@@ -95,10 +95,9 @@ class Spectrum(ndd.NDDataArray):
             The amount to offset by. If no unit is given the current axis unit
             is used
         """
-        if isinstance(offset, u.Quantity):
-            self.map_to_axis(lambda x: x + offset)
-        else:
-            self.map_to_axis(lambda x: x + (offset * self.axis_unit))
+        if not isinstance(offset, u.Quantity):
+            offset *= self.axis_unit
+        self.axis += offset
 
     def map_to_axis(self, fun):
         """
