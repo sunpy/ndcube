@@ -111,7 +111,7 @@ class Spectrum(ndd.NDDataArray):
             The function to apply to the wavelengths.
         """
         qtys = [tick * self.axis_unit for tick in self.axis]
-        newqtys = map(fun, qtys)
+        newqtys = [fun(x) for x in qtys]
         newaxis = [tick.value for tick in newqtys]
         self.axis = newaxis
 

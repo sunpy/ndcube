@@ -66,7 +66,7 @@ class SpectralCube(object):
             fitter.
         """
         recalc = kwargs.get('recalculate', False)
-        key = [guess[1] for guess in (line_guess,) + extra_lines]
+        key = tuple([guess[1] for guess in (line_guess,) + extra_lines])
         if recalc or key not in self._memo:
             gaussian_array = np.empty(self.spectra.shape, dtype=object)
             for i in range(self.spectra.shape[0]):

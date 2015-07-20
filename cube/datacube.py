@@ -23,8 +23,8 @@ from astropy.units import sday  # sidereal day
 from sunpy.map import GenericMap, MapMeta
 from sunpy.visualization.imageanimator import ImageAnimator
 from sunpy.lightcurve import LightCurve
-from sunpy.spectra.spectrum import Spectrum
-from sunpy.spectra.spectrogram import Spectrogram
+from sunpycube.spectra.spectrum import Spectrum
+from sunpycube.spectra.spectrogram import Spectrogram
 from sunpycube.spectra.spectral_cube import SpectralCube
 from sunpycube.cube import cube_utils as cu
 from sunpy.wcs import wcs_util as wu
