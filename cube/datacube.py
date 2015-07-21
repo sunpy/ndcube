@@ -464,7 +464,7 @@ class Cube(astropy.nddata.NDDataArray):
         start = crval - crpix * delta
         stop = start + len(self.data) * delta
         cunit = u.Unit(self.axes_wcs.wcs.cunit[-1])
-        return np.arange(start, stop, delta), cunit
+        return np.linspace(start, stop, num=self.data.shape[axis]), cunit
 
     def freq_axis(self):
         """
@@ -481,7 +481,7 @@ class Cube(astropy.nddata.NDDataArray):
         start = crval - crpix * delta
         stop = start + self.data.shape[axis] * delta
         cunit = u.Unit(self.axes_wcs.wcs.cunit[-1 - axis])
-        return np.arange(start, stop, delta), cunit
+        return np.linspace(start, stop, num=self.data.shape[axis]), cunit
 
     def _array_is_aligned(self):
         """

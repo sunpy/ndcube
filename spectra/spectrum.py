@@ -97,7 +97,7 @@ class Spectrum(ndd.NDDataArray):
         """
         if not isinstance(offset, u.Quantity):
             offset *= self.axis_unit
-        self.axis += offset
+        self.axis += offset.to(self.axis_unit)
 
     def map_to_axis(self, fun):
         """
