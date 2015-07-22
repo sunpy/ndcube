@@ -23,7 +23,7 @@ def orient(array, wcs):
     array : `~numpy.ndarray`
         The input 3- or 4-d array with two position dimensions and one spectral
         dimension.
-    wcs : `~astropy.wcs.WCS`
+    wcs : `~sunpy.wcs.WCS`
         The input 3- or 4-d WCS with two position dimensions and one spectral
         dimension.
     """
@@ -48,6 +48,7 @@ def orient(array, wcs):
     result_array = array.transpose(array_order)
 
     wcs_order = np.array(select_order(axtypes))[::-1]
+
     result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
     result_wcs.was_augmented = wcs.was_augmented
     result_wcs.oriented = True
@@ -70,7 +71,8 @@ def select_order(axtypes):
     """
     order = [(0, t) if t in ['TIME', 'UTC'] else
              (1, t) if t == 'WAVE' else
-             (axtypes.index(t) + 2, t) for t in axtypes]
+             (2, t) if t == 'HPLT-TAN' else
+             (axtypes.index(t) + 3, t) for t in axtypes]
     order.sort()
     result = [axtypes.index(s) for (_, s) in order]
     return result
@@ -413,7 +415,7 @@ def convert_point(value, unit, wcs, axis, _source='cube'):
     if isinstance(value, u.Quantity):
         value = value.value
         unit = value.unit
-    if _source is 'cube':
+    if _source == 'cube':
         wcsaxis = -1 - axis if wcs.oriented or not wcs.was_augmented \
                   else -2 - axis
     else:
@@ -449,7 +451,7 @@ def _convert_slice(item, wcs, axis, _source='cube'):
         The axis the slice corresponds to, in numpy-style ordering (i.e.
         opposite WCS convention)
     """
-    if _source is 'cube':
+    if _source == 'cube':
         wcs_ax = -2 - axis if wcs.was_augmented and not wcs.oriented \
                 else -1 - axis
     else:

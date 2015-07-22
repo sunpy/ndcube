@@ -86,9 +86,9 @@ class Cube(astropy.nddata.NDDataArray):
         if data is None:
             data = self._choose_wavelength_slice(0)
 
-        if style is 'imshow':
+        if style == 'imshow':
             plot = axes.imshow(data, **kwargs)
-        elif style is 'pcolormesh':
+        elif style == 'pcolormesh':
             plot = axes.pcolormesh(data, **kwargs)
 
         return plot
@@ -120,9 +120,9 @@ class Cube(astropy.nddata.NDDataArray):
         if data is None:
             data = self._choose_x_slice(0)
 
-        if style is 'imshow':
+        if style == 'imshow':
             plot = axes.imshow(data, **kwargs)
-        elif style is 'pcolormesh':
+        elif style == 'pcolormesh':
             plot = axes.pcolormesh(data, **kwargs)
 
         return plot
@@ -443,8 +443,8 @@ class Cube(astropy.nddata.NDDataArray):
         axis = 0 if self.axes_wcs.wcs.ctype[-1] == 'WAVE' else 1
         coordaxes = [1, 2] if axis == 0 else [0, 2]  # Non-spectral axes
         newwcs = wu.reindex_wcs(self.axes_wcs, np.arary(coordaxes))
-        time_or_x_size = self.data.shape[coordaxes[0]]
-        y_size = self.data.shape[coordaxes[1]]
+        time_or_x_size = self.data.shape[coordaxes[1]]
+        y_size = self.data.shape[coordaxes[0]]
         spectra = np.empty((time_or_x_size, y_size), dtype=Spectrum)
         for i in range(time_or_x_size):
             for j in range(y_size):

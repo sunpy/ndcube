@@ -136,7 +136,7 @@ class Spectrum(ndd.NDDataArray):
             g_mod = models.Gaussian1D(amplitude=amp, mean=mean, stddev=stddev)
             g_init = g_init + g_mod
         fitter = fitting.LevMarLSQFitter()
-        x_range = kwargs.get('x_range')
+        x_range = kwargs.pop('x_range', None)
         if x_range is not None:
             arrmin = self._qty_to_pixel(x_range[0])
             arrmax = self._qty_to_pixel(x_range[1])
@@ -145,6 +145,7 @@ class Spectrum(ndd.NDDataArray):
         else:
             fit_axis = self.axis
             fit_data = self.data
+        kwargs.pop('recalc', 0)
         return fitter(g_init, fit_axis, fit_data, **kwargs)
 
     def _qty_to_pixel(self, quantity):
@@ -157,9 +158,12 @@ class Spectrum(ndd.NDDataArray):
         quantity: astropy.units.Quantity
             The quantity to convert
         """
-        value = quantity / self.axis_unit
+        if isinstance(quantity, u.Quantity):
+            value = quantity.to(self.axis_unit).value
+        else:
+            value = quantity
         closest_index = (np.abs(self.axis - value)).argmin()
-        return self.axis.index(closest_index)
+        return self.axis[closest_index]
 
     def __getitem__(self, item):
         if isinstance(item, int):

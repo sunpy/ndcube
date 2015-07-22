@@ -12,6 +12,7 @@ import gwcs
 import numpy as np
 from sunpy.map import GenericMap, MapCube
 from sunpycube.cube import cube_utils as cu
+from sunpy.util.progressbar import TTYProgressBar as PB
 
 __all__ = ['SpectralCube']
 
@@ -69,13 +70,18 @@ class SpectralCube(object):
         key = tuple([guess[1] for guess in (line_guess,) + extra_lines])
         if recalc or key not in self._memo:
             gaussian_array = np.empty(self.spectra.shape, dtype=object)
+            bar = PB(self.spectra.shape[0] * self.spectra.shape[1])
+            drawbar = kwargs.pop('progress_bar', False)
             for i in range(self.spectra.shape[0]):
                 for j in range(self.spectra.shape[1]):
                     fit = self.spectra[i, j].gaussian_fit(line_guess,
                                                           *extra_lines,
                                                           **kwargs)
                     gaussian_array[i, j] = fit
+                    if drawbar:
+                        bar.poke()
             self._memo[key] = gaussian_array
+            bar.finish()
             return gaussian_array
         else:
             return self._memo[key]
