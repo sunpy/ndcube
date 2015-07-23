@@ -66,7 +66,7 @@ class SpectralCube(object):
             Extra keyword arguments are ultimately passed on to the astropy
             fitter.
         """
-        recalc = kwargs.get('recalculate', False)
+        recalc = kwargs.pop('recalc', False)
         key = tuple([guess[1] for guess in (line_guess,) + extra_lines])
         if recalc or key not in self._memo:
             gaussian_array = np.empty(self.spectra.shape, dtype=object)
