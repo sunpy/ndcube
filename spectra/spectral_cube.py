@@ -45,7 +45,7 @@ class SpectralCube(object):
         self.meta = meta
         self._memo = {}
 
-    def _gaussian_fits(self, line_guess, *extra_lines, **kwargs):
+    def _gaussian_fits(self, line_guess=None, *extra_lines, **kwargs):
         """
         Returns an array of fit objects from which parameters can be extracted
         corresponding to the line guesses provided.
@@ -55,7 +55,9 @@ class SpectralCube(object):
         line_guess and extra_lines: 3-tuples of floats
             There must be at least one guess, in the format (intensity,
             position, stddev). The closer these guesses are to the true values
-            the better the fit will be.
+            the better the fit will be. If left to None, each of the individual
+            spectra will come up with their own guesses. This only works for
+            cubes with clean, single-line spectra.
         recalc=False: boolean
             If True, the gaussian fits will be recalculated, even if there's an
             existing fit for the given wavelengths already in the memo. This
@@ -66,7 +68,10 @@ class SpectralCube(object):
             fitter.
         """
         recalc = kwargs.pop('recalc', False)
-        key = tuple([guess[1] for guess in (line_guess,) + extra_lines])
+        if line_guess is None:
+            key = 'auto'
+        else:
+            key = tuple([guess[1] for guess in (line_guess,) + extra_lines])
         if recalc or key not in self._memo:
             gaussian_array = np.empty(self.spectra.shape, dtype=object)
             bar = PB(self.spectra.shape[0] * self.spectra.shape[1])

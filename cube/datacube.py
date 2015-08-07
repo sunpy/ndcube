@@ -30,6 +30,7 @@ from sunpycube.cube import cube_utils as cu
 from sunpy.wcs import wcs_util as wu
 
 __all__ = ['Cube']
+# TODO: use uncertainties in all calculations and conversions
 
 
 class Cube(astropy.nddata.NDDataArray):
@@ -48,10 +49,15 @@ class Cube(astropy.nddata.NDDataArray):
 
     axes_wcs: sunpy.wcs.wcs.WCS object
         The WCS object containing the axes' information
+    errors: numpy ndarray
+        one-sigma errors for the data.
     """
 
-    def __init__(self, data, wcs, **kwargs):
+    def __init__(self, data, wcs, errors=None, **kwargs):
         data, wcs = cu.orient(data, wcs)
+        if errors is not None:
+            err = astropy.nddata.StdDevUncertainty(errors)
+            kwargs.update({'uncertainty': err})
         astropy.nddata.NDDataArray.__init__(self, data=data, **kwargs)
         self.axes_wcs = wcs
         # We don't send this to NDDataArray because it's not
@@ -289,7 +295,7 @@ class Cube(astropy.nddata.NDDataArray):
 
         return LightCurve(data=data, meta=self.meta)
 
-    def slice_to_spectrum(self, *coords):
+    def slice_to_spectrum(self, *coords, **kwargs):
         """
         For a cube containing a spectral dimension, returns a sunpy spectrum.
         The given coordinates represent which values to take. If they are None,
@@ -327,6 +333,10 @@ class Cube(astropy.nddata.NDDataArray):
             item = [slice(None, None, None) if i is None else i for i in item]
 
         data = self.data[item]
+        errors = (None if self.uncertainty is None else
+                  self.uncertainty.array[item])
+        mask = None if self.mask is None else self.mask[item]
+        kwargs.update({'uncertainty': errors, 'mask': mask})
         for i in range(len(pixels)):
             if pixels[i] is None:
                 if i == 0:
@@ -336,7 +346,7 @@ class Cube(astropy.nddata.NDDataArray):
                 data = data.sum(axis=sumaxis)
 
         freq_axis, cunit = self.freq_axis()
-        return Spectrum(np.array(data), np.array(freq_axis), cunit)
+        return Spectrum(np.array(data), np.array(freq_axis), cunit, **kwargs)
 
     def slice_to_spectrogram(self, y_coord, x_coord=None, **kwargs):
         """

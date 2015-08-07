@@ -40,10 +40,7 @@ class Spectrum(ndd.NDDataArray):
         every data-point.
     """
 
-    def __init__(self, data, axis, axis_unit, errors=None, **kwargs):
-        if errors is not None:
-            err = ndd.StdDevUncertainty(errors)
-            kwargs.update({'uncertainty': err})
+    def __init__(self, data, axis, axis_unit, **kwargs):
         ndd.NDDataArray.__init__(self, data=data, **kwargs)
         self.axis = axis
         self.axis_unit = axis_unit
@@ -153,6 +150,11 @@ class Spectrum(ndd.NDDataArray):
         else:
             fit_axis = self.axis
             fit_data = self.data
+        if self.uncertainty is not None:
+            errors = self.uncertainty.data
+            weights = 1 / errors
+            weights[self.mask] = 0
+            kwargs.update({'weights': weights})
         kwargs.pop('recalc', 0)
         return fitter(g_init, fit_axis, fit_data, **kwargs)
 
