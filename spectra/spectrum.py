@@ -32,12 +32,18 @@ class Spectrum(ndd.NDDataArray):
         The unit of the spectral axis. This must be in units of frequency or
         distance.
 
+    errors: np.ndarray
+        Standard-deviation errors for the data
+
     data: np.ndarray
         one-dimensional array which the intensity at a particular frequency at
         every data-point.
     """
 
-    def __init__(self, data, axis, axis_unit, **kwargs):
+    def __init__(self, data, axis, axis_unit, errors=None, **kwargs):
+        if errors is not None:
+            err = ndd.StdDevUncertainty(errors)
+            kwargs.update({'uncertainty': err})
         ndd.NDDataArray.__init__(self, data=data, **kwargs)
         self.axis = axis
         self.axis_unit = axis_unit
@@ -114,7 +120,7 @@ class Spectrum(ndd.NDDataArray):
         newaxis = [tick.value for tick in newqtys]
         self.axis = newaxis
 
-    def gaussian_fit(self, line_guess, *extra_lines, **kwargs):
+    def gaussian_fit(self, line_guess=None, *extra_lines, **kwargs):
         """
         Fits a gaussian distribution to the data, and returns a fit whose
         parameters - amplitude, mean and standard deviation, among others,
@@ -130,6 +136,8 @@ class Spectrum(ndd.NDDataArray):
         **kwargs: dict
             Additional keyword arguments are passed on to the fitter
         """
+        if line_guess is None:
+            line_guess = self._make_line_guess()
         g_init = models.Gaussian1D(amplitude=line_guess[0], mean=line_guess[1],
                                    stddev=line_guess[2])
         for (amp, mean, stddev) in extra_lines:
@@ -147,6 +155,20 @@ class Spectrum(ndd.NDDataArray):
             fit_data = self.data
         kwargs.pop('recalc', 0)
         return fitter(g_init, fit_axis, fit_data, **kwargs)
+
+    def _make_line_guess(self):
+        """
+        Makes a guess for a first approximation of the gaussian parameters.
+        This only works for clear, single line profiles; it may produce
+        nonsensical results in other cases.
+        """
+        amp = self.data.max()
+        argamp = self.data.argmax()
+        mean = self.axis[argamp]
+        diffs = np.abs(self.data - amp / 2)
+        stddev = (self.axis[diffs[argamp:].argmin()] -
+                  self.axis[diffs[:argamp].argmin()])
+        return (amp, mean, stddev)
 
     def _qty_to_pixel(self, quantity):
         """

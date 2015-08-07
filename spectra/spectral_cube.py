@@ -8,7 +8,6 @@ shape of the structure isn't necessarily a cuboid - each spectrum may have
 different wavelength axes.
 """
 
-import gwcs
 import numpy as np
 from sunpy.map import GenericMap, MapCube
 from sunpycube.cube import cube_utils as cu
