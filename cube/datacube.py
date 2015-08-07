@@ -333,8 +333,7 @@ class Cube(astropy.nddata.NDDataArray):
             item = [slice(None, None, None) if i is None else i for i in item]
 
         data = self.data[item]
-        errors = (None if self.uncertainty is None else
-                  self.uncertainty.array[item])
+        errors = (None if self.uncertainty is None else self.uncertainty[item])
         mask = None if self.mask is None else self.mask[item]
         kwargs.update({'uncertainty': errors, 'mask': mask})
         for i in range(len(pixels)):
