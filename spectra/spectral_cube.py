@@ -123,7 +123,8 @@ class SpectralCube(object):
                 values[i, j] = fit.parameters[param::3]
         return values
 
-    def param_map_cube(self, parameter, line_guess, *extra_lines, **kwargs):
+    def param_map_cube(self, parameter, line_guess=None, *extra_lines,
+                       **kwargs):
         """
         Returns a MapCube of the given parameter at the given Gaussian values.
         The parameter can be 'intensity', which returns the amplitudes of the
