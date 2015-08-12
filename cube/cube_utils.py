@@ -11,7 +11,7 @@ from sunpy.wcs import wcs_util
 from astropy import units as u
 
 
-def orient(array, wcs):
+def orient(array, wcs, errors=None):
     # This is mostly lifted from astropy's spectral cube.
     """
     Given a 3 or 4D cube and a WCS, swap around the axes so that the
@@ -26,6 +26,9 @@ def orient(array, wcs):
     wcs : `~sunpy.wcs.WCS`
         The input 3- or 4-d WCS with two position dimensions and one spectral
         dimension.
+    errors: ndarray, optional
+        An extra array to orient, corresponding to uncertainties and errors in
+        the data.
     """
 
     if wcs.oriented:  # If this wcs has already been oriented.
@@ -46,13 +49,16 @@ def orient(array, wcs):
     else:
         array_order = select_order(axtypes)
     result_array = array.transpose(array_order)
-
     wcs_order = np.array(select_order(axtypes))[::-1]
 
     result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
     result_wcs.was_augmented = wcs.was_augmented
     result_wcs.oriented = True
-    return result_array, result_wcs
+    if errors is not None:
+        result_err = errors.transpose(array_order)
+        return result_array, result_err, result_wcs
+    else:
+        return result_array, result_wcs
 
 
 def select_order(axtypes):

@@ -54,10 +54,12 @@ class Cube(astropy.nddata.NDDataArray):
     """
 
     def __init__(self, data, wcs, errors=None, **kwargs):
-        data, wcs = cu.orient(data, wcs)
         if errors is not None:
+            data, errors, wcs = cu.orient(data, wcs, errors=errors)
             err = astropy.nddata.StdDevUncertainty(errors)
             kwargs.update({'uncertainty': err})
+        else:
+            data, wcs = cu.orient(data, wcs)
         astropy.nddata.NDDataArray.__init__(self, data=data, **kwargs)
         self.axes_wcs = wcs
         # We don't send this to NDDataArray because it's not
