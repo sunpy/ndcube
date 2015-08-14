@@ -168,8 +168,10 @@ class Spectrum(ndd.NDDataArray):
         argamp = self.data.argmax()
         mean = self.axis[argamp]
         diffs = np.abs(self.data - amp / 2)
-        stddev = (self.axis[diffs[argamp:].argmin()] -
-                  self.axis[diffs[:argamp].argmin()])
+        rval = (diffs[argamp:].argmin() if diffs[argamp:].size > 0
+                else len(diffs) - 1)
+        lval = diffs[argamp:].argmin() if diffs[:argamp].size > 0 else 0
+        stddev = (self.axis[rval] - self.axis[lval])
         return (amp, mean, stddev)
 
     def _qty_to_pixel(self, quantity):

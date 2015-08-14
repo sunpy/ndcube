@@ -6,12 +6,14 @@ Utilities used in the sunpy.cube.cube module. Moved here to prevent clutter and
 aid readability.
 """
 
+from __future__ import absolute_import
 import numpy as np
 from sunpy.wcs import wcs_util
 from astropy import units as u
+from copy import deepcopy
 
 
-def orient(array, wcs, errors=None):
+def orient(array, wcs, *extra_arrs):
     # This is mostly lifted from astropy's spectral cube.
     """
     Given a 3 or 4D cube and a WCS, swap around the axes so that the
@@ -26,13 +28,12 @@ def orient(array, wcs, errors=None):
     wcs : `~sunpy.wcs.WCS`
         The input 3- or 4-d WCS with two position dimensions and one spectral
         dimension.
-    errors: ndarray, optional
-        An extra array to orient, corresponding to uncertainties and errors in
+   extra_arrs: one or more ndarrays, optional
+        Extra arrays to orient, corresponding to uncertainties and errors in
         the data.
     """
-
     if wcs.oriented:  # If this wcs has already been oriented.
-        return array, wcs
+        return (array, wcs) + extra_arrs
 
     if array.ndim != 3 and array.ndim != 4:
         raise ValueError("Input array must be 3- or 4-dimensional")
@@ -54,11 +55,8 @@ def orient(array, wcs, errors=None):
     result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
     result_wcs.was_augmented = wcs.was_augmented
     result_wcs.oriented = True
-    if errors is not None:
-        result_err = errors.transpose(array_order)
-        return result_array, result_err, result_wcs
-    else:
-        return result_array, result_wcs
+    result_extras = [arr.transpose(array_order) for arr in extra_arrs]
+    return (result_array, result_wcs) + tuple(result_extras)
 
 
 def select_order(axtypes):
@@ -246,14 +244,17 @@ def reduce_dim(cube, axis, keys):
         newwcs.wcs.crpix[waxis] = 0
         newwcs.wcs.crval[waxis] = (cube.axes_wcs.wcs.crval[waxis] +
                                    cube.axes_wcs.wcs.cdelt[waxis] * start)
-    meta = cube.meta
-    unit = cube.unit
-    uncertainty = cube.uncertainty
-    mask = cube.mask
+    kwargs = {'meta': cube.meta, 'unit': cube.unit}
+    if cube.uncertainty is not None:
+        errors = deepcopy(cube.uncertainty)
+        errors.array = errors.array.take(indices, axis=axis)
+        kwargs.update({'errors': errors})
+    if cube.mask is not None:
+        mask = cube.mask.take(indices, axis=axis)
+        kwargs.update({'mask': mask})
 
     from . import datacube as c
-    newcube = c.Cube(data=newdata, wcs=newwcs, meta=meta, unit=unit,
-                     uncertainty=uncertainty, mask=mask)
+    newcube = c.Cube(data=newdata, wcs=newwcs, **kwargs)
     return newcube
 
 
@@ -290,7 +291,7 @@ def getitem_3d(cube, item):
                      not any(isinstance(i, int) for i in item)))
 
     reducedcube = reduce_dim(cube, 0, slice(None, None, None))
-    # We're not actually reducing a cube, just a way of copying the cube.
+    # XXX: We're not actually reducing a cube, just a way of copying the cube.
     if isinstance(item, tuple):
         for i in range(len(item)):
             if isinstance(item[i], slice):
@@ -436,6 +437,12 @@ def convert_point(value, unit, wcs, axis, _source='cube'):
     point = crpix + pointdelta
 
     return int(np.round(point))
+
+
+def pixelize(coord, wcs, axis):
+    '''shorthand for convert_point'''
+    unit = coord.unit if isinstance(coord, u.Quantity) else None
+    return convert_point(coord, unit, wcs, axis)
 
 
 def _convert_slice(item, wcs, axis, _source='cube'):

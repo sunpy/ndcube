@@ -50,17 +50,21 @@ class Cube(astropy.nddata.NDDataArray):
     axes_wcs: sunpy.wcs.wcs.WCS object
         The WCS object containing the axes' information
     errors: numpy ndarray
-        one-sigma errors for the data.
+        one-sigma errors for the data. If the error array is present, there
+        should also be a mask keyword argument
     """
 
     def __init__(self, data, wcs, errors=None, **kwargs):
+        mask = kwargs.pop('mask', np.zeros(data.shape, dtype=bool))
         if errors is not None:
-            data, errors, wcs = cu.orient(data, wcs, errors=errors)
-            err = astropy.nddata.StdDevUncertainty(errors)
-            kwargs.update({'uncertainty': err})
+            data, wcs, err_array, mask = cu.orient(data, wcs, errors.array,
+                                                   mask)
+            errors.array = err_array
+            kwargs.update({'uncertainty': errors})
         else:
-            data, wcs = cu.orient(data, wcs)
-        astropy.nddata.NDDataArray.__init__(self, data=data, **kwargs)
+            data, wcs, mask = cu.orient(data, wcs, mask)
+        astropy.nddata.NDDataArray.__init__(self, data=data, mask=mask,
+                                            **kwargs)
         self.axes_wcs = wcs
         # We don't send this to NDDataArray because it's not
         # supported as of astropy 1.0. Eventually we will.
@@ -224,16 +228,12 @@ class Cube(astropy.nddata.NDDataArray):
         if self.axes_wcs.wcs.ctype[-2] == 'WAVE' and self.data.ndim == 3:
             error = "Cannot construct a map with only one spatial dimension"
             raise cu.CubeError(3, error)
-
-        def pixelize(coord, axis):
-            '''shorthand for convert_point'''
-            unit = coord.unit if isinstance(coord, u.Quantity) else None
-            return cu.convert_point(coord, unit, self.axes_wcs, axis)
         if isinstance(chunk, tuple):
-            item = slice(pixelize(chunk[0], 0), pixelize(chunk[1], 0), None)
+            item = slice(cu.pixelize(chunk[0], self.axes_wcs, 0),
+                         cu.pixelize(chunk[1], self.axes_wcs, 0), None)
             maparray = self.data[item].sum(0)
         else:
-            maparray = self.data[pixelize(chunk, 0)]
+            maparray = self.data[cu.pixelize(chunk, self.axes_wcs, 0)]
 
         if self.data.ndim == 4:
             if snd_dim is None:
@@ -241,11 +241,11 @@ class Cube(astropy.nddata.NDDataArray):
                 raise cu.CubeError(4, error)
 
             if isinstance(snd_dim, tuple):
-                item = slice(pixelize(snd_dim[0], 1),
-                             pixelize(snd_dim[1], 1), None)
+                item = slice(cu.pixelize(snd_dim[0], self.axes_wcs, 1),
+                             cu.pixelize(snd_dim[1], self.axes_wcs, 1), None)
                 maparray = maparray[item].sum(0)
             else:
-                maparray = maparray[pixelize(snd_dim, 1)]
+                maparray = maparray[cu.pixelize(snd_dim, self.axes_wcs, 1)]
 
         mapheader = MapMeta(self.meta)
         gmap = GenericMap(data=maparray, header=mapheader, *args, **kwargs)
@@ -271,27 +271,21 @@ class Cube(astropy.nddata.NDDataArray):
                                'Cannot create a lightcurve with no time axis')
         if self.axes_wcs.wcs.ctype[-2] != 'WAVE':
             raise cu.CubeError(2, 'A spectral axis is needed in a lightcurve')
-
-        def pixelize(coord, axis):
-            '''shorthand for convert_point'''
-            unit = coord.unit if isinstance(coord, u.Quantity) else None
-            return cu.convert_point(coord, unit, self.axes_wcs, axis)
-
         if self.data.ndim == 3:
             data = self._choose_wavelength_slice(wavelength)
             if y_coord is not None:
-                data = data[:, pixelize(y_coord, 1)]
+                data = data[:, cu.pixelize(y_coord, self.axes_wcs, 1)]
         else:
             if y_coord is None and x_coord is None:
                 raise cu.CubeError(4, "At least one coordinate must be given")
             if y_coord is None:
                 y_coord = slice(None, None, None)
             else:
-                y_coord = pixelize(y_coord, 2)
+                y_coord = cu.pixelize(y_coord, self.axes_wcs, 2)
             if x_coord is None:
                 x_coord = slice(None, None, None)
             else:
-                x_coord = pixelize(x_coord, 3)
+                x_coord = cu.pixelize(x_coord, self.axes_wcs, 3)
             item = (slice(None, None, None), wavelength, y_coord, x_coord)
             data = self.data[item]
 
@@ -317,12 +311,7 @@ class Cube(astropy.nddata.NDDataArray):
         if 'WAVE' not in self.axes_wcs.wcs.ctype:
             raise cu.CubeError(2, 'Spectral axis needed to create a spectrum')
         axis = 0 if self.axes_wcs.wcs.ctype[-1] == 'WAVE' else 1
-
-        def pixelize(coord):
-            '''shorthand for convert_point'''
-            unit = coord.unit if isinstance(coord, u.Quantity) else None
-            return cu.convert_point(coord, unit, self.axes_wcs, axis)
-        pixels = [pixelize(coord) for coord in coords]
+        pixels = [cu.pixelize(coord, self.axes_wcs, axis) for coord in coords]
         item = range(len(pixels))
         if axis == 0:
             item[1:] = pixels
@@ -347,6 +336,8 @@ class Cube(astropy.nddata.NDDataArray):
                 data = data.sum(axis=sumaxis)
 
         freq_axis, cunit = self.freq_axis()
+        err = self.uncertainty[item] if self.uncertainty is not None else None
+        kwargs.update({'uncertainty': err})
         return Spectrum(np.array(data), np.array(freq_axis), cunit, **kwargs)
 
     def slice_to_spectrogram(self, y_coord, x_coord=None, **kwargs):
@@ -366,17 +357,13 @@ class Cube(astropy.nddata.NDDataArray):
                                'Cannot create a spectrogram with no time axis')
         if self.axes_wcs.wcs.ctype[-2] != 'WAVE':
             raise cu.CubeError(2, 'A spectral axis is needed in a spectrogram')
-
-        def pixelize(coord, axis):
-            '''shorthand for convert_point'''
-            unit = coord.unit if isinstance(coord, u.Quantity) else None
-            return cu.convert_point(coord, unit, self.axes_wcs, axis)
         if self.data.ndim == 3:
-            data = self.data[:, :, pixelize(y_coord, 2)]
+            data = self.data[:, :, cu.pixelize(y_coord, self.axes_wcs, 2)]
         else:
             if x_coord is None:
                 raise cu.CubeError(4, 'An x-coordinate is needed for 4D cubes')
-            data = self.data[:, :, pixelize(y_coord, 2), pixelize(x_coord, 3)]
+            data = self.data[:, :, cu.pixelize(y_coord, self.axes_wcs, 2),
+                             cu.pixelize(x_coord, self.axes_wcs, 3)]
         time_axis = self.time_axis()[0]
         freq_axis = self.freq_axis()[0]
 
