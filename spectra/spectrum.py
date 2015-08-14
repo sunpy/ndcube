@@ -86,7 +86,6 @@ class Spectrum(ndd.NDDataArray):
         figure = plt.figure()
         self.plot(**matplot_args)
         figure.show()
-        return figure
 
     def shift_axis(self, offset):
         """
@@ -151,7 +150,7 @@ class Spectrum(ndd.NDDataArray):
             fit_axis = self.axis
             fit_data = self.data
         if self.uncertainty is not None:
-            errors = self.uncertainty.data
+            errors = self.uncertainty.array
             weights = 1 / errors
             weights[self.mask] = 0
             kwargs.update({'weights': weights})
