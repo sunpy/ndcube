@@ -8,7 +8,7 @@ aid readability.
 
 from __future__ import absolute_import
 import numpy as np
-from sunpy.wcs import wcs_util
+from sunpycube import wcs_util
 from astropy import units as u
 from copy import deepcopy
 

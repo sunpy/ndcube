@@ -27,7 +27,7 @@ from sunpycube.spectra.spectrum import Spectrum
 from sunpycube.spectra.spectrogram import Spectrogram
 from sunpycube.spectra.spectral_cube import SpectralCube
 from sunpycube.cube import cube_utils as cu
-from sunpy.wcs import wcs_util as wu
+from sunpycube import wcs_util as wu
 
 __all__ = ['Cube']
 # TODO: use uncertainties in all calculations and conversions
