@@ -25,7 +25,7 @@ try:
     from sunpy.util.metadata import MetaDict
 except ImportError:
     from sunpy.map import MapMeta as MetaDict
-from sunpy.visualization.imageanimator import ImageAnimator
+from sunpy.visualization.imageanimator import ImageAnimatorWCS
 from sunpy.lightcurve import LightCurve
 from sunpycube.spectra.spectrum import Spectrum
 from sunpycube.spectra.spectrogram import Spectrogram
@@ -75,8 +75,8 @@ class Cube(astropy.nddata.NDDataArray):
         # Also it's called axes_wcs because wcs belongs to astropy.nddata and
         # that messes up slicing.
 
-    def plot_wavelength_slice(self, offset, axes=None,
-                              style='imshow', **kwargs):
+    def plot_wavelength_slice(self, offset, axes=None, unit_x_axis=None,
+                            unit_y_axis=None, origin='lower', **kwargs):
         """
         Plots an x-y graph at a certain specified wavelength onto the current
         axes. Keyword arguments are passed on to matplotlib.
@@ -89,28 +89,38 @@ class Cube(astropy.nddata.NDDataArray):
             it will plot the closest wavelength. If the offset is out of range,
             it will plot the primary wavelength (offset 0)
 
-        axes: matplotlib.axes or None:
+        axes: astropy.visualization.wcsaxes.core.WCSAxes or None:
             The axes to plot onto. If None the current axes will be used.
 
-        style: 'imshow' or 'pcolormesh'
-            The style of plot to be used. Default is 'imshow'
+        unit_x_axis: astropy.units
+           The unit of y axis.
+
+        unit_y_axis: astropy.units
+            The unit of y axis.
         """
         if axes is None:
-            axes = plt.gca()
+            fig = plt.figure()
+            axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.axes_wcs, slices=(offset, 'y',  'x'))
+
+        if unit_x_axis is not None:
+            axes.coords[2].set_format_unit(unit_x_axis)
+            axes.coords[2].set_ticks(exclude_overlapping=True)
+
+        if unit_y_axis is not None:
+            axes.coords[1].set_format_unit(unit_y_axis)
+            axes.coords[1].set_ticks(exclude_overlapping=True)
 
         data = self._choose_wavelength_slice(offset)
+
         if data is None:
             data = self._choose_wavelength_slice(0)
 
-        if style == 'imshow':
-            plot = axes.imshow(data, **kwargs)
-        elif style == 'pcolormesh':
-            plot = axes.pcolormesh(data, **kwargs)
+        plot = axes.imshow(data, origin=origin, **kwargs)
 
         return plot
 
-    def plot_x_slice(self, offset, axes=None,
-                     style='imshow', **kwargs):
+    def plot_x_slice(self, offset, axes=None, unit_x_axis=None, 
+                    unit_y_axis=None, origin='lower', **kwargs):
         """
         Plots an x-y graph at a certain specified wavelength onto the current
         axes. Keyword arguments are passed on to matplotlib.
@@ -123,23 +133,33 @@ class Cube(astropy.nddata.NDDataArray):
             it will plot the closest x-distance. If the offset is out of range,
             it will plot the primary wavelength (offset 0)
 
-        axes: matplotlib.axes or None:
+        axes: astropy.visualization.wcsaxes.core.WCSAxes or None:
             The axes to plot onto. If None the current axes will be used.
 
-        style: 'imshow' or 'pcolormesh'
-            The style of plot to be used. Default is 'imshow'
+        unit_x_axis: astropy.units
+           The unit of y axis.
+
+        unit_y_axis: astropy.units
+            The unit of y axis.
         """
         if axes is None:
-            axes = plt.gca()
+            fig = plt.figure()
+            axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.axes_wcs, slices=('y', offset,  'x'))
+
+        if unit_x_axis is not None:
+            axes.coords[2].set_format_unit(unit_x_axis)
+            axes.coords[2].set_ticks(exclude_overlapping=True)
+
+        if unit_y_axis is not None:
+            axes.coords[1].set_format_unit(unit_y_axis)
+            axes.coords[1].set_ticks(exclude_overlapping=True)
 
         data = self._choose_x_slice(offset)
+
         if data is None:
             data = self._choose_x_slice(0)
 
-        if style == 'imshow':
-            plot = axes.imshow(data, **kwargs)
-        elif style == 'pcolormesh':
-            plot = axes.pcolormesh(data, **kwargs)
+        plot = axes.imshow(data, origin=origin, **kwargs)
 
         return plot
 
@@ -150,7 +170,7 @@ class Cube(astropy.nddata.NDDataArray):
         Parameters other than data are passed to ImageAnimator, which in turn
         passes them to imshow.
         """
-        i = ImageAnimator(data=self.data, *args, **kwargs)
+        i = ImageAnimatorWCS(self.data, wcs=self.axes_wcs, *args, **kwargs)
         return i
 
     def _choose_wavelength_slice(self, offset):
