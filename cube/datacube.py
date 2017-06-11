@@ -233,6 +233,30 @@ class Cube(astropy.nddata.NDDataArray):
 
         return arr
 
+    def truncate(self, offset_range, axis):
+        """
+        Truncates the data on any dimension.
+
+        Parameters
+        ----------
+        offset_range: tuple
+            Given the range of indices required like (2,5),
+            and axis=0 then it will return the cube where the
+            axis 0 is trucated from 2 to 5.
+        """
+        arr = None
+        length = self.data.shape[axis]
+        if isinstance(offset_range, tuple):
+            if offset_range[0] >= 0 and offset_range[1] < length and len(offset_range)==2:
+                if all(isinstance(n, int) for n in offset_range):
+                    take_indices = list(set([i for i in range(offset_range[0])])^set([j for j in range(offset_range[1])]))
+                    arr = self.data.take(take_indices, axis=axis)
+                else:
+                    raise ValueError("Values of Offset range should be integer")
+            else:
+                raise ValueError("Offset range provided is out of bounds")
+        return arr
+
     def slice_to_map(self, chunk, snd_dim=None, *args, **kwargs):
         """
         Converts a given frequency chunk to a SunPy Map. Extra parameters are
