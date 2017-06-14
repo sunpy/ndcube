@@ -94,6 +94,7 @@ def reindex_wcs(wcs, inds):
     outwcs.wcs.cunit = [wcs.wcs.cunit[i] for i in inds]
     outwcs.wcs.ctype = [wcs.wcs.ctype[i] for i in inds]
     outwcs.wcs.cname = [wcs.wcs.cname[i] for i in inds]
+    outwcs._naxis = [wcs._naxis[i] for i in inds]
 
     return outwcs
 

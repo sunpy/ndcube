@@ -123,9 +123,11 @@ def test_choose_x_slice():
     assert f is None
 
 
-def test_freq_axis():
-    f1, u1 = cube.freq_axis()
-    f2, u2 = cubem.freq_axis()
+def test_wavelength_axis():
+    cube_wavelength_axis = cube.wavelength_axis()
+    cubem_wavelength_axis = cubem.wavelength_axis()
+    f1, u1 = cube_wavelength_axis.value, cube_wavelength_axis.unit
+    f2, u2 = cubem_wavelength_axis.value, cubem_wavelength_axis.unit
     # the e-11 are the conversions from angstrom to meters
     assert np.allclose(f1, [0, 2.0e-11, 4.0e-11])
     assert np.allclose(f2, [0, 2.0e-11, 4.0e-11])
@@ -134,7 +136,8 @@ def test_freq_axis():
 
 
 def test_time_axis():
-    t1, u1 = cube.time_axis()
+    cube_time_axis = cube.time_axis()
+    t1, u1 = cube_time_axis.value, cube_time_axis.unit
     assert np.allclose(t1, [0, 0.4])
     assert u1 == u.min
     with pytest.raises(cu.CubeError):

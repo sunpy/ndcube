@@ -16,6 +16,7 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.nddata
+import copy
 from astropy import units as u
 from astropy.units import sday  # sidereal day
 
@@ -83,19 +84,19 @@ class Cube(astropy.nddata.NDDataArray):
 
         Parameters
         ----------
-        offset: int or float
+        offset: `int` or `float`
             The offset from the primary wavelength to plot. If it's an int it
             will plot the nth wavelength from the primary; if it's a float then
             it will plot the closest wavelength. If the offset is out of range,
             it will plot the primary wavelength (offset 0)
 
-        axes: astropy.visualization.wcsaxes.core.WCSAxes or None:
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
             The axes to plot onto. If None the current axes will be used.
 
-        unit_x_axis: astropy.units
-           The unit of y axis.
+        unit_x_axis: `astropy.units.Unit`
+           The unit of x axis.
 
-        unit_y_axis: astropy.units
+        unit_y_axis: `astropy.units.Unit`
             The unit of y axis.
         """
         if axes is None:
@@ -167,8 +168,31 @@ class Cube(astropy.nddata.NDDataArray):
         """
         Plots an interactive visualization of this cube with a slider
         controlling the wavelength axis.
-        Parameters other than data are passed to ImageAnimator, which in turn
+        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
         passes them to imshow.
+
+        Parameters
+        ----------
+        image_axes: `list`
+            The two axes that make the image.
+            Like [-1,-2] this implies cube instance -1 dimension
+            will be x-axis and -2 dimension will be y-axis.
+
+        unit_x_axis: `astropy.units.Unit`
+            The unit of x axis.
+
+        unit_y_axis: `astropy.units.Unit`
+            The unit of y axis.
+
+        axis_ranges: list of physical coordinates for array or None
+            If None array indices will be used for all axes.
+            If a list it should contain one element for each axis of the numpy array.
+            For the image axes a [min, max] pair should be specified which will be
+            passed to :func:`matplotlib.pyplot.imshow` as extent.
+            For the slider axes a [min, max] pair can be specified or an array the
+            same length as the axis which will provide all values for that slider.
+            If None is specified for an axis then the array indices will be used
+            for that axis.
         """
         i = ImageAnimatorWCS(self.data, wcs=self.axes_wcs, *args, **kwargs)
         return i
@@ -180,7 +204,7 @@ class Cube(astropy.nddata.NDDataArray):
 
         Parameters
         ----------
-        offset: int or astropy quantity
+        offset: `int` or astropy quantity
             Offset from the cube's primary wavelength. If the value is an int,
             then it returns that slice. Otherwise, it will return the nearest
             wavelength to the one specified.
@@ -212,7 +236,7 @@ class Cube(astropy.nddata.NDDataArray):
 
         Parameters
         ----------
-        offset: int or astropy quantity
+        offset: `int` or astropy quantity
             Offset from the cube's initial x. If the value is an int,
             then it returns that slice. Otherwise, it will return the nearest
             wavelength to the one specified.
@@ -233,29 +257,52 @@ class Cube(astropy.nddata.NDDataArray):
 
         return arr
 
-    def truncate(self, offset_range, axis=0):
+    @classmethod
+    def _new_instance(cls, data, wcs, errors=None, **kwargs):
+        return cls(data, wcs, errors=errors, **kwargs)
+
+    def truncate(self, slice_data):
         """
         Truncates the data on any dimension.
 
         Parameters
         ----------
-        offset_range: tuple
-            Given the range of indices required like (2,5),
-            and axis=0 then it will return the cube where the
-            axis 0 is trucated from 2 to 5.
+        slice_data: `tuple` or `list` or `slice`
+            Given a list/tuple/slice like slice_data=(slice(2,3), None, slice(0,6)).
+            This will return cube with data sliced in 1st dimension between 2 and 3,
+            2nd dimension returned as it is and 3rd dimension sliced between 0 and 6.
 
-        axis: int
-            The axis needed to be truncated.
+        Examples
+        --------
+        >>> from sunpycube.cube.datacube import Cube
+        >>> file = #location in computer
+        >>> cube = Cube(data,wcs)
+        >>> new_cube = cube.truncate((slice(3,4), None, slice(0,5)))
+        >>> new_cube1 = cube.truncate([slice(3,4), None, slice(0,5)])
+        >>> new_cube2 = cube.truncate(slice(3,4))
+
+
         """
-        arr = None
-        length = self.data.shape[axis]
-        if isinstance(offset_range, tuple) and all(isinstance(n, int) for n in offset_range):
-            if offset_range[0] >= 0 and offset_range[1] < length and len(offset_range)==2:
-                take_indices = list(set([i for i in range(offset_range[0])]) ^ set([j for j in range(offset_range[1])]))
-                arr = self.data.take(take_indices, axis=axis)
-            else:
-                raise ValueError("Offset range provided is out of bounds")
-        return arr
+        data = self.data
+        wcs = self.axes_wcs
+        mask = self.mask
+
+        if isinstance(slice_data, slice):
+            data = data[slice_data]
+            wcs = wcs.slice(slice_data, numpy_order=False)
+            mask = mask[slice_data]
+            return self._new_instance(data, wcs)
+
+        slice_parameters_list = list(slice_data)
+        for i, _slice in enumerate(slice_parameters_list):
+            if _slice is None:
+                slice_parameters_list[i] = slice(0, data.shape[i])
+
+        data = data[slice_parameters_list]
+        wcs = wcs.slice(slice_parameters_list, numpy_order=False)
+        mask = mask[slice_parameters_list]
+
+        return self._new_instance(data, wcs)
 
     def slice_to_map(self, chunk, snd_dim=None, *args, **kwargs):
         """
@@ -383,7 +430,8 @@ class Cube(astropy.nddata.NDDataArray):
                     sumaxis = 1 if i == 2 else i
                 data = data.sum(axis=sumaxis)
 
-        freq_axis, cunit = self.freq_axis()
+        wavelength_axis = self.wavelength_axis()
+        freq_axis, cunit = wavelength_axis.value, wavelength_axis.unit
         err = self.uncertainty[item] if self.uncertainty is not None else None
         kwargs.update({'uncertainty': err})
         return Spectrum(np.array(data), np.array(freq_axis), cunit, **kwargs)
@@ -412,8 +460,8 @@ class Cube(astropy.nddata.NDDataArray):
                 raise cu.CubeError(4, 'An x-coordinate is needed for 4D cubes')
             data = self.data[:, :, cu.pixelize(y_coord, self.axes_wcs, 2),
                              cu.pixelize(x_coord, self.axes_wcs, 3)]
-        time_axis = self.time_axis()[0]
-        freq_axis = self.freq_axis()[0]
+        time_axis = self.time_axis().value
+        freq_axis = self.wavelength_axis().value
 
         if 'DATE_OBS'in self.meta:
             tformat = '%Y-%m-%dT%H:%M:%S.%f'
@@ -510,9 +558,9 @@ class Cube(astropy.nddata.NDDataArray):
         start = crval - crpix * delta
         stop = start + len(self.data) * delta
         cunit = u.Unit(self.axes_wcs.wcs.cunit[-1])
-        return np.linspace(start, stop, num=self.data.shape[0]), cunit
+        return np.linspace(start, stop, num=self.data.shape[0]) * cunit
 
-    def freq_axis(self):
+    def wavelength_axis(self):
         """
         Returns a numpy array containing the frequency values for the cube's
         spectral dimension, as well as the axis's unit.
@@ -527,7 +575,7 @@ class Cube(astropy.nddata.NDDataArray):
         start = crval - crpix * delta
         stop = start + self.data.shape[axis] * delta
         cunit = u.Unit(self.axes_wcs.wcs.cunit[-1 - axis])
-        return np.linspace(start, stop, num=self.data.shape[axis]), cunit
+        return np.linspace(start, stop, num=self.data.shape[axis]) * cunit
 
     def _array_is_aligned(self):
         """

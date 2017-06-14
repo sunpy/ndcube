@@ -519,6 +519,7 @@ class CubeError(Exception):
     def __init__(self, value, msg):
         Exception.__init__(self, msg)
         self.value = value
+        self.message = msg
 
     def __str__(self):
         return 'ERROR ' + repr(self.value) + ' (' \
