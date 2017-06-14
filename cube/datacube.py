@@ -259,6 +259,9 @@ class Cube(astropy.nddata.NDDataArray):
 
     @classmethod
     def _new_instance(cls, data, wcs, errors=None, **kwargs):
+        """
+        Instantiate a new instance of this class using given data.
+        """
         return cls(data, wcs, errors=errors, **kwargs)
 
     def truncate(self, slice_data):
@@ -291,7 +294,7 @@ class Cube(astropy.nddata.NDDataArray):
             data = data[slice_data]
             wcs = wcs.slice(slice_data, numpy_order=False)
             mask = mask[slice_data]
-            return self._new_instance(data, wcs)
+            return self._new_instance(data, wcs, mask=mask)
 
         slice_parameters_list = list(slice_data)
         for i, _slice in enumerate(slice_parameters_list):
@@ -302,7 +305,7 @@ class Cube(astropy.nddata.NDDataArray):
         wcs = wcs.slice(slice_parameters_list, numpy_order=False)
         mask = mask[slice_parameters_list]
 
-        return self._new_instance(data, wcs)
+        return self._new_instance(data, wcs, mask=mask)
 
     def slice_to_map(self, chunk, snd_dim=None, *args, **kwargs):
         """
