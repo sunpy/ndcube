@@ -264,49 +264,6 @@ class Cube(astropy.nddata.NDDataArray):
         """
         return cls(data, wcs, errors=errors, **kwargs)
 
-    def truncate(self, slice_data):
-        """
-        Truncates the data on any dimension.
-
-        Parameters
-        ----------
-        slice_data: `tuple` or `list` or `slice`
-            Given a list/tuple/slice like slice_data=(slice(2,3), None, slice(0,6)).
-            This will return cube with data sliced in 1st dimension between 2 and 3,
-            2nd dimension returned as it is and 3rd dimension sliced between 0 and 6.
-
-        Examples
-        --------
-        >>> from sunpycube.cube.datacube import Cube
-        >>> file = #location in computer
-        >>> cube = Cube(data,wcs)
-        >>> new_cube = cube.truncate((slice(3,4), None, slice(0,5)))
-        >>> new_cube1 = cube.truncate([slice(3,4), None, slice(0,5)])
-        >>> new_cube2 = cube.truncate(slice(3,4))
-
-
-        """
-        data = self.data
-        wcs = self.axes_wcs
-        mask = self.mask
-
-        if isinstance(slice_data, slice):
-            data = data[slice_data]
-            wcs = wcs.slice(slice_data, numpy_order=False)
-            mask = mask[slice_data]
-            return self._new_instance(data, wcs, mask=mask)
-
-        slice_parameters_list = list(slice_data)
-        for i, _slice in enumerate(slice_parameters_list):
-            if _slice is None:
-                slice_parameters_list[i] = slice(0, data.shape[i])
-
-        data = data[slice_parameters_list]
-        wcs = wcs.slice(slice_parameters_list, numpy_order=False)
-        mask = mask[slice_parameters_list]
-
-        return self._new_instance(data, wcs, mask=mask)
-
     def slice_to_map(self, chunk, snd_dim=None, *args, **kwargs):
         """
         Converts a given frequency chunk to a SunPy Map. Extra parameters are

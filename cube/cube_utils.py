@@ -226,7 +226,6 @@ def reduce_dim(cube, axis, keys):
     keys: slice object
         The slicing to apply
     """
-    waxis = -1 - axis
     start = keys.start if keys.start is not None else 0
     stop = keys.stop if keys.stop is not None else cube.data.shape[axis]
     if stop > cube.data.shape[axis]:
@@ -237,13 +236,12 @@ def reduce_dim(cube, axis, keys):
     indices = range(start, stop, step)
     newdata = cube.data.take(indices, axis=axis)
     newwcs = cube.axes_wcs.deepcopy()
-    if keys.step is not None:
-        newwcs.wcs.cdelt[waxis] *= keys.step
-    if keys.start is not None:
-        start = keys.start
-        newwcs.wcs.crpix[waxis] = 0
-        newwcs.wcs.crval[waxis] = (cube.axes_wcs.wcs.crval[waxis] +
-                                   cube.axes_wcs.wcs.cdelt[waxis] * start)
+
+    wcs_slice_data = [slice(start, stop)]
+    for i in range(axis-1, -1, -1):
+        wcs_slice_data.insert(0, slice(0, cube.data.shape[i]))
+    newwcs = newwcs.slice(wcs_slice_data, numpy_order=False)
+
     kwargs = {'meta': cube.meta, 'unit': cube.unit}
     if cube.uncertainty is not None:
         errors = deepcopy(cube.uncertainty)
@@ -253,8 +251,7 @@ def reduce_dim(cube, axis, keys):
         mask = cube.mask.take(indices, axis=axis)
         kwargs.update({'mask': mask})
 
-    from . import datacube as c
-    newcube = c.Cube(data=newdata, wcs=newwcs, **kwargs)
+    newcube = cube._new_instance(data=newdata, wcs=newwcs, **kwargs)
     return newcube
 
 
@@ -289,7 +286,6 @@ def getitem_3d(cube, item):
     stay_as_cube = (isinstance(item, slice) or
                     (isinstance(item, tuple) and
                      not any(isinstance(i, int) for i in item)))
-
     reducedcube = reduce_dim(cube, 0, slice(None, None, None))
     # XXX: We're not actually reducing a cube, just a way of copying the cube.
     if isinstance(item, tuple):
