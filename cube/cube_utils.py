@@ -240,7 +240,7 @@ def reduce_dim(cube, axis, keys):
     wcs_slice_data = [slice(start, stop)]
     for i in range(axis-1, -1, -1):
         wcs_slice_data.insert(0, slice(0, cube.data.shape[i]))
-    newwcs = newwcs.slice(wcs_slice_data, numpy_order=False)
+    newwcs = newwcs.slice(wcs_slice_data)
 
     kwargs = {'meta': cube.meta, 'unit': cube.unit}
     if cube.uncertainty is not None:
