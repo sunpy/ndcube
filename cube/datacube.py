@@ -33,7 +33,7 @@ from sunpycube.spectra.spectral_cube import SpectralCube
 from sunpycube.cube import cube_utils as cu
 from sunpycube import wcs_util as wu
 
-__all__ = ['Cube']
+__all__ = ['Cube', 'CubeSequence']
 # TODO: use uncertainties in all calculations and conversions
 
 
@@ -495,11 +495,29 @@ class Cube(astropy.nddata.NDDataArray):
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
-        if not self._array_is_aligned():
-            raise cu.CubeError(6, "Slicing on unaligned wcs-array systems " +
-                               "not supported at the moment")
         pixels = cu.pixelize_slice(item, self.axes_wcs)
         if self.data.ndim == 3:
             return cu.getitem_3d(self, pixels)
         else:
             return cu.getitem_4d(self, pixels)
+
+class CubeSequence(object):
+    """
+    Class representing list of cubes.
+
+    Attributes
+    ----------
+    data_list : `list`
+        List of cubes.
+    """
+
+    def __init__(self, data_list):
+        if not all(isinstance(data, Cube) for data in data_list):
+            raise ValueError("data list should be of cube object")
+
+        self.data = data_list
+
+    def __getitem__(self, item):
+        if item is None or (isinstance(item, tuple) and None in item):
+            raise IndexError("None indices not supported")
+        return cu.get_cube_from_sequence(self, item) 

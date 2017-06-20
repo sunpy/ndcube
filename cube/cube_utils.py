@@ -50,8 +50,8 @@ def orient(array, wcs, *extra_arrs):
     else:
         array_order = select_order(axtypes)
     result_array = array.transpose(array_order)
-    wcs_order = np.array(select_order(axtypes))[::-1]
-
+    wcs_order = np.array(select_order(axtypes))
+    
     result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
     result_wcs.was_augmented = wcs.was_augmented
     result_wcs.oriented = True
@@ -503,6 +503,20 @@ def _convert_slice(item, wcs, axis, _source='cube'):
 
     return slice(start, end, delta)
 
+def get_cube_from_sequence(cubesequence, item):
+    """
+    Handles CubeSequence's __getitem__ method for list of cubes.
+
+    Parameters
+    ----------
+    cubesequence: sunpycube.CubeSequence object
+        The cubesequence to get the item from
+    item: int, slice object, or tuple of these
+        The item to get from the cube
+    """
+    if isinstance(item, int):
+        return cubesequence.data[item]
+    return cubesequence.data[item[0]][item[1::]]
 
 class CubeError(Exception):
     """
