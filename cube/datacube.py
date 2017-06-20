@@ -104,7 +104,7 @@ class Cube(astropy.nddata.NDDataArray):
             The style of plot to be used. Default is 'imshow'
         """
         if axes is None:
-            axes = wcsaxes_compat.gca_wcs(slices=("x", "y", offset))
+            axes = wcsaxes_compat.gca_wcs(self.axes_wcs, slices=("x", "y", offset))
         
         if unit_x_axis is not None:
             axes.coords[2].set_format_unit(unit_x_axis)
@@ -152,7 +152,7 @@ class Cube(astropy.nddata.NDDataArray):
             The style of plot to be used. Default is 'imshow'
         """
         if axes is None:
-            axes = wcsaxes_compat.gca_wcs(slices=("x", offset, "y"))
+            axes = wcsaxes_compat.gca_wcs(self.axes_wcs, slices=("x", offset, "y"))
 
         if unit_x_axis is not None:
             axes.coords[2].set_format_unit(unit_x_axis)
