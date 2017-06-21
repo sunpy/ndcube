@@ -519,7 +519,7 @@ def get_cube_from_sequence(cubesequence, item):
     """
     if isinstance(item, int):
         return cubesequence.data[item]
-    return cubesequence.data[item[-1]][item[:-1:]]
+    return cubesequence.data[item[0]][item[1::]]
 
 class CubeError(Exception):
     """
