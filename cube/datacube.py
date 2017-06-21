@@ -511,20 +511,15 @@ class CubeSequence(object):
     data_list : `list`
         List of cubes.
 
-    meta : `astropy.io.fits.header.Header` or None
+    meta : `dict` or None
         The header of the CubeSequence.
     """
 
     def __init__(self, data_list, meta=None):
         if not all(isinstance(data, Cube) for data in data_list):
             raise ValueError("data list should be of cube object")
-
-        if not isinstance(meta, astropy.io.fits.header.Header):
-            raise ValueError("meta shoulld be astropy.io.fits.header.Header instance")
-
         self.data = data_list
-        if meta is not None:
-            self.meta = dict(meta)
+        self.meta = meta
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
