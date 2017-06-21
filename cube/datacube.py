@@ -16,7 +16,6 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.nddata
-import astropy.io.fits.header
 from astropy import units as u
 from astropy.units import sday  # sidereal day
 
