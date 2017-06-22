@@ -520,6 +520,49 @@ def get_cube_from_sequence(cubesequence, item):
         return cubesequence.data[item]
     return cubesequence.data[item[0]][item[1::]]
 
+def index_sequence_as_cube(cubesequence, item):
+    """
+    Enables CubeSequence to be indexed as a single Cube.
+
+    This is only possible if cubesequence.common_axis is set,
+    i.e. if the Cubes are sequence in order along one of the Cube axes.
+    For example, if cubesequence.common_axis=1 where the first axis is
+    time, and the Cubes are sequence chronologically such that the last
+    time slice of one Cube is directly followed in time by the first time
+    slice of the next Cube, then this function allows the CubeSequence to
+    be indexed as though all Cubes were combined into one ordered along
+    the time axis.
+
+    Parameters
+    ----------
+    cubesequence: sunpycube.CubeSequence object
+        The cubesequence to get the item from
+    item: int, slice object, or tuple of these
+        The item to get from the cube.  If tuple length must be <= number
+        of dimensions in single Cube.
+
+    Example
+    -------
+    >>> # Say we have three Cubes each cube has common_axis=1 is time and shape=(3,3,3)
+    >>> data_list = [cubeA, cubeB, cubeC]
+    >>> cs = CubeSequence(data_list, meta=None, common_axis=1)
+    >>> # return zeroth time slice of cubeB in via normal CubeSequence indexing.
+    >>> cs[1,:,0,:]
+    >>> # Return same slice using this function
+    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0, (slice(0, cubeB.shape[2]))
+
+    """
+    cumul_cube_lengths = np.cumsum(np.array([c.shape for c in cubesequence.data]))
+    item_list = list(item)
+    if type(item_list[cubesequence.common_axis]) is int:
+        sequence_index = np.where(cumul_cube_lengths < item_list[cubesequence.common_axis])[0][-1]
+        cube_index = item[cubesequence.common_axis] - cumul_cube_lengths[sequence_index]
+        item_list[cubesequence.common_axis] = cube_index
+        item_list.insert(0, sequence_index)
+        item_tuple = tuple(item_list)
+        return cubesequence[item_tuple]
+    
+
 class CubeError(Exception):
     """
     Class for handling Cube errors.

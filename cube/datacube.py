@@ -543,13 +543,21 @@ class CubeSequence(object):
 
     meta : `dict` or None
         The header of the CubeSequence.
+
+    common_axis: `int` or None
+        The data axis which is common between the CubeSequence and the Cubes within.
+        For example, if the Cubes are sequenced in chronological order and time is
+        one of the zeroth axis of each Cube, then common_axis should be se to 0.
+        This enables the option for the CubeSequence to be indexed as though it is
+        one single Cube.
     """
 
-    def __init__(self, data_list, meta=None):
+    def __init__(self, data_list, meta=None, common_axis=None):
         if not all(isinstance(data, Cube) for data in data_list):
             raise ValueError("data list should be of cube object")
         self.data = data_list
         self.meta = meta
+        self.common_axis = common_axis
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
