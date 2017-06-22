@@ -349,6 +349,9 @@ def getitem_4d(cube, item):
             if isinstance(item[i], slice):
                 reducedcube = reduce_dim(reducedcube, i, item[i])
 
+    if isinstance(item, slice):
+        reducedcube = reduce_dim(reducedcube, 0, item)
+
     if slice_to_map:
         result = handle_slice_to_map(reducedcube, item)
     elif slice_to_spectrum:
