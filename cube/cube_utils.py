@@ -50,7 +50,7 @@ def orient(array, wcs, *extra_arrs):
     else:
         array_order = select_order(axtypes)
     result_array = array.transpose(array_order)
-    wcs_order = np.array(select_order(axtypes))[::-1]
+    wcs_order = np.array(select_order(axtypes))
 
     result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
     result_wcs.was_augmented = wcs.was_augmented
@@ -293,6 +293,9 @@ def getitem_3d(cube, item):
             if isinstance(item[i], slice):
                 reducedcube = reduce_dim(reducedcube, i, item[i])
 
+    if isinstance(item, slice):
+        reducedcube = reduce_dim(reducedcube, 0, item)
+
     if slice_to_map:
         result = handle_slice_to_map(reducedcube, item)
     elif slice_to_spectrum:
@@ -341,6 +344,9 @@ def getitem_4d(cube, item):
         for i in range(len(item)):
             if isinstance(item[i], slice):
                 reducedcube = reduce_dim(reducedcube, i, item[i])
+
+    if isinstance(item, slice):
+        reducedcube = reduce_dim(reducedcube, 0, item)
 
     if slice_to_map:
         result = handle_slice_to_map(reducedcube, item)
@@ -499,6 +505,20 @@ def _convert_slice(item, wcs, axis, _source='cube'):
 
     return slice(start, end, delta)
 
+def get_cube_from_sequence(cubesequence, item):
+    """
+    Handles CubeSequence's __getitem__ method for list of cubes.
+
+    Parameters
+    ----------
+    cubesequence: sunpycube.CubeSequence object
+        The cubesequence to get the item from
+    item: int, slice object, or tuple of these
+        The item to get from the cube
+    """
+    if isinstance(item, int):
+        return cubesequence.data[item]
+    return cubesequence.data[item[0]][item[1::]]
 
 class CubeError(Exception):
     """
