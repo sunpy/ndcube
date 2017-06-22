@@ -77,8 +77,7 @@ class Cube(astropy.nddata.NDDataArray):
         # Also it's called axes_wcs because wcs belongs to astropy.nddata and
         # that messes up slicing.
 
-    def plot_wavelength_slice(self, offset, axes=None, unit_x_axis=None,
-                            unit_y_axis=None, style='imshow', **kwargs):
+    def plot_wavelength_slice(self, offset, axes=None, style='imshow', **kwargs):
         """
         Plots an x-y graph at a certain specified wavelength onto the current
         axes. Keyword arguments are passed on to matplotlib.
@@ -94,25 +93,11 @@ class Cube(astropy.nddata.NDDataArray):
         axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
             The axes to plot onto. If None the current axes will be used.
 
-        unit_x_axis: `astropy.units.Unit`
-            The unit of x axis.
-
-        unit_y_axis: `astropy.units.Unit`
-            The unit of y axis.
-
         style: 'imshow' or 'pcolormesh'
             The style of plot to be used. Default is 'imshow'
         """
         if axes is None:
             axes = wcsaxes_compat.gca_wcs(self.axes_wcs, slices=("x", "y", offset))
-        
-        if unit_x_axis is not None:
-            axes.coords[2].set_format_unit(unit_x_axis)
-            axes.coords[2].set_ticks(exclude_overlapping=True)
-
-        if unit_y_axis is not None:
-            axes.coords[1].set_format_unit(unit_y_axis)
-            axes.coords[1].set_ticks(exclude_overlapping=True)
 
         data = self._choose_wavelength_slice(offset)
         if data is None:
@@ -125,8 +110,7 @@ class Cube(astropy.nddata.NDDataArray):
 
         return plot
 
-    def plot_x_slice(self, offset, axes=None, unit_x_axis=None,
-                    unit_y_axis=None, style='imshow', **kwargs):
+    def plot_x_slice(self, offset, axes=None, style='imshow', **kwargs):
         """
         Plots an x-y graph at a certain specified wavelength onto the current
         axes. Keyword arguments are passed on to matplotlib.
@@ -142,25 +126,11 @@ class Cube(astropy.nddata.NDDataArray):
         axes: `astropy.visualization.wcsaxes.core.WCSAxes` or None:
             The axes to plot onto. If None the current axes will be used.
 
-        unit_x_axis: `astropy.units.Unit`
-            The unit of y axis.
-
-        unit_y_axis: `astropy.units.Unit`
-            The unit of y axis.
-
         style: 'imshow' or 'pcolormesh'
             The style of plot to be used. Default is 'imshow'
         """
         if axes is None:
             axes = wcsaxes_compat.gca_wcs(self.axes_wcs, slices=("x", offset, "y"))
-
-        if unit_x_axis is not None:
-            axes.coords[2].set_format_unit(unit_x_axis)
-            axes.coords[2].set_ticks(exclude_overlapping=True)
-
-        if unit_y_axis is not None:
-            axes.coords[1].set_format_unit(unit_y_axis)
-            axes.coords[1].set_ticks(exclude_overlapping=True)
 
         data = self._choose_x_slice(offset)
         if data is None:
