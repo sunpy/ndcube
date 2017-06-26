@@ -267,19 +267,19 @@ def getitem_3d(cube, item):
         The item to get from the cube
     """
     axes = cube.axes_wcs.wcs.ctype
-    slice_to_map = (axes[-2] != 'WAVE' and
+    slice_to_map = (axes[1] != 'WAVE' and
                     (isinstance(item, int) or
                      iter_isinstance(item, (int, slice), (int, slice, slice))))
     slice_to_spectrum = (((isinstance(item, int) or
                            iter_isinstance(item, (int, slice),
-                                           (int, slice, slice),
-                                           (int, slice, int)))
-                          and axes[-2] == 'WAVE')
-                         or (axes[-1] == 'WAVE' and
+                                                 (int, slice, slice),
+                                                 (int, slice, int)))
+                          and axes[1] == 'WAVE')
+                         or (axes[0] == 'WAVE' and
                              iter_isinstance(item, (slice, int, int))))
     slice_to_spectrogram = (iter_isinstance(item, (slice, slice, int)) and
-                            axes[-2] == 'WAVE')
-    slice_to_lightcurve = (axes[-2] == 'WAVE' and
+                            axes[1] == 'WAVE')
+    slice_to_lightcurve = (axes[1] == 'WAVE' and
                            (iter_isinstance(item, (slice, int, int),
                                             (slice, int),
                                             (slice, int, slice))))
@@ -393,6 +393,8 @@ def pixelize_slice(item, wcs, _source='cube'):
         result = tuple(result)
     elif isinstance(item, u.Quantity):
         result = convert_point(item.value, item.unit, wcs, 0)
+    elif isinstance(item, slice):
+        result = _convert_slice(item, wcs, 0, _source=_source)
     else:
         result = item
 
@@ -425,19 +427,17 @@ def convert_point(value, unit, wcs, axis, _source='cube'):
         value = value.value
         unit = value.unit
     if _source == 'cube':
-        wcsaxis = -1 - axis if wcs.oriented or not wcs.was_augmented \
-            else -2 - axis
+        wcsaxis = -1 - axis if wcs.oriented and not wcs.was_augmented \
+                  else -2 - axis
     else:
         wcsaxis = 1 - axis
     cunit = u.Unit(wcs.wcs.cunit[wcsaxis])
     crpix = wcs.wcs.crpix[wcsaxis]
     crval = wcs.wcs.crval[wcsaxis] * cunit
     cdelt = wcs.wcs.cdelt[wcsaxis] * cunit
-
     point = (value * unit).to(cunit)
     pointdelta = ((point - crval) / cdelt).value
     point = crpix + pointdelta
-
     return int(np.round(point))
 
 
@@ -467,8 +467,8 @@ def _convert_slice(item, wcs, axis, _source='cube'):
         opposite WCS convention)
     """
     if _source == 'cube':
-        wcs_ax = -2 - axis if wcs.was_augmented and not wcs.oriented \
-            else -1 - axis
+        wcs_ax = -2 - axis if wcs.was_augmented or not wcs.oriented \
+                else -1 - axis
     else:
         wcs_ax = 1 - axis
     steps = [item.start, item.stop, item.step]

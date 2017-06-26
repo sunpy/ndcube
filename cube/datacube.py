@@ -194,7 +194,7 @@ class Cube(astropy.nddata.NDDataArray):
         if self.data.ndim == 4:
             raise cu.CubeError(4, "Can only work with 3D cubes")
 
-        axis = 1 if self.axes_wcs.wcs.ctype[-1] in ['TIME', 'UTC'] else 0
+        axis = -2 if self.axes_wcs.wcs.ctype[0] in ['TIME', 'UTC'] else -1
         arr = None
         length = self.data.shape[axis]
         if isinstance(offset, int) and offset >= 0 and offset < length:
@@ -222,14 +222,14 @@ class Cube(astropy.nddata.NDDataArray):
             wavelength to the one specified.
         """
         arr = None
-        axis = 1 if self.axes_wcs.wcs.ctype[-2] != 'WAVE' else 2
+        axis = 0
         length = self.data.shape[axis]
         if isinstance(offset, int) and offset >= 0 and offset < length:
             arr = self.data.take(offset, axis=axis)
 
         if isinstance(offset, u.Quantity):
-            unit = self.axes_wcs.wcs.cunit[-1 - axis]
-            delta = self.axes_wcs.wcs.cdelt[-1 - axis] * unit
+            unit = self.axes_wcs.wcs.cunit[-1]
+            delta = self.axes_wcs.wcs.cdelt[-1] * unit
             wloffset = offset.to(unit) / delta
             wloffset = int(wloffset)
             if wloffset >= 0 and wloffset < self.data.shape[axis]:
@@ -260,15 +260,15 @@ class Cube(astropy.nddata.NDDataArray):
             Only used for hypercubes, the wavelength to choose from; works in
             the same way as chunk.
         """
-        if self.axes_wcs.wcs.ctype[-2] == 'WAVE' and self.data.ndim == 3:
+        if self.axes_wcs.wcs.ctype[1] == 'WAVE' and self.data.ndim == 3:
             error = "Cannot construct a map with only one spatial dimension"
             raise cu.CubeError(3, error)
         if isinstance(chunk, tuple):
-            item = slice(cu.pixelize(chunk[0], self.axes_wcs, 0),
-                         cu.pixelize(chunk[1], self.axes_wcs, 0), None)
+            item = slice(cu.pixelize(chunk[0], self.axes_wcs, -1),
+                         cu.pixelize(chunk[1], self.axes_wcs, -1), None)
             maparray = self.data[item].sum(0)
         else:
-            maparray = self.data[cu.pixelize(chunk, self.axes_wcs, 0)]
+            maparray = self.data[cu.pixelize(chunk, self.axes_wcs, -1)]
 
         if self.data.ndim == 4:
             if snd_dim is None:
@@ -276,11 +276,11 @@ class Cube(astropy.nddata.NDDataArray):
                 raise cu.CubeError(4, error)
 
             if isinstance(snd_dim, tuple):
-                item = slice(cu.pixelize(snd_dim[0], self.axes_wcs, 1),
-                             cu.pixelize(snd_dim[1], self.axes_wcs, 1), None)
+                item = slice(cu.pixelize(snd_dim[0], self.axes_wcs, -1),
+                             cu.pixelize(snd_dim[1], self.axes_wcs, -1), None)
                 maparray = maparray[item].sum(0)
             else:
-                maparray = maparray[cu.pixelize(snd_dim, self.axes_wcs, 1)]
+                maparray = maparray[cu.pixelize(snd_dim, self.axes_wcs, -1)]
 
         mapheader = MetaDict(self.meta)
         gmap = GenericMap(data=maparray, header=mapheader, *args, **kwargs)
@@ -301,10 +301,10 @@ class Cube(astropy.nddata.NDDataArray):
         x_coord: int or astropy quantity, optional
             In the case of hypercubes, specify an extra celestial coordinate.
         """
-        if self.axes_wcs.wcs.ctype[-1] not in ['TIME', 'UTC']:
+        if self.axes_wcs.wcs.ctype[0] not in ['TIME', 'UTC']:
             raise cu.CubeError(1,
                                'Cannot create a lightcurve with no time axis')
-        if self.axes_wcs.wcs.ctype[-2] != 'WAVE':
+        if self.axes_wcs.wcs.ctype[1] != 'WAVE':
             raise cu.CubeError(2, 'A spectral axis is needed in a lightcurve')
         if self.data.ndim == 3:
             data = self._choose_wavelength_slice(wavelength)
@@ -345,10 +345,10 @@ class Cube(astropy.nddata.NDDataArray):
         """
         if 'WAVE' not in self.axes_wcs.wcs.ctype:
             raise cu.CubeError(2, 'Spectral axis needed to create a spectrum')
-        axis = 0 if self.axes_wcs.wcs.ctype[-1] == 'WAVE' else 1
+        axis = -1 if self.axes_wcs.wcs.ctype[0] == 'WAVE' else -2
         pixels = [cu.pixelize(coord, self.axes_wcs, axis) for coord in coords]
         item = range(len(pixels))
-        if axis == 0:
+        if axis == -1:
             item[1:] = pixels
             item[0] = slice(None, None, None)
             item = [slice(None, None, None) if i is None else i for i in item]
@@ -361,15 +361,15 @@ class Cube(astropy.nddata.NDDataArray):
         data = self.data[item]
         errors = (None if self.uncertainty is None else self.uncertainty[item])
         mask = None if self.mask is None else self.mask[item]
-        kwargs.update({'uncertainty': errors, 'mask': mask})
         for i in range(len(pixels)):
             if pixels[i] is None:
                 if i == 0:
-                    sumaxis = 1 if axis == 0 else 0
+                    sumaxis = 1 if axis == -1 else 0
                 else:
                     sumaxis = 1 if i == 2 else i
                 data = data.sum(axis=sumaxis)
-
+                mask = mask.sum(axis=sumaxis)
+        kwargs.update({'uncertainty': errors, 'mask': mask})
         wavelength_axis = self.wavelength_axis()
         freq_axis, cunit = wavelength_axis.value, wavelength_axis.unit
         err = self.uncertainty[item] if self.uncertainty is not None else None
@@ -388,10 +388,10 @@ class Cube(astropy.nddata.NDDataArray):
         x_coord: int
             The x-coordinate to pick. This is only used for hypercubes.
         """
-        if self.axes_wcs.wcs.ctype[-1] not in ['TIME', 'UTC']:
+        if self.axes_wcs.wcs.ctype[0] not in ['TIME', 'UTC']:
             raise cu.CubeError(1,
                                'Cannot create a spectrogram with no time axis')
-        if self.axes_wcs.wcs.ctype[-2] != 'WAVE':
+        if self.axes_wcs.wcs.ctype[1] != 'WAVE':
             raise cu.CubeError(2, 'A spectral axis is needed in a spectrogram')
         if self.data.ndim == 3:
             data = self.data[:, :, cu.pixelize(y_coord, self.axes_wcs, 2)]
@@ -414,7 +414,7 @@ class Cube(astropy.nddata.NDDataArray):
             end = datetime.datetime.strptime(self.meta['DATE_END'], tformat)
         else:
             dif = time_axis[-1] - time_axis[0]
-            unit = self.axes_wcs.wcs.cunit[-1]
+            unit = self.axes_wcs.wcs.cunit[0]
             dif = dif * u.Unit(unit)
             days = dif.to(sday)
             lapse = datetime.timedelta(days.value)
@@ -490,15 +490,15 @@ class Cube(astropy.nddata.NDDataArray):
         Returns a numpy array containing the time values for the cube's time
         dimension, as well as the unit used.
         """
-        if self.axes_wcs.wcs.ctype[-1] not in ['TIME', 'UTC']:
+        if self.axes_wcs.wcs.ctype[0] not in ['TIME', 'UTC']:
             raise cu.CubeError(1, 'No time axis present')
-        delta = self.axes_wcs.wcs.cdelt[-1]
-        crpix = self.axes_wcs.wcs.crpix[-1]
-        crval = self.axes_wcs.wcs.crval[-1]
+        delta = self.axes_wcs.wcs.cdelt[0]
+        crpix = self.axes_wcs.wcs.crpix[0]
+        crval = self.axes_wcs.wcs.crval[0]
         start = crval - crpix * delta
         stop = start + len(self.data) * delta
-        cunit = u.Unit(self.axes_wcs.wcs.cunit[-1])
-        return np.linspace(start, stop, num=self.data.shape[0]) * cunit
+        cunit = u.Unit(self.axes_wcs.wcs.cunit[0])
+        return np.linspace(start, stop, num=self.data.shape[-1]) * cunit
 
     def wavelength_axis(self):
         """
@@ -508,14 +508,14 @@ class Cube(astropy.nddata.NDDataArray):
         if 'WAVE' not in self.axes_wcs.wcs.ctype:
             raise cu.CubeError(2,
                                'No energy (wavelength, frequency) axis found')
-        axis = 0 if self.axes_wcs.wcs.ctype[-1] == 'WAVE' else 1
-        delta = self.axes_wcs.wcs.cdelt[-1 - axis]
-        crpix = self.axes_wcs.wcs.crpix[-1 - axis]
-        crval = self.axes_wcs.wcs.crval[-1 - axis]
+        axis = 0 if self.axes_wcs.wcs.ctype[0] == 'WAVE' else 1
+        delta = self.axes_wcs.wcs.cdelt[axis]
+        crpix = self.axes_wcs.wcs.crpix[axis]
+        crval = self.axes_wcs.wcs.crval[axis]
         start = crval - crpix * delta
-        stop = start + self.data.shape[axis] * delta
-        cunit = u.Unit(self.axes_wcs.wcs.cunit[-1 - axis])
-        return np.linspace(start, stop, num=self.data.shape[axis]) * cunit
+        stop = start + self.data.shape[-1 - axis] * delta
+        cunit = u.Unit(self.axes_wcs.wcs.cunit[axis])
+        return np.linspace(start, stop, num=self.data.shape[-1 - axis]) * cunit
 
     def _array_is_aligned(self):
         """
