@@ -332,23 +332,32 @@ def test_4d_getitem_to_spectrum_world_coord():
         assert isinstance(s, Spectrum)
 
 
-# def test_4d_getitem_to_cube():
-#     slices = [hcube[1], hcube[1, 0:1], hcube[0, :, 0:2], hcube[0, :, :, 0:2],
-#               hcube[1:3, 1], hcube[0:2, 0, :], hcube[:, 0, :, 0:2],
-#               hcube[1:3, :, 1, 1:2], hcube[:, :, 0], hcube[:, :, :, 2]]
-#     for s in slices:
-#         assert isinstance(s, Cube) and s.data.ndim == 3
+def test_4d_getitem_to_cube():
+    slices = [hcube[1], 
+              hcube[1, 0:1], 
+              hcube[0, :, 0:2], 
+              hcube[0, :, :, 0:2],
+              hcube[1:3, 1], 
+              hcube[0:2, 0, :], 
+              hcube[:, 0, :, 0:2],
+              hcube[0:1, 0, :, 1:2], 
+              hcube[:, 1, :, :]]
+    for s in slices:
+        assert isinstance(s, Cube) and s.data.ndim == 3
 
 
-# def test_4d_getitem_to_cube_world_coord():
-#     slices = [hcube[0.3 * u.deg], hcube[0.5 * u.deg, 0:1],
-#             hcube[0.3 * u.deg, :, 0:2], hcube[0.5 * u.deg, :, :, 0:2],
-#             hcube[1:3, 0.6 * u.deg], hcube[0:2, 0.2 * u.deg, :],
-#             hcube[:, 0.2 * u.deg, :, 0:2],
-#             hcube[0.0 * u.deg:1, :, 1, 1:2],
-#             hcube[:, :, 100 * u.Angstrom], hcube[:, :, :, 0.6 * u.min]]
-#     for s in slices:
-#       assert isinstance(s, Cube) and s.data.ndim == 3
+def test_4d_getitem_to_cube_world_coord():
+    slices = [hcube[0.3 * u.deg], 
+              hcube[0.5 * u.deg, 0:1],
+              hcube[0.3 * u.deg, :, 0:2], 
+              hcube[0.5 * u.deg, :, :, 0:2],
+              hcube[1:3, 0.6 * u.deg], 
+              hcube[0:2, 0.2 * u.deg, :],
+              hcube[:, 0.2 * u.deg, :, 0:2],
+              hcube[0.0 * u.deg, :, :, 1:2],
+              hcube[:, 0.1 * u.deg,:]]
+    for s in slices:
+      assert isinstance(s, Cube) and s.data.ndim == 3
 
 
 def test_4d_getitem_to_hypercube():
@@ -357,12 +366,12 @@ def test_4d_getitem_to_hypercube():
         assert isinstance(s, Cube) and s.data.ndim == 4
 
 
-# def test_4d_getitem_to_hypercube_world_coord():
-#     slices = [hcube[0.4 * u.min:1.2 * u.min:0.8, :, :, 0:1],
-#               hcube[1:, 10:10.4 * u.nm:2, :], hcube[2:, 10:10.4 * u.nm:2],
-#               hcube[0.4 * u.min:1.2 * u.min:0.8]]
-#     for s in slices:
-#         assert isinstance(s, Cube) and s.data.ndim == 4
+def test_4d_getitem_to_hypercube_world_coord():
+    slices = [hcube[0.4 * u.deg:1.2 * u.deg:0.8, :, :, 0:1],
+              hcube[2:, 0: 0.5* u.deg:1],
+              hcube[0.4 * u.deg:1.2 * u.deg:0.8]]
+    for s in slices:
+        assert isinstance(s, Cube) and s.data.ndim == 4
 
 
 def test_4d_getitem_to_spectrogram():
