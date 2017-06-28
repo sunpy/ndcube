@@ -518,8 +518,19 @@ def get_cube_from_sequence(cubesequence, item):
         The item to get from the cube
     """
     if isinstance(item, int):
-        return cubesequence.data[item]
-    return cubesequence.data[item[0]][item[1::]]
+        result = cubesequence.data[item]
+
+    if isinstance(item, slice):
+        data = cubesequence.data[item]
+        print(type(data))
+        meta = cubesequence.meta
+        result = cubesequence._new_instance(data, meta)
+
+    if isinstance(item, tuple):
+        data = cubesequence.data[item[0]][item[1::]]
+        meta = cubesequence.meta
+        result = cubesequence._new_instance(data, meta)
+    return result
 
 
 def index_sequence_as_cube(cubesequence, item):

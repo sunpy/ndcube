@@ -558,9 +558,17 @@ class CubeSequence(object):
         if not all(isinstance(data, Cube) for data in data_list):
             raise ValueError("data list should be of cube object")
         self.data = data_list
+        self.len = len(data_list)
         self.meta = meta
         self.common_axis = common_axis
         self.shape = tuple([len(data_list)] + list(data_list[0].shape))
+
+    @classmethod
+    def _new_instance(cls, data_list, meta=None):
+        """
+        Instantiate a new instance of this class using given data.
+        """
+        return cls(data_list, meta=meta)
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
