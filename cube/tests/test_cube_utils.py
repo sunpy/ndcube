@@ -1,26 +1,32 @@
 # -*- coding: utf-8 -*-
 import pytest
-from sunpy.cube import cube_utils as cu
+from sunpycube.cube import cube_utils as cu
 import numpy as np
-from sunpy.wcs.wcs import WCS
+from sunpycube.wcs_util import WCS
 from astropy import units as u
 
-ht = {'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 0, 'CRVAL1': 0,
-      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
-      'CTYPE3': 'TIME    ', 'CUNIT3': 'min', 'CDELT3': 0.4, 'CRPIX3': 0, 'CRVAL3': 0}
+ht = {
+      'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2,
+      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 3,
+      'CTYPE3': 'TIME    ', 'CUNIT3': 'min', 'CDELT3': 0.4, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 4
+      }
 wt = WCS(header=ht, naxis=3)
-hm = {'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5,
-      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 10,
-      'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1}
+
+hm = {
+    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 4,
+    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 3,
+    'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2,
+      }
 wm = WCS(header=hm, naxis=3)
+
 data = np.array([[[1,2,3,4], [2,4,5,3], [0,-1,2,3]],
                  [[2,4,5,1], [10,5,2,2], [10,3,3,0]]])
 
 
 def test_orient_with_time():
     newdata, newwcs = cu.orient(data, wt)
-    assert newwcs.wcs.axis_types[-2] == 3000  # code for a spectral dimension
-    assert newwcs.wcs.axis_types[-1] == 0  # code for an unknown axis - time
+    assert newwcs.wcs.axis_types[1] == 3000  # code for a spectral dimension
+    assert newwcs.wcs.axis_types[0] == 0  # code for an unknown axis - time
     assert newwcs.naxis == 4
     assert newdata.shape == (2, 3, 4)  # the time dimension should be first
     with pytest.raises(ValueError):
@@ -33,8 +39,8 @@ def test_orient_with_time():
 
 def test_orient_no_time():
     newdata, newwcs = cu.orient(data, wm)
-    assert newwcs.wcs.axis_types[-1] == 3000
-    assert newdata.shape == (3, 2, 4)
+    assert newwcs.wcs.axis_types[0] == 3000
+    assert newdata.shape == (2, 3, 4)
 
 
 def test_select_order():
@@ -93,13 +99,13 @@ def test_convert_slice():
               (slice(9.6, 10.2 * u.Angstrom, None), wm, 1),
               (slice(9.6 * u.Angstrom, 10.2 * u.Angstrom, None), wm, 1),
               (slice(None, None, 0.8 * u.min), wt, 0),
-              (slice(3 * u.deg, 14.5, 2), wm, 2)]
+              (slice(0 * u.deg, 14.5, 2), wt, 2)]
 
     results = [slice(1, None, 2.2),
                slice(-2, 1, None),
                slice(-2, 1, None),
                slice(None, None, 2),
-               slice(7, 30, 4)]
+               slice(0, 29, 4)]
 
     for i in range(len(slices)):
         assert cu._convert_slice(*slices[i]) == results[i]
