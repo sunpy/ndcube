@@ -563,3 +563,9 @@ class CubeSequence(object):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         return cu.get_cube_from_sequence(self, item) 
+
+    def index_as_cube(self, item):
+        """
+        Method to slice the cubesequence instance as a single cube
+        """
+        return cu.index_sequence_as_cube(self, item)
