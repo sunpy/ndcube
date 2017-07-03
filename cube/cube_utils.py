@@ -522,7 +522,6 @@ def get_cube_from_sequence(cubesequence, item):
 
     if isinstance(item, slice):
         data = cubesequence.data[item]
-        print(type(data))
         meta = cubesequence.meta
         result = cubesequence._new_instance(data, meta)
 
