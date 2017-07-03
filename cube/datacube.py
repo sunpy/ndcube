@@ -33,6 +33,7 @@ from sunpycube.spectra.spectrum import Spectrum
 from sunpycube.spectra.spectrogram import Spectrogram
 from sunpycube.spectra.spectral_cube import SpectralCube
 from sunpycube.cube import cube_utils as cu
+from sunpycube.visualization import animation as ani
 from sunpycube import wcs_util as wu
 
 __all__ = ['Cube', 'CubeSequence']
@@ -562,4 +563,8 @@ class CubeSequence(object):
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
-        return cu.get_cube_from_sequence(self, item) 
+        return cu.get_cube_from_sequence(self, item)
+
+    def animate(self, *args, **kwargs):
+        i = ani.ImageAnimatorCubeSequence(self, *args, **kwargs)
+        return i

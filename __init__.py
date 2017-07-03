@@ -21,4 +21,5 @@ except ImportError:
     __githash__ = ''
 
 from sunpycube.cube import datacube, cube_utils
+from sunpycube.visualization import animation
 from sunpycube.spectra import spectral_cube, spectrum, spectrogram
