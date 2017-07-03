@@ -616,13 +616,11 @@ def index_sequence_as_cube(cubesequence, item):
     return cubesequence[item_tuple]
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
-    if cube_like_index > cumul_cube_lengths[-1]:
-        raise ValueError("Out of range must have length between 0 and {0} inclusive.".format(cumul_cube_lengths[-1]-1))
     if cube_like_index < cumul_cube_lengths[0]:
         sequence_index = 0
         cube_index = cube_like_index
     else:
-        sequence_index = np.where(cumul_cube_lengths < cube_like_index)[0][-1]
+        sequence_index = np.where(cumul_cube_lengths <= cube_like_index)[0][-1]
         cube_index = cube_like_index - cumul_cube_lengths[sequence_index]
         sequence_index += 1
     return sequence_index, cube_index
