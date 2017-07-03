@@ -567,4 +567,10 @@ class CubeSequence(object):
 
     def animate(self, *args, **kwargs):
         i = ani.ImageAnimatorCubeSequence(self, *args, **kwargs)
-        return i
+        return i 
+
+    def index_as_cube(self, item):
+        """
+        Method to slice the cubesequence instance as a single cube
+        """
+        return cu.index_sequence_as_cube(self, item)
