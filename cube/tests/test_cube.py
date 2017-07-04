@@ -149,215 +149,219 @@ def test_time_axis():
         cubem.time_axis()
 
 
-def test_slicing_first_axis():
-    # x-y-lambda slices
-    s1 = cubem[1]
-    s2 = cubem[0:2]
-    s3 = cubem[:]
-
-    # y-lambda-time slices
-    s4 = cube[1]
-    s5 = cube[0:2]
-    s6 = cube[:]
-
-    assert isinstance(s1, GenericMap)
-    assert isinstance(s2, Cube)
-    assert isinstance(s3, Cube)
-    assert isinstance(s4, Spectrum)
-    assert isinstance(s5, Cube)
-    assert isinstance(s6, Cube)
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[1], GenericMap),
+    (cubem[0:2], Cube),
+    (cubem[:], Cube),
+    (cube[1], Spectrum),
+    (cube[0:2], Cube),
+    (cube[:], Cube),
+])
+def test_slicing_first_axis(test_input, expected):
+    assert isinstance(test_input, expected)
     with pytest.raises(IndexError):
         cubem[None]
     with pytest.raises(IndexError):
         cube[None]
 
 
-def test_slicing_first_axis_world_coord():
-    # x-y-lambda slices
-    s1 = cubem[0.5 * u.deg]
-    s2 = cubem[0.5 * u.deg:10.4]
-    s3 = cubem[::0.4 * u.deg]
-
-    # y-lambda-time slices
-    s4 = cube[0.5 * u.deg]
-    s5 = cube[0:0.8 * u.deg]
-    s6 = cube[::1.0 * u.deg]
-
-    assert isinstance(s1, GenericMap)
-    assert isinstance(s2, Cube)
-    assert isinstance(s3, Cube)
-    assert isinstance(s4, Spectrum)
-    assert isinstance(s5, Cube)
-    assert isinstance(s6, Cube)
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[0.5 * u.deg], GenericMap),
+    (cubem[0.5 * u.deg:10.4], Cube),
+    (cubem[::0.4 * u.deg], Cube),
+    (cube[0.5 * u.deg], Spectrum),
+    (cube[0:0.8 * u.deg], Cube),
+    (cube[::1.0 * u.deg], Cube),
+])
+def test_slicing_first_axis_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
     with pytest.raises(IndexError):
         cubem[None]
     with pytest.raises(IndexError):
         cube[None]
 
 
-def test_slicing_second_axis():
-              # x-y-lambda
-    slices = [cubem[:, 1], cubem[:, 0:2], cubem[:, :],
-              cubem[1, 1], cubem[1, 0:2], cubem[1, :],
-              # y-lambda-time
-              cube[:, 1], cube[:, 0:2], cube[:, :],
-              cube[1, 1], cube[1, 0:2], cube[1, :]]
-
-    types = [np.ndarray, Cube, Cube, 
-             np.ndarray, GenericMap, GenericMap,
-             LightCurve, Cube, Cube,
-             np.ndarray, Spectrum, Spectrum]
-    for (s, t) in zip(slices, types):
-        assert isinstance(s, t)
-
-
-def test_slicing_second_axis_world_coord():
-              # x-y-lambda
-    slices = [cubem[:, -0.5 * u.deg], cubem[:, -0.5:0.5 * u.deg],
-              cubem[:, ::1 * u.deg], cubem[0.5 * u.deg, 0 * u.deg],
-              cubem[1, -0.5:0.5 * u.deg], cubem[1, ::1 * u.deg],
-              # y-lambda-time
-              cube[:, 0.2 * u.Angstrom], cube[:, 0:0.4 * u.Angstrom],
-              cube[:, 0:0.4 * u.Angstrom:0.4], cube[1, 0.2 * u.Angstrom],
-              cube[0.5 * u.deg, 0:2], cube[0.5 * u.deg, 0:0.4 * u.Angstrom:0.4]
-              ]
-
-    types = [np.ndarray, Cube, Cube, np.ndarray, GenericMap, GenericMap,
-             LightCurve, Cube, Cube, np.ndarray, Spectrum, Spectrum]
-    for (s, t) in zip(slices, types):
-        assert isinstance(s, t)
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, 1], np.ndarray),
+    (cubem[:, 0:2], Cube),
+    (cubem[:, :], Cube),
+    (cubem[1, 1], np.ndarray),
+    (cubem[1, 0:2], GenericMap),
+    (cubem[1, :], GenericMap),
+    (cube[:, 1], LightCurve),
+    (cube[:, 0:2], Cube),
+    (cube[:, :], Cube),
+    (cube[1, 1], np.ndarray),
+    (cube[1, 0:2], Spectrum),
+    (cube[1, :], Spectrum),
+])
+def test_slicing_second_axis(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_slicing_third_axis():
-              # x-y-lambda
-    slices = [cubem[:, :, 1], cubem[:, :, 0:2], cubem[:, :, :],
-              cubem[:, 1, 1], cubem[:, 1, 0:2], cubem[:, 1, :],
-              cubem[1, :, 1], cubem[1, :, 0:2], cubem[1, :, :],
-              cubem[1, 1, 1], cubem[1, 1, 0:2], cubem[1, 1, :],
-              # y-lambda-time
-              cube[:, :, 1], cube[:, :, 0:2], cube[:, :, :],
-              cube[:, 1, 1], cube[:, 1, 0:2], cube[:, 1, :],
-              cube[1, :, 1], cube[1, :, 0:2], cube[1, :, :],
-              cube[1, 1, 1], cube[1, 1, 0:2], cube[1, 1, :]]
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, -0.5 * u.deg], np.ndarray),
+    (cubem[:, -0.5:0.5 * u.deg], Cube),
+    (cubem[:, ::1 * u.deg], Cube),
+    (cubem[0.5 * u.deg, 0 * u.deg], np.ndarray),
+    (cubem[1, -0.5:0.5 * u.deg], GenericMap),
+    (cubem[1, ::1 * u.deg], GenericMap),
+    (cube[:, 0.2 * u.Angstrom], LightCurve),
+    (cube[:, 0:0.4 * u.Angstrom], Cube),
+    (cube[:, 0:0.4 * u.Angstrom:0.4], Cube),
+    (cube[1, 0.2 * u.Angstrom], np.ndarray),
+    (cube[0.5 * u.deg, 0:2], Spectrum),
+    (cube[0.5 * u.deg, 0:0.4 * u.Angstrom:0.4], Spectrum),
 
-    types = [np.ndarray, Cube, Cube,
-             Spectrum, np.ndarray, np.ndarray,
-             np.ndarray, GenericMap, GenericMap,
-             int, np.ndarray, np.ndarray,
-
-             Spectrogram, Cube, Cube,
-             LightCurve, LightCurve, LightCurve,
-             Spectrum, Spectrum, Spectrum,
-             int, np.ndarray, np.ndarray]
-    for (s, t) in zip(slices, types):
-        assert isinstance(s, t)
+])
+def test_slicing_second_axis_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_slicing_third_axis_world_coord():
-              # x-y-lambda
-    slices = [cubem[:, :,  10 * u.Angstrom], cubem[:, :, 0.2:0.1 * u.Angstrom],
-              cubem[:, :, 0.2:1 * u.Angstrom:0.8],
-              cubem[:, -0.5 * u.deg, 10 * u.Angstrom], cubem[:, -0.5 * u.deg, 0:2],
-              cubem[:, -0.5 * u.deg, 0.2:1 * u.Angstrom:0.8],
-              cubem[0.5 * u.deg, :, 10 * u.Angstrom], cubem[1, :, 0.2:1 * u.Angstrom],
-              cubem[0.5 * u.deg, :, 0.2:1 * u.Angstrom:0.8],
-              cubem[0.5 * u.deg, -0.5 * u.deg, 10 * u.Angstrom],
-              cubem[1, 1, 0.2:1 * u.Angstrom],
-              cubem[0.5 * u.deg, -0.5 * u.deg, 0.2:1 * u.Angstrom:0.8],
-              # y-lambda-time
-              cube[:, :, 0.5 * u.min], cube[:, :, 0:1 * u.min],
-              cube[:, :, ::1 * u.min], cube[:, 0.2 * u.Angstrom, 0.5 * u.min],
-              cube[:, 1, 0:1 * u.min], cube[:, 0.2 * u.Angstrom, ::1 * u.min],
-              cube[0.5 * u.deg, :, 0.5 * u.min], cube[1, :, 0:1 * u.min],
-              cube[0.5 * u.deg, :, ::1 * u.min],
-              cube[0.5 * u.deg, 0.2 * u.Angstrom, 0.5 * u.min],
-              cube[0.5 * u.deg, 1, 0:1 * u.min], cube[0.5 * u.deg, 1, :]]
-
-    types = [np.ndarray, Cube, Cube,
-             Spectrum, np.ndarray, np.ndarray,
-             np.ndarray, GenericMap, GenericMap,
-             int, np.ndarray, np.ndarray,
-
-             Spectrogram, Cube, Cube,
-             LightCurve, LightCurve, LightCurve,
-             Spectrum, Spectrum, Spectrum,
-             int, np.ndarray, np.ndarray]
-    for (s, t) in zip(slices, types):
-        assert isinstance(s, t)
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, :, 1], np.ndarray),
+    (cubem[:, :, 0:2], Cube),
+    (cubem[:, :, :], Cube),
+    (cubem[:, 1, 1], Spectrum),
+    (cubem[:, 1, 0:2], np.ndarray),
+    (cubem[:, 1, :], np.ndarray),
+    (cubem[1, :, 1], np.ndarray),
+    (cubem[1, :, 0:2], GenericMap),
+    (cubem[1, :, :], GenericMap),
+    (cubem[1, 1, 1], int),
+    (cubem[1, 1, 0:2], np.ndarray),
+    (cubem[1, 1, :], np.ndarray),
+    (cube[:, :, 1], Spectrogram),
+    (cube[:, :, 0:2], Cube),
+    (cube[:, :, :], Cube),
+    (cube[:, 1, 1], LightCurve),
+    (cube[:, 1, 0:2], LightCurve),
+    (cube[:, 1, :], LightCurve),
+    (cube[1, :, 1], Spectrum),
+    (cube[1, :, 0:2], Spectrum),
+    (cube[1, :, :], Spectrum),
+    (cube[1, 1, 1], int),
+    (cube[1, 1, 0:2], np.ndarray),
+    (cube[1, 1, :], np.ndarray),
+])
+def test_slicing_third_axis(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_array():
-    slices = [hcube[1, 1, 1, 1], hcube[0, 1, 1],
-              hcube[1, 0, 1, :], hcube[1, 1, :, 2]]
-    assert isinstance(slices[0], int)
-    for s in slices[1:]:
-        assert isinstance(s, np.ndarray)
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, :,  10 * u.Angstrom], np.ndarray),
+    (cubem[:, :, 0.2:0.1 * u.Angstrom], Cube),
+    (cubem[:, :, 0.2:1 * u.Angstrom:0.8], Cube),
+    (cubem[:, -0.5 * u.deg, 10 * u.Angstrom], Spectrum),
+    (cubem[:, -0.5 * u.deg, 0:2], np.ndarray),
+    (cubem[:, -0.5 * u.deg, 0.2:1 * u.Angstrom:0.8], np.ndarray),
+    (cubem[0.5 * u.deg, :, 10 * u.Angstrom], np.ndarray),
+    (cubem[1, :, 0.2:1 * u.Angstrom], GenericMap),
+    (cubem[0.5 * u.deg, :, 0.2:1 * u.Angstrom:0.8], GenericMap),
+    (cubem[0.5 * u.deg, -0.5 * u.deg, 10 * u.Angstrom], int),
+    (cubem[1, 1, 0.2:1 * u.Angstrom], np.ndarray),
+    (cubem[0.5 * u.deg, -0.5 * u.deg, 0.2:1 * u.Angstrom:0.8], np.ndarray),
+    (cube[:, :, 0.5 * u.min], Spectrogram),
+    (cube[:, :, 0:1 * u.min], Cube),
+    (cube[:, :, ::1 * u.min], Cube),
+    (cube[:, 0.2 * u.Angstrom, 0.5 * u.min], LightCurve),
+    (cube[:, 1, 0:1 * u.min], LightCurve),
+    (cube[:, 0.2 * u.Angstrom, ::1 * u.min], LightCurve),
+    (cube[0.5 * u.deg, :, 0.5 * u.min], Spectrum),
+    (cube[1, :, 0:1 * u.min], Spectrum),
+    (cube[0.5 * u.deg, :, ::1 * u.min], Spectrum),
+    (cube[0.5 * u.deg, 0.2 * u.Angstrom, 0.5 * u.min], int),
+    (cube[0.5 * u.deg, 1, 0:1 * u.min], np.ndarray),
+    (cube[0.5 * u.deg, 1, :], np.ndarray),
+])
+def test_slicing_third_axis_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_array_world_coord():
-    slices = [hcube[1, 0.5 * u.deg, 1, 0.6 * u.min], hcube[0, 1, :, 1 * u.min],
-              hcube[0.7 * u.deg, 1, 93 * u.Angstrom],
-              hcube[0.5 * u.deg, 0.0 * u.deg, 1, :]]
-    assert isinstance(slices[0], int)
-    for s in slices[1:]:
-        assert isinstance(s, np.ndarray)
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[1, 1, 1, 1], int),
+    (hcube[0, 1, 1], np.ndarray),
+    (hcube[1, 0, 1, :], np.ndarray),
+    (hcube[1, 1, :, 2], np.ndarray),
+])
+def test_4d_getitem_to_array(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_map():
-    slices = [hcube[1, 0], hcube[1, 1, :], hcube[1, 1, :, 0:2]]
-    for s in slices:
-        assert isinstance(s, GenericMap)
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[1, 0.5 * u.deg, 1, 0.6 * u.min], int),
+    (hcube[0, 1, :, 1 * u.min], np.ndarray),
+    (hcube[0.7 * u.deg, 1, 93 * u.Angstrom], np.ndarray),
+    (hcube[0.5 * u.deg, 0.0 * u.deg, 1, :], np.ndarray),
+])
+def test_4d_getitem_to_array_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_map_world_coord():
-    slices = [hcube[0.5 * u.deg, 0], hcube[0.4 * u.deg, 0.0 * u.deg, :],
-              hcube[0.0 * u.deg, 0.5 * u.deg, :, 0:2]]
-    for s in slices:
-        assert isinstance(s, GenericMap)
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[1, 0], GenericMap),
+    (hcube[1, 1, :], GenericMap),
+    (hcube[1, 1, :, 0:2], GenericMap),
+])
+def test_4d_getitem_to_map(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_spectrum():
-    slices = [hcube[1, :, 1, 2], hcube[0, :, 0], hcube[1, :, 1, 0:2],
-              hcube[0, :, :, 0]]
-    for s in slices:
-        assert isinstance(s, Spectrum)
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[0.5 * u.deg, 0], GenericMap),
+    (hcube[0.4 * u.deg, 0.0 * u.deg, :], GenericMap),
+    (hcube[0.0 * u.deg, 0.5 * u.deg, :, 0:2], GenericMap)
+])
+def test_4d_getitem_to_map_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_spectrum_world_coord():
-    slices = [hcube[0.4 * u.deg, :, 95.0 * u.Angstrom, 2],
-              hcube[0.5 * u.deg, :, 100 * u.Angstrom], 
-              hcube[0.5 * u.deg, :, 1, :2],
-              hcube[0 * u.deg, :, :, 0]]
-    for s in slices:
-        assert isinstance(s, Spectrum)
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[1, :, 1, 2], Spectrum),
+    (hcube[0, :, 0], Spectrum),
+    (hcube[1, :, 1, 0:2], Spectrum),
+    (hcube[0, :, :, 0], Spectrum),
+])
+def test_4d_getitem_to_spectrum(test_input, expected):
+    assert isinstance(test_input, expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[0.4 * u.deg, :, 95.0 * u.Angstrom, 2], Spectrum),
+    (hcube[0.5 * u.deg, :, 100 * u.Angstrom], Spectrum),
+    (hcube[0.5 * u.deg, :, 1, :2], Spectrum),
+    (hcube[0 * u.deg, :, :, 0], Spectrum),
+])
+def test_4d_getitem_to_spectrum_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
 def test_4d_getitem_to_cube():
-    slices = [hcube[1], 
-              hcube[1, 0:1], 
-              hcube[0, :, 0:2], 
+    slices = [hcube[1],
+              hcube[1, 0:1],
+              hcube[0, :, 0:2],
               hcube[0, :, :, 0:2],
-              hcube[1:3, 1], 
-              hcube[0:2, 0, :], 
+              hcube[1:3, 1],
+              hcube[0:2, 0, :],
               hcube[:, 0, :, 0:2],
-              hcube[0:1, 0, :, 1:2], 
+              hcube[0:1, 0, :, 1:2],
               hcube[:, 1, :, :]]
     for s in slices:
         assert isinstance(s, Cube) and s.data.ndim == 3
 
 
 def test_4d_getitem_to_cube_world_coord():
-    slices = [hcube[0.3 * u.deg], 
+    slices = [hcube[0.3 * u.deg],
               hcube[0.5 * u.deg, 0:1],
-              hcube[0.3 * u.deg, :, 0:2], 
+              hcube[0.3 * u.deg, :, 0:2],
               hcube[0.5 * u.deg, :, :, 0:2],
-              hcube[1:3, 0.6 * u.deg], 
+              hcube[1:3, 0.6 * u.deg],
               hcube[0:2, 0.2 * u.deg, :],
               hcube[:, 0.2 * u.deg, :, 0:2],
               hcube[0.0 * u.deg, :, :, 1:2],
-              hcube[:, 0.1 * u.deg,:]]
+              hcube[:, 0.1 * u.deg, :]]
     for s in slices:
-      assert isinstance(s, Cube) and s.data.ndim == 3
+        assert isinstance(s, Cube) and s.data.ndim == 3
 
 
 def test_4d_getitem_to_hypercube():
@@ -368,7 +372,7 @@ def test_4d_getitem_to_hypercube():
 
 def test_4d_getitem_to_hypercube_world_coord():
     slices = [hcube[0.4 * u.deg:1.2 * u.deg:0.8, :, :, 0:1],
-              hcube[2:, 0: 0.5* u.deg:1],
+              hcube[2:, 0: 0.5 * u.deg:1],
               hcube[0.4 * u.deg:1.2 * u.deg:0.8]]
     for s in slices:
         assert isinstance(s, Cube) and s.data.ndim == 4
