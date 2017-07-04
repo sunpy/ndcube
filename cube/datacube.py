@@ -575,3 +575,52 @@ class CubeSequence(object):
         Method to slice the cubesequence instance as a single cube
         """
         return cu.index_sequence_as_cube(self, item)
+    def plot_x_slice(self, offset, **kwargs):
+        """
+        Plots an x-y graph at a certain specified wavelength onto the current
+        axes. Keyword arguments are passed on to matplotlib.
+
+        Parameters
+        ----------
+        offset: `int` or `float`
+            The offset from the initial x value to plot. If it's an int it
+            will plot slice n from the start; if it's a float then
+            it will plot the closest x-distance. If the offset is out of range,
+            it will plot the primary wavelength (offset 0)
+
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or None:
+            The axes to plot onto. If None the current axes will be used.
+
+        style: 'imshow' or 'pcolormesh'
+            The style of plot to be used. Default is 'imshow'
+        """
+        cumul_cube_lengths = np.cumsum(np.array([c.shape[self.common_axis]
+                                             for c in self.data]))
+        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(offset, cumul_cube_lengths)
+        plot = self[sequence_index].plot_x_slice(cube_index, **kwargs)
+        return plot
+
+    def plot_wavelength_slice(self, offset, **kwargs):
+        """ 
+        Plots an x-y graph at a certain specified wavelength onto the current
+        axes. Keyword arguments are passed on to matplotlib.
+
+        Parameters
+        ----------
+        offset: `int` or `float`
+            The offset from the primary wavelength to plot. If it's an int it
+            will plot the nth wavelength from the primary; if it's a float then
+            it will plot the closest wavelength. If the offset is out of range,
+            it will plot the primary wavelength (offset 0)
+
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
+            The axes to plot onto. If None the current axes will be used.
+
+        style: 'imshow' or 'pcolormesh'
+            The style of plot to be used. Default is 'imshow'
+        """
+        cumul_cube_lengths = np.cumsum(np.array([c.shape[self.common_axis]
+                                             for c in self.data]))
+        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(offset, cumul_cube_lengths)
+        plot = self[sequence_index].plot_wavelength_slice(cube_index, **kwargs)
+        return plot
