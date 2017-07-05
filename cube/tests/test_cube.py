@@ -388,19 +388,24 @@ def test_4d_getitem_to_spectrogram_world_coord():
     assert isinstance(s, Spectrogram)
 
 
-def test_4d_getitem_to_lightcurve():
-    slices = [hcube[:, 0, 0, 0], hcube[:, 1, 1, :], hcube[:, 1, 0],
-              hcube[:, 1, :, 2]]
-    for s in slices:
-        assert isinstance(s, LightCurve)
+@pytest.mark.parametrize("test_input,expected", [
+    (hcube[:, 0, 0, 0], LightCurve),
+    (hcube[:, 1, 1, :], LightCurve),
+    (hcube[:, 1, 0], LightCurve),
+    (hcube[:, 1, :, 2], LightCurve),
+])
+def test_4d_getitem_to_lightcurve(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
-def test_4d_getitem_to_lightcurve_world_coord():
-    slices = [hcube[:, 0, 0, 0.6 * u.min], hcube[:, 1, :, 1 * u.min],
-              hcube[0.4 * u.deg:1.2:0.8, 1, 95 * u.Angstrom, :],
-              hcube[0.4 * u.deg:1.2:0.8, 1, 100 * u.Angstrom]]
-    for s in slices:
-        assert isinstance(s, LightCurve)
+@pytest.mark.parametrize("test_input, expected", [
+    (hcube[:, 0, 0, 0.6 * u.min], LightCurve),
+    (hcube[:, 1, :, 1 * u.min], LightCurve),
+    (hcube[0.4 * u.deg:1.2:0.8, 1, 95 * u.Angstrom, :], LightCurve),
+    (hcube[0.4 * u.deg:1.2:0.8, 1, 100 * u.Angstrom], LightCurve)
+])
+def test_4d_getitem_to_lightcurve_world_coord(test_input, expected):
+    assert isinstance(test_input, expected)
 
 
 def test_reduce_dim():
