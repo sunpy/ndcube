@@ -4,16 +4,16 @@ from sunpycube.cube import cube_utils as cu
 
 
 class ImageAnimatorCubeSequence(ImageAnimatorWCS):
-	"""
-	Animates N-dimensional data with the associated astropy WCS object.
+    """
+    Animates N-dimensional data with the associated astropy WCS object.
 
     The following keyboard shortcuts are defined in the viewer:
 
-    - 'left': previous step on active slider
-    - 'right': next step on active slider
-    - 'top': change the active slider up one
-    - 'bottom': change the active slider down one
-    - 'p': play/pause active slider
+    left': previous step on active slider
+    right': next step on active slider
+    top': change the active slider up one
+    bottom': change the active slider down one
+    'p': play/pause active slider
 
     This viewer can have user defined buttons added by specifying the labels
     and functions called when those buttons are clicked as keyword arguments.
@@ -58,24 +58,28 @@ class ImageAnimatorCubeSequence(ImageAnimatorWCS):
         The unit of y axis.
 
     Extra keywords are passed to imshow.
-	"""
-	def __init__(self, seq, wcs=None, **kwargs):
-		self.sequence = seq.data
-		self.cumul_cube_lengths = np.cumsum(np.array([c.shape[0] for c in self.sequence]))
-		data_concat = np.concatenate(seq.data, axis=0)
-		super(ImageAnimatorCubeSequence, self).__init__(data_concat, wcs=self.sequence[0].axes_wcs, **kwargs)
+    """
 
-	def update_plot(self, val, im, slider):
-		val = int(val)
-		ax_ind = self.slider_axes[slider.slider_ind]
-		ind = np.argmin(np.abs(self.axis_ranges[ax_ind] - val))
-		self.frame_slice[ax_ind] = ind
-		list_slices_wcsaxes = list(self.slices_wcsaxes)
-		sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(val, self.cumul_cube_lengths)
-		list_slices_wcsaxes[self.wcs.naxis-ax_ind-1] = cube_index
-		self.slices_wcsaxes = list_slices_wcsaxes
-		if val != slider.cval:
-			self.axes.reset_wcs(wcs=self.sequence[sequence_index].axes_wcs, slices=self.slices_wcsaxes)
-			self._set_unit_in_axis(self.axes)
-			im.set_array(self.data[self.frame_slice])
-			slider.cval = val
+    def __init__(self, seq, wcs=None, **kwargs):
+        self.sequence = seq.data
+        self.cumul_cube_lengths = np.cumsum(np.array([c.shape[0] for c in self.sequence]))
+        data_concat = np.concatenate(seq.data, axis=0)
+        super(ImageAnimatorCubeSequence, self).__init__(
+            data_concat, wcs=self.sequence[0].axes_wcs, **kwargs)
+
+    def update_plot(self, val, im, slider):
+        val = int(val)
+        ax_ind = self.slider_axes[slider.slider_ind]
+        ind = np.argmin(np.abs(self.axis_ranges[ax_ind] - val))
+        self.frame_slice[ax_ind] = ind
+        list_slices_wcsaxes = list(self.slices_wcsaxes)
+        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(
+            val, self.cumul_cube_lengths)
+        list_slices_wcsaxes[self.wcs.naxis-ax_ind-1] = cube_index
+        self.slices_wcsaxes = list_slices_wcsaxes
+        if val != slider.cval:
+            self.axes.reset_wcs(
+                wcs=self.sequence[sequence_index].axes_wcs, slices=self.slices_wcsaxes)
+            self._set_unit_in_axis(self.axes)
+            im.set_array(self.data[self.frame_slice])
+            slider.cval = val

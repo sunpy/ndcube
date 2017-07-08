@@ -131,7 +131,7 @@ def handle_slice_to_spectrum(cube, item):
         if iter_isinstance(item, (int, slice, int, int)):
             spec = cube.slice_to_spectrum(item[0], item[2], item[3])
         elif iter_isinstance(item, (int, slice, int, slice),
-                                   (int, slice, int)):
+                             (int, slice, int)):
             spec = cube.slice_to_spectrum(item[0], item[2], None)
         elif iter_isinstance(item, (int, slice, slice, int)):
             spec = cube.slice_to_spectrum(item[0], None, item[3])
@@ -272,8 +272,8 @@ def getitem_3d(cube, item):
                      iter_isinstance(item, (int, slice), (int, slice, slice))))
     slice_to_spectrum = (((isinstance(item, int) or
                            iter_isinstance(item, (int, slice),
-                                                 (int, slice, slice),
-                                                 (int, slice, int)))
+                                           (int, slice, slice),
+                                           (int, slice, int)))
                           and axes[-2] == 'WAVE')
                          or (axes[-1] == 'WAVE' and
                              iter_isinstance(item, (slice, int, int))))
@@ -281,8 +281,8 @@ def getitem_3d(cube, item):
                             axes[-2] == 'WAVE')
     slice_to_lightcurve = (axes[-2] == 'WAVE' and
                            (iter_isinstance(item, (slice, int, int),
-                                                  (slice, int),
-                                                  (slice, int, slice))))
+                                            (slice, int),
+                                            (slice, int, slice))))
     stay_as_cube = (isinstance(item, slice) or
                     (isinstance(item, tuple) and
                      not any(isinstance(i, int) for i in item)))
@@ -323,19 +323,19 @@ def getitem_4d(cube, item):
         The item to get from the cube
     """
     slice_to_map = iter_isinstance(item, (int, int), (int, int, slice),
-                                         (int, int, slice, slice))
+                                   (int, int, slice, slice))
     slice_to_spectrogram = iter_isinstance(item, (slice, slice, int, int))
     slice_to_spectrum = iter_isinstance(item, (int, slice, int, int),
-                                              (int, slice, int),
-                                              (int, slice, int, slice),
-                                              (int, slice, slice, int))
+                                        (int, slice, int),
+                                        (int, slice, int, slice),
+                                        (int, slice, slice, int))
     slice_to_cube = (isinstance(item, int) or
                      (isinstance(item, tuple) and
                       len([i for i in item if isinstance(i, int)]) == 1))
     slice_to_lightcurve = iter_isinstance(item, (slice, int, int, int),
-                                                (slice, int, int),
-                                                (slice, int, int, slice),
-                                                (slice, int, slice, int))
+                                          (slice, int, int),
+                                          (slice, int, int, slice),
+                                          (slice, int, slice, int))
     stay_as_hypercube = (isinstance(item, slice) or
                          (isinstance(item, tuple) and
                           not any(isinstance(i, int) for i in item)))
@@ -426,7 +426,7 @@ def convert_point(value, unit, wcs, axis, _source='cube'):
         unit = value.unit
     if _source == 'cube':
         wcsaxis = -1 - axis if wcs.oriented or not wcs.was_augmented \
-                  else -2 - axis
+            else -2 - axis
     else:
         wcsaxis = 1 - axis
     cunit = u.Unit(wcs.wcs.cunit[wcsaxis])
@@ -468,7 +468,7 @@ def _convert_slice(item, wcs, axis, _source='cube'):
     """
     if _source == 'cube':
         wcs_ax = -2 - axis if wcs.was_augmented and not wcs.oriented \
-                else -1 - axis
+            else -1 - axis
     else:
         wcs_ax = 1 - axis
     steps = [item.start, item.stop, item.step]
@@ -505,6 +505,7 @@ def _convert_slice(item, wcs, axis, _source='cube'):
 
     return slice(start, end, delta)
 
+
 def get_cube_from_sequence(cubesequence, item):
     """
     Handles CubeSequence's __getitem__ method for list of cubes.
@@ -519,6 +520,7 @@ def get_cube_from_sequence(cubesequence, item):
     if isinstance(item, int):
         return cubesequence.data[item]
     return cubesequence.data[item[0]][item[1::]]
+
 
 def index_sequence_as_cube(cubesequence, item):
     """
@@ -563,7 +565,7 @@ def index_sequence_as_cube(cubesequence, item):
                              "axis = {0}".format(cubesequence.common_axis))
         else:
             sequence_index, cube_index = _convert_cube_like_index_to_sequence_indices(
-            item, cumul_cube_lengths)
+                item, cumul_cube_lengths)
             item_list = [item]
     # Case 2: Item is slice and common axis is 0.
     elif isinstance(item, slice):
@@ -573,7 +575,7 @@ def index_sequence_as_cube(cubesequence, item):
                              "axis = {0}".format(cubesequence.common_axis))
         else:
             sequence_index, cube_index = _convert_cube_like_slice_to_sequence_slices(
-            item, cumul_cube_lengths)
+                item, cumul_cube_lengths)
             item_list = [item]
     # Case 3: Item is tuple and common axis index is int.
     elif isinstance(item[cubesequence.common_axis], int):
@@ -587,7 +589,7 @@ def index_sequence_as_cube(cubesequence, item):
                              "{0} and {1} inclusive.".format(
                                  cubesequence.common_axis, len(cubesequence[0].shape)))
         sequence_index, cube_index = _convert_cube_like_index_to_sequence_indices(
-                                                    item_list[cubesequence.common_axis], cumul_cube_lengths)
+            item_list[cubesequence.common_axis], cumul_cube_lengths)
     # Case 4: Item is tuple and common axis index is slice.
     elif isinstance(item[cubesequence.common_axis], slice):
         # Since item must be a tuple, convert to list to
@@ -615,18 +617,20 @@ def index_sequence_as_cube(cubesequence, item):
     item_tuple = tuple(item_list)
     return cubesequence[item_tuple]
 
+
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
-    #so that it returns the correct sequence_index and cube_index as 
-    #np.where(cumul_cube_lengths <= cube_like_index) returns NULL.
+    # so that it returns the correct sequence_index and cube_index as
+    # np.where(cumul_cube_lengths <= cube_like_index) returns NULL.
     if cube_like_index < cumul_cube_lengths[0]:
         sequence_index = 0
         cube_index = cube_like_index
     else:
         sequence_index = np.where(cumul_cube_lengths <= cube_like_index)[0][-1]
         cube_index = cube_like_index - cumul_cube_lengths[sequence_index]
-        #sequence_index should be plus one as the sequence_index earlier is previous index.
+        # sequence_index should be plus one as the sequence_index earlier is previous index.
         sequence_index += 1
     return sequence_index, cube_index
+
 
 def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_length):
     sequence_start_index, cube_start_index = _convert_cube_like_index_to_sequence_indices(
@@ -636,7 +640,7 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
     sequence_slice = slice(sequence_start_index, sequence_stop_index, cube_like_slice.step)
     cube_slice = slice(cube_start_index, cube_stop_index, cube_like_slice.step)
     return sequence_slice, cube_slice
-    
+
 
 class CubeError(Exception):
     """
