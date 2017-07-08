@@ -595,8 +595,9 @@ class CubeSequence(object):
             The style of plot to be used. Default is 'imshow'
         """
         cumul_cube_lengths = np.cumsum(np.array([c.shape[self.common_axis]
-                                             for c in self.data]))
-        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(offset, cumul_cube_lengths)
+                                                 for c in self.data]))
+        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(
+            offset, cumul_cube_lengths)
         plot = self[sequence_index].plot_x_slice(cube_index, **kwargs)
         return plot
 
@@ -620,7 +621,8 @@ class CubeSequence(object):
             The style of plot to be used. Default is 'imshow'
         """
         cumul_cube_lengths = np.cumsum(np.array([c.shape[self.common_axis]
-                                             for c in self.data]))
-        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(offset, cumul_cube_lengths)
+                                                 for c in self.data]))
+        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(
+            offset, cumul_cube_lengths)
         plot = self[sequence_index].plot_wavelength_slice(cube_index, **kwargs)
         return plot
