@@ -533,6 +533,7 @@ class Cube(astropy.nddata.NDDataArray):
         else:
             return cu.getitem_4d(self, pixels)
 
+
 class CubeSequence(object):
     """
     Class representing list of cubes.
@@ -567,7 +568,7 @@ class CubeSequence(object):
 
     def animate(self, *args, **kwargs):
         i = ani.ImageAnimatorCubeSequence(self, *args, **kwargs)
-        return i 
+        return i
 
     def index_as_cube(self, item):
         """
