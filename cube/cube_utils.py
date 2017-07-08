@@ -272,8 +272,8 @@ def getitem_3d(cube, item):
                      iter_isinstance(item, (int, slice), (int, slice, slice))))
     slice_to_spectrum = (((isinstance(item, int) or
                            iter_isinstance(item, (int, slice),
-                                                 (int, slice, slice),
-                                                 (int, slice, int)))
+                                           (int, slice, slice),
+                                           (int, slice, int)))
                           and axes[1] == 'WAVE')
                          or (axes[0] == 'WAVE' and
                              iter_isinstance(item, (slice, int, int))))
@@ -428,7 +428,7 @@ def convert_point(value, unit, wcs, axis, _source='cube'):
         unit = value.unit
     if _source == 'cube':
         wcsaxis = -1 - axis if wcs.oriented and not wcs.was_augmented \
-                  else -2 - axis
+            else -2 - axis
     else:
         wcsaxis = 1 - axis
     cunit = u.Unit(wcs.wcs.cunit[wcsaxis])
@@ -468,7 +468,7 @@ def _convert_slice(item, wcs, axis, _source='cube'):
     """
     if _source == 'cube':
         wcs_ax = -2 - axis if wcs.was_augmented or not wcs.oriented \
-                else -1 - axis
+            else -1 - axis
     else:
         wcs_ax = 1 - axis
     steps = [item.start, item.stop, item.step]

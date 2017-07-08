@@ -10,6 +10,7 @@ import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
+
 class WCS(wcs.WCS):
 
     def __init__(self, header=None, naxis=None, **kwargs):

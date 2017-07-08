@@ -17,7 +17,7 @@ data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
 data2 = np.array([[[11, 22, 33, 44], [22, 44, 55, 33], [0, -1, 22, 33]],
-                 [[22, 44, 55, 11], [10, 55, 22, 22], [10, 33, 33, 0]]])
+                  [[22, 44, 55, 11], [10, 55, 22, 22], [10, 33, 33, 0]]])
 
 ht = {'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2,
       'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 3,
@@ -50,7 +50,7 @@ seq = CubeSequence([cube1, cube2, cube3, cube4])
     (seq[0:2], CubeSequence),
 ])
 def test_slice_first_index_sequence(test_input, expected):
-	assert isinstance(test_input, expected)
+    assert isinstance(test_input, expected)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -60,4 +60,4 @@ def test_slice_first_index_sequence(test_input, expected):
     (seq[0:].len, 4),
 ])
 def test_slice_first_index_sequence(test_input, expected):
-	assert test_input == expected
+    assert test_input == expected
