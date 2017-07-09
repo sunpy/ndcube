@@ -555,8 +555,6 @@ class CubeSequence(object):
     """
 
     def __init__(self, data_list, meta=None, common_axis=None):
-        if not all(isinstance(data, Cube) for data in data_list):
-            raise ValueError("data list should be of cube object")
         self.data = data_list
         self.meta = meta
         self.common_axis = common_axis
@@ -577,6 +575,12 @@ class CubeSequence(object):
     def animate(self, *args, **kwargs):
         i = ani.ImageAnimatorCubeSequence(self, *args, **kwargs)
         return i
+    @classmethod
+    def _new_instance(cls, data_list, meta=None, common_axis=None):
+        """
+        Instantiate a new instance of this class using given data.
+        """
+        return cls(data_list, meta=meta, common_axis=common_axis)
 
     def index_as_cube(self, item):
         """
