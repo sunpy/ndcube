@@ -560,8 +560,7 @@ class CubeSequence(object):
         self.data = data_list
         self.meta = meta
         self.common_axis = common_axis
-        self.shape = (len(data_list), data_list[0].shape[0],
-                      data_list[0].shape[1], data_list[0].shape[2])
+        self.shape = (len(data_list), data_list[0].shape)
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
