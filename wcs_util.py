@@ -15,8 +15,8 @@ class WCS(wcs.WCS):
 
     def __init__(self, header=None, naxis=None, **kwargs):
         self.oriented = False
-        if WCS._needs_augmenting(header):
-            self.was_augmented = True
+        self.was_augmented = WCS._needs_augmenting(header)
+        if self.was_augmented:
             header = WCS._augment(header, naxis)
             if naxis is not None:
                 naxis = naxis + 1
@@ -26,10 +26,14 @@ class WCS(wcs.WCS):
 
     @classmethod
     def _needs_augmenting(cls, header):
+        """
+        WCS cannot be created with only one spacial dimension. If
+        WCS detects that returns that it needs to be augmented.
+        """
         try:
             wcs.WCS(header=header)
         except InconsistentAxisTypesError as err:
-            if re.search(r'Unmatched celestial axes', err.message):
+            if re.search(r'Unmatched celestial axes', str(err)):
                 return True
         return False
 
@@ -39,16 +43,15 @@ class WCS(wcs.WCS):
         new_wcs_axes_params = {'CRPIX': 0, 'CDELT': 1, 'CRVAL': 0,
                                'CNAME': 'redundant axis', 'CTYPE': 'HPLN-TAN',
                                'CROTA': 0, 'CUNIT': 'deg', 'NAXIS': 0}
-        axis = max(newheader.get('NAXIS', 0), naxis) + 1
-        axis = str(axis)
+        axis = str(max(newheader.get('NAXIS', 0), naxis) + 1)
         for param in new_wcs_axes_params:
             attr = new_wcs_axes_params[param]
             newheader[param + axis] = attr
         try:
-            wcs.WCS(header=newheader).get_axis_types()
+            print(wcs.WCS(header=newheader).get_axis_types())
         except InconsistentAxisTypesError as err:
-            projection = re.findall(r'expected [^,]+', err.message)[0][9:]
-            header['CTYPE' + axis] = projection
+            projection = re.findall(r'expected [^,]+', str(err))[0][9:]
+            newheader['CTYPE' + axis] = projection
         return newheader
 
 
@@ -145,7 +148,7 @@ def add_celestial_axis(wcs):
     try:
         outwcs.get_axis_types()
     except InconsistentAxisTypesError as err:
-        projection = re.findall(r'expected [^,]+', err.message)[0][9:]
+        projection = re.findall(r'expected [^,]+', err.value.args[0])[0][9:]
         outwcs.wcs.ctype[-1] = projection
 
     return outwcs

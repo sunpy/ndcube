@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 import datetime
 
 from random import randint
+from sunpy.extern.six.moves import zip
 from copy import copy
 from math import floor
 

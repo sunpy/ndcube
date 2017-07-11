@@ -371,7 +371,7 @@ def test_join_gap():
             [one, other], nonlinear=False, maxgap=0
         )
 
-    assert excinfo.value.message == "Too large gap."
+    assert excinfo.value.args[0] == "Too large gap."
 
 
 def test_join_with_gap():
@@ -432,7 +432,7 @@ def test_join_with_gap_fill():
 
     assert np.array_equal(z.data[:, :3600], one.data)
 
-    print type(z.data)
+    print(type(z.data))
 
     # Second data to unpack masked array
     assert np.isnan(z.data.data[:, 3600:3602]).all()
@@ -511,7 +511,7 @@ def test_rescale_error():
     with pytest.raises(ValueError) as excinfo:
         spec.rescale(0, 1)
     assert (
-        excinfo.value.message ==
+        excinfo.value.args[0] ==
         "Spectrogram needs to contain distinct values."
     )
 
@@ -527,7 +527,7 @@ def test_rescale_error2():
 
     with pytest.raises(ValueError) as excinfo:
         spec.rescale(1, 1)
-    assert excinfo.value.message == "Maximum and minimum must be different."
+    assert excinfo.value.args[0] == "Maximum and minimum must be different."
 
 
 def test_resample():
@@ -577,7 +577,7 @@ def test_combine_freqs():
 
     # print comb
 
-    for freq in xrange(10):
+    for freq in range(10):
         assert np.array_equal(
             comb[9 - freq, :], stuff[freq % 2][4 - freq // 2, :]
         )
@@ -605,7 +605,7 @@ def test_join_diff_freq():
 
     with pytest.raises(ValueError) as excinfo:
         LinearTimeSpectrogram.join_many([spec, spec2])
-    assert excinfo.value.message == "Frequency channels do not match."
+    assert excinfo.value.args[0] == "Frequency channels do not match."
 
 
 def test_intersect_time():
