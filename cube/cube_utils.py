@@ -535,7 +535,7 @@ def get_cube_from_sequence(cubesequence, item):
         # item represents (slice(start_cube_index, end_cube_index, None),
         # [slice_of_start_cube, slice_of_end_cube]) if end cube is not sliced then length is 1.
         if isinstance(item[0], slice):
-            data = cubesequence.data[item[0].start:item[0].stop]
+            data = cubesequence.data[item[0]]
             # applying the slice in the start of cube.
             data[0] = data[0][item[1][0]]
             if len(item[1]) is 2:
@@ -633,10 +633,6 @@ def index_sequence_as_cube(cubesequence, item):
                                  cubesequence.common_axis, len(cubesequence[0].shape)))
         sequence_index, cube_index = _convert_cube_like_slice_to_sequence_slices(
             item_list[cubesequence.common_axis], cumul_cube_lengths)
-        # if sequence_index.start != sequence_index.stop:
-        #     raise ValueError("Slicing across multiple cubes not yet supported.")
-        # else:
-        #     sequence_index = sequence_index.start
     else:
         raise ValueError("Invalid index/slice input.")
     # Replace common axis index/slice with corresponding
