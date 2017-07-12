@@ -524,21 +524,29 @@ def get_cube_from_sequence(cubesequence, item):
     if isinstance(item, tuple):
         # if the 0th index is int.
         if isinstance(item[0], int):
-            result = cubesequence.data[item[0]][item[1::]]
+            # to satisfy something like cubesequence[0,0] this should have data type
+            # as cubesequence[0][0]
+            if len(item[1::]) is 1:
+                result = cubesequence.data[item[0]][item[1]]
+            else:
+                result = cubesequence.data[item[0]][item[1::]]
         # if the 0th index is slice.
         # used for the index_sequence_as_cube function. Slicing across cubes.
         # item represents (slice(start_cube_index, end_cube_index, None),
         # [slice_of_start_cube, slice_of_end_cube]) if end cube is not sliced then length is 1.
         if isinstance(item[0], slice):
             data = cubesequence.data[item[0].start:item[0].stop]
-            # applying the slice in the strt of cube.
+            # applying the slice in the start of cube.
             data[0] = data[0][item[1][0]]
             if len(item[1]) is 2:
                 # applying the slice in the end of cube.
                 data[-1] = data[-1][item[1][-1]]
             # applying the rest of the item in all the cubes.
             for i, cube in enumerate(data):
-                data[i] = cube[item[2::]]
+                if len(item[2::]) is 1:
+                    data[i] = cube[item[2]]
+                else:
+                    data[i] = cube[item[2::]]
             result = cubesequence._new_instance(
                 data, meta=cubesequence.meta, common_axis=cubesequence.common_axis)
     return result

@@ -11,6 +11,7 @@ wavelength
 
 # standard libraries
 import datetime
+import warnings
 
 # external libraries
 import numpy as np
@@ -554,11 +555,16 @@ class CubeSequence(object):
         one single Cube.
     """
 
-    def __init__(self, data_list, meta=None, common_axis=None):
+    def __init__(self, data_list, meta=None, common_axis=0):
         self.data = data_list
         self.meta = meta
         self.common_axis = common_axis
-        self.shape = tuple([len(data_list)] + list(data_list[0].shape))
+        try:
+            self.shape = tuple([len(data_list)] + list(data_list[0].shape))
+        except AttributeError as err:
+            warnings.warn("AttributeError " + str(err))
+        else:
+            self.shape = tuple([len(data_list)])
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
