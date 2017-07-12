@@ -560,13 +560,6 @@ class CubeSequence(object):
         self.common_axis = common_axis
         self.shape = tuple([len(data_list)] + list(data_list[0].shape))
 
-    @classmethod
-    def _new_instance(cls, data_list, meta=None):
-        """
-        Instantiate a new instance of this class using given data.
-        """
-        return cls(data_list, meta=meta)
-
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
@@ -575,6 +568,7 @@ class CubeSequence(object):
     def animate(self, *args, **kwargs):
         i = ani.ImageAnimatorCubeSequence(self, *args, **kwargs)
         return i
+
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """

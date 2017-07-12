@@ -427,8 +427,7 @@ def convert_point(value, unit, wcs, axis, _source='cube'):
         value = value.value
         unit = value.unit
     if _source == 'cube':
-        wcsaxis = -1 - axis if wcs.oriented and not wcs.was_augmented \
-            else -2 - axis
+        wcsaxis = -1 - axis if not wcs.was_augmented else -2 - axis
     else:
         wcsaxis = 1 - axis
     cunit = u.Unit(wcs.wcs.cunit[wcsaxis])
@@ -467,8 +466,7 @@ def _convert_slice(item, wcs, axis, _source='cube'):
         opposite WCS convention)
     """
     if _source == 'cube':
-        wcs_ax = -2 - axis if wcs.was_augmented or not wcs.oriented \
-            else -1 - axis
+        wcs_ax = -2 - axis if wcs.was_augmented else -1 - axis
     else:
         wcs_ax = 1 - axis
     steps = [item.start, item.stop, item.step]

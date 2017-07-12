@@ -74,11 +74,11 @@ def test_iter_isinstance():
 
 
 def test_convert_point():
-    assert cu.convert_point(10.0, u.Angstrom, wm, 1) == 0
-    assert cu.convert_point(10.2, u.Angstrom, wm, 1) == 1
-    assert cu.convert_point(9.6, u.Angstrom, wm, 1) == -2
-    assert cu.convert_point(10.3, u.Angstrom, wm, 1) == 2
-    assert cu.convert_point(0.001, u.mm, wm, 1) == 49950
+    assert cu.convert_point(10.0, u.Angstrom, wm, 2) == 0
+    assert cu.convert_point(10.2, u.Angstrom, wm, 2) == 1
+    assert cu.convert_point(9.6, u.Angstrom, wm, 2) == -2
+    assert cu.convert_point(10.3, u.Angstrom, wm, 2) == 2
+    assert cu.convert_point(0.001, u.mm, wm, 2) == 49950
 
     assert cu.convert_point(0, u.min, wt, 0) == 0
     assert cu.convert_point(3.1, u.min, wt, 0) == 8
@@ -96,8 +96,8 @@ def test_convert_point():
 
 def test_convert_slice():
     slices = [(slice(1, None, 2.2), wt, 2),
-              (slice(9.6, 10.2 * u.Angstrom, None), wm, 1),
-              (slice(9.6 * u.Angstrom, 10.2 * u.Angstrom, None), wm, 1),
+              (slice(9.6, 10.2 * u.Angstrom, None), wm, 2),
+              (slice(9.6 * u.Angstrom, 10.2 * u.Angstrom, None), wm, 2),
               (slice(None, None, 0.8 * u.min), wt, 0),
               (slice(0 * u.deg, 14.5, 2), wt, 2)]
 
@@ -115,13 +115,13 @@ def test_convert_slice():
 
 def test_pixelize_slice():
     sl = [((slice(1, None, 3), 3.2, slice(None, None, 2)), wt),
-          ((0.3 * u.deg, 0.0001 * u.mm, 5400 * u.arcsec), wm),
-          ((slice(None, 3 * u.deg, 2), slice(5 * u.nm, 6, 1 * u.nm),
-            slice(90 * u.arcmin, 300, 60)), wm)]
+          ((0.3 * u.deg, 2474.5 * u.deg, 10.75 * u.Angstrom), wm),
+          ((slice(None, 3 * u.deg, 2), slice(99.5 * u.deg, 124.5, 1 * u.deg),
+            slice(90 * u.Angstrom, 300, 60)), wm)]
 
     results = [(slice(1, None, 3), 3.2, slice(None, None, 2)),
                (0, 4950, 4),
-               (slice(None, 7, 5), slice(200, 250, 50), slice(4, 11, 2))]
+               (slice(None, 7, 5), slice(200, 250, 2), slice(400, 1450, 300))]
 
     for i in range(len(sl)):
         assert cu.pixelize_slice(*sl[i]) == results[i]
