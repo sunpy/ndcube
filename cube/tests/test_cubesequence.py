@@ -66,15 +66,16 @@ def test_slice_first_index_sequence(test_input, expected):
 def test_slice_first_index_sequence(test_input, expected):
     assert test_input == expected
 
+
 @pytest.mark.parametrize("test_input,expected", [
     (seq.index_as_cube(0), Spectrum),
     (seq.index_as_cube(3), GenericMap),
     (seq.index_as_cube(10), GenericMap),
-    (seq.index_as_cube((5, slice(1,2))), Spectrum),
-    (seq.index_as_cube((slice(0,5), slice(1,3))), CubeSequence),
-    (seq.index_as_cube((slice(0,3), slice(0,2), 2)), CubeSequence),
-    (seq.index_as_cube((slice(0,6))), CubeSequence),
-    (seq.index_as_cube((slice(0,5), slice(0,2), slice(0,2))), CubeSequence),
+    (seq.index_as_cube((5, slice(1, 2))), Spectrum),
+    (seq.index_as_cube((slice(0, 5), slice(1, 3))), CubeSequence),
+    (seq.index_as_cube((slice(0, 3), slice(0, 2), 2)), CubeSequence),
+    (seq.index_as_cube((slice(0, 6))), CubeSequence),
+    (seq.index_as_cube((slice(0, 5), slice(0, 2), slice(0, 2))), CubeSequence),
 ])
 def test_index_sequence_as_cube(test_input, expected):
     assert isinstance(test_input, expected)

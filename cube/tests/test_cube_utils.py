@@ -126,22 +126,28 @@ def test_pixelize_slice():
     for i in range(len(sl)):
         assert cu.pixelize_slice(*sl[i]) == results[i]
 
+
 @pytest.mark.parametrize("test_input,expected", [
-    (cu._convert_cube_like_index_to_sequence_indices(5, np.array([8, 16, 24, 32])), (0,5)),
-    (cu._convert_cube_like_index_to_sequence_indices(8, np.array([8, 16, 24, 32])), (1,0)),
-    (cu._convert_cube_like_index_to_sequence_indices(20, np.array([8, 16, 24, 32])), (2,4)),
-    (cu._convert_cube_like_index_to_sequence_indices(50, np.array([8, 16, 24, 32])), (3,7)),
+    (cu._convert_cube_like_index_to_sequence_indices(5, np.array([8, 16, 24, 32])), (0, 5)),
+    (cu._convert_cube_like_index_to_sequence_indices(8, np.array([8, 16, 24, 32])), (1, 0)),
+    (cu._convert_cube_like_index_to_sequence_indices(20, np.array([8, 16, 24, 32])), (2, 4)),
+    (cu._convert_cube_like_index_to_sequence_indices(50, np.array([8, 16, 24, 32])), (3, 7)),
 ])
 def test_convert_cube_like_index_to_sequence_indices(test_input, expected):
     assert test_input == expected
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (cu._convert_cube_like_slice_to_sequence_slices(slice(2, 5), np.array([8, 16, 24, 32])), (slice(0, 1), slice(2, 5))),
-    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 15), np.array([8, 16, 24, 32])), (slice(0, 2), [slice(5, 8), slice(0, 7)])),
-    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 16), np.array([8, 16, 24, 32])), (slice(0, 2), [slice(5, 8)])),
-    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 23), np.array([8, 16, 24, 32])), (slice(0, 3), [slice(5, 8), slice(0, 7)])),
-    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 100), np.array([8, 16, 24, 32])), (slice(0, 4), [slice(5, 8)])),
+    (cu._convert_cube_like_slice_to_sequence_slices(slice(2, 5),
+                                                    np.array([8, 16, 24, 32])), (slice(0, 1), slice(2, 5))),
+    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 15), np.array(
+        [8, 16, 24, 32])), (slice(0, 2), [slice(5, 8), slice(0, 7)])),
+    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 16),
+                                                    np.array([8, 16, 24, 32])), (slice(0, 2), [slice(5, 8)])),
+    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 23), np.array(
+        [8, 16, 24, 32])), (slice(0, 3), [slice(5, 8), slice(0, 7)])),
+    (cu._convert_cube_like_slice_to_sequence_slices(slice(5, 100),
+                                                    np.array([8, 16, 24, 32])), (slice(0, 4), [slice(5, 8)])),
 ])
 def test_convert_cube_like_slice_to_sequence_slices(test_input, expected):
     assert test_input == expected
