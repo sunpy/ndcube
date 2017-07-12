@@ -648,27 +648,42 @@ def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_len
         cube_index = cube_like_index
     else:
         sequence_index = np.where(cumul_cube_lengths <= cube_like_index)[0][-1]
-        cube_index = cube_like_index - cumul_cube_lengths[sequence_index]
-        # sequence_index should be plus one as the sequence_index earlier is previous index.
-        sequence_index += 1
+        # if the cube is out of range then return the last index
+        if cube_like_index > cumul_cube_lengths[-1] - 1:
+            cube_index = cumul_cube_lengths[0] - 1
+        else:
+            cube_index = cube_like_index - cumul_cube_lengths[sequence_index]
+        # sequence_index should be plus one as the sequence_index earlier is
+        # previous index if it is not already the last cube index.
+        if sequence_index < cumul_cube_lengths.size - 1:
+            sequence_index += 1
     return sequence_index, cube_index
 
 
-def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_length):
+def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_lengths):
     sequence_start_index, cube_start_index = _convert_cube_like_index_to_sequence_indices(
-        cube_like_slice.start, cumul_cube_length)
+        cube_like_slice.start, cumul_cube_lengths)
     sequence_stop_index, cube_stop_index = _convert_cube_like_index_to_sequence_indices(
-        cube_like_slice.stop, cumul_cube_length)
+        cube_like_slice.stop, cumul_cube_lengths)
+    if not cube_like_slice.stop < cumul_cube_lengths[-1]:
+        # as _convert_cube_like_index_to_sequence_indices function returns last
+        # cube index so we need to increment it by one and set the cube_stop_index
+        # as 0 as the function returns the last index of the cube.
+        cube_stop_index = 0
+        sequence_stop_index += 1
     # if the start and end sequence index are not equal implies slicing across cubes.
     if sequence_start_index != sequence_stop_index:
         # the first slice of cube_slice will be cube_start_index and the length of
         # that cube's end index
-        cube_slice = [slice(cube_start_index, cumul_cube_length[
+        # only storing those cube_slice that needs to be changed.
+        # Like if sequence_slice is slice(0, 3) meaning - 0, 1, 2 cubes this means we will
+        # store only 0th index slice and 2nd index slice in this list.
+        cube_slice = [slice(cube_start_index, cumul_cube_lengths[
                             sequence_start_index], cube_like_slice.step)]
 
         # for cube over which slices occur appending them
         # for i in range(sequence_start_index+1, sequence_stop_index):
-        #     cube_slice.append(slice(0, cumul_cube_length[i]-cumul_cube_length[i-1]))
+        #     cube_slice.append(slice(0, cumul_cube_lengths[i]-cumul_cube_lengths[i-1]))
         # if the stop index is 0 then slice(0, 0) is not taken. slice(0,3)
         # represent 0,1,2 not 0,1,2,3.
         if int(cube_stop_index) is not 0:
@@ -679,7 +694,7 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
             sequence_slice = slice(sequence_start_index, sequence_stop_index, cube_like_slice.step)
     else:
         cube_slice = slice(cube_start_index, cube_stop_index, cube_like_slice.step)
-        sequence_slice = slice(sequence_start_index, sequence_stop_index, cube_like_slice.step)
+        sequence_slice = slice(sequence_start_index, sequence_stop_index+1, cube_like_slice.step)
     return sequence_slice, cube_slice
 
 
