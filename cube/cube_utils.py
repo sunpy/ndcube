@@ -518,7 +518,7 @@ def get_cube_from_sequence(cubesequence, item):
     if isinstance(item, int):
         result = cubesequence.data[item]
     if isinstance(item, slice):
-        data = cubesequence.data[item.start:item.stop]
+        data = cubesequence.data[item]
         result = cubesequence._new_instance(
             data, meta=cubesequence.meta, common_axis=cubesequence.common_axis)
     if isinstance(item, tuple):
