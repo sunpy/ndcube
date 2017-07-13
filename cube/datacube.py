@@ -563,7 +563,6 @@ class CubeSequence(object):
             self.shape = tuple([len(data_list)] + list(data_list[0].shape))
         except AttributeError as err:
             warnings.warn("AttributeError " + str(err))
-        else:
             self.shape = tuple([len(data_list)])
 
     def __getitem__(self, item):
