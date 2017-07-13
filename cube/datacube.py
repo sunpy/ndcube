@@ -555,10 +555,11 @@ class CubeSequence(object):
         one single Cube.
     """
 
-    def __init__(self, data_list, meta=None, common_axis=0):
+    def __init__(self, data_list, meta=None, common_axis=0, **kwargs):
         self.data = data_list
         self.meta = meta
         self.common_axis = common_axis
+        self.time = kwargs.get('time', None)
         try:
             self.shape = tuple([len(data_list)] + list(data_list[0].shape))
         except AttributeError as err:
