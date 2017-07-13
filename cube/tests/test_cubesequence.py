@@ -48,6 +48,8 @@ seq = CubeSequence([cube1, cube2, cube3, cube4])
     (seq[0:1], CubeSequence),
     (seq[1:3], CubeSequence),
     (seq[0:2], CubeSequence),
+    (seq[slice(0, 2)], CubeSequence),
+    (seq[slice(0, 3)], CubeSequence),
 ])
 def test_slice_first_index_sequence(test_input, expected):
     assert isinstance(test_input, expected)
@@ -58,6 +60,8 @@ def test_slice_first_index_sequence(test_input, expected):
     (seq[1:3].shape[0], 2),
     (seq[0:2].shape[0], 2),
     (seq[0:].shape[0], 4),
+    (seq[slice(0, 2)].shape[0], 2),
+    (seq[slice(0, 3)].shape[0], 3),
 ])
 def test_slice_first_index_sequence(test_input, expected):
     assert test_input == expected
