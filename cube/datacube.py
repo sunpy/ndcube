@@ -582,11 +582,12 @@ class CubeSequence(object):
         """
         return cls(data_list, meta=meta, common_axis=common_axis)
 
-    def index_as_cube(self, item):
+    @property
+    def index_as_cube(self):
         """
         Method to slice the cubesequence instance as a single cube
         """
-        return cu.index_sequence_as_cube(self, item)
+        return Slice_helper(self)
 
     def plot_x_slice(self, offset, **kwargs):
         """
@@ -639,3 +640,13 @@ class CubeSequence(object):
             offset, cumul_cube_lengths)
         plot = self[sequence_index].plot_wavelength_slice(cube_index, **kwargs)
         return plot
+
+
+class Slice_helper(object):
+    """Helper class to make slicing in index_as_cube more pythonic"""
+
+    def __init__(self, seq):
+        self.seq = seq
+
+    def __getitem__(self, item):
+        return cu.index_sequence_as_cube(self.seq, item)
