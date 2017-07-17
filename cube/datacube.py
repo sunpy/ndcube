@@ -582,22 +582,11 @@ class CubeSequence(object):
         """
         return cls(data_list, meta=meta, common_axis=common_axis)
 
-    @property
-    def index_as_cube(self):
+    def index_as_cube(self, item):
         """
         Method to slice the cubesequence instance as a single cube
-
-        Example
-        -------
-        >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
-        >>> data_list = [cubeA, cubeB, cubeC]
-        >>> cs = CubeSequence(data_list, meta=None, common_axis=0)
-        >>> # return zeroth time slice of cubeB in via normal CubeSequence indexing.
-        >>> cs[1,:,0,:]
-        >>> # Return same slice using this function
-        >>> cs.index_sequence_as_cube[3:6, 0,   :]
         """
-        return _IndexAsCubeSlicer(self)
+        return cu.index_sequence_as_cube(self, item)
 
     def plot_x_slice(self, offset, **kwargs):
         """
@@ -650,25 +639,3 @@ class CubeSequence(object):
             offset, cumul_cube_lengths)
         plot = self[sequence_index].plot_wavelength_slice(cube_index, **kwargs)
         return plot
-
-
-class _IndexAsCubeSlicer(object):
-    """
-    Helper class to make slicing in index_as_cube more pythonic.
-    Helps to make operations like in numpy array.
-    >>> data_list = numpy.array(range(10))
-    >>> data_list[3:5]
-    >>> [4, 5, 6]
-    This makes slicing like this possible for index_as_cube.
-
-    Attributes
-    ----------
-    seq : `sunpycube.cube.CubeSequence`
-        Object of CubeSequence.
-    """
-
-    def __init__(self, seq):
-        self.seq = seq
-
-    def __getitem__(self, item):
-        return cu.index_sequence_as_cube(self.seq, item)
