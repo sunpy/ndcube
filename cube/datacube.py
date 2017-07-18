@@ -64,6 +64,9 @@ class Cube(astropy.nddata.NDDataArray):
 
     def __init__(self, data, wcs, errors=None, **kwargs):
         mask = kwargs.pop('mask', np.zeros(data.shape, dtype=bool))
+        if kwargs.get('meta') is not None:
+            if not isinstance(kwargs.get('meta'), (dict, None)):
+                raise ValueError("meta should be of a dictionary.")
         if errors is not None:
             data, wcs, err_array, mask = cu.orient(data, wcs, errors.array,
                                                    mask)
