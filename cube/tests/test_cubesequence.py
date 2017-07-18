@@ -59,7 +59,7 @@ def test_slice_first_index_sequence(test_input, expected):
     (seq[0:1].shape[0], 1),
     (seq[1:3].shape[0], 2),
     (seq[0:2].shape[0], 2),
-    (seq[0::].shape[0], 4),
+    (seq[0:].shape[0], 4),
     (seq[slice(0, 2)].shape[0], 2),
     (seq[slice(0, 3)].shape[0], 3),
 ])
