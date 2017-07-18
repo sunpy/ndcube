@@ -629,7 +629,7 @@ class CubeSequence(object):
         return plot
 
     def plot_wavelength_slice(self, offset, **kwargs):
-        """ 
+        """
         Plots an x-y graph at a certain specified wavelength onto the current
         axes. Keyword arguments are passed on to matplotlib.
 
