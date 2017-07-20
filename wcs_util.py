@@ -53,24 +53,87 @@ class WCS(wcs.WCS):
             newheader['CTYPE' + axis] = projection
         return newheader
 
+    @property
+    def wcs_slicer(self):
+        return _WcsSlicer(self)
+
+
+class _WcsSlicer(object):
+    """docstring for _WcsSlicer"""
+
+    def __init__(self, wcs):
+        self._axes_wcs = wcs
+
     def __getitem__(self, item):
-        if isinstance(item, slice):
-            new_wcs = self.wcs.slice((item))
-        elif isinstance(item, int):
-            new_wcs = self.wcs.dropaxis(0)
-            new_wcs._naxis[0:-1]
-        elif isinstance(item, tuple):
-            if cu.iter_isinstance(item, (slice, slice, slice)):
-                new_wcs = self.wcs.slice((item))
-            elif cu.iter_isinstance(item, (int, slice, slice)):
-                new_wcs = self.wcs.dropaxis(0)
-                new_wcs._naxis[0:-1]
-                new_wcs = new_wcs.slice((item[1::]))
-            elif cu.iter_isinstance(item, (slice, int, slice)):
-                new_wcs = self.wcs.dropaxis(1)
-                item_ = (item[0], item[2])
-                new_wcs = new_wcs.slice((item_))
-        return new_wcs
+        return wcs_slicing(self._axes_wcs, item)
+
+
+def wcs_slicing(wcs, item):
+    # normal slice.
+    if isinstance(item, slice):
+        new_wcs = wcs.slice((item))
+    # a int item dropping the axis
+    elif isinstance(item, int):
+        new_wcs = wcs.dropaxis(0)
+        new_wcs._naxis = np.delete(new_wcs._naxis, 0)
+    # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
+    elif isinstance(item, tuple):
+        # if all are slices
+        if all_slice(item):
+            new_wcs = wcs.slice((item))
+        # if all are not slices some of them are int then
+        else:
+            # axis to drop
+            daxis_list = dropaxis_list(item)
+            new_wcs = wcs
+            for i, index in enumerate(daxis_list):
+                # dropping all the axis that int.
+                new_wcs = new_wcs.dropaxis(index-i)
+                # changing the naxis
+                new_wcs._naxis = np.delete(new_wcs._naxis, index-i)
+            item_ = get_all_slices(item)
+            new_wcs = new_wcs.slice((item_))
+    return new_wcs
+
+
+def get_all_slices(obj):
+    """
+    It returns all slices from a tuple or list.
+    """
+    result = []
+    for sl in obj:
+        if isinstance(sl, slice):
+            result.append(sl)
+    return result
+
+
+def all_slice(obj):
+    """
+    Returns True if all the elements in the object are slices else return False
+    """
+    result = False
+    if not isinstance(obj, (tuple, list)):
+        return result
+    result |= all(isinstance(o, slice) for o in obj)
+    return result
+
+
+def dropaxis_list(obj):
+    """
+    Return list of all the axis to drop.
+    Example
+    -------
+    >>> dropaxis_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
+    >>> [2, 4]
+    """
+    result = []
+    if not isinstance(obj, (tuple, list)):
+        return result
+    for i, o in enumerate(obj):
+        if isinstance(o, int):
+            result.append(i)
+    return result
+
 
 def reindex_wcs(wcs, inds):
     # From astropy.spectral_cube.wcs_utils

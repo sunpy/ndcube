@@ -5,5 +5,5 @@ __email__ = 'mateo.inchaurrandieta@gmail.com'
 
 from . import datacube
 from . import cube_utils
-from . import *
+from . import NDCube
 from . import NDCube_utils

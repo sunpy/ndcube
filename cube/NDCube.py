@@ -26,8 +26,8 @@ class NDCube(astropy.nddata.NDData):
 
     def plot(self, *args, **kwargs):
         """
-        Plots an interactive visualization of this cube with a slider
-        controlling the wavelength axis.
+        Plots an interactive visualization of this cube using sliders to move through axes
+        plot using in the image.
         Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
         passes them to imshow.
 
@@ -62,6 +62,7 @@ class NDCube(astropy.nddata.NDData):
             raise IndexError("None indices not supported")
         return NDCube_utils.getitem_ND(self, item)
 
+
 class Cube2D(NDCube):
     """docstring for Cube2D"""
 
@@ -86,3 +87,4 @@ class Cube1D(NDCube):
 
     def __getitem__(self, item):
         pass
+
