@@ -9,6 +9,7 @@ import numpy as np
 
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
+from sunpycube.cube import cube_utils as cu
 
 
 class WCS(wcs.WCS):
@@ -52,6 +53,24 @@ class WCS(wcs.WCS):
             newheader['CTYPE' + axis] = projection
         return newheader
 
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            new_wcs = self.wcs.slice((item))
+        elif isinstance(item, int):
+            new_wcs = self.wcs.dropaxis(0)
+            new_wcs._naxis[0:-1]
+        elif isinstance(item, tuple):
+            if cu.iter_isinstance(item, (slice, slice, slice)):
+                new_wcs = self.wcs.slice((item))
+            elif cu.iter_isinstance(item, (int, slice, slice)):
+                new_wcs = self.wcs.dropaxis(0)
+                new_wcs._naxis[0:-1]
+                new_wcs = new_wcs.slice((item[1::]))
+            elif cu.iter_isinstance(item, (slice, int, slice)):
+                new_wcs = self.wcs.dropaxis(1)
+                item_ = (item[0], item[2])
+                new_wcs = new_wcs.slice((item_))
+        return new_wcs
 
 def reindex_wcs(wcs, inds):
     # From astropy.spectral_cube.wcs_utils

@@ -1,5 +1,6 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import astropy.nddata
+from sunpycube.cube import NDCube_utils
 
 __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 
@@ -57,8 +58,9 @@ class NDCube(astropy.nddata.NDData):
         return i
 
     def __getitem__(self, item):
-        pass
-
+        if item is None or (isinstance(item, tuple) and None in item):
+            raise IndexError("None indices not supported")
+        return NDCube_utils.getitem_ND(self, item)
 
 class Cube2D(NDCube):
     """docstring for Cube2D"""
