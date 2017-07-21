@@ -8,9 +8,20 @@ __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 class NDCube(astropy.nddata.NDData):
     """docstring for NDCube"""
 
-    def __init__(self, data=None, wcs=None, **kwargs):
-        super(NDCube, self).__init__(data=data, **kwargs)
-        self.axes_wcs = wcs
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+        if data.ndim is not wcs.naxis:
+            raise ValueError(
+                "The number of dimensions of data and number of axes of wcs donot match.")
+        super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
+                                     wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
+
+    @classmethod
+    def _new_instance(cls, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+        """
+        Instantiate a new instance of this class using given data.
+        """
+        return cls(data, uncertainty=uncertainty, mask=mask,
+                   wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self):
         pass
@@ -54,37 +65,50 @@ class NDCube(astropy.nddata.NDData):
             If None is specified for an axis then the array indices will be used
             for that axis.
         """
-        i = ImageAnimatorWCS(self.data, wcs=self.axes_wcs, *args, **kwargs)
+        i = ImageAnimatorWCS(self.data, wcs=self.wcs, *args, **kwargs)
         return i
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
-        return NDCube_utils.getitem_ND(self, item)
+        return self._getitem_NDCube(item)
+
+    def _getitem_NDCube(self, item):
+        data = self.data[item]
+        # wcs = self.wcs.wcs_slicer[item]
+        wcs = None
+        mask = None
+        if self.mask is not None:
+            mask = self.mask[item]
+        if data.ndim is 2:
+            result = Cube2D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
+                            meta=self.meta, unit=self.unit, copy=False)
+        elif data.ndim is 1:
+            result = Cube1D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
+                            meta=self.meta, unit=self.unit, copy=False)
+        else:
+            result = self._new_instance(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
+                                        meta=self.meta, unit=self.unit, copy=False)
+        return result
 
 
 class Cube2D(NDCube):
     """docstring for Cube2D"""
 
-    def __init__(self, data=None, wcs=None, **kwargs):
-        super(Cube2D, self).__init__(data=data, wcs=wcs, **kwargs)
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+        super(Cube2D, self).__init__(data, uncertainty=uncertainty, mask=mask,
+                                     wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
     def plot(self):
-        pass
-
-    def __getitem__(self, item):
         pass
 
 
 class Cube1D(NDCube):
     """docstring for Cube1D"""
 
-    def __init__(self, data=None, wcs=None, **kwargs):
-        super(Cube1D, self).__init__(data=data, wcs=wcs, **kwargs)
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+        super(Cube1D, self).__init__(data, uncertainty=uncertainty, mask=mask,
+                                     wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
     def plot(self):
         pass
-
-    def __getitem__(self, item):
-        pass
-

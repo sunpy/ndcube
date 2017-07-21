@@ -20,6 +20,6 @@ try:
 except ImportError:
     __githash__ = ''
 
-from sunpycube.cube import datacube, cube_utils, NDCube, NDCube_utils
+from sunpycube.cube import datacube, cube_utils, NDCube
 from sunpycube.visualization import animation
 from sunpycube.spectra import spectral_cube, spectrum, spectrogram
