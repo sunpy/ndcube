@@ -1,6 +1,6 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import astropy.nddata
-from sunpycube.cube import NDCube_utils
+import numpy as np
 
 __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 
@@ -10,18 +10,16 @@ class NDCube(astropy.nddata.NDData):
 
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
         if data.ndim is not wcs.naxis:
-            raise ValueError(
-                "The number of dimensions of data and number of axes of wcs donot match.")
+            _naxis = wcs._naxis
+            count = 0
+            for i in _naxis:
+                if not i is 1:
+                    count += 1
+            if count is not data.ndim:
+                raise ValueError(
+                    "The number of dimensions of data and number of axes of wcs donot match.")
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
-
-    @classmethod
-    def _new_instance(cls, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
-        """
-        Instantiate a new instance of this class using given data.
-        """
-        return cls(data, uncertainty=uncertainty, mask=mask,
-                   wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self):
         pass
@@ -71,12 +69,8 @@ class NDCube(astropy.nddata.NDData):
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
-        return self._getitem_NDCube(item)
-
-    def _getitem_NDCube(self, item):
         data = self.data[item]
-        # wcs = self.wcs.wcs_slicer[item]
-        wcs = None
+        wcs = self.wcs.wcs_slicer[item]
         mask = None
         if self.mask is not None:
             mask = self.mask[item]
@@ -87,8 +81,8 @@ class NDCube(astropy.nddata.NDData):
             result = Cube1D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
                             meta=self.meta, unit=self.unit, copy=False)
         else:
-            result = self._new_instance(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                                        meta=self.meta, unit=self.unit, copy=False)
+            result = NDCube(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
+                            meta=self.meta, unit=self.unit, copy=False)
         return result
 
 

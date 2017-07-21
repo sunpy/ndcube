@@ -72,10 +72,15 @@ def wcs_slicing(wcs, item):
     # normal slice.
     if isinstance(item, slice):
         new_wcs = wcs.slice((item))
-    # a int item dropping the axis
+    # item is int then slicing axis.
     elif isinstance(item, int):
-        new_wcs = wcs.dropaxis(0)
-        new_wcs._naxis = np.delete(new_wcs._naxis, 0)
+        if item < wcs._naxis[-1] and item >= 0:
+            new_wcs = wcs.slice((slice(item, item+1)))
+        elif item < 0:
+            new_wcs = wcs.slice(slice(0, 1))
+        else:
+            raise ValueError(
+                "indexed value {0} is out of bounds for axis {1} with size {2}".format(item, 0, wcs._naxis[-1]))
     # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
     elif isinstance(item, tuple):
         # if all are slices
@@ -84,27 +89,9 @@ def wcs_slicing(wcs, item):
         # if all are not slices some of them are int then
         else:
             # axis to drop
-            daxis_list = dropaxis_list(item)
-            new_wcs = wcs
-            for i, index in enumerate(daxis_list):
-                # dropping all the axis that int.
-                new_wcs = new_wcs.dropaxis(index-i)
-                # changing the naxis
-                new_wcs._naxis = np.delete(new_wcs._naxis, index-i)
-            item_ = get_all_slices(item)
-            new_wcs = new_wcs.slice((item_))
+            item_ = slice_list(item, wcs._naxis[::-1])
+            new_wcs = wcs.slice(item_)
     return new_wcs
-
-
-def get_all_slices(obj):
-    """
-    It returns all slices from a tuple or list.
-    """
-    result = []
-    for sl in obj:
-        if isinstance(sl, slice):
-            result.append(sl)
-    return result
 
 
 def all_slice(obj):
@@ -118,20 +105,28 @@ def all_slice(obj):
     return result
 
 
-def dropaxis_list(obj):
+def slice_list(obj, _naxis):
     """
-    Return list of all the axis to drop.
+    Return list of all the slices.
     Example
     -------
-    >>> dropaxis_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
-    >>> [2, 4]
+    >>> slice_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
+    >>> (slice(1,2), slice(1,3), slice(2, 3), slice(2,4), slice(8, 9))
     """
     result = []
     if not isinstance(obj, (tuple, list)):
         return result
     for i, o in enumerate(obj):
         if isinstance(o, int):
-            result.append(i)
+            if o < _naxis[i] and o >= 0:
+                result.append(slice(o, o+1))
+            elif o < 0:
+                result.append(slice(0, 1))
+            else:
+                raise ValueError(
+                    "indexed value {0} is out of bounds for axis {1} with size {2}".format(o, i, _naxis[i]))
+        elif isinstance(o, slice):
+            result.append(o)
     return result
 
 
