@@ -1,6 +1,7 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+import astropy.units as u
 import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
@@ -98,19 +99,32 @@ class Cube2D(NDCube):
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
     def plot(self, axes=None, axis_data=['x', 'y'], **kwargs):
+        """
+        Plots an x-y graph at a certain specified wavelength onto the current
+        axes. Keyword arguments are passed on to matplotlib.
+
+        Parameters
+        ----------
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
+            The axes to plot onto. If None the current axes will be used.
+
+        axis_data: `list`.
+            The first axis in WCS object will become the first axis of axis_data and
+            second axis in WCS object will become the seconf axis of axis_data.
+        """
         if axes is None:
-        	if self.wcs.naxis is not 2:
-        		slice_list = self.wcs._naxis
-        		axis_index = []
-        		for i, ax in enumerate(slice_list):
-        			if ax is not 1:
-        				axis_index.append(i)
-        		if len(axis_index) is 2:
-        			slice_list[axis_index[0]] = axis_data[0]
-        			slice_list[axis_index[1]] = axis_data[1]
-        		else:
-        			raise ValueError("Dimensions of WCS and data don't match")
-        	axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
+            if self.wcs.naxis is not 2:
+                slice_list = self.wcs._naxis
+                axis_index = []
+                for i, ax in enumerate(slice_list):
+                    if ax is not 1:
+                        axis_index.append(i)
+                if len(axis_index) is 2:
+                    slice_list[axis_index[0]] = axis_data[0]
+                    slice_list[axis_index[1]] = axis_data[1]
+                else:
+                    raise ValueError("Dimensions of WCS and data don't match")
+            axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
         plot = axes.imshow(self.data, **kwargs)
         return plot
 
@@ -122,6 +136,22 @@ class Cube1D(NDCube):
         super(Cube1D, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def plot(self):
-        plot = plt.plot(self.data)
+    def plot(self, unit=None):
+        """
+        Plots a graph.
+        Keyword arguments are passed on to matplotlib.
+
+        Parameters
+        ----------
+        unit: `astropy.unit.Unit`
+        The data is changed to the unit given or the self.unit if not given.
+        """
+        if self.unit is not None and unit is None:
+            if isinstance(self.unit, u.Unit):
+                plot = plt.plot(self.data * self.unit)
+            else:
+                plot = plt.plot(self.data)
+        elif unit is not None:
+            if isinstance(unit, u.Unit):
+                plot = plt.plot(self.data * unit)
         return plot
