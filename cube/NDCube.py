@@ -1,4 +1,5 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
+import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
@@ -95,8 +96,22 @@ class Cube2D(NDCube):
         super(Cube2D, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def plot(self):
-        pass
+    def plot(self, axes=None, axis_data=['x', 'y'], **kwargs):
+        if axes is None:
+        	if self.wcs.naxis is not 2:
+        		slice_list = self.wcs._naxis
+        		axis_index = []
+        		for i, ax in enumerate(slice_list):
+        			if ax is not 1:
+        				axis_index.append(i)
+        		if len(axis_index) is 2:
+        			slice_list[axis_index[0]] = axis_data[0]
+        			slice_list[axis_index[1]] = axis_data[1]
+        		else:
+        			raise ValueError("Dimensions of WCS and data don't match")
+        	axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
+        plot = axes.imshow(self.data, **kwargs)
+        return plot
 
 
 class Cube1D(NDCube):
