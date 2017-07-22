@@ -1,4 +1,5 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
+import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import sunpycube.wcs_util
 import astropy.nddata
@@ -122,4 +123,5 @@ class Cube1D(NDCube):
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
     def plot(self):
-        pass
+        plot = plt.plot(self.data)
+        return plot
