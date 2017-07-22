@@ -21,7 +21,7 @@ class WCS(wcs.WCS):
             header = WCS._augment(header, naxis)
             if naxis is not None:
                 naxis = naxis + 1
-        wcs.WCS.__init__(self, header=header, naxis=naxis, **kwargs)
+        super(WCS, self).__init__(header=header, naxis=naxis, **kwargs)
 
     @classmethod
     def _needs_augmenting(cls, header):
@@ -53,22 +53,8 @@ class WCS(wcs.WCS):
             newheader['CTYPE' + axis] = projection
         return newheader
 
-    @property
-    def wcs_slicer(self):
-        return _WcsSlicer(self)
 
-
-class _WcsSlicer(object):
-    """docstring for _WcsSlicer"""
-
-    def __init__(self, wcs):
-        self._axes_wcs = wcs
-
-    def __getitem__(self, item):
-        return wcs_slicing(self._axes_wcs, item)
-
-
-def wcs_slicing(wcs, item):
+def _wcs_slicer(wcs, item):
     # normal slice.
     if isinstance(item, slice):
         new_wcs = wcs.slice((item))

@@ -1,4 +1,5 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
+import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
 
@@ -70,10 +71,11 @@ class NDCube(astropy.nddata.NDData):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         data = self.data[item]
-        wcs = self.wcs.wcs_slicer[item]
-        mask = None
+        wcs = sunpycube.wcs_util._wcs_slicer(self.wcs, item)
         if self.mask is not None:
             mask = self.mask[item]
+        else:
+            mask = None
         if data.ndim is 2:
             result = Cube2D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
                             meta=self.meta, unit=self.unit, copy=False)
