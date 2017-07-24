@@ -70,17 +70,17 @@ def _wcs_slicer(wcs, item):
     # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
     elif isinstance(item, tuple):
         # if all are slices
-        if all_slice(item):
+        if _all_slice(item):
             new_wcs = wcs.slice((item))
         # if all are not slices some of them are int then
         else:
             # axis to drop
-            item_ = slice_list(item, wcs._naxis[::-1])
+            item_ = _slice_list(item, wcs._naxis[::-1])
             new_wcs = wcs.slice(item_)
     return new_wcs
 
 
-def all_slice(obj):
+def _all_slice(obj):
     """
     Returns True if all the elements in the object are slices else return False
     """
@@ -91,12 +91,12 @@ def all_slice(obj):
     return result
 
 
-def slice_list(obj, _naxis):
+def _slice_list(obj, _naxis):
     """
     Return list of all the slices.
     Example
     -------
-    >>> slice_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
+    >>> _slice_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
     >>> (slice(1,2), slice(1,3), slice(2, 3), slice(2,4), slice(8, 9))
     """
     result = []
