@@ -172,7 +172,7 @@ class Cube1D(NDCube):
         super(Cube1D, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def plot(self, unit=None):
+    def plot(self, unit=None, origin=0):
         """
         Plots a graph.
         Keyword arguments are passed on to matplotlib.
@@ -182,5 +182,11 @@ class Cube1D(NDCube):
         unit: `astropy.unit.Unit`
         The data is changed to the unit given or the self.unit if not given.
         """
-        plot = plt.plot(self.wcs.pixel_to_world(np.arange(len(self.data)), self.data))
+        index_not_one = []
+        for i, item in enumerate(self.wcs._naxis):
+            if item is not 1:
+                index_not_one.append(i)
+        if unit is None:
+            unit = self.wcs.wcs.cunit[index_not_one[0]]
+        plot = plt.plot(self.pixel_to_world(origin=origin) * unit)
         return plot
