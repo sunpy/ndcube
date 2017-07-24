@@ -22,6 +22,7 @@ class WCS(wcs.WCS):
             if naxis is not None:
                 naxis = naxis + 1
         super(WCS, self).__init__(header=header, naxis=naxis, **kwargs)
+        self._bool_sliced = [False]*self.wcs.naxis
 
     @classmethod
     def _needs_augmenting(cls, header):
@@ -62,8 +63,10 @@ def _wcs_slicer(wcs, item):
     elif isinstance(item, int):
         if item < wcs._naxis[-1] and item >= 0:
             new_wcs = wcs.slice((slice(item, item+1)))
+            new_wcs._bool_sliced[0] = True
         elif item < 0:
             new_wcs = wcs.slice(slice(0, 1))
+            new_wcs._bool_sliced[0] = True
         else:
             raise ValueError(
                 "indexed value {0} is out of bounds for axis {1} with size {2}".format(item, 0, wcs._naxis[-1]))
@@ -74,9 +77,13 @@ def _wcs_slicer(wcs, item):
             new_wcs = wcs.slice((item))
         # if all are not slices some of them are int then
         else:
-            # axis to drop
+            # axis to change to 1
+            # searching all indexes to change
             item_ = _slice_list(item, wcs._naxis[::-1])
             new_wcs = wcs.slice(item_)
+            for i, it in enumerate(item):
+                if isinstance(it, int):
+                    new_wcs._bool_sliced[i] = True
     return new_wcs
 
 

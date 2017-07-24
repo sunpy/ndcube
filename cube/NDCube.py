@@ -25,8 +25,44 @@ class NDCube(astropy.nddata.NDData):
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def pixel_to_world(self):
-        pass
+    def pixel_to_world(self, origin=0):
+        """
+        Convert a pixel coordinate to a data (world) coordinate by using
+        `~astropy.wcs.WCS.all_pix2world`.
+
+        Parameters
+        ----------
+        origin : int
+            Origin of the top-left corner. i.e. count from 0 or 1.
+            Normally, origin should be 0 when passing numpy indices, or 1 if
+            passing values from FITS header or map attributes.
+            See `~astropy.wcs.WCS.wcs_pix2world` for more information.
+
+        Returns
+        -------
+
+        coord : `list`
+            A list of arrays containing the output coordinates.
+
+        """
+        _naxis = self.wcs._naxis
+        list_arg = []
+        indexed_not_as_one = []
+        result = []
+        for i, axis_dim in enumerate(_naxis):
+            # the cases where the wcs dimension was made 1 and the _bool_sliced is True
+            if axis_dim is 1 and self.wcs._bool_sliced[self.wcs.naxis-1-i]:
+                list_arg.append(self.wcs.wcs.crpix[i]-1+origin)
+            else:
+            # else it is not the case where the dimension of wcs is 1.
+                list_arg.append(np.arange(axis_dim))
+            # appending all the indexes to be returned in the answer
+                indexed_not_as_one.append(i)
+        pixel_to_world = self.wcs.all_pix2world(*list_arg, origin)
+        # collecting all the needed answer in this list.
+        for index in indexed_not_as_one:
+            result.append(pixel_to_world[index])
+        return result
 
     def world_to_pixel(self):
         pass
@@ -146,12 +182,5 @@ class Cube1D(NDCube):
         unit: `astropy.unit.Unit`
         The data is changed to the unit given or the self.unit if not given.
         """
-        if self.unit is not None and unit is None:
-            if isinstance(self.unit, u.Unit):
-                plot = plt.plot(self.data * self.unit)
-            else:
-                plot = plt.plot(self.data)
-        elif unit is not None:
-            if isinstance(unit, u.Unit):
-                plot = plt.plot(self.data * unit)
+        plot = plt.plot(self.wcs.pixel_to_world(np.arange(len(self.data)), self.data))
         return plot
