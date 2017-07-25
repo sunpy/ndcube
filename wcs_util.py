@@ -22,7 +22,6 @@ class WCS(wcs.WCS):
             if naxis is not None:
                 naxis = naxis + 1
         super(WCS, self).__init__(header=header, naxis=naxis, **kwargs)
-        self._bool_sliced = [False]*self.wcs.naxis
 
     @classmethod
     def _needs_augmenting(cls, header):
@@ -55,21 +54,17 @@ class WCS(wcs.WCS):
         return newheader
 
 
-def _wcs_slicer(wcs, item):
+def _wcs_slicer(wcs, missing_axis, item):
+    """
+    Returns the new sliced wcs and changed missing axis
+    """
     # normal slice.
     if isinstance(item, slice):
         new_wcs = wcs.slice((item))
     # item is int then slicing axis.
     elif isinstance(item, int):
-        if item < wcs._naxis[-1] and item >= 0:
-            new_wcs = wcs.slice((slice(item, item+1)))
-            new_wcs._bool_sliced[0] = True
-        elif item < 0:
-            new_wcs = wcs.slice(slice(0, 1))
-            new_wcs._bool_sliced[0] = True
-        else:
-            raise ValueError(
-                "indexed value {0} is out of bounds for axis {1} with size {2}".format(item, 0, wcs._naxis[-1]))
+        new_wcs = wcs.slice((slice(item, item+1)))
+        missing_axis[0] = True
     # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
     elif isinstance(item, tuple):
         # if all are slices
@@ -79,12 +74,12 @@ def _wcs_slicer(wcs, item):
         else:
             # axis to change to 1
             # searching all indexes to change
-            item_ = _slice_list(item, wcs._naxis[::-1])
+            item_ = _slice_list(item)
             new_wcs = wcs.slice(item_)
             for i, it in enumerate(item):
                 if isinstance(it, int):
-                    new_wcs._bool_sliced[i] = True
-    return new_wcs
+                    missing_axis[i] = True
+    return new_wcs, missing_axis
 
 
 def _all_slice(obj):
@@ -98,7 +93,7 @@ def _all_slice(obj):
     return result
 
 
-def _slice_list(obj, _naxis):
+def _slice_list(obj):
     """
     Return list of all the slices.
     Example
@@ -111,13 +106,7 @@ def _slice_list(obj, _naxis):
         return result
     for i, o in enumerate(obj):
         if isinstance(o, int):
-            if o < _naxis[i] and o >= 0:
-                result.append(slice(o, o+1))
-            elif o < 0:
-                result.append(slice(0, 1))
-            else:
-                raise ValueError(
-                    "indexed value {0} is out of bounds for axis {1} with size {2}".format(o, i, _naxis[i]))
+            result.append(slice(o, o+1))
         elif isinstance(o, slice):
             result.append(o)
     return result

@@ -12,12 +12,15 @@ __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 class NDCube(astropy.nddata.NDData):
     """docstring for NDCube"""
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
+        if missing_axis is None:
+            self.missing_axis = [False]*wcs.naxis
+        else:
+            self.missing_axis = missing_axis
         if data.ndim is not wcs.naxis:
-            _naxis = wcs._naxis
             count = 0
-            for i in _naxis:
-                if not i is 1:
+            for bool_ in self.missing_axis:
+                if not bool_:
                     count += 1
             if count is not data.ndim:
                 raise ValueError(
@@ -48,14 +51,13 @@ class NDCube(astropy.nddata.NDData):
             A list of arrays containing the output coordinates.
 
         """
-        _naxis = self.wcs._naxis
         list_arg = []
         indexed_not_as_one = []
         result = []
         quantity_index = 0
-        for i, axis_dim in enumerate(_naxis):
-            # the cases where the wcs dimension was made 1 and the _bool_sliced is True
-            if axis_dim is 1 and self.wcs._bool_sliced[self.wcs.naxis-1-i]:
+        for i, _ in enumerate(self.missing_axis):
+            # the cases where the wcs dimension was made 1 and the missing_axis is True
+            if self.missing_axis[self.wcs.naxis-1-i]:
                 list_arg.append(self.wcs.wcs.crpix[i]-1+origin)
             else:
                 # else it is not the case where the dimension of wcs is 1.
@@ -115,29 +117,29 @@ class NDCube(astropy.nddata.NDData):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         data = self.data[item]
-        wcs = sunpycube.wcs_util._wcs_slicer(self.wcs, item)
+        wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(self.wcs, self.missing_axis, item)
         if self.mask is not None:
             mask = self.mask[item]
         else:
             mask = None
         if data.ndim is 2:
             result = Cube2D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                            meta=self.meta, unit=self.unit, copy=False)
+                            meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         elif data.ndim is 1:
             result = Cube1D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                            meta=self.meta, unit=self.unit, copy=False)
+                            meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         else:
             result = NDCube(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                            meta=self.meta, unit=self.unit, copy=False)
+                            meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         return result
 
 
 class Cube2D(NDCube):
     """docstring for Cube2D"""
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
         super(Cube2D, self).__init__(data, uncertainty=uncertainty, mask=mask,
-                                     wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
+                                     wcs=wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
     def plot(self, axes=None, axis_data=['x', 'y'], **kwargs):
         """
@@ -155,15 +157,17 @@ class Cube2D(NDCube):
         """
         if axes is None:
             if self.wcs.naxis is not 2:
-                slice_list = self.wcs._naxis
+                missing_axis = self.missing_axis
+                slice_list = []
                 axis_index = []
-                for i, ax in enumerate(slice_list):
-                    if ax is not 1:
-                        axis_index.append(i)
-                if len(axis_index) is 2:
-                    slice_list[axis_index[0]] = axis_data[0]
-                    slice_list[axis_index[1]] = axis_data[1]
-                else:
+                index = 0
+                for i, bool_ in enumerate(missing_axis):
+                    if not bool_:
+                        slice_list.append(axis_data[index])
+                        index += 1
+                    else:
+                        slice_list.append(1)
+                if index is not 2:
                     raise ValueError("Dimensions of WCS and data don't match")
             axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
         plot = axes.imshow(self.data, **kwargs)
@@ -173,9 +177,9 @@ class Cube2D(NDCube):
 class Cube1D(NDCube):
     """docstring for Cube1D"""
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, **kwargs):
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
         super(Cube1D, self).__init__(data, uncertainty=uncertainty, mask=mask,
-                                     wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
+                                     wcs=wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
     def plot(self, unit=None, origin=0):
         """
@@ -188,8 +192,8 @@ class Cube1D(NDCube):
         The data is changed to the unit given or the self.unit if not given.
         """
         index_not_one = []
-        for i, item in enumerate(self.wcs._naxis):
-            if item is not 1:
+        for i, _bool in enumerate(self.missing_axis):
+            if _bool:
                 index_not_one.append(i)
         if unit is None:
             unit = self.wcs.wcs.cunit[index_not_one[0]]
