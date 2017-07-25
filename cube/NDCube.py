@@ -25,18 +25,21 @@ class NDCube(astropy.nddata.NDData):
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def pixel_to_world(self, origin=0):
+    def pixel_to_world(self, quantity_axis_list, origin=0):
         """
         Convert a pixel coordinate to a data (world) coordinate by using
         `~astropy.wcs.WCS.all_pix2world`.
 
         Parameters
         ----------
-        origin : int
+        origin : `int`
             Origin of the top-left corner. i.e. count from 0 or 1.
             Normally, origin should be 0 when passing numpy indices, or 1 if
             passing values from FITS header or map attributes.
             See `~astropy.wcs.WCS.wcs_pix2world` for more information.
+
+        quantity_axis_list : `list`
+            A list of `~astropy.units.Quantity`.
 
         Returns
         -------
@@ -49,19 +52,21 @@ class NDCube(astropy.nddata.NDData):
         list_arg = []
         indexed_not_as_one = []
         result = []
+        quantity_index = 0
         for i, axis_dim in enumerate(_naxis):
             # the cases where the wcs dimension was made 1 and the _bool_sliced is True
             if axis_dim is 1 and self.wcs._bool_sliced[self.wcs.naxis-1-i]:
                 list_arg.append(self.wcs.wcs.crpix[i]-1+origin)
             else:
-            # else it is not the case where the dimension of wcs is 1.
-                list_arg.append(np.arange(axis_dim))
+                # else it is not the case where the dimension of wcs is 1.
+                list_arg.append(quantity_axis_list[quantity_index])
+                quantity_index += 1
             # appending all the indexes to be returned in the answer
                 indexed_not_as_one.append(i)
         pixel_to_world = self.wcs.all_pix2world(*list_arg, origin)
         # collecting all the needed answer in this list.
         for index in indexed_not_as_one:
-            result.append(pixel_to_world[index])
+            result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
         return result
 
     def world_to_pixel(self):
@@ -188,5 +193,6 @@ class Cube1D(NDCube):
                 index_not_one.append(i)
         if unit is None:
             unit = self.wcs.wcs.cunit[index_not_one[0]]
-        plot = plt.plot(self.pixel_to_world(origin=origin) * unit)
+        plot = plt.plot(self.pixel_to_world(
+            [u.Quantity(np.arange(self.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit), self.data)
         return plot
