@@ -25,7 +25,7 @@ class NDCube(astropy.nddata.NDData):
                     count += 1
             if count is not data.ndim:
                 raise ValueError(
-                    "The number of dimensions of data and number of axes of wcs donot match.")
+                    "The number of data dimensions and number of wcs non-missing axes do not match.")
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
