@@ -5,6 +5,7 @@ import astropy.units as u
 import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
+import copy
 
 __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 
@@ -135,7 +136,7 @@ class NDCube(astropy.nddata.NDData):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         data = self.data[item]
-        wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(self.wcs, self.missing_axis, item)
+        wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(self.wcs, copy.deepcopy(self.missing_axis), item)
         if self.mask is not None:
             mask = self.mask[item]
         else:
