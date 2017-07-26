@@ -142,9 +142,11 @@ class NDCubeOrdered(NDCube):
 
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)
-        wcs_order = np.array(sunpycube.cube.cube_utils.select_order(axtypes))[::-1]
+        array_order = sunpycube.cube.cube_utils.select_order(axtypes)
+        result_data = data.transpose(array_order)
+        wcs_order = np.array(array_order)[::-1]
         result_wcs = sunpycube.wcs_util.reindex_wcs(wcs, wcs_order)
-        super(NDCubeOrdered, self).__init__(data, uncertainty=uncertainty, mask=mask,
+        super(NDCubeOrdered, self).__init__(result_data, uncertainty=uncertainty, mask=mask,
                                             wcs=result_wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
 
