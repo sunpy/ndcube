@@ -41,7 +41,7 @@ class WCS(wcs.WCS):
         newheader = deepcopy(header)
         new_wcs_axes_params = {'CRPIX': 0, 'CDELT': 1, 'CRVAL': 0,
                                'CNAME': 'redundant axis', 'CTYPE': 'HPLN-TAN',
-                               'CROTA': 0, 'CUNIT': 'deg', 'NAXIS': 0}
+                               'CROTA': 0, 'CUNIT': 'deg', 'NAXIS': 1}
         axis = str(max(newheader.get('NAXIS', 0), naxis) + 1)
         for param in new_wcs_axes_params:
             attr = new_wcs_axes_params[param]

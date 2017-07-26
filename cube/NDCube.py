@@ -1,5 +1,5 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import astropy.units as u
