@@ -106,16 +106,20 @@ class NDCube(astropy.nddata.NDData):
         The dimensions of the data (x axis first, y axis second, z axis third ...so on) and the type of axes.
         """
         ctype = list(self.wcs.wcs.ctype)[::-1]
+        axes_ctype = []
+        for i, axis in enumerate(self.missing_axis):
+            if not axis:
+                axes_ctype.append(ctype[i])
         shape = self.data.shape
-        return PixelPair(dimensions=shape, axes=ctype)
+        return PixelPair(dimensions=shape, axes=axes_ctype)
 
     def plot(self, axes=None, axis_data=['x', 'y'], unit=None, origin=0, *args, **kwargs):
         if self.data.ndim >= 3:
-            plot = plot3D(self, *args, *kwargs)
+            plot = _plot_3D_cube(self, *args, *kwargs)
         elif self.data.ndim is 2:
-            plot = plot2D(self, axes=axes, axis_data=axis_data, **kwargs)
+            plot = _plot_2D_cube(self, axes=axes, axis_data=axis_data, **kwargs)
         elif self.data.ndim is 1:
-            plot = plot1D(self, unit=unit, origin=origin)
+            plot = _plot_1D_cube(self, unit=unit, origin=origin)
         return plot
 
     def __getitem__(self, item):
@@ -144,7 +148,7 @@ class NDCubeOrdered(NDCube):
                                             wcs=result_wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
 
-def plot3D(cube, *args, **kwargs):
+def _plot_3D_cube(cube, *args, **kwargs):
     """
     Plots an interactive visualization of this cube using sliders to move through axes
     plot using in the image.
@@ -178,7 +182,7 @@ def plot3D(cube, *args, **kwargs):
     return i
 
 
-def plot2D(cube, axes=None, axis_data=['x', 'y'], **kwargs):
+def _plot_2D_cube(cube, axes=None, axis_data=['x', 'y'], **kwargs):
     """
     Plots an x-y graph at a certain specified wavelength onto the current
     axes. Keyword arguments are passed on to matplotlib.
@@ -211,7 +215,7 @@ def plot2D(cube, axes=None, axis_data=['x', 'y'], **kwargs):
     return plot
 
 
-def plot1D(cube, unit=None, origin=0):
+def _plot_1D_cube(cube, unit=None, origin=0):
     """
     Plots a graph.
     Keyword arguments are passed on to matplotlib.
