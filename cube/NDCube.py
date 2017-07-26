@@ -3,6 +3,7 @@ from collections import OrderedDict, namedtuple
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import astropy.units as u
+import sunpycube.cube.cube_utils
 import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
@@ -130,6 +131,17 @@ class NDCube(astropy.nddata.NDData):
         result = NDCube(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
                         meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         return result
+
+
+class NDCubeOrdered(NDCube):
+    """docstring for NDCubeOrdered"""
+
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
+        axtypes = list(wcs.wcs.ctype)
+        wcs_order = np.array(sunpycube.cube.cube_utils.select_order(axtypes))[::-1]
+        result_wcs = sunpycube.wcs_util.reindex_wcs(wcs, wcs_order)
+        super(NDCubeOrdered, self).__init__(data, uncertainty=uncertainty, mask=mask,
+                                            wcs=result_wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
 
 def plot3D(cube, *args, **kwargs):
