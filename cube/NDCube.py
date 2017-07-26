@@ -1,4 +1,5 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
+from collections import OrderedDict, namedtuple
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import astropy.units as u
@@ -6,6 +7,8 @@ import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
 import copy
+
+PixelPair = namedtuple('PixelPair', 'dimensions axes')
 
 __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 
@@ -96,126 +99,122 @@ class NDCube(astropy.nddata.NDData):
     def to_sunpy(self):
         pass
 
-    def dimension(self):
-        pass
-
-    def plot(self, *args, **kwargs):
+    @property
+    def dimensions(self):
         """
-        Plots an interactive visualization of this cube using sliders to move through axes
-        plot using in the image.
-        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
-        passes them to imshow.
-
-        Parameters
-        ----------
-        image_axes: `list`
-            The two axes that make the image.
-            Like [-1,-2] this implies cube instance -1 dimension
-            will be x-axis and -2 dimension will be y-axis.
-
-        unit_x_axis: `astropy.units.Unit`
-            The unit of x axis.
-
-        unit_y_axis: `astropy.units.Unit`
-            The unit of y axis.
-
-        axis_ranges: list of physical coordinates for array or None
-            If None array indices will be used for all axes.
-            If a list it should contain one element for each axis of the numpy array.
-            For the image axes a [min, max] pair should be specified which will be
-            passed to :func:`matplotlib.pyplot.imshow` as extent.
-            For the slider axes a [min, max] pair can be specified or an array the
-            same length as the axis which will provide all values for that slider.
-            If None is specified for an axis then the array indices will be used
-            for that axis.
+        The dimensions of the data (x axis first, y axis second, z axis third ...so on) and the type of axes.
         """
-        i = ImageAnimatorWCS(self.data, wcs=self.wcs, *args, **kwargs)
-        return i
+        ctype = list(self.wcs.wcs.ctype)[::-1]
+        shape = self.data.shape
+        return PixelPair(dimensions=shape, axes=ctype)
+
+    def plot(self, axes=None, axis_data=['x', 'y'], unit=None, origin=0, *args, **kwargs):
+        if self.data.ndim >= 3:
+            plot = plot3D(self, *args, *kwargs)
+        elif self.data.ndim is 2:
+            plot = plot2D(self, axes=axes, axis_data=axis_data, **kwargs)
+        elif self.data.ndim is 1:
+            plot = plot1D(self, unit=unit, origin=origin)
+        return plot
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         data = self.data[item]
-        wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(self.wcs, copy.deepcopy(self.missing_axis), item)
+        wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(
+            self.wcs, copy.deepcopy(self.missing_axis), item)
         if self.mask is not None:
             mask = self.mask[item]
         else:
             mask = None
-        if data.ndim is 2:
-            result = Cube2D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                            meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
-        elif data.ndim is 1:
-            result = Cube1D(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                            meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
-        else:
-            result = NDCube(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
-                            meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
+        result = NDCube(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
+                        meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         return result
 
 
-class Cube2D(NDCube):
-    """docstring for Cube2D"""
+def plot3D(cube, *args, **kwargs):
+    """
+    Plots an interactive visualization of this cube using sliders to move through axes
+    plot using in the image.
+    Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
+    passes them to imshow.
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
-        super(Cube2D, self).__init__(data, uncertainty=uncertainty, mask=mask,
-                                     wcs=wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
+    Parameters
+    ----------
+    image_axes: `list`
+        The two axes that make the image.
+        Like [-1,-2] this implies cube instance -1 dimension
+        will be x-axis and -2 dimension will be y-axis.
 
-    def plot(self, axes=None, axis_data=['x', 'y'], **kwargs):
-        """
-        Plots an x-y graph at a certain specified wavelength onto the current
-        axes. Keyword arguments are passed on to matplotlib.
+    unit_x_axis: `astropy.units.Unit`
+        The unit of x axis.
 
-        Parameters
-        ----------
-        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
-            The axes to plot onto. If None the current axes will be used.
+    unit_y_axis: `astropy.units.Unit`
+        The unit of y axis.
 
-        axis_data: `list`.
-            The first axis in WCS object will become the first axis of axis_data and
-            second axis in WCS object will become the seconf axis of axis_data.
-        """
-        if axes is None:
-            if self.wcs.naxis is not 2:
-                missing_axis = self.missing_axis
-                slice_list = []
-                axis_index = []
-                index = 0
-                for i, bool_ in enumerate(missing_axis):
-                    if not bool_:
-                        slice_list.append(axis_data[index])
-                        index += 1
-                    else:
-                        slice_list.append(1)
-                if index is not 2:
-                    raise ValueError("Dimensions of WCS and data don't match")
-            axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
-        plot = axes.imshow(self.data, **kwargs)
-        return plot
+    axis_ranges: list of physical coordinates for array or None
+        If None array indices will be used for all axes.
+        If a list it should contain one element for each axis of the numpy array.
+        For the image axes a [min, max] pair should be specified which will be
+        passed to :func:`matplotlib.pyplot.imshow` as extent.
+        For the slider axes a [min, max] pair can be specified or an array the
+        same length as the axis which will provide all values for that slider.
+        If None is specified for an axis then the array indices will be used
+        for that axis.
+    """
+    i = ImageAnimatorWCS(cube.data, wcs=cube.wcs, *args, **kwargs)
+    return i
 
 
-class Cube1D(NDCube):
-    """docstring for Cube1D"""
+def plot2D(cube, axes=None, axis_data=['x', 'y'], **kwargs):
+    """
+    Plots an x-y graph at a certain specified wavelength onto the current
+    axes. Keyword arguments are passed on to matplotlib.
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
-        super(Cube1D, self).__init__(data, uncertainty=uncertainty, mask=mask,
-                                     wcs=wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
+    Parameters
+    ----------
+    axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
+        The axes to plot onto. If None the current axes will be used.
 
-    def plot(self, unit=None, origin=0):
-        """
-        Plots a graph.
-        Keyword arguments are passed on to matplotlib.
+    axis_data: `list`.
+        The first axis in WCS object will become the first axis of axis_data and
+        second axis in WCS object will become the seconf axis of axis_data.
+    """
+    if axes is None:
+        if cube.wcs.naxis is not 2:
+            missing_axis = cube.missing_axis
+            slice_list = []
+            axis_index = []
+            index = 0
+            for i, bool_ in enumerate(missing_axis):
+                if not bool_:
+                    slice_list.append(axis_data[index])
+                    index += 1
+                else:
+                    slice_list.append(1)
+            if index is not 2:
+                raise ValueError("Dimensions of WCS and data don't match")
+        axes = wcsaxes_compat.gca_wcs(cube.wcs, slices=slice_list)
+    plot = axes.imshow(cube.data, **kwargs)
+    return plot
 
-        Parameters
-        ----------
-        unit: `astropy.unit.Unit`
-        The data is changed to the unit given or the self.unit if not given.
-        """
-        index_not_one = []
-        for i, _bool in enumerate(self.missing_axis):
-            if _bool:
-                index_not_one.append(i)
-        if unit is None:
-            unit = self.wcs.wcs.cunit[index_not_one[0]]
-        plot = plt.plot(self.pixel_to_world(
-            [u.Quantity(np.arange(self.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit), self.data)
-        return plot
+
+def plot1D(cube, unit=None, origin=0):
+    """
+    Plots a graph.
+    Keyword arguments are passed on to matplotlib.
+
+    Parameters
+    ----------
+    unit: `astropy.unit.Unit`
+    The data is changed to the unit given or the cube.unit if not given.
+    """
+    index_not_one = []
+    for i, _bool in enumerate(cube.missing_axis):
+        if _bool:
+            index_not_one.append(i)
+    if unit is None:
+        unit = cube.wcs.wcs.cunit[index_not_one[0]]
+    plot = plt.plot(cube.pixel_to_world(
+        [u.Quantity(np.arange(cube.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit), cube.data)
+    return plot
