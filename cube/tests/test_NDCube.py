@@ -11,13 +11,13 @@ import pytest
 import numpy as np
 import astropy.units as u
 
-PixelPair = namedtuple('PixelPair', 'dimensions axes')
+DimensionPair = namedtuple('DimensionPair', 'dimensions axes')
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
-ht = {'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2,
+ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
       'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 3,
-      'CTYPE3': 'TIME    ', 'CUNIT3': 'min', 'CDELT3': 0.4, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 4}
+      'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
 wt = WCS(header=ht, naxis=3)
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
@@ -45,6 +45,7 @@ cubem = NDCube(data, wcs=wm)
 cube = NDCube(data, wcs=wt, missing_axis=[False, False, False, True])
 hcube = NDCube(data4, wcs=w4)
 
+
 @pytest.mark.parametrize("test_input,expected", [
     (cubem[:, 1], NDCube),
     (cubem[:, 0:2], NDCube),
@@ -59,39 +60,119 @@ hcube = NDCube(data4, wcs=w4)
     (cube[1, 0:2], NDCube),
     (cube[1, :], NDCube),
 ])
-def test_slicing_second_axis(test_input, expected):
+def test_slicing_second_axis_type(test_input, expected):
     assert isinstance(test_input, expected)
 
-@pytest.mark.parametrize("test_input,expected", [
-    (cubem[:, 1].dimensions[0], PixelPair(dimensions=(2, 4), axes=['HPLN-TAN', 'WAVE'])[0]),
-    (cubem[:, 0:2].dimensions[0], PixelPair(dimensions=(2, 2, 4), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])[0]),
-    (cubem[:, :].dimensions[0], PixelPair(dimensions=(2, 3, 4), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])[0]),
-    (cubem[1, 1].dimensions[0], PixelPair(dimensions=(4,), axes=['WAVE'])[0]),
-    (cubem[1, 0:2].dimensions[0], PixelPair(dimensions=(2, 4), axes=['HPLT-TAN', 'WAVE'])[0]),
-    (cubem[1, :].dimensions[0], PixelPair(dimensions=(3, 4), axes=['HPLT-TAN', 'WAVE'])[0]),
-    (cube[:, 1].dimensions[0], PixelPair(dimensions=(2, 4), axes=['HPLN-TAN', 'WAVE'])[0]),
-    (cube[:, 0:2].dimensions[0], PixelPair(dimensions=(2, 2, 4), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])[0]),
-    (cube[:, :].dimensions[0], PixelPair(dimensions=(2, 3, 4), axes=['HPLN-TAN', 'TIME', 'WAVE'])[0]),
-    (cube[1, 1].dimensions[0], PixelPair(dimensions=(4,), axes=['WAVE'])[0]),
-    (cube[1, 0:2].dimensions[0], PixelPair(dimensions=(2, 4), axes=['TIME', 'WAVE'])[0]),
-    (cube[1, :].dimensions[0], PixelPair(dimensions=(3, 4), axes=['TIME', 'WAVE'])[0]),
-])
-def test_slicing_second_axis(test_input, expected):
-    assert test_input == expected
 
 @pytest.mark.parametrize("test_input,expected", [
-    (cubem[:, 1].dimensions[1], PixelPair(dimensions=(2, 4), axes=['HPLN-TAN', 'WAVE'])[1]),
-    (cubem[:, 0:2].dimensions[1], PixelPair(dimensions=(2, 2, 4), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])[1]),
-    (cubem[:, :].dimensions[1], PixelPair(dimensions=(2, 3, 4), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])[1]),
-    (cubem[1, 1].dimensions[1], PixelPair(dimensions=(4,), axes=['WAVE'])[1]),
-    (cubem[1, 0:2].dimensions[1], PixelPair(dimensions=(2, 4), axes=['HPLT-TAN', 'WAVE'])[1]),
-    (cubem[1, :].dimensions[1], PixelPair(dimensions=(3, 4), axes=['HPLT-TAN', 'WAVE'])[1]),
-    (cube[:, 1].dimensions[1], PixelPair(dimensions=(2, 4), axes=['HPLN-TAN', 'WAVE'])[1]),
-    (cube[:, 0:2].dimensions[1], PixelPair(dimensions=(2, 2, 4), axes=['HPLN-TAN', 'TIME', 'WAVE'])[1]),
-    (cube[:, :].dimensions[1], PixelPair(dimensions=(2, 3, 4), axes=['HPLN-TAN', 'TIME', 'WAVE'])[1]),
-    (cube[1, 1].dimensions[1], PixelPair(dimensions=(4,), axes=['WAVE'])[1]),
-    (cube[1, 0:2].dimensions[1], PixelPair(dimensions=(2, 4), axes=['TIME', 'WAVE'])[1]),
-    (cube[1, :].dimensions[1], PixelPair(dimensions=(3, 4), axes=['TIME', 'WAVE'])[1]),
+    (cubem[:, 1].dimensions, DimensionPair(dimensions=u.Quantity((2, 4), unit=u.pix), axes=['HPLN-TAN', 'WAVE'])),
+    (cubem[:, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 2, 4), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+    (cubem[:, :].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+    (cubem[1, 1].dimensions, DimensionPair(dimensions=u.Quantity((4,), unit=u.pix), axes=['WAVE'])),
+    (cubem[1, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE'])),
+    (cubem[1, :].dimensions, DimensionPair(dimensions=u.Quantity((3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE'])),
+    (cube[:, 1].dimensions, DimensionPair(dimensions=u.Quantity((2, 4), unit=u.pix), axes=['HPLT-TAN', 'TIME'])),
+    (cube[:, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 2, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE', 'TIME'])),
+    (cube[:, :].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE', 'TIME'])),
+    (cube[1, 1].dimensions, DimensionPair(dimensions=u.Quantity((4,), unit=u.pix), axes=['TIME'])),
+    (cube[1, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 4), unit=u.pix), axes=['WAVE', 'TIME'])),
+    (cube[1, :].dimensions, DimensionPair(dimensions=u.Quantity((3, 4), unit=u.pix), axes=['WAVE', 'TIME'])),
 ])
 def test_slicing_second_axis(test_input, expected):
-    assert test_input == expected
+    assert test_input[1] == expected[1]
+    assert np.all(test_input[0].value == expected[0].value)
+    assert test_input[0].unit == expected[0].unit
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[1], NDCube),
+    (cubem[0:2], NDCube),
+    (cubem[:], NDCube),
+    (cube[1], NDCube),
+    (cube[0:2], NDCube),
+    (cube[:], NDCube),
+])
+def test_slicing_first_axis_type(test_input, expected):
+    assert isinstance(test_input, expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[1].dimensions, DimensionPair(dimensions=u.Quantity((3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE'])),
+    (cubem[0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+    (cubem[:].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+    (cube[1].dimensions, DimensionPair(dimensions=u.Quantity((3, 4), unit=u.pix), axes=['WAVE', 'TIME'])),
+    (cube[0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE', 'TIME'])),
+    (cube[:].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE', 'TIME'])),
+])
+def test_slicing_first_axis_dimensions(test_input, expected):
+    assert test_input[1] == expected[1]
+    assert np.all(test_input[0].value == expected[0].value)
+    assert test_input[0].unit == expected[0].unit
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, :, 1], NDCube),
+    (cubem[:, :, 0:2], NDCube),
+    (cubem[:, :, :], NDCube),
+    (cubem[:, 1, 1], NDCube),
+    (cubem[:, 1, 0:2], NDCube),
+    (cubem[:, 1, :], NDCube),
+    (cubem[1, :, 1], NDCube),
+    (cubem[1, :, 0:2], NDCube),
+    (cubem[1, :, :], NDCube),
+    (cubem[1, 1, 1], NDCube),
+    (cubem[1, 1, 0:2], NDCube),
+    (cubem[1, 1, :], NDCube),
+    (cube[:, :, 1], NDCube),
+    (cube[:, :, 0:2], NDCube),
+    (cube[:, :, :], NDCube),
+    (cube[:, 1, 1], NDCube),
+    (cube[:, 1, 0:2], NDCube),
+    (cube[:, 1, :], NDCube),
+    (cube[1, :, 1], NDCube),
+    (cube[1, :, 0:2], NDCube),
+    (cube[1, :, :], NDCube),
+    (cube[1, 1, 1], NDCube),
+    (cube[1, 1, 0:2], NDCube),
+    (cube[1, 1, :], NDCube),
+])
+def test_slicing_third_axis(test_input, expected):
+    assert isinstance(test_input, expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, :, 1].dimensions, DimensionPair(dimensions=u.Quantity((2, 3), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN'])),
+    (cubem[:, :, 0:2].dimensions, DimensionPair(
+        dimensions=u.Quantity((2, 3, 2), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+    (cubem[:, :, :].dimensions, DimensionPair(
+        dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+    (cubem[:, 1, 1].dimensions, DimensionPair(dimensions=u.Quantity((2,), unit=u.pix), axes=['HPLN-TAN'])),
+    (cubem[:, 1, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 2), unit=u.pix), axes=['HPLN-TAN', 'WAVE'])),
+    (cubem[:, 1, :].dimensions, DimensionPair(dimensions=u.Quantity((2, 4), unit=u.pix), axes=['HPLN-TAN', 'WAVE'])),
+    (cubem[1, :, 1].dimensions, DimensionPair(dimensions=u.Quantity((3,), unit=u.pix), axes=['HPLT-TAN'])),
+    (cubem[1, :, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((3, 2), unit=u.pix), axes=['HPLT-TAN', 'WAVE'])),
+    (cubem[1, :, :].dimensions, DimensionPair(dimensions=u.Quantity((3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE'])),
+    (cubem[1, 1, 1].dimensions, DimensionPair(dimensions=u.Quantity((), unit=u.pix), axes=[])),
+    (cubem[1, 1, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2,), unit=u.pix), axes=['WAVE'])),
+    (cubem[1, 1, :].dimensions, DimensionPair(dimensions=u.Quantity((4,), unit=u.pix), axes=['WAVE'])),
+    (cube[:, :, 1].dimensions, DimensionPair(dimensions=u.Quantity((2, 3), unit=u.pix), axes=['HPLT-TAN', 'WAVE'])),
+    (cube[:, :, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 2), unit=u.pix), axes=['HPLT-TAN', 'WAVE', 'TIME'])),
+    (cube[:, :, :].dimensions, DimensionPair(dimensions=u.Quantity((2, 3, 4), unit=u.pix), axes=['HPLT-TAN', 'WAVE', 'TIME'])),
+    (cube[:, 1, 1].dimensions, DimensionPair(dimensions=u.Quantity((2,), unit=u.pix), axes=['HPLT-TAN'])),
+    (cube[:, 1, 0:2].dimensions, DimensionPair(dimensions=u.Quantity((2, 2), unit=u.pix), axes=['HPLT-TAN', 'TIME'])),
+    (cube[:, 1, :].dimensions, DimensionPair(dimensions=u.Quantity((2, 4), unit=u.pix), axes=['HPLT-TAN', 'TIME'])),
+    (cube[1, :, 1].dimensions, DimensionPair(dimensions=u.Quantity((3,), unit = u.pix), axes=['WAVE'])),
+    (cube[1, :, 0:2].dimensions, DimensionPair(
+                                               dimensions=u.Quantity((3, 2), unit = u.pix), axes=['WAVE', 'TIME'])),
+    (cube[1, :, :].dimensions, DimensionPair(
+                                             dimensions=u.Quantity((3, 4), unit = u.pix), axes=['WAVE', 'TIME'])),
+    (cube[1, 1, 1].dimensions, DimensionPair(dimensions=u.Quantity((), unit = u.pix), axes=[])),
+    (cube[1, 1, 0:2].dimensions, DimensionPair(
+                                               dimensions=u.Quantity((2,), unit = u.pix), axes=['TIME'])),
+    (cube[1, 1, :].dimensions, DimensionPair(dimensions=u.Quantity((4,), unit = u.pix
+), axes=['TIME'])),
+])
+def test_slicing_third_axis(test_input, expected):
+    assert test_input[1] == expected[1]
+    assert np.all(test_input[0].value == expected[0].value)
+    assert test_input[0].unit == expected[0].unit
