@@ -126,9 +126,10 @@ class NDCube(astropy.nddata.NDData):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         data = self.data[item]
+        # here missing axis is reversed as the item comes already in the reverse order
+        # of the input
         wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(
             self.wcs, copy.deepcopy(self.missing_axis[::-1]), item)
-        print("wcs ", wcs)
         if self.mask is not None:
             mask = self.mask[item]
         else:
