@@ -59,27 +59,58 @@ def _wcs_slicer(wcs, missing_axis, item):
     Returns the new sliced wcs and changed missing axis
     """
     # normal slice.
+    item_checked = []
     if isinstance(item, slice):
-        new_wcs = wcs.slice((item))
+        index = 0
+        for _bool in missing_axis:
+            if not _bool:
+                if index is not 1:
+                    item_checked.append(item)
+                    index += 1
+                else:
+                    item_checked.append(slice(None, None, None))
+            else:
+                item_checked.append(slice(0,1))
+        new_wcs = wcs.slice((item_checked))
     # item is int then slicing axis.
     elif isinstance(item, int):
-        new_wcs = wcs.slice((slice(item, item+1)))
-        missing_axis[0] = True
+        index = 0
+        for i, _bool in enumerate(missing_axis):
+            if not _bool:
+                if index is not 1:
+                    item_checked.append(slice(item, item+1))
+                    missing_axis[i] = True
+                    index += 1
+                else:
+                    item_checked.append(slice(None, None, None))
+            else:
+                item_checked.append(slice(0,1))
+        new_wcs = wcs.slice(item_checked)
     # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
     elif isinstance(item, tuple):
         # if all are slices
-        if _all_slice(item):
-            new_wcs = wcs.slice((item))
+        index = 0
+        for _bool in missing_axis:
+            if not _bool:
+                if index is not len(item):
+                    item_checked.append(item[index])
+                    index += 1
+                else:
+                    item_checked.append(slice(None, None, None))
+            else:
+                item_checked.append(slice(0,1))
+        if _all_slice(item_checked):
+            new_wcs = wcs.slice((item_checked))
         # if all are not slices some of them are int then
         else:
             # axis to change to 1
             # searching all indexes to change
-            item_ = _slice_list(item)
+            item_ = _slice_list(item_checked)
             new_wcs = wcs.slice(item_)
-            for i, it in enumerate(item):
+            for i, it in enumerate(item_checked):
                 if isinstance(it, int):
                     missing_axis[i] = True
-    return new_wcs, missing_axis
+    return new_wcs, missing_axis[::-1]
 
 
 def _all_slice(obj):

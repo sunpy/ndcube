@@ -9,7 +9,7 @@ import astropy.nddata
 import numpy as np
 import copy
 
-PixelPair = namedtuple('PixelPair', 'dimensions axes')
+DimensionPair = namedtuple('DimensionPair', 'dimensions axes')
 
 __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 
@@ -105,13 +105,13 @@ class NDCube(astropy.nddata.NDData):
         """
         The dimensions of the data (x axis first, y axis second, z axis third ...so on) and the type of axes.
         """
-        ctype = list(self.wcs.wcs.ctype)[::-1]
+        ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
             if not axis:
                 axes_ctype.append(ctype[i])
-        shape = self.data.shape
-        return PixelPair(dimensions=shape, axes=axes_ctype)
+        shape = u.Quantity(self.data.shape, unit=u.pix)
+        return DimensionPair(dimensions=shape, axes=axes_ctype[::-1])
 
     def plot(self, axes=None, axis_data=['x', 'y'], unit=None, origin=0, *args, **kwargs):
         if self.data.ndim >= 3:
@@ -127,7 +127,8 @@ class NDCube(astropy.nddata.NDData):
             raise IndexError("None indices not supported")
         data = self.data[item]
         wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(
-            self.wcs, copy.deepcopy(self.missing_axis), item)
+            self.wcs, copy.deepcopy(self.missing_axis[::-1]), item)
+        print("wcs ", wcs)
         if self.mask is not None:
             mask = self.mask[item]
         else:
