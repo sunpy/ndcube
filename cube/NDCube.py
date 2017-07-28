@@ -9,7 +9,7 @@ import astropy.nddata
 import numpy as np
 import copy
 
-DimensionPair = namedtuple('DimensionPair', 'dimensions axes')
+DimensionPair = namedtuple('DimensionPair', 'lengths axis_types')
 
 __all__ = ['NDCube', 'Cube2D', 'Cube1D']
 
@@ -111,13 +111,17 @@ class NDCube(astropy.nddata.NDData):
             if not axis:
                 axes_ctype.append(ctype[i])
         shape = u.Quantity(self.data.shape, unit=u.pix)
-        return DimensionPair(dimensions=shape, axes=axes_ctype[::-1])
+        return DimensionPair(lengths=shape, axis_types=axes_ctype[::-1])
 
-    def plot(self, axes=None, axis_data=['x', 'y'], unit=None, origin=0, *args, **kwargs):
+    def plot(self, axes=None, image_axes=[-1, -2], unit_x_axis=None, unit_y_axis=None, axis_ranges=None, unit=None, origin=0, **kwargs):
+        axis_data = ['x' for i in range(2)]
+        axis_data[image_axes[0]] = 'x'
+        axis_data[image_axes[1]] = 'y'
         if self.data.ndim >= 3:
-            plot = _plot_3D_cube(self, *args, *kwargs)
+            plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
+                                 axis_ranges=axis_ranges, *kwargs)
         elif self.data.ndim is 2:
-            plot = _plot_2D_cube(self, axes=axes, axis_data=axis_data, **kwargs)
+            plot = _plot_2D_cube(self, axes=axes, image_axes=axis_data, **kwargs)
         elif self.data.ndim is 1:
             plot = _plot_1D_cube(self, unit=unit, origin=origin)
         return plot
@@ -152,7 +156,8 @@ class NDCubeOrdered(NDCube):
                                             wcs=result_wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
 
-def _plot_3D_cube(cube, *args, **kwargs):
+def _plot_3D_cube(cube, image_axes=None, unit_x_axis=None, unit_y_axis=None,
+                  axis_ranges=None, **kwargs):
     """
     Plots an interactive visualization of this cube using sliders to move through axes
     plot using in the image.
@@ -182,11 +187,12 @@ def _plot_3D_cube(cube, *args, **kwargs):
         If None is specified for an axis then the array indices will be used
         for that axis.
     """
-    i = ImageAnimatorWCS(cube.data, wcs=cube.wcs, *args, **kwargs)
+    i = ImageAnimatorWCS(cube.data, wcs=cube.wcs, unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
+                         axis_ranges=axis_ranges, **kwargs)
     return i
 
 
-def _plot_2D_cube(cube, axes=None, axis_data=['x', 'y'], **kwargs):
+def _plot_2D_cube(cube, axes=None, image_axes=['x', 'y'], **kwargs):
     """
     Plots an x-y graph at a certain specified wavelength onto the current
     axes. Keyword arguments are passed on to matplotlib.
@@ -196,9 +202,9 @@ def _plot_2D_cube(cube, axes=None, axis_data=['x', 'y'], **kwargs):
     axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
         The axes to plot onto. If None the current axes will be used.
 
-    axis_data: `list`.
-        The first axis in WCS object will become the first axis of axis_data and
-        second axis in WCS object will become the seconf axis of axis_data.
+    image_axes: `list`.
+        The first axis in WCS object will become the first axis of image_axes and
+        second axis in WCS object will become the seconf axis of image_axes.
     """
     if axes is None:
         if cube.wcs.naxis is not 2:
@@ -208,7 +214,7 @@ def _plot_2D_cube(cube, axes=None, axis_data=['x', 'y'], **kwargs):
             index = 0
             for i, bool_ in enumerate(missing_axis):
                 if not bool_:
-                    slice_list.append(axis_data[index])
+                    slice_list.append(image_axes[index])
                     index += 1
                 else:
                     slice_list.append(1)

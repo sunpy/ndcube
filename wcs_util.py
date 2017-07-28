@@ -255,3 +255,12 @@ def add_celestial_axis(wcs):
         outwcs.wcs.ctype[-1] = projection
 
     return outwcs
+
+
+def assert_wcs_are_equal(wcs1, wcs2):
+    assert list(wcs1.wcs.ctype) == list(wcs2.wcs.ctype)
+    assert list(wcs1.wcs.crval) == list(wcs2.wcs.crval)
+    assert list(wcs1.wcs.crpix) == list(wcs2.wcs.crpix)
+    assert list(wcs1.wcs.cdelt) == list(wcs2.wcs.cdelt)
+    assert list(wcs1.wcs.cunit) == list(wcs2.wcs.cunit)
+    assert wcs1.wcs.naxis == wcs2.wcs.naxis
