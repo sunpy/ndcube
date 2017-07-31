@@ -167,7 +167,7 @@ class NDCube(astropy.nddata.NDData):
     @property
     def dimensions(self):
         """
-        The dimensions of the data x axis first, y axis second, z axis third ...so on and the type of axes.
+        The dimensions of the data and the type of axes.
         Returns a DimensionPair having two data that is lengths and axis_types.
         """
         ctype = list(self.wcs.wcs.ctype)
