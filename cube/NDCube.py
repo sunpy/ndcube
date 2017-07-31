@@ -22,7 +22,7 @@ class NDCube(astropy.nddata.NDData):
     Attributes
     ----------
     data: `numpy.ndarray`
-        The spectral cube holding the actual data in this object.
+        The array holding the actual data in this object.
 
     wcs: `sunpycube.wcs.wcs.WCS`
         The WCS object containing the axes' information
@@ -78,13 +78,14 @@ class NDCube(astropy.nddata.NDData):
         Parameters
         ----------
         quantity_axis_list : `list`
-            A list of `~astropy.units.Quantity`.
+            A list of `~astropy.units.Quantity` with unit as pixel `pix`.
 
-        origin : `int`
+        origin : `int`.
             Origin of the top-left corner. i.e. count from 0 or 1.
             Normally, origin should be 0 when passing numpy indices, or 1 if
             passing values from FITS header or map attributes.
             See `~astropy.wcs.WCS.wcs_pix2world` for more information.
+            Default is 0.
 
         Returns
         -------
@@ -129,6 +130,7 @@ class NDCube(astropy.nddata.NDData):
             Normally, origin should be 0 when passing numpy indices, or 1 if
             passing values from FITS header or map attributes.
             See `~astropy.wcs.WCS.wcs_world2pix` for more information.
+            Default is 0.
 
         Returns
         -------
@@ -164,7 +166,8 @@ class NDCube(astropy.nddata.NDData):
     @property
     def dimensions(self):
         """
-        The dimensions of the data (x axis first, y axis second, z axis third ...so on) and the type of axes.
+        The dimensions of the data x axis first, y axis second, z axis third ...so on and the type of axes.
+        Returns a DimensionPair having two data that is lengths and axis_types.
         """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
@@ -174,7 +177,8 @@ class NDCube(astropy.nddata.NDData):
         shape = u.Quantity(self.data.shape, unit=u.pix)
         return DimensionPair(lengths=shape, axis_types=axes_ctype[::-1])
 
-    def plot(self, axes=None, image_axes=[-1, -2], unit_x_axis=None, unit_y_axis=None, axis_ranges=None, unit=None, origin=0, **kwargs):
+    def plot(self, axes=None, image_axes=[-1, -2], unit_x_axis=None, unit_y_axis=None,
+             axis_ranges=None, unit=None, origin=0, **kwargs):
         """
         Plots an interactive visualization of this cube with a slider
         controlling the wavelength axis for data having dimensions greater than 2.
@@ -213,7 +217,6 @@ class NDCube(astropy.nddata.NDData):
             for that axis.
         """
         axis_data = ['x' for i in range(2)]
-        axis_data[image_axes[0]] = 'x'
         axis_data[image_axes[1]] = 'y'
         if self.data.ndim >= 3:
             plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
@@ -245,18 +248,18 @@ class NDCubeOrdered(NDCube):
     """
     Class representing N dimensional cubes with oriented WCS.
     Extra arguments are passed on to NDData's init.
+    For example, in an x, y, t cube the order would be (t,x,y) and in a
+    lambda, t, y cube the order will be (t, lambda, y).
 
     Attributes
     ----------
     data: `numpy.ndarray`
-        The spectral cube holding the actual data in this object.
+        The array holding the actual data in this object.
 
     wcs: `sunpycube.wcs.wcs.WCS`
         The WCS object containing the axes' information. The axes'
         priorities are time, spectral, celestial. This means that if
         present, each of these axis will take precedence over the others.
-        For example, in an x, y, t cube the order would be (t,x,y) and in a
-        lambda, t, y cube the order will be (t, lambda, y).
 
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
@@ -285,7 +288,8 @@ class NDCubeOrdered(NDCube):
         Note however that it is not always possible to save the input as reference. Default is False.
     """
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
+                 unit=None, copy=False, missing_axis=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)
         array_order = sunpycube.cube.cube_utils.select_order(axtypes)
         result_data = data.transpose(array_order)
@@ -333,7 +337,7 @@ def _plot_3D_cube(cube, image_axes=None, unit_x_axis=None, unit_y_axis=None,
 
 def _plot_2D_cube(cube, axes=None, image_axes=['x', 'y'], **kwargs):
     """
-    Plots an x-y graph at a certain specified wavelength onto the current
+    Plots a 2D image onto the current
     axes. Keyword arguments are passed on to matplotlib.
 
     Parameters
