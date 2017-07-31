@@ -258,6 +258,10 @@ def add_celestial_axis(wcs):
 
 
 def assert_wcs_are_equal(wcs1, wcs2):
+    """
+    Assert function for testing two wcs object.
+    Used in testing NDCube.
+    """
     assert list(wcs1.wcs.ctype) == list(wcs2.wcs.ctype)
     assert list(wcs1.wcs.crval) == list(wcs2.wcs.crval)
     assert list(wcs1.wcs.crpix) == list(wcs2.wcs.crpix)
