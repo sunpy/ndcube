@@ -309,6 +309,4 @@ def test_pixel_to_world(test_input, expected):
      2], wt.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3]-1, 0)[0]),
 ])
 def test_world_to_pixel(test_input, expected):
-    print("test_input ", test_input)
-    print("expected ", expected)
     assert np.allclose(test_input.value, expected)
