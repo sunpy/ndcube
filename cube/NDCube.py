@@ -53,7 +53,8 @@ class NDCube(astropy.nddata.NDData):
         -------
 
         coord : `list`
-            A list of arrays containing the output coordinates.
+            A list of arrays containing the output coordinates
+            reverse of the wcs axis order.
 
         """
         list_arg = []
@@ -93,10 +94,10 @@ class NDCube(astropy.nddata.NDData):
             # appending all the indexes to be returned in the answer
                 indexed_not_as_one.append(self.wcs.naxis-1-i)
         list_arguemnts = list_arg[::-1]
-        pixel_to_world = self.wcs.all_world2pix(*list_arguemnts, origin)
+        world_to_pixel = self.wcs.all_world2pix(*list_arguemnts, origin)
         # collecting all the needed answer in this list.
         for index in indexed_not_as_one[::-1]:
-            result.append(u.Quantity(pixel_to_world[index], unit=u.pix))
+            result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
         return result[::-1]
 
     def to_sunpy(self):

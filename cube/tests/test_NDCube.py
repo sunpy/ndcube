@@ -282,3 +282,33 @@ def test_slicing_third_axis(test_input, expected):
 ])
 def test_pixel_to_world(test_input, expected):
     assert np.all(test_input.value == expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    # this case is failing can you please check
+    (cubem[1].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m)])[
+     0], wm.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), wm.wcs.crpix[2]-1, 0)[1]),
+
+    (cubem[1].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m)])[
+     1], wm.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), wm.wcs.crpix[2]-1, 0)[0]),
+    (cubem[0:2].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m)])[
+     0], wm.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), 0)[-1]),
+    (cubem[0:2].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m)])[
+     1], wm.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), 0)[1]),
+    (cubem[0:2].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m)])[
+     2], wm.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), 0)[0]),
+    (cube[1].world_to_pixel([u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min)])[0], wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[2]-1, wt.wcs.crpix[3]-1, 0)[1]),
+    (cube[1].world_to_pixel([u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min)])[1], wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[2]-1, wt.wcs.crpix[3]-1, 0)[0]),
+    (cube[0:2].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min)])[
+     0], wt.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3]-1, 0)[2]),
+    (cube[0:2].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min)])[
+     1], wt.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3]-1, 0)[1]),
+    (cube[0:2].world_to_pixel([u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min)])[
+     2], wt.all_world2pix(u.Quantity(np.arange(4), unit=u.deg), u.Quantity(np.arange(4), unit=u.m), u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3]-1, 0)[0]),
+])
+def test_world_to_pixel(test_input, expected):
+    print("test_input ", test_input)
+    print("expected ", expected)
+    assert np.allclose(test_input.value, expected)
