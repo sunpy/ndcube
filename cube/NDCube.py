@@ -54,7 +54,8 @@ class NDCube(astropy.nddata.NDData):
         Note however that it is not always possible to save the input as reference. Default is False.
     """
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
+                 unit=None, copy=False, missing_axis=None, **kwargs):
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
         else:
