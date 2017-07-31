@@ -11,11 +11,48 @@ import copy
 
 DimensionPair = namedtuple('DimensionPair', 'lengths axis_types')
 
-__all__ = ['NDCube', 'Cube2D', 'Cube1D']
+__all__ = ['NDCube']
 
 
 class NDCube(astropy.nddata.NDData):
-    """docstring for NDCube"""
+    """
+    Class representing N dimensional cubes.
+    Extra arguments are passed on to NDData's init.
+
+    Attributes
+    ----------
+    data: `numpy.ndarray`
+        The spectral cube holding the actual data in this object.
+
+    wcs: `sunpycube.wcs.wcs.WCS`
+        The WCS object containing the axes' information
+
+    uncertainty : any type, optional
+        Uncertainty in the dataset. Should have an attribute uncertainty_type
+        that defines what kind of uncertainty is stored, for example "std"
+        for standard deviation or "var" for variance. A metaclass defining
+        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
+        has no such attribute the uncertainty is stored as UnknownUncertainty.
+        Defaults to None.
+
+    mask : any type, optional
+        Mask for the dataset. Masks should follow the numpy convention
+        that valid data points are marked by False and invalid ones with True.
+        Defaults to None.
+
+    meta : dict-like object, optional
+        Additional meta information about the dataset. If no meta is provided
+        an empty collections.OrderedDict is created. Default is None.
+
+    unit : Unit-like or str, optional
+        Unit for the dataset. Strings that can be converted to a Unit are allowed.
+        Default is None.
+
+    copy : bool, optional
+        Indicates whether to save the arguments as copy. True copies every attribute
+        before saving it while False tries to save every parameter as reference.
+        Note however that it is not always possible to save the input as reference. Default is False.
+    """
 
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
         if missing_axis is None:
@@ -40,14 +77,14 @@ class NDCube(astropy.nddata.NDData):
 
         Parameters
         ----------
+        quantity_axis_list : `list`
+            A list of `~astropy.units.Quantity`.
+
         origin : `int`
             Origin of the top-left corner. i.e. count from 0 or 1.
             Normally, origin should be 0 when passing numpy indices, or 1 if
             passing values from FITS header or map attributes.
             See `~astropy.wcs.WCS.wcs_pix2world` for more information.
-
-        quantity_axis_list : `list`
-            A list of `~astropy.units.Quantity`.
 
         Returns
         -------
@@ -55,7 +92,6 @@ class NDCube(astropy.nddata.NDData):
         coord : `list`
             A list of arrays containing the output coordinates
             reverse of the wcs axis order.
-
         """
         list_arg = []
         indexed_not_as_one = []
@@ -79,6 +115,28 @@ class NDCube(astropy.nddata.NDData):
         return result[::-1]
 
     def world_to_pixel(self, quantity_axis_list, origin=0):
+        """
+        Convert a world coordinate to a data (pixel) coordinate by using
+        `~astropy.wcs.WCS.all_world2pix`.
+
+        Parameters
+        ----------
+        quantity_axis_list : `list`
+            A list of `~astropy.units.Quantity`.
+
+        origin : `int`
+            Origin of the top-left corner. i.e. count from 0 or 1.
+            Normally, origin should be 0 when passing numpy indices, or 1 if
+            passing values from FITS header or map attributes.
+            See `~astropy.wcs.WCS.wcs_world2pix` for more information.
+
+        Returns
+        -------
+
+        coord : `list`
+            A list of arrays containing the output coordinates
+            reverse of the wcs axis order.
+        """
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -117,6 +175,43 @@ class NDCube(astropy.nddata.NDData):
         return DimensionPair(lengths=shape, axis_types=axes_ctype[::-1])
 
     def plot(self, axes=None, image_axes=[-1, -2], unit_x_axis=None, unit_y_axis=None, axis_ranges=None, unit=None, origin=0, **kwargs):
+        """
+        Plots an interactive visualization of this cube with a slider
+        controlling the wavelength axis for data having dimensions greater than 2.
+        Plots an x-y graph onto the current axes for 2D or 1D data. Keyword arguments are passed
+        on to matplotlib.
+        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
+        passes them to imshow for data greater than 2D.
+
+        Parameters
+        ----------
+        image_axes: `list`
+            The two axes that make the image.
+            Like [-1,-2] this implies cube instance -1 dimension
+            will be x-axis and -2 dimension will be y-axis.
+
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or None:
+            The axes to plot onto. If None the current axes will be used.
+
+        unit_x_axis: `astropy.units.Unit`
+            The unit of x axis for 2D plots.
+
+        unit_y_axis: `astropy.units.Unit`
+            The unit of y axis for 2D plots.
+
+        unit: `astropy.unit.Unit`
+            The data is changed to the unit given or the cube.unit if not given, for 1D plots.
+
+        axis_ranges: list of physical coordinates for array or None
+            If None array indices will be used for all axes.
+            If a list it should contain one element for each axis of the numpy array.
+            For the image axes a [min, max] pair should be specified which will be
+            passed to :func:`matplotlib.pyplot.imshow` as extent.
+            For the slider axes a [min, max] pair can be specified or an array the
+            same length as the axis which will provide all values for that slider.
+            If None is specified for an axis then the array indices will be used
+            for that axis.
+        """
         axis_data = ['x' for i in range(2)]
         axis_data[image_axes[0]] = 'x'
         axis_data[image_axes[1]] = 'y'
@@ -147,7 +242,48 @@ class NDCube(astropy.nddata.NDData):
 
 
 class NDCubeOrdered(NDCube):
-    """docstring for NDCubeOrdered"""
+    """
+    Class representing N dimensional cubes with oriented WCS.
+    Extra arguments are passed on to NDData's init.
+
+    Attributes
+    ----------
+    data: `numpy.ndarray`
+        The spectral cube holding the actual data in this object.
+
+    wcs: `sunpycube.wcs.wcs.WCS`
+        The WCS object containing the axes' information. The axes'
+        priorities are time, spectral, celestial. This means that if
+        present, each of these axis will take precedence over the others.
+        For example, in an x, y, t cube the order would be (t,x,y) and in a
+        lambda, t, y cube the order will be (t, lambda, y).
+
+    uncertainty : any type, optional
+        Uncertainty in the dataset. Should have an attribute uncertainty_type
+        that defines what kind of uncertainty is stored, for example "std"
+        for standard deviation or "var" for variance. A metaclass defining
+        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
+        has no such attribute the uncertainty is stored as UnknownUncertainty.
+        Defaults to None.
+
+    mask : any type, optional
+        Mask for the dataset. Masks should follow the numpy convention
+        that valid data points are marked by False and invalid ones with True.
+        Defaults to None.
+
+    meta : dict-like object, optional
+        Additional meta information about the dataset. If no meta is provided
+        an empty collections.OrderedDict is created. Default is None.
+
+    unit : Unit-like or str, optional
+        Unit for the dataset. Strings that can be converted to a Unit are allowed.
+        Default is None.
+
+    copy : bool, optional
+        Indicates whether to save the arguments as copy. True copies every attribute
+        before saving it while False tries to save every parameter as reference.
+        Note however that it is not always possible to save the input as reference. Default is False.
+    """
 
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None, unit=None, copy=False, missing_axis=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)
@@ -180,7 +316,7 @@ def _plot_3D_cube(cube, image_axes=None, unit_x_axis=None, unit_y_axis=None,
     unit_y_axis: `astropy.units.Unit`
         The unit of y axis.
 
-    axis_ranges: list of physical coordinates for array or None
+    axis_ranges: `list` of physical coordinates for array or None
         If None array indices will be used for all axes.
         If a list it should contain one element for each axis of the numpy array.
         For the image axes a [min, max] pair should be specified which will be
@@ -236,7 +372,7 @@ def _plot_1D_cube(cube, unit=None, origin=0):
     Parameters
     ----------
     unit: `astropy.unit.Unit`
-    The data is changed to the unit given or the cube.unit if not given.
+        The data is changed to the unit given or the cube.unit if not given.
     """
     index_not_one = []
     for i, _bool in enumerate(cube.missing_axis):
