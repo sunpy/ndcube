@@ -250,8 +250,10 @@ class NDCubeOrdered(NDCube):
     """
     Class representing N dimensional cubes with oriented WCS.
     Extra arguments are passed on to NDData's init.
+    The order is TIME, SPECTRAL, SOLAR-x, SOLAR-Y and any other dimension.
     For example, in an x, y, t cube the order would be (t,x,y) and in a
     lambda, t, y cube the order will be (t, lambda, y).
+    Extra arguments are passed on to NDData's init.
 
     Attributes
     ----------
