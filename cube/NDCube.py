@@ -63,18 +63,19 @@ class NDCube(astropy.nddata.NDData):
         for i, _ in enumerate(self.missing_axis):
             # the cases where the wcs dimension was made 1 and the missing_axis is True
             if self.missing_axis[self.wcs.naxis-1-i]:
-                list_arg.append(self.wcs.wcs.crpix[i]-1+origin)
+                list_arg.append(self.wcs.wcs.crpix[self.wcs.naxis-1-i]-1+origin)
             else:
                 # else it is not the case where the dimension of wcs is 1.
                 list_arg.append(quantity_axis_list[quantity_index])
                 quantity_index += 1
             # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(i)
-        pixel_to_world = self.wcs.all_pix2world(*list_arg, origin)
+                indexed_not_as_one.append(self.wcs.naxis-1-i)
+        list_arguemnts = list_arg[::-1]
+        pixel_to_world = self.wcs.all_pix2world(*list_arguemnts, origin)
         # collecting all the needed answer in this list.
-        for index in indexed_not_as_one:
+        for index in indexed_not_as_one[::-1]:
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
-        return result
+        return result[::-1]
 
     def world_to_pixel(self, quantity_axis_list, origin=0):
         list_arg = []
@@ -84,18 +85,19 @@ class NDCube(astropy.nddata.NDData):
         for i, _ in enumerate(self.missing_axis):
             # the cases where the wcs dimension was made 1 and the missing_axis is True
             if self.missing_axis[self.wcs.naxis-1-i]:
-                list_arg.append(self.wcs.wcs.crval[i]+1-origin)
+                list_arg.append(self.wcs.wcs.crval[self.wcs.naxis-1-i]+1-origin)
             else:
                 # else it is not the case where the dimension of wcs is 1.
                 list_arg.append(quantity_axis_list[quantity_index])
                 quantity_index += 1
             # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(i)
-        world_to_pixel = self.wcs.all_world2pix(*list_arg, origin)
+                indexed_not_as_one.append(self.wcs.naxis-1-i)
+        list_arguemnts = list_arg[::-1]
+        pixel_to_world = self.wcs.all_world2pix(*list_arguemnts, origin)
         # collecting all the needed answer in this list.
-        for index in indexed_not_as_one:
-            result.append(u.Quantity(world_to_pixel[index], unit=self.wcs.wcs.cunit[index]))
-        return result
+        for index in indexed_not_as_one[::-1]:
+            result.append(u.Quantity(pixel_to_world[index], unit=u.pix))
+        return result[::-1]
 
     def to_sunpy(self):
         pass

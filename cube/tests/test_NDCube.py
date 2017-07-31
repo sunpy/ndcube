@@ -256,3 +256,29 @@ def test_slicing_third_axis(test_input, expected):
     assert test_input[1] == expected[1]
     assert np.all(test_input[0].value == expected[0].value)
     assert test_input[0].unit == expected[0].unit
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[1].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[0], wm.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wm.wcs.crpix[2]-1, 0)[-2]),
+    (cubem[1].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     1], wm.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wm.wcs.crpix[2]-1, 0)[0]),
+    (cubem[0:2].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     0], wm.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), 0)[-1]),
+    (cubem[0:2].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     1], wm.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), 0)[1]),
+    (cubem[0:2].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     2], wm.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), 0)[0]),
+    (cube[1].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[0], wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[2]-1, wt.wcs.crpix[3]-1, 0)[1]),
+    (cube[1].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[1], wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[2]-1, wt.wcs.crpix[3]-1, 0)[0]),
+    (cube[0:2].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     0], wt.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3]-1, 0)[2]),
+    (cube[0:2].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     1], wt.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3]-1, 0)[1]),
+    (cube[0:2].pixel_to_world([u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix)])[
+     2], wt.all_pix2world(u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3]-1, 0)[0]),
+])
+def test_pixel_to_world(test_input, expected):
+    assert np.all(test_input.value == expected)
