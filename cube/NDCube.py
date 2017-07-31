@@ -167,8 +167,9 @@ class NDCube(astropy.nddata.NDData):
     @property
     def dimensions(self):
         """
-        The dimensions of the data and the type of axes.
-        Returns a DimensionPair having two data that is lengths and axis_types.
+        Returns a named tuple with two attributes: 'lengths' gives the lengths
+        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
+        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
         """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
