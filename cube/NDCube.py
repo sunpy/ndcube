@@ -242,7 +242,7 @@ class NDCube(astropy.nddata.NDData):
         else:
             mask = None
         if self.uncertainty is not None:
-            if not isinstance(self.uncertainty.array, int):
+            if isinstance(self.uncertainty.array, np.ndarray):
                 if self.uncertainty.array.shape == self.data.shape:
                     uncertainty = self.uncertainty[item]
                 else:
