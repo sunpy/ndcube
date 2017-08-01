@@ -42,40 +42,44 @@ data4 = np.array([[[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                    [[7, 3, 2, 6], [1, 7, 8, 7], [2, 4, 0, 1]]]])
 mask_cubem = data > 0
 mask_cube = data >= 0
-cubem = NDCube(data, wcs=wm, mask=mask_cubem)
-cube = NDCube(data, wcs=wt, missing_axis=[False, False, False, True], mask=mask_cube)
+cubem = NDCube(data, wcs=wm, mask=mask_cubem, uncertainty=data)
+cube = NDCube(data, wcs=wt, missing_axis=[False, False,
+                                          False, True], mask=mask_cube, uncertainty=[2, 3])
 hcube = NDCube(data4, wcs=w4)
 
 
-@pytest.mark.parametrize("test_input,expected,mask,wcs", [
+@pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty", [
     (cubem[:, 1], NDCube, mask_cubem[:, 1], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1))),
+        wm, [False, False, False], (slice(None, None, None), 1)), data[:, 1]),
     (cubem[:, 0:2], NDCube, mask_cubem[:, 0:2], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), slice(0, 2, None)))),
+        wm, [False, False, False], (slice(None, None, None), slice(0, 2, None))), data[:, 0:2]),
     (cubem[:, :], NDCube, mask_cubem[:, :], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), slice(None, None, None)))),
-    (cubem[1, 1], NDCube, mask_cubem[1, 1], _wcs_slicer(wm, [False, False, False], (1, 1))),
+        wm, [False, False, False], (slice(None, None, None), slice(None, None, None))), data[:, :]),
+    (cubem[1, 1], NDCube, mask_cubem[1, 1], _wcs_slicer(
+        wm, [False, False, False], (1, 1)), data[1, 1]),
     (cubem[1, 0:2], NDCube, mask_cubem[1, 0:2], _wcs_slicer(
-        wm, [False, False, False], (1, slice(0, 2, None)))),
+        wm, [False, False, False], (1, slice(0, 2, None))), data[1, 0:2]),
     (cubem[1, :], NDCube, mask_cubem[1, :], _wcs_slicer(
-        wm, [False, False, False], (1, slice(None, None, None)))),
+        wm, [False, False, False], (1, slice(None, None, None))), data[1, :]),
     (cube[:, 1], NDCube, mask_cube[:, 1], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), 1))),
+        wt, [True, False, False, False], (slice(None, None, None), 1)), np.array([2, 3])),
     (cube[:, 0:2], NDCube, mask_cube[:, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), slice(0, 2, None)))),
+        wt, [True, False, False, False], (slice(None, None, None), slice(0, 2, None))), np.array([2, 3])),
     (cube[:, :], NDCube, mask_cube[:, :], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None)))),
-    (cube[1, 1], NDCube, mask_cube[1, 1], _wcs_slicer(wt, [True, False, False, False], (1, 1))),
+        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None))), np.array([2, 3])),
+    (cube[1, 1], NDCube, mask_cube[1, 1], _wcs_slicer(
+        wt, [True, False, False, False], (1, 1)), np.array([2, 3])),
     (cube[1, 0:2], NDCube, mask_cube[1, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(0, 2, None)))),
+        wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3])),
     (cube[1, :], NDCube, mask_cube[1, :], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(0, 2, None)))),
+        wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3])),
 ])
-def test_slicing_second_axis_type(test_input, expected, mask, wcs):
+def test_slicing_second_axis_type(test_input, expected, mask, wcs, uncertainty):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axis == wcs[1]
+    assert test_input.uncertainty.array.shape == uncertainty.shape
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -108,23 +112,25 @@ def test_slicing_second_axis(test_input, expected):
     assert test_input[0].unit == expected[0].unit
 
 
-@pytest.mark.parametrize("test_input,expected,mask,wcs", [
-    (cubem[1], NDCube, mask_cubem[1], _wcs_slicer(wm, [False, False, False], 1)),
+@pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty", [
+    (cubem[1], NDCube, mask_cubem[1], _wcs_slicer(wm, [False, False, False], 1), data[1]),
     (cubem[0:2], NDCube, mask_cubem[0:2], _wcs_slicer(
-        wm, [False, False, False], slice(0, 2, None))),
+        wm, [False, False, False], slice(0, 2, None)), data[0:2]),
     (cubem[:], NDCube, mask_cubem[:], _wcs_slicer(
-        wm, [False, False, False], slice(None, None, None))),
-    (cube[1], NDCube, mask_cube[1], _wcs_slicer(wt, [True, False, False, False], 1)),
+        wm, [False, False, False], slice(None, None, None)), data[:]),
+    (cube[1], NDCube, mask_cube[1], _wcs_slicer(
+        wt, [True, False, False, False], 1), np.array([2, 3])),
     (cube[0:2], NDCube, mask_cube[0:2], _wcs_slicer(
-        wt, [True, False, False, False], slice(0, 2, None))),
+        wt, [True, False, False, False], slice(0, 2, None)), np.array([2, 3])),
     (cube[:], NDCube, mask_cube[:], _wcs_slicer(
-        wt, [True, False, False, False], slice(None, None, None))),
+        wt, [True, False, False, False], slice(None, None, None)), np.array([2, 3])),
 ])
-def test_slicing_first_axis_type(test_input, expected, mask, wcs):
+def test_slicing_first_axis_type(test_input, expected, mask, wcs, uncertainty):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axis == wcs[1]
+    assert test_input.uncertainty.array.shape == uncertainty.shape
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -147,61 +153,62 @@ def test_slicing_first_axis_dimensions(test_input, expected):
     assert test_input[0].unit == expected[0].unit
 
 
-@pytest.mark.parametrize("test_input,expected,mask,wcs", [
+@pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty", [
     (cubem[:, :, 1], NDCube, mask_cubem[:, :, 1], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), slice(None, None, None), 1))),
+        wm, [False, False, False], (slice(None, None, None), slice(None, None, None), 1)), data[:, :, 1]),
     (cubem[:, :, 0:2], NDCube, mask_cubem[:, :, 0:2], _wcs_slicer(wm, [False, False, False],
-                                                                  (slice(None, None, None), slice(None, None, None), slice(0, 2, None)))),
+                                                                  (slice(None, None, None), slice(None, None, None), slice(0, 2, None))), data[:, :, 0:2]),
     (cubem[:, :, :], NDCube, mask_cubem[:, :, :], _wcs_slicer(wm, [False, False, False],
-                                                              (slice(None, None, None), slice(None, None, None), slice(None, None, None)))),
+                                                              (slice(None, None, None), slice(None, None, None), slice(None, None, None))), data[:, :, :]),
     (cubem[:, 1, 1], NDCube, mask_cubem[:, 1, 1], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1, 1))),
+        wm, [False, False, False], (slice(None, None, None), 1, 1)), data[:, 1, 1]),
     (cubem[:, 1, 0:2], NDCube, mask_cubem[:, 1, 0:2], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1, slice(0, 2, None)))),
+        wm, [False, False, False], (slice(None, None, None), 1, slice(0, 2, None))), data[:, 1, 0:2]),
     (cubem[:, 1, :], NDCube, mask_cubem[:, 1, :], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None)))),
+        wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None))), data[:, 1, :]),
     (cubem[1, :, 1], NDCube, mask_cubem[1, :, 1], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None)))),
+        wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None))), data[1, :, 1]),
     (cubem[1, :, 0:2], NDCube, mask_cubem[1, :, 0:2], _wcs_slicer(
-        wm, [False, False, False], (1, slice(None, None, None), slice(0, 2, None)))),
+        wm, [False, False, False], (1, slice(None, None, None), slice(0, 2, None))), data[1, :, 0:2]),
     (cubem[1, :, :], NDCube, mask_cubem[1, :, :], _wcs_slicer(
-        wm, [False, False, False], (1, slice(None, None, None), slice(None, None, None)))),
+        wm, [False, False, False], (1, slice(None, None, None), slice(None, None, None))), data[1, :, :]),
     (cubem[1, 1, 1], NDCube, mask_cubem[1, 1, 1],
-     _wcs_slicer(wm, [False, False, False], (1, 1, 1))),
+     _wcs_slicer(wm, [False, False, False], (1, 1, 1)), data[1, 1, 1]),
     (cubem[1, 1, 0:2], NDCube, mask_cubem[1, 1, 0:2], _wcs_slicer(
-        wm, [False, False, False], (1, 1, slice(0, 2, None)))),
+        wm, [False, False, False], (1, 1, slice(0, 2, None))), data[1, 1, 0:2]),
     (cubem[1, 1, :], NDCube, mask_cubem[1, 1, :], _wcs_slicer(
-        wm, [False, False, False], (1, 1, slice(None, None, None)))),
+        wm, [False, False, False], (1, 1, slice(None, None, None))), data[1, 1, :]),
     (cube[:, :, 1], NDCube, mask_cube[:, :, 1], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None), 1))),
+        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None), 1)), np.array([2, 3])),
     (cube[:, :, 0:2], NDCube, mask_cube[:, :, 0:2], _wcs_slicer(wt, [True, False, False,
-                                                                     False], (slice(None, None, None), slice(None, None, None), slice(0, 2, None)))),
+                                                                     False], (slice(None, None, None), slice(None, None, None), slice(0, 2, None))), np.array([2, 3])),
     (cube[:, :, :], NDCube, mask_cube[:, :, :], _wcs_slicer(wt, [True, False, False, False],
-                                                            (slice(None, None, None), slice(None, None, None), slice(None, None, None)))),
+                                                            (slice(None, None, None), slice(None, None, None), slice(None, None, None))), np.array([2, 3])),
     (cube[:, 1, 1], NDCube, mask_cube[:, 1, 1], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), 1, 1))),
+        wt, [True, False, False, False], (slice(None, None, None), 1, 1)), np.array([2, 3])),
     (cube[:, 1, 0:2], NDCube, mask_cube[:, 1, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), 1, slice(0, 2, None)))),
+        wt, [True, False, False, False], (slice(None, None, None), 1, slice(0, 2, None))), np.array([2, 3])),
     (cube[:, 1, :], NDCube, mask_cube[:, 1, :], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), 1, slice(None, None, None)))),
+        wt, [True, False, False, False], (slice(None, None, None), 1, slice(None, None, None))), np.array([2, 3])),
     (cube[1, :, 1], NDCube, mask_cube[1, :, 1], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(None, None, None), 1))),
+        wt, [True, False, False, False], (1, slice(None, None, None), 1)), np.array([2, 3])),
     (cube[1, :, 0:2], NDCube, mask_cube[1, :, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(None, None, None), slice(0, 2, None)))),
+        wt, [True, False, False, False], (1, slice(None, None, None), slice(0, 2, None))), np.array([2, 3])),
     (cube[1, :, :], NDCube, mask_cube[1, :, :], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(None, None, None), slice(None, None, None)))),
+        wt, [True, False, False, False], (1, slice(None, None, None), slice(None, None, None))), np.array([2, 3])),
     (cube[1, 1, 1], NDCube, mask_cube[1, 1, 1], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1, 1))),
+        wt, [True, False, False, False], (1, 1, 1)), np.array([2, 3])),
     (cube[1, 1, 0:2], NDCube, mask_cube[1, 1, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1, slice(0, 2, None)))),
+        wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3])),
     (cube[1, 1, :], NDCube, mask_cube[1, 1, :], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1, slice(0, 2, None)))),
+        wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3])),
 ])
-def test_slicing_third_axis(test_input, expected, mask, wcs):
+def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axis == wcs[1]
+    assert test_input.uncertainty.arange.shape == uncertainty.shape
 
 
 @pytest.mark.parametrize("test_input,expected", [

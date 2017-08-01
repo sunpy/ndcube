@@ -241,7 +241,17 @@ class NDCube(astropy.nddata.NDData):
             mask = self.mask[item]
         else:
             mask = None
-        result = NDCube(data, wcs=wcs, mask=mask, uncertainty=self.uncertainty,
+        if self.uncertainty is not None:
+            if not isinstance(self.uncertainty.array, int):
+                if self.uncertainty.array.shape == self.data.shape:
+                    uncertainty = self.uncertainty[item]
+                else:
+                    uncertainty = self.uncertainty
+            else:
+                uncertainty = self.uncertainty
+        else:
+            uncertainty = None
+        result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty,
                         meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         return result
 
