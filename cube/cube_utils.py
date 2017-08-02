@@ -516,8 +516,7 @@ def get_cube_from_sequence(cubesequence, item):
         The item to get from the cube
     """
     if isinstance(item, int):
-        result = cubesequence._new_instance(
-            [cubesequence.data[item]], meta=cubesequence.meta, common_axis=cubesequence.common_axis)
+        result = cubesequence.data[item]
     if isinstance(item, slice):
         data = cubesequence.data[item]
         result = cubesequence._new_instance(

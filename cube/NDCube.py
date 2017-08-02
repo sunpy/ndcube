@@ -258,6 +258,16 @@ class NDCube(astropy.nddata.NDData):
                         meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
         return result
 
+    def __repr__(self):
+        return (
+            """Sunpy NDCube
+---------------------
+{wcs}
+---------------------
+Length of NDCube: {lengthNDCube}
+Axis Types of NDCube: {axis_type}
+""".format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions[0], axis_type=self.dimensions[1]))
+
 
 class NDCubeOrdered(NDCube):
     """
@@ -440,6 +450,15 @@ class NDCubeSequence(object):
     def animate(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
         return i
+
+    def __repr__(self):
+        return (
+            """Sunpy NDCubeSequence
+---------------------
+Length of NDCubeSequence:  {length}
+Length of 1st NDCube: {lengthNDCube}
+Axis Types of 1st NDCube: {axis_type}
+""".format(length=self.dimensions[0], lengthNDCube=self.dimensions[1][0], axis_type=self.dimensions[1][1]))
 
     @property
     def dimensions(self):
