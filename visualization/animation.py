@@ -3,7 +3,7 @@ import numpy as np
 from sunpycube.cube import cube_utils as cu
 
 
-class ImageAnimatorCubeSequence(ImageAnimatorWCS):
+class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
     """
     Animates N-dimensional data with the associated astropy WCS object.
 
@@ -62,10 +62,10 @@ class ImageAnimatorCubeSequence(ImageAnimatorWCS):
 
     def __init__(self, seq, wcs=None, **kwargs):
         self.sequence = seq.data
-        self.cumul_cube_lengths = np.cumsum(np.array([c.shape[0] for c in self.sequence]))
-        data_concat = np.concatenate(seq.data, axis=0)
-        super(ImageAnimatorCubeSequence, self).__init__(
-            data_concat, wcs=self.sequence[0].axes_wcs, **kwargs)
+        self.cumul_cube_lengths = np.cumsum(np.array([c.data.shape[0] for c in self.sequence]))
+        data_concat = np.concatenate([ndcube.data for ndcube in seq.data], axis=0)
+        super(ImageAnimatorNDCubeSequence, self).__init__(
+            data_concat, wcs=self.sequence[0].wcs, **kwargs)
 
     def update_plot(self, val, im, slider):
         val = int(val)
@@ -79,7 +79,7 @@ class ImageAnimatorCubeSequence(ImageAnimatorWCS):
         self.slices_wcsaxes = list_slices_wcsaxes
         if val != slider.cval:
             self.axes.reset_wcs(
-                wcs=self.sequence[sequence_index].axes_wcs, slices=self.slices_wcsaxes)
+                wcs=self.sequence[sequence_index].wcs, slices=self.slices_wcsaxes)
             self._set_unit_in_axis(self.axes)
             im.set_array(self.data[self.frame_slice])
             slider.cval = val
