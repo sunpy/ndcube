@@ -162,7 +162,7 @@ class NDCube(astropy.nddata.NDData):
         return result[::-1]
 
     def to_sunpy(self):
-        pass
+        raise NotImplementedError("to_sunpy() is not Implemented.")
 
     @property
     def dimensions(self):
