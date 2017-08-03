@@ -171,8 +171,7 @@ def test_slicing_first_axis_type(test_input, expected, mask, wcs, uncertainty, d
         wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(
         shape=u.Quantity((2,), unit=u.pix), axis_types=['TIME'])),
     (cube[1, 1, :], NDCube, mask_cube[1, 1, :], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((4,), unit=u.pix
-                                                                                                                        ), axis_types=['TIME'])),
+        wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((4,), unit=u.pix), axis_types=['TIME'])),
 ])
 def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty, dimensions):
     assert isinstance(test_input, expected)
