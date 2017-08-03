@@ -10,7 +10,7 @@ import pytest
 import numpy as np
 import astropy.units as u
 
-DimensionPair = namedtuple('DimensionPair', 'lengths axis_types')
+DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
@@ -37,29 +37,29 @@ cube = NDCube(data, wcs=wt, missing_axis=[False, False,
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions", [
     (cubem[:, 1], NDCube, mask_cubem[:, 1], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1)), data[:, 1], DimensionPair(lengths=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLN-TAN', 'WAVE'])),
+        wm, [False, False, False], (slice(None, None, None), 1)), data[:, 1], DimensionPair(shape=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLN-TAN', 'WAVE'])),
     (cubem[:, 0:2], NDCube, mask_cubem[:, 0:2], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), slice(0, 2, None))), data[:, 0:2], DimensionPair(lengths=u.Quantity((2, 2, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+        wm, [False, False, False], (slice(None, None, None), slice(0, 2, None))), data[:, 0:2], DimensionPair(shape=u.Quantity((2, 2, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
     (cubem[:, :], NDCube, mask_cubem[:, :], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), slice(None, None, None))), data[:, :], DimensionPair(lengths=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+        wm, [False, False, False], (slice(None, None, None), slice(None, None, None))), data[:, :], DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
     (cubem[1, 1], NDCube, mask_cubem[1, 1], _wcs_slicer(
-        wm, [False, False, False], (1, 1)), data[1, 1], DimensionPair(lengths=u.Quantity((4,), unit=u.pix), axis_types=['WAVE'])),
+        wm, [False, False, False], (1, 1)), data[1, 1], DimensionPair(shape=u.Quantity((4,), unit=u.pix), axis_types=['WAVE'])),
     (cubem[1, 0:2], NDCube, mask_cubem[1, 0:2], _wcs_slicer(
-        wm, [False, False, False], (1, slice(0, 2, None))), data[1, 0:2], DimensionPair(lengths=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
+        wm, [False, False, False], (1, slice(0, 2, None))), data[1, 0:2], DimensionPair(shape=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
     (cubem[1, :], NDCube, mask_cubem[1, :], _wcs_slicer(
-        wm, [False, False, False], (1, slice(None, None, None))), data[1, :], DimensionPair(lengths=u.Quantity((3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
+        wm, [False, False, False], (1, slice(None, None, None))), data[1, :], DimensionPair(shape=u.Quantity((3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
     (cube[:, 1], NDCube, mask_cube[:, 1], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), 1)), np.array([2, 3]), DimensionPair(lengths=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'TIME'])),
+        wt, [True, False, False, False], (slice(None, None, None), 1)), np.array([2, 3]), DimensionPair(shape=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'TIME'])),
     (cube[:, 0:2], NDCube, mask_cube[:, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), slice(0, 2, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity((2, 2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
+        wt, [True, False, False, False], (slice(None, None, None), slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((2, 2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
     (cube[:, :], NDCube, mask_cube[:, :], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
+        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
     (cube[1, 1], NDCube, mask_cube[1, 1], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1)), np.array([2, 3]), DimensionPair(lengths=u.Quantity((4,), unit=u.pix), axis_types=['TIME'])),
+        wt, [True, False, False, False], (1, 1)), np.array([2, 3]), DimensionPair(shape=u.Quantity((4,), unit=u.pix), axis_types=['TIME'])),
     (cube[1, 0:2], NDCube, mask_cube[1, 0:2], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity((2, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
+        wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((2, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
     (cube[1, :], NDCube, mask_cube[1, :], _wcs_slicer(
-        wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity((3, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
+        wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((3, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
 ])
 def test_slicing_second_axis_type(test_input, expected, mask, wcs, uncertainty, dimensions):
     assert isinstance(test_input, expected)
@@ -73,22 +73,22 @@ def test_slicing_second_axis_type(test_input, expected, mask, wcs, uncertainty, 
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions", [
-    (cubem[1], NDCube, mask_cubem[1], _wcs_slicer(wm, [False, False, False], 1), data[1], DimensionPair(lengths=u.Quantity(
+    (cubem[1], NDCube, mask_cubem[1], _wcs_slicer(wm, [False, False, False], 1), data[1], DimensionPair(shape=u.Quantity(
         (3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
     (cubem[0:2], NDCube, mask_cubem[0:2], _wcs_slicer(
-        wm, [False, False, False], slice(0, 2, None)), data[0:2], DimensionPair(lengths=u.Quantity(
+        wm, [False, False, False], slice(0, 2, None)), data[0:2], DimensionPair(shape=u.Quantity(
             (2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
     (cubem[:], NDCube, mask_cubem[:], _wcs_slicer(
-        wm, [False, False, False], slice(None, None, None)), data[:], DimensionPair(lengths=u.Quantity(
+        wm, [False, False, False], slice(None, None, None)), data[:], DimensionPair(shape=u.Quantity(
             (2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
     (cube[1], NDCube, mask_cube[1], _wcs_slicer(
-        wt, [True, False, False, False], 1), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+        wt, [True, False, False, False], 1), np.array([2, 3]), DimensionPair(shape=u.Quantity(
             (3, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
     (cube[0:2], NDCube, mask_cube[0:2], _wcs_slicer(
-        wt, [True, False, False, False], slice(0, 2, None)), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+        wt, [True, False, False, False], slice(0, 2, None)), np.array([2, 3]), DimensionPair(shape=u.Quantity(
             (2, 3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
     (cube[:], NDCube, mask_cube[:], _wcs_slicer(
-        wt, [True, False, False, False], slice(None, None, None)), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+        wt, [True, False, False, False], slice(None, None, None)), np.array([2, 3]), DimensionPair(shape=u.Quantity(
             (2, 3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
 ])
 def test_slicing_first_axis_type(test_input, expected, mask, wcs, uncertainty, dimensions):
@@ -104,74 +104,74 @@ def test_slicing_first_axis_type(test_input, expected, mask, wcs, uncertainty, d
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions", [
     (cubem[:, :, 1], NDCube, mask_cubem[:, :, 1], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), slice(None, None, None), 1)), data[:, :, 1], DimensionPair(lengths=u.Quantity(
+        wm, [False, False, False], (slice(None, None, None), slice(None, None, None), 1)), data[:, :, 1], DimensionPair(shape=u.Quantity(
             (2, 3), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN'])),
     (cubem[:, :, 0:2], NDCube, mask_cubem[:, :, 0:2], _wcs_slicer(wm, [False, False, False],
                                                                   (slice(None, None, None), slice(None, None, None), slice(0, 2, None))), data[:, :, 0:2], DimensionPair(
-        lengths=u.Quantity((2, 3, 2), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+        shape=u.Quantity((2, 3, 2), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
     (cubem[:, :, :], NDCube, mask_cubem[:, :, :], _wcs_slicer(wm, [False, False, False],
                                                               (slice(None, None, None), slice(None, None, None), slice(None, None, None))), data[:, :, :], DimensionPair(
-        lengths=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
+        shape=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])),
     (cubem[:, 1, 1], NDCube, mask_cubem[:, 1, 1], _wcs_slicer(
         wm, [False, False, False], (slice(None, None, None), 1, 1)), data[:, 1, 1], DimensionPair(
-        lengths=u.Quantity((2,), unit=u.pix), axis_types=['HPLN-TAN'])),
+        shape=u.Quantity((2,), unit=u.pix), axis_types=['HPLN-TAN'])),
     (cubem[:, 1, 0:2], NDCube, mask_cubem[:, 1, 0:2], _wcs_slicer(
         wm, [False, False, False], (slice(None, None, None), 1, slice(0, 2, None))), data[:, 1, 0:2], DimensionPair(
-        lengths=u.Quantity((2, 2), unit=u.pix), axis_types=['HPLN-TAN', 'WAVE'])),
+        shape=u.Quantity((2, 2), unit=u.pix), axis_types=['HPLN-TAN', 'WAVE'])),
     (cubem[:, 1, :], NDCube, mask_cubem[:, 1, :], _wcs_slicer(
-        wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None))), data[:, 1, :], DimensionPair(lengths=u.Quantity(
+        wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None))), data[:, 1, :], DimensionPair(shape=u.Quantity(
             (2, 4), unit=u.pix), axis_types=['HPLN-TAN', 'WAVE'])),
     (cubem[1, :, 1], NDCube, mask_cubem[1, :, 1], _wcs_slicer(
         wm, [False, False, False], (1, slice(None, None, None), 1)), data[1, :, 1], DimensionPair(
-        lengths=u.Quantity((3,), unit=u.pix), axis_types=['HPLT-TAN'])),
+        shape=u.Quantity((3,), unit=u.pix), axis_types=['HPLT-TAN'])),
     (cubem[1, :, 0:2], NDCube, mask_cubem[1, :, 0:2], _wcs_slicer(
         wm, [False, False, False], (1, slice(None, None, None), slice(0, 2, None))), data[1, :, 0:2], DimensionPair(
-        lengths=u.Quantity((3, 2), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
+        shape=u.Quantity((3, 2), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
     (cubem[1, :, :], NDCube, mask_cubem[1, :, :], _wcs_slicer(
-        wm, [False, False, False], (1, slice(None, None, None), slice(None, None, None))), data[1, :, :], DimensionPair(lengths=u.Quantity(
+        wm, [False, False, False], (1, slice(None, None, None), slice(None, None, None))), data[1, :, :], DimensionPair(shape=u.Quantity(
             (3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
     (cubem[1, 1, 1], NDCube, mask_cubem[1, 1, 1],
-     _wcs_slicer(wm, [False, False, False], (1, 1, 1)), data[1, 1, 1], DimensionPair(lengths=u.Quantity((), unit=u.pix), axis_types=[])),
+     _wcs_slicer(wm, [False, False, False], (1, 1, 1)), data[1, 1, 1], DimensionPair(shape=u.Quantity((), unit=u.pix), axis_types=[])),
     (cubem[1, 1, 0:2], NDCube, mask_cubem[1, 1, 0:2], _wcs_slicer(
         wm, [False, False, False], (1, 1, slice(0, 2, None))), data[1, 1, 0:2], DimensionPair(
-        lengths=u.Quantity((2,), unit=u.pix), axis_types=['WAVE'])),
+        shape=u.Quantity((2,), unit=u.pix), axis_types=['WAVE'])),
     (cubem[1, 1, :], NDCube, mask_cubem[1, 1, :], _wcs_slicer(
         wm, [False, False, False], (1, 1, slice(None, None, None))), data[1, 1, :], DimensionPair(
-        lengths=u.Quantity((4,), unit=u.pix), axis_types=['WAVE'])),
+        shape=u.Quantity((4,), unit=u.pix), axis_types=['WAVE'])),
     (cube[:, :, 1], NDCube, mask_cube[:, :, 1], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None), 1)), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+        wt, [True, False, False, False], (slice(None, None, None), slice(None, None, None), 1)), np.array([2, 3]), DimensionPair(shape=u.Quantity(
             (2, 3), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE'])),
     (cube[:, :, 0:2], NDCube, mask_cube[:, :, 0:2], _wcs_slicer(wt, [True, False, False,
-                                                                     False], (slice(None, None, None), slice(None, None, None), slice(0, 2, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+                                                                     False], (slice(None, None, None), slice(None, None, None), slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity(
                                                                          (2, 3, 2), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
     (cube[:, :, :], NDCube, mask_cube[:, :, :], _wcs_slicer(wt, [True, False, False, False],
-                                                            (slice(None, None, None), slice(None, None, None), slice(None, None, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+                                                            (slice(None, None, None), slice(None, None, None), slice(None, None, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity(
                                                                 (2, 3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
     (cube[:, 1, 1], NDCube, mask_cube[:, 1, 1], _wcs_slicer(
         wt, [True, False, False, False], (slice(None, None, None), 1, 1)), np.array([2, 3]), DimensionPair(
-        lengths=u.Quantity((2,), unit=u.pix), axis_types=['HPLT-TAN'])),
+        shape=u.Quantity((2,), unit=u.pix), axis_types=['HPLT-TAN'])),
     (cube[:, 1, 0:2], NDCube, mask_cube[:, 1, 0:2], _wcs_slicer(
         wt, [True, False, False, False], (slice(None, None, None), 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(
-        lengths=u.Quantity((2, 2), unit=u.pix), axis_types=['HPLT-TAN', 'TIME'])),
+        shape=u.Quantity((2, 2), unit=u.pix), axis_types=['HPLT-TAN', 'TIME'])),
     (cube[:, 1, :], NDCube, mask_cube[:, 1, :], _wcs_slicer(
-        wt, [True, False, False, False], (slice(None, None, None), 1, slice(None, None, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity(
+        wt, [True, False, False, False], (slice(None, None, None), 1, slice(None, None, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity(
             (2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'TIME'])),
     (cube[1, :, 1], NDCube, mask_cube[1, :, 1], _wcs_slicer(
         wt, [True, False, False, False], (1, slice(None, None, None), 1)), np.array([2, 3]), DimensionPair(
-        lengths=u.Quantity((3,), unit=u.pix), axis_types=['WAVE'])),
+        shape=u.Quantity((3,), unit=u.pix), axis_types=['WAVE'])),
     (cube[1, :, 0:2], NDCube, mask_cube[1, :, 0:2], _wcs_slicer(
         wt, [True, False, False, False], (1, slice(None, None, None), slice(0, 2, None))), np.array([2, 3]), DimensionPair(
-        lengths=u.Quantity((3, 2), unit=u.pix), axis_types=['WAVE', 'TIME'])),
+        shape=u.Quantity((3, 2), unit=u.pix), axis_types=['WAVE', 'TIME'])),
     (cube[1, :, :], NDCube, mask_cube[1, :, :], _wcs_slicer(
         wt, [True, False, False, False], (1, slice(None, None, None), slice(None, None, None))), np.array([2, 3]), DimensionPair(
-        lengths=u.Quantity((3, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
+        shape=u.Quantity((3, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
     (cube[1, 1, 1], NDCube, mask_cube[1, 1, 1], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1, 1)), np.array([2, 3]), DimensionPair(lengths=u.Quantity((), unit=u.pix), axis_types=[])),
+        wt, [True, False, False, False], (1, 1, 1)), np.array([2, 3]), DimensionPair(shape=u.Quantity((), unit=u.pix), axis_types=[])),
     (cube[1, 1, 0:2], NDCube, mask_cube[1, 1, 0:2], _wcs_slicer(
         wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(
-        lengths=u.Quantity((2,), unit=u.pix), axis_types=['TIME'])),
+        shape=u.Quantity((2,), unit=u.pix), axis_types=['TIME'])),
     (cube[1, 1, :], NDCube, mask_cube[1, 1, :], _wcs_slicer(
-        wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(lengths=u.Quantity((4,), unit=u.pix
+        wt, [True, False, False, False], (1, 1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((4,), unit=u.pix
                                                                                                                         ), axis_types=['TIME'])),
 ])
 def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty, dimensions):

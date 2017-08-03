@@ -11,8 +11,8 @@ import astropy.nddata
 import numpy as np
 import copy
 
-DimensionPair = namedtuple('DimensionPair', 'lengths axis_types')
-NDCubeSequencePair = namedtuple('NDCubeSequencePair', 'Size NDCubeDimensionPair')
+DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
+SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
 
 __all__ = ['NDCube', 'NDCubeSequence']
 
@@ -170,7 +170,7 @@ class NDCube(astropy.nddata.NDData):
     @property
     def dimensions(self):
         """
-        Returns a named tuple with two attributes: 'lengths' gives the lengths
+        Returns a named tuple with two attributes: 'shape' gives the shape
         of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
         e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
         """
@@ -180,7 +180,7 @@ class NDCube(astropy.nddata.NDData):
             if not axis:
                 axes_ctype.append(ctype[i])
         shape = u.Quantity(self.data.shape, unit=u.pix)
-        return DimensionPair(lengths=shape, axis_types=axes_ctype[::-1])
+        return DimensionPair(shape=shape, axis_types=axes_ctype[::-1])
 
     def plot(self, axes=None, image_axes=[-1, -2], unit_x_axis=None, unit_y_axis=None,
              axis_ranges=None, unit=None, origin=0, **kwargs):
@@ -447,7 +447,7 @@ class NDCubeSequence(object):
             raise IndexError("None indices not supported")
         return cu.get_cube_from_sequence(self, item)
 
-    def animate(self, *args, **kwargs):
+    def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
         return i
 
@@ -458,11 +458,12 @@ class NDCubeSequence(object):
 Length of NDCubeSequence:  {length}
 Length of 1st NDCube: {lengthNDCube}
 Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions[0], lengthNDCube=self.dimensions[1][0], axis_type=self.dimensions[1][1]))
+""".format(length=self.dimensions.shape[0], lengthNDCube=self.dimensions.shape[1::], axis_type=self.dimensions.axis_types[1::]))
 
     @property
     def dimensions(self):
-        return NDCubeSequencePair(Size=len(self.data), NDCubeDimensionPair=self.data[0].dimensions)
+        return SequenceDimensionPair(shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
+                                     axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
