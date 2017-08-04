@@ -451,6 +451,37 @@ class NDCubeSequence(object):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
         return i
 
+    def explode_along_axis(self, axis=None):
+        """
+        Creates one less Dimensional data.
+
+        Parameters
+        ----------
+
+        axis : `int`
+            The axis along which the data is to be changed.
+        """
+        # if axis is None then set axis as common axis.
+        if axis is None:
+            axis = self.common_axis
+        # is axis is -ve then calculate the axis from the length of the dimensions of one cube
+        if axis < 0:
+            axis = len(self.dimensions.shape[1::]) + axis
+        # To store the resultant cube
+        result_cubes = []
+        # All slices are initially initialised as slice(None, None, None)
+        result_cubes_slice = [slice(None, None, None)] * len(self[0].data.shape)
+        # the range of the axis that needs to be sliced
+        range_of_axis = self[0].data.shape[axis]
+        for ndcube in self.data:
+            for index in range(range_of_axis):
+                # setting the slice value to the index so that the slices are done correctly.
+                result_cubes_slice[axis] = index
+                # appending the sliced cubes in the result_cube list
+                result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
+        # creating a new sequence with the result_cubes keeping the meta and common axis as axis
+        return self._new_instance(result_cubes, meta=self.meta, common_axis=axis)
+
     def __repr__(self):
         return (
             """Sunpy NDCubeSequence
