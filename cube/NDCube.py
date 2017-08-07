@@ -451,7 +451,7 @@ class NDCubeSequence(object):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
         return i
 
-    def explode_along_axis(self, axis=None):
+    def explode_along_axis(self, axis):
         """
         Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
 
@@ -462,10 +462,8 @@ class NDCubeSequence(object):
             The axis along which the data is to be changed.
         """
         # if axis is None then set axis as common axis.
-        if axis is None:
-            axis = self.common_axis
-        elif self.common_axis is not None:
-            if self.common_axis is not axis:
+        if self.common_axis is not None:
+            if self.common_axis != axis:
                 raise ValueError("axis and common_axis should be equal.")
         # is axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:

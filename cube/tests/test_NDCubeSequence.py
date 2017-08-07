@@ -92,11 +92,11 @@ def test_index_as_cube(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (seq1.explode_along_axis(axis=0), SequenceDimensionPair(
+    (seq1.explode_along_axis(0), SequenceDimensionPair(
         shape=([8] + list(u.Quantity((3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
-    (seq1.explode_along_axis(axis=1), SequenceDimensionPair(shape=(
+    (seq1.explode_along_axis(1), SequenceDimensionPair(shape=(
         [12] + list(u.Quantity((2, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'TIME'))),
-    (seq1.explode_along_axis(axis=2), SequenceDimensionPair(shape=(
+    (seq1.explode_along_axis(2), SequenceDimensionPair(shape=(
         [16] + list(u.Quantity((2, 3), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE')))
 ])
 def test_explode_along_axis(test_input, expected):
@@ -108,4 +108,4 @@ def test_explode_along_axis(test_input, expected):
 
 def test_explode_along_axis():
     with pytest.raises(ValueError):
-        seq.explode_along_axis(axis=1)
+        seq.explode_along_axis(1)
