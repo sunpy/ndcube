@@ -35,7 +35,8 @@ cube2 = NDCube(data, wcs=wm)
 cube3 = NDCube(data2, wcs=wt, missing_axis=[False, False, False, True])
 cube4 = NDCube(data2, wcs=wm)
 
-seq = NDCubeSequence([cube1, cube2, cube3, cube4])
+seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
+seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -66,14 +67,22 @@ def test_slice_first_index_sequence(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (seq.index_as_cube[0:5].dimensions, SequenceDimensionPair(shape=([3] + list(u.Quantity((2, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[1:3].dimensions, SequenceDimensionPair(shape=([2] + list(u.Quantity((1, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[0:6].dimensions, SequenceDimensionPair(shape=([3] + list(u.Quantity((2, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[0::].dimensions, SequenceDimensionPair(shape=([4] + list(u.Quantity((2, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[0:5, 0].dimensions, SequenceDimensionPair(shape=([3] + list(u.Quantity((3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[1:3, 0:2].dimensions, SequenceDimensionPair(shape=([2] + list(u.Quantity((1, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[0:6, 0, 0:1].dimensions, SequenceDimensionPair(shape=([3] + list(u.Quantity((1, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
-    (seq.index_as_cube[0::, 0, 0].dimensions, SequenceDimensionPair(shape=([4] + list(u.Quantity((4,), unit=u.pix))), axis_types=('Sequence Axis', 'TIME'))),
+    (seq.index_as_cube[0:5].dimensions, SequenceDimensionPair(shape=(
+        [3] + list(u.Quantity((2, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[1:3].dimensions, SequenceDimensionPair(shape=(
+        [2] + list(u.Quantity((1, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[0:6].dimensions, SequenceDimensionPair(shape=(
+        [3] + list(u.Quantity((2, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[0::].dimensions, SequenceDimensionPair(shape=(
+        [4] + list(u.Quantity((2, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[0:5, 0].dimensions, SequenceDimensionPair(
+        shape=([3] + list(u.Quantity((3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[1:3, 0:2].dimensions, SequenceDimensionPair(shape=(
+        [2] + list(u.Quantity((1, 3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[0:6, 0, 0:1].dimensions, SequenceDimensionPair(
+        shape=([3] + list(u.Quantity((1, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
+    (seq.index_as_cube[0::, 0, 0].dimensions, SequenceDimensionPair(
+        shape=([4] + list(u.Quantity((4,), unit=u.pix))), axis_types=('Sequence Axis', 'TIME'))),
 ])
 def test_index_as_cube(test_input, expected):
     assert test_input.shape[0] == expected.shape[0]
@@ -83,12 +92,20 @@ def test_index_as_cube(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (seq.explode_along_axis(axis=0), SequenceDimensionPair(shape=([8] + list(u.Quantity((3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
-    (seq.explode_along_axis(axis=1), SequenceDimensionPair(shape=([12] + list(u.Quantity((2, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'TIME'))),
-    (seq.explode_along_axis(axis=2), SequenceDimensionPair(shape=([16] + list(u.Quantity((2, 3), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE')))
+    (seq1.explode_along_axis(axis=0), SequenceDimensionPair(
+        shape=([8] + list(u.Quantity((3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
+    (seq1.explode_along_axis(axis=1), SequenceDimensionPair(shape=(
+        [12] + list(u.Quantity((2, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'TIME'))),
+    (seq1.explode_along_axis(axis=2), SequenceDimensionPair(shape=(
+        [16] + list(u.Quantity((2, 3), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE')))
 ])
-def test_explode_along_axis(test_input,expected):
+def test_explode_along_axis(test_input, expected):
     assert test_input.dimensions.shape[0] == expected.shape[0]
     for seq_indexed, expected_dim in zip(test_input.dimensions.shape[1::], expected.shape[1::]):
         assert seq_indexed.value == expected_dim.value
     assert test_input.dimensions.axis_types == expected.axis_types
+
+
+def test_explode_along_axis():
+    with pytest.raises(ValueError):
+        seq.explode_along_axis(axis=1)

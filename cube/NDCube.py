@@ -436,7 +436,7 @@ class NDCubeSequence(object):
         one single Cube.
     """
 
-    def __init__(self, data_list, meta=None, common_axis=0, **kwargs):
+    def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
         self.data = data_list
         self.meta = meta
         self.common_axis = common_axis
@@ -453,7 +453,7 @@ class NDCubeSequence(object):
 
     def explode_along_axis(self, axis=None):
         """
-        Creates one less Dimensional data.
+        Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
 
         Parameters
         ----------
@@ -464,6 +464,9 @@ class NDCubeSequence(object):
         # if axis is None then set axis as common axis.
         if axis is None:
             axis = self.common_axis
+        elif self.common_axis is not None:
+            if self.common_axis is not axis:
+                raise ValueError("axis and common_axis should be equal.")
         # is axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
             axis = len(self.dimensions.shape[1::]) + axis
@@ -518,6 +521,8 @@ Axis Types of 1st NDCube: {axis_type}
         >>> # Return same slice using this function
         >>> cs.index_sequence_as_cube[3:6, 0,   :]
         """
+        if self.common_axis is None:
+            raise ValueError("common_axis cannot be None")
         return _IndexAsCubeSlicer(self)
 
 
