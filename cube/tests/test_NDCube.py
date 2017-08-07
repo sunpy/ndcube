@@ -61,7 +61,7 @@ cube = NDCube(data, wcs=wt, missing_axis=[False, False,
     (cube[1, :], NDCube, mask_cube[1, :], _wcs_slicer(
         wt, [True, False, False, False], (1, slice(0, 2, None))), np.array([2, 3]), DimensionPair(shape=u.Quantity((3, 4), unit=u.pix), axis_types=['WAVE', 'TIME'])),
 ])
-def test_slicing_second_axis_type(test_input, expected, mask, wcs, uncertainty, dimensions):
+def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimensions):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     assert_wcs_are_equal(test_input.wcs, wcs[0])
@@ -91,7 +91,7 @@ def test_slicing_second_axis_type(test_input, expected, mask, wcs, uncertainty, 
         wt, [True, False, False, False], slice(None, None, None)), np.array([2, 3]), DimensionPair(shape=u.Quantity(
             (2, 3, 4), unit=u.pix), axis_types=['HPLT-TAN', 'WAVE', 'TIME'])),
 ])
-def test_slicing_first_axis_type(test_input, expected, mask, wcs, uncertainty, dimensions):
+def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty, dimensions):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     assert_wcs_are_equal(test_input.wcs, wcs[0])

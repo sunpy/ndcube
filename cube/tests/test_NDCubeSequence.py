@@ -80,3 +80,15 @@ def test_index_as_cube(test_input, expected):
     for seq_indexed, expected_dim in zip(test_input.shape[1::], expected.shape[1::]):
         assert seq_indexed.value == expected_dim.value
     assert test_input.axis_types == expected.axis_types
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (seq.explode_along_axis(axis=0), SequenceDimensionPair(shape=([8] + list(u.Quantity((3, 4), unit=u.pix))), axis_types=('Sequence Axis', 'WAVE', 'TIME'))),
+    (seq.explode_along_axis(axis=1), SequenceDimensionPair(shape=([12] + list(u.Quantity((2, 4), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'TIME'))),
+    (seq.explode_along_axis(axis=2), SequenceDimensionPair(shape=([16] + list(u.Quantity((2, 3), unit=u.pix))), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE')))
+])
+def test_explode_along_axis(test_input,expected):
+    assert test_input.dimensions.shape[0] == expected.shape[0]
+    for seq_indexed, expected_dim in zip(test_input.dimensions.shape[1::], expected.shape[1::]):
+        assert seq_indexed.value == expected_dim.value
+    assert test_input.dimensions.axis_types == expected.axis_types
