@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from sunpycube.cube.NDCube import NDCube, NDCubeSequence
 from sunpycube.cube import cube_utils as cu
 from sunpycube.wcs_util import WCS
