@@ -105,6 +105,6 @@ def test_explode_along_axis(test_input, expected):
     assert test_input.dimensions.axis_types == expected.axis_types
 
 
-def test_explode_along_axis():
+def test_explode_along_axis_error():
     with pytest.raises(ValueError):
         seq.explode_along_axis(1)
