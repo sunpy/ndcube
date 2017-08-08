@@ -13,52 +13,6 @@ from astropy import units as u
 from copy import deepcopy
 
 
-def orient(array, wcs, *extra_arrs):
-    # This is mostly lifted from astropy's spectral cube.
-    """
-    Given a 3 or 4D cube and a WCS, swap around the axes so that the
-    axes are in the correct order: the first in Numpy notation, and the last
-    in WCS notation.
-
-    Parameters
-    ----------
-    array : `~numpy.ndarray`
-        The input 3- or 4-d array with two position dimensions and one spectral
-        dimension.
-    wcs : `~sunpy.wcs.WCS`
-        The input 3- or 4-d WCS with two position dimensions and one spectral
-        dimension.
-   extra_arrs: one or more ndarrays, optional
-        Extra arrays to orient, corresponding to uncertainties and errors in
-        the data.
-    """
-    if wcs.oriented:  # If this wcs has already been oriented.
-        return (array, wcs) + extra_arrs
-
-    if array.ndim != 3 and array.ndim != 4:
-        raise ValueError("Input array must be 3- or 4-dimensional")
-
-    if not ((wcs.wcs.naxis == 3 and array.ndim == 3) or
-            (wcs.wcs.naxis == 4 and array.ndim == 4 and not wcs.was_augmented)
-            or (wcs.wcs.naxis == 4 and array.ndim == 3 and wcs.was_augmented)):
-        raise ValueError("WCS must have the same dimensions as the array")
-
-    axtypes = list(wcs.wcs.ctype)
-
-    if wcs.was_augmented:
-        array_order = select_order(axtypes[2::-1])
-    else:
-        array_order = select_order(axtypes)
-    result_array = array.transpose(array_order)
-    wcs_order = np.array(select_order(axtypes))
-
-    result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
-    result_wcs.was_augmented = wcs.was_augmented
-    result_wcs.oriented = True
-    result_extras = [arr.transpose(array_order) for arr in extra_arrs]
-    return (result_array, result_wcs) + tuple(result_extras)
-
-
 def select_order(axtypes):
     """
     Returns the indices of the correct axis priority for the given list of WCS
@@ -80,76 +34,6 @@ def select_order(axtypes):
     order.sort()
     result = [axtypes.index(s) for (_, s) in order]
     return result
-
-
-def iter_isinstance(obj, *type_tuples):
-    """
-    Given an iterable object and a list of tuples of types, classes or tuples
-    of types and classes determine if the given object's items are instances of
-    the given types. iter_isinstance(obj, types_1, types_2) is shorthand
-    for iter_isinstance(obj, types_1) or iter_isinstance(obj, types_2).
-
-    Parameters
-    ----------
-    obj: tuple
-        The object to check
-    *types: any number of types or classes
-        The classes to check against
-    """
-    result = False
-    if not isinstance(obj, (tuple, list)):
-        return False
-    for types in type_tuples:
-        if len(obj) != len(types):
-            continue
-        result |= all(isinstance(o, t) for o, t in zip(obj, types))
-    return result
-
-
-def reduce_dim(cube, axis, keys):
-    """
-    Given an axis and a slice object, returns a new cube with the slice
-    applied along the given dimension. For example, in a time-x-y cube,
-    a reduction along the x axis (axis 1) with a slice value (1, 4, None)
-    would return a cube where the only x values were 1 to 3 of the original
-    cube.
-
-    Parameters
-    ----------
-    cube: sunpy.cube.Cube
-        The cube to reduce
-    axis: int
-        The dimension to reduce
-    keys: slice object
-        The slicing to apply
-    """
-    start = keys.start if keys.start is not None else 0
-    stop = keys.stop if keys.stop is not None else cube.data.shape[axis]
-    if stop > cube.data.shape[axis]:
-        stop = cube.data.shape[axis]
-    if start < 0:
-        start = 0
-    step = keys.step if keys.step is not None else 1
-    indices = range(start, stop, step)
-    newdata = cube.data.take(indices, axis=axis)
-    newwcs = cube.axes_wcs.deepcopy()
-
-    wcs_slice_data = [slice(start, stop)]
-    for i in range(axis-1, -1, -1):
-        wcs_slice_data.insert(0, slice(0, cube.data.shape[i]))
-    newwcs = newwcs.slice(wcs_slice_data)
-
-    kwargs = {'meta': cube.meta, 'unit': cube.unit}
-    if cube.uncertainty is not None:
-        errors = deepcopy(cube.uncertainty)
-        errors.array = errors.array.take(indices, axis=axis)
-        kwargs.update({'errors': errors})
-    if cube.mask is not None:
-        mask = cube.mask.take(indices, axis=axis)
-        kwargs.update({'mask': mask})
-
-    newcube = cube._new_instance(data=newdata, wcs=newwcs, **kwargs)
-    return newcube
 
 
 def get_cube_from_sequence(cubesequence, item):
@@ -357,25 +241,3 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
         cube_slice = slice(cube_start_index, cube_stop_index, cube_like_slice.step)
         sequence_slice = slice(sequence_start_index, sequence_stop_index+1, cube_like_slice.step)
     return sequence_slice, cube_slice
-
-
-class CubeError(Exception):
-    """
-    Class for handling Cube errors.
-    """
-    errors = {0: 'Unspecified error',
-              1: 'Time dimension not present',
-              2: 'Spectral dimension not present',
-              3: 'Insufficient spatial dimensions',
-              4: 'Dimension error',
-              5: 'Slicing unit error',
-              6: 'Unaligned array error'}
-
-    def __init__(self, value, msg):
-        Exception.__init__(self, msg)
-        self.value = value
-        self.message = msg
-
-    def __str__(self):
-        return 'ERROR ' + repr(self.value) + ' (' \
-               + self.errors.get(self.value, '') + '): ' + self.message
