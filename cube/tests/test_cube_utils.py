@@ -23,26 +23,6 @@ data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
 
-def test_orient_with_time():
-    newdata, newwcs = cu.orient(data, wt)
-    assert newwcs.wcs.axis_types[1] == 3000  # code for a spectral dimension
-    assert newwcs.wcs.axis_types[0] == 0  # code for an unknown axis - time
-    assert newwcs.naxis == 4
-    assert newdata.shape == (2, 3, 4)  # the time dimension should be first
-    with pytest.raises(ValueError):
-        cu.orient(np.zeros((1, 2)), wt)
-    with pytest.raises(ValueError):
-        cu.orient(np.zeros((1, 2, 3, 4)), wt)
-    with pytest.raises(ValueError):
-        cu.orient(data, WCS(naxis=2))
-
-
-def test_orient_no_time():
-    newdata, newwcs = cu.orient(data, wm)
-    assert newwcs.wcs.axis_types[0] == 3000
-    assert newdata.shape == (2, 3, 4)
-
-
 def test_select_order():
     lists = [['TIME', 'WAVE', 'HPLT-TAN', 'HPLN-TAN'],
              ['WAVE', 'HPLT-TAN', 'UTC', 'HPLN-TAN'],
@@ -60,71 +40,6 @@ def test_select_order():
 
     for (l, r) in zip(lists, results):
         assert cu.select_order(l) == r
-
-
-def test_iter_isinstance():
-    obj = (1, 'x', 2.5)
-    assert cu.iter_isinstance(obj, (int, str, float))
-    assert cu.iter_isinstance(obj, ((int, float), (str, int), float))
-    assert not cu.iter_isinstance(obj, (int, str))
-    assert not cu.iter_isinstance(obj, (int, str, float, int))
-    assert not cu.iter_isinstance(1, (int))  # only works for tuples
-    assert not cu.iter_isinstance(int, (float))
-    assert cu.iter_isinstance(obj, (int, str), (int, str, float), (float, int))
-
-
-def test_convert_point():
-    assert cu.convert_point(10.0, u.Angstrom, wm, 2) == 0
-    assert cu.convert_point(10.2, u.Angstrom, wm, 2) == 1
-    assert cu.convert_point(9.6, u.Angstrom, wm, 2) == -2
-    assert cu.convert_point(10.3, u.Angstrom, wm, 2) == 2
-    assert cu.convert_point(0.001, u.mm, wm, 2) == 49950
-
-    assert cu.convert_point(0, u.min, wt, 0) == 0
-    assert cu.convert_point(3.1, u.min, wt, 0) == 8
-    assert cu.convert_point(-2.4, u.min, wt, 0) == -6
-    assert cu.convert_point(0, u.s, wt, 0) == 0
-    assert cu.convert_point(24, u.s, wt, 0) == 1
-    assert cu.convert_point(-72, u.s, wt, 0) == -3
-
-    assert cu.convert_point(0.2, u.Angstrom, wt, 1) == 1
-    assert cu.convert_point(12, None, wt, 0) == 12
-    assert cu.convert_point(15.7, None, wm, 3) == 15
-    assert cu.convert_point(4, u.pix, wm, 2) == 4
-    assert cu.convert_point(7.2, u.pixel, wt, 1) == 7
-
-
-def test_convert_slice():
-    slices = [(slice(1, None, 2.2), wt, 2),
-              (slice(9.6, 10.2 * u.Angstrom, None), wm, 2),
-              (slice(9.6 * u.Angstrom, 10.2 * u.Angstrom, None), wm, 2),
-              (slice(None, None, 0.8 * u.min), wt, 0),
-              (slice(0 * u.deg, 14.5, 2), wt, 2)]
-
-    results = [slice(1, None, 2.2),
-               slice(-2, 1, None),
-               slice(-2, 1, None),
-               slice(None, None, 2),
-               slice(0, 29, 4)]
-
-    for i in range(len(slices)):
-        assert cu._convert_slice(*slices[i]) == results[i]
-    with pytest.raises(cu.CubeError):
-        cu._convert_slice(slice(2 * u.m, 3, 4 * u.mm), wm, 0)
-
-
-def test_pixelize_slice():
-    sl = [((slice(1, None, 3), 3.2, slice(None, None, 2)), wt),
-          ((0.3 * u.deg, 2474.5 * u.deg, 10.75 * u.Angstrom), wm),
-          ((slice(None, 3 * u.deg, 2), slice(99.5 * u.deg, 124.5, 1 * u.deg),
-            slice(90 * u.Angstrom, 300, 60)), wm)]
-
-    results = [(slice(1, None, 3), 3.2, slice(None, None, 2)),
-               (0, 4950, 4),
-               (slice(None, 7, 5), slice(200, 250, 2), slice(400, 1450, 300))]
-
-    for i in range(len(sl)):
-        assert cu.pixelize_slice(*sl[i]) == results[i]
 
 
 @pytest.mark.parametrize("test_input,expected", [
