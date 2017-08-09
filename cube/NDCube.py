@@ -407,7 +407,7 @@ def _plot_1D_cube(cube, unit=None, origin=0):
     """
     index_not_one = []
     for i, _bool in enumerate(cube.missing_axis):
-        if _bool:
+        if not _bool:
             index_not_one.append(i)
     if unit is None:
         unit = cube.wcs.wcs.cunit[index_not_one[0]]
