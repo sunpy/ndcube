@@ -2,6 +2,7 @@ from sunpy.visualization.imageanimator import ImageAnimatorWCS
 from collections import namedtuple
 from sunpycube.visualization import animation as ani
 from sunpycube.cube import cube_utils as cu
+import sunpy.map
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import astropy.units as u
@@ -10,6 +11,7 @@ import sunpycube.wcs_util
 import astropy.nddata
 import numpy as np
 import copy
+import warnings
 
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
@@ -165,7 +167,18 @@ class NDCube(astropy.nddata.NDData):
         return result[::-1]
 
     def to_sunpy(self):
-        raise NotImplementedError("to_sunpy() is not Implemented.")
+        wcs_axes = list(self.wcs.wcs.ctype)
+        missing_axis = self.missing_axis
+        index_not_one = []
+        if 'TIME' in wcs_axes and len(self.dimensions.shape) is 1:
+            result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
+        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes and len(self.dimensions.shape) is 2:
+            if not missing_axis[wcs_axes.index("HPLT-TAN")] and not missing_axis[wcs_axes.index("HPLN-TAN")]:
+                result = sunpy.map.Map(self.data, self.meta)
+        else:
+            warnings.warn("Object type not Implemented")
+            result = None
+        return result
 
     @property
     def dimensions(self):
