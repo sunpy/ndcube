@@ -440,7 +440,6 @@ class NDCubeSequence(object):
         self.data = data_list
         self.meta = meta
         self.common_axis = common_axis
-        self.time = kwargs.get('time', None)
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
