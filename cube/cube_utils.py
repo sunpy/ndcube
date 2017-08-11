@@ -175,7 +175,7 @@ def index_sequence_as_cube(cubesequence, item):
     item_tuple = tuple(item_list)
     if item is None or (isinstance(item, tuple) and None in item):
         raise IndexError("None indices not supported")
-    return get_cube_from_sequence(cubesequence, item)
+    return get_cube_from_sequence(cubesequence, item_tuple)
 
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
