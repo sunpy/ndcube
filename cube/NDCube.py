@@ -51,14 +51,18 @@ class NDCube(astropy.nddata.NDData):
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
 
+    coords : `list` of `tuple`s, each with three entries (`str`, `int`, `astropy.units.quantity`)
+        Gives the name, axis of data, and values of coordinates of a data axis not
+        included in the WCS object.
+
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
         Note however that it is not always possible to save the input as reference. Default is False.
     """
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
-                 unit=None, copy=False, missing_axis=None, **kwargs):
+    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
+                 unit=None, coords=None, copy=False, missing_axis=None, **kwargs):
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
         else:
@@ -71,6 +75,17 @@ class NDCube(astropy.nddata.NDData):
             if count is not data.ndim:
                 raise ValueError(
                     "The number of data dimensions and number of wcs non-missing axes do not match.")
+        self.coords = {}
+        coord_error = "Coord must have three properties supplied, " + \
+          "name (str), axis (int), values (Quantity):"
+        for coord in coords:
+            if len(coord) != 3:
+                raise ValueError(coord_error+"{0}".format(coord))
+            elif type(coord[0]) is not str or type(coord[1]) is not int or \
+              type(coord[2]) is not astropy.units.quantity.Quantity:
+                raise ValueError(coord_error+"{0}".format(coord))
+            else:
+                self.coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
@@ -254,8 +269,12 @@ class NDCube(astropy.nddata.NDData):
                 uncertainty = self.uncertainty
         else:
             uncertainty = None
-        result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty,
-                        meta=self.meta, unit=self.unit, copy=False, missing_axis=missing_axis)
+        coords_keys = list(self.coords.keys())
+        result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
+                        unit=self.unit, copy=False, missing_axis=missing_axis,
+                        coords=[(ck, self.coords[ck]["axis"],
+                                 self.coords[ck]["value"][item[self.coords[ck]["axis"]]])
+                                 for ck in coords_keys])
         return result
 
     def __repr__(self):
