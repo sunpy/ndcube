@@ -173,7 +173,9 @@ def index_sequence_as_cube(cubesequence, item):
     # Insert corresponding index/slice of required cube in sequence.
     item_list.insert(0, sequence_index)
     item_tuple = tuple(item_list)
-    return cubesequence[item_tuple]
+    if item is None or (isinstance(item, tuple) and None in item):
+        raise IndexError("None indices not supported")
+    return get_cube_from_sequence(cubesequence, item)
 
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
