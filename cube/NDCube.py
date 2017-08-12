@@ -342,7 +342,8 @@ class NDCubeOrdered(NDCube):
         wcs_order = np.array(array_order)[::-1]
         result_wcs = sunpycube.wcs_util.reindex_wcs(wcs, wcs_order)
         super(NDCubeOrdered, self).__init__(result_data, uncertainty=uncertainty, mask=mask,
-                                            wcs=result_wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
+                                            wcs=result_wcs, meta=meta, unit=unit, copy=copy,
+                                            missing_axis=missing_axis, **kwargs)
 
 
 def _plot_3D_cube(cube, image_axes=None, unit_x_axis=None, unit_y_axis=None,
@@ -509,12 +510,28 @@ class NDCubeSequence(object):
 Length of NDCubeSequence:  {length}
 Length of 1st NDCube: {lengthNDCube}
 Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions.shape[0], lengthNDCube=self.dimensions.shape[1::], axis_type=self.dimensions.axis_types[1::]))
+""".format(length=self.dimensions.shape[0], lengthNDCube=self.dimensions.shape[1::],
+           axis_type=self.dimensions.axis_types[1::]))
 
     @property
     def dimensions(self):
         return SequenceDimensionPair(shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
                                      axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
+
+    @property
+    def common_axis_coords(self):
+        if self.common_axis:
+            common_coords = {}
+            common_coords_list = []
+            coord_names = list(self[0].coords.keys())
+            for coord_name in coord_names:
+                if self[0].coords[coord_name]["axis"] == self.common_axis:
+                    coord_unit = self[0].coords[coord_name]["value"].unit
+                    qs = tuple([np.asarray(c.coords["time"]["value"].to(coord_unit).value) for c in self])
+                   common_coords[coord_name] = Quantity(np.concatenate(qs), unit=coord_unit)
+        else:
+            common_coords = None
+        return common_coords
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
