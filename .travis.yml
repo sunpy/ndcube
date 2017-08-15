@@ -30,7 +30,7 @@ env:
         - PYTHON_VERSION=3.6
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
-        - SUNPY_VERSION=stable
+        - SUNPY_VERSION=pre
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test'
         - PIP_DEPENDENCIES='git+https://github.com/sunpy/sunpy-sphinx-theme'
