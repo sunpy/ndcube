@@ -1,12 +1,12 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 from collections import namedtuple
-from sunpycube.visualization import animation as ani
-from sunpycube.cube import cube_utils as cu
+from ndcube.visualization import animation as ani
+from ndcube import cube_utils as cu
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import astropy.units as u
-import sunpycube.cube.cube_utils
-import sunpycube.wcs_util
+import ndcube.cube_utils
+import ndcube.wcs_util
 import astropy.nddata
 import numpy as np
 import copy
@@ -27,7 +27,7 @@ class NDCube(astropy.nddata.NDData):
     data: `numpy.ndarray`
         The array holding the actual data in this object.
 
-    wcs: `sunpycube.wcs.wcs.WCS`
+    wcs: `ndcube.wcs.wcs.WCS`
         The WCS object containing the axes' information
 
     uncertainty : any type, optional
@@ -238,7 +238,7 @@ class NDCube(astropy.nddata.NDData):
         data = self.data[item]
         # here missing axis is reversed as the item comes already in the reverse order
         # of the input
-        wcs, missing_axis = sunpycube.wcs_util._wcs_slicer(
+        wcs, missing_axis = ndcube.wcs_util._wcs_slicer(
             self.wcs, copy.deepcopy(self.missing_axis[::-1]), item)
         if self.mask is not None:
             mask = self.mask[item]
@@ -283,7 +283,7 @@ class NDCubeOrdered(NDCube):
     data: `numpy.ndarray`
         The array holding the actual data in this object.
 
-    wcs: `sunpycube.wcs.wcs.WCS`
+    wcs: `ndcube.wcs.wcs.WCS`
         The WCS object containing the axes' information. The axes'
         priorities are time, spectral, celestial. This means that if
         present, each of these axis will take precedence over the others.
@@ -318,10 +318,10 @@ class NDCubeOrdered(NDCube):
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
                  unit=None, copy=False, missing_axis=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)
-        array_order = sunpycube.cube.cube_utils.select_order(axtypes)
+        array_order = ndcube.cube_utils.select_order(axtypes)
         result_data = data.transpose(array_order)
         wcs_order = np.array(array_order)[::-1]
-        result_wcs = sunpycube.wcs_util.reindex_wcs(wcs, wcs_order)
+        result_wcs = ndcube.wcs_util.reindex_wcs(wcs, wcs_order)
         super(NDCubeOrdered, self).__init__(result_data, uncertainty=uncertainty, mask=mask,
                                             wcs=result_wcs, meta=meta, unit=unit, copy=copy, missing_axis=missing_axis, **kwargs)
 
@@ -534,7 +534,7 @@ class _IndexAsCubeSlicer(object):
 
     Attributes
     ----------
-    seq : `sunpycube.cube.NDCubeSequence`
+    seq : `ndcube.NDCubeSequence`
         Object of NDCubeSequence.
     """
 

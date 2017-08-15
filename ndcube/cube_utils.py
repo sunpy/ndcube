@@ -8,7 +8,7 @@ aid readability.
 
 from __future__ import absolute_import
 import numpy as np
-from sunpycube import wcs_util
+from ndcube import wcs_util
 from astropy import units as u
 from copy import deepcopy
 
@@ -42,7 +42,7 @@ def get_cube_from_sequence(cubesequence, item):
 
     Parameters
     ----------
-    cubesequence: sunpycube.CubeSequence object
+    cubesequence: ndcube.CubeSequence object
         The cubesequence to get the item from
     item: int, slice object, or tuple of these
         The item to get from the cube
@@ -99,7 +99,7 @@ def index_sequence_as_cube(cubesequence, item):
 
     Parameters
     ----------
-    cubesequence: sunpycube.CubeSequence object
+    cubesequence: ndcube.CubeSequence object
         The cubesequence to get the item from
     item: int, slice object, or tuple of these
         The item to get from the cube.  If tuple length must be <= number

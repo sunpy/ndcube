@@ -1,6 +1,6 @@
-from sunpycube.cube.NDCube import NDCube, NDCubeSequence
-from sunpycube.cube import cube_utils as cu
-from sunpycube.wcs_util import WCS
+from ndcube import NDCube, NDCubeSequence
+from ndcube import cube_utils as cu
+from ndcube.wcs_util import WCS
 from collections import namedtuple
 import numpy as np
 import pytest

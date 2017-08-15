@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
-from sunpycube.cube import cube_utils as cu
+from ndcube import cube_utils as cu
 import numpy as np
-from sunpycube.wcs_util import WCS
+from ndcube.wcs_util import WCS
 from astropy import units as u
 
 ht = {

@@ -2,9 +2,9 @@
 '''
 Tests for NDCube
 '''
-from sunpycube.cube.NDCube import NDCube
-from sunpycube.cube import cube_utils as cu
-from sunpycube.wcs_util import WCS, _wcs_slicer, assert_wcs_are_equal
+from ndcube import NDCube
+from ndcube import cube_utils as cu
+from ndcube.wcs_util import WCS, _wcs_slicer, assert_wcs_are_equal
 from collections import namedtuple
 import pytest
 import numpy as np

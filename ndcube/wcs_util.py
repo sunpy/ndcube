@@ -9,7 +9,7 @@ import numpy as np
 
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
-from sunpycube.cube import cube_utils as cu
+from ndcube import cube_utils as cu
 
 
 class WCS(wcs.WCS):
