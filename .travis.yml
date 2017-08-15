@@ -33,7 +33,6 @@ env:
         - SUNPY_VERSION=pre
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test'
-        - PIP_DEPENDENCIES='git+https://github.com/sunpy/sunpy-sphinx-theme'
         - EVENT_TYPE='pull_request push'
 
         
@@ -43,7 +42,7 @@ env:
         
         # List other runtime dependencies for the package that are available as
         # pip packages here.
-        # - PIP_DEPENDENCIES=''
+        - PIP_DEPENDENCIES='sunpy-sphinx-theme'
 
         # Conda packages for affiliated packages are hosted in channel
         # "astropy" while builds for astropy LTS with recent numpy versions

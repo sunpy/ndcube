@@ -22,4 +22,4 @@ dependencies:
     - suds-jurko
     - pip:
       - sunpy==0.8.rc1
-      - git+https://github.com/sunpy/sunpy-sphinx-theme.git
+      - sunpy-sphinx-theme
