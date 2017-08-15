@@ -1,12 +1,13 @@
 name: ndcube
 
 channels:
-    - astropy
+    - conda-forge
 
 dependencies:
+    - python=3
     - astropy
     - Cython
     - matplotlib
     - numpy
-#   - pip:
-#       - dependency_from_pip
+    - pip:
+      - sunpy==0.8.rc1
