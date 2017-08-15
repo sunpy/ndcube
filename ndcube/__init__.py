@@ -1,7 +1,7 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+# Licensed under a 2-clause BSD style license - see LICENSE.rst
 
 """
-This is an Astropy affiliated package.
+This is a SunPy affiliated package.
 """
 
 # Affiliated packages may add whatever they like to this file, but
@@ -12,6 +12,6 @@ from ._sunpy_init import *
 
 if not _ASTROPY_SETUP_:
     # For egg_info test builds to pass, put package imports here.
+    from .ndcube import *
 
-    pass
 

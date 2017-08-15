@@ -1,6 +1,6 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import numpy as np
-from sunpycube.cube import cube_utils as cu
+from ndcube import cube_utils as cu
 
 
 class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
@@ -20,7 +20,7 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
 
     Parameters
     ----------
-    seq: `sunpycube.cube.datacube.CubeSequence`
+    seq: `ndcube.datacube.CubeSequence`
         The list of cubes.
 
     image_axes: `list`
