@@ -64,7 +64,7 @@ class NDCube(astropy.nddata.NDData):
     """
 
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
-                 unit=None, copy=False, missing_axis=None, **kwargs):
+                 unit=None, coords=None, copy=False, missing_axis=None, **kwargs):
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
         else:
@@ -77,18 +77,19 @@ class NDCube(astropy.nddata.NDData):
             if count is not data.ndim:
                 raise ValueError(
                     "The number of data dimensions and number of wcs non-missing axes do not match.")
+
         self.coords = {}
-        coord_error = "Coord must have three properties supplied, " + \
-          "name (str), axis (int), values (Quantity):"
+        coord_error = "Coord must have three properties supplied, name (str), axis (int), values (Quantity): {0}"
+
         if coords:
-	    for coord in coords:
-	        if len(coord) != 3:
-	            raise ValueError(coord_error+"{0}".format(coord))
-    	        elif type(coord[0]) is not str or type(coord[1]) is not int or \
-	             type(coord[2]) is not astropy.units.quantity.Quantity:
-	            raise ValueError(coord_error+"{0}".format(coord))
-	        else:
-	            self.coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
+            for coord in coords:
+                if len(coord) != 3:
+                    raise ValueError(coord_error.format(coord))
+                elif not isinstance(coord[2], (str, int, astropy.units.quantity.Quantity)):
+                    raise ValueError(coord_error.format(coord))
+                else:
+                    self.coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
+
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
 
@@ -541,7 +542,7 @@ Axis Types of 1st NDCube: {axis_type}
                 if self[0].coords[coord_name]["axis"] == self.common_axis:
                     coord_unit = self[0].coords[coord_name]["value"].unit
                     qs = tuple([np.asarray(c.coords["time"]["value"].to(coord_unit).value) for c in self])
-                   common_coords[coord_name] = Quantity(np.concatenate(qs), unit=coord_unit)
+                    common_coords[coord_name] = u.Quantity(np.concatenate(qs), unit=coord_unit)
         else:
             common_coords = None
         return common_coords
