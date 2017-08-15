@@ -1,9 +1,9 @@
 A base package for multi-dimensional contiguious and non-contiguious spatially aware arrays.
 --------------------------------------------------------------------------------------------
 
-.. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
-    :target: http://www.astropy.org
-    :alt: Powered by Astropy Badge
+.. image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
+    :target: http://www.sunpy.org
+    :alt: Powered by Sunpy Badge
 
 
 
