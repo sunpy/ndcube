@@ -92,12 +92,6 @@ matrix:
         - os: linux
           env: MAIN_CMD='pycodestyle ndcube --count' SETUP_CMD=''
 
-    allow_failures:
-        # Do a PEP8 test with pycodestyle
-        # (allow to fail unless your code completely compliant)
-        - os: linux
-          env: MAIN_CMD='pycodestyle ndcube --count' SETUP_CMD=''
-
 install:
 
     # We now use the ci-helpers package to set up our testing environment.
