@@ -285,11 +285,22 @@ class NDCube(astropy.nddata.NDData):
         else:
             uncertainty = None
         coords_keys = list(self.coords.keys())
+        new_coords = copy.deepcopy(self.coords)
+        for ck in coords_keys:
+            axis_ck = new_coords[ck]["axis"]
+            if isinstance(item, (slice, int)):
+                if axis_ck is 0:
+                    new_coords[ck]["value"] = new_coords[ck]["value"][item]
+            if isinstance(item, tuple):
+                try:
+                    slice_item_coords = item[axis_ck]
+                    new_coords[ck]["value"] = new_coords[ck]["value"][slice_item_coords]
+                except IndexError as e:
+                    pass
         result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
                         unit=self.unit, copy=False, missing_axis=missing_axis,
-                        coords=[(ck, self.coords[ck]["axis"],
-                                 self.coords[ck]["value"][item[self.coords[ck]["axis"]]])
-                                 for ck in coords_keys])
+                        coords=[(ck, new_coords[ck]["axis"], new_coords[ck]["value"])
+                                for ck in coords_keys])
         return result
 
     def __repr__(self):
@@ -525,7 +536,7 @@ Length of NDCubeSequence:  {length}
 Length of 1st NDCube: {lengthNDCube}
 Axis Types of 1st NDCube: {axis_type}
 """.format(length=self.dimensions.shape[0], lengthNDCube=self.dimensions.shape[1::],
-           axis_type=self.dimensions.axis_types[1::]))
+                axis_type=self.dimensions.axis_types[1::]))
 
     @property
     def dimensions(self):
@@ -541,7 +552,8 @@ Axis Types of 1st NDCube: {axis_type}
             for coord_name in coord_names:
                 if self[0].coords[coord_name]["axis"] == self.common_axis:
                     coord_unit = self[0].coords[coord_name]["value"].unit
-                    qs = tuple([np.asarray(c.coords["time"]["value"].to(coord_unit).value) for c in self])
+                    qs = tuple([np.asarray(c.coords["time"]["value"].to(coord_unit).value)
+                                for c in self])
                     common_coords[coord_name] = u.Quantity(np.concatenate(qs), unit=coord_unit)
         else:
             common_coords = None
