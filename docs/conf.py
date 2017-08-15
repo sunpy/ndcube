@@ -52,6 +52,9 @@ conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
 setup_cfg = dict(conf.items('metadata'))
 
 # -- General configuration ----------------------------------------------------
+#
+intersphinx_mapping.pop('h5py', None)
+intersphinx_mapping['sunpy'] = ("http://docs.sunpy.org/en/stable", None)
 
 # By default, highlight as Python 3.
 highlight_language = 'python3'
@@ -112,11 +115,7 @@ release = package.__version__
 # name of a builtin theme or the name of a custom theme in html_theme_path.
 #html_theme = None
 
-html_theme = "sunpy_sphinx_theme"
-
-
-
-
+from sunpy_sphinx_theme.conf import *
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
@@ -141,6 +140,12 @@ html_title = '{0} v{1}'.format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + 'doc'
 
+extensions.remove('astropy_helpers.extern.numpydoc')
+extensions.append('sphinx.ext.napoleon')
+# Disable having a separate return type row
+napoleon_use_rtype = False
+# Disable google style docstrings
+napoleon_google_docstring = False
 
 # -- Options for LaTeX output -------------------------------------------------
 
