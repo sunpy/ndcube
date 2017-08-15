@@ -24,7 +24,7 @@ class NDCube(astropy.nddata.NDData):
     Class representing N dimensional cubes.
     Extra arguments are passed on to NDData's init.
 
-    Attributes
+    Parameters
     ----------
     data: `numpy.ndarray`
         The array holding the actual data in this object.
@@ -312,7 +312,7 @@ class NDCubeOrdered(NDCube):
     lambda, t, y cube the order will be (t, lambda, y).
     Extra arguments are passed on to NDData's init.
 
-    Attributes
+    Parameters
     ----------
     data: `numpy.ndarray`
         The array holding the actual data in this object.
@@ -455,7 +455,7 @@ class NDCubeSequence(object):
     """
     Class representing list of cubes.
 
-    Attributes
+    Parameters
     ----------
     data_list : `list`
         List of cubes.
@@ -583,7 +583,7 @@ class _IndexAsCubeSlicer(object):
     >>> [4, 5, 6]
     This makes slicing like this possible for index_as_cube.
 
-    Attributes
+    Parameters
     ----------
     seq : `ndcube.NDCubeSequence`
         Object of NDCubeSequence.
