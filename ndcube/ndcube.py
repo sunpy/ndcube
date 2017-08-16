@@ -576,12 +576,12 @@ Axis Types of 1st NDCube: {axis_type}
         Example
         -------
         >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
-        >>> data_list = [cubeA, cubeB, cubeC]
-        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0)
+        >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
+        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0) # doctest: +SKIP
         >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
-        >>> cs[1,:,0,:]
+        >>> cs[1,:,0,:] # doctest: +SKIP
         >>> # Return same slice using this function
-        >>> cs.index_sequence_as_cube[3:6, 0,   :]
+        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
         """
         if self.common_axis is None:
             raise ValueError("common_axis cannot be None")
@@ -592,6 +592,7 @@ class _IndexAsCubeSlicer(object):
     """
     Helper class to make slicing in index_as_cube more pythonic.
     Helps to make operations like in numpy array.
+    >>> import numpy
     >>> data_list = numpy.array(range(10))
     >>> data_list[3:5]
     >>> [4, 5, 6]
