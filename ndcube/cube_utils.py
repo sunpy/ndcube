@@ -250,3 +250,12 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
         cube_slice = slice(cube_start_index, cube_stop_index, cube_like_slice.step)
         sequence_slice = slice(sequence_start_index, sequence_stop_index+1, cube_like_slice.step)
     return sequence_slice, cube_slice
+
+
+def assert_extra_coords_equal(test_input, extra_coords):
+    assert test_input._extra_coords.keys() == extra_coords.keys()
+    for key in test_input._extra_coords.keys():
+        assert test_input._extra_coords[key]['axis'] == extra_coords[key]['axis']
+        assert np.all(test_input._extra_coords[key][
+                      'value'].value == extra_coords[key]['value'].value)
+        assert test_input._extra_coords[key]['value'].unit == extra_coords[key]['value'].unit

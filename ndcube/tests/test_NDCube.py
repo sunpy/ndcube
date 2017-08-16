@@ -73,12 +73,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimen
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    assert test_input.extra_coords.keys() == extra_coords.keys()
-    for key in test_input.extra_coords.keys():
-        assert test_input.extra_coords[key]['axis'] == extra_coords[key]['axis']
-        assert np.all(test_input.extra_coords[key][
-                      'value'].value == extra_coords[key]['value'].value)
-        assert test_input.extra_coords[key]['value'].unit == extra_coords[key]['value'].unit
+    cu.assert_extra_coords_equal(test_input, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,extra_coords", [
@@ -104,12 +99,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty, dimens
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    assert test_input.extra_coords.keys() == extra_coords.keys()
-    for key in test_input.extra_coords.keys():
-        assert test_input.extra_coords[key]['axis'] == extra_coords[key]['axis']
-        assert np.all(test_input.extra_coords[key][
-                      'value'].value == extra_coords[key]['value'].value)
-        assert test_input.extra_coords[key]['value'].unit == extra_coords[key]['value'].unit
+    cu.assert_extra_coords_equal(test_input, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,extra_coords", [
@@ -171,12 +161,7 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty, dimens
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    assert test_input.extra_coords.keys() == extra_coords.keys()
-    for key in test_input.extra_coords.keys():
-        assert test_input.extra_coords[key]['axis'] == extra_coords[key]['axis']
-        assert np.all(test_input.extra_coords[key][
-                      'value'].value == extra_coords[key]['value'].value)
-        assert test_input.extra_coords[key]['value'].unit == extra_coords[key]['value'].unit
+    cu.assert_extra_coords_equal(test_input, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected", [

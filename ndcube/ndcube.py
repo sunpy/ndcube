@@ -78,7 +78,7 @@ class NDCube(astropy.nddata.NDData):
                 raise ValueError(
                     "The number of data dimensions and number of wcs non-missing axes do not match.")
 
-        self.extra_coords = {}
+        self._extra_coords = {}
         coord_error = "Coord must have three properties supplied, name (str), axis (int), values (Quantity): {0}"
 
         if extra_coords:
@@ -88,7 +88,7 @@ class NDCube(astropy.nddata.NDData):
                 elif not isinstance(coord[2], (str, int, astropy.units.quantity.Quantity)):
                     raise ValueError(coord_error.format(coord))
                 else:
-                    self.extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
+                    self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
 
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
@@ -284,8 +284,8 @@ class NDCube(astropy.nddata.NDData):
                 uncertainty = self.uncertainty
         else:
             uncertainty = None
-        extra_coords_keys = list(self.extra_coords.keys())
-        new_extra_coords = copy.deepcopy(self.extra_coords)
+        extra_coords_keys = list(self._extra_coords.keys())
+        new_extra_coords = copy.deepcopy(self._extra_coords)
         for ck in extra_coords_keys:
             axis_ck = new_extra_coords[ck]["axis"]
             if isinstance(item, (slice, int)):
@@ -294,13 +294,14 @@ class NDCube(astropy.nddata.NDData):
             if isinstance(item, tuple):
                 try:
                     slice_item_extra_coords = item[axis_ck]
-                    new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][slice_item_extra_coords]
+                    new_extra_coords[ck]["value"] = new_extra_coords[
+                        ck]["value"][slice_item_extra_coords]
                 except IndexError as e:
                     pass
         result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
                         unit=self.unit, copy=False, missing_axis=missing_axis,
                         extra_coords=[(ck, new_extra_coords[ck]["axis"], new_extra_coords[ck]["value"])
-                                for ck in extra_coords_keys])
+                                      for ck in extra_coords_keys])
         return result
 
     def __repr__(self):
@@ -554,7 +555,8 @@ Axis Types of 1st NDCube: {axis_type}
                     coord_unit = self[0].extra_coords[coord_name]["value"].unit
                     qs = tuple([np.asarray(c.extra_coords["time"]["value"].to(coord_unit).value)
                                 for c in self])
-                    common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs), unit=coord_unit)
+                    common_extra_coords[coord_name] = u.Quantity(
+                        np.concatenate(qs), unit=coord_unit)
         else:
             common_extra_coords = None
         return common_extra_coords
