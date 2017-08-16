@@ -145,7 +145,7 @@ def _slice_list(obj):
     Example
     -------
     >>> _slice_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
-    >>> (slice(1,2), slice(1,3), slice(2, 3), slice(2,4), slice(8, 9))
+        (slice(1,2), slice(1,3), slice(2, 3), slice(2,4), slice(8, 9))
     """
     result = []
     if not isinstance(obj, (tuple, list)):

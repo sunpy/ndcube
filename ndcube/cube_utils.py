@@ -115,12 +115,12 @@ def index_sequence_as_cube(cubesequence, item):
     Example
     -------
     >>> # Say we have three Cubes each cube has common_axis=1 is time and shape=(3,3,3)
-    >>> data_list = [cubeA, cubeB, cubeC]
-    >>> cs = CubeSequence(data_list, meta=None, common_axis=1)
+    >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
+    >>> cs = CubeSequence(data_list, meta=None, common_axis=1) # doctest: +SKIP
     >>> # return zeroth time slice of cubeB in via normal CubeSequence indexing.
-    >>> cs[1,:,0,:]
+    >>> cs[1,:,0,:] # doctest: +SKIP
     >>> # Return same slice using this function
-    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0, (slice(0, cubeB.shape[2]))
+    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0, (slice(0, cubeB.shape[2])) # doctest: +SKIP
 
     """
     # Determine starting slice of each cube along common axis.
