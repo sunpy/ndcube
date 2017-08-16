@@ -53,7 +53,7 @@ class NDCube(astropy.nddata.NDData):
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
 
-    coords : `list` of `tuple`s, each with three entries (`str`, `int`, `astropy.units.quantity`)
+    extra_coords : `list` of `tuple`s, each with three entries (`str`, `int`, `astropy.units.quantity`)
         Gives the name, axis of data, and values of coordinates of a data axis not
         included in the WCS object.
 
@@ -64,7 +64,7 @@ class NDCube(astropy.nddata.NDData):
     """
 
     def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
-                 unit=None, coords=None, copy=False, missing_axis=None, **kwargs):
+                 unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
         else:
@@ -78,17 +78,17 @@ class NDCube(astropy.nddata.NDData):
                 raise ValueError(
                     "The number of data dimensions and number of wcs non-missing axes do not match.")
 
-        self.coords = {}
+        self.extra_coords = {}
         coord_error = "Coord must have three properties supplied, name (str), axis (int), values (Quantity): {0}"
 
-        if coords:
-            for coord in coords:
+        if extra_coords:
+            for coord in extra_coords:
                 if len(coord) != 3:
                     raise ValueError(coord_error.format(coord))
                 elif not isinstance(coord[2], (str, int, astropy.units.quantity.Quantity)):
                     raise ValueError(coord_error.format(coord))
                 else:
-                    self.coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
+                    self.extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
 
         super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
                                      wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
@@ -284,23 +284,23 @@ class NDCube(astropy.nddata.NDData):
                 uncertainty = self.uncertainty
         else:
             uncertainty = None
-        coords_keys = list(self.coords.keys())
-        new_coords = copy.deepcopy(self.coords)
-        for ck in coords_keys:
-            axis_ck = new_coords[ck]["axis"]
+        extra_coords_keys = list(self.extra_coords.keys())
+        new_extra_coords = copy.deepcopy(self.extra_coords)
+        for ck in extra_coords_keys:
+            axis_ck = new_extra_coords[ck]["axis"]
             if isinstance(item, (slice, int)):
                 if axis_ck is 0:
-                    new_coords[ck]["value"] = new_coords[ck]["value"][item]
+                    new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][item]
             if isinstance(item, tuple):
                 try:
-                    slice_item_coords = item[axis_ck]
-                    new_coords[ck]["value"] = new_coords[ck]["value"][slice_item_coords]
+                    slice_item_extra_coords = item[axis_ck]
+                    new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][slice_item_extra_coords]
                 except IndexError as e:
                     pass
         result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
                         unit=self.unit, copy=False, missing_axis=missing_axis,
-                        coords=[(ck, new_coords[ck]["axis"], new_coords[ck]["value"])
-                                for ck in coords_keys])
+                        extra_coords=[(ck, new_extra_coords[ck]["axis"], new_extra_coords[ck]["value"])
+                                for ck in extra_coords_keys])
         return result
 
     def __repr__(self):
@@ -544,20 +544,20 @@ Axis Types of 1st NDCube: {axis_type}
                                      axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
 
     @property
-    def common_axis_coords(self):
+    def common_axis_extra_coords(self):
         if self.common_axis:
-            common_coords = {}
-            common_coords_list = []
-            coord_names = list(self[0].coords.keys())
+            common_extra_coords = {}
+            common_extra_coords_list = []
+            coord_names = list(self[0].extra_coords.keys())
             for coord_name in coord_names:
-                if self[0].coords[coord_name]["axis"] == self.common_axis:
-                    coord_unit = self[0].coords[coord_name]["value"].unit
-                    qs = tuple([np.asarray(c.coords["time"]["value"].to(coord_unit).value)
+                if self[0].extra_coords[coord_name]["axis"] == self.common_axis:
+                    coord_unit = self[0].extra_coords[coord_name]["value"].unit
+                    qs = tuple([np.asarray(c.extra_coords["time"]["value"].to(coord_unit).value)
                                 for c in self])
-                    common_coords[coord_name] = u.Quantity(np.concatenate(qs), unit=coord_unit)
+                    common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs), unit=coord_unit)
         else:
-            common_coords = None
-        return common_coords
+            common_extra_coords = None
+        return common_extra_coords
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
