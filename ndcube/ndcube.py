@@ -590,18 +590,14 @@ Axis Types of 1st NDCube: {axis_type}
 
 class _IndexAsCubeSlicer(object):
     """
-    Helper class to make slicing in index_as_cube more pythonic.
-    Helps to make operations like in numpy array.
-    >>> import numpy
-    >>> data_list = numpy.arange(10)
-    >>> data_list[3:5]
-        np.array([3, 4])
-    This makes slicing like this possible for index_as_cube.
+    Helper class to make slicing in index_as_cube sliceable/indexable
+    like a numpy array.
 
     Parameters
     ----------
     seq : `ndcube.NDCubeSequence`
         Object of NDCubeSequence.
+
     """
 
     def __init__(self, seq):
