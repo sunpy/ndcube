@@ -9,6 +9,7 @@ from collections import namedtuple
 import pytest
 import numpy as np
 import astropy.units as u
+import sunpy.map
 
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 
@@ -214,3 +215,22 @@ def test_pixel_to_world(test_input, expected):
 ])
 def test_world_to_pixel(test_input, expected):
     assert np.allclose(test_input.value, expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem[:, :, 0].to_sunpy(), sunpy.map.mapbase.GenericMap),
+    (cubem[:, 0:2, 1].to_sunpy(), sunpy.map.mapbase.GenericMap),
+    (cubem[0:2, :, 2].to_sunpy(), sunpy.map.mapbase.GenericMap)
+])
+def test_to_sunpy(test_input, expected):
+    assert isinstance(test_input, expected)
+
+
+@pytest.mark.parametrize("test_input", [
+    (cubem[0, :, 0]),
+    (cubem[:, 1, 1]),
+    (cubem[0:2, :, 0:2])
+])
+def test_to_sunpy_error(test_input):
+    with pytest.raises(NotImplementedError):
+        test_input.to_sunpy()
