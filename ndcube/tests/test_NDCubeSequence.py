@@ -5,6 +5,7 @@ from collections import namedtuple
 import numpy as np
 import pytest
 import astropy.units as u
+import sunpy.map
 
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
 
@@ -36,6 +37,12 @@ cube4 = NDCube(data2, wcs=wm)
 
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
 seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
+
+map1 = cube2[:, :, 0].to_sunpy()
+map2 = cube2[:, :, 1].to_sunpy()
+map3 = cube2[:, :, 2].to_sunpy()
+map4 = cube2[:, :, 3].to_sunpy()
+mapcube_seq = NDCubeSequence([map1, map2, map3, map4], common_axis=0)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -108,3 +115,19 @@ def test_explode_along_axis(test_input, expected):
 def test_explode_along_axis_error():
     with pytest.raises(ValueError):
         seq.explode_along_axis(1)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (mapcube_seq.to_sunpy(), sunpy.map.mapcube.MapCube)
+])
+def test_to_sunpy(test_input, expected):
+    assert isinstance(test_input, expected)
+
+
+@pytest.mark.parametrize("test_input", [
+    (seq),
+    (seq1),
+])
+def test_to_sunpy_error(test_input):
+    with pytest.raises(NotImplementedError):
+        test_input.to_sunpy()

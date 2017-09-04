@@ -3,6 +3,7 @@ from collections import namedtuple
 from ndcube.visualization import animation as ani
 from ndcube import cube_utils as cu
 import sunpy.map
+from sunpy.map.mapcube import MapCube
 import matplotlib.pyplot as plt
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 import astropy.units as u
@@ -11,7 +12,6 @@ import ndcube.wcs_util
 import astropy.nddata
 import numpy as np
 import copy
-import warnings
 
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
@@ -193,8 +193,7 @@ class NDCube(astropy.nddata.NDData):
             if not missing_axis[wcs_axes.index("HPLT-TAN")] and not missing_axis[wcs_axes.index("HPLN-TAN")]:
                 result = sunpy.map.Map(self.data, self.meta)
         else:
-            warnings.warn("Object type not Implemented")
-            result = None
+            raise NotImplementedError("Object type not Implemented")
         return result
 
     @property
@@ -496,6 +495,14 @@ class NDCubeSequence(object):
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
         return i
+
+    def to_sunpy(self, *args, **kwargs):
+        result = None
+        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap) for instance_sequence in self.data):
+            result = MapCube(self.data, *args, **kwargs)
+        else:
+            raise NotImplementedError("Sequence type not Implemented")
+        return result
 
     def explode_along_axis(self, axis):
         """
