@@ -16,7 +16,7 @@ import copy
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
 
-__all__ = ['NDCube', 'NDCubeSequence']
+__all__ = ['NDCube', 'NDCubeSequence', 'SequenceDimensionPair']
 
 
 class NDCube(astropy.nddata.NDData):
