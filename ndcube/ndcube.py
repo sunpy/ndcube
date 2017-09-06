@@ -53,7 +53,8 @@ class NDCube(astropy.nddata.NDData):
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
 
-    extra_coords : `list` of `tuple`s, each with three entries (`str`, `int`, `astropy.units.quantity`)
+    extra_coords : iterable of `tuple`s, each with three entries
+        (`str`, `int`, `astropy.units.quantity` or array-like)
         Gives the name, axis of data, and values of coordinates of a data axis not
         included in the WCS object.
 
@@ -79,13 +80,14 @@ class NDCube(astropy.nddata.NDData):
                     "The number of data dimensions and number of wcs non-missing axes do not match.")
 
         self._extra_coords = {}
-        coord_error = "Coord must have three properties supplied, name (str), axis (int), values (Quantity): {0}"
+        coord_error = "Coord must have three properties supplied, name (str), axis (int), " \
+                      "values (Quantity or array-like): {0}"
 
         if extra_coords:
             for coord in extra_coords:
                 if len(coord) != 3:
                     raise ValueError(coord_error.format(coord))
-                elif not isinstance(coord[2], (str, int, astropy.units.quantity.Quantity)):
+                elif not isinstance(coord[0], str) or not isinstance(coord[1], int):
                     raise ValueError(coord_error.format(coord))
                 else:
                     self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
