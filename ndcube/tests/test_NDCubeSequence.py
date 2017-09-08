@@ -1,11 +1,14 @@
+from collections import namedtuple
+import pytest
+
+import numpy as np
+import astropy.units as u
+import sunpy.map
+
 from ndcube import NDCube, NDCubeSequence
 from ndcube import cube_utils as cu
 from ndcube.wcs_util import WCS
-from collections import namedtuple
-import numpy as np
-import pytest
-import astropy.units as u
-import sunpy.map
+
 
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
 
@@ -30,10 +33,10 @@ hm = {
 wt = WCS(header=ht, naxis=3)
 wm = WCS(header=hm, naxis=3)
 
-cube1 = NDCube(data, wcs=wt, missing_axis=[False, False, False, True])
-cube2 = NDCube(data, wcs=wm)
-cube3 = NDCube(data2, wcs=wt, missing_axis=[False, False, False, True])
-cube4 = NDCube(data2, wcs=wm)
+cube1 = NDCube(data, wt, missing_axis=[False, False, False, True])
+cube2 = NDCube(data, wm)
+cube3 = NDCube(data2, wt, missing_axis=[False, False, False, True])
+cube4 = NDCube(data2, wm)
 
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
 seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])

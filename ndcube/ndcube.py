@@ -5,11 +5,11 @@ import astropy.units as u
 import astropy.nddata
 import numpy as np
 import matplotlib.pyplot as plt
-
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import sunpy.map
 from sunpy.map.mapcube import MapCube
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+
 from ndcube.visualization import animation as ani
 from ndcube import cube_utils
 from ndcube import wcs_util

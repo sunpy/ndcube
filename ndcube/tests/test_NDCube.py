@@ -2,14 +2,16 @@
 '''
 Tests for NDCube
 '''
-from ndcube import NDCube
-from ndcube import cube_utils as cu
-from ndcube.wcs_util import WCS, _wcs_slicer, assert_wcs_are_equal
 from collections import namedtuple
 import pytest
+
 import numpy as np
 import astropy.units as u
 import sunpy.map
+
+from ndcube import NDCube
+from ndcube import cube_utils as cu
+from ndcube.wcs_util import WCS, _wcs_slicer, assert_wcs_are_equal
 
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 
@@ -31,10 +33,10 @@ wm = WCS(header=hm, naxis=3)
 
 mask_cubem = data > 0
 mask_cube = data >= 0
-cubem = NDCube(data, wcs=wm, mask=mask_cubem, uncertainty=data,
+cubem = NDCube(data, wm, mask=mask_cubem, uncertainty=data,
                extra_coords=[('time', 0, u.Quantity(range(10), unit=u.pix)),
                              ('hello', 1, u.Quantity(range(10), unit=u.pix)), ('bye', 2, u.Quantity(range(10), unit=u.pix))])
-cube = NDCube(data, wcs=wt, missing_axis=[False, False, False, True], mask=mask_cube, uncertainty=[2, 3],
+cube = NDCube(data, wt, missing_axis=[False, False, False, True], mask=mask_cube, uncertainty=[2, 3],
               extra_coords=[('time', 0, u.Quantity(range(10), unit=u.pix)),
                             ('hello', 1, u.Quantity(range(10), unit=u.pix)), ('bye', 2, u.Quantity(range(10), unit=u.pix))])
 
