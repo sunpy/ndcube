@@ -62,7 +62,8 @@ class NDCube(astropy.nddata.NDData):
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
-        Note however that it is not always possible to save the input as reference. Default is False.
+        Note however that it is not always possible to save the input as reference.
+        Default is False.
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
@@ -77,8 +78,8 @@ class NDCube(astropy.nddata.NDData):
                 if not bool_:
                     count += 1
             if count is not data.ndim:
-                raise ValueError(
-                    "The number of data dimensions and number of wcs non-missing axes do not match.")
+                raise ValueError("The number of data dimensions and number of "
+                                 "wcs non-missing axes do not match.")
 
         self._extra_coords = {}
         coord_error = "Coord must have three properties supplied, name (str), axis (int), " \
@@ -192,8 +193,10 @@ class NDCube(astropy.nddata.NDData):
         index_not_one = []
         if 'TIME' in wcs_axes and len(self.dimensions.shape) is 1:
             result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
-        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes and len(self.dimensions.shape) is 2:
-            if not missing_axis[wcs_axes.index("HPLT-TAN")] and not missing_axis[wcs_axes.index("HPLN-TAN")]:
+        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes \
+                and len(self.dimensions.shape) is 2:
+            if not missing_axis[wcs_axes.index("HPLT-TAN")] \
+                    and not missing_axis[wcs_axes.index("HPLN-TAN")]:
                 result = sunpy.map.Map(self.data, self.meta)
         else:
             raise NotImplementedError("Object type not Implemented")
@@ -256,8 +259,8 @@ class NDCube(astropy.nddata.NDData):
         axis_data = ['x' for i in range(2)]
         axis_data[image_axes[1]] = 'y'
         if self.data.ndim >= 3:
-            plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
-                                 axis_ranges=axis_ranges, *kwargs)
+            plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis,
+                                 unit_y_axis=unit_y_axis, axis_ranges=axis_ranges, *kwargs)
         elif self.data.ndim is 2:
             plot = _plot_2D_cube(self, axes=axes, image_axes=axis_data[::-1], **kwargs)
         elif self.data.ndim is 1:
@@ -301,9 +304,9 @@ class NDCube(astropy.nddata.NDData):
                 except IndexError as e:
                     pass
         return NDCube(data, wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
-                        unit=self.unit, copy=False, missing_axis=missing_axis,
-                        extra_coords=[(ck, new_extra_coords[ck]["axis"], new_extra_coords[ck]["value"])
-                                      for ck in extra_coords_keys])
+                      unit=self.unit, copy=False, missing_axis=missing_axis,
+                      extra_coords=[(ck, new_extra_coords[ck]["axis"],
+                                     new_extra_coords[ck]["value"]) for ck in extra_coords_keys])
 
     def __repr__(self):
         return (
@@ -359,7 +362,8 @@ class NDCubeOrdered(NDCube):
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
-        Note however that it is not always possible to save the input as reference. Default is False.
+        Note however that it is not always possible to save the input as reference.
+        Default is False.
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
@@ -369,8 +373,8 @@ class NDCubeOrdered(NDCube):
         result_data = data.transpose(array_order)
         wcs_order = np.array(array_order)[::-1]
         result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
-        super(NDCubeOrdered, self).__init__(result_data, result_wcs, uncertainty=uncertainty, mask=mask,
-                                            meta=meta, unit=unit, copy=copy,
+        super(NDCubeOrdered, self).__init__(result_data, result_wcs, uncertainty=uncertainty,
+                                            mask=mask, meta=meta, unit=unit, copy=copy,
                                             missing_axis=missing_axis, **kwargs)
 
 
@@ -460,7 +464,8 @@ def _plot_1D_cube(cube, unit=None, origin=0):
     if unit is None:
         unit = cube.wcs.wcs.cunit[index_not_one[0]]
     plot = plt.plot(cube.pixel_to_world(
-        [u.Quantity(np.arange(cube.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit), cube.data)
+        [u.Quantity(np.arange(cube.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit),
+                    cube.data)
     return plot
 
 
@@ -500,7 +505,8 @@ class NDCubeSequence(object):
 
     def to_sunpy(self, *args, **kwargs):
         result = None
-        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap) for instance_sequence in self.data):
+        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
+               for instance_sequence in self.data):
             result = MapCube(self.data, *args, **kwargs)
         else:
             raise NotImplementedError("Sequence type not Implemented")
@@ -550,8 +556,9 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def dimensions(self):
-        return SequenceDimensionPair(shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
-                                     axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
+        return SequenceDimensionPair(
+            shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
+            axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
 
     @property
     def common_axis_extra_coords(self):
