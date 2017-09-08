@@ -1,17 +1,18 @@
-from sunpy.visualization.imageanimator import ImageAnimatorWCS
+import copy
 from collections import namedtuple
-from ndcube.visualization import animation as ani
-from ndcube import cube_utils as cu
-import sunpy.map
-from sunpy.map.mapcube import MapCube
-import matplotlib.pyplot as plt
-import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+
 import astropy.units as u
-import ndcube.cube_utils
-import ndcube.wcs_util
 import astropy.nddata
 import numpy as np
-import copy
+import matplotlib.pyplot as plt
+from sunpy.visualization.imageanimator import ImageAnimatorWCS
+import sunpy.map
+from sunpy.map.mapcube import MapCube
+import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+
+from ndcube.visualization import animation as ani
+from ndcube import cube_utils
+from ndcube import wcs_util
 
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
@@ -61,10 +62,11 @@ class NDCube(astropy.nddata.NDData):
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
-        Note however that it is not always possible to save the input as reference. Default is False.
+        Note however that it is not always possible to save the input as reference.
+        Default is False.
     """
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
+    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
@@ -76,8 +78,8 @@ class NDCube(astropy.nddata.NDData):
                 if not bool_:
                     count += 1
             if count is not data.ndim:
-                raise ValueError(
-                    "The number of data dimensions and number of wcs non-missing axes do not match.")
+                raise ValueError("The number of data dimensions and number of "
+                                 "wcs non-missing axes do not match.")
 
         self._extra_coords = {}
         coord_error = "Coord must have three properties supplied, name (str), axis (int), " \
@@ -92,8 +94,8 @@ class NDCube(astropy.nddata.NDData):
                 else:
                     self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
 
-        super(NDCube, self).__init__(data, uncertainty=uncertainty, mask=mask,
-                                     wcs=wcs, meta=meta, unit=unit, copy=copy, **kwargs)
+        super(NDCube, self).__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
+                                     meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self, quantity_axis_list, origin=0):
         """
@@ -133,8 +135,8 @@ class NDCube(astropy.nddata.NDData):
                 quantity_index += 1
             # appending all the indexes to be returned in the answer
                 indexed_not_as_one.append(self.wcs.naxis-1-i)
-        list_arguemnts = list_arg[::-1]
-        pixel_to_world = self.wcs.all_pix2world(*list_arguemnts, origin)
+        list_arguments = list_arg[::-1]
+        pixel_to_world = self.wcs.all_pix2world(*list_arguments, origin)
         # collecting all the needed answer in this list.
         for index in indexed_not_as_one[::-1]:
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
@@ -191,8 +193,10 @@ class NDCube(astropy.nddata.NDData):
         index_not_one = []
         if 'TIME' in wcs_axes and len(self.dimensions.shape) is 1:
             result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
-        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes and len(self.dimensions.shape) is 2:
-            if not missing_axis[wcs_axes.index("HPLT-TAN")] and not missing_axis[wcs_axes.index("HPLN-TAN")]:
+        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes \
+                and len(self.dimensions.shape) is 2:
+            if not missing_axis[wcs_axes.index("HPLT-TAN")] \
+                    and not missing_axis[wcs_axes.index("HPLN-TAN")]:
                 result = sunpy.map.Map(self.data, self.meta)
         else:
             raise NotImplementedError("Object type not Implemented")
@@ -255,8 +259,8 @@ class NDCube(astropy.nddata.NDData):
         axis_data = ['x' for i in range(2)]
         axis_data[image_axes[1]] = 'y'
         if self.data.ndim >= 3:
-            plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
-                                 axis_ranges=axis_ranges, *kwargs)
+            plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis,
+                                 unit_y_axis=unit_y_axis, axis_ranges=axis_ranges, *kwargs)
         elif self.data.ndim is 2:
             plot = _plot_2D_cube(self, axes=axes, image_axes=axis_data[::-1], **kwargs)
         elif self.data.ndim is 1:
@@ -269,7 +273,7 @@ class NDCube(astropy.nddata.NDData):
         data = self.data[item]
         # here missing axis is reversed as the item comes already in the reverse order
         # of the input
-        wcs, missing_axis = ndcube.wcs_util._wcs_slicer(
+        wcs, missing_axis = wcs_util._wcs_slicer(
             self.wcs, copy.deepcopy(self.missing_axis[::-1]), item)
         if self.mask is not None:
             mask = self.mask[item]
@@ -299,11 +303,10 @@ class NDCube(astropy.nddata.NDData):
                         ck]["value"][slice_item_extra_coords]
                 except IndexError as e:
                     pass
-        result = NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
-                        unit=self.unit, copy=False, missing_axis=missing_axis,
-                        extra_coords=[(ck, new_extra_coords[ck]["axis"], new_extra_coords[ck]["value"])
-                                      for ck in extra_coords_keys])
-        return result
+        return NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
+                      unit=self.unit, copy=False, missing_axis=missing_axis,
+                      extra_coords=[(ck, new_extra_coords[ck]["axis"],
+                                     new_extra_coords[ck]["value"]) for ck in extra_coords_keys])
 
     def __repr__(self):
         return (
@@ -359,18 +362,19 @@ class NDCubeOrdered(NDCube):
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
-        Note however that it is not always possible to save the input as reference. Default is False.
+        Note however that it is not always possible to save the input as reference.
+        Default is False.
     """
 
-    def __init__(self, data, uncertainty=None, mask=None, wcs=None, meta=None,
+    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
                  unit=None, copy=False, missing_axis=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)
-        array_order = ndcube.cube_utils.select_order(axtypes)
+        array_order = cube_utils.select_order(axtypes)
         result_data = data.transpose(array_order)
         wcs_order = np.array(array_order)[::-1]
-        result_wcs = ndcube.wcs_util.reindex_wcs(wcs, wcs_order)
-        super(NDCubeOrdered, self).__init__(result_data, uncertainty=uncertainty, mask=mask,
-                                            wcs=result_wcs, meta=meta, unit=unit, copy=copy,
+        result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
+        super(NDCubeOrdered, self).__init__(result_data, result_wcs, uncertainty=uncertainty,
+                                            mask=mask, meta=meta, unit=unit, copy=copy,
                                             missing_axis=missing_axis, **kwargs)
 
 
@@ -460,7 +464,8 @@ def _plot_1D_cube(cube, unit=None, origin=0):
     if unit is None:
         unit = cube.wcs.wcs.cunit[index_not_one[0]]
     plot = plt.plot(cube.pixel_to_world(
-        [u.Quantity(np.arange(cube.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit), cube.data)
+        [u.Quantity(np.arange(cube.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit),
+                    cube.data)
     return plot
 
 
@@ -492,7 +497,7 @@ class NDCubeSequence(object):
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
-        return cu.get_cube_from_sequence(self, item)
+        return cube_utils.get_cube_from_sequence(self, item)
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
@@ -500,7 +505,8 @@ class NDCubeSequence(object):
 
     def to_sunpy(self, *args, **kwargs):
         result = None
-        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap) for instance_sequence in self.data):
+        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
+               for instance_sequence in self.data):
             result = MapCube(self.data, *args, **kwargs)
         else:
             raise NotImplementedError("Sequence type not Implemented")
@@ -550,8 +556,9 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def dimensions(self):
-        return SequenceDimensionPair(shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
-                                     axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
+        return SequenceDimensionPair(
+            shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
+            axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
 
     @property
     def common_axis_extra_coords(self):
@@ -613,4 +620,4 @@ class _IndexAsCubeSlicer(object):
         self.seq = seq
 
     def __getitem__(self, item):
-        return cu.index_sequence_as_cube(self.seq, item)
+        return cube_utils.index_sequence_as_cube(self.seq, item)
