@@ -135,8 +135,8 @@ class NDCube(astropy.nddata.NDData):
                 quantity_index += 1
             # appending all the indexes to be returned in the answer
                 indexed_not_as_one.append(self.wcs.naxis-1-i)
-        list_arguemnts = list_arg[::-1]
-        pixel_to_world = self.wcs.all_pix2world(*list_arguemnts, origin)
+        list_arguments = list_arg[::-1]
+        pixel_to_world = self.wcs.all_pix2world(*list_arguments, origin)
         # collecting all the needed answer in this list.
         for index in indexed_not_as_one[::-1]:
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))

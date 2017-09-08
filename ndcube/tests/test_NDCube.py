@@ -18,14 +18,16 @@ DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
-      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 3,
+      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
+      'NAXIS2': 3,
       'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
 wt = WCS(header=ht, naxis=3)
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
 hm = {
-    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 4,
+    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
+    'NAXIS1': 4,
     'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 3,
     'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2,
 }
@@ -52,14 +54,18 @@ cube = NDCube(data, wt, mask=mask_cube, uncertainty=[2, 3],
       'hello': {'axis': 1, 'value': u.Quantity(1, unit=u.pix)},
       'time': {'axis': 0, 'value': u.Quantity(range(10), unit=u.pix)}}),
     (cubem[:, 0:2], NDCube, mask_cubem[:, 0:2],
-     _wcs_slicer(wm, [False, False, False], (slice(None, None, None), slice(0, 2, None))), data[:, 0:2],
-     DimensionPair(shape=u.Quantity((2, 2, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
+     _wcs_slicer(wm, [False, False, False], (slice(None, None, None), slice(0, 2, None))),
+     data[:, 0:2],
+     DimensionPair(shape=u.Quantity((2, 2, 4), unit=u.pix),
+                   axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
      {'bye': {'axis': 2, 'value': u.Quantity(range(10), unit=u.pix)},
       'hello': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
       'time': {'axis': 0, 'value': u.Quantity(range(10), unit=u.pix)}}),
     (cubem[:, :], NDCube, mask_cubem[:, :],
-     _wcs_slicer(wm, [False, False, False], (slice(None, None, None), slice(None, None, None))), data[:, :],
-     DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
+     _wcs_slicer(wm, [False, False, False], (slice(None, None, None), slice(None, None, None))),
+     data[:, :],
+     DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix),
+                   axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
      {'time': {'axis': 0, 'value': u.Quantity(range(10), unit=u.pix)},
       'hello': {'axis': 1, 'value': u.Quantity(range(10), unit=u.pix)},
       'bye': {'axis': 2, 'value': u.Quantity(range(10), unit=u.pix)}}),
@@ -123,7 +129,8 @@ cube = NDCube(data, wt, mask=mask_cube, uncertainty=[2, 3],
       'hello': {'axis': 1, 'value': u.Quantity(range(10), unit=u.pix)},
       'bye': {'axis': 2, 'value': u.Quantity(range(10), unit=u.pix)}}),
 ])
-def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimensions, extra_coords):
+def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimensions,
+                             extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     assert_wcs_are_equal(test_input.wcs, wcs[0])
@@ -146,7 +153,8 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimen
     (cubem[0:2], NDCube, mask_cubem[0:2],
      _wcs_slicer(wm, [False, False, False], slice(0, 2, None)),
      data[0:2],
-     DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
+     DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix),
+                   axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
      {'time': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
       'hello': {'axis': 1, 'value': u.Quantity(range(10), unit=u.pix)},
       'bye': {'axis': 2, 'value': u.Quantity(range(10), unit=u.pix)}}),
@@ -216,7 +224,8 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty, dimens
      _wcs_slicer(wm, [False, False, False],
                  (slice(None, None, None), slice(None, None, None), slice(None, None, None))),
      data[:, :, :],
-     DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix), axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
+     DimensionPair(shape=u.Quantity((2, 3, 4), unit=u.pix),
+                   axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE']),
      {'time': {'axis': 0, 'value': u.Quantity(range(10), unit=u.pix)},
       'hello': {'axis': 1, 'value': u.Quantity(range(10), unit=u.pix)},
       'bye': {'axis': 2, 'value': u.Quantity(range(10), unit=u.pix)}}),
