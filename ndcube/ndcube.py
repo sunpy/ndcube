@@ -94,7 +94,7 @@ class NDCube(astropy.nddata.NDData):
                 else:
                     self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
 
-        super(NDCube, self).__init__(data, wcs, uncertainty=uncertainty, mask=mask,
+        super(NDCube, self).__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                                      meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self, quantity_axis_list, origin=0):
@@ -303,7 +303,7 @@ class NDCube(astropy.nddata.NDData):
                         ck]["value"][slice_item_extra_coords]
                 except IndexError as e:
                     pass
-        return NDCube(data, wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
+        return NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
                       unit=self.unit, copy=False, missing_axis=missing_axis,
                       extra_coords=[(ck, new_extra_coords[ck]["axis"],
                                      new_extra_coords[ck]["value"]) for ck in extra_coords_keys])
