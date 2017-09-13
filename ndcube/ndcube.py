@@ -297,13 +297,13 @@ class NDCube(astropy.nddata.NDData):
                              "same number of elements as number of data dimensions.")
         # Convert coords of lower left corner to pixel units.
         lower_pixels = self.world_to_pixel(lower_left_corner)
-        upper_pixels = self.world_to_pixel([lower_left_corner[i]+dimension_widths[i] for i in range(n_dim)])
+        upper_pixels = self.world_to_pixel([lower_left_corner[i]+dimension_widths[i]
+                                            for i in range(n_dim)])
         # Round pixel values to nearest integer.
         lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
         upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
         slic = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
         return self[slic]
-
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
