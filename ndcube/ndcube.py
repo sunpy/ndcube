@@ -262,7 +262,7 @@ class NDCube(astropy.nddata.NDData):
         axis_data = ['x' for i in range(2)]
         axis_data[image_axes[1]] = 'y'
         if self.data.ndim >= 3:
-            plot = _plot_3D_cube(self, image_axes=axis_data, unit_x_axis=unit_x_axis,
+            plot = _plot_3D_cube(self, image_axes=image_axes, unit_x_axis=unit_x_axis,
                                  unit_y_axis=unit_y_axis, axis_ranges=axis_ranges, *kwargs)
         elif self.data.ndim is 2:
             plot = _plot_2D_cube(self, axes=axes, image_axes=axis_data[::-1], **kwargs)
