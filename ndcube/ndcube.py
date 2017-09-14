@@ -530,7 +530,7 @@ class NDCubeSequence(object):
     def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
         self.data = data_list
         self.meta = meta
-        self.common_axis = common_axis
+        self._common_axis = common_axis
 
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
@@ -561,8 +561,8 @@ class NDCubeSequence(object):
             The axis along which the data is to be changed.
         """
         # if axis is None then set axis as common axis.
-        if self.common_axis is not None:
-            if self.common_axis != axis:
+        if self._common_axis is not None:
+            if self._common_axis != axis:
                 raise ValueError("axis and common_axis should be equal.")
         # is axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
@@ -600,17 +600,22 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def common_axis_extra_coords(self):
-        if self.common_axis:
+        if self._common_axis in range(self.data[0].wcs.naxis):
             common_extra_coords = {}
-            common_extra_coords_list = []
-            coord_names = list(self[0].extra_coords.keys())
+            coord_names = list(self.data[0]._extra_coords.keys())
             for coord_name in coord_names:
-                if self[0].extra_coords[coord_name]["axis"] == self.common_axis:
-                    coord_unit = self[0].extra_coords[coord_name]["value"].unit
-                    qs = tuple([np.asarray(c.extra_coords["time"]["value"].to(coord_unit).value)
-                                for c in self])
-                    common_extra_coords[coord_name] = u.Quantity(
-                        np.concatenate(qs), unit=coord_unit)
+                if self.data[0]._extra_coords[coord_name]["axis"] == self._common_axis:
+                    try:
+                        coord_unit = self.data[0]._extra_coords[coord_name]["value"].unit
+                        qs = tuple([np.asarray(
+                            c._extra_coords[coord_name]["value"].to(coord_unit).value)
+                                    for c in self.data])
+                        common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
+                                                                     unit=coord_unit)
+                    except AttributeError:
+                        qs = tuple([np.asarray(c._extra_coords[coord_name]["value"])
+                                    for c in self.data])
+                        common_extra_coords[coord_name] = np.concatenate(qs)
         else:
             common_extra_coords = None
         return common_extra_coords
@@ -625,7 +630,7 @@ Axis Types of 1st NDCube: {axis_type}
     @property
     def index_as_cube(self):
         """
-        Method to slice the NDcubesequence instance as a single cube
+        Method to slice the NDCubesequence instance as a single cube
 
         Example
         -------
@@ -637,7 +642,7 @@ Axis Types of 1st NDCube: {axis_type}
         >>> # Return same slice using this function
         >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
         """
-        if self.common_axis is None:
+        if self._common_axis is None:
             raise ValueError("common_axis cannot be None")
         return _IndexAsCubeSlicer(self)
 
