@@ -447,12 +447,15 @@ def _plot_3D_cube(cube, image_axes=None, unit_x_axis=None, unit_y_axis=None,
         If None is specified for an axis then the array indices will be used
         for that axis.
     """
-    i = ImageAnimatorWCS(cube.data, wcs=cube.wcs, unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
+    if not image_axes:
+        image_axes = [-1, -2]
+    i = ImageAnimatorWCS(cube.data, wcs=cube.wcs, image_axes=image_axes,
+                         unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
                          axis_ranges=axis_ranges, **kwargs)
     return i
 
 
-def _plot_2D_cube(cube, axes=None, image_axes=['x', 'y'], **kwargs):
+def _plot_2D_cube(cube, axes=None, image_axes=None, **kwargs):
     """
     Plots a 2D image onto the current
     axes. Keyword arguments are passed on to matplotlib.
@@ -464,8 +467,11 @@ def _plot_2D_cube(cube, axes=None, image_axes=['x', 'y'], **kwargs):
 
     image_axes: `list`.
         The first axis in WCS object will become the first axis of image_axes and
-        second axis in WCS object will become the seconf axis of image_axes.
+        second axis in WCS object will become the second axis of image_axes.
+        Default: ['x', 'y']
     """
+    if not image_axes:
+        image_axes = ['x', 'y']
     if axes is None:
         if cube.wcs.naxis is not 2:
             missing_axis = cube.missing_axis
@@ -587,9 +593,9 @@ class NDCubeSequence(object):
             """Sunpy NDCubeSequence
 ---------------------
 Length of NDCubeSequence:  {length}
-Length of 1st NDCube: {lengthNDCube}
+Shape of 1st NDCube: {shapeNDCube}
 Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions.shape[0], lengthNDCube=self.dimensions.shape[1::],
+""".format(length=self.dimensions.shape[0], shapeNDCube=self.dimensions.shape[1::],
                 axis_type=self.dimensions.axis_types[1::]))
 
     @property
