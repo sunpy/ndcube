@@ -555,9 +555,9 @@ class NDCubeSequence(object):
             """Sunpy NDCubeSequence
 ---------------------
 Length of NDCubeSequence:  {length}
-Length of 1st NDCube: {lengthNDCube}
+Shape of 1st NDCube: {shapeNDCube}
 Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions.shape[0], lengthNDCube=self.dimensions.shape[1::],
+""".format(length=self.dimensions.shape[0], shapeNDCube=self.dimensions.shape[1::],
                 axis_type=self.dimensions.axis_types[1::]))
 
     @property
