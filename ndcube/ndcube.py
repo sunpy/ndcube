@@ -561,7 +561,7 @@ Axis Types of 1st NDCube: {axis_type}
             axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
 
     @property
-    def common_axis_extra_coords(self):
+    def _common_axis_extra_coords(self):
         if self.common_axis:
             common_extra_coords = {}
             common_extra_coords_list = []
