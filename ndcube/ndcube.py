@@ -111,7 +111,7 @@ class NDCube(astropy.nddata.NDData):
                 if not self.missing_axis[::-1][coord[1]]:
                     if len(coord[2]) != data.shape[coord[1]]:
                         raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
-                                                                data.shape(coord[1])))
+                                                                data.shape[coord[1]]))
                 self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
         # Initialize NDCube.
         super(NDCube, self).__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
