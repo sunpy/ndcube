@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Author: Mateo Inchaurrandieta <mateo.inchaurrandieta@gmail.com>
-# pylint: disable=E1101, C0330
-"""
-Utilities used in the sunpy.cube.cube module. Moved here to prevent clutter and
-aid readability.
-"""
+# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
+
+"""Utilities for ndcube."""
 
 from __future__ import absolute_import
-import numpy as np
-from ndcube import wcs_util
-from astropy import units as u
+
 from copy import deepcopy
+
+import numpy as np
+from astropy import units as u
+
+from ndcube import wcs_util
 
 
 def select_order(axtypes):
@@ -54,19 +54,20 @@ def get_cube_from_sequence(cubesequence, item, type_slice=None):
         result.data = result.data[item]
     if isinstance(item, tuple):
         # if the 0th index is int.
-        if isinstance(item[0], int):
-            # to satisfy something like cubesequence[0,0] this should have data type
-            # as cubesequence[0][0]
-            if len(item[1::]) is 1:
+        if isinstance(item[0], int) or isinstance(item[0], np.int64):
+            # to satisfy something like cubesequence[0,0] this should have
+            # data type as cubesequence[0][0]
+            if len(item[1::]) == 1:
                 result = result.data[item[0]][item[1]]
             else:
                 result = result.data[item[0]][item[1::]]
         # if the 0th index is slice.
         # used for the index_sequence_as_cube function. Slicing across cubes.
         # item represents (slice(start_cube_index, end_cube_index, None),
-        # [slice_of_start_cube, slice_of_end_cube]) if end cube is not sliced then length is 1.
+        # [slice_of_start_cube, slice_of_end_cube]) if end cube is not sliced
+        # then length is 1.
         elif isinstance(item[0], slice) and type_slice is None:
-            if len(item[1::]) is 1:
+            if len(item[1::]) == 1:
                 result.data = result.data[item[0]]
                 for i, data in enumerate(result.data):
                     result.data[i] = data[item[1]]
@@ -126,7 +127,7 @@ def index_sequence_as_cube(cubesequence, item):
     # Determine starting slice of each cube along common axis.
     cumul_cube_lengths = np.cumsum(np.array([c.data.shape[cubesequence._common_axis]
                                              for c in cubesequence.data]))
-    # Case 1: Item is int and common axis is 0. Not yet supported.
+    # Case 1: Item is int and common axis is 0.
     if isinstance(item, int):
         if cubesequence._common_axis != 0:
             raise ValueError("Input can only be indexed with an int if "
@@ -183,9 +184,9 @@ def index_sequence_as_cube(cubesequence, item):
     if item is None or (isinstance(item, tuple) and None in item):
         raise IndexError("None indices not supported")
     try:
-        return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
-    except:
         return get_cube_from_sequence(cubesequence, item_tuple)
+    except:
+        return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
 
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
