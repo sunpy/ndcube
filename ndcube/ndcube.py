@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
+
 import copy
 from collections import namedtuple
 
