@@ -64,6 +64,15 @@ class NDCube(astropy.nddata.NDData):
         before saving it while False tries to save every parameter as reference.
         Note however that it is not always possible to save the input as reference.
         Default is False.
+
+    missing_axis : `list` of `bool`s
+        Designates which axes in wcs object do not have a corresponding axis is the data.
+        True means axis is "missing", False means axis corresponds to a data axis.
+        Ordering corresponds to the axis ordering in the WCS object, i.e. reverse of data.
+        For example, say the data's y-axis corresponds to latitude and x-axis corresponds
+        to wavelength.  In order the convert the y-axis to latitude the WCS must contain
+        a "missing" longitude axis as longitude and latitude are not separable.
+
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
@@ -80,20 +89,28 @@ class NDCube(astropy.nddata.NDData):
             if count is not data.ndim:
                 raise ValueError("The number of data dimensions and number of "
                                  "wcs non-missing axes do not match.")
-
+        # Check and prep extra coords.
         self._extra_coords = {}
-        coord_error = "Coord must have three properties supplied, name (str), axis (int), " \
-                      "values (Quantity or array-like): {0}"
-
+        coord_format_error = "Coord must have three properties supplied, " + \
+                             "name (str), axis (int), values (Quantity or array-like)." + \
+                             " Input coord: {0}"
+        coord_len_error = "extra coord ({0}) must have same length as data axis " + \
+                          "to which it is assigned: coord length, {1} != data axis length, {2}"
         if extra_coords:
             for coord in extra_coords:
+                # Check extra coord has the right number and types of info.
                 if len(coord) != 3:
-                    raise ValueError(coord_error.format(coord))
-                elif not isinstance(coord[0], str) or not isinstance(coord[1], int):
-                    raise ValueError(coord_error.format(coord))
-                else:
-                    self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
-
+                    raise ValueError(coord_format_error.format(coord))
+                if not isinstance(coord[0], str) or not isinstance(coord[1], int):
+                    raise ValueError(coord_format_error.format(coord))
+                # Unless extra coord corresponds to a missing axis, check length
+                # of coord is same is data axis to which is corresponds.
+                if not self.missing_axis[::-1][coord[1]]:
+                    if len(coord[2]) != data.shape[coord[1]]:
+                        raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
+                                                                data.shape(coord[1])))
+                self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
+        # Initialize NDCube.
         super(NDCube, self).__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                                      meta=meta, unit=unit, copy=copy, **kwargs)
 
