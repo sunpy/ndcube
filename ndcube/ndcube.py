@@ -92,27 +92,12 @@ class NDCube(astropy.nddata.NDData):
             if count is not data.ndim:
                 raise ValueError("The number of data dimensions and number of "
                                  "wcs non-missing axes do not match.")
-        # Check and prep extra coords.
-        self._extra_coords = {}
-        coord_format_error = "Coord must have three properties supplied, " + \
-                             "name (str), axis (int), values (Quantity or array-like)." + \
-                             " Input coord: {0}"
-        coord_len_error = "extra coord ({0}) must have same length as data axis " + \
-                          "to which it is assigned: coord length, {1} != data axis length, {2}"
+        # Format extra coords.
         if extra_coords:
-            for coord in extra_coords:
-                # Check extra coord has the right number and types of info.
-                if len(coord) != 3:
-                    raise ValueError(coord_format_error.format(coord))
-                if not isinstance(coord[0], str) or not isinstance(coord[1], int):
-                    raise ValueError(coord_format_error.format(coord))
-                # Unless extra coord corresponds to a missing axis, check length
-                # of coord is same is data axis to which is corresponds.
-                if not self.missing_axis[::-1][coord[1]]:
-                    if len(coord[2]) != data.shape[coord[1]]:
-                        raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
-                                                                data.shape[coord[1]]))
-                self._extra_coords[coord[0]] = {"axis": coord[1], "value": coord[2]}
+            self._extra_coords_wcs_axis = _format_input_extra_coords_to_extra_coords_wcs_axis(
+                extra_coords, self.missing_axis, data.shape)
+        else:
+            self._extra_coords_wcs_axis = None
         # Initialize NDCube.
         super(NDCube, self).__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                                      meta=meta, unit=unit, copy=copy, **kwargs)
@@ -325,6 +310,19 @@ class NDCube(astropy.nddata.NDData):
         slic = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
         return self[slic]
 
+    @property
+    def _extra_coords(self):
+        if not self._extra_coords_wcs_axis:
+            result = None
+        else:
+            result = {}
+            for key in list(self._extra_coords_wcs_axis.keys()):
+                result[key] = {
+                    "axis": _wcs_axis_to_data_axis(self._extra_coords_wcs_axis[key]["wcs axis"],
+                                                   self.missing_axis),
+                    "value": self._extra_coords_wcs_axis[key]["value"]}
+        return result
+
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
@@ -347,24 +345,30 @@ class NDCube(astropy.nddata.NDData):
                 uncertainty = self.uncertainty
         else:
             uncertainty = None
-        extra_coords_keys = list(self._extra_coords.keys())
-        new_extra_coords = copy.deepcopy(self._extra_coords)
-        for ck in extra_coords_keys:
-            axis_ck = new_extra_coords[ck]["axis"]
-            if isinstance(item, (slice, int)):
-                if axis_ck is 0:
-                    new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][item]
-            if isinstance(item, tuple):
-                try:
-                    slice_item_extra_coords = item[axis_ck]
-                    new_extra_coords[ck]["value"] = new_extra_coords[
-                        ck]["value"][slice_item_extra_coords]
-                except IndexError as e:
-                    pass
+        if self._extra_coords is None:
+            new_extra_coords_dict = None
+        else:
+            old_extra_coords = self._extra_coords
+            extra_coords_keys = list(old_extra_coords.keys())
+            new_extra_coords = copy.deepcopy(self._extra_coords_wcs_axis)
+            for ck in extra_coords_keys:
+                axis_ck = old_extra_coords[ck]["axis"]
+                if isinstance(item, (slice, int)):
+                    if axis_ck is 0:
+                        new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][item]
+                if isinstance(item, tuple):
+                    try:
+                        slice_item_extra_coords = item[axis_ck]
+                        new_extra_coords[ck]["value"] = \
+                            new_extra_coords[ck]["value"][slice_item_extra_coords]
+                    except IndexError:
+                        pass
+                    except TypeError:
+                        pass
+                new_extra_coords_dict = _extra_coords_to_input_format(new_extra_coords, missing_axis)
         return NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
                       unit=self.unit, copy=False, missing_axis=missing_axis,
-                      extra_coords=[(ck, new_extra_coords[ck]["axis"],
-                                     new_extra_coords[ck]["value"]) for ck in extra_coords_keys])
+                      extra_coords=new_extra_coords_dict)
 
     def __repr__(self):
         return (
@@ -690,3 +694,85 @@ class _IndexAsCubeSlicer(object):
 
     def __getitem__(self, item):
         return cube_utils.index_sequence_as_cube(self.seq, item)
+
+def _wcs_axis_to_data_axis(wcs_axis, missing_axis):
+    if wcs_axis is None:
+        result = None
+    else:
+        if missing_axis[wcs_axis]:
+            result = None
+        else:
+            data_ordered_wcs_axis = len(missing_axis)-wcs_axis-1
+            result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
+    return result
+
+def _data_axis_to_wcs_axis(data_axis, missing_axis):
+    if data_axis is None:
+        result = None
+    else:
+        result =  len(missing_axis)-np.where(np.cumsum(
+            [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
+    return result
+
+def _extra_coords_to_input_format(extra_coords, missing_axis):
+    """
+    Converts NDCube._extra_coords attribute to format required as input for new NDCube.
+
+    Paramaters
+    ----------
+    extra_coords: dict
+        An NDCube._extra_coords instance.
+
+    Returns
+    -------
+    input_format: `list`
+        Infomation on extra coords in format required by `NDCube.__init__`.
+
+    """
+    coord_names = list(extra_coords.keys())
+    result = []
+    for name in coord_names:
+        coord_keys = list(extra_coords[name].keys())
+        if "wcs axis" in coord_keys and "axis" not in coord_keys:
+            axis = _wcs_axis_to_data_axis(extra_coords[name]["wcs axis"], missing_axis)
+        elif "axis" in coord_keys and "wcs axis" not in coord_keys:
+            axis = extra_coords[name]["axis"]
+        else:
+            raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
+        result.append((name, axis, extra_coords[name]["value"]))
+    return result
+
+def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_axis, data_shape):
+    extra_coords_wcs_axis = {}
+    coord_format_error = "Coord must have three properties supplied, " + \
+                         "name (str), axis (int), values (Quantity or array-like)." + \
+                         " Input coord: {0}"
+    coord_0_format_error = "1st element of extra coordinate tuple must be a " \
+                           "string giving the coordinate's name."
+    coord_1_format_error = "2nd element of extra coordinate tuple must be None " \
+                           "or an int giving the data axis " \
+                           "to which the coordinate corresponds."
+    coord_len_error = "extra coord ({0}) must have same length as data axis " + \
+                      "to which it is assigned: coord length, {1} != data axis length, {2}"
+    for coord in extra_coords:
+        # Check extra coord has the right number and types of info.
+        if len(coord) != 3:
+            raise ValueError(coord_format_error.format(coord))
+        if not isinstance(coord[0], str):
+            raise ValueError(coord_0_format_error.format(coord))
+        if coord[1] is not None and not isinstance(coord[1], int) and \
+                not isinstance(coord[1], np.int64):
+            raise ValueError(coord_1_format_error)
+        # Unless extra coord corresponds to a missing axis, check length
+        # of coord is same is data axis to which is corresponds.
+        if coord[1] is not None:
+            if not missing_axis[::-1][coord[1]]:
+
+                if len(coord[2]) != data_shape[coord[1]]:
+                    raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
+                                                            data_shape[coord[1]]))
+        # Determine wcs axis corresponding to data axis of coord
+        extra_coords_wcs_axis[coord[0]] = {
+            "wcs axis": _data_axis_to_wcs_axis(coord[1], missing_axis),
+            "value": coord[2]}
+    return extra_coords_wcs_axis
