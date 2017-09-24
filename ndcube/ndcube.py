@@ -365,7 +365,8 @@ class NDCube(astropy.nddata.NDData):
                         pass
                     except TypeError:
                         pass
-                new_extra_coords_dict = _extra_coords_to_input_format(new_extra_coords, missing_axis)
+                new_extra_coords_dict = _extra_coords_to_input_format(new_extra_coords,
+                                                                      missing_axis)
         return NDCube(data, wcs=wcs, mask=mask, uncertainty=uncertainty, meta=self.meta,
                       unit=self.unit, copy=False, missing_axis=missing_axis,
                       extra_coords=new_extra_coords_dict)
@@ -695,6 +696,7 @@ class _IndexAsCubeSlicer(object):
     def __getitem__(self, item):
         return cube_utils.index_sequence_as_cube(self.seq, item)
 
+
 def _wcs_axis_to_data_axis(wcs_axis, missing_axis):
     if wcs_axis is None:
         result = None
@@ -706,13 +708,15 @@ def _wcs_axis_to_data_axis(wcs_axis, missing_axis):
             result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
     return result
 
+
 def _data_axis_to_wcs_axis(data_axis, missing_axis):
     if data_axis is None:
         result = None
     else:
-        result =  len(missing_axis)-np.where(np.cumsum(
+        result = len(missing_axis)-np.where(np.cumsum(
             [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
     return result
+
 
 def _extra_coords_to_input_format(extra_coords, missing_axis):
     """
@@ -741,6 +745,7 @@ def _extra_coords_to_input_format(extra_coords, missing_axis):
             raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
         result.append((name, axis, extra_coords[name]["value"]))
     return result
+
 
 def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_axis, data_shape):
     extra_coords_wcs_axis = {}
