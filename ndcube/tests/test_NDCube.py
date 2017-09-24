@@ -102,7 +102,7 @@ cube = NDCube(data, wt, mask=mask_cube, uncertainty=uncertainty,
                                              unit=u.pix)}}),
     (cube[:, 1], NDCube, mask_cube[:, 1],
      _wcs_slicer(wt, [True, False, False, False], (slice(None, None, None), 1)),
-     uncertainty[:,1],
+     uncertainty[:, 1],
      DimensionPair(shape=u.Quantity((2, 4), unit=u.pix), axis_types=['HPLT-TAN', 'TIME']),
      {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions.shape[0].value)),
                                               unit=u.pix)},
@@ -164,7 +164,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimen
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    cu.assert_extra_coords_equal(test_input, extra_coords)
+    cu.assert_extra_coords_equal(test_input._extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,extra_coords", [
@@ -239,7 +239,7 @@ def test_slicing_first_axis(
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    cu.assert_extra_coords_equal(test_input, extra_coords)
+    cu.assert_extra_coords_equal(test_input._extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,extra_coords", [
@@ -412,7 +412,7 @@ def test_slicing_first_axis(
                                              unit=u.pix)}}),
     (cube[1, :, 1], NDCube, mask_cube[1, :, 1],
      _wcs_slicer(wt, [True, False, False, False], (1, slice(None, None, None), 1)),
-     uncertainty[1,:, 1],
+     uncertainty[1, :, 1],
      DimensionPair(shape=u.Quantity((3,), unit=u.pix), axis_types=['WAVE']),
      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
       'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions.shape[1].value)),
@@ -469,7 +469,7 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty, dimens
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    cu.assert_extra_coords_equal(test_input, extra_coords)
+    cu.assert_extra_coords_equal(test_input._extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected", [
