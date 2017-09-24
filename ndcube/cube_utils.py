@@ -61,20 +61,15 @@ def get_cube_from_sequence(cubesequence, item, type_slice=None):
                 result = result.data[item[0]][item[1]]
             else:
                 result = result.data[item[0]][item[1::]]
-        # if the 0th index is slice.
-        # used for the index_sequence_as_cube function. Slicing across cubes.
-        # item represents (slice(start_cube_index, end_cube_index, None),
-        # [slice_of_start_cube, slice_of_end_cube]) if end cube is not sliced
-        # then length is 1.
-        elif isinstance(item[0], slice) and type_slice is None:
-            if len(item[1::]) == 1:
-                result.data = result.data[item[0]]
-                for i, data in enumerate(result.data):
-                    result.data[i] = data[item[1]]
-            else:
-                result.data = result.data[item[0]]
-                for i, data in enumerate(result.data):
-                    result.data[i] = data[item[1::]]
+        # the 0th index of tuple will have the slice that will be applied across cubes
+        # the 1st index of tuple contains the information of 1st cube to slice and last
+        # cube to slice.
+        # and the rest of the tuple contains the rest of the slice information applied to
+        # all cubes.
+        # example - (slice(0, 3, None), [slice(0, 2, None), slice(0, 1, None)], 1, 0)
+        # this part of the code should not be called directly by the __getitem__ method
+        # of the NDCubesequence as having slice in 0th index is not possible.
+        # so having this sequence_as_cube parameter helps.
         elif isinstance(item[0], slice) and type_slice is 'sequence_as_cube':
             data = result.data[item[0]]
             # applying the slice in the start of cube.
@@ -183,10 +178,13 @@ def index_sequence_as_cube(cubesequence, item):
     item_tuple = tuple(item_list)
     if item is None or (isinstance(item, tuple) and None in item):
         raise IndexError("None indices not supported")
-    try:
-        return get_cube_from_sequence(cubesequence, item_tuple)
-    except:
-        return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
+
+    # if the slicing is done across one cube. Then we can pass the item_tuple as
+    # (int, rest of the information) not (int, int , rest of the information)
+    if isinstance(item_tuple[0], int) and isinstance(item_tuple[1], int):
+        if item_tuple[0] == item_tuple[1]:
+            return get_cube_from_sequence(cubesequence, item_tuple[1::])
+    return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
 
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
