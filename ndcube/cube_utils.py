@@ -258,10 +258,10 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
 
 
 def assert_extra_coords_equal(test_input, extra_coords):
-    assert test_input._extra_coords.keys() == extra_coords.keys()
-    for key in list(test_input._extra_coords.keys()):
-        assert test_input._extra_coords[key]['axis'] == extra_coords[key]['axis']
-        assert (test_input._extra_coords[key]['value'] == extra_coords[key]['value']).all()
+    assert test_input.keys() == extra_coords.keys()
+    for key in list(test_input.keys()):
+        assert test_input[key]['axis'] == extra_coords[key]['axis']
+        assert (test_input[key]['value'] == extra_coords[key]['value']).all()
 
 
 def assert_metas_equal(test_input, expected_output):
