@@ -197,7 +197,10 @@ def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_len
         sequence_index = np.where(cumul_cube_lengths <= cube_like_index)[0][-1]
         # if the cube is out of range then return the last index
         if cube_like_index > cumul_cube_lengths[-1] - 1:
-            cube_index = cumul_cube_lengths[0] - 1
+            if len(cumul_cube_lengths) == 1:
+                cube_index = cumul_cube_lengths[-1] - 1
+            else:
+                cube_index = cumul_cube_lengths[-1] - cumul_cube_lengths[-2] - 1
         else:
             cube_index = cube_like_index - cumul_cube_lengths[sequence_index]
         # sequence_index should be plus one as the sequence_index earlier is
