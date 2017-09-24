@@ -286,5 +286,5 @@ def assert_cubesequences_equal(test_input, expected_sequence):
     assert type(test_input) == type(expected_sequence)
     assert_metas_equal(test_input.meta, expected_sequence.meta)
     assert test_input._common_axis == expected_sequence._common_axis
-    for i, cube in test_input.data:
+    for i, cube in enumerate(test_input.data):
         assert_cubes_equal(cube, expected_sequence.data[i])

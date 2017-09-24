@@ -20,7 +20,7 @@ from ndcube import wcs_util
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
 
-__all__ = ['NDCube', 'NDCubeSequence', 'SequenceDimensionPair']
+__all__ = ['NDCube', 'NDCubeSequence', 'SequenceDimensionPair', '_extra_coords_to_input_format']
 
 
 class NDCube(astropy.nddata.NDData):
