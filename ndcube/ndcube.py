@@ -354,7 +354,7 @@ class NDCube(astropy.nddata.NDData):
             for ck in extra_coords_keys:
                 axis_ck = old_extra_coords[ck]["axis"]
                 if isinstance(item, (slice, int)):
-                    if axis_ck is 0:
+                    if axis_ck == 0:
                         new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][item]
                 if isinstance(item, tuple):
                     try:
