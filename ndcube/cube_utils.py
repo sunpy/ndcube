@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Author: Mateo Inchaurrandieta <mateo.inchaurrandieta@gmail.com>
-# pylint: disable=E1101, C0330
-"""
-Utilities used in the sunpy.cube.cube module. Moved here to prevent clutter and
-aid readability.
-"""
+# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
+
+"""Utilities for ndcube."""
 
 from __future__ import absolute_import
-import numpy as np
-from ndcube import wcs_util
-from astropy import units as u
+
 from copy import deepcopy
+
+import numpy as np
+from astropy import units as u
+
+from ndcube import wcs_util
 
 
 def select_order(axtypes):
@@ -54,10 +54,10 @@ def get_cube_from_sequence(cubesequence, item, type_slice=None):
         result.data = result.data[item]
     if isinstance(item, tuple):
         # if the 0th index is int.
-        if isinstance(item[0], int):
-            # to satisfy something like cubesequence[0,0] this should have data type
-            # as cubesequence[0][0]
-            if len(item[1::]) is 1:
+        if isinstance(item[0], int) or isinstance(item[0], np.int64):
+            # to satisfy something like cubesequence[0,0] this should have
+            # data type as cubesequence[0][0]
+            if len(item[1::]) == 1:
                 result = result.data[item[0]][item[1]]
             else:
                 result = result.data[item[0]][item[1::]]
@@ -122,7 +122,7 @@ def index_sequence_as_cube(cubesequence, item):
     # Determine starting slice of each cube along common axis.
     cumul_cube_lengths = np.cumsum(np.array([c.data.shape[cubesequence._common_axis]
                                              for c in cubesequence.data]))
-    # Case 1: Item is int and common axis is 0. Not yet supported.
+    # Case 1: Item is int and common axis is 0.
     if isinstance(item, int):
         if cubesequence._common_axis != 0:
             raise ValueError("Input can only be indexed with an int if "
@@ -182,9 +182,9 @@ def index_sequence_as_cube(cubesequence, item):
     # if the slicing is done across one cube. Then we can pass the item_tuple as
     # (int, rest of the information) not (int, int , rest of the information)
     if isinstance(item_tuple[0], int) and isinstance(item_tuple[1], int):
-        if item_tuple[0] == item_tuple[1]:
-            return get_cube_from_sequence(cubesequence, item_tuple[1::])
-    return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
+        return get_cube_from_sequence(cubesequence, item_tuple[1::])
+    else:
+        return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
 
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
@@ -197,7 +197,10 @@ def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_len
         sequence_index = np.where(cumul_cube_lengths <= cube_like_index)[0][-1]
         # if the cube is out of range then return the last index
         if cube_like_index > cumul_cube_lengths[-1] - 1:
-            cube_index = cumul_cube_lengths[0] - 1
+            if len(cumul_cube_lengths) == 1:
+                cube_index = cumul_cube_lengths[-1] - 1
+            else:
+                cube_index = cumul_cube_lengths[-1] - cumul_cube_lengths[-2] - 1
         else:
             cube_index = cube_like_index - cumul_cube_lengths[sequence_index]
         # sequence_index should be plus one as the sequence_index earlier is

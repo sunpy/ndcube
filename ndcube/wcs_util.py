@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-# Author: Mateo Inchaurrandieta <mateo.inchaurrandieta@gmail.com>
-# pylint: disable=E1101
-'''Miscellaneous WCS utilities'''
+# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
+
+"""Miscellaneous WCS utilities"""
+
 import re
 from copy import deepcopy
 
 import numpy as np
-
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
+
 from ndcube import cube_utils as cu
 
 
@@ -77,7 +78,7 @@ def _wcs_slicer(wcs, missing_axis, item):
                 item_checked.append(slice(0, 1))
         new_wcs = wcs.slice((item_checked))
     # item is int then slicing axis.
-    elif isinstance(item, int):
+    elif isinstance(item, int) or isinstance(item, np.int64):
         # using index to keep track of whether the int(which is converted to
         # slice(int_value, int_value+1)) is already added or not. It checks
         # the dead axis i.e missing_axis to check if it is dead than slice(0,1)
@@ -146,7 +147,7 @@ def _slice_list(obj):
     Example
     -------
     >>> _slice_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
-        [slice(1, 2, None), slice(1, 3, None), slice(2, 3, None), slice(2, 4, None), slice(8, 9, None)]
+    [slice(1, 2, None), slice(1, 3, None), slice(2, 3, None), slice(2, 4, None), slice(8, 9, None)]
     """
     result = []
     if not isinstance(obj, (tuple, list)):
