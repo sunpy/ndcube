@@ -252,7 +252,7 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
         else:
             sequence_slice = slice(sequence_start_index, sequence_stop_index, cube_like_slice.step)
     else:
-        cube_slice = slice(cube_start_index, cube_stop_index, cube_like_slice.step)
+        cube_slice = [slice(cube_start_index, cube_stop_index, cube_like_slice.step)]
         sequence_slice = slice(sequence_start_index, sequence_stop_index+1, cube_like_slice.step)
     return sequence_slice, cube_slice
 

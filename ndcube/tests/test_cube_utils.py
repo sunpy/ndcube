@@ -54,7 +54,7 @@ def test_convert_cube_like_index_to_sequence_indices(test_input, expected):
 
 @pytest.mark.parametrize("test_input,expected", [
     (cu._convert_cube_like_slice_to_sequence_slices(
-        slice(2, 5), np.array([8, 16, 24, 32])), (slice(0, 1), slice(2, 5))),
+        slice(2, 5), np.array([8, 16, 24, 32])), (slice(0, 1), [slice(2, 5)])),
     (cu._convert_cube_like_slice_to_sequence_slices(
         slice(5, 15), np.array([8, 16, 24, 32])), (slice(0, 2), [slice(5, 8), slice(0, 7)])),
     (cu._convert_cube_like_slice_to_sequence_slices(
