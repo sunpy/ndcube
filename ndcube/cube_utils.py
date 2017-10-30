@@ -54,7 +54,7 @@ def get_cube_from_sequence(cubesequence, item):
         result.data = result.data[item]
     if isinstance(item, tuple):
         # if the 0th index is int.
-        if isinstance(item[0], int) or isinstance(item[0], np.int64):
+        if isinstance(item[0], int):
             # to satisfy something like cubesequence[0,0] this should have
             # data type as cubesequence[0][0]
             if len(item[1::]) == 1:
@@ -204,7 +204,9 @@ def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_len
         # previous index if it is not already the last cube index.
         if sequence_index < cumul_cube_lengths.size - 1:
             sequence_index += 1
-    return sequence_index, cube_index
+    # Return sequence and cube indices.  Ensure they are int, rather
+    # than np.int64 to avoid confusion in checking type elsewhere.
+    return int(sequence_index), int(cube_index)
 
 
 def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_lengths):
