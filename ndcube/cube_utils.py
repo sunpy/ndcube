@@ -36,7 +36,7 @@ def select_order(axtypes):
     return result
 
 
-def get_cube_from_sequence(cubesequence, item, type_slice=None):
+def get_cube_from_sequence(cubesequence, item):
     """
     Handles CubeSequence's __getitem__ method for list of cubes.
 
@@ -70,7 +70,7 @@ def get_cube_from_sequence(cubesequence, item, type_slice=None):
         # this part of the code should not be called directly by the __getitem__ method
         # of the NDCubesequence as having slice in 0th index is not possible.
         # so having this sequence_as_cube parameter helps.
-        elif isinstance(item[0], slice) and type_slice is 'sequence_as_cube':
+        elif isinstance(item[0], slice):
             data = result.data[item[0]]
             # applying the slice in the start of cube.
             data[0] = data[0][item[1][0]]
@@ -84,6 +84,8 @@ def get_cube_from_sequence(cubesequence, item, type_slice=None):
                 else:
                     data[i] = cube[item[2::]]
             result.data = data
+        else:
+            raise ValueError("Unrecognized indexing item. item = {0}".format(item))
     return result
 
 
@@ -179,12 +181,7 @@ def index_sequence_as_cube(cubesequence, item):
     if item is None or (isinstance(item, tuple) and None in item):
         raise IndexError("None indices not supported")
 
-    # if the slicing is done across one cube. Then we can pass the item_tuple as
-    # (int, rest of the information) not (int, int , rest of the information)
-    if isinstance(item_tuple[0], int) and isinstance(item_tuple[1], int):
-        return get_cube_from_sequence(cubesequence, item_tuple[1::])
-    else:
-        return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
+    return get_cube_from_sequence(cubesequence, item_tuple)
 
 
 def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
