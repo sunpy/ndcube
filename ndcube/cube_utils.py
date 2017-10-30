@@ -182,7 +182,8 @@ def index_sequence_as_cube(cubesequence, item):
     # if the slicing is done across one cube. Then we can pass the item_tuple as
     # (int, rest of the information) not (int, int , rest of the information)
     if isinstance(item_tuple[0], int) and isinstance(item_tuple[1], int):
-        return get_cube_from_sequence(cubesequence, item_tuple[1::])
+        #return get_cube_from_sequence(cubesequence, item_tuple[1::])
+        return get_cube_from_sequence(cubesequence, item_tuple)
     else:
         return get_cube_from_sequence(cubesequence, item_tuple, type_slice='sequence_as_cube')
 
