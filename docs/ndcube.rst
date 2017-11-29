@@ -22,11 +22,23 @@ you can create an `NDCube` by doing::
   import ndcube
   my_cube = ndcube.NDCube(data, wcs)
 
+The data array is stored in the mycube.data attribute while the WCS
+object is stored in the my_cube.wcs attribute.  However, when
+manipulating/slicing the data is it better to slice the object as a
+whole.  (See section on Slicing.)  So the .data attribute should only
+be accessed to access a specific value(s) in the data.  Another thing
+to note is that as part of the initialization, the wcs object is
+converted from an `astropy.wcs.WCS` to an `ndcube.wcs_util.WCS` object
+which has some additional features for tracking "missing axes", etc.
+(See section on Missing Axes.)
+
 Thanks to the fact that `NDCube` is subclassed from
-`astropy.nddata.NDData`, you can also supply metadata (`dict` or
-dict-like), a data mask (boolean `numpy.ndarray`), an
-uncertainty array (`numpy.ndarray`) describing the uncertainty of each
-data array value, and a unit (`astropy.units.Unit` or unit `str`).
+`astropy.nddata.NDData`, you can also supply additional data to the
+`NDCube` instance.  These include: metadata (`dict` or
+dict-like); a data mask (boolean `numpy.ndarray`) highlighting, for
+example, reliable and unreliable pixels; an uncertainty array
+(`numpy.ndarray`) describing the uncertainty of each data array value;
+and a unit (`astropy.units.Unit` or unit `str`).
 For example::
 
   my_cube = ndcube.NDCube(data, wcs, uncertainty=uncertainty,
@@ -34,20 +46,6 @@ For example::
 
 N.B. Following the unfortunately confusing convention, the order of
 the axes in the WCS object are reversed compared to the data.
-
-Dimensions
----------
-
-NDCube has a useful property for inspecting its data shape and
-axis types, `NDCube.dimensions`::
-
-  my_cube.dimensions
-
-This returns a named tuple with a "shape" and "axis_types" attribute.
-"shape" is an `astropy.units.Quantity` of pixel units giving the
-length of each dimension in the `NDCube`.  Meanwhile, "axis_types" is
-`list` of `str` giving the WCS transformation type for each axis.
-Here the shape and axis types are given in data order, not WCS order.
 
 Slicing
 -----
@@ -89,6 +87,27 @@ it translates from real world to pixel coordinates and rounds to the
 nearest integer before indexing/slicing the `NDCube` object.
 Therefore it should be noted that slightly different inputs to this
 method can result in the same output.
+
+Dimensions
+---------
+
+NDCube has a useful property for inspecting its data shape and
+axis types, `NDCube.dimensions`::
+
+  my_cube.dimensions
+
+This returns a named tuple with a "shape" and "axis_types" attribute.
+"shape" is an `astropy.units.Quantity` of pixel units giving the
+length of each dimension in the `NDCube`.  Meanwhile, "axis_types" is
+`list` of `str` giving the WCS transformation type for each axis.
+Here the shape and axis types are given in data order, not WCS order.
+
+As the dimensions property returns a named tuple, the shape and axis
+types can be accessed directly::
+
+  my_cube.dimensions.shape
+  my_cube.dimensions.axis_types
+
 
 Missing Axes
 ----------
@@ -147,7 +166,7 @@ sub-dictionary corresponds to an extra coordinate, e.g. time, and
 gives the value of number of the data axis to which it corresponds as
 well as the value of that coordinate at each data array element::
 
-  my_cube._extra_coords()
+  my_cube._extra_coords
 
 Just like the data array and the WCS object, the extra coordinates are
 sliced automatically when the `NDCube` object is sliced.
