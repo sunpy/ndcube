@@ -11,7 +11,7 @@ subclassed from `astropy.wcs.WCS` and contains a few additional
 attributes to enable to keep track of its relationship to the data.
 
 Initialization
-----------
+----------------
 
 To initialize the most basic `NDCube` object, all you need is a
 `numpy.ndarray` containing the data, and an `astropy.wcs.WCS` object
@@ -48,7 +48,7 @@ N.B. Following the unfortunately confusing convention, the order of
 the axes in the WCS object are reversed compared to the data.
 
 Slicing
------
+--------
 
 Arguably NDCube's most powerful capability is its slicing.  Slicing an
 NDCube object using the standard slicing notation allows users to
@@ -89,7 +89,7 @@ Therefore it should be noted that slightly different inputs to this
 method can result in the same output.
 
 Dimensions
----------
+-----------
 
 NDCube has a useful property for inspecting its data shape and
 axis types, `NDCube.dimensions`::
@@ -110,7 +110,7 @@ types can be accessed directly::
 
 
 Missing Axes
-----------
+-------------
 
 Some WCS axis types are coupled.  For example, the helioprojected
 latitude and longitude of the Sun as viewed by a camera on a satellite
@@ -142,7 +142,7 @@ be aware of as many of the coordinate transformation functionalities
 of `NDCube` are only made possible by the missing axis feature.
 
 Extra Coordinates
---------------
+-------------------
 
 In the case of some datasets, there may be additional translations
 that between the array elements and real world coordinates that are
@@ -183,7 +183,7 @@ coordinate.  The third element of the tuple must be of the same length
 as data axis to which it is assigned.
 
 Plotting
-------
+---------
 
 To quickly and easily visualize N-D data, `NDCube` provides a
 simple-to-use, yet powerful plotting method, `NDCube.plot`, which
@@ -235,7 +235,7 @@ unit_x_axis, unit_y_axis, unit kwargs.  However, if not set, these are
 derived from the `NDCube` wcs and unit attributes.
 
 Coordinate Transformations
-----------------------
+----------------------------
 
 The fundamental point the WCS system is the ability to easily
 translate between pixel and real world coordinates.  For this purpose, 

@@ -1,6 +1,6 @@
-===========
+===============
 NDCubeSequence
-===========
+===============
 
 `NDCubeSequence` is a class for handling multiple `NDCube` objects as
 though they were one contiguous data set.  Another way of thinking
@@ -11,7 +11,7 @@ Regarding implementation, and `NDCubeSequence` instance is effectively
 a list of `NDCube` instances with some helper methods attached.
 
 Initialization
-----------
+----------------
 
 To initialize the most basic `NDCube` object, all you need is a list
 of `NDCube` instances::
@@ -67,7 +67,7 @@ the `NDCubeSequence` to the desired data axis number::
 
 The common axis is then stored in the private _common_axis attribute::
 
-  my_sequence ._common_axis
+  my_sequence._common_axis
 
 Defining a common axis enables to full range of the `NDCubeSequence`
 features to be utilized including `NDCubeSequence.plot`,
@@ -76,7 +76,7 @@ features to be utilized including `NDCubeSequence.plot`,
 details on these features.
 
 Dimensions
----------
+-----------
 
 `NDCubeSequence` has a useful dimensions property for inspecting the
 size and shape of an `NDCubeSequence` instance::
@@ -108,7 +108,7 @@ types can be accessed directly::
 
 
 Slicing
------
+--------
 As with `NDCube`, slicing an `NDCubeSequence` using the standard
 slicing API simulataneously slices the data arrays, WCS objects, masks,
 uncertainty arrays, etc. in each relevant sub-cube.  For example, say
@@ -174,7 +174,7 @@ As the data comes from multiple sub-cubes, a new `NDCubeSequence` is
 returned.
 
 Common Axis Extra Coordinates
---------------------------
+-------------------------------
 
 If common axis is defined, it may be useful to view the extra
 coordinates along that common axis defined by each of the sub-cube
@@ -193,7 +193,7 @@ information as it is with `NDCube._extra_coords` making
 `NDCubeSequence._common_axis_extra_coords` simpler.
   
 Plotting
-------
+---------
 
 The `NDCubeSequence.plot` method allows the sequence to be animated as
 though it were one contiguous `NDCube`. It has the same API and same
@@ -202,7 +202,7 @@ details.
 
 
 Explode Along Axis
-----------------
+-------------------
 
 During data analysis, say of a stack of images, you may need to do
 fine-pointing adjustments to each exposure, for example, due to
