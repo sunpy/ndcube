@@ -9,6 +9,8 @@ by a WCS (World Coordinate System) translation.
 .. toctree::
    :maxdepth:3
 	     introduction
+	     ndcube
+	     ndcubesequence
 
 Reference/API
 =============
