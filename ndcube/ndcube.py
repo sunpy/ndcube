@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
+
+import abc
 
 import astropy.units as u
 import astropy.nddata
+from astropy.utils.misc import InheritDocstrings
 import numpy as np
 import sunpy.map
 
@@ -15,10 +17,102 @@ from ndcube import DimensionPair
 __all__ = ['NDCube', 'NDCubeOrdered']
 
 
-class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDData):
+class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
+    """
+    Metaclass for NDCube.
+    """
+
+
+class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
+
+    @abc.abstractmethod
+    def pixel_to_world(self, quantity_axis_list, origin=0):
+        """
+        Convert a pixel coordinate to a data (world) coordinate by using
+        `~astropy.wcs.WCS.all_pix2world`.
+
+        Parameters
+        ----------
+        quantity_axis_list : `list`
+            A list of `~astropy.units.Quantity` with unit as pixel `pix`.
+
+        origin : `int`.
+            Origin of the top-left corner. i.e. count from 0 or 1.
+            Normally, origin should be 0 when passing numpy indices, or 1 if
+            passing values from FITS header or map attributes.
+            See `~astropy.wcs.WCS.wcs_pix2world` for more information.
+            Default is 0.
+
+        Returns
+        -------
+
+        coord : `list`
+            A list of arrays containing the output coordinates
+            reverse of the wcs axis order.
+        """
+
+    @abc.abstractmethod
+    def world_to_pixel(self, quantity_axis_list, origin=0):
+        """
+        Convert a world coordinate to a data (pixel) coordinate by using
+        `~astropy.wcs.WCS.all_world2pix`.
+
+        Parameters
+        ----------
+        quantity_axis_list : `list`
+            A list of `~astropy.units.Quantity`.
+
+        origin : `int`
+            Origin of the top-left corner. i.e. count from 0 or 1.
+            Normally, origin should be 0 when passing numpy indices, or 1 if
+            passing values from FITS header or map attributes.
+            See `~astropy.wcs.WCS.wcs_world2pix` for more information.
+            Default is 0.
+
+        Returns
+        -------
+
+        coord : `list`
+            A list of arrays containing the output coordinates
+            reverse of the wcs axis order.
+        """
+
+    @abc.abstractproperty
+    def dimensions(self):
+        """
+        Returns a named tuple with two attributes: 'shape' gives the shape
+        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
+        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
+        """
+
+    @abc.abstractmethod
+    def crop_by_coords(self, lower_left_corner, dimension_widths):
+        """
+        Crops an NDCube given a lower left corner and widths of region of interest.
+
+        Parameters
+        ----------
+        lower_left_corner: `list` of `astropy.units.Quantity`
+            The lower left corner of the region of interest described in physical units
+            consistent with the NDCube's wcs object.  The length of the iterable must
+            equal the number of data dimensions and must have the same order as the data.
+
+        dimension_widths: iterable of `astropy.units.Quantity`
+            The width of the region of interest in each dimension in physical units
+            consistent with the NDCube's wcs object.  The length of the iterable must
+            equal the number of data dimensions and must have the same order as the data.
+
+        Returns
+        -------
+        result: NDCube
+
+        """
+
+
+class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
     """
     Class representing N dimensional cubes.
-    Extra arguments are passed on to NDData's init.
+    Extra arguments are passed on to `~astropy.nddata.NDData`.
 
     Parameters
     ----------
@@ -26,7 +120,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDData):
         The array holding the actual data in this object.
 
     wcs: `ndcube.wcs.wcs.WCS`
-        The WCS object containing the axes' information
+        The WCS object containing the axes information
 
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
@@ -95,29 +189,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDData):
                                      meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self, quantity_axis_list, origin=0):
-        """
-        Convert a pixel coordinate to a data (world) coordinate by using
-        `~astropy.wcs.WCS.all_pix2world`.
-
-        Parameters
-        ----------
-        quantity_axis_list : `list`
-            A list of `~astropy.units.Quantity` with unit as pixel `pix`.
-
-        origin : `int`.
-            Origin of the top-left corner. i.e. count from 0 or 1.
-            Normally, origin should be 0 when passing numpy indices, or 1 if
-            passing values from FITS header or map attributes.
-            See `~astropy.wcs.WCS.wcs_pix2world` for more information.
-            Default is 0.
-
-        Returns
-        -------
-
-        coord : `list`
-            A list of arrays containing the output coordinates
-            reverse of the wcs axis order.
-        """
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -141,29 +212,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDData):
         return result[::-1]
 
     def world_to_pixel(self, quantity_axis_list, origin=0):
-        """
-        Convert a world coordinate to a data (pixel) coordinate by using
-        `~astropy.wcs.WCS.all_world2pix`.
-
-        Parameters
-        ----------
-        quantity_axis_list : `list`
-            A list of `~astropy.units.Quantity`.
-
-        origin : `int`
-            Origin of the top-left corner. i.e. count from 0 or 1.
-            Normally, origin should be 0 when passing numpy indices, or 1 if
-            passing values from FITS header or map attributes.
-            See `~astropy.wcs.WCS.wcs_world2pix` for more information.
-            Default is 0.
-
-        Returns
-        -------
-
-        coord : `list`
-            A list of arrays containing the output coordinates
-            reverse of the wcs axis order.
-        """
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -203,11 +251,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDData):
 
     @property
     def dimensions(self):
-        """
-        Returns a named tuple with two attributes: 'shape' gives the shape
-        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
-        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-        """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
@@ -217,26 +260,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDData):
         return DimensionPair(shape=shape, axis_types=axes_ctype[::-1])
 
     def crop_by_coords(self, lower_left_corner, dimension_widths):
-        """
-        Crops an NDCube given a lower left corner and widths of region of interest.
-
-        Parameters
-        ----------
-        lower_left_corner: `list` of `astropy.units.Quantity`
-            The lower left corner of the region of interest described in physical units
-            consistent with the NDCube's wcs object.  The length of the iterable must
-            equal the number of data dimensions and must have the same order as the data.
-
-        dimension_widths: iterable of `astropy.units.Quantity`
-            The width of the region of interest in each dimension in physical units
-            consistent with the NDCube's wcs object.  The length of the iterable must
-            equal the number of data dimensions and must have the same order as the data.
-
-        Returns
-        -------
-        result: NDCube
-
-        """
         n_dim = len(self.dimensions.shape)
         if len(lower_left_corner) != len(dimension_widths) != n_dim:
             raise ValueError("lower_left_corner and dimension_widths must have "
