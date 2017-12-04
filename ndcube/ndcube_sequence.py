@@ -150,6 +150,7 @@ Axis Types of 1st NDCube: {axis_type}
 Cube Sequence Helpers
 """
 
+
 class _IndexAsCubeSlicer:
     """
     Helper class to make slicing in index_as_cube sliceable/indexable
