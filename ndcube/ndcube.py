@@ -2,25 +2,22 @@
 # Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
 
 import copy
-from collections import namedtuple
 
 import astropy.units as u
 import astropy.nddata
 import numpy as np
 import matplotlib.pyplot as plt
-from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import sunpy.map
 from sunpy.map.mapcube import MapCube
-import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 
-from ndcube.visualization import animation as ani
 from ndcube import cube_utils
 from ndcube import wcs_util
+from ndcube import DimensionPair, SequenceDimensionPair
+from ndcube.visualization import animation as ani
+from ndcube.plot_helpers import _plot_1D_cube, _plot_2D_cube, _plot_1D_cube
 
-DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
-SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
 
-__all__ = ['NDCube', 'NDCubeSequence', 'SequenceDimensionPair', '_extra_coords_to_input_format']
+__all__ = ['NDCube', 'NDCubeOrdered']
 
 
 class NDCube(astropy.nddata.NDData):
@@ -441,283 +438,6 @@ class NDCubeOrdered(NDCube):
                                             missing_axis=missing_axis, **kwargs)
 
 
-def _plot_3D_cube(cube, image_axes=None, unit_x_axis=None, unit_y_axis=None,
-                  axis_ranges=None, **kwargs):
-    """
-    Plots an interactive visualization of this cube using sliders to move through axes
-    plot using in the image.
-    Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
-    passes them to imshow.
-
-    Parameters
-    ----------
-    image_axes: `list`
-        The two axes that make the image.
-        Like [-1,-2] this implies cube instance -1 dimension
-        will be x-axis and -2 dimension will be y-axis.
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    axis_ranges: `list` of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-    """
-    if not image_axes:
-        image_axes = [-1, -2]
-    i = ImageAnimatorWCS(cube.data, wcs=cube.wcs, image_axes=image_axes,
-                         unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
-                         axis_ranges=axis_ranges, **kwargs)
-    return i
-
-
-def _plot_2D_cube(cube, axes=None, image_axes=None, **kwargs):
-    """
-    Plots a 2D image onto the current
-    axes. Keyword arguments are passed on to matplotlib.
-
-    Parameters
-    ----------
-    axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
-        The axes to plot onto. If None the current axes will be used.
-
-    image_axes: `list`.
-        The first axis in WCS object will become the first axis of image_axes and
-        second axis in WCS object will become the second axis of image_axes.
-        Default: ['x', 'y']
-    """
-    if not image_axes:
-        image_axes = ['x', 'y']
-    if axes is None:
-        if cube.wcs.naxis is not 2:
-            missing_axis = cube.missing_axis
-            slice_list = []
-            axis_index = []
-            index = 0
-            for i, bool_ in enumerate(missing_axis):
-                if not bool_:
-                    slice_list.append(image_axes[index])
-                    index += 1
-                else:
-                    slice_list.append(1)
-            if index is not 2:
-                raise ValueError("Dimensions of WCS and data don't match")
-        axes = wcsaxes_compat.gca_wcs(cube.wcs, slices=slice_list)
-    plot = axes.imshow(cube.data, **kwargs)
-    return plot
-
-
-def _plot_1D_cube(cube, unit=None, origin=0):
-    """
-    Plots a graph.
-    Keyword arguments are passed on to matplotlib.
-
-    Parameters
-    ----------
-    unit: `astropy.unit.Unit`
-        The data is changed to the unit given or the cube.unit if not given.
-    """
-    index_not_one = []
-    for i, _bool in enumerate(cube.missing_axis):
-        if not _bool:
-            index_not_one.append(i)
-    if unit is None:
-        unit = cube.wcs.wcs.cunit[index_not_one[0]]
-    plot = plt.plot(cube.pixel_to_world(
-        [u.Quantity(np.arange(cube.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit),
-                    cube.data)
-    return plot
-
-
-class NDCubeSequence(object):
-    """
-    Class representing list of cubes.
-
-    Parameters
-    ----------
-    data_list : `list`
-        List of cubes.
-
-    meta : `dict` or None
-        The header of the NDCubeSequence.
-
-    common_axis: `int` or None
-        The data axis which is common between the NDCubeSequence and the Cubes within.
-        For example, if the Cubes are sequenced in chronological order and time is
-        one of the zeroth axis of each Cube, then common_axis should be se to 0.
-        This enables the option for the NDCubeSequence to be indexed as though it is
-        one single Cube.
-    """
-
-    def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
-        self.data = data_list
-        self.meta = meta
-        self._common_axis = common_axis
-
-    def __getitem__(self, item):
-        if item is None or (isinstance(item, tuple) and None in item):
-            raise IndexError("None indices not supported")
-        return cube_utils.get_cube_from_sequence(self, item)
-
-    def plot(self, *args, **kwargs):
-        i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
-        return i
-
-    def to_sunpy(self, *args, **kwargs):
-        result = None
-        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
-               for instance_sequence in self.data):
-            result = MapCube(self.data, *args, **kwargs)
-        else:
-            raise NotImplementedError("Sequence type not Implemented")
-        return result
-
-    def explode_along_axis(self, axis):
-        """
-        Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
-
-        Parameters
-        ----------
-
-        axis : `int`
-            The axis along which the data is to be changed.
-        """
-        # if axis is None then set axis as common axis.
-        if self._common_axis is not None:
-            if self._common_axis != axis:
-                raise ValueError("axis and common_axis should be equal.")
-        # is axis is -ve then calculate the axis from the length of the dimensions of one cube
-        if axis < 0:
-            axis = len(self.dimensions.shape[1::]) + axis
-        # To store the resultant cube
-        result_cubes = []
-        # All slices are initially initialised as slice(None, None, None)
-        result_cubes_slice = [slice(None, None, None)] * len(self[0].data.shape)
-        # the range of the axis that needs to be sliced
-        range_of_axis = self[0].data.shape[axis]
-        for ndcube in self.data:
-            for index in range(range_of_axis):
-                # setting the slice value to the index so that the slices are done correctly.
-                result_cubes_slice[axis] = index
-                # appending the sliced cubes in the result_cube list
-                result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
-        # creating a new sequence with the result_cubes keeping the meta and common axis as axis
-        return self._new_instance(result_cubes, meta=self.meta, common_axis=axis)
-
-    def __repr__(self):
-        return (
-            """Sunpy NDCubeSequence
----------------------
-Length of NDCubeSequence:  {length}
-Shape of 1st NDCube: {shapeNDCube}
-Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions.shape[0], shapeNDCube=self.dimensions.shape[1::],
-                axis_type=self.dimensions.axis_types[1::]))
-
-    @property
-    def dimensions(self):
-        return SequenceDimensionPair(
-            shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
-            axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
-
-    @property
-    def _common_axis_extra_coords(self):
-        if self._common_axis in range(self.data[0].wcs.naxis):
-            common_extra_coords = {}
-            coord_names = list(self.data[0]._extra_coords.keys())
-            for coord_name in coord_names:
-                if self.data[0]._extra_coords[coord_name]["axis"] == self._common_axis:
-                    try:
-                        coord_unit = self.data[0]._extra_coords[coord_name]["value"].unit
-                        qs = tuple([np.asarray(
-                            c._extra_coords[coord_name]["value"].to(coord_unit).value)
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
-                                                                     unit=coord_unit)
-                    except AttributeError:
-                        qs = tuple([np.asarray(c._extra_coords[coord_name]["value"])
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = np.concatenate(qs)
-        else:
-            common_extra_coords = None
-        return common_extra_coords
-
-    @classmethod
-    def _new_instance(cls, data_list, meta=None, common_axis=None):
-        """
-        Instantiate a new instance of this class using given data.
-        """
-        return cls(data_list, meta=meta, common_axis=common_axis)
-
-    @property
-    def index_as_cube(self):
-        """
-        Method to slice the NDCubesequence instance as a single cube
-
-        Example
-        -------
-        >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
-        >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
-        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0) # doctest: +SKIP
-        >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
-        >>> cs[1,:,0,:] # doctest: +SKIP
-        >>> # Return same slice using this function
-        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
-        """
-        if self._common_axis is None:
-            raise ValueError("common_axis cannot be None")
-        return _IndexAsCubeSlicer(self)
-
-
-class _IndexAsCubeSlicer(object):
-    """
-    Helper class to make slicing in index_as_cube sliceable/indexable
-    like a numpy array.
-
-    Parameters
-    ----------
-    seq : `ndcube.NDCubeSequence`
-        Object of NDCubeSequence.
-
-    """
-
-    def __init__(self, seq):
-        self.seq = seq
-
-    def __getitem__(self, item):
-        return cube_utils.index_sequence_as_cube(self.seq, item)
-
-
-def _wcs_axis_to_data_axis(wcs_axis, missing_axis):
-    if wcs_axis is None:
-        result = None
-    else:
-        if missing_axis[wcs_axis]:
-            result = None
-        else:
-            data_ordered_wcs_axis = len(missing_axis)-wcs_axis-1
-            result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
-    return result
-
-
-def _data_axis_to_wcs_axis(data_axis, missing_axis):
-    if data_axis is None:
-        result = None
-    else:
-        result = len(missing_axis)-np.where(np.cumsum(
-            [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
-    return result
-
-
 def _extra_coords_to_input_format(extra_coords, missing_axis):
     """
     Converts NDCube._extra_coords attribute to format required as input for new NDCube.
@@ -744,6 +464,27 @@ def _extra_coords_to_input_format(extra_coords, missing_axis):
         else:
             raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
         result.append((name, axis, extra_coords[name]["value"]))
+    return result
+
+
+def _wcs_axis_to_data_axis(wcs_axis, missing_axis):
+    if wcs_axis is None:
+        result = None
+    else:
+        if missing_axis[wcs_axis]:
+            result = None
+        else:
+            data_ordered_wcs_axis = len(missing_axis)-wcs_axis-1
+            result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
+    return result
+
+
+def _data_axis_to_wcs_axis(data_axis, missing_axis):
+    if data_axis is None:
+        result = None
+    else:
+        result = len(missing_axis)-np.where(np.cumsum(
+            [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
     return result
 
 

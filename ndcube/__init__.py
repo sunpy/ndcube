@@ -10,6 +10,12 @@ This is a SunPy affiliated package.
 from ._sunpy_init import *
 # ----------------------------------------------------------------------------
 
+from collections import namedtuple
+DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
+SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
+
 if not _ASTROPY_SETUP_:
     # For egg_info test builds to pass, put package imports here.
-    from .ndcube import *
+    from .ndcube import NDCube, NDCubeOrdered
+    from .ndcube_sequence import NDCubeSequence
+
