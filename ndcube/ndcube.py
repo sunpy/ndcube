@@ -14,12 +14,12 @@ from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 from ndcube import DimensionPair
 
 
-__all__ = ['NDCube', 'NDCubeOrdered']
+__all__ = ['NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
 
 class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
     """
-    Metaclass for NDCube.
+    A metaclass that combines `abc.ABCMeta` and `~astropy.utils.misc.InheritDocstrings`.
     """
 
 
