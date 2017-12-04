@@ -185,8 +185,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
         else:
             self._extra_coords_wcs_axis = None
         # Initialize NDCube.
-        super(NDCube, self).__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
-                                     meta=meta, unit=unit, copy=copy, **kwargs)
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
+                         meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self, quantity_axis_list, origin=0):
         list_arg = []
