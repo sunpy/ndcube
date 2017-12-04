@@ -54,7 +54,7 @@ class NDCube(astropy.nddata.NDData):
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
 
-    extra_coords : iterable of `tuple`s, each with three entries
+    extra_coords : iterable of `tuple`, each with three entries
         (`str`, `int`, `astropy.units.quantity` or array-like)
         Gives the name, axis of data, and values of coordinates of a data axis not
         included in the WCS object.
@@ -65,7 +65,7 @@ class NDCube(astropy.nddata.NDData):
         Note however that it is not always possible to save the input as reference.
         Default is False.
 
-    missing_axis : `list` of `bool`s
+    missing_axis : `list` of `bool`
         Designates which axes in wcs object do not have a corresponding axis is the data.
         True means axis is "missing", False means axis corresponds to a data axis.
         Ordering corresponds to the axis ordering in the WCS object, i.e. reverse of data.
@@ -278,12 +278,12 @@ class NDCube(astropy.nddata.NDData):
 
         Parameters
         ----------
-        lower_left_corner: `list` of `astropy.units.Quantity`s
+        lower_left_corner: `list` of `astropy.units.Quantity`
             The lower left corner of the region of interest described in physical units
             consistent with the NDCube's wcs object.  The length of the iterable must
             equal the number of data dimensions and must have the same order as the data.
 
-        dimension_widths: iterable of `astropy.units.Quantity`s
+        dimension_widths: iterable of `astropy.units.Quantity`
             The width of the region of interest in each dimension in physical units
             consistent with the NDCube's wcs object.  The length of the iterable must
             equal the number of data dimensions and must have the same order as the data.
