@@ -18,4 +18,3 @@ if not _ASTROPY_SETUP_:
     # For egg_info test builds to pass, put package imports here.
     from .ndcube import NDCube, NDCubeOrdered
     from .ndcube_sequence import NDCubeSequence
-

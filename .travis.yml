@@ -30,7 +30,7 @@ env:
         - PYTHON_VERSION=3.6
         - NUMPY_VERSION=stable
         - ASTROPY_VERSION=stable
-        - SUNPY_VERSION=pre
+        - SUNPY_VERSION=stable
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test'
         - EVENT_TYPE='pull_request push'
