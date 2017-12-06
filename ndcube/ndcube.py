@@ -308,7 +308,7 @@ class NDCube(astropy.nddata.NDData):
         return self[slic]
 
     @property
-    def _extra_coords(self):
+    def extra_coords(self):
         if not self._extra_coords_wcs_axis:
             result = None
         else:
@@ -342,10 +342,10 @@ class NDCube(astropy.nddata.NDData):
                 uncertainty = self.uncertainty
         else:
             uncertainty = None
-        if self._extra_coords is None:
+        if self.extra_coords is None:
             new_extra_coords_dict = None
         else:
-            old_extra_coords = self._extra_coords
+            old_extra_coords = self.extra_coords
             extra_coords_keys = list(old_extra_coords.keys())
             new_extra_coords = copy.deepcopy(self._extra_coords_wcs_axis)
             for ck in extra_coords_keys:
@@ -440,12 +440,12 @@ class NDCubeOrdered(NDCube):
 
 def _extra_coords_to_input_format(extra_coords, missing_axis):
     """
-    Converts NDCube._extra_coords attribute to format required as input for new NDCube.
+    Converts NDCube.extra_coords attribute to format required as input for new NDCube.
 
     Paramaters
     ----------
     extra_coords: dict
-        An NDCube._extra_coords instance.
+        An NDCube.extra_coords instance.
 
     Returns
     -------
