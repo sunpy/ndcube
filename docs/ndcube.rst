@@ -318,7 +318,7 @@ of each `~astropy.units.Quantity` must be the same.
 as to those that were input, except that they are now in real world
 coordinates::
 
-  >>> >>> real_world_coords
+  >>> real_world_coords
   [<Quantity [ 1.40006967, 2.6002542 ] deg>,
    <Quantity [ 1.49986193, 2.99724799] deg>,
    <Quantity [  1.10000000e-09,  1.16000000e-09] m>]

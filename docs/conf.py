@@ -118,7 +118,7 @@ release = package.__version__
 from sunpy_sphinx_theme.conf import *
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {'**': ['docsidebar.html']}
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.

@@ -7,12 +7,9 @@ package designed for handling n-dimensional datacubes described
 by a WCS (World Coordinate System) translation.
 
 .. toctree::
-   :maxdepth:3
+   :maxdepth: 3
+
    introduction
    ndcube
    ndcubesequence
-
-Reference/API
-=============
-
-.. automodapi:: ndcube
+   api
