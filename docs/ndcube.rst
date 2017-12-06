@@ -45,12 +45,12 @@ create an `~ndcube.NDCube` instance by doing::
 The data array is stored in the ``mycube.data`` attribute while the
 WCS object is stored in the ``my_cube.wcs`` attribute.  However, when
 manipulating/slicing the data is it better to slice the object as a
-whole.  (See section on Slicing.)  So the ``.data`` attribute should only
-be accessed to access a specific value(s) in the data.  Another thing
-to note is that as part of the initialization, the WCS object is
-converted from an `astropy.wcs.WCS` to an `ndcube.wcs_util.WCS` object
-which has some additional features for tracking "missing axes", etc.
-(See section on Missing Axes.)
+whole.  (See section on :ref:`slicing`.)  So the ``.data`` attribute
+should only be accessed to access a specific value(s) in the data.
+Another thing to note is that as part of the initialization, the WCS
+object is converted from an `astropy.wcs.WCS` to an
+`ndcube.wcs_util.WCS` object which has some additional features for
+tracking "missing axes", etc. (See section on :ref:`missing_axes`.)
 
 Thanks to the fact that `~ndcube.NDCube` is subclassed from
 `astropy.nddata.NDData`, you can also supply additional data to the
@@ -92,7 +92,9 @@ types can be accessed directly::
   <Quantity [ 3., 4., 5.] pix>
   >>> my_cube.dimensions.axis_types
   ['HPLN-TAN', 'HPLT-TAN', 'WAVE']
-  
+
+.. _slicing:
+
 Slicing
 -------
 
@@ -132,6 +134,7 @@ nearest integer before indexing/slicing the `~ndcube.NDCube` object.
 Therefore it should be noted that slightly different inputs to this
 method can result in the same output.
 
+.. _missing_axes:
 
 Missing Axes
 ------------

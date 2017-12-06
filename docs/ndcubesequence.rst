@@ -53,14 +53,15 @@ Now we can define our cubes.
   >>> # Define a mask such that all array elements are unmasked.
   >>> mask = np.empty(data0.shape, dtype=object)
   >>> mask[:, :, :] = False
+  >>> cube_meta = {"Description": "This is example NDCube metadata."}
   >>> my_cube0 = ndcube.NDCube(data0, input_wcs, uncertainty=np.sqrt(data0),
-  ...                          mask=mask, meta=meta, unit=None,
+  ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input0)
   >>> my_cube1 = ndcube.NDCube(data1, input_wcs, uncertainty=np.sqrt(data1),
-  ...                          mask=mask, meta=meta, unit=None,
+  ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input1)
   >>> my_cube2 = ndcube.NDCube(data2, input_wcs, uncertainty=np.sqrt(data2),
-  ...                          mask=mask, meta=meta, unit=None,
+  ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input2)
 
 Finally, now that have two `~ndcube.NDCube` instances, creating an
