@@ -57,12 +57,20 @@ Now we can define our cubes.
   >>> my_cube0 = ndcube.NDCube(data0, input_wcs, uncertainty=np.sqrt(data0),
   ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input0)
+  INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
   >>> my_cube1 = ndcube.NDCube(data1, input_wcs, uncertainty=np.sqrt(data1),
   ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input1)
+  INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
   >>> my_cube2 = ndcube.NDCube(data2, input_wcs, uncertainty=np.sqrt(data2),
   ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input2)
+  INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
+
+N.B. The above warnings are due to the fact that
+`astropy.nddata.uncertainty` is recommended to have an
+``uncertainty_type`` attribute giving a string describing the type of
+uncertainty.  However, this is not required.
 
 Finally, now that have two `~ndcube.NDCube` instances, creating an
 `~ndcube.NDCubeSequence` to hold them is simple::

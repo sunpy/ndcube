@@ -66,8 +66,13 @@ uncertainty of each data array value;  and a unit
   >>> mask[:, :, :] = False
   >>> meta = {"Description": "This is example NDCube metadata."}
   >>> my_cube = ndcube.NDCube(data, input_wcs, uncertainty=np.sqrt(data),
-  ...                         mask=mask, meta=meta, unit=None) 
+  ...                         mask=mask, meta=meta, unit=None)
+  INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
 
+N.B. The above warning is due to the fact that
+`astropy.nddata.uncertainty` is recommended to have an
+``uncertainty_type`` attribute giving a string describing the type of
+uncertainty.  However, this is not required.
 
 Dimensions
 ----------
