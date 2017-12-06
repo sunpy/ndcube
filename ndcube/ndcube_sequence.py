@@ -1,3 +1,5 @@
+import numpy as np
+
 import sunpy.map
 from sunpy.map import MapCube
 from ndcube import cube_utils
