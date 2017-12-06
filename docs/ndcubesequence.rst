@@ -23,8 +23,8 @@ this tutorial.  First we define the data arrays and WCS objects::
   >>> # Define data for cubes
   >>> import numpy as np
   >>> data0 = np.ones((3, 4, 5))
-  >>> data1 = data0*2
-  >>> data2 = data1*2
+  >>> data1 = data0 * 2
+  >>> data2 = data1 * 2
   
   >>> # Define WCS object for both cubes.
   >>> import astropy.wcs
@@ -50,6 +50,9 @@ directly in time by the slices in the next::
 Now we can define our cubes.
 
   >>> import ndcube
+  >>> # Define a mask such that all array elements are unmasked.
+  >>> mask = np.empty(data0.shape, dtype=object)
+  >>> mask[:, :, :] = False
   >>> my_cube0 = ndcube.NDCube(data0, input_wcs, uncertainty=np.sqrt(data0),
   ...                          mask=mask, meta=meta, unit=None,
   ...                          extra_coords=extra_coords_input0)
@@ -160,8 +163,8 @@ independently!) However, with `~ndcube.NDCubeSequence` this becomes as
 simple as indexing a single array::
 
   >>> ######### Due to a bug, this currently doesn't work! #########
-  >>> regions_of_interest_in_sequence = my_sequence[1:3, 0, 1:3, 1:4]
-  >>> regions_of_interest_in_sequence.dimensions
+  >>> regions_of_interest_in_sequence = my_sequence[1:3, 0, 1:3, 1:4] # doctest: +SKIP
+  >>> regions_of_interest_in_sequence.dimensions # doctest: +SKIP
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis

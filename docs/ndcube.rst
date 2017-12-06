@@ -6,7 +6,7 @@ NDCube
 to handle array contained in a single N-D array described by a single
 WCS transformation.  `~ndcube.NDCube` is subclassed from `astropy.nddata.NDData`
 and so inherits the same attributes for data, wcs, uncertainty, mask,
-meta, and unit.  The WCS object contained in the .wcs attribute is
+meta, and unit.  The WCS object contained in the ``.wcs`` attribute is
 subclassed from `astropy.wcs.WCS` and contains a few additional
 attributes to enable to keep track of its relationship to the data.
 
@@ -24,10 +24,10 @@ where every value is 1::
 
 Now let's create an `astropy.wcs.WCS` object describing the
 translation from the array element coordinates to real world
-coordinates.  Let's the first data axis be helioprojected longitude, the
-second by helioprojected latitude, and the third be wavelength.  (Note
-that due to (confusing) convention, the order of the axes in the WCS
-object is reversed relative to the data array.
+coordinates.  Let's the first data axis be helioprojective longitude,
+the second by helioprojective latitude, and the third be wavelength.
+(Note that due to (confusing) convention, the order of the axes in the
+WCS object is reversed relative to the data array.
 
   >>> import astropy.wcs
   >>> wcs_input_dict = {
@@ -55,10 +55,10 @@ which has some additional features for tracking "missing axes", etc.
 Thanks to the fact that `~ndcube.NDCube` is subclassed from
 `astropy.nddata.NDData`, you can also supply additional data to the
 `~ndcube.NDCube` instance.  These include: metadata (`dict` or
-dict-like) located at ``NDCube.metadata``; a data mask
-(boolean `numpy.ndarray`) located at``NDCube.mask`` highlighting, for
+dict-like) located at `NDCube.metadata`; a data mask
+(boolean `numpy.ndarray`) located at`NDCube.mask` highlighting, for
 example, reliable and unreliable pixels; an uncertainty array
-(`numpy.ndarray`) located at ``NDCube.uncertainty`` describing the
+(`numpy.ndarray`) located at `NDCube.uncertainty` describing the
 uncertainty of each data array value;  and a unit
 (`astropy.units.Unit` or unit `str`). For example::
 
@@ -136,7 +136,7 @@ method can result in the same output.
 Missing Axes
 ------------
 
-Some WCS axis types are coupled.  For example, the helioprojected
+Some WCS axis types are coupled.  For example, the helioprojective
 latitude and longitude of the Sun as viewed by a camera on a satellite
 orbiting Earth do not map independently to the pixel grid.  Instead,
 the longitude changes as we move vertically along the same x-position
