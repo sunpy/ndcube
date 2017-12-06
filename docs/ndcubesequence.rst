@@ -49,20 +49,21 @@ directly in time by the slices in the next::
   
 Now we can define our cubes.
 
-  >>> import ndcube
+  >>> from ndcube import NDCube
+  >>> from ndcube import NDCubeSequence
   >>> # Define a mask such that all array elements are unmasked.
   >>> mask = np.empty(data0.shape, dtype=object)
   >>> mask[:, :, :] = False
   >>> cube_meta = {"Description": "This is example NDCube metadata."}
-  >>> my_cube0 = ndcube.NDCube(data0, input_wcs, uncertainty=np.sqrt(data0),
+  >>> my_cube0 = NDCube(data0, input_wcs, uncertainty=np.sqrt(data0),
   ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input0)
   INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
-  >>> my_cube1 = ndcube.NDCube(data1, input_wcs, uncertainty=np.sqrt(data1),
+  >>> my_cube1 = NDCube(data1, input_wcs, uncertainty=np.sqrt(data1),
   ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input1)
   INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
-  >>> my_cube2 = ndcube.NDCube(data2, input_wcs, uncertainty=np.sqrt(data2),
+  >>> my_cube2 = NDCube(data2, input_wcs, uncertainty=np.sqrt(data2),
   ...                          mask=mask, meta=cube_meta, unit=None,
   ...                          extra_coords=extra_coords_input2)
   INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
@@ -75,7 +76,7 @@ uncertainty.  However, this is not required.
 Finally, now that have two `~ndcube.NDCube` instances, creating an
 `~ndcube.NDCubeSequence` to hold them is simple::
   
-  >>> my_sequence = ndcube.NDCubeSequence([my_cube0, my_cube1, my_cube2])
+  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2])
 
 While, each `~ndcube.NDCube` in the `~ndcube.NDCubeSequence` can have
 its own meta, it is also possible to supply additional metadata upon
@@ -84,7 +85,7 @@ common to all sub-cubes or is specific to the sequence rather than the
 sub-cubes. This metadata is input as a dictionary::
 
   >>> my_sequence_metadata = {"Description": "This is some sample NDCubeSequence metadata."}
-  >>> my_sequence = ndcube.NDCubeSequence([my_cube0, my_cube1, my_cube2],
+  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2],
   ...                                     meta=my_sequence_metadata)
 
 and stored in the ``my_sequence.meta`` attribute.  Meanwhile, the
@@ -182,7 +183,8 @@ a single sub-cube -- say the 0th and 1st slices along the 0th axis in
 the 1st sub-cube, an NDCube is returned::
 
   >>> roi_from_single_subcube = my_sequence[1, 0:2, 1:3, 1:4]
-  DimensionPair(shape=<Quantity [ 2., 3.] pix>, axis_types=['HPLT-TAN', 'WAVE'])
+  >>> roi_from_single_subcube.dimensions
+  DimensionPair(shape=<Quantity [ 2., 2., 3.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
 
 If a common axis has been defined for the `~ndcube.NDCubeSequence` one
 can think of it as a contiguous data set with different sections along
@@ -201,6 +203,8 @@ above, i.e. ``my_sequence[1, 0:2, 1:3, 1:4]``.  Then this can be
 acheived by entering::
 
   >>> roi_from_single_subcube = my_sequence.index_as_cube[3:5, 1:3, 1:4]
+  >>> roi_from_single_subcube.dimensions
+  SequenceDimensionPair(shape=(1, <Quantity 1.0 pix>, <Quantity 3.0 pix>, <Quantity 5.0 pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
 
 In this case the entire region came from a single sub-cube.  However,
 `~ndcube.NDCubeSequence.index_as_cube` also works when the region of
@@ -211,6 +215,8 @@ sub-cube and the 0th slice of the 2nd sub-cube. In cube-like indexing
 this corresponds to slices 2 to 7 along to the 0th cube axis::
 
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
+  >>> roi_across_subcubes.dimensions
+  SequenceDimensionPair(shape=(3, <Quantity 0.0 pix>, <Quantity 3.0 pix>, <Quantity 5.0 pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
 
 In both the examples above, an `~ndcube.NDCubeSequence` object is
 returned.  In the case of former example, this is despite the fact

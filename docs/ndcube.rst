@@ -39,8 +39,8 @@ WCS object is reversed relative to the data array.
 Now that we have a data array and a corresponding WCS object, we can
 create an `~ndcube.NDCube` instance by doing::
 
-  >>> import ndcube
-  >>> my_cube = ndcube.NDCube(data, input_wcs)
+  >>> from ndcube import NDCube
+  >>> my_cube = NDCube(data, input_wcs)
 
 The data array is stored in the ``mycube.data`` attribute while the
 WCS object is stored in the ``my_cube.wcs`` attribute.  However, when
@@ -65,7 +65,7 @@ uncertainty of each data array value;  and a unit
   >>> mask = np.empty((3, 4, 5), dtype=object)
   >>> mask[:, :, :] = False
   >>> meta = {"Description": "This is example NDCube metadata."}
-  >>> my_cube = ndcube.NDCube(data, input_wcs, uncertainty=np.sqrt(data),
+  >>> my_cube = NDCube(data, input_wcs, uncertainty=np.sqrt(data),
   ...                         mask=mask, meta=meta, unit=None)
   INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
 
@@ -207,9 +207,10 @@ each pixel along the axis.  So to add timestamps along the 0th axis of
   ...               for i in range(axis_length)]
   >>> extra_coords_input = [("time", 0, timestamps)]
   >>> # Generate NDCube as above, except now set extra_coords kwarg.
-  >>> my_cube = ndcube.NDCube(data, input_wcs, uncertainty=np.sqrt(data),
+  >>> my_cube = NDCube(data, input_wcs, uncertainty=np.sqrt(data),
   ...                         mask=mask, meta=meta, unit=None,
   ...                         extra_coords=extra_coords_input)
+  INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
 
 The extra_coords() property returns a dictionary where each key
 is a coordinat name key entered by the user.  The value of each key is
@@ -316,7 +317,7 @@ To convert two pixels with pixel coordinates (2, 3, 4) and (5, 6, 7),
 we would call pixel_to_world like so::
 
   >>> real_world_coords = my_cube.pixel_to_world(
-  [Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix)])
+  ... [Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix)])
 
 As can be seen, since each `~astropy.units.Quantity` describes a
 different pixel coordinate of the same number of pixels, the lengths
