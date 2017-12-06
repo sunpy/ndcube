@@ -164,7 +164,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty, dimen
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    cu.assert_extra_coords_equal(test_input._extra_coords, extra_coords)
+    cu.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,extra_coords", [
@@ -239,7 +239,7 @@ def test_slicing_first_axis(
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    cu.assert_extra_coords_equal(test_input._extra_coords, extra_coords)
+    cu.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,extra_coords", [
@@ -469,7 +469,7 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty, dimens
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    cu.assert_extra_coords_equal(test_input._extra_coords, extra_coords)
+    cu.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected", [
