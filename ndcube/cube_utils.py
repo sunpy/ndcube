@@ -3,14 +3,37 @@
 
 """Utilities for ndcube."""
 
-from __future__ import absolute_import
-
 from copy import deepcopy
 
 import numpy as np
-from astropy import units as u
 
 from ndcube import wcs_util
+
+
+__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis',
+           'select_order',
+           'get_cube_from_sequence', 'index_sequence_as_cube']
+
+
+def data_axis_to_wcs_axis(data_axis, missing_axis):
+    if data_axis is None:
+        result = None
+    else:
+        result = len(missing_axis)-np.where(np.cumsum(
+            [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
+    return result
+
+
+def wcs_axis_to_data_axis(wcs_axis, missing_axis):
+    if wcs_axis is None:
+        result = None
+    else:
+        if missing_axis[wcs_axis]:
+            result = None
+        else:
+            data_ordered_wcs_axis = len(missing_axis)-wcs_axis-1
+            result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
+    return result
 
 
 def select_order(axtypes):
