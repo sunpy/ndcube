@@ -1,10 +1,15 @@
-********************
-ndcube Documentation
-********************
+************
+ndcube Guide
+************
 
-This is the documentation for ndcube.
+Welcome to the ndcube User Guide. ndcube is a SunPy-affiliated
+package designed for handling n-dimensional datacubes described
+by a WCS (World Coordinate System) translation.
 
-Reference/API
-=============
+.. toctree::
+   :maxdepth: 3
 
-.. automodapi:: ndcube
+   introduction
+   ndcube
+   ndcubesequence
+   api
