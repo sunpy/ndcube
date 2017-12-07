@@ -26,7 +26,7 @@ this tutorial.  First we define the data arrays and WCS objects::
   >>> data1 = data0 * 2
   >>> data2 = data1 * 2
   
-  >>> # Define WCS object for both cubes.
+  >>> # Define WCS object for all cubes.
   >>> import astropy.wcs
   >>> wcs_input_dict = {
   ... 'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
@@ -35,7 +35,7 @@ this tutorial.  First we define the data arrays and WCS objects::
   >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
 Let's also define an extra coordinate of time.  (See NDCube section of
-this guide of more detail.)Let the slices along the 0th axis are
+this guide of more detail.) Let the slices along the 0th axis are
 separated by one minute and the slices in preceding cube are followed
 directly in time by the slices in the next::
   
@@ -73,8 +73,7 @@ N.B. The above warnings are due to the fact that
 ``uncertainty_type`` attribute giving a string describing the type of
 uncertainty.  However, this is not required.
 
-Finally, now that have two `~ndcube.NDCube` instances, creating an
-`~ndcube.NDCubeSequence` to hold them is simple::
+Finally, creating an `~ndcube.NDCubeSequence` becomes is simple::
   
   >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2])
 
@@ -92,8 +91,8 @@ and stored in the ``my_sequence.meta`` attribute.  Meanwhile, the
 `~ndcube.NDCube` instances are stored in the ``my_sequence.data``.
 However, analgously to `~ndcube.NDCube`, it is strongly advised that 
 the data is manipulated by slicing the `~ndcube.NDCubeSequence` rather
-than more manually delving into the .data attribute.  For more
-explanation, see the section on Slicing.
+than more manually delving into the ``.data`` attribute.  For more
+explanation, see the section on :ref:`slicing`.
 
 Common Axis
 -----------
@@ -138,7 +137,7 @@ size and shape of an `~ndcube.NDCubeSequence` instance::
   SequenceDimensionPair(shape=(3, <Quantity 3.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
 
 
-Like NDCube it returns a named tuple with a "shape" and "axis_types"
+Like NDCube it returns a named tuple with a ``shape`` and ``axis_types``
 where the values of the 0th sub-cube are returned as
 `astropy.units.Quantity` and `str` objects, respectively.  In addition
 however, another dimension is return at the start of the named tuple.
@@ -155,17 +154,19 @@ types can be accessed directly::
   >>> my_sequence.dimensions.axis_types
   ('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE')
 
+.. _slicing:
+
 Slicing
 -------
 As with `~ndcube.NDCube`, slicing an `~ndcube.NDCubeSequence` using
 the standard slicing API simulataneously slices the data arrays, WCS
 objects, masks, uncertainty arrays, etc. in each relevant sub-cube.
 For example, say we have three NDCubes in an `~ndcube.NDCubeSequence`,
-each of shape (10, 20, 30).  Say we want to obtain a region of
+each of shape ``(3, 4, 5)``.  Say we want to obtain a region of
 interest between the 1st and 2nd pixels (inclusive) in the 2nd
 dimension and 1st and 3rd pixels (inclusive) in the 3rd dimension of
 the 0th slice along the 0th axis in only the 1st (not 0th) and 2nd
-sub-cubes in the sequence. This would a cumbersome slicing operation
+sub-cubes in the sequence. This would be a cumbersome slicing operation
 if treating the sub-cube independently. (This would be made even worse
 without the power of `~ndcube.NDCube` where the data arrays, WCS
 objects, masks, uncertainty arrays, etc. would all have to be sliced
@@ -179,8 +180,8 @@ simple as indexing a single array::
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis
 in each original sub-cube.  If our regions of interest only came from
-a single sub-cube -- say the 0th and 1st slices along the 0th axis in
-the 1st sub-cube, an NDCube is returned::
+a single sub-cube - say the 0th and 1st slices along the 0th axis in
+the 1st sub-cube - an NDCube is returned::
 
   >>> roi_from_single_subcube = my_sequence[1, 0:2, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
@@ -223,7 +224,7 @@ returned.  In the case of former example, this is despite the fact
 that the region of interest only came from one sub-cube and so the
 sequence axis is of length 1.  The only time an `~ndcube.NDCube`
 object is returned is when a single slice along the common axis is
-indexed. This API was chosen so that a the object type returned is
+indexed. This API was chosen so that the object type returned is
 predictable and doesn't depend on the (possibly different) shape of
 the sub-cubes along the common axis. 
 
@@ -285,13 +286,13 @@ your data, e.g. due to satellite wobble.  If these changes are not
 describable with a single WCS object, it may be desirable to break up
 the N-D sub-cubes of an `~ndcube.NDCubeSequence` into an sequence of
 sub-cubes with dimension N-1. This would enable a separate WCS object
-to be associated with each image can hence allow individual pointing
+to be associated with each image and hence allow individual pointing
 adjustments.
 
 Rather than manually dividing the datacubes up and deriving the
 corresponding WCS object for each exposure, `~ndcube.NDCubeSequence`
 provides a useful method,
-`~ndcube.NDCubeSequence.explode_along_axis`. To call it simply provide
+`~ndcube.NDCubeSequence.explode_along_axis`. To call it, simply provide
 the number of the data cube axis along which you wish to break up the
 sub-cubes::
 

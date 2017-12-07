@@ -3,7 +3,7 @@ NDCube
 ======
 
 `~ndcube.NDCube` is the fundamental class of the ndcube package and is designed
-to handle array contained in a single N-D array described by a single
+to handle data contained in a single N-D array described by a single
 WCS transformation.  `~ndcube.NDCube` is subclassed from `astropy.nddata.NDData`
 and so inherits the same attributes for data, wcs, uncertainty, mask,
 meta, and unit.  The WCS object contained in the ``.wcs`` attribute is
@@ -26,7 +26,7 @@ Now let's create an `astropy.wcs.WCS` object describing the
 translation from the array element coordinates to real world
 coordinates.  Let's the first data axis be helioprojective longitude,
 the second by helioprojective latitude, and the third be wavelength.
-(Note that due to (confusing) convention, the order of the axes in the
+Note that due to (confusing) convention, the order of the axes in the
 WCS object is reversed relative to the data array.
 
   >>> import astropy.wcs
@@ -45,8 +45,8 @@ create an `~ndcube.NDCube` instance by doing::
 The data array is stored in the ``mycube.data`` attribute while the
 WCS object is stored in the ``my_cube.wcs`` attribute.  However, when
 manipulating/slicing the data is it better to slice the object as a
-whole.  (See section on :ref:`slicing`.)  So the ``.data`` attribute
-should only be accessed to access a specific value(s) in the data.
+whole.  (See section on :ref:`ndcube_slicing`.)  So the ``.data`` attribute
+should only be used to access a specific value(s) in the data.
 Another thing to note is that as part of the initialization, the WCS
 object is converted from an `astropy.wcs.WCS` to an
 `ndcube.wcs_util.WCS` object which has some additional features for
@@ -83,34 +83,34 @@ axis types, `~ndcube.NDCube.dimensions`::
   >>> my_cube.dimensions
   DimensionPair(shape=<Quantity [ 3., 4., 5.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
 
-This returns a named tuple with a "shape" and "axis_types" attribute.
-"shape" is an `~astropy.units.Quantity` of pixel units giving the
-length of each dimension in the `~ndcube.NDCube`.  Meanwhile,
-"axis_types" is `list` of `str` giving the WCS transformation type for
+This returns a named tuple with a ``shape`` and ``axis_types`` attribute.
+``shape`` is an `~astropy.units.Quantity` of pixel units giving the
+length of each dimension in the `~ndcube.NDCube` while
+``axis_types`` is `list` of `str` giving the WCS transformation type for
 each axis. Here the shape and axis types are given in data order, not
 WCS order.
 
-As the dimensions property returns a named tuple, the shape and axis
-types can be accessed directly::
+As the dimensions property returns a named tuple, the ``shape`` and
+``axis_types`` can be accessed directly::
 
   >>> my_cube.dimensions.shape
   <Quantity [ 3., 4., 5.] pix>
   >>> my_cube.dimensions.axis_types
   ['HPLN-TAN', 'HPLT-TAN', 'WAVE']
 
-.. _slicing:
+.. _ndcube_slicing:
 
 Slicing
 -------
 
 Arguably NDCube's most powerful capability is its slicing.  Slicing an
-NDCube object using the standard slicing notation allows users to
-access sub-regions of their data while simultaneously slicing not only
-the other array attributes (e.g. uncertainty, mask, etc.) but also the
-WCS object.  This ensures that even though the data array has changed
-size and shape, each array element will still corresponding to the
-same real world coordinates as they did before.  An example of how to
-slice a 3-D `~ndcube.NDCube` object is::
+`~ndcube.NDCube` object using the standard slicing notation allows
+users to access sub-regions of their data while simultaneously slicing
+not only the other array attributes (e.g. uncertainty, mask, etc.) but
+also the WCS object.  This ensures that even though the data array has
+changed size and shape, each array element will still corresponding to
+the same real world coordinates as they did before.  An example of how
+to slice a 3-D `~ndcube.NDCube` object is::
 
   >>> my_cube_roi = my_cube[3:5, 10:100, 30:37]
 
@@ -177,21 +177,21 @@ Extra Coordinates
 -----------------
 
 In the case of some datasets, there may be additional translations
-that between the array elements and real world coordinates that are
+between the array elements and real world coordinates that are 
 not included in the WCS.  Consider a 3-D data cube from a rastering
 slit-spectrograph instrument.  The first axis corresponds to the
 x-position of the slit as it steps across a region of interest in a
-set pattern.  The second corresponds to latitude along the slit.  And
-the third axis corresponds to wavelength.  However, first axis also
+given pattern.  The second corresponds to latitude along the slit.  And
+the third axis corresponds to wavelength.  However, the first axis also
 corresponds to time, as it takes time for the slit to move and then
 take another exposure which results in a new spectrogram (y-position
-vs. wavelength). It would be very useful to have the time of each
-position in the x-axis associated with the time at which the exposure
-was taken, but the WCS can only handle one translation per axis.
+vs. wavelength). It would be very useful to have the measurement times
+associated along the x-axis associated.  However, the WCS can only
+handle one translation per axis.
 
 Fortunately, `~ndcube.NDCube` has a solution to this.  Values at
 integer (pixel) steps along an axis can be stored within the object
-and accessed via the `~ndcube.NDCube.extra_coords()` property. To
+and accessed via the `~ndcube.NDCube.extra_coords` property. To
 attach extra coordinates to an `~ndcube.NDCube` instance, provide a
 iterable of tuples of the form (`str`, `int`, `~astropy.units.Quantity`
 or `list`) where the 0th entry gives the name of the coordinate, the
@@ -208,13 +208,13 @@ each pixel along the axis.  So to add timestamps along the 0th axis of
   >>> extra_coords_input = [("time", 0, timestamps)]
   >>> # Generate NDCube as above, except now set extra_coords kwarg.
   >>> my_cube = NDCube(data, input_wcs, uncertainty=np.sqrt(data),
-  ...                         mask=mask, meta=meta, unit=None,
-  ...                         extra_coords=extra_coords_input)
+  ...                  mask=mask, meta=meta, unit=None,
+  ...                  extra_coords=extra_coords_input)
   INFO: uncertainty should have attribute uncertainty_type. [astropy.nddata.nddata]
 
-The extra_coords() property returns a dictionary where each key
-is a coordinat name key entered by the user.  The value of each key is
-itself another dictionary with keys "axis" and "value" giving the
+The `~ndcube.NDCube.extra_coords` property returns a dictionary where each key
+is a coordinate name entered by the user.  The value of each key is
+itself another dictionary with keys ``'axis'`` and ``'value'`` giving the
 corresponding data axis number and coordinate value at each pixel as
 supplied by the user::
 
@@ -232,31 +232,47 @@ time coordinate will only contain the value from that slice.::
   >>> my_cube[0].extra_coords
   {'time': {'axis': None, 'value': datetime.datetime(2000, 1, 1, 0, 0)}}
 
+Note that the ``axis`` value is now ``None`` because the dimensionality of the
+`~ndcube.NDCube` has been reduced via the slicing::
+
+  >>> my_cube[0].dimensions.shape
+  <Quantity [ 4., 5.] pix>
+
+and so the ``time`` extra coordinate no longer corresponds to a data
+axis.  This would not have been the case if we had done the slicing
+so the length of the 0th axis was >1::
+
+  >>> my_cube[0:2].dimensions.shape
+  <Quantity [ 2., 4., 5.] pix>
+  >>> my_cube[0:2].extra_coords
+  {'time': {'axis': 0,
+    'value': [datetime.datetime(2000, 1, 1, 0, 0),
+     datetime.datetime(2000, 1, 1, 0, 1)]}}
+
 Plotting
 --------
 
 To quickly and easily visualize N-D data, `~ndcube.NDCube` provides a
 simple-to-use, yet powerful plotting method, `~ndcube.NDCube.plot`,
 which produces a sensible visualization based on the dimensionality of
-the data within the `~ndcube.NDCube` instance.  It is intended to be a
-useful quicklook tool and not a replacement for high quality plots or
-animations, e.g. for publications.  The plot method can be called very
-simply, like so::
+the data.  It is intended to be a useful quicklook tool and not a
+replacement for high quality plots or animations, e.g. for
+publications.  The plot method can be called very simply, like so::
 
   >>> my_cube.plot() # doctest: +SKIP
 
 The type of visualization returned depends on the dimensionality of
-the dat within the `~ndcube.NDCube` object.  For 1-D data a line plot
+the data within the `~ndcube.NDCube` object.  For 1-D data a line plot
 is produced, similar to `matplotlib.pyplot.plot`.  For 2-D data, an
 image is produced similar to that of `matplotlib.pyplot.imshow`.
 While for a >2-D data, a
 `sunpy.visualization.imageanimator.ImageAnimatorWCS` object is
-returned.  This displays a 2-D imaged with sliders for each additional
+returned.  This displays a 2-D image with sliders for each additional
 dimension which allow the user to animate through the different values
 of each dimension and see the effect in the 2-D image.
 
 No args are required.  The necessary information to generate the plot
-are derived from the data and metadata in the `~ndcube.NDCube`
+is derived from the data and metadata in the `~ndcube.NDCube`
 itself. Setting the x and y ranges of the plot can be done simply by
 indexing the `~ndcube.NDCube` object itself to the desired region of
 interest and then calling the plot method, e.g.::
@@ -264,7 +280,7 @@ interest and then calling the plot method, e.g.::
   >>> my_cube[0, 10:100, :].plot() # doctest: +SKIP
 
 In addition to this, some optional kwargs can be used to customize the
-plot.  The axis_ranges kwarg can be used to set the axes ticklabels.  See the
+plot.  The ``axis_ranges`` kwarg can be used to set the axes ticklabels.  See the
 `~sunpy.visualization.imageanimator.ImageAnimatorWCS` documentation for
 more detail.  However, if this is not set, the axis ticklabels are
 automatically derived in real world coordination from the WCS obect
@@ -272,17 +288,17 @@ within the `~ndcube.NDCube`.
 
 By default the final two data dimensions are used for the plot
 axes in 2-D or greater visualizations, but this can be set by the user
-using the images_axes kwarg::
+using the ``images_axes`` kwarg::
 
   >>> my_cube.plot(image_axes=[0,1]) # doctest: +SKIP
 
 where the first entry in the list gives the index of the data index to
 go on the x-axis, and the second entry gives the index of the data
-index to go on the y-axis.
+axis to go on the y-axis.
 
 In addition, the units of the axes or the data can be set by the
-unit_x_axis, unit_y_axis, unit kwargs.  However, if not set, these are
-derived from the `~ndcube.NDCube` wcs and unit attributes.
+``unit_x_axis``, ``unit_y_axis``, unit kwargs.  However, if not set,
+these are derived from the `~ndcube.NDCube` wcs and unit attributes.
 
 Coordinate Transformations
 --------------------------
@@ -334,7 +350,7 @@ coordinates::
 
 The exact units used are defined within the `~ndcube.NDCube`
 instance's `~ndcube.wcs_util.WCS` object.  Once again, the coordinates
-of the nth pixel is given by the nth elements from each of the
+of the nth pixel is given by the nth element of each of the
 `~astropy.units.Quantity` objects returned.
 
 Using `~ndcube.NDCube.world_to_pixel` to convert real world
@@ -355,10 +371,10 @@ returned::
 
 Both `~ndcube.NDCube.pixel_to_world` and
 `~ndcube.NDCube.world_to_pixel` have an additional optional kwarg,
-origin, whose default is 0.  This is the same as the origin arg in
+``origin``, whose default is 0.  This is the same as the ``origin`` arg in
 `~astropy.wcs.WCS.all_pix2world` and `~astropy.wcs.WCS.all_world2pix`
 and defines whether the WCS translation is 0-based (C) or 1-based
 (FORTRAN).  Changing this kwarg will result in the pixel coordinates
 being offset by 1.  In most cases, the approriate setting will be
-origin=0, but 1-based may be required for writing the WCS translations
-to a FITS header.
+``origin=0``, but 1-based may be required for writing the WCS
+translations to a FITS header.
