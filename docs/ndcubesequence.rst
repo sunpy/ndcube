@@ -92,7 +92,7 @@ and stored in the ``my_sequence.meta`` attribute.  Meanwhile, the
 However, analgously to `~ndcube.NDCube`, it is strongly advised that 
 the data is manipulated by slicing the `~ndcube.NDCubeSequence` rather
 than more manually delving into the ``.data`` attribute.  For more
-explanation, see the section on :ref:`slicing`.
+explanation, see the section on :ref:`sequence_slicing`.
 
 Common Axis
 -----------
@@ -154,7 +154,7 @@ types can be accessed directly::
   >>> my_sequence.dimensions.axis_types
   ('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE')
 
-.. _slicing:
+.. _sequence_slicing:
 
 Slicing
 -------
