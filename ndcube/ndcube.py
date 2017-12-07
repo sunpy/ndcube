@@ -194,6 +194,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
     def pixel_to_world(self, quantity_axis_list, origin=0):
+        # The docstring is defined in NDDataBase
+
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -217,6 +219,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
         return result[::-1]
 
     def world_to_pixel(self, quantity_axis_list, origin=0):
+        # The docstring is defined in NDDataBase
+
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -256,6 +260,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
 
     @property
     def dimensions(self):
+        # The docstring is defined in NDDataBase
+
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
@@ -265,6 +271,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
         return DimensionPair(shape=shape, axis_types=axes_ctype[::-1])
 
     def crop_by_coords(self, lower_left_corner, dimension_widths):
+        # The docstring is defined in NDDataBase
+
         n_dim = len(self.dimensions.shape)
         if len(lower_left_corner) != len(dimension_widths) != n_dim:
             raise ValueError("lower_left_corner and dimension_widths must have "
@@ -281,6 +289,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
 
     @property
     def extra_coords(self):
+        # The docstring is defined in NDDataBase
+
         if not self._extra_coords_wcs_axis:
             result = None
         else:
