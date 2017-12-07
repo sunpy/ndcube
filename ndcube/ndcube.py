@@ -85,6 +85,11 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
         """
 
+    @abc.abstractproperty
+    def extra_coords(self):
+        """
+        """
+
     @abc.abstractmethod
     def crop_by_coords(self, lower_left_corner, dimension_widths):
         """
