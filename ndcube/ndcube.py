@@ -125,7 +125,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
         The array holding the actual data in this object.
 
     wcs: `ndcube.wcs.wcs.WCS`
-        The WCS object containing the axes information
+        The WCS object containing the axes' information
 
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
