@@ -13,13 +13,16 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
     def _slice_wcs(self, item):
         """
-        Override this so it does not interfere.
+        Override this so we do not use the wcs slicing on ``NDSlicingMixin``.
         """
         return None
 
     def __getitem__(self, item):
         """
-        Override to exclude None indices.
+        Override to explicitly catch `None` indices.
+
+        This method calls ``_slice`` and then constructs a new object using the
+        kwargs returned by ``_slice``.
         """
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
@@ -27,6 +30,10 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         return super().__getitem__(item)
 
     def _slice(self, item):
+        """
+        Construct a set of keyword arguments to initialise a new (sliced)
+        instance of the class.
+        """
         kwargs = super()._slice(item)
 
         wcs, missing_axis = self._slice_wcs_missing_axis(item)
