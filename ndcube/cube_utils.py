@@ -36,7 +36,7 @@ def select_order(axtypes):
     return result
 
 
-def get_sequence_slices(item, dimensions):
+def convert_item_to_sequence_slices(item):
     """Converts NDCubeSequence slice item to list of SequenceSlice objects."""
     cube_slice_default = slice(None)
     if isinstance(item, int):
@@ -52,106 +52,56 @@ def get_sequence_slices(item, dimensions):
 
 def get_sequence_slices_from_int_item(item, cube_slice):
     """Converts int index of an NDCubeSequence to list of SequenceSlices."""
-    return [SequenceSlice(item, whole_cube_slice)]
+    return [SequenceSlice(item, cube_slice)]
 
 
 def get_sequence_slices_from_slice_item(item, cube_slice):
     """Converts slice item of an NDCubeSequence to list of SequenceSlices."""
-    return [SequenceSlice(i, cube_slice) for i in range(item.start, item.stop, item.step)]
+    try:
+        sequence_slices = [SequenceSlice(i, cube_slice)
+                           for i in range(item.start, item.stop, item.step)]
+    except TypeError:
+        sequence_slices = [SequenceSlice(i, cube_slice)
+                           for i in range(item.start, item.stop)]
+    return sequence_slices
 
 
 def get_sequence_slices_from_tuple_item(item):
     """Converts NDCubeSequence slice item tuple to list of SequenceSlice objects."""
+    # Define slice to be applied to cubes.
+    if len(item[1:]) == 1:
+        cube_slice = item[1]
+    else:
+        cube_slice = item[1:]
+    # Based on type of sequence index, define sequence slices.
     if isinstance(item[0], int):
-        if len(item[1:]) == 1:
-            cube_slice = item[1]
-        else:
-            cube_slice = item[1:]
         sequence_slices = get_sequence_slices_from_int_item(item[0], cube_slice)
     elif isinstance(item[0], slice):
-        
-    #????????????? Below is copied and pasted.  Needs reworking. ???????????????
-    
-    # the 0th index of tuple will have the slice that will be applied across cubes
-    # the 1st index of tuple contains the information of 1st cube to slice and last
-    # cube to slice.
-    # and the rest of the tuple contains the rest of the slice information applied to
-    # all cubes.
-    # example - (slice(0, 3, None), [slice(0, 2, None), slice(0, 1, None)], 1, 0)
-    # this part of the code should not be called directly by the __getitem__ method
-    # of the NDCubesequence as having slice in 0th index is not possible.
-    # so having this sequence_as_cube parameter helps.
-    elif isinstance(item[0], slice):
-        data = result.data[item[0]]
-        # applying the slice in the start of cube.
-        data[0] = data[0][item[1][0]]
-        if len(item[1]) is 2:
-            # applying the slice in the end of cube.
-            data[-1] = data[-1][item[1][-1]]
-        # applying the rest of the item in all the cubes.
-        for i, cube in enumerate(data):
-            if len(item[2::]) is 1:
-                data[i] = cube[item[2]]
-            else:
-                data[i] = cube[item[2::]]
-            result.data = data
+        sequence_slices = get_sequence_slices_from_slice_item(item[0], cube_slice)
+    else:
+        raise TypeError("Unrecognized sequence slice type: {0}", item[0])
+    return sequence_slices
 
-
-def _get_cube_from_sequence(cubesequence, item):
+def slice_sequence(cubesequence, sequence_slices):
     """
-    Handles CubeSequence's __getitem__ method for list of cubes.
+    Slices an NDCubeSequence given a list of SequenceSlice objects.
 
     Parameters
     ----------
-    cubesequence: ndcube.CubeSequence object
-        The cubesequence to get the item from
-    item: int, slice object, or tuple of these
-        The item to get from the cube
+    cubesequence: `ndcube.NDCubeSequence`
+        The cubesequence to slice.
+    sequence_slices: `list` of `SequenceSlice`
+        Slices to be applied to each relevant NDCube in the sequence.
+
     """
     result = deepcopy(cubesequence)
-    if isinstance(item, int):
-        result = result.data[item]
-    if isinstance(item, slice):
-        result.data = result.data[item]
-    if isinstance(item, tuple):
-        # if the 0th index is int.
-        if isinstance(item[0], int):
-            # to satisfy something like cubesequence[0,0] this should have
-            # data type as cubesequence[0][0]
-            if len(item[1::]) == 1:
-                result = result.data[item[0]][item[1]]
-            else:
-                result = result.data[item[0]][item[1::]]
-        # the 0th index of tuple will have the slice that will be applied across cubes
-        # the 1st index of tuple contains the information of 1st cube to slice and last
-        # cube to slice.
-        # and the rest of the tuple contains the rest of the slice information applied to
-        # all cubes.
-        # example - (slice(0, 3, None), [slice(0, 2, None), slice(0, 1, None)], 1, 0)
-        # this part of the code should not be called directly by the __getitem__ method
-        # of the NDCubesequence as having slice in 0th index is not possible.
-        # so having this sequence_as_cube parameter helps.
-        elif isinstance(item[0], slice):
-            data = result.data[item[0]]
-            # applying the slice in the start of cube.
-            data[0] = data[0][item[1][0]]
-            if len(item[1]) is 2:
-                # applying the slice in the end of cube.
-                data[-1] = data[-1][item[1][-1]]
-            # applying the rest of the item in all the cubes.
-            for i, cube in enumerate(data):
-                if len(item[2::]) is 1:
-                    data[i] = cube[item[2]]
-                else:
-                    data[i] = cube[item[2::]]
-            result.data = data
-        else:
-            raise ValueError("Unrecognized indexing item. item = {0}".format(item))
-    return result
-
-
-def get_cube_from_sequence(cubesequence, item):
-    return item
+    if len(sequence_slices) == 1:
+        return result.data[sequence_slices[0].sequence_index][sequence_slices[0].cube_slice]
+    else:
+        data = [result.data[sequence_slice.sequence_index][sequence_slice.cube_slice]
+                for sequence_slice in sequence_slices]
+        result.data = data
+        return result
 
 
 def index_sequence_as_cube(cubesequence, item):
@@ -369,7 +319,7 @@ class SequenceSlice(object):
         Slice to be applied to NDCube at NDCubeSequence.data[sequence_index].
 
     """
-    def __init__(sequence_index, cube_slice):
+    def __init__(self, sequence_index, cube_slice):
         if not isinstance(sequence_index, int):
             raise TypeError("sequence_index must be ant int.")
         if not isinstance(cube_slice, (slice, tuple)):

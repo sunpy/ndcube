@@ -36,7 +36,10 @@ class NDCubeSequence:
     def __getitem__(self, item):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
-        return cube_utils.get_cube_from_sequence(self, item)
+        #return cube_utils.get_cube_from_sequence(self, item)
+        # Convert item to list of SequenceSlices
+        sequence_slices = cube_utils.convert_item_to_sequence_slices(item)
+        return cube_utils.slice_sequence(self, sequence_slices)
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
