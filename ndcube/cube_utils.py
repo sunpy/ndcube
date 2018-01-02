@@ -50,36 +50,84 @@ def convert_item_to_sequence_slices(item):
     return sequence_slices
 
 
-def get_sequence_slices_from_int_item(item, cube_slice):
-    """Converts int index of an NDCubeSequence to list of SequenceSlices."""
-    return [SequenceSlice(item, cube_slice)]
+def get_sequence_slices_from_int_item(int_item, cube_slice):
+    """
+    Converts int index of an NDCubeSequence to list of SequenceSlices.
+
+    Parameters
+    ----------
+    int_item: `int`
+        index of NDCube within NDCubeSequence to be slices out.
+
+    cube_slice: `int`, `slice`, or `tuple`
+        Slice to be applied to selected NDCube.
+
+    Returns
+    -------
+    result: `list` of `SequenceSlice`
+        List of a length one containing a SequenceSlice object giving the
+        index of the selected NDCube and the slice to be applied to that cube.
+
+    """
+    return [SequenceSlice(int_item, cube_slice)]
 
 
-def get_sequence_slices_from_slice_item(item, cube_slice):
-    """Converts slice item of an NDCubeSequence to list of SequenceSlices."""
+def get_sequence_slices_from_slice_item(slice_item, cube_slice):
+    """
+    Converts slice item of an NDCubeSequence to list of SequenceSlices.
+
+    Parameters
+    ----------
+    slice_item: `slice`
+        Indicates which NDCubes within NDCubeSequence are to be slices out.
+
+    cube_slice: `int`, `slice`, or `tuple`
+        Slice to be applied to each selected NDCube.
+
+    Returns
+    -------
+    sequence_slices: `list` of `SequenceSlice`
+        SequenceSlices for each relevant NDCube within NDCubeSequence.
+
+    """
     try:
         sequence_slices = [SequenceSlice(i, cube_slice)
-                           for i in range(item.start, item.stop, item.step)]
+                           for i in range(slice_item.start, slice_item.stop, slice_item.step)]
     except TypeError:
         sequence_slices = [SequenceSlice(i, cube_slice)
-                           for i in range(item.start, item.stop)]
+                           for i in range(slice_item.start, slice_item.stop)]
     return sequence_slices
 
 
-def get_sequence_slices_from_tuple_item(item):
-    """Converts NDCubeSequence slice item tuple to list of SequenceSlice objects."""
+def get_sequence_slices_from_tuple_item(tuple_item):
+    """
+    Converts NDCubeSequence slice item tuple to list of SequenceSlice objects.
+
+    Parameters
+    ----------
+    tuple_item: `tuple` of `int` and/or `slice`.
+        Index/slice for different dimensions of NDCubeSequence.  The first entry
+        applies to the sequence axis while subsequent entries make up the slicing
+        item to be applied to the NDCubes.
+
+    Returns
+    -------
+    sequence_slices: `list` of `SequenceSlice`
+        SequenceSlices for each relevant NDCube within NDCubeSequence.
+
+    """
     # Define slice to be applied to cubes.
-    if len(item[1:]) == 1:
-        cube_slice = item[1]
+    if len(tuple_item[1:]) == 1:
+        cube_slice = tuple_item[1]
     else:
-        cube_slice = item[1:]
+        cube_slice = tuple_item[1:]
     # Based on type of sequence index, define sequence slices.
-    if isinstance(item[0], int):
-        sequence_slices = get_sequence_slices_from_int_item(item[0], cube_slice)
-    elif isinstance(item[0], slice):
-        sequence_slices = get_sequence_slices_from_slice_item(item[0], cube_slice)
+    if isinstance(tuple_item[0], int):
+        sequence_slices = get_sequence_slices_from_int_item(tuple_item[0], cube_slice)
+    elif isinstance(tuple_item[0], slice):
+        sequence_slices = get_sequence_slices_from_slice_item(tuple_item[0], cube_slice)
     else:
-        raise TypeError("Unrecognized sequence slice type: {0}".format(item[0]))
+        raise TypeError("Unrecognized sequence slice type: {0}".format(tuple_item[0]))
     return sequence_slices
 
 def slice_sequence(cubesequence, sequence_slices):
@@ -92,6 +140,11 @@ def slice_sequence(cubesequence, sequence_slices):
         The cubesequence to slice.
     sequence_slices: `list` of `SequenceSlice`
         Slices to be applied to each relevant NDCube in the sequence.
+
+    Returns
+    -------
+    result: `NDCubeSequence` or `NDCube`
+        The sliced cube sequence.
 
     """
     result = deepcopy(cubesequence)
