@@ -6,12 +6,22 @@
 from __future__ import absolute_import
 
 from copy import deepcopy
+from collections import namedtuple
 
 import numpy as np
 from astropy import units as u
 
 from ndcube import wcs_util
 
+# Define SequenceIndex named tuple to hold two ints:
+# the index of a cube within an NDCubeSequence and
+# an index along the common axis of the cubes within the sequence.
+SequenceIndex = namedtuple("SequenceIndex", "sequence_index common_axis_index")
+# Define SequenceSlice named tuple to hold an int and
+# a slice or tuple of slices and/or ints:
+# the index of a cube within an NDCubeSequence and
+# an slice item to be applied to the cube.
+SequenceSlice = namedtuple("SequenceSlice", "sequence_index cube_item")
 
 def select_order(axtypes):
     """
@@ -130,6 +140,7 @@ def get_sequence_slices_from_tuple_item(tuple_item):
         raise TypeError("Unrecognized sequence slice type: {0}".format(tuple_item[0]))
     return sequence_slices
 
+
 def slice_sequence(cubesequence, sequence_slices):
     """
     Slices an NDCubeSequence given a list of SequenceSlice objects.
@@ -151,7 +162,7 @@ def slice_sequence(cubesequence, sequence_slices):
     if len(sequence_slices) == 1:
         return result.data[sequence_slices[0].sequence_index][sequence_slices[0].cube_slice]
     else:
-        data = [result.data[sequence_slice.sequence_index][sequence_slice.cube_slice]
+        data = [result.data[sequence_slice.sequence_index][sequence_slice.cube_item]
                 for sequence_slice in sequence_slices]
         result.data = data
         return result
@@ -190,161 +201,87 @@ def index_sequence_as_cube(cubesequence, item):
 
     """
     # Convert index_as_cube item to a regular NDCubeSequence item.
-    sequence_slices = convert_index_as_cube_item_to_sequence_slices(cubesequence, item)
+    sequence_slices = convert_cube_like_item_to_sequence_slices(cubesequence, item)
     # Use output to slice NDCubeSequence as normal.
     return slice_sequence(cubesequence, sequence_slices)
 
-
-def _index_sequence_as_cube(cubesequence, item):
+def convert_cube_like_item_to_sequence_slices(cubesequence, cube_like_item):
     """
-    Enables CubeSequence to be indexed as a single Cube.
-
-    This is only possible if cubesequence._common_axis is set,
-    i.e. if the Cubes are sequence in order along one of the Cube axes.
-    For example, if cubesequence._common_axis=1 where the first axis is
-    time, and the Cubes are sequence chronologically such that the last
-    time slice of one Cube is directly followed in time by the first time
-    slice of the next Cube, then this function allows the CubeSequence to
-    be indexed as though all Cubes were combined into one ordered along
-    the time axis.
+    Converts an input item to NDCubeSequence.index_as_cube to a list od SequenceSlice objects.
 
     Parameters
     ----------
-    cubesequence: ndcube.CubeSequence object
-        The cubesequence to get the item from
-    item: int, slice object, or tuple of these
-        The item to get from the cube.  If tuple length must be <= number
-        of dimensions in single Cube.
 
-    Example
-    -------
-    >>> # Say we have three Cubes each cube has common_axis=1 is time and shape=(3,3,3)
-    >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
-    >>> cs = CubeSequence(data_list, meta=None, common_axis=1) # doctest: +SKIP
-    >>> # return zeroth time slice of cubeB in via normal CubeSequence indexing.
-    >>> cs[1,:,0,:] # doctest: +SKIP
-    >>> # Return same slice using this function
-    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0, (slice(0, cubeB.shape[2])) # doctest: +SKIP
-
-    """
-    # Determine starting slice of each cube along common axis.
-    cumul_cube_lengths = np.cumsum(np.array([c.data.shape[cubesequence._common_axis]
-                                             for c in cubesequence.data]))
-    # Case 1: Item is int and common axis is 0.
-    if isinstance(item, int):
-        if cubesequence._common_axis != 0:
-            raise ValueError("Input can only be indexed with an int if "
-                             "CubeSequence's common axis is 0. common "
-                             "axis = {0}".format(cubesequence._common_axis))
-        else:
-            sequence_index, cube_index = _convert_cube_like_index_to_sequence_indices(
-                item, cumul_cube_lengths)
-            item_list = [item]
-    # Case 2: Item is slice and common axis is 0.
-    elif isinstance(item, slice):
-        if cubesequence._common_axis != 0:
-            raise ValueError("Input can only be sliced with a single slice if "
-                             "CubeSequence's common axis is 0. common "
-                             "axis = {0}".format(cubesequence._common_axis))
-        else:
-            sequence_index, cube_index = _convert_cube_like_slice_to_sequence_slices(
-                item, cumul_cube_lengths)
-            item_list = [item]
-    # Case 3: Item is tuple and common axis index is int.ance(item[cubesequence._common_axis], int):
-        # Since item must be a tuple, convert to list to
-        # make ensure it's mutable for next cases.
-        item_list = list(item)
-        # Check item is long enough to include common axis.
-        if len(item_list) < cubesequence._common_axis:
-            raise ValueError("Input item not long enough to include common axis."
-                             "Must have length of of between "
-                             "{0} and {1} inclusive.".format(
-                                 cubesequence._common_axis, len(cubesequence[0].data.shape)))
-        sequence_index, cube_index = _convert_cube_like_index_to_sequence_indices(
-            item_list[cubesequence._common_axis], cumul_cube_lengths)
-    # Case 4: Item is tuple and common axis index is slice.
-    elif isinstance(item[cubesequence._common_axis], slice):
-        # Since item must be a tuple, convert to list to
-        # make ensure it's mutable for next cases.
-        item_list = list(item)
-        # Check item is long enough to include common axis.
-        if len(item_list) < cubesequence._common_axis:
-            raise ValueError("Input item not long enough to include common axis."
-                             "Must have length of of between "
-                             "{0} and {1} inclusive.".format(
-                                 cubesequence._common_axis, len(cubesequence[0].data.shape)))
-        sequence_index, cube_index = _convert_cube_like_slice_to_sequence_slices(
-            item_list[cubesequence._common_axis], cumul_cube_lengths)
-    else:
-        raise ValueError("Invalid index/slice input.")
-    # Replace common axis index/slice with corresponding
-    # index/slice with cube.
-    item_list[cubesequence._common_axis] = cube_index
-    # Insert corresponding index/slice of required cube in sequence.
-    item_list.insert(0, sequence_index)
-    item_tuple = tuple(item_list)
-    if item is None or (isinstance(item, tuple) and None in item):
-        raise IndexError("None indices not supported")
-
-    return get_cube_from_sequence(cubesequence, item_tuple)
-
-
-def convert_index_as_cube_item_to_sequence_slices(cubesequence, item):
-    """
-    Converts slice item input to NDCubeSequence.index_as_cube to list of SequenceSlices.
     """
     # Determine starting slice of each cube along common axis.
     cumul_cube_lengths = np.cumsum(np.array([c.data.shape[cubesequence._common_axis]
                                              for c in cubesequence.data]))
     invalid_item_error_message = "Invalid index/slice input."
     # Case 1: Item is int and common axis is 0.
-    if isinstance(item, int):
+    if isinstance(cube_like_item, int):
         if cubesequence._common_axis != 0:
             raise ValueError("Input can only be indexed with an int if "
                              "CubeSequence's common axis is 0. common "
                              "axis = {0}".format(cubesequence._common_axis))
         else:
-            sequence_index, cube_index = _convert_cube_like_index_to_sequence_indices(
-                item, cumul_cube_lengths)
-            sequence_slices = get_sequence_slices_from_int_item(sequence_index, cube_index)
+            sequence_index = _convert_cube_like_index_to_sequence_index(
+                cube_like_item, cumul_cube_lengths)
+            sequence_slices = get_sequence_slices_from_int_item(
+                sequence_index.sequence_index, sequence_index.common_axis_index)
     # Case 2: Item is slice and common axis is 0.
-    elif isinstance(item, slice):
+    elif isinstance(cube_like_item, slice):
         if cubesequence._common_axis != 0:
             raise ValueError("Input can only be sliced with a single slice if "
                              "CubeSequence's common axis is 0. common "
                              "axis = {0}".format(cubesequence._common_axis))
         else:
-            sequence_slices = _convert_cube_like_slice_to_sequence_slices(
-                item, cumul_cube_lengths)
+            sequence_indices = _convert_cube_like_slice_to_sequence_indices(
+                cube_like_item, cumul_cube_lengths)
+            sequence_slices = [_convert_sequence_index_to_sequence_slice(
+                sequence_index, cubesequence._common_axis) for sequence_index in sequence_indices]
     # Case 3: Item is tuple.
-    elif isinstance(item, tuple):
+    elif isinstance(cube_like_item, tuple):
         # Check item is long enough to include common axis.
-        if len(item) < cubesequence._common_axis:
+        if len(cube_like_item) < cubesequence._common_axis:
             raise ValueError("Input item not long enough to include common axis."
                              "Must have length between "
                              "{0} and {1} inclusive.".format(
                                  cubesequence._common_axis, len(cubesequence[0].data.shape)))
-        # Use common axis index/slice to generate slices for sequence.
-        if isinstance(item[cubesequence._common_axis], int):
-            sequence_index, cube_index = _convert_cube_like_index_to_sequence_indices(
-            item[cubesequence._common_axis], cumul_cube_lengths)
-        elif isinstance(item[cubesequence._common_axis], slice):
-            sequence_index, cube_index = _convert_cube_like_slice_to_sequence_slices(
-            item[cubesequence._common_axis], cumul_cube_lengths)
+        # Use common axis index/slice to generate sequence indices
+        # for each common axis slice.
+        if isinstance(cube_like_item[cubesequence._common_axis], int):
+            sequence_indices = [_convert_cube_like_index_to_sequence_index(
+                item[cubesequence._common_axis], cumul_cube_lengths)]
+        elif isinstance(cube_like_item[cubesequence._common_axis], slice):
+            sequence_indices = _convert_cube_like_slice_to_sequence_indices(
+                item, cumul_cube_lengths)
         else:
             raise ValueError(invalid_item_error_message)
-        sequence_item = [slice(None) for i in range(len(cubesequence.dimensions))]
-        sequence_item[0] = sequence_index
-        sequence_item[cubesequence._common_axis+1] = cube_index
-        sequence_slices = get_sequence_slices_from_tuple_item(sequence_item)
-    else:
-        raise ValueError(invalid_item_error_message)
+        # Use sequence indices to generate sequence slices.
+        sequence_slices = [_convert_sequence_index_to_sequence_slice(sequence_index)
+                           for sequence_index in sequence_indices]
     return sequence_slices
 
 
-def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_lengths):
-    # so that it returns the correct sequence_index and cube_index as
-    # np.where(cumul_cube_lengths <= cube_like_index) returns NULL.
+def _convert_cube_like_index_to_sequence_index(cube_like_index, cumul_cube_lengths):
+    """
+    Converts a cube-like index of an NDCubeSequence to indices along the sequence and common axes.
+
+    Parameters
+    ----------
+    cube_like_index: `int`
+        Cube-like index of NDCubeSequence
+
+    cumul_cube_lengths: iterable of `int`
+        Cumulative length of each cube in sequence along common axis.
+
+    Returns
+    -------
+    sequence_index: `tuple` and two `int`
+        First element gives index of cube along sequence axis.
+        Second element each index along common axis of relevant cube.
+
+    """
     if cube_like_index < cumul_cube_lengths[0]:
         sequence_index = 0
         cube_index = cube_like_index
@@ -364,62 +301,81 @@ def _convert_cube_like_index_to_sequence_indices(cube_like_index, cumul_cube_len
             sequence_index += 1
     # Return sequence and cube indices.  Ensure they are int, rather
     # than np.int64 to avoid confusion in checking type elsewhere.
-    return int(sequence_index), int(cube_index)
+    return SequenceIndex(int(sequence_index), int(cube_index))
 
 
 def _convert_cube_like_slice_to_sequence_indices(cube_like_slice, cumul_cube_lengths):
-    if cube_like_slice.start is None:
-        cube_like_slice_start = 0
-    else:
-        cube_like_slice_start = cube_like_slice.start
-    if cube_like_slice.stop is None:
-        cube_like_slice_stop = cumul_cube_lengths[-1]
-    else:
-        cube_like_slice_stop = cube_like_slice.stop
-    sequence_start_index, cube_start_index = _convert_cube_like_index_to_sequence_indices(
-        cube_like_slice_start, cumul_cube_lengths)
-    sequence_stop_index, cube_stop_index = _convert_cube_like_index_to_sequence_indices(
-            cube_like_slice_stop, cumul_cube_lengths)
-    if cube_like_slice.stop is None:
-        sequence_stop_index = len(cumul_cube_lengths)-1
-    else:
-        if not cube_like_slice.stop < cumul_cube_lengths[-1]:
-            # as _convert_cube_like_index_to_sequence_indices function returns last
-            # cube index so we need to increment it by one and set the cube_stop_index
-            # as 0 as the function returns the last index of the cube.
-            cube_stop_index = 0
-            sequence_stop_index += 1
-    # if the start and end sequence index are not equal implies slicing across cubes.
-    if sequence_start_index != sequence_stop_index:
-        # the first slice of cube_slice will be cube_start_index and the length of
-        # that cube's end index
-        # only storing those cube_slice that needs to be changed.
-        # Like if sequence_slice is slice(0, 3) meaning - 0, 1, 2 cubes this means we will
-        # store only 0th index slice and 2nd index slice in this list.
-        cube_slices = [slice(cube_start_index, cumul_cube_lengths[
-                             sequence_start_index], cube_like_slice.step)]
+    """
+    Converts common axis slice input to NDCubeSequence.index_as_cube to a list of sequence indices.
 
-        # for cube over which slices occur appending them
-        # for i in range(sequence_start_index+1, sequence_stop_index):
-        #     cube_slice.append(slice(0, cumul_cube_lengths[i]-cumul_cube_lengths[i-1]))
-        # if the stop index is 0 then slice(0, 0) is not taken. slice(0,3)
-        # represent 0,1,2 not 0,1,2,3.
-        if int(cube_stop_index) is not 0:
-            cube_slices.append(slice(0, cube_stop_index, cube_like_slice.step))
-            sequence_indices = range(sequence_start_index,
-                                     sequence_stop_index+1)
-        else:
-            sequence_indices = range(sequence_start_index, sequence_stop_index, cube_like_slice.step)
+    Parameters
+    ----------
+    cube_like_slice: `slice`
+        Slice along common axis in NDCubeSequence.index_as_cube item.
+
+    cumul_cube_lengths: iterable of `int`
+        Cumulative length of each cube in sequence along common axis.
+
+    Returns
+    -------
+    sequence_indices: `list` of `tuple` of two `int`
+        List sequence indices (sequence axis, common axis) for each element
+        along common axis represented by input cube_like_slice.
+    
+    """
+    cube_like_indices = np.arange(cumul_cube_lengths[-1])[cube_like_slice]
+    sequence_indices = [
+        _convert_cube_like_index_to_sequence_index(cube_like_index, cumul_cube_lengths)
+        for cube_like_index in cube_like_indices]
+    return sequence_indices
+
+
+def _convert_sequence_index_to_sequence_slice(sequence_index, common_axis, cube_like_item=None):
+    """
+    Converts sequence/cube index to a SequenceSlice object.
+
+    Parameters
+    ----------
+    sequence_index: SequenceIndex `namedtuple`
+        0th element gives index of cube along sequence axis.
+        1st element each index along common axis of relevant cube.
+        Must be same format as output from _convert_cube_like_index_to_sequence_indices.
+
+    common_axis: `int`
+        Common axis as defined in NDCubeSequence.
+
+    cube_like_item: `None` of `tuple` of `slice` and/or `int` objects (Optional)
+        The original item input to `NDCubeSequence.index_as_cube` including the
+        slices/indices of non-common axes of cubes within sequence.  If None, a
+        tuple of slice(None) objects is generated  long enough so that the last
+        element in the tuple corresponds to the common axis and is set to the
+        1st (0-based counting) the sequence_index input, above.  This tuple is
+        then set to the cube_item attribute of the output `SequenceSlice` object.
+
+    Returns
+    -------
+    sequence_slice: `SequenceSlice`
+        
+    """
+    if not cube_like_item and common_axis == 0:
+        sequence_slice = SequenceSlice(sequence_index.sequence_index,
+                                       sequence_index.common_axis_index)
     else:
-        cube_slices = [slice(cube_start_index, cube_stop_index, cube_like_slice.step)]
-        sequence_indices = range(sequence_start_index, sequence_stop_index+1, cube_like_slice.step)
-    while len(cube_slices) < len(sequence_indices):
-        # ATTENTION: What happens when step is not multiple of cube lengths?
-        cube_slices.insert(1, slice(None, None, cube_like_slice.step))
-    sequence_slices = []
-    for i in range(len(sequence_indices)):
-        sequence_slices.append(SequenceSlice(sequence_indices[i], cube_slices[i]))
-    return sequence_slices
+        # Create mutable version of cube_like_item.
+        try:
+            cube_item_list = list(cube_like_item)
+        except TypeError as err:
+            if err.message == "'NoneType' object is not iterable":
+                cube_item_list = []
+            else:
+                raise err
+        # Make sure cube_like_item is long enough to include common axis
+        while len(cube_item_list) < common_axis:
+            cube_item_list.append(slice(None))
+        # Create new sequence slice
+        cube_item_list[common_axis] = sequence_index.common_axis_index
+        sequence_slice = SequenceSlice(sequence_index.sequence_index, tuple(cube_item_list))
+    return sequence_slice
 
 
 def assert_extra_coords_equal(test_input, extra_coords):
@@ -453,29 +409,3 @@ def assert_cubesequences_equal(test_input, expected_sequence):
     assert test_input._common_axis == expected_sequence._common_axis
     for i, cube in enumerate(test_input.data):
         assert_cubes_equal(cube, expected_sequence.data[i])
-
-
-class SequenceSlice(object):
-    """
-    Holds index of an NDCube within NDCubeSequence and a slice item to be applied to cube.
-
-    Used in slicing NDCubeSequences.
-
-    Parameters
-    ----------
-    sequence_index: `int`
-        index of NDCube within NDCubeSequence.data.
-
-    cube_slice: `slice` or `tuple`
-        Slice to be applied to NDCube at NDCubeSequence.data[sequence_index].
-
-    """
-    def __init__(self, sequence_index, cube_slice):
-        if not isinstance(sequence_index, int):
-            raise TypeError("sequence_index must be ant int.")
-        self.sequence_index = sequence_index
-        self.cube_slice = cube_slice
-
-    def __repr__(self):
-        return ("SequenceSlice\n-------------\nSequence Index: {0}\nCube Slice: {1}\n".format(
-            self.sequence_index, self.cube_slice))
