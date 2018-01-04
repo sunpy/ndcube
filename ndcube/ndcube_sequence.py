@@ -38,7 +38,7 @@ class NDCubeSequence:
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         # Convert item to list of SequenceSlices
-        sequence_items = cube_utils.convert_item_to_sequence_items(item)
+        sequence_items = cube_utils.convert_item_to_sequence_items(item, len(self.data))
         return cube_utils.slice_sequence(self, sequence_items)
 
     def plot(self, *args, **kwargs):
