@@ -365,7 +365,7 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
     sequence_slices: `list` of SequenceSlice `namedtuple`.
         List sequence slices (sequence axis, common axis) for each element
         along common axis represented by input cube_like_slice.
-    
+
     """
     # Determine sequence indices of cubes included in cube-like slice.
     cumul_cube_lengths = np.cumsum(cube_lengths)
@@ -395,9 +395,9 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
     # penultimate cube's length along the common axis.
     if last_sequence_index.sequence_index > first_sequence_index.sequence_index and \
       last_sequence_index.common_axis_item == 0:
-      last_sequence_index = SequenceSlice(
-          last_sequence_index.sequence_index-1,
-          cumul_cube_lengths[last_sequence_index.sequence_index-1])
+        last_sequence_index = SequenceSlice(
+            last_sequence_index.sequence_index-1,
+            cumul_cube_lengths[last_sequence_index.sequence_index-1])
     # Iterate through relevant cubes and determine slices for each.
     # Do last cube outside loop as its end index may not correspond to
     # the end of the cube's common axis.
@@ -412,8 +412,8 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
         # Let i be the index along the sequence axis of the next relevant cube.
         i = unique_sequence_indices[j]
         # Determine last common axis index for this cube.
-        common_axis_last_index = cube_lengths[i] - \
-          ((cube_lengths[i]-common_axis_start_index) % step)
+        common_axis_last_index = \
+          cube_lengths[i] - ((cube_lengths[i]-common_axis_start_index) % step)
         # Generate SequenceSlice for this cube and append to list.
         sequence_slices.append(SequenceSlice(
             i, slice(common_axis_start_index, common_axis_last_index+1, step)))
@@ -421,9 +421,9 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
         if cube_lengths[i] == common_axis_last_index:
             common_axis_start_index = step-1
         else:
-            common_axis_start_index = step - \
-              (((cube_lengths[i]-common_axis_last_index) % step) + \
-               cumul_cube_lengths[unique_sequence_indices[j+1]-1] - cumul_cube_lengths[i])
+            common_axis_start_index = \
+              step - (((cube_lengths[i]-common_axis_last_index) % step) +
+                      cumul_cube_lengths[unique_sequence_indices[j+1]-1] - cumul_cube_lengths[i])
         # Iterate counter.
         j += 1
     # Create slice for last cube manually.
@@ -460,7 +460,7 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
     sequence_item: SequenceSlice `namedtuple`.
         Describes sequence index of an NDCube within an NDCubeSequence and the
         slice/index item to be applied to the whole NDCube.
-        
+
     """
     if not cube_like_item and common_axis == 0:
         sequence_item = SequenceItem(sequence_slice.sequence_index,
