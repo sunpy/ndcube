@@ -292,8 +292,12 @@ def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
         else:
             # Derive list of SequenceSlice objects that describes the
             # cube_like_item in regular slicing notation.
+            # First ensure None types within slice are replaced with appropriate ints.
+            cube_like_item_no_nones = convert_slice_nones_to_ints(
+                cube_like_item,
+                cubesequence.cube_like_dimensions.shape[cubesequence._common_axis].value)
             sequence_slices = _convert_cube_like_slice_to_sequence_slices(
-                cube_like_item, cube_lengths)
+                cube_like_item_no_nones, cube_lengths)
     # Case 3: Item is tuple.
     elif isinstance(cube_like_item, tuple):
         # Check item is long enough to include common axis.
@@ -510,6 +514,43 @@ def assert_extra_coords_equal(test_input, extra_coords):
     for key in list(test_input.keys()):
         assert test_input[key]['axis'] == extra_coords[key]['axis']
         assert (test_input[key]['value'] == extra_coords[key]['value']).all()
+
+
+def convert_slice_nones_to_ints(slice_item, target_length):
+    """
+    Converts None types within a slice to the appropriate ints based on object to be sliced.
+
+    Parameters
+    ----------
+    slice_item: `slice`
+       Slice for which Nones should be converted.
+
+    target_length: `int`
+        Length of object to which slice will be applied.
+
+    Returns
+    -------
+    new_slice: `slice`
+        Slice with Nones replaced with ints.
+    
+    """
+    if not slice_item.step:
+        step = 1
+    else:
+        step = slice_item.step
+    start = slice_item.start
+    stop = slice_item.stop
+    if step < 0:
+        if not slice_item.start:
+            start = target_length
+        if not slice_item.stop:
+            stop = 0
+    else:
+        if not slice_item.start:
+            start = 0
+        if not slice_item.stop:
+            stop = target_length
+    return slice(start, stop, step)
 
 
 def assert_metas_equal(test_input, expected_output):
