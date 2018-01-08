@@ -103,6 +103,15 @@ Axis Types of 1st NDCube: {axis_type}
             axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
 
     @property
+    def cube_like_dimensions(self):
+        dimensions = self.dimensions
+        shape_list_one_cube = list(dimensions.shape[1:])
+        shape_list_one_cube[self._common_axis] = \
+          dimensions.shape[0]*shape_list_one_cube[self._common_axis]
+        return SequenceDimensionPair(shape=tuple(shape_list_one_cube),
+                                     axis_types=dimensions.axis_types[1:])
+
+    @property
     def common_axis_extra_coords(self):
         if self._common_axis in range(self.data[0].wcs.naxis):
             common_extra_coords = {}
