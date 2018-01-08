@@ -279,7 +279,7 @@ def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
         else:
             # Derive list of SequenceSlice objects that describes the
             # cube_like_item in regular slicing notation.
-            sequence_index = _convert_cube_like_index_to_sequence_index(
+            sequence_index = _convert_cube_like_index_to_sequence_slice(
                 cube_like_item, cube_lengths)
             sequence_slices = get_sequence_slices_from_int_item(
                 sequence_index.sequence_index, sequence_index.common_axis_index)
@@ -310,7 +310,7 @@ def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
         # the cube_like_item, derive list of SequenceSlice objects that
         # describes the cube_like_item in regular slicing notation.
         if isinstance(cube_like_item[cubesequence._common_axis], int):
-            sequence_index = _convert_cube_like_index_to_sequence_index(
+            sequence_index = _convert_cube_like_index_to_sequence_slice(
                 cube_like_item, cube_lengths)
             sequence_slices = get_sequence_slices_from_int_item(
                 sequence_index.sequence_index, sequence_index.common_axis_index)
@@ -532,7 +532,7 @@ def convert_slice_nones_to_ints(slice_item, target_length):
     -------
     new_slice: `slice`
         Slice with Nones replaced with ints.
-    
+
     """
     if not slice_item.step:
         step = 1
