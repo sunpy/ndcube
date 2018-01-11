@@ -14,7 +14,7 @@ from ndcube import cube_utils
 from ndcube import wcs_util
 from ndcube import DimensionPair, SequenceDimensionPair
 from ndcube.visualization import animation as ani
-from ndcube.plot_helpers import _plot_1D_cube, _plot_2D_cube, _plot_1D_cube
+from ndcube.plot_helpers import _plot_1D_cube, _plot_2D_cube, _plot_3D_cube
 
 
 __all__ = ['NDCube', 'NDCubeOrdered']
