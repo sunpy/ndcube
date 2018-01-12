@@ -1,7 +1,9 @@
 import numpy as np
 
+import astropy.units as u
 import sunpy.map
 from sunpy.map import MapCube
+
 from ndcube import cube_utils
 from ndcube import DimensionPair, SequenceDimensionPair
 from ndcube.visualization import animation as ani
@@ -104,6 +106,8 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def cube_like_dimensions(self):
+        if type(self._common_axis) is not int:
+            raise TypeError("Common axis must be set.")
         dimensions = self.dimensions
         shape_list_one_cube = list(dimensions.shape[1:])
         shape_list_one_cube[self._common_axis] = \
