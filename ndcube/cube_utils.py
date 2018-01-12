@@ -279,10 +279,8 @@ def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
         else:
             # Derive list of SequenceSlice objects that describes the
             # cube_like_item in regular slicing notation.
-            sequence_index = _convert_cube_like_index_to_sequence_slice(
-                cube_like_item, cube_lengths)
-            sequence_slices = get_sequence_slices_from_int_item(
-                sequence_index.sequence_index, sequence_index.common_axis_index)
+            sequence_slices = [_convert_cube_like_index_to_sequence_slice(
+                cube_like_item, cube_lengths)]
             all_axes_item = None
     # Case 2: Item is slice and common axis is 0.
     elif isinstance(cube_like_item, slice):
@@ -311,7 +309,7 @@ def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
         if isinstance(cube_like_item[cubesequence._common_axis], int):
             sequence_index = _convert_cube_like_index_to_sequence_slice(
                 cube_like_item[cubesequence._common_axis], cube_lengths)
-            sequence_slices = get_sequence_slices_from_int_item(
+            sequence_slices = get_sequence_items_from_int_item(
                 sequence_index.sequence_index, sequence_index.common_axis_index)
         elif isinstance(cube_like_item[cubesequence._common_axis], slice):
             sequence_slices = _convert_cube_like_slice_to_sequence_slices(
@@ -467,7 +465,7 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
 
     Parameters
     ----------
-    sequence_index: SequenceIndex `namedtuple`
+    sequence_slice: SequenceSlice `namedtuple`
         0th element gives index of cube along sequence axis.
         1st element each index along common axis of relevant cube.
         Must be same format as output from _convert_cube_like_index_to_sequence_indices.
