@@ -77,18 +77,14 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             reverse of the wcs axis order.
         """
 
+    # InheritDocstrings doesn't work on property methods.
     @abc.abstractproperty
     def dimensions(self):
-        """
-        Returns a named tuple with two attributes: 'shape' gives the shape
-        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
-        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-        """
+        pass
 
     @abc.abstractproperty
     def extra_coords(self):
-        """
-        """
+        pass
 
     @abc.abstractmethod
     def crop_by_coords(self, lower_left_corner, dimension_widths):
@@ -260,7 +256,11 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
 
     @property
     def dimensions(self):
-        # The docstring is defined in NDDataBase
+        """
+        Returns a named tuple with two attributes: 'shape' gives the shape
+        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
+        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
+        """
 
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
@@ -289,7 +289,19 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
 
     @property
     def extra_coords(self):
-        # The docstring is defined in NDDataBase
+        """
+        Dictionary of extra coords where each key is the name of an extra
+        coordinate supplied by user during instantiation of the NDCube.
+
+        The value of each key is itself a dictionary with the following keys:
+          | 'axis': `int`
+          |     The number of the data axis to which the extra coordinate corresponds.
+          | 'value': `astropy.units.Quantity` or array-like
+          |     The value of the extra coordinate at each pixel/array element along the
+          |     corresponding axis (given by the 'axis' key, above).  Note this means
+          |     that the length of 'value' must be equal to the length of the data axis
+          |     to which is corresponds.
+        """
 
         if not self._extra_coords_wcs_axis:
             result = None
