@@ -45,7 +45,6 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Returns
         -------
-
         coord : `list`
             A list of arrays containing the output coordinates
             reverse of the wcs axis order.
@@ -71,7 +70,6 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Returns
         -------
-
         coord : `list`
             A list of arrays containing the output coordinates
             reverse of the wcs axis order.
