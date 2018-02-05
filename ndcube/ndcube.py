@@ -110,7 +110,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
 
 
-class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, NDCubeBase):
+class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin, NDCubeBase):
     """
     Class representing N dimensional cubes.
     Extra arguments are passed on to `~astropy.nddata.NDData`.
