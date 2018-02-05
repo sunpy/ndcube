@@ -16,6 +16,7 @@ __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis',
 
 
 def data_axis_to_wcs_axis(data_axis, missing_axis):
+    """Converts a data axis number to the corresponding wcs axis number."""
     if data_axis is None:
         result = None
     else:
@@ -25,6 +26,7 @@ def data_axis_to_wcs_axis(data_axis, missing_axis):
 
 
 def wcs_axis_to_data_axis(wcs_axis, missing_axis):
+    """Converts a wcs axis number to the corresponding data axis number."""
     if wcs_axis is None:
         result = None
     else:
@@ -277,6 +279,43 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cumul_cube_leng
         cube_slice = [slice(cube_start_index, cube_stop_index, cube_like_slice.step)]
         sequence_slice = slice(sequence_start_index, sequence_stop_index+1, cube_like_slice.step)
     return sequence_slice, cube_slice
+
+
+def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_axis,
+                                                        data_shape):
+    extra_coords_wcs_axis = {}
+    coord_format_error = ("Coord must have three properties supplied, "
+                            "name (str), axis (int), values (Quantity or array-like)."
+                            " Input coord: {0}")
+    coord_0_format_error = ("1st element of extra coordinate tuple must be a "
+                            "string giving the coordinate's name.")
+    coord_1_format_error = ("2nd element of extra coordinate tuple must be None "
+                            "or an int giving the data axis "
+                            "to which the coordinate corresponds.")
+    coord_len_error = ("extra coord ({0}) must have same length as data axis "
+                        "to which it is assigned: coord length, {1} != data axis length, {2}")
+    for coord in extra_coords:
+        # Check extra coord has the right number and types of info.
+        if len(coord) != 3:
+            raise ValueError(coord_format_error.format(coord))
+        if not isinstance(coord[0], str):
+            raise ValueError(coord_0_format_error.format(coord))
+        if coord[1] is not None and not isinstance(coord[1], int) and \
+                not isinstance(coord[1], np.int64):
+            raise ValueError(coord_1_format_error)
+        # Unless extra coord corresponds to a missing axis, check length
+        # of coord is same is data axis to which is corresponds.
+        if coord[1] is not None:
+            if not missing_axis[::-1][coord[1]]:
+
+                if len(coord[2]) != data_shape[coord[1]]:
+                    raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
+                                                            data_shape[coord[1]]))
+        # Determine wcs axis corresponding to data axis of coord
+        extra_coords_wcs_axis[coord[0]] = {
+            "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axis),
+            "value": coord[2]}
+    return extra_coords_wcs_axis
 
 
 def assert_extra_coords_equal(test_input, extra_coords):

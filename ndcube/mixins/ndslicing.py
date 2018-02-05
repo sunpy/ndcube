@@ -9,17 +9,19 @@ __all__ = ['NDCubeSlicingMixin']
 
 
 class NDCubeSlicingMixin(NDSlicingMixin):
+    # Inherit docstring from parent class
     __doc__ = NDSlicingMixin.__doc__
 
     def _slice_wcs(self, item):
         """
-        Override this so we do not use the wcs slicing on ``NDSlicingMixin``.
+        Override parent class method so we disable the wcs slicing on
+        `astropy.nddata.mixins.NDSlicingMixin`.
         """
         return None
 
     def __getitem__(self, item):
         """
-        Override to explicitly catch `None` indices.
+        Override the parent class method to explicitly catch `None` indices.
 
         This method calls ``_slice`` and then constructs a new object using the
         kwargs returned by ``_slice``.
@@ -32,7 +34,12 @@ class NDCubeSlicingMixin(NDSlicingMixin):
     def _slice(self, item):
         """
         Construct a set of keyword arguments to initialise a new (sliced)
-        instance of the class.
+        instance of the class. This method is called in
+        `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
+
+        This method extends the `~astropy.nddata.mixins.NDSlicingMixin` method
+        to add support for ``missing_axis`` and ``extra_coords`` and overwrites
+        the astropy handling of wcs slicing.
         """
         kwargs = super()._slice(item)
 
