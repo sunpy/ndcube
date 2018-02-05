@@ -20,7 +20,7 @@ from ndcube.plot_helpers import _plot_1D_cube, _plot_2D_cube, _plot_3D_cube
 __all__ = ['NDCube', 'NDCubeOrdered']
 
 
-class NDCube(astropy.nddata.NDData):
+class NDCube(astropy.nddata.NDArithmeticMixin, astropy.nddata.NDData):
     """
     Class representing N dimensional cubes.
     Extra arguments are passed on to NDData's init.
