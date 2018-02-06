@@ -58,21 +58,21 @@ def test_convert_cube_like_index_to_sequence_slice(test_input, expected):
 
 @pytest.mark.parametrize("test_input,expected", [
     (cu._convert_cube_like_slice_to_sequence_slices(
-        slice(2, 5), np.array([8]*4)), [cu.SequenceSlice(0, slice(2, 5))]),
+        slice(2, 5), np.array([8]*4)), [cu.SequenceSlice(0, slice(2, 5, 1))]),
     (cu._convert_cube_like_slice_to_sequence_slices(
         slice(5, 15), np.array([8]*4)),
-     [cu.SequenceSlice(0, slice(5, 8)), cu.SequenceSlice(1, slice(0, 7))]),
+     [cu.SequenceSlice(0, slice(5, 8, 1)), cu.SequenceSlice(1, slice(0, 7, 1))]),
     (cu._convert_cube_like_slice_to_sequence_slices(
         slice(5, 16), np.array([8]*4)),
-     [cu.SequenceSlice(0, slice(5, 8)), cu.SequenceSlice(1, slice(0, 8))]),
+     [cu.SequenceSlice(0, slice(5, 8, 1)), cu.SequenceSlice(1, slice(0, 8, 1))]),
     (cu._convert_cube_like_slice_to_sequence_slices(
         slice(5, 23), np.array([8]*4)),
-     [cu.SequenceSlice(0, slice(5, 8)), cu.SequenceSlice(1, slice(0, 8)),
-      cu.SequenceSlice(2, slice(0, 7))]),
+     [cu.SequenceSlice(0, slice(5, 8, 1)), cu.SequenceSlice(1, slice(0, 8, 1)),
+      cu.SequenceSlice(2, slice(0, 7, 1))]),
     (cu._convert_cube_like_slice_to_sequence_slices(
         slice(5, 100), np.array([8]*4)),
-     [cu.SequenceSlice(0, slice(5, 8)), cu.SequenceSlice(1, slice(0, 8)),
-      cu.SequenceSlice(2, slice(0, 8)), cu.SequenceSlice(3, slice(0, 8))])
+     [cu.SequenceSlice(0, slice(5, 8, 1)), cu.SequenceSlice(1, slice(0, 8, 1)),
+      cu.SequenceSlice(2, slice(0, 8, 1)), cu.SequenceSlice(3, slice(0, 8, 1))])
 ])
 def test_convert_cube_like_slice_to_sequence_slices(test_input, expected):
     assert test_input == expected
