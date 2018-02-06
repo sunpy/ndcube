@@ -85,21 +85,45 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractmethod
-    def crop_by_coords(self, lower_left_corner, dimension_widths):
+    def crop_by_coords(self, min_coord_values, interval_widths):
         """
-        Crops an NDCube given a lower left corner and widths of region of interest.
+        Crops an NDCube given minimum values and interval widths along axes.
 
         Parameters
         ----------
-        lower_left_corner: `list` of `astropy.units.Quantity`
-            The lower left corner of the region of interest described in physical units
-            consistent with the NDCube's wcs object.  The length of the iterable must
-            equal the number of data dimensions and must have the same order as the data.
+        min_coord_values: `list` of `astropy.units.Quantity`
+            The minimum desired values along each relevant axis after cropping
+            described in physical units consistent with the NDCube's wcs object.
+            The length of the iterable must equal the number of data dimensions and must
+            have the same order as the data.
 
-        dimension_widths: iterable of `astropy.units.Quantity`
+        interval_widths: iterable of `astropy.units.Quantity`
             The width of the region of interest in each dimension in physical units
             consistent with the NDCube's wcs object.  The length of the iterable must
             equal the number of data dimensions and must have the same order as the data.
+
+        Returns
+        -------
+        result: NDCube
+
+        """
+
+    @abc.abstractmethod
+    def crop_by_extra_coord(self, min_coord_value, interval_width, extra_coord):
+        """
+        Crops an NDCube given a minimum value and interval width along an extra coord.
+
+        Parameters
+        ----------
+        min_coord_value: Single value of type consistent with the extra coord.
+            The minimum desired value of the extra coord after cropping.
+
+        interval_width: Single value of type consistent with the extra coord.
+            The width of the interval along the extra coord axis in physical units
+            consistent with the extra coord.
+
+        extra_coord: `str`
+            Name of extra coord.
 
         Returns
         -------
@@ -268,22 +292,34 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         shape = u.Quantity(self.data.shape, unit=u.pix)
         return DimensionPair(shape=shape, axis_types=axes_ctype[::-1])
 
-    def crop_by_coords(self, lower_left_corner, dimension_widths):
+    def crop_by_coords(self, min_coord_values, interval_widths):
         # The docstring is defined in NDDataBase
 
         n_dim = len(self.dimensions.shape)
-        if len(lower_left_corner) != len(dimension_widths) != n_dim:
-            raise ValueError("lower_left_corner and dimension_widths must have "
+        if len(min_coord_values) != len(interval_widths) != n_dim:
+            raise ValueError("min_coord_values and interval_widths must have "
                              "same number of elements as number of data dimensions.")
         # Convert coords of lower left corner to pixel units.
-        lower_pixels = self.world_to_pixel(lower_left_corner)
-        upper_pixels = self.world_to_pixel([lower_left_corner[i]+dimension_widths[i]
+        lower_pixels = self.world_to_pixel(min_coord_values)
+        upper_pixels = self.world_to_pixel([min_coord_values[i]+interval_widths[i]
                                             for i in range(n_dim)])
         # Round pixel values to nearest integer.
         lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
         upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
-        slic = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
-        return self[slic]
+        item = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
+        return self[item]
+
+    def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
+        # The docstring is defined in NDDataBase
+
+        extra_coord_dict = self.extra_coords[coord_name]
+        extra_coord_values = np.asarray(extra_coord_dict["value"])
+        w = np.logical_and(extra_coord_values >= min_coord_value,
+                           extra_coord_values < min_coord_value + interval_width)
+        w = np.arange(len(extra_coord_values))[w]
+        item = [slice(None)]*len(self.dimensions.shape)
+        item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
+        return self[tuple(item)]
 
     @property
     def extra_coords(self):
