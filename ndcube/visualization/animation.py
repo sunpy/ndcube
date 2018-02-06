@@ -1,6 +1,7 @@
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import numpy as np
-from ndcube import cube_utils as cu
+
+from ndcube import utils
 
 
 class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
@@ -73,7 +74,7 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
         ind = np.argmin(np.abs(self.axis_ranges[ax_ind] - val))
         self.frame_slice[ax_ind] = ind
         list_slices_wcsaxes = list(self.slices_wcsaxes)
-        sequence_index, cube_index = cu._convert_cube_like_index_to_sequence_indices(
+        sequence_index, cube_index = utils.sequence._convert_cube_like_index_to_sequence_indices(
             val, self.cumul_cube_lengths)
         list_slices_wcsaxes[self.wcs.naxis-ax_ind-1] = cube_index
         self.slices_wcsaxes = list_slices_wcsaxes

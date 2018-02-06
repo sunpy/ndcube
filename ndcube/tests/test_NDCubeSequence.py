@@ -1,13 +1,14 @@
+# -*- coding: utf-8 -*-
 from collections import namedtuple
+
 import pytest
 
+import sunpy.map
 import numpy as np
 import astropy.units as u
-import sunpy.map
 
 from ndcube import NDCube, NDCubeSequence
-from ndcube import cube_utils as cu
-from ndcube.wcs_util import WCS
+from ndcube.utils.wcs import WCS
 
 
 SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
