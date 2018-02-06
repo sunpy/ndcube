@@ -121,7 +121,7 @@ def get_sequence_items_from_int_item(int_item, n_cubes=None):
         which together represent the original input slice/index item.
 
     """
-    return [SequenceItem(int_item, cube_item)]
+    return [SequenceItem(int_item, slice(None))]
 
 
 @convert_item_to_sequence_items.register(slice)
@@ -150,7 +150,7 @@ def get_sequence_items_from_slice_item(slice_item, n_cubes):
     # If there are None types in slice, replace with correct entries based on sign of step.
     no_none_slice = convert_slice_nones_to_ints(slice_item, n_cubes)
     # Derive SequenceItems for each cube.
-    sequence_items = [SequenceItem(i, cube_item)
+    sequence_items = [SequenceItem(i, slice(None))
                       for i in range(no_none_slice.start, no_none_slice.stop, no_none_slice.step)]
     return sequence_items
 
