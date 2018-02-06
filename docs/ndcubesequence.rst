@@ -173,8 +173,9 @@ independently!) However, with `~ndcube.NDCubeSequence` this becomes as
 simple as indexing a single array::
 
   >>> ######### Due to a bug, this currently doesn't work! #########
-  >>> regions_of_interest_in_sequence = my_sequence[1:3, 0, 1:3, 1:4] # doctest: +SKIP
-  >>> regions_of_interest_in_sequence.dimensions # doctest: +SKIP
+  >>> regions_of_interest_in_sequence = my_sequence[1:3, 0, 1:3, 1:4]
+  >>> regions_of_interest_in_sequence.dimensions
+  SequenceDimensionPair(shape=(2, <Quantity 2. pix>, <Quantity 3. pix>), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE'))
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis
@@ -204,7 +205,7 @@ acheived by entering::
 
   >>> roi_from_single_subcube = my_sequence.index_as_cube[3:5, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
-    SequenceDimensionPair(shape=(1, <Quantity 1. pix>, <Quantity 3. pix>, <Quantity 5. pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))                                                                                                                  
+    DimensionPair(shape=<Quantity [2., 2., 3.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
 
 In this case the entire region came from a single sub-cube.  However,
 `~ndcube.NDCubeSequence.index_as_cube` also works when the region of
@@ -216,7 +217,7 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
 
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
-  SequenceDimensionPair(shape=(3, <Quantity 0. pix>, <Quantity 3. pix>, <Quantity 5. pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))                                                                                                                  
+  SequenceDimensionPair(shape=(3, <Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
 
 In both the examples above, an `~ndcube.NDCubeSequence` object is
 returned.  In the case of former example, this is despite the fact
