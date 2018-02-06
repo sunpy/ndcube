@@ -148,24 +148,10 @@ def get_sequence_items_from_slice_item(slice_item, n_cubes):
 
     """
     # If there are None types in slice, replace with correct entries based on sign of step.
-    if not slice_item.step:
-        step = 1
-    else:
-        step = slice_item.step
-    start = slice_item.start
-    stop = slice_item.stop
-    if step < 0:
-        if not slice_item.start:
-            start = n_cubes
-        if not slice_item.stop:
-            stop = 0
-    else:
-        if not slice_item.start:
-            start = 0
-        if not slice_item.stop:
-            stop = n_cubes
+    no_none_slice = convert_slice_nones_to_ints(slice_item, n_cubes)
     # Derive SequenceItems for each cube.
-    sequence_items = [SequenceItem(i, cube_item) for i in range(start, stop, step)]
+    sequence_items = [SequenceItem(i, cube_item)
+                      for i in range(no_none_slice.start, no_none_slice.stop, no_none_slice.step)]
     return sequence_items
 
 
