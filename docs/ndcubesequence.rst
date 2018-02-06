@@ -134,8 +134,7 @@ Analagous to `ndcube.NDCube.dimensions`, there is also a
 size and shape of an `~ndcube.NDCubeSequence` instance::
 
   >>> my_sequence.dimensions
-  SequenceDimensionPair(shape=(3, <Quantity 3.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
-
+  SequenceDimensionPair(shape=(3, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
 
 Like NDCube it returns a named tuple with a ``shape`` and ``axis_types``
 where the values of the 0th sub-cube are returned as
@@ -149,7 +148,7 @@ As the dimensions property returns a named tuple, the shape and axis
 types can be accessed directly::
 
   >>> my_sequence.dimensions.shape
-  (3, <Quantity 3.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>)
+  (3, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
   
   >>> my_sequence.dimensions.axis_types
   ('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE')
@@ -185,7 +184,7 @@ the 1st sub-cube - an NDCube is returned::
 
   >>> roi_from_single_subcube = my_sequence[1, 0:2, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
-  DimensionPair(shape=<Quantity [ 2., 2., 3.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
+  DimensionPair(shape=<Quantity [2., 2., 3.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
 
 If a common axis has been defined for the `~ndcube.NDCubeSequence` one
 can think of it as a contiguous data set with different sections along
@@ -205,7 +204,7 @@ acheived by entering::
 
   >>> roi_from_single_subcube = my_sequence.index_as_cube[3:5, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
-  SequenceDimensionPair(shape=(1, <Quantity 1.0 pix>, <Quantity 3.0 pix>, <Quantity 5.0 pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
+    SequenceDimensionPair(shape=(1, <Quantity 1. pix>, <Quantity 3. pix>, <Quantity 5. pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))                                                                                                                  
 
 In this case the entire region came from a single sub-cube.  However,
 `~ndcube.NDCubeSequence.index_as_cube` also works when the region of
@@ -217,7 +216,7 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
 
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
-  SequenceDimensionPair(shape=(3, <Quantity 0.0 pix>, <Quantity 3.0 pix>, <Quantity 5.0 pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))
+  SequenceDimensionPair(shape=(3, <Quantity 0. pix>, <Quantity 3. pix>, <Quantity 5. pix>), axis_types=('Sequence Axis', 'HPLN-TAN', 'HPLT-TAN', 'WAVE'))                                                                                                                  
 
 In both the examples above, an `~ndcube.NDCubeSequence` object is
 returned.  In the case of former example, this is despite the fact
@@ -306,9 +305,9 @@ dimensions.shape ``(3, <Quantity 3.0 pix>, <Quantity 4.0 pix>,
 
   >>> # Check old and new shapes of the squence
   >>> my_sequence.dimensions.shape
-  (3, <Quantity 3.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>)
+  (3, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
   >>> exploded_sequence.dimensions.shape
-  (9, <Quantity 4.0 pix>, <Quantity 5.0 pix>)
+  (9, <Quantity 4. pix>, <Quantity 5. pix>)
 
 Note that any cube axis can be input.  A common axis need not be
 defined.
