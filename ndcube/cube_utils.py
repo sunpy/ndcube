@@ -5,6 +5,7 @@
 
 from copy import deepcopy
 from collections import namedtuple
+from functools import singledispatch
 
 import numpy as np
 
@@ -73,6 +74,7 @@ def select_order(axtypes):
     return result
 
 
+@singledispatch
 def convert_item_to_sequence_items(item, n_cubes):
     """
     Converts NDCubeSequence __getitem__ item to list of SequenceSlice objects.
@@ -92,19 +94,15 @@ def convert_item_to_sequence_items(item, n_cubes):
         which together represent the original input slice/index item.
 
     """
-    cube_slice_default = slice(None)
-    if isinstance(item, int):
-        sequence_items = get_sequence_items_from_int_item(item, cube_slice_default)
-    elif isinstance(item, slice):
-        sequence_items = get_sequence_items_from_slice_item(item, cube_slice_default, n_cubes)
-    elif isinstance(item, tuple):
-        sequence_items = get_sequence_items_from_tuple_item(item, n_cubes)
-    else:
-        raise TypeError("Unrecognized slice type: {0}", item)
-    return sequence_items
+    # If type if the first input of this function does not match the
+    # type of first input of one of the below registered functions,
+    # raise an error.  Otherwise one of the below registered functions
+    # is executed.
+    raise TypeError("Unrecognized slice type: {0}", item)
 
 
-def get_sequence_items_from_int_item(int_item, cube_item):
+@convert_item_to_sequence_items.register(int)
+def get_sequence_items_from_int_item(int_item, n_cubes=None):
     """
     Converts int index of an NDCubeSequence to list of SequenceSlices.
 
@@ -126,7 +124,8 @@ def get_sequence_items_from_int_item(int_item, cube_item):
     return [SequenceItem(int_item, cube_item)]
 
 
-def get_sequence_items_from_slice_item(slice_item, cube_item, n_cubes):
+@convert_item_to_sequence_items.register(slice)
+def get_sequence_items_from_slice_item(slice_item, n_cubes):
     """
     Converts slice item of an NDCubeSequence to list of SequenceSlices.
 
@@ -170,6 +169,7 @@ def get_sequence_items_from_slice_item(slice_item, cube_item, n_cubes):
     return sequence_items
 
 
+@convert_item_to_sequence_items.register(tuple)
 def get_sequence_items_from_tuple_item(tuple_item, n_cubes):
     """
     Converts NDCubeSequence slice item tuple to list of SequenceSlice objects.
