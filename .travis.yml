@@ -67,8 +67,8 @@ matrix:
 
     include:
         # Try MacOS X
-        - os: osx
-          env: SETUP_CMD='test'
+        # - os: osx
+        #   env: SETUP_CMD='test'
 
         # Do a coverage test.
         - os: linux

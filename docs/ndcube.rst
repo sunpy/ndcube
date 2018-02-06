@@ -81,7 +81,7 @@ NDCube has a useful property for inspecting its data shape and
 axis types, `~ndcube.NDCube.dimensions`::
 
   >>> my_cube.dimensions
-  DimensionPair(shape=<Quantity [ 3., 4., 5.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
+  DimensionPair(shape=<Quantity [3., 4., 5.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
 
 This returns a named tuple with a ``shape`` and ``axis_types`` attribute.
 ``shape`` is an `~astropy.units.Quantity` of pixel units giving the
@@ -94,7 +94,7 @@ As the dimensions property returns a named tuple, the ``shape`` and
 ``axis_types`` can be accessed directly::
 
   >>> my_cube.dimensions.shape
-  <Quantity [ 3., 4., 5.] pix>
+  <Quantity [3., 4., 5.] pix>
   >>> my_cube.dimensions.axis_types
   ['HPLN-TAN', 'HPLT-TAN', 'WAVE']
 
@@ -236,14 +236,14 @@ Note that the ``axis`` value is now ``None`` because the dimensionality of the
 `~ndcube.NDCube` has been reduced via the slicing::
 
   >>> my_cube[0].dimensions.shape
-  <Quantity [ 4., 5.] pix>
+  <Quantity [4., 5.] pix>
 
 and so the ``time`` extra coordinate no longer corresponds to a data
 axis.  This would not have been the case if we had done the slicing
 so the length of the 0th axis was >1::
 
   >>> my_cube[0:2].dimensions.shape
-  <Quantity [ 2., 4., 5.] pix>
+  <Quantity [2., 4., 5.] pix>
   >>> my_cube[0:2].extra_coords
   {'time': {'axis': 0,
     'value': [datetime.datetime(2000, 1, 1, 0, 0),
@@ -344,9 +344,7 @@ as to those that were input, except that they are now in real world
 coordinates::
 
   >>> real_world_coords
-  [<Quantity [ 1.40006967, 2.6002542 ] deg>,
-   <Quantity [ 1.49986193, 2.99724799] deg>,
-   <Quantity [  1.10000000e-09,  1.16000000e-09] m>]
+  [<Quantity [1.40006967, 2.6002542 ] deg>, <Quantity [1.49986193, 2.99724799] deg>, <Quantity [1.10e-09, 1.16e-09] m>]
 
 The exact units used are defined within the `~ndcube.NDCube`
 instance's `~ndcube.wcs_util.WCS` object.  Once again, the coordinates
@@ -365,9 +363,7 @@ returned::
   ... [Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
   ...  Quantity(1.10000000e-09,  unit="m")])
   >>> pixel_coords
-  [<Quantity 2.0000000101029034 pix>,
-   <Quantity 2.9999999961693913 pix>,
-   <Quantity 3.999999999999993 pix>]
+  [<Quantity 2.00000001 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
 
 Both `~ndcube.NDCube.pixel_to_world` and
 `~ndcube.NDCube.world_to_pixel` have an additional optional kwarg,
