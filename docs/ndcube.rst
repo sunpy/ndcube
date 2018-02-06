@@ -218,18 +218,15 @@ itself another dictionary with keys ``'axis'`` and ``'value'`` giving the
 corresponding data axis number and coordinate value at each pixel as
 supplied by the user::
 
-  >>> my_cube.extra_coords
-  {'time': {'axis': 0,
-    'value': [datetime.datetime(2000, 1, 1, 0, 0),
-     datetime.datetime(2000, 1, 1, 0, 1),
-     datetime.datetime(2000, 1, 1, 0, 2)]}}
+  >>> my_cube.extra_coords # doctest: +SKIP
+  {'time': {'axis': 0, 'value': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 1, 1, 0, 1), datetime.datetime(2000, 1, 1, 0, 2)]}}
 
 Just like the data array and the WCS object, the extra coordinates are
 sliced automatically when the `~ndcube.NDCube` object is sliced.  So
 if we take the first slice of ``my_cube`` in the 0th axis, the extra
 time coordinate will only contain the value from that slice.::
 
-  >>> my_cube[0].extra_coords
+  >>> my_cube[0].extra_coords # doctest: +SKIP
   {'time': {'axis': None, 'value': datetime.datetime(2000, 1, 1, 0, 0)}}
 
 Note that the ``axis`` value is now ``None`` because the dimensionality of the
@@ -244,10 +241,8 @@ so the length of the 0th axis was >1::
 
   >>> my_cube[0:2].dimensions.shape
   <Quantity [2., 4., 5.] pix>
-  >>> my_cube[0:2].extra_coords
-  {'time': {'axis': 0,
-    'value': [datetime.datetime(2000, 1, 1, 0, 0),
-     datetime.datetime(2000, 1, 1, 0, 1)]}}
+  >>> my_cube[0:2].extra_coords # doctest: +SKIP
+  {'time': {'value': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 1, 1, 0, 1)], 'axis': 0}}
 
 Plotting
 --------

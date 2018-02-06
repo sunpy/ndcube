@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
 
 """Utilities for ndcube."""
 
@@ -75,7 +74,7 @@ def select_order(axtypes):
 
 
 @singledispatch
-def convert_item_to_sequence_items(item, n_cubes):
+def convert_item_to_sequence_items(item, n_cubes=None, cube_item=None):
     """
     Converts NDCubeSequence __getitem__ item to list of SequenceSlice objects.
 
@@ -85,7 +84,8 @@ def convert_item_to_sequence_items(item, n_cubes):
         An slice/index item compatible with input to NDCubeSequence.__getitem__.
 
     n_cubes: `int`
-        Number of cubes in NDCubeSequence being sliced.
+        Number of cubes in NDCubeSequence being sliced.  Must be supplied, but
+        not used if item type is `int` or `slice`.
 
     Returns
     -------
@@ -102,7 +102,7 @@ def convert_item_to_sequence_items(item, n_cubes):
 
 
 @convert_item_to_sequence_items.register(int)
-def get_sequence_items_from_int_item(int_item, n_cubes=None):
+def get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(None)):
     """
     Converts int index of an NDCubeSequence to list of SequenceSlices.
 
@@ -110,6 +110,10 @@ def get_sequence_items_from_int_item(int_item, n_cubes=None):
     ----------
     int_item: `int`
         index of NDCube within NDCubeSequence to be slices out.
+
+    n_cubes: `None`
+        Not used.  Exists in API to be consistent with API of convert_item_to_sequence_items()
+        to which it this function is registered under single dispatch.
 
     cube_item: `int`, `slice`, or `tuple`
         Item to be applied to selected NDCube.
@@ -121,11 +125,11 @@ def get_sequence_items_from_int_item(int_item, n_cubes=None):
         which together represent the original input slice/index item.
 
     """
-    return [SequenceItem(int_item, slice(None))]
+    return [SequenceItem(int_item, cube_item)]
 
 
 @convert_item_to_sequence_items.register(slice)
-def get_sequence_items_from_slice_item(slice_item, n_cubes):
+def get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None)):
     """
     Converts slice item of an NDCubeSequence to list of SequenceSlices.
 
@@ -134,11 +138,11 @@ def get_sequence_items_from_slice_item(slice_item, n_cubes):
     slice_item: `slice`
         Indicates which NDCubes within NDCubeSequence are to be slices out.
 
-    cube_item: `int`, `slice`, or `tuple`
-        Item to be applied to each selected NDCube.
-
     n_cubes: `int`
         Number of cubes in NDCubeSequence being sliced.
+
+    cube_item: `int`, `slice`, or `tuple`
+        Item to be applied to each selected NDCube.
 
     Returns
     -------
@@ -150,13 +154,13 @@ def get_sequence_items_from_slice_item(slice_item, n_cubes):
     # If there are None types in slice, replace with correct entries based on sign of step.
     no_none_slice = convert_slice_nones_to_ints(slice_item, n_cubes)
     # Derive SequenceItems for each cube.
-    sequence_items = [SequenceItem(i, slice(None))
+    sequence_items = [SequenceItem(i, cube_item)
                       for i in range(no_none_slice.start, no_none_slice.stop, no_none_slice.step)]
     return sequence_items
 
 
 @convert_item_to_sequence_items.register(tuple)
-def get_sequence_items_from_tuple_item(tuple_item, n_cubes):
+def get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
     """
     Converts NDCubeSequence slice item tuple to list of SequenceSlice objects.
 
@@ -169,6 +173,10 @@ def get_sequence_items_from_tuple_item(tuple_item, n_cubes):
 
     n_cubes: `int`
         Number of cubes in NDCubeSequence being sliced.
+
+    cube_item: `None`
+        Not used.  Exists in API to be consistent with API of convert_item_to_sequence_items()
+        to which it this function is registered under single dispatch.
 
     Returns
     -------
@@ -183,12 +191,8 @@ def get_sequence_items_from_tuple_item(tuple_item, n_cubes):
     else:
         cube_item = tuple_item[1:]
     # Based on type of sequence index, define sequence slices.
-    if isinstance(tuple_item[0], int):
-        sequence_items = get_sequence_items_from_int_item(tuple_item[0], cube_item)
-    elif isinstance(tuple_item[0], slice):
-        sequence_items = get_sequence_items_from_slice_item(tuple_item[0], cube_item, n_cubes)
-    else:
-        raise TypeError("Unrecognized sequence slice type: {0}".format(tuple_item[0]))
+    sequence_items = convert_item_to_sequence_items(tuple_item[0], n_cubes=n_cubes,
+                                                    cube_item=cube_item)
     return sequence_items
 
 
