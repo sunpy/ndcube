@@ -2,8 +2,7 @@ import copy
 
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 
-from ndcube import wcs_util
-from ndcube import cube_utils
+from ndcube import utils
 
 __all__ = ['NDCubeSlicingMixin']
 
@@ -53,7 +52,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
     def _slice_wcs_missing_axis(self, item):
         # here missing axis is reversed as the item comes already in the reverse order
         # of the input
-        return wcs_util._wcs_slicer(
+        return utils.wcs._wcs_slicer(
             self.wcs, copy.deepcopy(self.missing_axis[::-1]), item)
 
     def _slice_extra_coords(self, item, missing_axis):
@@ -102,7 +101,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         for name in coord_names:
             coord_keys = list(extra_coords[name].keys())
             if "wcs axis" in coord_keys and "axis" not in coord_keys:
-                axis = cube_utils.wcs_axis_to_data_axis(extra_coords[name]["wcs axis"],
+                axis = utils.cube.wcs_axis_to_data_axis(extra_coords[name]["wcs axis"],
                                                         missing_axis)
             elif "axis" in coord_keys and "wcs axis" not in coord_keys:
                 axis = extra_coords[name]["axis"]

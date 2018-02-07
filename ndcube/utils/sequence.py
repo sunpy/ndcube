@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""Utilities for ndcube."""
+"""
+Utilities for ndcube sequence.
+"""
 
 from copy import deepcopy
 from collections import namedtuple
@@ -8,69 +10,26 @@ from functools import singledispatch
 
 import numpy as np
 
-from ndcube import wcs_util
 
-# Define SequenceSlice named tuple of length 2. Its attributes are:
-# sequence_index: an int giving the index of a cube within an NDCubeSequence.
-# common_axis_item: slice of int index of to be to be applied to the common
-# axis of the cube.
+__all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items', 'slice_sequence',
+           'index_sequence_as_cube', 'convert_cube_like_item_to_sequence_items',
+           'convert_slice_nones_to_ints']
+
+
 SequenceSlice = namedtuple("SequenceSlice", "sequence_index common_axis_item")
-# Define SequenceItem named tuple of length 2. Its attributes are:
-# sequence_index: an int giving the index of a cube within an NDCubeSequence.
-# cube_item: item (int, slice, tuple) to be applied to cube identified
-# by sequence_index attribute.
+"""
+Define SequenceSlice named tuple of length 2. Its attributes are:
+sequence_index: an int giving the index of a cube within an NDCubeSequence.
+common_axis_item: slice of int index of to be to be applied to the common
+axis of the cube.
+"""
 SequenceItem = namedtuple("SequenceItem", "sequence_index cube_item")
-
-
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis',
-           'select_order',
-           'get_cube_from_sequence', 'index_sequence_as_cube']
-
-
-def data_axis_to_wcs_axis(data_axis, missing_axis):
-    """Converts a data axis number to the corresponding wcs axis number."""
-    if data_axis is None:
-        result = None
-    else:
-        result = len(missing_axis)-np.where(np.cumsum(
-            [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
-    return result
-
-
-def wcs_axis_to_data_axis(wcs_axis, missing_axis):
-    """Converts a wcs axis number to the corresponding data axis number."""
-    if wcs_axis is None:
-        result = None
-    else:
-        if missing_axis[wcs_axis]:
-            result = None
-        else:
-            data_ordered_wcs_axis = len(missing_axis)-wcs_axis-1
-            result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
-    return result
-
-
-def select_order(axtypes):
-    """
-    Returns the indices of the correct axis priority for the given list of WCS
-    CTYPEs. For example, given ['HPLN-TAN', 'TIME', 'WAVE'] it will return
-    [1, 2, 0] because index 1 (time) has the highest priority, followed by
-    wavelength and finally solar-x. When two or more celestial axes are in the
-    list, order is preserved between them (i.e. only TIME, UTC and WAVE are
-    moved)
-
-    Parameters
-    ----------
-    axtypes: str list
-        The list of CTYPEs to be modified.
-    """
-    order = [(0, t) if t in ['TIME', 'UTC'] else
-             (1, t) if t == 'WAVE' else
-             (2, t) if t == 'HPLT-TAN' else
-             (axtypes.index(t) + 3, t) for t in axtypes]
-    order.sort()
-    result = [axtypes.index(s) for (_, s) in order]
-    return result
+"""
+Define SequenceItem named tuple of length 2. Its attributes are:
+sequence_index: an int giving the index of a cube within an NDCubeSequence.
+cube_item: item (int, slice, tuple) to be applied to cube identified
+by sequence_index attribute.
+"""
 
 
 @singledispatch
@@ -252,7 +211,8 @@ def index_sequence_as_cube(cubesequence, item):
     >>> # return zeroth time slice of cubeB in via normal CubeSequence indexing.
     >>> cs[1,:,0,:] # doctest: +SKIP
     >>> # Return same slice using this function
-    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0, (slice(0, cubeB.shape[2])) # doctest: +SKIP
+    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0,
+    ...                             (slice(0, cubeB.shape[2])) # doctest: +SKIP
 
     """
     # Convert index_as_cube item to a list of regular NDCubeSequence
@@ -422,8 +382,6 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
         sequence_int_indices[i] = one_step_sequence_slices[i].sequence_index
     unique_index = np.sort(np.unique(sequence_int_indices, return_index=True)[1])
     unique_sequence_indices = sequence_int_indices[unique_index]
-    # Get cumulative cube lengths of selected cubes.
-    unique_cumul_cube_lengths = cumul_cube_lengths[unique_sequence_indices]
     # Convert start and stop cube-like indices to sequence indices.
     first_sequence_index = _convert_cube_like_index_to_sequence_slice(cube_like_slice.start,
                                                                       cube_lengths)
@@ -455,8 +413,8 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
         # Let i be the index along the sequence axis of the next relevant cube.
         i = unique_sequence_indices[j]
         # Determine last common axis index for this cube.
-        common_axis_last_index = \
-          cube_lengths[i] - ((cube_lengths[i] - common_axis_start_index) % step)
+        common_axis_last_index = cube_lengths[i] - (
+            (cube_lengths[i] - common_axis_start_index) % step)
         # Generate SequenceSlice for this cube and append to list.
         sequence_slices.append(
             SequenceSlice(i, slice(common_axis_start_index,
@@ -562,72 +520,3 @@ def convert_slice_nones_to_ints(slice_item, target_length):
         if not slice_item.stop:
             stop = int(target_length)
     return slice(start, stop, step)
-
-
-def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_axis,
-                                                        data_shape):
-    extra_coords_wcs_axis = {}
-    coord_format_error = ("Coord must have three properties supplied, "
-                            "name (str), axis (int), values (Quantity or array-like)."
-                            " Input coord: {0}")
-    coord_0_format_error = ("1st element of extra coordinate tuple must be a "
-                            "string giving the coordinate's name.")
-    coord_1_format_error = ("2nd element of extra coordinate tuple must be None "
-                            "or an int giving the data axis "
-                            "to which the coordinate corresponds.")
-    coord_len_error = ("extra coord ({0}) must have same length as data axis "
-                        "to which it is assigned: coord length, {1} != data axis length, {2}")
-    for coord in extra_coords:
-        # Check extra coord has the right number and types of info.
-        if len(coord) != 3:
-            raise ValueError(coord_format_error.format(coord))
-        if not isinstance(coord[0], str):
-            raise ValueError(coord_0_format_error.format(coord))
-        if coord[1] is not None and not isinstance(coord[1], int) and \
-                not isinstance(coord[1], np.int64):
-            raise ValueError(coord_1_format_error)
-        # Unless extra coord corresponds to a missing axis, check length
-        # of coord is same is data axis to which is corresponds.
-        if coord[1] is not None:
-            if not missing_axis[::-1][coord[1]]:
-
-                if len(coord[2]) != data_shape[coord[1]]:
-                    raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
-                                                            data_shape[coord[1]]))
-        # Determine wcs axis corresponding to data axis of coord
-        extra_coords_wcs_axis[coord[0]] = {
-            "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axis),
-            "value": coord[2]}
-    return extra_coords_wcs_axis
-
-
-def assert_extra_coords_equal(test_input, extra_coords):
-    assert test_input.keys() == extra_coords.keys()
-    for key in list(test_input.keys()):
-        assert test_input[key]['axis'] == extra_coords[key]['axis']
-        assert (test_input[key]['value'] == extra_coords[key]['value']).all()
-
-def assert_metas_equal(test_input, expected_output):
-    assert test_input.keys() == expected_output.keys()
-    for key in list(test_input.keys()):
-        assert test_input[key] == expected_output[key]
-
-
-def assert_cubes_equal(test_input, expected_cube):
-    assert type(test_input) == type(expected_cube)
-    assert np.all(test_input.mask == expected_cube.mask)
-    wcs_util.assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
-    assert test_input.missing_axis == expected_cube.missing_axis
-    assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
-    assert test_input.dimensions[1] == expected_cube.dimensions[1]
-    assert np.all(test_input.dimensions[0].value == expected_cube.dimensions[0].value)
-    assert test_input.dimensions[0].unit == expected_cube.dimensions[0].unit
-    assert_extra_coords_equal(test_input._extra_coords, expected_cube._extra_coords)
-
-
-def assert_cubesequences_equal(test_input, expected_sequence):
-    assert type(test_input) == type(expected_sequence)
-    assert_metas_equal(test_input.meta, expected_sequence.meta)
-    assert test_input._common_axis == expected_sequence._common_axis
-    for i, cube in enumerate(test_input.data):
-        assert_cubes_equal(cube, expected_sequence.data[i])
