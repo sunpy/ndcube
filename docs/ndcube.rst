@@ -49,7 +49,7 @@ whole.  (See section on :ref:`ndcube_slicing`.)  So the ``.data`` attribute
 should only be used to access a specific value(s) in the data.
 Another thing to note is that as part of the initialization, the WCS
 object is converted from an `astropy.wcs.WCS` to an
-`ndcube.wcs_util.WCS` object which has some additional features for
+`ndcube.utils.wcs.WCS` object which has some additional features for
 tracking "missing axes", etc. (See section on :ref:`missing_axes`.)
 
 Thanks to the fact that `~ndcube.NDCube` is subclassed from
@@ -342,7 +342,7 @@ coordinates::
   [<Quantity [1.40006967, 2.6002542 ] deg>, <Quantity [1.49986193, 2.99724799] deg>, <Quantity [1.10e-09, 1.16e-09] m>]
 
 The exact units used are defined within the `~ndcube.NDCube`
-instance's `~ndcube.wcs_util.WCS` object.  Once again, the coordinates
+instance's `~ndcube.utils.wcs.WCS` object.  Once again, the coordinates
 of the nth pixel is given by the nth element of each of the
 `~astropy.units.Quantity` objects returned.
 
@@ -350,7 +350,7 @@ Using `~ndcube.NDCube.world_to_pixel` to convert real world
 coordinates to pixel coordinates is exactly the same, but in reverse.
 This time the input `~astropy.units.Quantity` objects must be in real
 world coordinates compatible with those defined in the
-`~ndcube.NDCube` instance's `~ndcube.wcs_util.WCS` object.  The output
+`~ndcube.NDCube` instance's `~ndcube.utils.wcs.WCS` object.  The output
 is a list of `~astropy.units.Quantity` objects in pixel units is
 returned::
 

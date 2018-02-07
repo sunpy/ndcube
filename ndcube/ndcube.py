@@ -2,14 +2,14 @@
 
 import abc
 
-import astropy.units as u
-import astropy.nddata
-from astropy.utils.misc import InheritDocstrings
 import numpy as np
+import astropy.nddata
+import astropy.units as u
+from astropy.utils.misc import InheritDocstrings
+
 import sunpy.map
 
-from ndcube import cube_utils
-from ndcube import wcs_util
+from ndcube import utils
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 from ndcube import DimensionPair
 
@@ -205,7 +205,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                                  "wcs non-missing axes do not match.")
         # Format extra coords.
         if extra_coords:
-            self._extra_coords_wcs_axis = cube_utils._format_input_extra_coords_to_extra_coords_wcs_axis(
+            self._extra_coords_wcs_axis = utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
                 extra_coords, self.missing_axis, data.shape)
         else:
             self._extra_coords_wcs_axis = None
@@ -345,7 +345,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
             result = {}
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
-                    "axis": cube_utils.wcs_axis_to_data_axis(
+                    "axis": utils.cube.wcs_axis_to_data_axis(
                         self._extra_coords_wcs_axis[key]["wcs axis"],
                         self.missing_axis),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
@@ -412,10 +412,10 @@ class NDCubeOrdered(NDCube):
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
                  unit=None, copy=False, missing_axis=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)
-        array_order = cube_utils.select_order(axtypes)
+        array_order = utils.cube.select_order(axtypes)
         result_data = data.transpose(array_order)
         wcs_order = np.array(array_order)[::-1]
-        result_wcs = wcs_util.reindex_wcs(wcs, wcs_order)
+        result_wcs = utils.wcs.reindex_wcs(wcs, wcs_order)
 
         super().__init__(result_data, result_wcs, uncertainty=uncertainty,
                          mask=mask, meta=meta, unit=unit, copy=copy,
