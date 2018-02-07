@@ -33,8 +33,8 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Parameters
         ----------
-        quantity_axis_list : `list`
-            A list of `~astropy.units.Quantity` with unit as pixel `pix`.
+        quantity_axis_list : iterable
+            An iterable of `~astropy.units.Quantity` with unit as pixel `pix`.
 
         origin : `int`.
             Origin of the top-left corner. i.e. count from 0 or 1.
@@ -58,8 +58,8 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Parameters
         ----------
-        quantity_axis_list : `list`
-            A list of `~astropy.units.Quantity`.
+        quantity_axis_list : iterable
+            A iterable of `~astropy.units.Quantity`.
 
         origin : `int`
             Origin of the top-left corner. i.e. count from 0 or 1.
@@ -91,7 +91,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Parameters
         ----------
-        min_coord_values: `list` of `astropy.units.Quantity`
+        min_coord_values: iterable of `astropy.units.Quantity`
             The minimum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
             The length of the iterable must equal the number of data dimensions and must
@@ -115,19 +115,21 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Parameters
         ----------
-        min_coord_value: Single value of type consistent with the extra coord.
+        min_coord_value: Single value `astropy.units.Quantity`
             The minimum desired value of the extra coord after cropping.
+            Unit must be consistent with the extra coord on which cropping is based.
 
-        interval_width: Single value of type consistent with the extra coord.
+        interval_width: Single value `astropy.units.Quantity`
             The width of the interval along the extra coord axis in physical units
-            consistent with the extra coord.
+            consistent with the extra coord.  Unit must be consistent with the extra
+            coord on which cropping is based.
 
         extra_coord: `str`
             Name of extra coord.
 
         Returns
         -------
-        result: NDCube
+        result: `ndcube.NDCube`
 
         """
 
