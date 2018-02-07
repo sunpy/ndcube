@@ -137,6 +137,34 @@ Axis Types of 1st NDCube: {axis_type}
             common_extra_coords = None
         return common_extra_coords
 
+
+    @property
+    def sequence_axis_extra_coords(self):
+        # Identify all extra coord names not assigned to a cube data axis.
+        sequence_coord_names = []
+        for cube in self.data:
+            all_extra_coords = cube.extra_coords
+            all_extra_coords_keys = list(all_extra_coords.keys())
+            for coord_key in all_extra_coords_keys:
+                if all_extra_coords[coord_key]["axis"] is None:
+                    sequence_coord_names.append(coord_key)
+        sequence_coord_names = set(sequence_coord_names)
+        # Define empty dictionary which will hold the extra coord
+        # values not assigned a cube data axis.
+        sequence_extra_coords = dict([(coord_key, np.empty(len(self.data), dtype=object))
+                                      for coord_key in sequence_coord_names])
+        # Iterate through cubes and populate values of each extra coord
+        # not assigned a cube data axis.
+        for i, cube in enumerate(self.data):
+            cube_extra_coords = cube.extra_coords
+            for coord_key in sequence_coord_names:
+                try:
+                    sequence_extra_coords[coord_key][i] = cube_extra_coords[coord_key]["value"]
+                except KeyError:
+                    sequence_extra_coords[coord_key][i] = None
+        return sequence_extra_coords
+
+
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """
