@@ -4,8 +4,8 @@ import astropy.units as u
 import sunpy.map
 from sunpy.map import MapCube
 
-from ndcube import cube_utils
-from ndcube import DimensionPair, SequenceDimensionPair
+from ndcube import utils
+from ndcube import SequenceDimensionPair
 from ndcube.visualization import animation as ani
 
 __all__ = ['NDCubeSequence']
@@ -40,8 +40,8 @@ class NDCubeSequence:
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
         # Convert item to list of SequenceSlices
-        sequence_items = cube_utils.convert_item_to_sequence_items(item, len(self.data))
-        return cube_utils.slice_sequence(self, sequence_items)
+        sequence_items = utils.sequence.convert_item_to_sequence_items(item, len(self.data))
+        return utils.sequence.slice_sequence(self, sequence_items)
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
@@ -110,8 +110,8 @@ Axis Types of 1st NDCube: {axis_type}
             raise TypeError("Common axis must be set.")
         dimensions = self.dimensions
         shape_list_one_cube = list(dimensions.shape[1:])
-        shape_list_one_cube[self._common_axis] = \
-          dimensions.shape[0]*shape_list_one_cube[self._common_axis]
+        shape_list_one_cube[self._common_axis] = (dimensions.shape[0] *
+                                                  shape_list_one_cube[self._common_axis])
         return SequenceDimensionPair(shape=tuple(shape_list_one_cube),
                                      axis_types=dimensions.axis_types[1:])
 
@@ -185,4 +185,4 @@ class _IndexAsCubeSlicer:
         self.seq = seq
 
     def __getitem__(self, item):
-        return cube_utils.index_sequence_as_cube(self.seq, item)
+        return utils.sequence.index_sequence_as_cube(self.seq, item)
