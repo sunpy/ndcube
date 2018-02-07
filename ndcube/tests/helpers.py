@@ -31,13 +31,13 @@ def assert_metas_equal(test_input, expected_output):
 def assert_cubes_equal(test_input, expected_cube):
     assert type(test_input) == type(expected_cube)
     assert np.all(test_input.mask == expected_cube.mask)
-    utils.wcs.assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
+    assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     assert test_input.missing_axis == expected_cube.missing_axis
     assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert test_input.dimensions[1] == expected_cube.dimensions[1]
     assert np.all(test_input.dimensions[0].value == expected_cube.dimensions[0].value)
     assert test_input.dimensions[0].unit == expected_cube.dimensions[0].unit
-    assert_extra_coords_equal(test_input._extra_coords, expected_cube._extra_coords)
+    assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
 
 
 def assert_cubesequences_equal(test_input, expected_sequence):
