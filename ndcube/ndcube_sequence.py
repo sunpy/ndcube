@@ -137,7 +137,6 @@ Axis Types of 1st NDCube: {axis_type}
             common_extra_coords = None
         return common_extra_coords
 
-
     @property
     def sequence_axis_extra_coords(self):
         # Identify all extra coord names not assigned to a cube data axis.
@@ -163,7 +162,6 @@ Axis Types of 1st NDCube: {axis_type}
                 except KeyError:
                     sequence_extra_coords[coord_key][i] = None
         return sequence_extra_coords
-
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
