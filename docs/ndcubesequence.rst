@@ -172,7 +172,6 @@ objects, masks, uncertainty arrays, etc. would all have to be sliced
 independently!) However, with `~ndcube.NDCubeSequence` this becomes as
 simple as indexing a single array::
 
-  >>> ######### Due to a bug, this currently doesn't work! #########
   >>> regions_of_interest_in_sequence = my_sequence[1:3, 0, 1:3, 1:4]
   >>> regions_of_interest_in_sequence.dimensions
   SequenceDimensionPair(shape=(2, <Quantity 2. pix>, <Quantity 3. pix>), axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE'))
