@@ -315,7 +315,10 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         # The docstring is defined in NDDataBase
 
         extra_coord_dict = self.extra_coords[coord_name]
-        extra_coord_values = np.asarray(extra_coord_dict["value"])
+        if isinstance(extra_coord_dict["value"], u.Quantity):
+            extra_coord_values = extra_coord_dict["value"]
+        else:
+            extra_coord_values = np.asarray(extra_coord_dict["value"])
         w = np.logical_and(extra_coord_values >= min_coord_value,
                            extra_coord_values < min_coord_value + interval_width)
         w = np.arange(len(extra_coord_values))[w]

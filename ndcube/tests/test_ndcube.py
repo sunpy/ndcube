@@ -11,7 +11,7 @@ import astropy.units as u
 
 from ndcube import NDCube
 from ndcube.utils.wcs import WCS, _wcs_slicer
-from ndcube.tests.helpers import assert_wcs_are_equal, assert_extra_coords_equal
+from ndcube.tests import helpers
 
 DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 
@@ -401,13 +401,13 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                              dimensions, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    assert_wcs_are_equal(test_input.wcs, wcs[0])
+    helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axis == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    assert_extra_coords_equal(test_input.extra_coords, extra_coords)
+    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize(
@@ -577,13 +577,13 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                             dimensions, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    assert_wcs_are_equal(test_input.wcs, wcs[0])
+    helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axis == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    assert_extra_coords_equal(test_input.extra_coords, extra_coords)
+    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize(
@@ -1167,13 +1167,13 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty,
                             dimensions, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    assert_wcs_are_equal(test_input.wcs, wcs[0])
+    helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axis == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert test_input.dimensions[1] == dimensions[1]
     assert np.all(test_input.dimensions[0].value == dimensions[0].value)
     assert test_input.dimensions[0].unit == dimensions[0].unit
-    assert_extra_coords_equal(test_input.extra_coords, extra_coords)
+    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -1372,3 +1372,13 @@ def test_to_sunpy(test_input, expected):
 def test_to_sunpy_error(test_input):
     with pytest.raises(NotImplementedError):
         test_input.to_sunpy()
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [((cubem, 0*u.pix, 1.5*u.pix, "time"), cubem[0:2]),
+     ((cube, 0*u.pix, 1.5*u.pix, "bye"), cube[:, :, 0:2])])
+def test_crop_by_extra_coord(test_input, expected):
+    print(test_input[0].crop_by_extra_coord(*tuple(test_input[1:])))
+    print(expected.mask)
+    helpers.assert_cubes_equal(
+        test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
