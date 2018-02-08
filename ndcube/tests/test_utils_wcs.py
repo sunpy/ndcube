@@ -3,6 +3,18 @@ import pytest
 
 from ndcube import utils
 
+
+def test_wcs_needs_augmenting():
+    pass
+
+
+def test_wcs_augment():
+    pass
+
+
+def test_wcs_slicer():
+    pass
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [({}, False),

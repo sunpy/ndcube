@@ -1176,6 +1176,14 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty,
     assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
+@pytest.mark.parametrize("test_input", [(cubem)])
+def test_slicing_error(test_input):
+    with pytest.raises(IndexError):
+        test_input[None]
+    with pytest.raises(IndexError):
+        test_input[0, None]
+
+
 @pytest.mark.parametrize("test_input,expected", [
     (cubem[1].pixel_to_world([
         u.Quantity(np.arange(4), unit=u.pix),

@@ -1,55 +1,32 @@
 # -*- coding: utf-8 -*-
 import pytest
-import numpy as np
 
 from ndcube import utils
 
-ht = {
-    'CTYPE1': 'HPLT-TAN',
-    'CUNIT1': 'deg',
-    'CDELT1': 0.5,
-    'CRPIX1': 0,
-    'CRVAL1': 0,
-    'NAXIS1': 2,
-    'CTYPE2': 'WAVE    ',
-    'CUNIT2': 'Angstrom',
-    'CDELT2': 0.2,
-    'CRPIX2': 0,
-    'CRVAL2': 0,
-    'NAXIS2': 3,
-    'CTYPE3': 'TIME    ',
-    'CUNIT3': 'min',
-    'CDELT3': 0.4,
-    'CRPIX3': 0,
-    'CRVAL3': 0,
-    'NAXIS3': 4
-}
-wt = utils.wcs.WCS(header=ht, naxis=3)
+missing_axis_none = [False]*3
+missing_axis_0_2 = [True, False, True]
+missing_axis_1 = [False, True, False]
 
-hm = {
-    'CTYPE1': 'WAVE    ',
-    'CUNIT1': 'Angstrom',
-    'CDELT1': 0.2,
-    'CRPIX1': 0,
-    'CRVAL1': 10,
-    'NAXIS1': 4,
-    'CTYPE2': 'HPLT-TAN',
-    'CUNIT2': 'deg',
-    'CDELT2': 0.5,
-    'CRPIX2': 2,
-    'CRVAL2': 0.5,
-    'NAXIS2': 3,
-    'CTYPE3': 'HPLN-TAN',
-    'CUNIT3': 'deg',
-    'CDELT3': 0.4,
-    'CRPIX3': 2,
-    'CRVAL3': 1,
-    'NAXIS3': 2,
-}
-wm = utils.wcs.WCS(header=hm, naxis=3)
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [((None, missing_axis_none), None),
+     ((0, missing_axis_none), 2),
+     ((1, missing_axis_none), 1),
+     ((0, missing_axis_0_2), 1),
+     ((1, missing_axis_1), 0)])
+def test_data_axis_to_wcs_axis(test_input, expected):
+    assert utils.cube.data_axis_to_wcs_axis(*test_input) == expected
 
-data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
-                 [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [((None, missing_axis_none), None),
+     ((0, missing_axis_none), 2),
+     ((1, missing_axis_none), 1),
+     ((1, missing_axis_0_2), 0),
+     ((0, missing_axis_1), 1)])
+def test_wcs_axis_to_data_axis(test_input, expected):
+    assert utils.cube.wcs_axis_to_data_axis(*test_input) == expected
 
 
 def test_select_order():
@@ -72,36 +49,12 @@ def test_select_order():
         assert utils.cube.select_order(l) == r
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ((5, np.array([8] * 4)), utils.sequence.SequenceSlice(0, 5)),
-    ((8, np.array([8] * 4)), utils.sequence.SequenceSlice(1, 0)),
-    ((20, np.array([8] * 4)), utils.sequence.SequenceSlice(2, 4)),
-    ((50, np.array([8] * 4)), utils.sequence.SequenceSlice(3, 8)),
-])
-def test_convert_cube_like_index_to_sequence_slice(test_input, expected):
-    assert utils.sequence._convert_cube_like_index_to_sequence_slice(
-        *test_input) == expected
-
-
-@pytest.mark.parametrize("test_input,expected",
-                         [((slice(2, 5), np.array([8] * 4)),
-                           [utils.sequence.SequenceSlice(0, slice(2, 5, 1))]),
-                          ((slice(5, 15), np.array([8] * 4)), [
-                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
-                              utils.sequence.SequenceSlice(1, slice(0, 7, 1))
-                          ]), ((slice(5, 16), np.array([8] * 4)), [
-                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
-                              utils.sequence.SequenceSlice(1, slice(0, 8, 1))
-                          ]), ((slice(5, 23), np.array([8] * 4)), [
-                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
-                              utils.sequence.SequenceSlice(1, slice(0, 8, 1)),
-                              utils.sequence.SequenceSlice(2, slice(0, 7, 1))
-                          ]), ((slice(5, 100), np.array([8] * 4)), [
-                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
-                              utils.sequence.SequenceSlice(1, slice(0, 8, 1)),
-                              utils.sequence.SequenceSlice(2, slice(0, 8, 1)),
-                              utils.sequence.SequenceSlice(3, slice(0, 8, 1))
-                          ])])
-def test_convert_cube_like_slice_to_sequence_slices(test_input, expected):
-    assert utils.sequence._convert_cube_like_slice_to_sequence_slices(
-        *test_input) == expected
+@pytest.mark.parametrize(
+    "test_input",
+    [([('name', 0)], [False, False], (1, 2)),
+      ([(0, 0, 0)], [False, False], (1, 2)),
+      ([('name', '0', 0)], [False, False], (1, 2)),
+      ([('name', 0, [0, 1])], [False, False], (1, 2))])
+def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
+    with pytest.raises(ValueError):
+        utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(*test_input)
