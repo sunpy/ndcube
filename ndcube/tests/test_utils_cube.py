@@ -1,0 +1,107 @@
+# -*- coding: utf-8 -*-
+import pytest
+import numpy as np
+
+from ndcube import utils
+
+ht = {
+    'CTYPE1': 'HPLT-TAN',
+    'CUNIT1': 'deg',
+    'CDELT1': 0.5,
+    'CRPIX1': 0,
+    'CRVAL1': 0,
+    'NAXIS1': 2,
+    'CTYPE2': 'WAVE    ',
+    'CUNIT2': 'Angstrom',
+    'CDELT2': 0.2,
+    'CRPIX2': 0,
+    'CRVAL2': 0,
+    'NAXIS2': 3,
+    'CTYPE3': 'TIME    ',
+    'CUNIT3': 'min',
+    'CDELT3': 0.4,
+    'CRPIX3': 0,
+    'CRVAL3': 0,
+    'NAXIS3': 4
+}
+wt = utils.wcs.WCS(header=ht, naxis=3)
+
+hm = {
+    'CTYPE1': 'WAVE    ',
+    'CUNIT1': 'Angstrom',
+    'CDELT1': 0.2,
+    'CRPIX1': 0,
+    'CRVAL1': 10,
+    'NAXIS1': 4,
+    'CTYPE2': 'HPLT-TAN',
+    'CUNIT2': 'deg',
+    'CDELT2': 0.5,
+    'CRPIX2': 2,
+    'CRVAL2': 0.5,
+    'NAXIS2': 3,
+    'CTYPE3': 'HPLN-TAN',
+    'CUNIT3': 'deg',
+    'CDELT3': 0.4,
+    'CRPIX3': 2,
+    'CRVAL3': 1,
+    'NAXIS3': 2,
+}
+wm = utils.wcs.WCS(header=hm, naxis=3)
+
+data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
+                 [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
+
+
+def test_select_order():
+    lists = [['TIME', 'WAVE', 'HPLT-TAN',
+              'HPLN-TAN'], ['WAVE', 'HPLT-TAN', 'UTC',
+                            'HPLN-TAN'], ['HPLT-TAN', 'TIME', 'HPLN-TAN'],
+             ['HPLT-TAN', 'DEC--TAN',
+              'WAVE'], [], ['UTC', 'TIME', 'WAVE', 'HPLT-TAN']]
+
+    results = [
+        [0, 1, 2, 3],
+        [2, 0, 1, 3],
+        [1, 0, 2],  # Second order is initial order
+        [2, 0, 1],
+        [],
+        [1, 0, 2, 3]
+    ]
+
+    for (l, r) in zip(lists, results):
+        assert utils.cube.select_order(l) == r
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((5, np.array([8] * 4)), utils.sequence.SequenceSlice(0, 5)),
+    ((8, np.array([8] * 4)), utils.sequence.SequenceSlice(1, 0)),
+    ((20, np.array([8] * 4)), utils.sequence.SequenceSlice(2, 4)),
+    ((50, np.array([8] * 4)), utils.sequence.SequenceSlice(3, 8)),
+])
+def test_convert_cube_like_index_to_sequence_slice(test_input, expected):
+    assert utils.sequence._convert_cube_like_index_to_sequence_slice(
+        *test_input) == expected
+
+
+@pytest.mark.parametrize("test_input,expected",
+                         [((slice(2, 5), np.array([8] * 4)),
+                           [utils.sequence.SequenceSlice(0, slice(2, 5, 1))]),
+                          ((slice(5, 15), np.array([8] * 4)), [
+                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
+                              utils.sequence.SequenceSlice(1, slice(0, 7, 1))
+                          ]), ((slice(5, 16), np.array([8] * 4)), [
+                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
+                              utils.sequence.SequenceSlice(1, slice(0, 8, 1))
+                          ]), ((slice(5, 23), np.array([8] * 4)), [
+                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
+                              utils.sequence.SequenceSlice(1, slice(0, 8, 1)),
+                              utils.sequence.SequenceSlice(2, slice(0, 7, 1))
+                          ]), ((slice(5, 100), np.array([8] * 4)), [
+                              utils.sequence.SequenceSlice(0, slice(5, 8, 1)),
+                              utils.sequence.SequenceSlice(1, slice(0, 8, 1)),
+                              utils.sequence.SequenceSlice(2, slice(0, 8, 1)),
+                              utils.sequence.SequenceSlice(3, slice(0, 8, 1))
+                          ])])
+def test_convert_cube_like_slice_to_sequence_slices(test_input, expected):
+    assert utils.sequence._convert_cube_like_slice_to_sequence_slices(
+        *test_input) == expected
