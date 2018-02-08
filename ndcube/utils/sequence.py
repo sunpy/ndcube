@@ -510,9 +510,9 @@ def convert_slice_nones_to_ints(slice_item, target_length):
     start = slice_item.start
     stop = slice_item.stop
     if step < 0:
-        if not slice_item.start:
+        if slice_item.start is None:
             start = int(target_length)
-        if not slice_item.stop:
+        if slice_item.stop is None:
             stop = 0
     else:
         if not slice_item.start:
