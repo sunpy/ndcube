@@ -1378,7 +1378,5 @@ def test_to_sunpy_error(test_input):
     [((cubem, 0*u.pix, 1.5*u.pix, "time"), cubem[0:2]),
      ((cube, 0*u.pix, 1.5*u.pix, "bye"), cube[:, :, 0:2])])
 def test_crop_by_extra_coord(test_input, expected):
-    print(test_input[0].crop_by_extra_coord(*tuple(test_input[1:])))
-    print(expected.mask)
     helpers.assert_cubes_equal(
         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
