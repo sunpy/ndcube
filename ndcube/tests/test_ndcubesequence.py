@@ -2,6 +2,7 @@
 from collections import namedtuple
 import pytest
 import datetime
+import unittest
 
 import sunpy.map
 import numpy as np
@@ -42,30 +43,30 @@ cube1 = NDCube(data, wt, missing_axis=[False, False, False, True], extra_coords=
     ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube2 = NDCube(data, wm, extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data.shape[0]), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data.shape[0]+1), unit=u.pix) +
      cube1.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(1, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
 cube3 = NDCube(data2, wt, missing_axis=[False, False, False, True], extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(2, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube4 = NDCube(data2, wm, extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
      cube3.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(3, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 3))])
 
 cube2_no_no = NDCube(data, wm, extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data.shape[0]), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data.shape[0]+1), unit=u.pix) +
      cube1.extra_coords['pix']['value'][-1]),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
 cube3_no_time = NDCube(data2, wt, missing_axis=[False, False, False, True], extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(2, unit=u.cm))])
 
@@ -83,7 +84,18 @@ cube3_diff_incompatible_unit = NDCube(
     ('distance', None, u.Quantity(2, unit=u.s)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
+cube1_time_common = NDCube(data, wt, missing_axis=[False, False, False, True], extra_coords=[
+    ('time', 1, [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
+                 for i in range(data.shape[1])])])
+
+cube2_time_common = NDCube(data, wm, extra_coords=[
+    ('time', 1,
+     [cube1_time_common.extra_coords["time"]["value"][-1] + datetime.timedelta(minutes=i)
+      for i in range(1, data.shape[1]+1)])])
+
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
+seq_bad_common_axis = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis='0')
+seq_time_common = NDCubeSequence([cube1_time_common, cube2_time_common], common_axis=1)
 seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
 seq2 = NDCubeSequence([cube1, cube2_no_no, cube3_no_time, cube4])
 seq3 = NDCubeSequence([cube1, cube2, cube3_diff_compatible_unit, cube4])
@@ -198,6 +210,45 @@ def test_to_sunpy(test_input, expected):
 def test_to_sunpy_error(test_input):
     with pytest.raises(NotImplementedError):
         test_input.to_sunpy()
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [(seq, SequenceDimensionPair(shape=(4, 2.*u.pix, 3.*u.pix, 4.*u.pix),
+                                 axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE', 'TIME')))])
+def test_dimensions(test_input, expected):
+    unit_tester = unittest.TestCase()
+    unit_tester.assertEqual(test_input.dimensions, expected)
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [(seq, SequenceDimensionPair(shape=(8.*u.pix, 3.*u.pix, 4.*u.pix),
+                                 axis_types=('HPLT-TAN', 'WAVE', 'TIME')))])
+def test_cube_like_dimensions(test_input, expected):
+    unit_tester = unittest.TestCase()
+    unit_tester.assertEqual(test_input.cube_like_dimensions, expected)
+
+
+@pytest.mark.parametrize("test_input", [(seq_bad_common_axis)])
+def test_cube_like_dimensions_error(test_input):
+    with pytest.raises(TypeError):
+        seq_bad_common_axis.cube_like_dimensions
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [(seq, {'pix': u.Quantity([0., 1., 2., 3., 4., 5., 6., 7.], unit=u.pix)}),
+     (seq_time_common,
+      {'time': np.array([datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 1, 1, 0, 1),
+                         datetime.datetime(2000, 1, 1, 0, 2), datetime.datetime(2000, 1, 1, 0, 3),
+                         datetime.datetime(2000, 1, 1, 0, 4), datetime.datetime(2000, 1, 1, 0, 5)],
+                         dtype=object)})])
+def test_common_axis_extra_coords(test_input, expected):
+    output = test_input.common_axis_extra_coords
+    assert output.keys() == expected.keys()
+    for key in output.keys():
+        assert (output[key] == expected[key]).all()
 
 
 @pytest.mark.parametrize(
