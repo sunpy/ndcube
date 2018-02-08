@@ -38,25 +38,25 @@ wm = WCS(header=hm, naxis=3)
 
 cube1 = NDCube(data, wt, missing_axis=[False, False, False, True], extra_coords=[
     ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
-    ('no', None, u.Quantity(0, unit=u.pix)),
+    ('distance', None, u.Quantity(0, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube2 = NDCube(data, wm, extra_coords=[
     ('pix', 0, u.Quantity(np.arange(data.shape[0]), unit=u.pix) +
      cube1.extra_coords['pix']['value'][-1]),
-    ('no', None, u.Quantity(1, unit=u.pix)),
+    ('distance', None, u.Quantity(1, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
 cube3 = NDCube(data2, wt, missing_axis=[False, False, False, True], extra_coords=[
     ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
-    ('no', None, u.Quantity(2, unit=u.pix)),
+    ('distance', None, u.Quantity(2, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube4 = NDCube(data2, wm, extra_coords=[
     ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
      cube3.extra_coords['pix']['value'][-1]),
-    ('no', None, u.Quantity(3, unit=u.pix)),
+    ('distance', None, u.Quantity(3, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 3))])
 
 cube2_no_no = NDCube(data, wm, extra_coords=[
@@ -67,13 +67,29 @@ cube2_no_no = NDCube(data, wm, extra_coords=[
 cube3_no_time = NDCube(data2, wt, missing_axis=[False, False, False, True], extra_coords=[
     ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
-    ('no', None, u.Quantity(2, unit=u.pix))])
+    ('distance', None, u.Quantity(2, unit=u.cm))])
+
+cube3_diff_compatible_unit = NDCube(
+    data2, wt, missing_axis=[False, False, False, True], extra_coords=[
+    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+     cube2.extra_coords['pix']['value'][-1]),
+    ('distance', None, u.Quantity(2, unit=u.cm).to('m')),
+    ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
+
+cube3_diff_incompatible_unit = NDCube(
+    data2, wt, missing_axis=[False, False, False, True], extra_coords=[
+    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+     cube2.extra_coords['pix']['value'][-1]),
+    ('distance', None, u.Quantity(2, unit=u.s)),
+    ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
 seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
 seq2 = NDCubeSequence([cube1, cube2_no_no, cube3_no_time, cube4])
+seq3 = NDCubeSequence([cube1, cube2, cube3_diff_compatible_unit, cube4])
+seq4 = NDCubeSequence([cube1, cube2, cube3_diff_incompatible_unit, cube4])
 
-nan_extra_coord = u.Quantity(range(4), unit=u.pix)
+nan_extra_coord = u.Quantity(range(4), unit=u.cm)
 nan_extra_coord.value[1] = np.nan
 nan_time_extra_coord = np.array([datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
                                  for i in range(len(seq.data))])
@@ -187,12 +203,16 @@ def test_to_sunpy_error(test_input):
 @pytest.mark.parametrize(
     "test_input,expected",
     [(seq,
-      {'no': u.Quantity(range(4), unit=u.pix),
+      {'distance': u.Quantity(range(4), unit=u.cm),
        'time': np.array([datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
                         for i in range(len(seq.data))])}),
      (seq2,
-      {'no': nan_extra_coord,
-       'time': nan_time_extra_coord})])
+      {'distance': nan_extra_coord,
+       'time': nan_time_extra_coord}),
+     (seq3,
+      {'distance': u.Quantity(range(4), unit=u.cm),
+       'time': np.array([datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                        for i in range(len(seq.data))])})])
 def test_sequence_axis_extra_coords(test_input, expected):
     output = test_input.sequence_axis_extra_coords
     assert output.keys() == expected.keys()
@@ -209,7 +229,7 @@ def test_sequence_axis_extra_coords(test_input, expected):
                 if isinstance(output_value, float):
                     # Check if output is nan, expected is no and vice versa.
                     if not isinstance(expected[key][i], float):
-                        raise AssertionError("{0} != {1}", format(output_value, expected[key][i]))
+                        raise AssertionError("{0} != {1}".format(output_value, expected[key][i]))
                     elif np.logical_xor(np.isnan(output_value), np.isnan(expected[key][i])):
                         raise AssertionError("{0} != {1}", format(output_value, expected[key][i]))
                     # Else assert they are equal if they are both not NaN.
@@ -218,3 +238,9 @@ def test_sequence_axis_extra_coords(test_input, expected):
                 # Else, is output is not a float, assert it equals expected.
                 else:
                     assert output_value == expected[key][i]
+
+
+@pytest.mark.parametrize("test_input", [(seq4)])
+def test_sequence_axis_extra_coords_incompatible_unit_error(test_input):
+    with pytest.raises(u.UnitConversionError):
+        test_input.sequence_axis_extra_coords
