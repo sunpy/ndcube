@@ -163,8 +163,8 @@ Axis Types of 1st NDCube: {axis_type}
                 # Construct list of coord values from each cube for given extra coord.
                 try:
                     coord_values[j] = cube_extra_coords[j][coord_key]["value"]
-                    # Determine whether extra coord is a quantity by seeing
-                    # whether an one value has a unit. As we are not
+                    # Determine whether extra coord is a quantity by checking
+                    # whether any one value has a unit. As we are not
                     # assuming that all cubes have the same extra coords
                     # along the sequence axis, we will keep checking as we
                     # move through the cubes until all cubes are checked or
@@ -175,9 +175,10 @@ Axis Types of 1st NDCube: {axis_type}
                 except KeyError:
                     pass
             # If the extra coord is normally a Quantity, replace all
-            # NaN occurrences in coord value array with a NaN quantity
-            # with a compatible unit, and coord values from an array of
-            # Quantities to a simple Quantity.
+            # None occurrences in coord value array with a NaN, and
+            # convert coord_values from an array of Quantities to a
+            # single Quantity of length equal to number of cubes in
+            # sequence.
             w_none = np.where(coord_values == None)[0]
             if sequence_coord_units[i]:
                 # This part of if statement is coded in an apparently

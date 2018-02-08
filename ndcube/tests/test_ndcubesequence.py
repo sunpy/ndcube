@@ -196,7 +196,6 @@ def test_sequence_axis_extra_coords(test_input, expected):
     output = test_input.sequence_axis_extra_coords
     assert output.keys() == expected.keys()
     for key in output.keys():
-        print(key)
         if isinstance(output[key], u.Quantity):
             assert output[key].unit == expected[key].unit
             np.testing.assert_array_almost_equal(output[key].value, expected[key].value)
