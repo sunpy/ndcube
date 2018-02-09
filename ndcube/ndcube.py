@@ -80,10 +80,6 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     def dimensions(self):
         pass
 
-    @abc.abstractproperty
-    def extra_coords(self):
-        pass
-
     @abc.abstractmethod
     def crop_by_coords(self, lower_left_corner, dimension_widths):
         """
