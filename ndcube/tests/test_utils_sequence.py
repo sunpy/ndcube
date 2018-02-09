@@ -42,7 +42,7 @@ def test_convert_item_to_sequence_items(test_input, expected):
 
 def test_convert_item_to_sequence_items_error():
     with pytest.raises(TypeError):
-        utils.sequence.convert_item_to_sequence_items('item')    
+        utils.sequence.convert_item_to_sequence_items('item')
 
 
 def test_slice_sequence():
