@@ -72,21 +72,22 @@ cube3_no_time = NDCube(data2, wt, missing_axis=[False, False, False, True], extr
 
 cube3_diff_compatible_unit = NDCube(
     data2, wt, missing_axis=[False, False, False, True], extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
-     cube2.extra_coords['pix']['value'][-1]),
-    ('distance', None, u.Quantity(2, unit=u.cm).to('m')),
-    ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
+        ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+         cube2.extra_coords['pix']['value'][-1]),
+         ('distance', None, u.Quantity(2, unit=u.cm).to('m')),
+         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube3_diff_incompatible_unit = NDCube(
     data2, wt, missing_axis=[False, False, False, True], extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
-     cube2.extra_coords['pix']['value'][-1]),
-    ('distance', None, u.Quantity(2, unit=u.s)),
-    ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
+        ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
+         cube2.extra_coords['pix']['value'][-1]),
+         ('distance', None, u.Quantity(2, unit=u.s)),
+         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
-cube1_time_common = NDCube(data, wt, missing_axis=[False, False, False, True], extra_coords=[
-    ('time', 1, [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
-                 for i in range(data.shape[1])])])
+cube1_time_common = NDCube(
+    data, wt, missing_axis=[False, False, False, True],
+    extra_coords=[('time', 1, [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
+                               for i in range(data.shape[1])])])
 
 cube2_time_common = NDCube(data, wm, extra_coords=[
     ('time', 1,
@@ -243,7 +244,7 @@ def test_cube_like_dimensions_error(test_input):
       {'time': np.array([datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 1, 1, 0, 1),
                          datetime.datetime(2000, 1, 1, 0, 2), datetime.datetime(2000, 1, 1, 0, 3),
                          datetime.datetime(2000, 1, 1, 0, 4), datetime.datetime(2000, 1, 1, 0, 5)],
-                         dtype=object)})])
+                        dtype=object)})])
 def test_common_axis_extra_coords(test_input, expected):
     output = test_input.common_axis_extra_coords
     assert output.keys() == expected.keys()

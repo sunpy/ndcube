@@ -1381,6 +1381,7 @@ def test_to_sunpy_error(test_input):
     with pytest.raises(NotImplementedError):
         test_input.to_sunpy()
 
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [((cubem, 0*u.pix, 1.5*u.pix, "time"), cubem[0:2]),

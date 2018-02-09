@@ -369,7 +369,8 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, common_axis_cub
     """
     # Ensure any None attributes in input slice are filled with appropriate ints.
     cumul_common_axis_cube_lengths = np.cumsum(common_axis_cube_lengths)
-    cube_like_slice = convert_slice_nones_to_ints(cube_like_slice, cumul_common_axis_cube_lengths[-1])
+    cube_like_slice = convert_slice_nones_to_ints(cube_like_slice,
+                                                  cumul_common_axis_cube_lengths[-1])
     # Determine sequence indices of cubes included in cube-like slice.
     cube_like_indices = np.arange(cumul_common_axis_cube_lengths[-1])[cube_like_slice]
     n_cube_like_indices = len(cube_like_indices)
@@ -417,9 +418,9 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, common_axis_cub
         common_axis_last_index = common_axis_cube_lengths[i] - (
             (common_axis_cube_lengths[i] - common_axis_start_index) % step)
         # Generate SequenceSlice for this cube and append to list.
-        sequence_slices.append(
-            SequenceSlice(i, slice(common_axis_start_index,
-                                   min(common_axis_last_index+1, common_axis_cube_lengths[i]), step)))
+        sequence_slices.append(SequenceSlice(
+            i, slice(common_axis_start_index,
+                     min(common_axis_last_index+1, common_axis_cube_lengths[i]), step)))
         # Determine first common axis index for next cube.
         if common_axis_cube_lengths[i] == common_axis_last_index:
             common_axis_start_index = step-1

@@ -8,7 +8,7 @@ from ndcube import utils
 
 # sample data for tests
 tuple_item0 = (0, slice(0, 3))
-tuple_item1 = (slice(0,2), slice(0, 3), slice(None))
+tuple_item1 = (slice(0, 2), slice(0, 3), slice(None))
 tuple_item2 = (slice(3, 1, -1), slice(0, 3), slice(None))
 tuple_item3 = (slice(4, None, -2), slice(0, 3), slice(None))
 
@@ -22,7 +22,7 @@ n_cubes = 4
     ((slice(0, 2), 3), [utils.sequence.SequenceItem(sequence_index=0, cube_item=slice(None)),
                         utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(None))]),
     ((slice(1, 4, 2), 5), [utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(None)),
-                        utils.sequence.SequenceItem(sequence_index=3, cube_item=slice(None))]),
+                           utils.sequence.SequenceItem(sequence_index=3, cube_item=slice(None))]),
     ((slice(3, 1, -1), 5), [utils.sequence.SequenceItem(sequence_index=3, cube_item=slice(None)),
                             utils.sequence.SequenceItem(sequence_index=2, cube_item=slice(None))]),
     ((tuple_item0, n_cubes),
@@ -71,20 +71,29 @@ def test_convert_item_to_sequence_items_error():
     #((slice(6, 1, -1), 0, np.array([3, 5])),
     # [utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(3, 0, -1)),
     #  utils.sequence.SequenceItem(sequence_index=0, cube_item=slice(2, 1, -1))]),
-    
+
     # Test tuple cube_like_items
     (((0, 0, slice(1, 10)), 0, np.array([3, 5])),
      [utils.sequence.SequenceItem(sequence_index=0, cube_item=(0, 0, slice(1, 10, None)))]),
+
     (((0, 0, slice(1, 10)), 1, np.array([3, 5])),
      [utils.sequence.SequenceItem(sequence_index=0, cube_item=(0, 0, slice(1, 10, None)))]),
+
     (((slice(2, 10), 0, slice(1, 10)), 0, np.array([3, 5, 5])),
-     [utils.sequence.SequenceItem(sequence_index=0, cube_item=(slice(2, 3, 1), 0, slice(1, 10, None))),
-      utils.sequence.SequenceItem(sequence_index=1, cube_item=(slice(0, 5, 1), 0, slice(1, 10, None))),
-      utils.sequence.SequenceItem(sequence_index=2, cube_item=(slice(0, 2, 1), 0, slice(1, 10, None)))]),
+     [utils.sequence.SequenceItem(sequence_index=0,
+                                  cube_item=(slice(2, 3, 1), 0, slice(1, 10, None))),
+      utils.sequence.SequenceItem(sequence_index=1,
+                                  cube_item=(slice(0, 5, 1), 0, slice(1, 10, None))),
+      utils.sequence.SequenceItem(sequence_index=2,
+                                  cube_item=(slice(0, 2, 1), 0, slice(1, 10, None)))]),
+
     (((0, slice(2, 10), slice(1, 10)), 1, np.array([3, 5, 5])),
-     [utils.sequence.SequenceItem(sequence_index=0, cube_item=(0, slice(2, 3, 1), slice(1, 10, None))),
-      utils.sequence.SequenceItem(sequence_index=1, cube_item=(0, slice(0, 5, 1), slice(1, 10, None))),
-      utils.sequence.SequenceItem(sequence_index=2, cube_item=(0, slice(0, 2, 1), slice(1, 10, None)))]),
+     [utils.sequence.SequenceItem(sequence_index=0,
+                                  cube_item=(0, slice(2, 3, 1), slice(1, 10, None))),
+      utils.sequence.SequenceItem(sequence_index=1,
+                                  cube_item=(0, slice(0, 5, 1), slice(1, 10, None))),
+      utils.sequence.SequenceItem(sequence_index=2,
+                                  cube_item=(0, slice(0, 2, 1), slice(1, 10, None)))]),
      ])
 def test_convert_cube_like_item_to_sequence_items(test_input, expected):
     unit_tester = unittest.TestCase()
@@ -137,8 +146,7 @@ def test_convert_cube_like_index_to_sequence_slice(test_input, expected):
                               utils.sequence.SequenceSlice(3, slice(0, 8, 1))
                           ])])
 def test_convert_cube_like_slice_to_sequence_slices(test_input, expected):
-    assert utils.sequence._convert_cube_like_slice_to_sequence_slices(
-        *test_input) == expected
+    assert utils.sequence._convert_cube_like_slice_to_sequence_slices(*test_input) == expected
 
 
 @pytest.mark.parametrize(
@@ -157,6 +165,4 @@ def test_convert_slice_nones_to_ints(test_input, expected):
 def test_convert_sequence_slice_to_sequence_item(test_input, expected):
     unit_tester = unittest.TestCase()
     unit_tester.assertEqual(
-        utils.sequence._convert_sequence_slice_to_sequence_item(*test_input),
-        expected)
-    
+        utils.sequence._convert_sequence_slice_to_sequence_item(*test_input), expected)

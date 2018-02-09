@@ -21,6 +21,7 @@ extra_coords_dict_wcs = {"time": {"wcs axis": 0,
                          "hello": {"wcs axis": 1,
                                    "value": u.Quantity(range(axes_length), unit=u.pix)}}
 
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [((None, missing_axis_none), None),
@@ -63,12 +64,12 @@ def test_select_order():
         assert utils.cube.select_order(l) == r
 
 
-@pytest.mark.parametrize(
-    "test_input",
-    [([('name', 0)], [False, False], (1, 2)),
-      ([(0, 0, 0)], [False, False], (1, 2)),
-      ([('name', '0', 0)], [False, False], (1, 2)),
-      ([('name', 0, [0, 1])], [False, False], (1, 2))])
+@pytest.mark.parametrize("test_input", [
+    ([('name', 0)], [False, False], (1, 2)),
+    ([(0, 0, 0)], [False, False], (1, 2)),
+    ([('name', '0', 0)], [False, False], (1, 2)),
+    ([('name', 0, [0, 1])], [False, False], (1, 2))
+    ])
 def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
     with pytest.raises(ValueError):
         utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(*test_input)
@@ -100,7 +101,8 @@ def test_convert_extra_coords_dict_to_input_format(test_input, expected):
                     try:
                         assert el == expected[j][k]
                     except ValueError as err:
-                        if err.args[0] == "The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()":
+                        if err.args[0] == "The truth value of an array with more than" + \
+                          " one element is ambiguous. Use a.any() or a.all()":
                             assert (el == expected[j][k]).all()
                         else:
                             raise err
@@ -109,6 +111,7 @@ def test_convert_extra_coords_dict_to_input_format(test_input, expected):
                 j += 1
         if j == len(expected):
             raise AssertionError("{0} != {1}".format(output, expected))
+
 
 def test_convert_extra_coords_dict_to_input_format_error():
     with pytest.raises(KeyError):
