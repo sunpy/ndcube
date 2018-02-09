@@ -125,7 +125,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             coord on which cropping is based.
 
         extra_coord: `str`
-            Name of extra coord.
+            Name of extra coordinate.
 
         Returns
         -------
@@ -303,7 +303,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                              "same number of elements as number of data dimensions.")
         # Convert coords of lower left corner to pixel units.
         lower_pixels = self.world_to_pixel(min_coord_values)
-        upper_pixels = self.world_to_pixel([min_coord_values[i]+interval_widths[i]
+        upper_pixels = self.world_to_pixel([min_coord_values[i] + interval_widths[i]
                                             for i in range(n_dim)])
         # Round pixel values to nearest integer.
         lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
