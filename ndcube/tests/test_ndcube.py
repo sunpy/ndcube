@@ -19,14 +19,16 @@ DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
-      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 3,
+      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
+      'NAXIS2': 3,
       'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
 wt = WCS(header=ht, naxis=3)
 
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
-hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 4,
+hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
+      'NAXIS1': 4,
       'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 3,
       'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
 wm = WCS(header=hm, naxis=3)
@@ -60,7 +62,7 @@ cubet = NDCube(
     mask=mask_cubem,
     uncertainty=uncertaintym,
     extra_coords=[('time', 0, np.array([datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-                               for i in range(data.shape[0])])),
+                                        for i in range(data.shape[0])])),
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))])
 
@@ -1380,8 +1382,7 @@ def test_crop_by_coords_error(test_input):
     "test_input,expected",
     [((cubem, 0*u.pix, 1.5*u.pix, "time"), cubem[0:2]),
      ((cube, 0*u.pix, 1.5*u.pix, "bye"), cube[:, :, 0:2]),
-     ((cubet, datetime.datetime(2000, 1, 1), datetime.timedelta(minutes=2), "time"), cubet[:2])
-    ])
+     ((cubet, datetime.datetime(2000, 1, 1), datetime.timedelta(minutes=2), "time"), cubet[:2])])
 def test_crop_by_extra_coord(test_input, expected):
     helpers.assert_cubes_equal(
         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)

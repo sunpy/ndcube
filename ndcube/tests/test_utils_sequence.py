@@ -153,8 +153,7 @@ def test_convert_cube_like_slice_to_sequence_slices(test_input, expected):
     "test_input,expected",
     [((slice(0, 10), 20), slice(0, 10, 1)),
      ((slice(0, 10, 2), 20), slice(0, 10, 2)),
-     ((slice(None, 0, -1), 20), slice(20, 0, -1))
-    ])
+     ((slice(None, 0, -1), 20), slice(20, 0, -1))])
 def test_convert_slice_nones_to_ints(test_input, expected):
     assert utils.sequence.convert_slice_nones_to_ints(*test_input) == expected
 
