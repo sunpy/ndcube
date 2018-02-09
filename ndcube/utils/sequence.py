@@ -276,25 +276,23 @@ def convert_cube_like_item_to_sequence_items(cube_like_item, common_axis, common
     # Case 3: Item is tuple.
     elif isinstance(cube_like_item, tuple):
         # Check item is long enough to include common axis.
-        if len(cube_like_item) < common_axis:
+        if len(cube_like_item) < common_axis+1:
             raise ValueError("Input item not long enough to include common axis."
-                             "Must have length between "
-                             "{0} and {1} inclusive.".format(
-                                 common_axis, len(cubesequence[0].data.shape)))
+                             "Must have length > {0}".format(common_axis))
         # Based on type of slice/index in the common axis position of
         # the cube_like_item, derive list of SequenceSlice objects that
         # describes the cube_like_item in regular slicing notation.
         if isinstance(cube_like_item[common_axis], int):
-            sequence_index = _convert_cube_like_index_to_sequence_slice(
-                cube_like_item[common_axis], common_axis_cube_lengths)
-            sequence_slices = _get_sequence_items_from_int_item(
-                sequence_index.sequence_index, sequence_index.common_axis_item)
+            sequence_slices = [_convert_cube_like_index_to_sequence_slice(
+                cube_like_item[common_axis], common_axis_cube_lengths)]
         elif isinstance(cube_like_item[common_axis], slice):
             sequence_slices = _convert_cube_like_slice_to_sequence_slices(
                 cube_like_item[common_axis], common_axis_cube_lengths)
         else:
             raise ValueError(invalid_item_error_message)
         all_axes_item = cube_like_item
+    else:
+        raise TypeError("Unrecognized item type.")
     # Convert the sequence slices, that only describe the slicing along
     # the sequence axis and common axis to sequence items which
     # additionally describe how the non-common cube axes should be sliced.
@@ -405,7 +403,7 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, common_axis_cub
     # Iterate through relevant cubes and determine slices for each.
     # Do last cube outside loop as its end index may not correspond to
     # the end of the cube's common axis.
-    if not cube_like_slice.step:
+    if cube_like_slice.step is None:
         step = 1
     else:
         step = cube_like_slice.step
@@ -468,7 +466,7 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
         slice/index item to be applied to the whole NDCube.
 
     """
-    if not cube_like_item and common_axis == 0:
+    if cube_like_item is None and common_axis == 0:
         sequence_item = SequenceItem(sequence_slice.sequence_index,
                                      sequence_slice.common_axis_item)
     else:
@@ -481,7 +479,7 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
             else:
                 raise err
         # Make sure cube_like_item is long enough to include common axis
-        while len(cube_item_list) < common_axis:
+        while len(cube_item_list) <= common_axis:
             cube_item_list.append(slice(None))
         # Create new sequence slice
         cube_item_list[common_axis] = sequence_slice.common_axis_item
