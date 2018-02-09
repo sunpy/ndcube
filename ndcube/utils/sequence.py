@@ -61,7 +61,7 @@ def convert_item_to_sequence_items(item, n_cubes=None, cube_item=None):
 
 
 @convert_item_to_sequence_items.register(int)
-def get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(None)):
+def _get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(None)):
     """
     Converts int index of an NDCubeSequence to list of SequenceSlices.
 
@@ -88,7 +88,7 @@ def get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(Non
 
 
 @convert_item_to_sequence_items.register(slice)
-def get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None)):
+def _get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None)):
     """
     Converts slice item of an NDCubeSequence to list of SequenceSlices.
 
@@ -119,7 +119,7 @@ def get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None
 
 
 @convert_item_to_sequence_items.register(tuple)
-def get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
+def _get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
     """
     Converts NDCubeSequence slice item tuple to list of SequenceSlice objects.
 

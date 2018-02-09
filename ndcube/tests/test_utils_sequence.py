@@ -1,25 +1,48 @@
 # -*- coding: utf-8 -*-
 import pytest
+import unittest
 
 import numpy as np
 
 from ndcube import utils
 
+tuple_item0 = (0, slice(0, 3))
+tuple_item1 = (slice(0,2), slice(0, 3), slice(None))
+tuple_item2 = (slice(3, 1, -1), slice(0, 3), slice(None))
+tuple_item3 = (slice(4, None, -2), slice(0, 3), slice(None))
+
+n_cubes = 4
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((1, n_cubes), [utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(None))]),
+    ((slice(None), 2), [utils.sequence.SequenceItem(sequence_index=0, cube_item=slice(None)),
+                        utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(None))]),
+    ((slice(0, 2), 3), [utils.sequence.SequenceItem(sequence_index=0, cube_item=slice(None)),
+                        utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(None))]),
+    ((slice(1, 4, 2), 5), [utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(None)),
+                        utils.sequence.SequenceItem(sequence_index=3, cube_item=slice(None))]),
+    ((slice(3, 1, -1), 5), [utils.sequence.SequenceItem(sequence_index=3, cube_item=slice(None)),
+                            utils.sequence.SequenceItem(sequence_index=2, cube_item=slice(None))]),
+    ((tuple_item0, n_cubes),
+     [utils.sequence.SequenceItem(sequence_index=0, cube_item=tuple_item0[1])]),
+    ((tuple_item1, n_cubes),
+     [utils.sequence.SequenceItem(sequence_index=0, cube_item=tuple_item1[1:]),
+      utils.sequence.SequenceItem(sequence_index=1, cube_item=tuple_item1[1:])]),
+    ((tuple_item2, n_cubes),
+     [utils.sequence.SequenceItem(sequence_index=3, cube_item=tuple_item1[1:]),
+      utils.sequence.SequenceItem(sequence_index=2, cube_item=tuple_item1[1:])]),
+    ((tuple_item3, n_cubes),
+     [utils.sequence.SequenceItem(sequence_index=4, cube_item=tuple_item1[1:]),
+      utils.sequence.SequenceItem(sequence_index=2, cube_item=tuple_item1[1:])])
+    ])
+def test_convert_item_to_sequence_items(test_input, expected):
+    unit_tester = unittest.TestCase()
+    unit_tester.assertEqual(
+        utils.sequence.convert_item_to_sequence_items(*test_input), expected)
+
 def test_convert_item_to_sequence_items_error():
     with pytest.raises(TypeError):
-        utils.sequence.convert_item_to_sequence_items('item')
-
-
-def test_get_sequence_items_from_int_item():
-    pass
-
-
-def test_get_sequence_items_from_slice_item():
-    pass
-
-
-def test_get_sequence_items_from_tuple_item():
-    pass
+        utils.sequence.convert_item_to_sequence_items('item')    
 
 
 def test_slice_sequence():

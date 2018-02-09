@@ -91,3 +91,32 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
             "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axis),
             "value": coord[2]}
     return extra_coords_wcs_axis
+
+
+def convert_extra_coords_dict_to_input_format(extra_coords, missing_axis):
+        """
+        Converts NDCube.extra_coords attribute to format required as input for new NDCube.
+
+        Parameters
+        ----------
+        extra_coords: dict
+            An NDCube.extra_coords instance.
+
+        Returns
+        -------
+        input_format: `list`
+            Infomation on extra coords in format required by `NDCube.__init__`.
+
+        """
+        coord_names = list(extra_coords.keys())
+        result = []
+        for name in coord_names:
+            coord_keys = list(extra_coords[name].keys())
+            if "wcs axis" in coord_keys and "axis" not in coord_keys:
+                axis = wcs_axis_to_data_axis(extra_coords[name]["wcs axis"], missing_axis)
+            elif "axis" in coord_keys and "wcs axis" not in coord_keys:
+                axis = extra_coords[name]["axis"]
+            else:
+                raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
+            result.append((name, axis, extra_coords[name]["value"]))
+        return result
