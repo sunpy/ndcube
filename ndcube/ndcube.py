@@ -104,31 +104,6 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         """
 
-    @abc.abstractmethod
-    def crop_by_extra_coord(self, min_coord_value, interval_width, extra_coord):
-        """
-        Crops an NDCube given a minimum value and interval width along an extra coord.
-
-        Parameters
-        ----------
-        min_coord_value: Single value `astropy.units.Quantity`
-            The minimum desired value of the extra coord after cropping.
-            Unit must be consistent with the extra coord on which cropping is based.
-
-        interval_width: Single value `astropy.units.Quantity`
-            The width of the interval along the extra coord axis in physical units
-            consistent with the extra coord.  Unit must be consistent with the extra
-            coord on which cropping is based.
-
-        extra_coord: `str`
-            Name of extra coordinate.
-
-        Returns
-        -------
-        result: `ndcube.NDCube`
-
-        """
-
 
 class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin, NDCubeBase):
     """
@@ -308,8 +283,28 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         return self[item]
 
     def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
-        # The docstring is defined in NDDataBase
+        """
+        Crops an NDCube given a minimum value and interval width along an extra coord.
 
+        Parameters
+        ----------
+        min_coord_value: Single value `astropy.units.Quantity`
+            The minimum desired value of the extra coord after cropping.
+            Unit must be consistent with the extra coord on which cropping is based.
+
+        interval_width: Single value `astropy.units.Quantity`
+            The width of the interval along the extra coord axis in physical units
+            consistent with the extra coord.  Unit must be consistent with the extra
+            coord on which cropping is based.
+
+        extra_coord: `str`
+            Name of extra coordinate.
+
+        Returns
+        -------
+        result: `ndcube.NDCube`
+
+        """
         extra_coord_dict = self.extra_coords[coord_name]
         if isinstance(extra_coord_dict["value"], u.Quantity):
             extra_coord_values = extra_coord_dict["value"]
