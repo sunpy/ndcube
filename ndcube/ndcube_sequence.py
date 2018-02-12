@@ -72,7 +72,7 @@ class NDCubeSequence:
                 raise ValueError("axis and common_axis should be equal.")
         # is axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
-            axis = len(self.dimensions.shape[1::]) + axis
+            axis = len(self.dimensions[1::]) + axis
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
@@ -95,25 +95,41 @@ class NDCubeSequence:
 Length of NDCubeSequence:  {length}
 Shape of 1st NDCube: {shapeNDCube}
 Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions.shape[0], shapeNDCube=self.dimensions.shape[1::],
-                axis_type=self.dimensions.axis_types[1::]))
+""".format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
+           axis_type=self.world_axis_physical_types[1:]))
 
     @property
     def dimensions(self):
-        return SequenceDimensionPair(
-            shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
-            axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
+        dimensions = [len(self.data)] + list(self.data[0].shape)
+        # If there is a common axis, length of cube's along it may not
+        # be the same. Therefore if the lengths are different,
+        # represent them as a tuple of all the values, else as an int.
+        if self._common_axis:
+            common_axis_cube_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
+            if len(np.unique(common_axis_cube_lengths)) != 1:
+                dimensions[self._common_axis+1] = tuple(common_axis_dimension)
+        return tuple(dimensions)
+
+    @property
+    def world_axis_physical_types(self):
+        return tuple(["custom:Sequence Axis"]+list(self.data[0].world_axis_physical_types))
 
     @property
     def cube_like_dimensions(self):
         if type(self._common_axis) is not int:
             raise TypeError("Common axis must be set.")
-        dimensions = self.dimensions
-        shape_list_one_cube = list(dimensions.shape[1:])
-        shape_list_one_cube[self._common_axis] = (dimensions.shape[0] *
-                                                  shape_list_one_cube[self._common_axis])
-        return SequenceDimensionPair(shape=tuple(shape_list_one_cube),
-                                     axis_types=dimensions.axis_types[1:])
+        dimensions = list(self.dimensions)
+        cube_like_dimensions = list(self.dimensions[1:])
+        if isinstance(dimensions[self._common_axis+1], int):
+            cube_like_dimensions[self._common_axis] = \
+              dimensions[0] * dimensions[self._common_axis+1]
+        else:
+            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis+1])
+        return cube_like_dimensions
+
+    @property
+    def cube_like_world_axis_physical_types(self):
+        return self.data[0].world_axis_physical_types
 
     @property
     def common_axis_extra_coords(self):
