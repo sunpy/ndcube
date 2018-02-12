@@ -11,9 +11,8 @@ from functools import singledispatch
 import numpy as np
 
 
-__all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items', 'slice_sequence',
-           'index_sequence_as_cube', 'convert_cube_like_item_to_sequence_items',
-           'convert_slice_nones_to_ints']
+__all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items',
+           'convert_cube_like_item_to_sequence_items', 'convert_slice_nones_to_ints']
 
 
 SequenceSlice = namedtuple("SequenceSlice", "sequence_index common_axis_item")
