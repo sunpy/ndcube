@@ -112,9 +112,18 @@ def _get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(Non
     """
     # If there are None types in slice, replace with correct entries based on sign of step.
     no_none_slice = convert_slice_nones_to_ints(slice_item, n_cubes)
-    # Derive SequenceItems for each cube.
+    # Derive SequenceItems for each cube.  Recall that
+    # once convert_slice_nones_to_ints() has been applied, a None will
+    # only be present to signify the beginning of the array when the
+    # step is negative.  Therefore, if the stop parmeter of the above
+    # slice object is None, set the stop condition of the below for
+    # loop to -1.
+    if no_none_slice.stop is None:
+        stop = -1
+    else:
+        stop = no_none_slice.stop
     sequence_items = [SequenceItem(i, cube_item)
-                      for i in range(no_none_slice.start, no_none_slice.stop, no_none_slice.step)]
+                      for i in range(no_none_slice.start, stop, no_none_slice.step)]
     return sequence_items
 
 
@@ -323,9 +332,16 @@ def _convert_cube_like_index_to_sequence_slice(cube_like_index, common_axis_cube
     """
     # Derive cumulative lengths of cubes along common axis.
     cumul_common_axis_cube_lengths = np.cumsum(common_axis_cube_lengths)
-    # If cube_like_index is within first cube in sequence, it is
+    # If cube_like_index is within 0th cube in sequence, it is
     # simple to determine the sequence and common axis indices.
-    if cube_like_index < cumul_common_axis_cube_lengths[0]:
+    try:
+        index_in_0th_cube = cube_like_index < cumul_common_axis_cube_lengths[0]
+    except TypeError as err:
+        if "unorderable types: int() > NoneType()" in err.args[0]:
+            index_in_0th_cube = True
+        else:
+            raise err
+    if index_in_0th_cube:
         sequence_index = 0
         common_axis_index = cube_like_index
     # Else use more in-depth method.
@@ -345,7 +361,9 @@ def _convert_cube_like_index_to_sequence_slice(cube_like_index, common_axis_cube
             sequence_index += 1
     # Return sequence and cube indices.  Ensure they are int, rather
     # than np.int64 to avoid confusion in checking type elsewhere.
-    return SequenceSlice(int(sequence_index), int(common_axis_index))
+    if common_axis_index is not None:
+        common_axis_index = int(common_axis_index)
+    return SequenceSlice(int(sequence_index), common_axis_index)
 
 
 def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, common_axis_cube_lengths):
@@ -369,8 +387,6 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, common_axis_cub
     """
     # Ensure any None attributes in input slice are filled with appropriate ints.
     cumul_common_axis_cube_lengths = np.cumsum(common_axis_cube_lengths)
-    cube_like_slice = convert_slice_nones_to_ints(cube_like_slice,
-                                                  cumul_common_axis_cube_lengths[-1])
     # Determine sequence indices of cubes included in cube-like slice.
     cube_like_indices = np.arange(cumul_common_axis_cube_lengths[-1])[cube_like_slice]
     n_cube_like_indices = len(cube_like_indices)
@@ -492,6 +508,10 @@ def convert_slice_nones_to_ints(slice_item, target_length):
     """
     Converts None types within a slice to the appropriate ints based on object to be sliced.
 
+    The one case where a None is left in the slice object is when the step is negative and
+    the stop parameter is None, since this scenario cannot be represented with an int stop
+    parameter.
+
     Parameters
     ----------
     slice_item: `slice`
@@ -506,7 +526,7 @@ def convert_slice_nones_to_ints(slice_item, target_length):
         Slice with Nones replaced with ints.
 
     """
-    if not slice_item.step:
+    if slice_item.step is None:
         step = 1
     else:
         step = slice_item.step
@@ -515,8 +535,7 @@ def convert_slice_nones_to_ints(slice_item, target_length):
     if step < 0:
         if slice_item.start is None:
             start = int(target_length)
-        if slice_item.stop is None:
-            stop = 0
+        stop = slice_item.stop
     else:
         if not slice_item.start:
             start = 0

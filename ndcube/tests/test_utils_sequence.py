@@ -35,7 +35,8 @@ n_cubes = 4
       utils.sequence.SequenceItem(sequence_index=2, cube_item=tuple_item1[1:])]),
     ((tuple_item3, n_cubes),
      [utils.sequence.SequenceItem(sequence_index=4, cube_item=tuple_item1[1:]),
-      utils.sequence.SequenceItem(sequence_index=2, cube_item=tuple_item1[1:])])
+      utils.sequence.SequenceItem(sequence_index=2, cube_item=tuple_item1[1:]),
+      utils.sequence.SequenceItem(sequence_index=0, cube_item=tuple_item1[1:])])
     ])
 def test_convert_item_to_sequence_items(test_input, expected):
     unit_tester = unittest.TestCase()
