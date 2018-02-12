@@ -1449,4 +1449,3 @@ def test_ndcubeordered(test_input, expected):
         NDCubeOrdered(test_input[0], test_input[1], mask=test_input[2],
                       uncertainty=test_input[3], extra_coords=test_input[4]),
         expected)
-
