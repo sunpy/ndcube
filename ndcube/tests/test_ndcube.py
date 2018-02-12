@@ -10,7 +10,7 @@ import sunpy.map
 import numpy as np
 import astropy.units as u
 
-from ndcube import NDCube
+from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
 from ndcube.tests import helpers
 
@@ -29,14 +29,48 @@ data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
 
 hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
       'NAXIS1': 4,
-      'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 3,
+      'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5,
+      'NAXIS2': 3,
       'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
 wm = WCS(header=hm, naxis=3)
+
+h_disordered = {
+    'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2,
+    'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 10,
+    'NAXIS2': 4,
+    'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 2, 'CRVAL3': 0.5,
+    'NAXIS3': 3,
+    'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 0.4, 'CRPIX4': 2, 'CRVAL4': 1, 'NAXIS4': 2}
+w_disordered = WCS(header=h_disordered, naxis=4)
+
+data_disordered = np.zeros((2, 3, 4, 2))
+data_disordered[:, :, :, 0] = data
+data_disordered[:, :, :, 1] = data
+
+
+h_ordered = {
+    'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.4, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 2,
+    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5,
+    'NAXIS2': 3,
+    'CTYPE3': 'WAVE    ', 'CUNIT3': 'Angstrom', 'CDELT3': 0.2, 'CRPIX3': 0, 'CRVAL3': 10,
+    'NAXIS3': 4,
+    'CTYPE4': 'TIME    ', 'CUNIT4': 'min', 'CDELT4': 0.4, 'CRPIX4': 0, 'CRVAL4': 0, 'NAXIS4': 2}
+w_ordered = WCS(header=h_ordered, naxis=4)
+
+data_ordered = np.zeros((2, 4, 3, 2))
+data_ordered[0] = data.transpose()
+data_ordered[1] = data.transpose()
 
 mask_cubem = data > 0
 mask_cube = data >= 0
 uncertaintym = data
 uncertainty = np.sqrt(data)
+
+mask_disordered = data_disordered > 0
+uncertainty_disordered = data_disordered
+
+mask_ordered = data_ordered > 0
+uncertainty_ordered = data_ordered
 
 cubem = NDCube(
     data,
@@ -46,6 +80,25 @@ cubem = NDCube(
     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))])
+
+cube_disordered_inputs = (
+    data_disordered, w_disordered, mask_disordered, uncertainty_disordered,
+    [('spam', 0, u.Quantity(range(data_disordered.shape[0]), unit=u.pix)),
+     ('hello', 1, u.Quantity(range(data_disordered.shape[1]), unit=u.pix)),
+     ('bye', 2, u.Quantity(range(data_disordered.shape[2]), unit=u.pix))])
+cube_disordered = NDCube(cube_disordered_inputs[0], cube_disordered_inputs[1],
+                         mask=cube_disordered_inputs[2], uncertainty=cube_disordered_inputs[3],
+                         extra_coords=cube_disordered_inputs[4])
+
+cube_ordered = NDCubeOrdered(
+    data_ordered,
+    w_ordered,
+    mask=mask_ordered,
+    uncertainty=uncertainty_ordered,
+    extra_coords=[('spam', 3, u.Quantity(range(data_disordered.shape[0]), unit=u.pix)),
+                  ('hello', 2, u.Quantity(range(data_disordered.shape[1]), unit=u.pix)),
+                  ('bye', 1, u.Quantity(range(data_disordered.shape[2]), unit=u.pix))])
+
 cube = NDCube(
     data,
     wt,
@@ -1386,3 +1439,14 @@ def test_crop_by_coords_error(test_input):
 def test_crop_by_extra_coord(test_input, expected):
     helpers.assert_cubes_equal(
         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cube_disordered_inputs, cube_ordered)
+    ])
+def test_ndcubeordered(test_input, expected):
+    helpers.assert_cubes_equal(
+        NDCubeOrdered(test_input[0], test_input[1], mask=test_input[2],
+                      uncertainty=test_input[3], extra_coords=test_input[4]),
+        expected)
+

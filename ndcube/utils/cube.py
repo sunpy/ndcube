@@ -35,17 +35,17 @@ def wcs_axis_to_data_axis(wcs_axis, missing_axis):
 
 def select_order(axtypes):
     """
-    Returns the indices of the correct axis priority for the given list of WCS
-    CTYPEs. For example, given ['HPLN-TAN', 'TIME', 'WAVE'] it will return
-    [1, 2, 0] because index 1 (time) has the highest priority, followed by
-    wavelength and finally solar-x. When two or more celestial axes are in the
-    list, order is preserved between them (i.e. only TIME, UTC and WAVE are
-    moved)
+    Returns indices of the correct data order axis priority given a list of WCS CTYPEs.
+
+    For example, given ['HPLN-TAN', 'TIME', 'WAVE'] it will return
+    [1, 2, 0] because index 1 (time) has the lowest priority, followed by
+    wavelength and finally solar-x.
 
     Parameters
     ----------
     axtypes: str list
         The list of CTYPEs to be modified.
+
     """
     order = [(0, t) if t in ['TIME', 'UTC'] else
              (1, t) if t == 'WAVE' else
