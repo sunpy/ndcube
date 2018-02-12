@@ -336,7 +336,10 @@ def _convert_cube_like_index_to_sequence_slice(cube_like_index, common_axis_cube
     try:
         index_in_0th_cube = cube_like_index < cumul_common_axis_cube_lengths[0]
     except TypeError as err:
-        if "unorderable types: int() > NoneType()" in err.args[0]:
+        none_not_int_error_messages = [
+            "'>' not supported between instances of 'int' and 'NoneType'",
+            "unorderable types: int() > NoneType()"]
+        if err.args[0] in none_not_int_error_messages:
             index_in_0th_cube = True
         else:
             raise err
