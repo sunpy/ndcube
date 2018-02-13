@@ -133,24 +133,24 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def common_axis_extra_coords(self):
+        common_extra_coords = None
         if self._common_axis in range(self.data[0].wcs.naxis):
-            common_extra_coords = {}
-            coord_names = list(self.data[0].extra_coords.keys())
-            for coord_name in coord_names:
-                if self.data[0].extra_coords[coord_name]["axis"] == self._common_axis:
-                    try:
-                        coord_unit = self.data[0].extra_coords[coord_name]["value"].unit
-                        qs = tuple([np.asarray(
-                            c.extra_coords[coord_name]["value"].to(coord_unit).value)
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
-                                                                     unit=coord_unit)
-                    except AttributeError:
-                        qs = tuple([np.asarray(c.extra_coords[coord_name]["value"])
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = np.concatenate(qs)
-        else:
-            common_extra_coords = None
+            if self.data[0].extra_coords:
+                common_extra_coords = {}
+                coord_names = list(self.data[0].extra_coords.keys())
+                for coord_name in coord_names:
+                    if self.data[0].extra_coords[coord_name]["axis"] == self._common_axis:
+                        try:
+                            coord_unit = self.data[0].extra_coords[coord_name]["value"].unit
+                            qs = tuple([np.asarray(
+                                c.extra_coords[coord_name]["value"].to(coord_unit).value)
+                                        for c in self.data])
+                            common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
+                                                                         unit=coord_unit)
+                        except AttributeError:
+                            qs = tuple([np.asarray(c.extra_coords[coord_name]["value"])
+                                        for c in self.data])
+                            common_extra_coords[coord_name] = np.concatenate(qs)
         return common_extra_coords
 
     @property
