@@ -117,47 +117,53 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def common_axis_extra_coords(self):
-        if self._common_axis in range(self.data[0].wcs.naxis):
-            common_extra_coords = {}
-            coord_names = list(self.data[0].extra_coords.keys())
-            for coord_name in coord_names:
-                if self.data[0].extra_coords[coord_name]["axis"] == self._common_axis:
-                    try:
-                        coord_unit = self.data[0].extra_coords[coord_name]["value"].unit
-                        qs = tuple([np.asarray(
-                            c.extra_coords[coord_name]["value"].to(coord_unit).value)
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
-                                                                     unit=coord_unit)
-                    except AttributeError:
-                        qs = tuple([np.asarray(c.extra_coords[coord_name]["value"])
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = np.concatenate(qs)
-        else:
-            common_extra_coords = None
-        return common_extra_coords
+        if not isinstance(self._common_axis, int):
+            raise ValueError("Common axis is not set.")
+        common_axis_extra_coords = self._get_extra_coords_by_axis(self._common_axis)
+        for coord_name in list(common_axis_extra_coords.keys()):
+            common_axis_extra_coords[coord_name] = common_axis_extra_coords[coord_name].flatten()
+        return common_axis_extra_coords
 
     @property
     def sequence_axis_extra_coords(self):
-        # Identify all extra coord names not assigned to a cube data axis.
-        sequence_coord_names = []
+        return self._get_extra_coords_by_axis(None)
+
+    def _get_extra_coords_by_axis(self, axis):
+        """
+        Return subset of extra coords corresponding to a given axis.
+
+        Parameters
+        ----------
+        axis: `int` or `None`
+            Number of cube data axis of interest.  For extra coords not
+            corresponding to a cubes' data axis, set to None.
+
+        Returns
+        -------
+        axis_extra_coords: `dict`
+            Dictionary holding values of extra coords corresponding to input axis.
+            Keys are coord names.
+
+        """
+        # Identify all extra coord names assigned to input cube data axis.
+        axis_coord_names = []
         for cube in self.data:
             all_extra_coords = cube.extra_coords
             all_extra_coords_keys = list(all_extra_coords.keys())
             for coord_key in all_extra_coords_keys:
-                if all_extra_coords[coord_key]["axis"] is None:
-                    sequence_coord_names.append(coord_key)
-        sequence_coord_names = set(sequence_coord_names)
+                if all_extra_coords[coord_key]["axis"] == axis:
+                    axis_coord_names.append(coord_key)
+        axis_coord_names = set(axis_coord_names)
         # Define empty dictionary which will hold the extra coord
         # values not assigned a cube data axis.
-        sequence_extra_coords = {}
+        axis_extra_coords = {}
         # Define list of None signifying unit of each coord.  It will
         # be filled in in for loop below.
-        sequence_coord_units = [None]*len(sequence_coord_names)
+        axis_coord_units = [None]*len(axis_coord_names)
         # Iterate through cubes and populate values of each extra coord
         # not assigned a cube data axis.
         cube_extra_coords = [cube.extra_coords for cube in self.data]
-        for i, coord_key in enumerate(sequence_coord_names):
+        for i, coord_key in enumerate(axis_coord_names):
             coord_values = np.array([None]*len(self.data), dtype=object)
             for j, cube in enumerate(self.data):
                 # Construct list of coord values from each cube for given extra coord.
@@ -169,9 +175,9 @@ Axis Types of 1st NDCube: {axis_type}
                     # along the sequence axis, we will keep checking as we
                     # move through the cubes until all cubes are checked or
                     # we have found a unit.
-                    if not sequence_coord_units[i]:
+                    if not axis_coord_units[i]:
                         if isinstance(cube_extra_coords[j][coord_key]["value"], u.Quantity):
-                            sequence_coord_units[i] = cube_extra_coords[j][coord_key]["value"].unit
+                            axis_coord_units[i] = cube_extra_coords[j][coord_key]["value"].unit
                 except KeyError:
                     pass
             # If the extra coord is normally a Quantity, replace all
@@ -180,22 +186,22 @@ Axis Types of 1st NDCube: {axis_type}
             # single Quantity of length equal to number of cubes in
             # sequence.
             w_none = np.where(coord_values == None)[0]
-            if sequence_coord_units[i]:
+            if axis_coord_units[i]:
                 # This part of if statement is coded in an apparently
                 # round about way but necessitated because you can't
                 # put a NaN quantity into an array and keep its unit.
                 w_not_none = np.where(coord_values != None)[0]
                 coord_values = u.Quantity(list(coord_values[w_not_none]),
-                                          unit=sequence_coord_units[i])
+                                          unit=axis_coord_units[i])
                 coord_values = list(coord_values.value)
                 for index in w_none:
                     coord_values.insert(index, np.nan)
-                coord_values = u.Quantity(coord_values, unit=sequence_coord_units[i])
+                coord_values = u.Quantity(coord_values, unit=axis_coord_units[i])
             else:
                 coord_values[w_none] = np.nan
             # Enter sequence extra coord into dictionary
-            sequence_extra_coords[coord_key] = coord_values
-        return sequence_extra_coords
+            axis_extra_coords[coord_key] = coord_values
+        return axis_extra_coords
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):

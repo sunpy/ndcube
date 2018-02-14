@@ -246,10 +246,8 @@ def test_cube_like_dimensions_error(test_input):
                          datetime.datetime(2000, 1, 1, 0, 4), datetime.datetime(2000, 1, 1, 0, 5)],
                         dtype=object)})])
 def test_common_axis_extra_coords(test_input, expected):
-    output = test_input.common_axis_extra_coords
-    assert output.keys() == expected.keys()
-    for key in output.keys():
-        assert (output[key] == expected[key]).all()
+    unit_tester = unittest.TestCase()
+    unit_tester.assertEqual(test_input.common_axis_extra_coords, expected)
 
 
 @pytest.mark.parametrize(
