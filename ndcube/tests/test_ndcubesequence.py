@@ -131,11 +131,11 @@ def test_slice_first_index_sequence(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (seq[1:3].dimensions.shape[0], 2),
-    (seq[0:2].dimensions.shape[0], 2),
-    (seq[0::].dimensions.shape[0], 4),
-    (seq[slice(0, 2)].dimensions.shape[0], 2),
-    (seq[slice(0, 3)].dimensions.shape[0], 3),
+    (seq[1:3].dimensions[0], 2),
+    (seq[0:2].dimensions[0], 2),
+    (seq[0::].dimensions[0], 4),
+    (seq[slice(0, 2)].dimensions[0], 2),
+    (seq[slice(0, 3)].dimensions[0], 3),
 ])
 def test_slice_first_index_sequence(test_input, expected):
     assert test_input == expected
@@ -186,8 +186,8 @@ def test_index_as_cube(test_input, expected):
                            axis_types=('Sequence Axis', 'HPLT-TAN', 'WAVE')))
 ])
 def test_explode_along_axis(test_input, expected):
-    assert test_input.dimensions.shape[0] == expected.shape[0]
-    for seq_indexed, expected_dim in zip(test_input.dimensions.shape[1::], expected.shape[1::]):
+    assert test_input.dimensions[0] == expected.shape[0]
+    for seq_indexed, expected_dim in zip(test_input.dimensions[1::], expected.shape[1::]):
         assert seq_indexed.value == expected_dim.value
     assert test_input.dimensions.axis_types == expected.axis_types
 

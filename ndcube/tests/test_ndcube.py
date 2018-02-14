@@ -134,7 +134,7 @@ cubet = NDCube(
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              },
              'hello': {
                  'axis': None,
@@ -145,7 +145,7 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              }
          }),
         (cubem[:, 0:2], NDCube, mask_cubem[:, 0:2],
@@ -161,7 +161,7 @@ cubet = NDCube(
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              },
              'hello': {
                  'axis': 1,
@@ -172,7 +172,7 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              }
          }),
         (cubem[:, :], NDCube, mask_cubem[:, :],
@@ -188,21 +188,21 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cubem[1, 1], NDCube, mask_cubem[1, 1],
@@ -222,7 +222,7 @@ cubet = NDCube(
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[2].value)),
+                         range(int(cubem.dimensions[2].value)),
                          unit=u.pix)
                  }
              }),
@@ -245,7 +245,7 @@ cubet = NDCube(
                      1,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[2].value)),
+                         range(int(cubem.dimensions[2].value)),
                          unit=u.pix)
                  }
              }),
@@ -265,14 +265,14 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[:, 1], NDCube, mask_cube[:, 1],
@@ -287,7 +287,7 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis': None,
@@ -298,7 +298,7 @@ cubet = NDCube(
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[:, 0:2], NDCube, mask_cube[:, 0:2],
@@ -314,7 +314,7 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis': 1,
@@ -325,7 +325,7 @@ cubet = NDCube(
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[:, :], NDCube, mask_cube[:, :],
@@ -341,21 +341,21 @@ cubet = NDCube(
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[1, 1], NDCube, mask_cube[1, 1],
@@ -376,7 +376,7 @@ cubet = NDCube(
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cube.dimensions.shape[2].value)),
+                         range(int(cube.dimensions[2].value)),
                          unit=u.pix)
                  }
              }),
@@ -399,7 +399,7 @@ cubet = NDCube(
                          1,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[2].value)),
+                             range(int(cube.dimensions[2].value)),
                              unit=u.pix)
                      }
                  }),
@@ -418,7 +418,7 @@ cubet = NDCube(
                          0,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[1].value)),
+                             range(int(cube.dimensions[1].value)),
                              unit=u.pix)
                      },
                      'bye': {
@@ -426,7 +426,7 @@ cubet = NDCube(
                          1,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[2].value)),
+                             range(int(cube.dimensions[2].value)),
                              unit=u.pix)
                      }
                  }),
@@ -461,14 +461,14 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cubem[0:2], NDCube, mask_cubem[0:2],
@@ -486,14 +486,14 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cubem[:], NDCube, mask_cubem[:],
@@ -508,21 +508,21 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[1], NDCube, mask_cube[1],
@@ -539,7 +539,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                          0,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[1].value)),
+                             range(int(cube.dimensions[1].value)),
                              unit=u.pix)
                      },
                      'bye': {
@@ -547,7 +547,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                          1,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[2].value)),
+                             range(int(cube.dimensions[2].value)),
                              unit=u.pix)
                      }
                  }),
@@ -567,14 +567,14 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[:], NDCube, mask_cube[:],
@@ -589,21 +589,21 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
     ])
@@ -635,14 +635,14 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis': None,
@@ -662,14 +662,14 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis': 2,
@@ -689,21 +689,21 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cubem[:, 1, 1], NDCube, mask_cubem[:, 1, 1],
@@ -716,7 +716,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[0].value)),
+                         range(int(cubem.dimensions[0].value)),
                          unit=u.pix)
                  },
                  'hello': {
@@ -740,7 +740,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[0].value)),
+                         range(int(cubem.dimensions[0].value)),
                          unit=u.pix)
                  },
                  'hello': {
@@ -765,7 +765,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cubem.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis': None,
@@ -776,7 +776,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cubem[1, :, 1], NDCube, mask_cubem[1, :, 1],
@@ -793,7 +793,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[1].value)),
+                         range(int(cubem.dimensions[1].value)),
                          unit=u.pix)
                  },
                  'bye': {
@@ -817,7 +817,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[1].value)),
+                         range(int(cubem.dimensions[1].value)),
                          unit=u.pix)
                  },
                  'bye': {
@@ -842,14 +842,14 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cubem.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cubem.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cubem.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cubem[1, 1, 1], NDCube, mask_cubem[1, 1, 1],
@@ -904,7 +904,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cubem.dimensions.shape[2].value)),
+                         range(int(cubem.dimensions[2].value)),
                          unit=u.pix)
                  }
              }),
@@ -921,14 +921,14 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis': None,
@@ -948,14 +948,14 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis': 2,
@@ -975,21 +975,21 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis':
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[1].value)), unit=u.pix)
+                     range(int(cube.dimensions[1].value)), unit=u.pix)
              },
              'bye': {
                  'axis':
                  2,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[:, 1, 1], NDCube, mask_cube[:, 1, 1],
@@ -1002,7 +1002,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cube.dimensions.shape[0].value)),
+                         range(int(cube.dimensions[0].value)),
                          unit=u.pix)
                  },
                  'hello': {
@@ -1026,7 +1026,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cube.dimensions.shape[0].value)),
+                         range(int(cube.dimensions[0].value)),
                          unit=u.pix)
                  },
                  'hello': {
@@ -1051,7 +1051,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  0,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[0].value)), unit=u.pix)
+                     range(int(cube.dimensions[0].value)), unit=u.pix)
              },
              'hello': {
                  'axis': None,
@@ -1062,7 +1062,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                  1,
                  'value':
                  u.Quantity(
-                     range(int(cube.dimensions.shape[2].value)), unit=u.pix)
+                     range(int(cube.dimensions[2].value)), unit=u.pix)
              }
          }),
         (cube[1, :, 1], NDCube, mask_cube[1, :, 1],
@@ -1079,7 +1079,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cube.dimensions.shape[1].value)),
+                         range(int(cube.dimensions[1].value)),
                          unit=u.pix)
                  },
                  'bye': {
@@ -1103,7 +1103,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                          0,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[1].value)),
+                             range(int(cube.dimensions[1].value)),
                              unit=u.pix)
                      },
                      'bye': {
@@ -1127,7 +1127,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                          0,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[1].value)),
+                             range(int(cube.dimensions[1].value)),
                              unit=u.pix)
                      },
                      'bye': {
@@ -1135,7 +1135,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                          1,
                          'value':
                          u.Quantity(
-                             range(int(cube.dimensions.shape[2].value)),
+                             range(int(cube.dimensions[2].value)),
                              unit=u.pix)
                      }
                  }),
@@ -1192,7 +1192,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                      0,
                      'value':
                      u.Quantity(
-                         range(int(cube.dimensions.shape[2].value)),
+                         range(int(cube.dimensions[2].value)),
                          unit=u.pix)
                  }
              }),
