@@ -11,9 +11,8 @@ from functools import singledispatch
 import numpy as np
 
 
-__all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items', 'slice_sequence',
-           'index_sequence_as_cube', 'convert_cube_like_item_to_sequence_items',
-           'convert_slice_nones_to_ints']
+__all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items',
+           'convert_cube_like_item_to_sequence_items', 'convert_slice_nones_to_ints']
 
 
 SequenceSlice = namedtuple("SequenceSlice", "sequence_index common_axis_item")
@@ -61,7 +60,7 @@ def convert_item_to_sequence_items(item, n_cubes=None, cube_item=None):
 
 
 @convert_item_to_sequence_items.register(int)
-def get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(None)):
+def _get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(None)):
     """
     Converts int index of an NDCubeSequence to list of SequenceSlices.
 
@@ -88,7 +87,7 @@ def get_sequence_items_from_int_item(int_item, n_cubes=None, cube_item=slice(Non
 
 
 @convert_item_to_sequence_items.register(slice)
-def get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None)):
+def _get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None)):
     """
     Converts slice item of an NDCubeSequence to list of SequenceSlices.
 
@@ -112,14 +111,23 @@ def get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(None
     """
     # If there are None types in slice, replace with correct entries based on sign of step.
     no_none_slice = convert_slice_nones_to_ints(slice_item, n_cubes)
-    # Derive SequenceItems for each cube.
+    # Derive SequenceItems for each cube.  Recall that
+    # once convert_slice_nones_to_ints() has been applied, a None will
+    # only be present to signify the beginning of the array when the
+    # step is negative.  Therefore, if the stop parmeter of the above
+    # slice object is None, set the stop condition of the below for
+    # loop to -1.
+    if no_none_slice.stop is None:
+        stop = -1
+    else:
+        stop = no_none_slice.stop
     sequence_items = [SequenceItem(i, cube_item)
-                      for i in range(no_none_slice.start, no_none_slice.stop, no_none_slice.step)]
+                      for i in range(no_none_slice.start, stop, no_none_slice.step)]
     return sequence_items
 
 
 @convert_item_to_sequence_items.register(tuple)
-def get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
+def _get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
     """
     Converts NDCubeSequence slice item tuple to list of SequenceSlice objects.
 
@@ -155,7 +163,7 @@ def get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
     return sequence_items
 
 
-def slice_sequence(cubesequence, sequence_items):
+def _slice_sequence(cubesequence, sequence_items):
     """
     Slices an NDCubeSequence given a list of SequenceSlice objects.
 
@@ -182,7 +190,7 @@ def slice_sequence(cubesequence, sequence_items):
         return result
 
 
-def index_sequence_as_cube(cubesequence, item):
+def _index_sequence_as_cube(cubesequence, item):
     """
     Enables NDCubeSequence to be indexed as if it were a single NDCube.
 
@@ -217,22 +225,28 @@ def index_sequence_as_cube(cubesequence, item):
     """
     # Convert index_as_cube item to a list of regular NDCubeSequence
     # items of each relevant cube.
-    sequence_items = convert_cube_like_item_to_sequence_items(cubesequence, item)
+    common_axis_cube_lengths = np.array([c.data.shape[cubesequence._common_axis]
+                                         for c in cubesequence.data])
+    sequence_items = convert_cube_like_item_to_sequence_items(item, cubesequence._common_axis,
+                                                              common_axis_cube_lengths)
     # Use sequence items to slice NDCubeSequence.
-    return slice_sequence(cubesequence, sequence_items)
+    return _slice_sequence(cubesequence, sequence_items)
 
 
-def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
+def convert_cube_like_item_to_sequence_items(cube_like_item, common_axis, common_axis_cube_lengths):
     """
     Converts an input item to NDCubeSequence.index_as_cube to a list od SequenceSlice objects.
 
     Parameters
     ----------
-    cubesequence: `NDCubeSequence`
-        NDCubeSequence being sliced/indexed.
-
     cube_like_item: `int`, `slice`, of `tuple` of `int and/or `slice`.
         Item compatible with input to NDCubeSequence.index_as_cube.
+
+    common_axis: `int`
+        Data axis of NDCubes common to NDCubeSequence
+
+    common_axis_cube_lengths: `np.array`
+        Length of each cube in sequence along the common axis.
 
     Returns
     -------
@@ -241,67 +255,62 @@ def convert_cube_like_item_to_sequence_items(cubesequence, cube_like_item):
         which together represent the original input slice/index item.
 
     """
-    # Determine length of each cube along common axis.
-    cube_lengths = np.array([c.data.shape[cubesequence._common_axis]
-                             for c in cubesequence.data])
     invalid_item_error_message = "Invalid index/slice input."
     # Case 1: Item is int and common axis is 0.
     if isinstance(cube_like_item, int):
-        if cubesequence._common_axis != 0:
+        if common_axis != 0:
             raise ValueError("Input can only be indexed with an int if "
                              "CubeSequence's common axis is 0. common "
-                             "axis = {0}".format(cubesequence._common_axis))
+                             "axis = {0}".format(common_axis))
         else:
             # Derive list of SequenceSlice objects that describes the
             # cube_like_item in regular slicing notation.
             sequence_slices = [_convert_cube_like_index_to_sequence_slice(
-                cube_like_item, cube_lengths)]
+                cube_like_item, common_axis_cube_lengths)]
             all_axes_item = None
     # Case 2: Item is slice and common axis is 0.
     elif isinstance(cube_like_item, slice):
-        if cubesequence._common_axis != 0:
+        if common_axis != 0:
             raise ValueError("Input can only be sliced with a single slice if "
                              "CubeSequence's common axis is 0. common "
-                             "axis = {0}".format(cubesequence._common_axis))
+                             "axis = {0}".format(common_axis))
         else:
             # Derive list of SequenceSlice objects that describes the
             # cube_like_item in regular slicing notation.
             # First ensure None types within slice are replaced with appropriate ints.
             sequence_slices = _convert_cube_like_slice_to_sequence_slices(
-                cube_like_item, cube_lengths)
+                cube_like_item, common_axis_cube_lengths)
             all_axes_item = None
     # Case 3: Item is tuple.
     elif isinstance(cube_like_item, tuple):
         # Check item is long enough to include common axis.
-        if len(cube_like_item) < cubesequence._common_axis:
+        if len(cube_like_item) < common_axis+1:
             raise ValueError("Input item not long enough to include common axis."
-                             "Must have length between "
-                             "{0} and {1} inclusive.".format(
-                                 cubesequence._common_axis, len(cubesequence[0].data.shape)))
+                             "Must have length > {0}".format(common_axis))
         # Based on type of slice/index in the common axis position of
         # the cube_like_item, derive list of SequenceSlice objects that
         # describes the cube_like_item in regular slicing notation.
-        if isinstance(cube_like_item[cubesequence._common_axis], int):
-            sequence_index = _convert_cube_like_index_to_sequence_slice(
-                cube_like_item[cubesequence._common_axis], cube_lengths)
-            sequence_slices = get_sequence_items_from_int_item(
-                sequence_index.sequence_index, sequence_index.common_axis_index)
-        elif isinstance(cube_like_item[cubesequence._common_axis], slice):
+        if isinstance(cube_like_item[common_axis], int):
+            sequence_slices = [_convert_cube_like_index_to_sequence_slice(
+                cube_like_item[common_axis], common_axis_cube_lengths)]
+        elif isinstance(cube_like_item[common_axis], slice):
             sequence_slices = _convert_cube_like_slice_to_sequence_slices(
-                cube_like_item[cubesequence._common_axis], cube_lengths)
+                cube_like_item[common_axis], common_axis_cube_lengths)
         else:
             raise ValueError(invalid_item_error_message)
         all_axes_item = cube_like_item
+    else:
+        raise TypeError("Unrecognized item type.")
     # Convert the sequence slices, that only describe the slicing along
     # the sequence axis and common axis to sequence items which
     # additionally describe how the non-common cube axes should be sliced.
     sequence_items = [_convert_sequence_slice_to_sequence_item(
-        sequence_slice, cubesequence._common_axis, cube_like_item=all_axes_item)
+        sequence_slice, common_axis, cube_like_item=all_axes_item)
         for sequence_slice in sequence_slices]
     return sequence_items
 
 
-def _convert_cube_like_index_to_sequence_slice(cube_like_index, cube_lengths):
+def _convert_cube_like_index_to_sequence_slice(cube_like_index, common_axis_cube_lengths):
     """
     Converts a cube-like index of an NDCubeSequence to indices along the sequence and common axes.
 
@@ -310,7 +319,7 @@ def _convert_cube_like_index_to_sequence_slice(cube_like_index, cube_lengths):
     cube_like_index: `int`
         Cube-like index of NDCubeSequence
 
-    cube_lengths: iterable of `int`
+    common_axis_cube_lengths: iterable of `int`
         Length of each cube along common axis.
 
     Returns
@@ -321,33 +330,45 @@ def _convert_cube_like_index_to_sequence_slice(cube_like_index, cube_lengths):
 
     """
     # Derive cumulative lengths of cubes along common axis.
-    cumul_cube_lengths = np.cumsum(cube_lengths)
-    # If cube_like_index is within first cube in sequence, it is
+    cumul_common_axis_cube_lengths = np.cumsum(common_axis_cube_lengths)
+    # If cube_like_index is within 0th cube in sequence, it is
     # simple to determine the sequence and common axis indices.
-    if cube_like_index < cumul_cube_lengths[0]:
+    try:
+        index_in_0th_cube = cube_like_index < cumul_common_axis_cube_lengths[0]
+    except TypeError as err:
+        none_not_int_error_messages = [
+            "'>' not supported between instances of 'int' and 'NoneType'",
+            "unorderable types: int() > NoneType()"]
+        if err.args[0] in none_not_int_error_messages:
+            index_in_0th_cube = True
+        else:
+            raise err
+    if index_in_0th_cube:
         sequence_index = 0
         common_axis_index = cube_like_index
     # Else use more in-depth method.
     else:
         # Determine the index of the relevant cube within the sequence
         # from the cumulative common axis cube lengths.
-        sequence_index = np.where(cumul_cube_lengths <= cube_like_index)[0][-1]
-        if cube_like_index > cumul_cube_lengths[-1]-1:
+        sequence_index = np.where(cumul_common_axis_cube_lengths <= cube_like_index)[0][-1]
+        if cube_like_index > cumul_common_axis_cube_lengths[-1]-1:
             # If the cube is out of range then return the last common axis index.
-            common_axis_index = cube_lengths[-1]
+            common_axis_index = common_axis_cube_lengths[-1]
         else:
             # Else use simple equation to derive the relevant common axis index.
-            common_axis_index = cube_like_index - cumul_cube_lengths[sequence_index]
+            common_axis_index = cube_like_index - cumul_common_axis_cube_lengths[sequence_index]
         # sequence_index should be plus one as the sequence_index earlier is
         # previous index if it is not already the last cube index.
-        if sequence_index < cumul_cube_lengths.size - 1:
+        if sequence_index < cumul_common_axis_cube_lengths.size - 1:
             sequence_index += 1
     # Return sequence and cube indices.  Ensure they are int, rather
     # than np.int64 to avoid confusion in checking type elsewhere.
-    return SequenceSlice(int(sequence_index), int(common_axis_index))
+    if common_axis_index is not None:
+        common_axis_index = int(common_axis_index)
+    return SequenceSlice(int(sequence_index), common_axis_index)
 
 
-def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
+def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, common_axis_cube_lengths):
     """
     Converts common axis slice input to NDCubeSequence.index_as_cube to a list of sequence indices.
 
@@ -356,7 +377,7 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
     cube_like_slice: `slice`
         Slice along common axis in NDCubeSequence.index_as_cube item.
 
-    cube_lengths: iterable of `int`
+    common_axis_cube_lengths: iterable of `int`
         Length of each cube along common axis.
 
     Returns
@@ -367,10 +388,9 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
 
     """
     # Ensure any None attributes in input slice are filled with appropriate ints.
-    cumul_cube_lengths = np.cumsum(cube_lengths)
-    cube_like_slice = convert_slice_nones_to_ints(cube_like_slice, cumul_cube_lengths[-1])
+    cumul_common_axis_cube_lengths = np.cumsum(common_axis_cube_lengths)
     # Determine sequence indices of cubes included in cube-like slice.
-    cube_like_indices = np.arange(cumul_cube_lengths[-1])[cube_like_slice]
+    cube_like_indices = np.arange(cumul_common_axis_cube_lengths[-1])[cube_like_slice]
     n_cube_like_indices = len(cube_like_indices)
     one_step_sequence_slices = np.empty(n_cube_like_indices, dtype=object)
     # Define array of ints for all indices along common axis.
@@ -378,15 +398,15 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
     sequence_int_indices = np.zeros(n_cube_like_indices, dtype=int)
     for i in range(n_cube_like_indices):
         one_step_sequence_slices[i] = _convert_cube_like_index_to_sequence_slice(
-            cube_like_indices[i], cube_lengths)
+            cube_like_indices[i], common_axis_cube_lengths)
         sequence_int_indices[i] = one_step_sequence_slices[i].sequence_index
     unique_index = np.sort(np.unique(sequence_int_indices, return_index=True)[1])
     unique_sequence_indices = sequence_int_indices[unique_index]
     # Convert start and stop cube-like indices to sequence indices.
     first_sequence_index = _convert_cube_like_index_to_sequence_slice(cube_like_slice.start,
-                                                                      cube_lengths)
+                                                                      common_axis_cube_lengths)
     last_sequence_index = _convert_cube_like_index_to_sequence_slice(cube_like_slice.stop,
-                                                                     cube_lengths)
+                                                                     common_axis_cube_lengths)
     # Since the last index of any slice represents
     # 'up to but not including this element', if the last sequence index
     # is the first element of a new cube, elements from the last cube
@@ -398,11 +418,11 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
             last_sequence_index.common_axis_item == 0):
         last_sequence_index = SequenceSlice(
             last_sequence_index.sequence_index-1,
-            cube_lengths[last_sequence_index.sequence_index-1])
+            common_axis_cube_lengths[last_sequence_index.sequence_index-1])
     # Iterate through relevant cubes and determine slices for each.
     # Do last cube outside loop as its end index may not correspond to
     # the end of the cube's common axis.
-    if not cube_like_slice.step:
+    if cube_like_slice.step is None:
         step = 1
     else:
         step = cube_like_slice.step
@@ -413,19 +433,20 @@ def _convert_cube_like_slice_to_sequence_slices(cube_like_slice, cube_lengths):
         # Let i be the index along the sequence axis of the next relevant cube.
         i = unique_sequence_indices[j]
         # Determine last common axis index for this cube.
-        common_axis_last_index = cube_lengths[i] - (
-            (cube_lengths[i] - common_axis_start_index) % step)
+        common_axis_last_index = common_axis_cube_lengths[i] - (
+            (common_axis_cube_lengths[i] - common_axis_start_index) % step)
         # Generate SequenceSlice for this cube and append to list.
-        sequence_slices.append(
-            SequenceSlice(i, slice(common_axis_start_index,
-                                   min(common_axis_last_index+1, cube_lengths[i]), step)))
+        sequence_slices.append(SequenceSlice(
+            i, slice(common_axis_start_index,
+                     min(common_axis_last_index+1, common_axis_cube_lengths[i]), step)))
         # Determine first common axis index for next cube.
-        if cube_lengths[i] == common_axis_last_index:
+        if common_axis_cube_lengths[i] == common_axis_last_index:
             common_axis_start_index = step-1
         else:
             common_axis_start_index = \
-              step - (((cube_lengths[i] - common_axis_last_index) % step) +
-                      cumul_cube_lengths[unique_sequence_indices[j+1]-1] - cumul_cube_lengths[i])
+              step - (((common_axis_cube_lengths[i] - common_axis_last_index) % step) +
+                      cumul_common_axis_cube_lengths[unique_sequence_indices[j+1]-1] -
+                      cumul_common_axis_cube_lengths[i])
         # Iterate counter.
         j += 1
     # Create slice for last cube manually.
@@ -459,12 +480,12 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
 
     Returns
     -------
-    sequence_item: SequenceSlice `namedtuple`.
+    sequence_item: SequenceItem `namedtuple`.
         Describes sequence index of an NDCube within an NDCubeSequence and the
         slice/index item to be applied to the whole NDCube.
 
     """
-    if not cube_like_item and common_axis == 0:
+    if cube_like_item is None and common_axis == 0:
         sequence_item = SequenceItem(sequence_slice.sequence_index,
                                      sequence_slice.common_axis_item)
     else:
@@ -477,7 +498,7 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
             else:
                 raise err
         # Make sure cube_like_item is long enough to include common axis
-        while len(cube_item_list) < common_axis:
+        while len(cube_item_list) <= common_axis:
             cube_item_list.append(slice(None))
         # Create new sequence slice
         cube_item_list[common_axis] = sequence_slice.common_axis_item
@@ -488,6 +509,10 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
 def convert_slice_nones_to_ints(slice_item, target_length):
     """
     Converts None types within a slice to the appropriate ints based on object to be sliced.
+
+    The one case where a None is left in the slice object is when the step is negative and
+    the stop parameter is None, since this scenario cannot be represented with an int stop
+    parameter.
 
     Parameters
     ----------
@@ -503,17 +528,16 @@ def convert_slice_nones_to_ints(slice_item, target_length):
         Slice with Nones replaced with ints.
 
     """
-    if not slice_item.step:
+    if slice_item.step is None:
         step = 1
     else:
         step = slice_item.step
     start = slice_item.start
     stop = slice_item.stop
     if step < 0:
-        if not slice_item.start:
+        if slice_item.start is None:
             start = int(target_length)
-        if not slice_item.stop:
-            stop = 0
+        stop = slice_item.stop
     else:
         if not slice_item.start:
             start = 0

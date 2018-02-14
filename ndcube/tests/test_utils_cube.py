@@ -1,0 +1,119 @@
+# -*- coding: utf-8 -*-
+import pytest
+import unittest
+
+import numpy as np
+import astropy.units as u
+
+from ndcube import utils
+
+missing_axis_none = [False]*3
+missing_axis_0_2 = [True, False, True]
+missing_axis_1 = [False, True, False]
+
+axes_length = 3
+extra_coords_dict = {"time": {"axis": 0, "value": u.Quantity(range(axes_length), unit=u.pix)},
+                     "hello": {"axis": 1, "value": u.Quantity(range(axes_length), unit=u.pix)}}
+extra_coords_input = [('time', 0, u.Quantity(range(axes_length), unit=u.pix)),
+                      ('hello', 1, u.Quantity(range(axes_length), unit=u.pix))]
+extra_coords_dict_wcs = {"time": {"wcs axis": 0,
+                                  "value": u.Quantity(range(axes_length), unit=u.pix)},
+                         "hello": {"wcs axis": 1,
+                                   "value": u.Quantity(range(axes_length), unit=u.pix)}}
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [((None, missing_axis_none), None),
+     ((0, missing_axis_none), 2),
+     ((1, missing_axis_none), 1),
+     ((0, missing_axis_0_2), 1),
+     ((1, missing_axis_1), 0)])
+def test_data_axis_to_wcs_axis(test_input, expected):
+    assert utils.cube.data_axis_to_wcs_axis(*test_input) == expected
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [((None, missing_axis_none), None),
+     ((0, missing_axis_none), 2),
+     ((1, missing_axis_none), 1),
+     ((1, missing_axis_0_2), 0),
+     ((0, missing_axis_1), 1)])
+def test_wcs_axis_to_data_axis(test_input, expected):
+    assert utils.cube.wcs_axis_to_data_axis(*test_input) == expected
+
+
+def test_select_order():
+    lists = [['TIME', 'WAVE', 'HPLT-TAN',
+              'HPLN-TAN'], ['WAVE', 'HPLT-TAN', 'UTC',
+                            'HPLN-TAN'], ['HPLT-TAN', 'TIME', 'HPLN-TAN'],
+             ['HPLT-TAN', 'DEC--TAN',
+              'WAVE'], [], ['UTC', 'TIME', 'WAVE', 'HPLT-TAN']]
+
+    results = [
+        [0, 1, 2, 3],
+        [2, 0, 1, 3],
+        [1, 0, 2],  # Second order is initial order
+        [2, 0, 1],
+        [],
+        [1, 0, 2, 3]
+    ]
+
+    for (l, r) in zip(lists, results):
+        assert utils.cube.select_order(l) == r
+
+
+@pytest.mark.parametrize("test_input", [
+    ([('name', 0)], [False, False], (1, 2)),
+    ([(0, 0, 0)], [False, False], (1, 2)),
+    ([('name', '0', 0)], [False, False], (1, 2)),
+    ([('name', 0, [0, 1])], [False, False], (1, 2))
+    ])
+def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
+    with pytest.raises(ValueError):
+        utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(*test_input)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((extra_coords_dict, missing_axis_none), extra_coords_input),
+
+    ((extra_coords_dict_wcs,  missing_axis_none),
+     [('time', 2, u.Quantity(range(axes_length), unit=u.pix)),
+      ('hello', 1, u.Quantity(range(axes_length), unit=u.pix))]),
+
+    ((extra_coords_dict_wcs,  missing_axis_1),
+     [('time', 1, u.Quantity(range(axes_length), unit=u.pix)),
+      ('hello', None, u.Quantity(range(axes_length), unit=u.pix))])
+    ])
+def test_convert_extra_coords_dict_to_input_format(test_input, expected):
+    output = utils.cube.convert_extra_coords_dict_to_input_format(*test_input)
+    if len(output) != len(expected):
+        raise AssertionError("{0} != {1}".format(output, expected))
+    for output_tuple in output:
+        j = 0
+        while j < len(expected):
+            if output_tuple[0] == expected[j][0]:
+                assert len(output_tuple) == len(expected[j])
+                print(output_tuple)
+                print(expected[j])
+                for k, el in enumerate(output_tuple):
+                    try:
+                        assert el == expected[j][k]
+                    except ValueError as err:
+                        if err.args[0] == "The truth value of an array with more than" + \
+                          " one element is ambiguous. Use a.any() or a.all()":
+                            assert (el == expected[j][k]).all()
+                        else:
+                            raise err
+                j = len(expected)+1
+            else:
+                j += 1
+        if j == len(expected):
+            raise AssertionError("{0} != {1}".format(output, expected))
+
+
+def test_convert_extra_coords_dict_to_input_format_error():
+    with pytest.raises(KeyError):
+        utils.cube.convert_extra_coords_dict_to_input_format(
+            {"time": {"not axis": 0, "value": []}}, missing_axis_none)

@@ -41,7 +41,7 @@ class NDCubeSequence:
             raise IndexError("None indices not supported")
         # Convert item to list of SequenceSlices
         sequence_items = utils.sequence.convert_item_to_sequence_items(item, len(self.data))
-        return utils.sequence.slice_sequence(self, sequence_items)
+        return utils.sequence._slice_sequence(self, sequence_items)
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
@@ -245,4 +245,4 @@ class _IndexAsCubeSlicer:
         self.seq = seq
 
     def __getitem__(self, item):
-        return utils.sequence.index_sequence_as_cube(self.seq, item)
+        return utils.sequence._index_sequence_as_cube(self.seq, item)

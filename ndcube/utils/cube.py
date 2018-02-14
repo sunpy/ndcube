@@ -35,17 +35,17 @@ def wcs_axis_to_data_axis(wcs_axis, missing_axis):
 
 def select_order(axtypes):
     """
-    Returns the indices of the correct axis priority for the given list of WCS
-    CTYPEs. For example, given ['HPLN-TAN', 'TIME', 'WAVE'] it will return
-    [1, 2, 0] because index 1 (time) has the highest priority, followed by
-    wavelength and finally solar-x. When two or more celestial axes are in the
-    list, order is preserved between them (i.e. only TIME, UTC and WAVE are
-    moved)
+    Returns indices of the correct data order axis priority given a list of WCS CTYPEs.
+
+    For example, given ['HPLN-TAN', 'TIME', 'WAVE'] it will return
+    [1, 2, 0] because index 1 (time) has the lowest priority, followed by
+    wavelength and finally solar-x.
 
     Parameters
     ----------
     axtypes: str list
         The list of CTYPEs to be modified.
+
     """
     order = [(0, t) if t in ['TIME', 'UTC'] else
              (1, t) if t == 'WAVE' else
@@ -91,3 +91,32 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
             "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axis),
             "value": coord[2]}
     return extra_coords_wcs_axis
+
+
+def convert_extra_coords_dict_to_input_format(extra_coords, missing_axis):
+        """
+        Converts NDCube.extra_coords attribute to format required as input for new NDCube.
+
+        Parameters
+        ----------
+        extra_coords: dict
+            An NDCube.extra_coords instance.
+
+        Returns
+        -------
+        input_format: `list`
+            Infomation on extra coords in format required by `NDCube.__init__`.
+
+        """
+        coord_names = list(extra_coords.keys())
+        result = []
+        for name in coord_names:
+            coord_keys = list(extra_coords[name].keys())
+            if "wcs axis" in coord_keys and "axis" not in coord_keys:
+                axis = wcs_axis_to_data_axis(extra_coords[name]["wcs axis"], missing_axis)
+            elif "axis" in coord_keys and "wcs axis" not in coord_keys:
+                axis = extra_coords[name]["axis"]
+            else:
+                raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
+            result.append((name, axis, extra_coords[name]["value"]))
+        return result

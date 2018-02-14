@@ -16,6 +16,23 @@ __all__ = ['WCS', 'reindex_wcs', 'add_celestial_axis']
 class WCS(wcs.WCS):
 
     def __init__(self, header=None, naxis=None, **kwargs):
+        """
+        Initiates a WCS object with additional functionality to add dummy axes.
+
+        Not all WCS axes are independent.  Some, e.g. latitude and longitude,
+        are dependent and one cannot be used without the other.  Therefore this
+        WCS class has the ability to determine whether a dependent axis is missing
+        and can augment the WCS axes with a dummy axis to enable the translations
+        to work.
+
+        Parameters
+        ----------
+        header: FITS header or `dict` with appropriate FITS keywords.
+
+        naxis: `int`
+            Number of axis described by the header.
+
+        """
         self.oriented = False
         self.was_augmented = WCS._needs_augmenting(header)
         if self.was_augmented:
@@ -27,8 +44,15 @@ class WCS(wcs.WCS):
     @classmethod
     def _needs_augmenting(cls, header):
         """
+        Determines whether a missing dependent axis is missing from the WCS object.
+
         WCS cannot be created with only one spacial dimension. If
         WCS detects that returns that it needs to be augmented.
+
+        Parameters
+        ----------
+        header: FITS header or `dict` with appropriate FITS keywords.
+
         """
         try:
             wcs.WCS(header=header)
@@ -39,6 +63,10 @@ class WCS(wcs.WCS):
 
     @classmethod
     def _augment(cls, header, naxis):
+        """
+        Augments WCS with a dummy axis to take the place of a missing dependent axis.
+
+        """
         newheader = deepcopy(header)
         new_wcs_axes_params = {'CRPIX': 0, 'CDELT': 1, 'CRVAL': 0,
                                'CNAME': 'redundant axis', 'CTYPE': 'HPLN-TAN',
@@ -57,7 +85,31 @@ class WCS(wcs.WCS):
 
 def _wcs_slicer(wcs, missing_axis, item):
     """
-    Returns the new sliced wcs and changed missing axis
+    Returns the new sliced wcs and changed missing axis.
+
+    Paramters
+    ---------
+    wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
+        WCS object to be sliced.
+
+    missing_axis: `list` of `bool`
+        Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
+        Note that unlike in other places in this package, missing_axis has the same axis
+        ordering as the WCS object, i.e. the reverse of the data order.
+
+    item: `int`, `slice` or `tuple` of `int` and/or `slice`.
+        Slicing item.  Note that unlike in other places in this package, the item has the
+        same axis ordering as the WCS object, i.e. the reverse of the data order.
+
+    Returns
+    -------
+    new_wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
+        Sliced WCS object.
+
+    missing_axis: `list` of `bool`
+        Altered missing axis list.  Note the ordering has been reversed to reflect the data
+        (numpy) axis ordering convention.
+
     """
     # normal slice.
     item_checked = []

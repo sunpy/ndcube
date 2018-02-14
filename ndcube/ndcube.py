@@ -404,13 +404,28 @@ class NDCubeOrdered(NDCube):
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, copy=False, missing_axis=None, **kwargs):
-        axtypes = list(wcs.wcs.ctype)
+                 unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
+        axtypes = list(wcs.wcs.ctype)[::-1]
         array_order = utils.cube.select_order(axtypes)
         result_data = data.transpose(array_order)
-        wcs_order = np.array(array_order)[::-1]
-        result_wcs = utils.wcs.reindex_wcs(wcs, wcs_order)
+        result_wcs = utils.wcs.reindex_wcs(wcs, np.array(array_order))
+        if uncertainty is not None:
+            result_uncertainty = uncertainty.transpose(array_order)
+        else:
+            result_uncertainty = None
+        if mask is not None:
+            result_mask = mask.transpose(array_order)
+        else:
+            result_mask = None
+        # Reorder extra coords if needed.
+        if extra_coords:
+            reordered_extra_coords = []
+            for coord in extra_coords:
+                coord_list = list(coord)
+                coord_list[1] = array_order[coord_list[1]]
+                reordered_extra_coords.append(tuple(coord_list))
 
-        super().__init__(result_data, result_wcs, uncertainty=uncertainty,
-                         mask=mask, meta=meta, unit=unit, copy=copy,
-                         missing_axis=missing_axis, **kwargs)
+        super().__init__(result_data, result_wcs, uncertainty=result_uncertainty,
+                         mask=result_mask, meta=meta, unit=unit,
+                         extra_coords=reordered_extra_coords,
+                         copy=copy, missing_axis=missing_axis, **kwargs)
