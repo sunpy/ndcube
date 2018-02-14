@@ -37,11 +37,7 @@ class NDCubeSequence:
         self._common_axis = common_axis
 
     def __getitem__(self, item):
-        if item is None or (isinstance(item, tuple) and None in item):
-            raise IndexError("None indices not supported")
-        # Convert item to list of SequenceSlices
-        sequence_items = utils.sequence.convert_item_to_sequence_items(item, len(self.data))
-        return utils.sequence._slice_sequence(self, sequence_items)
+        return utils.sequence.slice_sequence(self, item)
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
@@ -100,7 +96,7 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def dimensions(self):
-        dimensions = [len(self.data)] + list(self.data[0].shape)
+        dimensions = [len(self.data)] + list(self.data[0].dimensions)
         # If there is a common axis, length of cube's along it may not
         # be the same. Therefore if the lengths are different,
         # represent them as a tuple of all the values, else as an int.
