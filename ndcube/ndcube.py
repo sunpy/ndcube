@@ -177,8 +177,9 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                                  "wcs non-missing axes do not match.")
         # Format extra coords.
         if extra_coords:
-            self._extra_coords_wcs_axis = utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                extra_coords, self.missing_axis, data.shape)
+            self._extra_coords_wcs_axis = \
+              utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
+                  extra_coords, self.missing_axis, data.shape)
         else:
             self._extra_coords_wcs_axis = None
         # Initialize NDCube.
@@ -258,7 +259,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         Returns a named tuple with two attributes: 'shape' gives the shape
         of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
         e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-    
+
         """
         return u.Quantity(self.data.shape, unit=u.pix)
 
