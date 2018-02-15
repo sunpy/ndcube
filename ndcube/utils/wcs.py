@@ -10,7 +10,38 @@ import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
-__all__ = ['WCS', 'reindex_wcs', 'add_celestial_axis']
+__all__ = ['WCS', 'reindex_wcs', 'add_celestial_axis', 'wcs_ivoa_mapping']
+
+# Define a two way dictionary to hold translations between WCS axis
+# types and International Virtual Observatory Alliance vocabulary.
+# See http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html
+class TwoWayDict(dict):
+    def __setitem__(self, key, value):
+        # Remove any previous connections with these values
+        if key in self:
+            del self[key]
+        if value in self:
+            del self[value]
+        dict.__setitem__(self, key, value)
+        dict.__setitem__(self, value, key)
+
+    def __delitem__(self, key):
+        dict.__delitem__(self, self[key])
+        dict.__delitem__(self, key)
+
+    def __len__(self):
+        """Returns the number of connections"""
+        return dict.__len__(self) // 2
+
+wcs_to_ivoa = {
+    "HPLT-TAN": "custom:pos.helioprojective.lat",
+    "HPLN-TAN": "custom:pos.helioprojective.lon",
+    "TIME": "time",
+    "WAVE": "em.wl"
+    }
+wcs_ivoa_mapping = TwoWayDict()
+for key in wcs_to_ivoa.keys():
+    wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
 
 
 class WCS(wcs.WCS):

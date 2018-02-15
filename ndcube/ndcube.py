@@ -10,6 +10,7 @@ from astropy.utils.misc import InheritDocstrings
 import sunpy.map
 
 from ndcube import utils
+from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 from ndcube import DimensionPair
 
@@ -277,8 +278,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
             if not axis:
-                axes_ctype.append(ctype[i])
-        return axes_ctype[::-1]
+                axes_ctype.append(wcs_ivoa_mapping[ctype[i]])
+        return tuple(axes_ctype[::-1])
 
     def crop_by_coords(self, min_coord_values, interval_widths):
         # The docstring is defined in NDDataBase

@@ -82,7 +82,7 @@ class NDCubeSequence:
                 # appending the sliced cubes in the result_cube list
                 result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
-        return self._new_instance(result_cubes, meta=self.meta, common_axis=axis)
+        return self._new_instance(result_cubes, meta=self.meta)
 
     def __repr__(self):
         return (
@@ -96,7 +96,7 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def dimensions(self):
-        dimensions = [len(self.data)] + list(self.data[0].dimensions)
+        dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
         # If there is a common axis, length of cube's along it may not
         # be the same. Therefore if the lengths are different,
         # represent them as a tuple of all the values, else as an int.
@@ -116,11 +116,13 @@ Axis Types of 1st NDCube: {axis_type}
             raise TypeError("Common axis must be set.")
         dimensions = list(self.dimensions)
         cube_like_dimensions = list(self.dimensions[1:])
-        if isinstance(dimensions[self._common_axis+1], int):
+        if dimensions[self._common_axis+1].isscalar:
             cube_like_dimensions[self._common_axis] = \
-              dimensions[0] * dimensions[self._common_axis+1]
+              u.Quantity(dimensions[0].value * dimensions[self._common_axis+1].value, unit=u.pix)
         else:
             cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis+1])
+        # Combine into single Quantity
+        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
         return cube_like_dimensions
 
     @property
