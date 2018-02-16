@@ -20,7 +20,7 @@ class TwoWayDict(UserDict):
         """
         The inverse dictionary.
         """
-        return {v:k for k, v in self.items()}
+        return {v: k for k, v in self.items()}
 
 
 # Define a two way dictionary to hold translations between WCS axis

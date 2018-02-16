@@ -281,7 +281,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                 key = ctype[i]
                 if "-TAN" in key:
                     key = key[:-4]
-                axes_ctype.append(wcs_ivoa_mapping.get(key, default=None)
+                axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
         return tuple(axes_ctype[::-1])
 
     def crop_by_coords(self, min_coord_values, interval_widths):
