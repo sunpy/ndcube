@@ -82,6 +82,41 @@ class WCS(wcs.WCS):
             newheader['CTYPE' + axis] = projection
         return newheader
 
+    def dependent_axes(self, axis):
+        # Given an axis number in numpy ordering, returns the axes whose
+        # WCS translations are dependent, including itself.  Again,
+        # returned axes are in numpy ordering convention.
+        # Copied from WCSCoordinates class in glue-viz/glue github repo.
+
+        # TODO: we should cache this
+
+        # if distorted, all bets are off
+        try:
+            if any([self.sip, self.det2im1, self.det2im2]):
+                return tuple(range(self.naxis))
+        except AttributeError:
+            pass
+
+        # here, axis is the index number in numpy convention
+        # we flip with [::-1] because WCS and numpy index
+        # conventions are reversed
+        pc = np.array(self.wcs.get_pc()[::-1, ::-1])
+        ndim = pc.shape[0]
+        pc[np.eye(ndim, dtype=np.bool)] = 0
+        axes = self.get_axis_types()[::-1]
+
+        # axes rotated
+        if pc[axis, :].any() or pc[:, axis].any():
+            return tuple(range(ndim))
+
+        # XXX can spectral still couple with other axes by this point??
+        if axes[axis].get('coordinate_type') != 'celestial':
+            return (axis,)
+
+        # in some cases, even the celestial coordinates are
+        # independent. We don't catch that here.
+        return tuple(i for i, a in enumerate(axes) if a.get('coordinate_type') == 'celestial')
+
 
 def _wcs_slicer(wcs, missing_axis, item):
     """
