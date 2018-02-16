@@ -268,18 +268,20 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         """
         Returns an iterable of strings describing the physical type for each world axis.
 
-        They should be names from the VO UCD1+ controlled
-        Vocabulary (http://www.ivoa.net/documents/latest/UCDlist.html).
-        If no matching UCD type exists, this can instead be "custom:xxx",
-        where xxx is an arbitrary string.  Alternatively, if the physical
-        type is unknown/undefined, an element can be `None`.
+        The strings conform to the International Virtual Observatory Alliance
+        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
+        definitions of the different strings and string components,
+        see http://www.ivoa.net/documents/latest/UCDlist.html.
 
         """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
             if not axis:
-                axes_ctype.append(wcs_ivoa_mapping[ctype[i]])
+                key = ctype[i]
+                if "-TAN" in key:
+                    key = key[:-4]
+                axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
         return tuple(axes_ctype[::-1])
 
     def crop_by_coords(self, min_coord_values, interval_widths):

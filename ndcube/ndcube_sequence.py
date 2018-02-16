@@ -108,7 +108,7 @@ Axis Types of 1st NDCube: {axis_type}
 
     @property
     def world_axis_physical_types(self):
-        return tuple(["custom:Sequence Axis"]+list(self.data[0].world_axis_physical_types))
+        return tuple(["meta.obs.sequence"]+list(self.data[0].world_axis_physical_types))
 
     @property
     def cube_like_dimensions(self):
