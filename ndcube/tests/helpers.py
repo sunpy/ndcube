@@ -3,6 +3,7 @@
 """
 Helpers for testing ndcube.
 """
+import unittest
 
 import numpy as np
 
@@ -29,14 +30,15 @@ def assert_metas_equal(test_input, expected_output):
 
 
 def assert_cubes_equal(test_input, expected_cube):
+    unit_tester = unittest.TestCase()
     assert type(test_input) == type(expected_cube)
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     assert test_input.missing_axis == expected_cube.missing_axis
     assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
-    assert test_input.dimensions[1] == expected_cube.dimensions[1]
-    assert np.all(test_input.dimensions[0].value == expected_cube.dimensions[0].value)
-    assert test_input.dimensions[0].unit == expected_cube.dimensions[0].unit
+    assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
+    assert all(test_input.dimensions.value == expected_cube.dimensions.value)
+    assert test_input.dimensions.unit == expected_cube.dimensions.unit
     assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
 
 

@@ -5,12 +5,36 @@
 
 import re
 from copy import deepcopy
+from collections import UserDict
 
 import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
-__all__ = ['WCS', 'reindex_wcs', 'add_celestial_axis']
+__all__ = ['WCS', 'reindex_wcs', 'add_celestial_axis', 'wcs_ivoa_mapping']
+
+
+class TwoWayDict(UserDict):
+    @property
+    def inv(self):
+        """
+        The inverse dictionary.
+        """
+        return {v: k for k, v in self.items()}
+
+
+# Define a two way dictionary to hold translations between WCS axis
+# types and International Virtual Observatory Alliance vocabulary.
+# See http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html
+wcs_to_ivoa = {
+    "HPLT": "custom:pos.helioprojective.lat",
+    "HPLN": "custom:pos.helioprojective.lon",
+    "TIME": "time",
+    "WAVE": "em.wl"
+    }
+wcs_ivoa_mapping = TwoWayDict()
+for key in wcs_to_ivoa.keys():
+    wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
 
 
 class WCS(wcs.WCS):
