@@ -6,7 +6,6 @@ Utilities for ndcube.
 
 import numpy as np
 
-
 __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order']
 
 

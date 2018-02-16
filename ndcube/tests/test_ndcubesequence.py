@@ -218,7 +218,10 @@ def test_common_axis_extra_coords(test_input, expected):
     output = test_input.common_axis_extra_coords
     assert output.keys() == expected.keys()
     for key in output.keys():
-        assert (output[key] == expected[key]).all()
+        try:
+            assert output[key] == expected[key]
+        except ValueError:
+            assert (output[key] == expected[key]).all()
 
 
 @pytest.mark.parametrize(
