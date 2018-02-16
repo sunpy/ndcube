@@ -138,7 +138,7 @@ easily inspecting the shape and phsyical axis types of an
   >>> my_sequence.dimensions
   (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
   >>> my_sequence.world_axis_physical_types
-  ('custom:Sequence Axis', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
 Like NDCube it returns a named tuple with a ``shape`` and ``axis_types``
 where the values of the 0th sub-cube are returned as
@@ -155,7 +155,7 @@ types can be accessed directly::
   (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
   
   >>> my_sequence.world_axis_physical_types
-  ('custom:Sequence Axis', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
 .. _sequence_slicing:
 
@@ -180,7 +180,7 @@ simple as indexing a single array::
   >>> regions_of_interest_in_sequence.dimensions
   (<Quantity 2. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
   >>> regions_of_interest_in_sequence.world_axis_physical_types
-  ('custom:Sequence Axis', 'custom:pos.helioprojective.lat', 'em.wl')
+  ('meta.obs.sequence', 'custom:pos.helioprojective.lat', 'em.wl')
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis
@@ -228,7 +228,7 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
   >>> roi_across_subcubes.dimensions
   (<Quantity 3. pix>, <Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
   >>> roi_across_subcubes.world_axis_physical_types
-  ('custom:Sequence Axis', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
 In both the examples above, an `~ndcube.NDCubeSequence` object is
 returned.  In the case of former example, this is despite the fact
