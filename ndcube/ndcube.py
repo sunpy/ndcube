@@ -421,7 +421,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         # Ensure the axes are in numerical order.
         dependent_axes = np.empty(n_axes, dtype=object)
         for i, axis in enumerate(int_axes):
-            x = np.array(self.wcs.dependent_axes(axis))
+            x = np.array(utils.wcs.dependent_axes(self.wcs, axis))
             x.sort()
             dependent_axes[i] = x
         n_dependent_axes = np.array([len(da) for da in dependent_axes])
