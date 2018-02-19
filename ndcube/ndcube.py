@@ -390,8 +390,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
 
         Example
         -------
-        >>> #NDCube.all_world_coords(('lat', 'lon')) # skip: doctest+
-        >>> #NDCube.all_world_coords(2) # skip: doctest+
+        >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
+        >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
         # Define the dimensions of the cube and the total number of axes.
@@ -414,7 +414,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                         int_axes.append(axis)
                     elif isinstance(axis, str):
                         int_axes.append(
-                            utils.cube._get_axis_number_from_axis_name(axes, world_axis_types))
+                            utils.cube._get_axis_number_from_axis_name(axis, world_axis_types))
                 int_axes = np.array(int_axes)
         # Ensure user has not entered the same axis twice.
         if len(np.unique(int_axes)) != len(int_axes):
