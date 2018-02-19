@@ -27,7 +27,7 @@ class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
 class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractmethod
-    def pixel_to_world(self, quantity_axis_list):
+    def pixel_to_world(self, *quantity_axis_list):
         """
         Convert a pixel coordinate to a data (world) coordinate by using
         `~astropy.wcs.WCS.all_pix2world`.
@@ -36,6 +36,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         ----------
         quantity_axis_list : iterable
             An iterable of `~astropy.units.Quantity` with unit as pixel `pix`.
+            Note that these quantities must be entered as separate arguments, not as one list.
 
         origin : `int`.
             Origin of the top-left corner. i.e. count from 0 or 1.
@@ -52,7 +53,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
 
     @abc.abstractmethod
-    def world_to_pixel(self, quantity_axis_list):
+    def world_to_pixel(self, *quantity_axis_list):
         """
         Convert a world coordinate to a data (pixel) coordinate by using
         `~astropy.wcs.WCS.all_world2pix`.
@@ -61,6 +62,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         ----------
         quantity_axis_list : iterable
             A iterable of `~astropy.units.Quantity`.
+            Note that these quantities must be entered as separate arguments, not as one list.
 
         origin : `int`
             Origin of the top-left corner. i.e. count from 0 or 1.
@@ -186,7 +188,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def pixel_to_world(self, quantity_axis_list):
+    def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
         origin = 0
@@ -212,7 +214,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
         return result[::-1]
 
-    def world_to_pixel(self, quantity_axis_list):
+    def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
         origin = 0
@@ -292,8 +294,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
             raise ValueError("min_coord_values and interval_widths must have "
                              "same number of elements as number of data dimensions.")
         # Convert coords of lower left corner to pixel units.
-        lower_pixels = self.world_to_pixel(min_coord_values)
-        upper_pixels = self.world_to_pixel([min_coord_values[i] + interval_widths[i]
+        lower_pixels = self.world_to_pixel(*min_coord_values)
+        upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
                                             for i in range(n_dim)])
         # Round pixel values to nearest integer.
         lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
