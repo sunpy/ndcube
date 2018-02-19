@@ -34,7 +34,10 @@ class NDCubeSequence:
     def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
         self.data = data_list
         self.meta = meta
-        self._common_axis = common_axis
+        if common_axis is not None:
+            self._common_axis = int(common_axis)
+        else:
+            self._common_axis = common_axis
 
     def __getitem__(self, item):
         return utils.sequence.slice_sequence(self, item)
