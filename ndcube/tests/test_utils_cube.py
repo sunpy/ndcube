@@ -117,3 +117,23 @@ def test_convert_extra_coords_dict_to_input_format_error():
     with pytest.raises(KeyError):
         utils.cube.convert_extra_coords_dict_to_input_format(
             {"time": {"not axis": 0, "value": []}}, missing_axis_none)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((np.array([0, 1, 2]), np.array([3, 3, 3])),
+     [u.Quantity([[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+                  [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+                  [[2, 2, 2], [2, 2, 2], [2, 2, 2]]], unit=u.pix),
+      u.Quantity([[[0, 0, 0], [1, 1, 1], [2, 2, 2]],
+                  [[0, 0, 0], [1, 1, 1], [2, 2, 2]],
+                  [[0, 0, 0], [1, 1, 1], [2, 2, 2]]], unit=u.pix),
+      u.Quantity([[[0, 1, 2], [0, 1, 2], [0, 1, 2]],
+                  [[0, 1, 2], [0, 1, 2], [0, 1, 2]],
+                  [[0, 1, 2], [0, 1, 2], [0, 1, 2]]], unit=u.pix),])
+    ])
+def test_get_pixel_quantities_for_dependent_axes(test_input, expected):
+    output = utils.cube._get_pixel_quantities_for_dependent_axes(test_input[0], test_input[1])
+    assert len(output) == len(expected)
+    for i in range(len(output)):
+        assert (output[i].value == expected[i].value).all()
+        assert output[i].unit == expected[i].unit

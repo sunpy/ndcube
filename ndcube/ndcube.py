@@ -365,51 +365,20 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         for axis in range(n_dimensions):
             # If axis has already been translated, do not do so again.
             if axes_translated[axis] == False:
-                # Construct pixel quantities in each dimension letting
-                # other dimensions all have 0 pixel value.
-                quantity_list = \
-                  [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes[axis]])),
-                              unit=u.pix)] * n_dimensions
-                # Replace array in quantity list corresponding to current axis with
-                # np.arange array.
                 if n_dependent_axes[axis] == 1:
+                    # Construct pixel quantities in each dimension letting
+                    # other dimensions all have 0 pixel value.
+                    quantity_list = \
+                      [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes[axis]])),
+                                  unit=u.pix)] * n_dimensions
+                    # Replace array in quantity list corresponding to current axis with
+                    # np.arange array.
                     quantity_list[axis] = u.Quantity(np.arange(cube_dimensions[axis]), unit=u.pix)
                 else:
                     # If the axis is dependent on another, perform
                     # translations on all dependent axes.
-                    for i, dependent_axis in enumerate(dependent_axes[axis]):
-                        # Define list of indices/slice objects for accessing
-                        # sections of dependent axis arrays that are to be
-                        # replaced with orthogonal np.arange arrays.
-                        slice_list = [0] * n_dependent_axes[axis]
-                        slice_list[i] = slice(None)
-                        # Define array of indices of axes in slice list not
-                        # including the axis along which we are inserting
-                        # np.arange.
-                        other_axis_indices = list(range(n_dependent_axes[dependent_axis]))
-                        del(other_axis_indices[i])
-                        other_axis_indices = np.asarray(other_axis_indices)
-                        other_axis_products = np.cumprod(cube_dimensions[other_axis_indices][::-1])[::-1]
-                        other_axis_products = np.append(other_axis_products, 1)[1:]
-                        # Determine total number of times we are going to
-                        # insert np.arange into quantity array.
-                        total_iters = np.prod(cube_dimensions[other_axis_indices])
-                        coord_axis_array = copy.deepcopy(quantity_list[dependent_axis].value)
-                        for k in range(total_iters):
-                            # Determine mapping from iteration int to
-                            # indices to insert to slice_list.
-                            mod = k
-                            l = 0
-                            # Use while loop so that l will always equal
-                            # n_dependent_axes[dependent_axis]-2 when loop is exited.
-                            while l < n_dependent_axes[dependent_axis]-2:
-                                slice_list[other_axis_indices[l]] = int(mod/other_axes_products[l])
-                                mod = mod % other_axes_products[l]
-                                l += 1
-                            slice_list[other_axis_indices[l]] = mod
-                            coord_axis_array[tuple(slice_list)] = np.arange(cube_dimensions[dependent_axis])
-                        # Replace pixel array for this axis in quantity_list.
-                        quantity_list[dependent_axis] = u.Quantity(coord_axis_array, unit=u.pix)
+                    quantity_list = utils.cube._get_pixel_quantities_for_dependent_axes(
+                        dependent_axes[axis], cube_dimensions)
                 # Perform wcs translation
                 dependent_axes_coords = self.pixel_to_world(quantity_list)
                 # Place world coords into output list
