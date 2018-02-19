@@ -11,7 +11,7 @@ import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
-__all__ = ['WCS', 'reindex_wcs', 'add_celestial_axis', 'wcs_ivoa_mapping']
+__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping']
 
 
 class TwoWayDict(UserDict):
@@ -280,56 +280,5 @@ def reindex_wcs(wcs, inds):
     outwcs.wcs.ctype = [wcs.wcs.ctype[i] for i in inds]
     outwcs.wcs.cname = [wcs.wcs.cname[i] for i in inds]
     outwcs._naxis = [wcs._naxis[i] for i in inds]
-
-    return outwcs
-
-
-def add_celestial_axis(wcs):
-    '''
-    Creates a copy of the given wcs and returns it, with an extra meaningless
-    celestial axes to allow for certain operations. The given WCS must already
-    have an unmatched celestial axis.
-
-    Parameters
-    ----------
-    wcs: sunpy.wcs.wcs.WCS object
-        The world coordinate system to add an axis to.
-    '''
-    outwcs = WCS(naxis=wcs.naxis + 1)
-    wcs_params_to_preserve = ['cel_offset', 'dateavg', 'dateobs', 'equinox',
-                              'latpole', 'lonpole', 'mjdavg', 'mjdobs', 'name',
-                              'obsgeo', 'phi0', 'radesys', 'restfrq',
-                              'restwav', 'specsys', 'ssysobs', 'ssyssrc',
-                              'theta0', 'velangl', 'velosys', 'zsource']
-    for par in wcs_params_to_preserve:
-        setattr(outwcs.wcs, par, getattr(wcs.wcs, par))
-
-    new_wcs_axes_params = {'crpix': [0], 'cdelt': [1], 'crval': [0],
-                           'cname': ['redundant axis'], 'ctype': ['HPLN-TAN'],
-                           'crota': [0], 'cunit': ['deg']}
-
-    try:
-        naxis = wcs.naxis
-        oldpc = wcs.wcs.pc
-        newpc = np.eye(naxis + 1)
-        newpc[:naxis, :naxis] = oldpc
-        outwcs.wcs.pc = newpc
-    except AttributeError:
-        pass
-
-    for param in new_wcs_axes_params:
-        try:
-            oldattr = list(getattr(wcs.wcs, param))
-            newattr = oldattr + new_wcs_axes_params[param]
-            setattr(outwcs.wcs, param, newattr)
-        except AttributeError:  # Some attributes may not be present. Ignore.
-            pass
-
-    # Change the projection if we have two redundant celestial axes.
-    try:
-        outwcs.get_axis_types()
-    except InconsistentAxisTypesError as err:
-        projection = re.findall(r'expected [^,]+', err.value.args[0])[0][9:]
-        outwcs.wcs.ctype[-1] = projection
 
     return outwcs

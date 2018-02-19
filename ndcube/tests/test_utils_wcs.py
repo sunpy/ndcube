@@ -49,10 +49,6 @@ def test_wcs_augment(test_input, expected):
     unit_tester.assertEqual(utils.wcs.WCS._augment(*test_input), expected)
 
 
-def test_wcs_slicer():
-    pass
-
-
 @pytest.mark.parametrize(
     "test_input,expected",
     [({}, False),
@@ -88,6 +84,3 @@ def test_reindex_wcs(test_input, expected):
 def test_reindex_wcs_errors(test_input):
     with pytest.raises(test_input[0]):
         utils.wcs.reindex_wcs(*test_input[1:])
-
-def test_add_celestial_axis():
-    pass
