@@ -8,7 +8,7 @@ Another way of thinking about it is that `~ndcube.NDCubeSequence`
 provides the ability to manipulate a data set described by multiple
 separate WCS transformations.
 
-Regarding implementation, and `~ndcube.NDCubeSequence` instance is
+Regarding implementation, an `~ndcube.NDCubeSequence` instance is
 effectively a list of `~ndcube.NDCube` instances with some helper
 methods attached.
 
@@ -34,18 +34,19 @@ this tutorial.  First we define the data arrays and WCS objects::
   ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
   >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
-Let's also define an extra coordinate of time.  (See NDCube section of
-this guide of more detail.) Let the slices along the 0th axis are
-separated by one minute and the slices in preceding cube are followed
-directly in time by the slices in the next::
+Let's also define an extra coordinate of time assigned to the 0th cube
+data axis and another label coordinate assigned to the cubes as
+wholes.  (See NDCube section of this guide of more detail.) Let the
+slices along the 0th axis be separated by one minute and the slices in
+preceding cube are followed directly in time by the slices in the next::
   
   >>> from datetime import datetime, timedelta
   >>> timestamps0 = [datetime(2000, 1, 1)+timedelta(minutes=i) for i in range(data0.shape[0])]
   >>> timestamps1 = [timestamps0[-1]+timedelta(minutes=i+1) for i in range(data1.shape[0])]
   >>> timestamps2 = [timestamps1[-1]+timedelta(minutes=i+1) for i in range(data2.shape[0])]
-  >>> extra_coords_input0 = [("time", 0, timestamps0)]
-  >>> extra_coords_input1 = [("time", 0, timestamps1)]
-  >>> extra_coords_input2 = [("time", 0, timestamps2)]
+  >>> extra_coords_input0 = [("time", 0, timestamps0), ("label", None, "hello")]
+  >>> extra_coords_input1 = [("time", 0, timestamps1), ("label", None, "world")]
+  >>> extra_coords_input2 = [("time", 0, timestamps2), ("label", None, "!")]
   
 Now we can define our cubes.
 
@@ -71,7 +72,13 @@ Now we can define our cubes.
 N.B. The above warnings are due to the fact that
 `astropy.nddata.uncertainty` is recommended to have an
 ``uncertainty_type`` attribute giving a string describing the type of
-uncertainty.  However, this is not required.
+uncertainty.  However, this is not required.  Also note that due to
+laziness, we have used the same WCS instance in each
+`~ndcube.NDCube` above.  However, it would be more common for each
+`~ndcube.NDCube` to have a different WCS, and the usefulness of
+`~ndcube.NDCubeSequence` is more pronounced when they are
+different. Nonetheless, this can still be used to adequately
+demonstrate the power of `~ndcube.NDCubeSequence`.
 
 Finally, creating an `~ndcube.NDCubeSequence` becomes is simple::
   
@@ -85,10 +92,10 @@ sub-cubes. This metadata is input as a dictionary::
 
   >>> my_sequence_metadata = {"Description": "This is some sample NDCubeSequence metadata."}
   >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2],
-  ...                                     meta=my_sequence_metadata)
+  ...                              meta=my_sequence_metadata)
 
 and stored in the ``my_sequence.meta`` attribute.  Meanwhile, the
-`~ndcube.NDCube` instances are stored in the ``my_sequence.data``.
+`~ndcube.NDCube` instances are stored in ``my_sequence.data``.
 However, analgously to `~ndcube.NDCube`, it is strongly advised that 
 the data is manipulated by slicing the `~ndcube.NDCubeSequence` rather
 than more manually delving into the ``.data`` attribute.  For more
@@ -109,7 +116,7 @@ observations taken from a period directly before ``my_cube1`` and
 ``my_cube2`` and the sub-cubes are  ordered chronologically in the
 sequence.  Then moving along the 0th axis of one sub-cube and moving
 along the sequence axis from one cube to the next both represent
-movement in time.  The difference is simply size of the steps.
+movement in time.  The difference is simply the size of the steps.
 Therefore it can be said that the 0th axis of the sub-cubes is common
 to the sequence. 
 
@@ -137,25 +144,18 @@ easily inspecting the shape and phsyical axis types of an
 
   >>> my_sequence.dimensions
   (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
-  >>> my_sequence.world_axis_physical_types
-  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
-Like NDCube it returns a named tuple with a ``shape`` and ``axis_types``
-where the values of the 0th sub-cube are returned as
-`astropy.units.Quantity` and `str` objects, respectively.  In addition
-however, another dimension is return at the start of the named tuple.
-Its value is an `int` (not a Quantity) giving the number of sub-cubes
-in the sequence.  Since this is not a WCS axis, its axis type is given
-the label ``'Sequence Axis'``.
-
-As the dimensions property returns a named tuple, the shape and axis
-types can be accessed directly::
-
-  >>> my_sequence.dimensions
-  (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+Slightly differently to `~ndcube.NDCube` it returns a tuple of
+`astropy.units.Quantity` instances with pixel units, giving the length
+of each axis.  Meanwhile, the
+`~ndcube.NDCubeSequence.world_axis_physical_types` returns a tuple of
+the physical axis types, as it does for `~ndcube.NDCube`::
   
   >>> my_sequence.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+
+The sequence axis is given the label ``'meta.obs.sequence'`` as it is
+the IVOA UCD1+ controlled word that best describes it.
 
 .. _sequence_slicing:
 
@@ -170,7 +170,7 @@ interest between the 1st and 2nd pixels (inclusive) in the 2nd
 dimension and 1st and 3rd pixels (inclusive) in the 3rd dimension of
 the 0th slice along the 0th axis in only the 1st (not 0th) and 2nd
 sub-cubes in the sequence. This would be a cumbersome slicing operation
-if treating the sub-cube independently. (This would be made even worse
+if treating the sub-cubes independently. (This would be made even worse
 without the power of `~ndcube.NDCube` where the data arrays, WCS
 objects, masks, uncertainty arrays, etc. would all have to be sliced
 independently!) However, with `~ndcube.NDCubeSequence` this becomes as
@@ -200,15 +200,15 @@ the common axis described by different WCS translations.  Therefore it
 would be useful to be able to index the sequence as though it were one
 single cube.  This can be achieved with the
 `ndcube.NDCubeSequence.index_as_cube` property.  In our above
-example, ``my_sequence`` has a shape of ``(3, <Quantity 3.0 pix>,
-<Quantity 4.0 pix>, <Quantity 5.0 pix>)`` and a common cube axis
-of ``0``.  Therefore we can think of ``my_sequence`` as a having an effective
-cube-like shape of ``(<Quantity 9.0 pix>, <Quantity 4.0 pix>,
-<Quantity 5.0 pix>)`` where the first sub-cube extends along the 0th
-cube-like axis from 0 to 3, the second from 3 to 6 and the third
-from 6 to 9.  Say we want to extract the same region of interest as
-above, i.e. ``my_sequence[1, 0:2, 1:3, 1:4]``.  Then this can be
-acheived by entering::
+example, ``my_sequence`` has a shape of ``(<Quantity 3. pix>,
+<Quantity 3.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>)`` and a
+common axis of ``0``.  Therefore we can think of ``my_sequence``
+as a having an effective cube-like shape of ``(<Quantity 9.0 pix>,
+<Quantity 4.0 pix>, <Quantity 5.0 pix>)`` where the first sub-cube
+extends along the 0th cube-like axis from 0 to 3, the second from 3 to
+6 and the third from 6 to 9.  Say we want to extract the same region
+of interest as above, i.e. ``my_sequence[1, 0:2, 1:3, 1:4]``.  Then
+this can be acheived by entering::
 
   >>> roi_from_single_subcube = my_sequence.index_as_cube[3:5, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
@@ -230,21 +230,12 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
   >>> roi_across_subcubes.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
-In both the examples above, an `~ndcube.NDCubeSequence` object is
-returned.  In the case of former example, this is despite the fact
-that the region of interest only came from one sub-cube and so the
-sequence axis is of length 1.  The only time an `~ndcube.NDCube`
-object is returned is when a single slice along the common axis is
-indexed. This API was chosen so that the object type returned is
-predictable and doesn't depend on the (possibly different) shape of
-the sub-cubes along the common axis. 
-
 Common Axis Extra Coordinates
 -----------------------------
 
 If a common axis is defined, it may be useful to view the extra
 coordinates along that common axis defined by each of the sub-cube
-`~ndcube.NDCube._extra_coords` as if the `~ndcube.NDCubeSequence` were
+`~ndcube.NDCube.extra_coords` as if the `~ndcube.NDCubeSequence` were
 one contiguous Cube.  This can be done using the
 ``common_axis_extra_coords`` property::
 
@@ -260,14 +251,14 @@ one contiguous Cube.  This can be done using the
         datetime.datetime(2000, 1, 1, 0, 8)], dtype=object)}
 
 This returns a dictionary where each key gives the name of the
-coordinate.  The value of each key are the values of that coordinate
+coordinate.  The value of each key is the values of that coordinate
 at each pixel along the common axis.  Since all these coordinates must
 be along the common axis, it is not necessary to supply axis
 information as it is with `ndcube.NDCube.extra_coords` making
 `ndcube.NDCubeSequence.common_axis_extra_coords` simpler.  Because
 this property has a functional form and calculates the dictionary
 each time from the constituent sub-cubes' `ndcube.NDCube.extra_coords`
-attributes, `ndcube.NDCubeSequence. common_axis_extra_coords` is
+attributes, `ndcube.NDCubeSequence.common_axis_extra_coords` is
 effectively sliced when the `~ndcube.NDCubeSequence` is sliced, e.g.::
 
   >>> my_sequence[1:3].common_axis_extra_coords
@@ -277,6 +268,23 @@ effectively sliced when the `~ndcube.NDCubeSequence` is sliced, e.g.::
         datetime.datetime(2000, 1, 1, 0, 6),
         datetime.datetime(2000, 1, 1, 0, 7),
         datetime.datetime(2000, 1, 1, 0, 8)], dtype=object)}
+
+Sequence Axis Extra Coordinates
+-------------------------------
+Analgous to `~ndcube.NDCubeSequence.common_axis_extra_coords`, it is
+also possible to access the extra coordinates that are not assigned to any
+`ndcube.NDCube` data axis via the
+`ndcube.NDCubeSequence.sequence_axis_extra_coords` property.  Whereas
+`~ndcube.NDCubeSequence.common_axis_extra_coords` returns all the
+extra coords with an ``'axis'`` value equal to the common axis,
+`~ndcube.NDCubeSequence.sequence_axis_extra_coords` returns all extra
+coords with an ``'axis'`` value of ``None``.  Another way of thinking
+about this is when there is no common axis set, is that they are
+assigned to the sequence axis, hence the property name.::
+
+  >>> my_sequence.sequence_axis_extra_coords
+  {'label': array(['hello', 'world', '!'], dtype=object)}
+
   
 Plotting
 --------
@@ -310,8 +318,8 @@ sub-cubes::
   >>> exploded_sequence = my_sequence.explode_along_axis(0)
 
 Assuming we are using the same ``my_sequence`` as above, with
-dimensions.shape ``(3, <Quantity 3.0 pix>, <Quantity 4.0 pix>,
-<Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an 
+dimensions.shape ``(<Quantity 3.0 pix>, <Quantity 3.0 pix>, <Quantity
+4.0 pix>, <Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an 
 `~ndcube.NDCubeSequence` of nine 2-D NDCubes each with shape
 ``(<Quantity 4.0 pix>, <Quantity 5.0 pix>)``.::
 
