@@ -166,18 +166,18 @@ def _get_pixel_quantities_for_dependent_axes(dependent_axes, cube_dimensions):
         # insert np.arange into quantity array.
         total_iters = np.prod(cube_dimensions[other_axes_indices])
         coord_axis_array = copy.deepcopy(quantity_list[dependent_axis].value)
-        for k in range(total_iters):
+        for j in range(total_iters):
             # Determine mapping from iteration int to
             # indices to insert to slice_list.
-            mod = k
-            l = 0
+            mod = j
+            k = 0
             # Use while loop so that l will always equal
             # n_dependent_axes[dependent_axis]-2 when loop is exited.
-            while l < n_dependent_axes-2:
-                slice_list[other_axes_indices[l]] = int(mod/other_axes_products[l])
-                mod = mod % other_axes_products[l]
-                l += 1
-            slice_list[other_axes_indices[l]] = mod
+            while k < n_dependent_axes-2:
+                slice_list[other_axes_indices[k]] = int(mod/other_axes_products[k])
+                mod = mod % other_axes_products[k]
+                k += 1
+            slice_list[other_axes_indices[k]] = mod
             coord_axis_array[tuple(slice_list)] = np.arange(cube_dimensions[dependent_axis])
         # Replace pixel array for this axis in quantity_list.
         quantity_list[dependent_axis] = u.Quantity(coord_axis_array, unit=u.pix)

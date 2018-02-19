@@ -129,7 +129,7 @@ def test_convert_extra_coords_dict_to_input_format_error():
                   [[0, 0, 0], [1, 1, 1], [2, 2, 2]]], unit=u.pix),
       u.Quantity([[[0, 1, 2], [0, 1, 2], [0, 1, 2]],
                   [[0, 1, 2], [0, 1, 2], [0, 1, 2]],
-                  [[0, 1, 2], [0, 1, 2], [0, 1, 2]]], unit=u.pix),])
+                  [[0, 1, 2], [0, 1, 2], [0, 1, 2]]], unit=u.pix)])
     ])
 def test_get_pixel_quantities_for_dependent_axes(test_input, expected):
     output = utils.cube._get_pixel_quantities_for_dependent_axes(test_input[0], test_input[1])

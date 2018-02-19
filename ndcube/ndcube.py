@@ -297,7 +297,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         # Convert coords of lower left corner to pixel units.
         lower_pixels = self.world_to_pixel(*min_coord_values)
         upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
-                                            for i in range(n_dim)])
+                                             for i in range(n_dim)])
         # Round pixel values to nearest integer.
         lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
         upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
@@ -408,7 +408,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                 # Remove axes from list that have now been translated.
                 axes_translated[dependent_axes[axis]] = True
         return all_coords
-
 
     def __repr__(self):
         return (
