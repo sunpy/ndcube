@@ -9,6 +9,7 @@ from collections import namedtuple
 from functools import singledispatch
 
 import numpy as np
+import astropy.units as u
 
 
 __all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items',
@@ -569,3 +570,99 @@ def convert_slice_nones_to_ints(slice_item, target_length):
         if not slice_item.stop:
             stop = int(target_length)
     return slice(start, stop, step)
+
+
+def _get_axis_extra_coord_names_and_units(cube_list, axis):
+    """
+    Retrieve all extra coord names and units assigned to a data axis along a sequence of cubes.
+
+    Parameters
+    ----------
+    cube_list: `list` of `ndcube.NDCube`
+       The sequence of cubes from which to extract the extra coords.
+
+    axis: `int`
+       Number of axis (in data/numpy ordering convention).
+
+    Returns
+    -------
+    axis_coord_names: `ndarray` of `str`
+        Names of all extra coordinates in sequence.
+
+    axis_coord_units: `ndarray` of `astropy.unit.unit`
+        Units of extra coordinates.
+
+    """
+    # Define empty lists to hold results.
+    axis_coord_names = []
+    axis_coord_units = []
+    # Extract extra coordinate names and units (if extra coord is a
+    # quantity) from each cube.
+    for cube in cube_list:
+        all_extra_coords = cube.extra_coords
+        all_extra_coords_keys = list(all_extra_coords.keys())
+        for coord_key in all_extra_coords_keys:
+            if all_extra_coords[coord_key]["axis"] == axis:
+                axis_coord_names.append(coord_key)
+                if isinstance(all_extra_coords[coord_key]["value"], u.Quantity):
+                    axis_coord_units.append(all_extra_coords[coord_key]["value"].unit)
+                else:
+                    axis_coord_units.append(None)
+    # Extra coords common between cubes will be repeated.  Get rid of
+    # duplicate names and then only keep the units corresponding to
+    # the first occurence of that name.
+    axis_coord_names, ind = np.unique(np.asarray(axis_coord_names), return_index=True)
+    axis_coord_units = np.asarray(axis_coord_units)[ind]
+    return axis_coord_names, axis_coord_units
+
+
+def _get_int_axis_extra_coords(cube_list, axis_coord_names, axis_coord_units, axis):
+    """
+    Retrieve all extra coord names and units assigned to a data axis along a sequence of cubes.
+
+    Parameters
+    ----------
+    cube_list: `list` of `ndcube.NDCube`
+       The sequence of cubes from which to extract the extra coords.
+
+    axis_coord_names: `ndarray` of `str`
+        Names of all extra coordinates in sequence.
+
+    axis_coord_units: `ndarray` of `astropy.unit.unit`
+        Units of extra coordinates.
+
+    axis: `int`
+       Number of axis (in data/numpy ordering convention).
+
+    Returns
+    -------
+    axis_extra_coords: `dict`
+        Extra coords along given axis.
+
+    """
+    # Define empty dictionary which will hold the extra coord
+    # values not assigned a cube data axis.
+    axis_extra_coords = {}
+    # Iterate through cubes and populate values of each extra coord
+    # not assigned a cube data axis.
+    cube_extra_coords = [cube.extra_coords for cube in cube_list]
+    for i, coord_key in enumerate(axis_coord_names):
+        coord_values = []
+        for j, cube in enumerate(cube_list):
+            # Construct list of coord values from each cube for given extra coord.
+            try:
+                if isinstance(cube_extra_coords[j][coord_key]["value"], u.Quantity):
+                    cube_coord_values = \
+                      cube_extra_coords[j][coord_key]["value"].to(axis_coord_units[i]).value
+                else:
+                    cube_coord_values = np.asarray(cube_extra_coords[j][coord_key]["value"])
+                coord_values = coord_values + list(cube_coord_values)
+            except KeyError:
+                # If coordinate not in cube, set coordinate values to NaN.
+                coord_values = coord_values + [np.nan] * cube.dimensions[axis].value
+        # Enter sequence extra coord into dictionary
+        if axis_coord_units[i]:
+            axis_extra_coords[coord_key] = coord_values * axis_coord_units[i]
+        else:
+            axis_extra_coords[coord_key] = np.asarray(coord_values)
+    return axis_extra_coords
