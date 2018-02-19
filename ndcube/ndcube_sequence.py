@@ -37,11 +37,7 @@ class NDCubeSequence:
         self._common_axis = common_axis
 
     def __getitem__(self, item):
-        if item is None or (isinstance(item, tuple) and None in item):
-            raise IndexError("None indices not supported")
-        # Convert item to list of SequenceSlices
-        sequence_items = utils.sequence.convert_item_to_sequence_items(item, len(self.data))
-        return utils.sequence._slice_sequence(self, sequence_items)
+        return utils.sequence.slice_sequence(self, item)
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
@@ -72,7 +68,7 @@ class NDCubeSequence:
                 raise ValueError("axis and common_axis should be equal.")
         # is axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
-            axis = len(self.dimensions.shape[1::]) + axis
+            axis = len(self.dimensions[1::]) + axis
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
@@ -86,7 +82,7 @@ class NDCubeSequence:
                 # appending the sliced cubes in the result_cube list
                 result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
-        return self._new_instance(result_cubes, meta=self.meta, common_axis=axis)
+        return self._new_instance(result_cubes, meta=self.meta)
 
     def __repr__(self):
         return (
@@ -95,46 +91,64 @@ class NDCubeSequence:
 Length of NDCubeSequence:  {length}
 Shape of 1st NDCube: {shapeNDCube}
 Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions.shape[0], shapeNDCube=self.dimensions.shape[1::],
-                axis_type=self.dimensions.axis_types[1::]))
+""".format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
+           axis_type=self.world_axis_physical_types[1:]))
 
     @property
     def dimensions(self):
-        return SequenceDimensionPair(
-            shape=tuple([len(self.data)]+list(self.data[0].dimensions.shape)),
-            axis_types=tuple(["Sequence Axis"]+self.data[0].dimensions.axis_types))
+        dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
+        # If there is a common axis, length of cube's along it may not
+        # be the same. Therefore if the lengths are different,
+        # represent them as a tuple of all the values, else as an int.
+        if self._common_axis:
+            common_axis_cube_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
+            if len(np.unique(common_axis_cube_lengths)) != 1:
+                dimensions[self._common_axis+1] = tuple(common_axis_dimension)
+        return tuple(dimensions)
+
+    @property
+    def world_axis_physical_types(self):
+        return tuple(["meta.obs.sequence"]+list(self.data[0].world_axis_physical_types))
 
     @property
     def cube_like_dimensions(self):
         if type(self._common_axis) is not int:
             raise TypeError("Common axis must be set.")
-        dimensions = self.dimensions
-        shape_list_one_cube = list(dimensions.shape[1:])
-        shape_list_one_cube[self._common_axis] = (dimensions.shape[0] *
-                                                  shape_list_one_cube[self._common_axis])
-        return SequenceDimensionPair(shape=tuple(shape_list_one_cube),
-                                     axis_types=dimensions.axis_types[1:])
+        dimensions = list(self.dimensions)
+        cube_like_dimensions = list(self.dimensions[1:])
+        if dimensions[self._common_axis+1].isscalar:
+            cube_like_dimensions[self._common_axis] = \
+              u.Quantity(dimensions[0].value * dimensions[self._common_axis+1].value, unit=u.pix)
+        else:
+            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis+1])
+        # Combine into single Quantity
+        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
+        return cube_like_dimensions
+
+    @property
+    def cube_like_world_axis_physical_types(self):
+        return self.data[0].world_axis_physical_types
 
     @property
     def common_axis_extra_coords(self):
+        common_extra_coords = None
         if self._common_axis in range(self.data[0].wcs.naxis):
-            common_extra_coords = {}
-            coord_names = list(self.data[0].extra_coords.keys())
-            for coord_name in coord_names:
-                if self.data[0].extra_coords[coord_name]["axis"] == self._common_axis:
-                    try:
-                        coord_unit = self.data[0].extra_coords[coord_name]["value"].unit
-                        qs = tuple([np.asarray(
-                            c.extra_coords[coord_name]["value"].to(coord_unit).value)
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
-                                                                     unit=coord_unit)
-                    except AttributeError:
-                        qs = tuple([np.asarray(c.extra_coords[coord_name]["value"])
-                                    for c in self.data])
-                        common_extra_coords[coord_name] = np.concatenate(qs)
-        else:
-            common_extra_coords = None
+            if self.data[0].extra_coords:
+                common_extra_coords = {}
+                coord_names = list(self.data[0].extra_coords.keys())
+                for coord_name in coord_names:
+                    if self.data[0].extra_coords[coord_name]["axis"] == self._common_axis:
+                        try:
+                            coord_unit = self.data[0].extra_coords[coord_name]["value"].unit
+                            qs = tuple([np.asarray(
+                                c.extra_coords[coord_name]["value"].to(coord_unit).value)
+                                        for c in self.data])
+                            common_extra_coords[coord_name] = u.Quantity(np.concatenate(qs),
+                                                                         unit=coord_unit)
+                        except AttributeError:
+                            qs = tuple([np.asarray(c.extra_coords[coord_name]["value"])
+                                        for c in self.data])
+                            common_extra_coords[coord_name] = np.concatenate(qs)
         return common_extra_coords
 
     @property

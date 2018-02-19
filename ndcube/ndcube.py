@@ -11,6 +11,7 @@ from astropy.utils.misc import InheritDocstrings
 import sunpy.map
 
 from ndcube import utils
+from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 from ndcube import DimensionPair
 
@@ -27,7 +28,7 @@ class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
 class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractmethod
-    def pixel_to_world(self, quantity_axis_list, origin=0):
+    def pixel_to_world(self, *quantity_axis_list):
         """
         Convert a pixel coordinate to a data (world) coordinate by using
         `~astropy.wcs.WCS.all_pix2world`.
@@ -36,6 +37,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         ----------
         quantity_axis_list : iterable
             An iterable of `~astropy.units.Quantity` with unit as pixel `pix`.
+            Note that these quantities must be entered as separate arguments, not as one list.
 
         origin : `int`.
             Origin of the top-left corner. i.e. count from 0 or 1.
@@ -52,7 +54,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
 
     @abc.abstractmethod
-    def world_to_pixel(self, quantity_axis_list, origin=0):
+    def world_to_pixel(self, *quantity_axis_list):
         """
         Convert a world coordinate to a data (pixel) coordinate by using
         `~astropy.wcs.WCS.all_world2pix`.
@@ -61,6 +63,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         ----------
         quantity_axis_list : iterable
             A iterable of `~astropy.units.Quantity`.
+            Note that these quantities must be entered as separate arguments, not as one list.
 
         origin : `int`
             Origin of the top-left corner. i.e. count from 0 or 1.
@@ -177,17 +180,19 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                                  "wcs non-missing axes do not match.")
         # Format extra coords.
         if extra_coords:
-            self._extra_coords_wcs_axis = utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                extra_coords, self.missing_axis, data.shape)
+            self._extra_coords_wcs_axis = \
+              utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
+                  extra_coords, self.missing_axis, data.shape)
         else:
             self._extra_coords_wcs_axis = None
         # Initialize NDCube.
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
-    def pixel_to_world(self, quantity_axis_list, origin=0):
+    def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
+        origin = 0
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -210,9 +215,10 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
         return result[::-1]
 
-    def world_to_pixel(self, quantity_axis_list, origin=0):
+    def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
+        origin = 0
         list_arg = []
         indexed_not_as_one = []
         result = []
@@ -239,10 +245,10 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
     def to_sunpy(self):
         wcs_axes = list(self.wcs.wcs.ctype)
         missing_axis = self.missing_axis
-        if 'TIME' in wcs_axes and len(self.dimensions.shape) is 1:
+        if 'TIME' in wcs_axes and len(self.dimensions) is 1:
             result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
         elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes \
-                and len(self.dimensions.shape) is 2:
+                and len(self.dimensions) is 2:
             if not missing_axis[wcs_axes.index("HPLT-TAN")] \
                     and not missing_axis[wcs_axes.index("HPLN-TAN")]:
                 result = sunpy.map.Map(self.data, self.meta)
@@ -256,26 +262,41 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         Returns a named tuple with two attributes: 'shape' gives the shape
         of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
         e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-        """
 
+        """
+        return u.Quantity(self.data.shape, unit=u.pix)
+
+    @property
+    def world_axis_physical_types(self):
+        """
+        Returns an iterable of strings describing the physical type for each world axis.
+
+        The strings conform to the International Virtual Observatory Alliance
+        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
+        definitions of the different strings and string components,
+        see http://www.ivoa.net/documents/latest/UCDlist.html.
+
+        """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
             if not axis:
-                axes_ctype.append(ctype[i])
-        shape = u.Quantity(self.data.shape, unit=u.pix)
-        return DimensionPair(shape=shape, axis_types=axes_ctype[::-1])
+                key = ctype[i]
+                if "-TAN" in key:
+                    key = key[:-4]
+                axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
+        return tuple(axes_ctype[::-1])
 
     def crop_by_coords(self, min_coord_values, interval_widths):
         # The docstring is defined in NDDataBase
 
-        n_dim = len(self.dimensions.shape)
+        n_dim = len(self.dimensions)
         if len(min_coord_values) != len(interval_widths) != n_dim:
             raise ValueError("min_coord_values and interval_widths must have "
                              "same number of elements as number of data dimensions.")
         # Convert coords of lower left corner to pixel units.
-        lower_pixels = self.world_to_pixel(min_coord_values)
-        upper_pixels = self.world_to_pixel([min_coord_values[i] + interval_widths[i]
+        lower_pixels = self.world_to_pixel(*min_coord_values)
+        upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
                                             for i in range(n_dim)])
         # Round pixel values to nearest integer.
         lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
@@ -314,7 +335,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         w = np.logical_and(extra_coord_values >= min_coord_value,
                            extra_coord_values < min_coord_value + interval_width)
         w = np.arange(len(extra_coord_values))[w]
-        item = [slice(None)]*len(self.dimensions.shape)
+        item = [slice(None)]*len(self.dimensions)
         item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
         return self[tuple(item)]
 
@@ -397,7 +418,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
 ---------------------
 Length of NDCube: {lengthNDCube}
 Axis Types of NDCube: {axis_type}
-""".format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions[0], axis_type=self.dimensions[1]))
+""".format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
+           axis_type=self.world_axis_physical_types))
 
 
 class NDCubeOrdered(NDCube):

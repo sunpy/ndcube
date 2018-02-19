@@ -77,26 +77,21 @@ uncertainty.  However, this is not required.
 Dimensions
 ----------
 
-NDCube has a useful property for inspecting its data shape and
-axis types, `~ndcube.NDCube.dimensions`::
+NDCube has useful properties for inspecting its data shape and
+axis types, `~ndcube.NDCube.dimensions` and
+`~ndcube.NDCube.world_axis_physical_types`::
 
   >>> my_cube.dimensions
-  DimensionPair(shape=<Quantity [3., 4., 5.] pix>, axis_types=['HPLN-TAN', 'HPLT-TAN', 'WAVE'])
-
-This returns a named tuple with a ``shape`` and ``axis_types`` attribute.
-``shape`` is an `~astropy.units.Quantity` of pixel units giving the
-length of each dimension in the `~ndcube.NDCube` while
-``axis_types`` is `list` of `str` giving the WCS transformation type for
-each axis. Here the shape and axis types are given in data order, not
-WCS order.
-
-As the dimensions property returns a named tuple, the ``shape`` and
-``axis_types`` can be accessed directly::
-
-  >>> my_cube.dimensions.shape
   <Quantity [3., 4., 5.] pix>
-  >>> my_cube.dimensions.axis_types
-  ['HPLN-TAN', 'HPLT-TAN', 'WAVE']
+  >>> my_cube.world_axis_physical_types
+  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+
+`~ndcube.NDCube.dimensions` returns an `~astropy.units.Quantity` of
+pixel units giving the length of each dimension in the
+`~ndcube.NDCube` while `~ndcube.NDCube.world_axis_physical_types`
+returns an iterable of strings denoted the type of physical property
+represented by each axis.  Here the shape and axis types are given in
+data order, not WCS order.
 
 .. _ndcube_slicing:
 
@@ -202,7 +197,7 @@ each pixel along the axis.  So to add timestamps along the 0th axis of
 
   >>> from datetime import datetime, timedelta
   >>> # Define our timestamps.  Must be same length as data axis.
-  >>> axis_length = int(my_cube.dimensions.shape[0].value)
+  >>> axis_length = int(my_cube.dimensions[0].value)
   >>> timestamps = [datetime(2000, 1, 1)+timedelta(minutes=i)
   ...               for i in range(axis_length)]
   >>> extra_coords_input = [("time", 0, timestamps)]
@@ -232,14 +227,14 @@ time coordinate will only contain the value from that slice.::
 Note that the ``axis`` value is now ``None`` because the dimensionality of the
 `~ndcube.NDCube` has been reduced via the slicing::
 
-  >>> my_cube[0].dimensions.shape
+  >>> my_cube[0].dimensions
   <Quantity [4., 5.] pix>
 
 and so the ``time`` extra coordinate no longer corresponds to a data
 axis.  This would not have been the case if we had done the slicing
 so the length of the 0th axis was >1::
 
-  >>> my_cube[0:2].dimensions.shape
+  >>> my_cube[0:2].dimensions
   <Quantity [2., 4., 5.] pix>
   >>> my_cube[0:2].extra_coords # doctest: +SKIP
   {'time': {'value': [datetime.datetime(2000, 1, 1, 0, 0), datetime.datetime(2000, 1, 1, 0, 1)], 'axis': 0}}
@@ -322,13 +317,13 @@ we would do::
 
   >>> import astropy.units as u
   >>> real_world_coords = my_cube.pixel_to_world(
-  ... [Quantity([2], unit=u.pix), Quantity([3], unit=u.pix), Quantity([4], unit=u.pix)])
+  ... Quantity([2], unit=u.pix), Quantity([3], unit=u.pix), Quantity([4], unit=u.pix))
 
 To convert two pixels with pixel coordinates (2, 3, 4) and (5, 6, 7),
 we would call pixel_to_world like so::
 
   >>> real_world_coords = my_cube.pixel_to_world(
-  ... [Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix)])
+  ... Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix))
 
 As can be seen, since each `~astropy.units.Quantity` describes a
 different pixel coordinate of the same number of pixels, the lengths
@@ -355,8 +350,8 @@ is a list of `~astropy.units.Quantity` objects in pixel units is
 returned::
 
   >>> pixel_coords = my_cube.world_to_pixel(
-  ... [Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
-  ...  Quantity(1.10000000e-09,  unit="m")])
+  ... Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
+  ...  Quantity(1.10000000e-09,  unit="m"))
   >>> pixel_coords
   [<Quantity 2.00000001 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
 

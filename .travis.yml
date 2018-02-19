@@ -38,7 +38,7 @@ env:
         
         # List other runtime dependencies for the package that are available as
         # conda packages here.
-        - CONDA_DEPENDENCIES='openjpeg Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas nomkl pytest-cov coverage glymur suds-jurko sphinx=1.6.7'
+        - CONDA_DEPENDENCIES='openjpeg Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas nomkl pytest-cov coverage glymur suds-jurko sphinx<1.7'
         
         # List other runtime dependencies for the package that are available as
         # pip packages here.
@@ -49,7 +49,7 @@ env:
         # are in astropy-ci-extras. If your package uses either of these,
         # add the channels to CONDA_CHANNELS along with any other channels
         # you want to use.
-        - CONDA_CHANNELS='conda-forge'
+        - CONDA_CHANNELS='sunpy'
 
         # If there are matplotlib or other GUI tests, uncomment the following
         # line to use the X virtual framebuffer.

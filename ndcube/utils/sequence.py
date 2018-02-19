@@ -31,6 +31,31 @@ by sequence_index attribute.
 """
 
 
+def slice_sequence(cubesequence, item):
+    """
+    Slice an NDCubeSequence given a slicing/index item.
+
+    Parameters
+    ----------
+    cubesequence: `ndcube.NDCubeSequence`
+        The cubesequence to slice.
+
+    item: `int`, `slice`, or `tuple` of `int` and/or `slice`.
+        An slice/index item compatible with input to NDCubeSequence.__getitem__.
+
+    Returns
+    -------
+    result: `NDCubeSequence` or `NDCube`
+        The sliced cube sequence.
+
+    """
+    if item is None or (isinstance(item, tuple) and None in item):
+        raise IndexError("None indices not supported")
+    # Convert item to list of SequenceSlices
+    sequence_items = convert_item_to_sequence_items(item, len(cubesequence.data))
+    return slice_sequence_by_sequence_items(cubesequence, sequence_items)
+
+
 @singledispatch
 def convert_item_to_sequence_items(item, n_cubes=None, cube_item=None):
     """
@@ -163,7 +188,7 @@ def _get_sequence_items_from_tuple_item(tuple_item, n_cubes, cube_item=None):
     return sequence_items
 
 
-def _slice_sequence(cubesequence, sequence_items):
+def slice_sequence_by_sequence_items(cubesequence, sequence_items):
     """
     Slices an NDCubeSequence given a list of SequenceSlice objects.
 
@@ -230,7 +255,7 @@ def _index_sequence_as_cube(cubesequence, item):
     sequence_items = convert_cube_like_item_to_sequence_items(item, cubesequence._common_axis,
                                                               common_axis_cube_lengths)
     # Use sequence items to slice NDCubeSequence.
-    return _slice_sequence(cubesequence, sequence_items)
+    return slice_sequence_by_sequence_items(cubesequence, sequence_items)
 
 
 def convert_cube_like_item_to_sequence_items(cube_like_item, common_axis, common_axis_cube_lengths):
