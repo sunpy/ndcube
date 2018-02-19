@@ -367,30 +367,73 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    @property
-    def all_world_coords(self):
-        """Returns WCS coordinate values of all pixels for all axes."""
+    def all_world_coords(self, axes=None):
+        """
+        Returns WCS coordinate values of all pixels for all axes.
+
+        Parameters
+        ----------
+        axes: `int` or `str`, or iterable of `int` or `str`
+            Axis number in numpy ordering or unique substring of world_axis_physical_types
+            of axes for which real world coordinates are desired.
+            Default=None implies all axes will be returned.
+
+        Returns
+        -------
+        axes_coords: `list` of `astropy.units.Quantity`
+            Real world coords for axes in order requested by user.
+
+        Example
+        -------
+        >>> #NDCube.all_world_coords(('lat', 'lon')) # skip: doctest+
+        >>> #NDCube.all_world_coords(2) # skip: doctest+
+
+        """
+        # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = len(cube_dimensions)
-        all_coords = [None]*n_dimensions
-        axes_translated = np.array([False] * n_dimensions)
+        world_axis_types = self.world_axis_physical_types
+        # Determine axis numbers of user supplied axes.
+        if axes is None:
+            int_axes = np.arange(n_dimensions)
+        else:
+            if isinstance(axes, int):
+                int_axes = np.array([axes])
+            elif isinstance(axes, str):
+                int_axes = np.array([
+                    utils.cube._get_axis_number_from_axis_name(axes, world_axis_types)])
+            else:
+                int_axes = []
+                for axis in axes:
+                    if isinstance(axis, int):
+                        int_axes.append(axis)
+                    elif isinstance(axis, str):
+                        int_axes.append(
+                            utils.cube._get_axis_number_from_axis_name(axes, world_axis_types))
+                int_axes = np.array(int_axes)
+        # Ensure user has not entered the same axis twice.
+        if len(np.unique(int_axes)) != len(int_axes):
+               raise ValueError("Same axis entered more than once.")
+        n_axes = len(int_axes)
+        axes_coords = [None] * n_axes
+        axes_translated = np.array([False] * n_axes)
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
-        dependent_axes = np.empty(n_dimensions, dtype=object)
-        for axis in range(n_dimensions):
+        dependent_axes = np.empty(n_axes, dtype=object)
+        for i, axis in enumerate(int_axes):
             x = np.array(self.wcs.dependent_axes(axis))
             x.sort()
-            dependent_axes[axis] = x
-        n_dependent_axes = np.array([len(axes) for axes in dependent_axes])
+            dependent_axes[i] = x
+        n_dependent_axes = np.array([len(da) for da in dependent_axes])
         # Iterate through each axis and perform WCS translation.
-        for axis in range(n_dimensions):
+        for i, axis in enumerate(int_axes):
             # If axis has already been translated, do not do so again.
-            if axes_translated[axis] == False:
-                if n_dependent_axes[axis] == 1:
+            if axes_translated[i] == False:
+                if n_dependent_axes[i] == 1:
                     # Construct pixel quantities in each dimension letting
                     # other dimensions all have 0 pixel value.
                     quantity_list = \
-                      [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes[axis]])),
+                      [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes[i]])),
                                   unit=u.pix)] * n_dimensions
                     # Replace array in quantity list corresponding to current axis with
                     # np.arange array.
@@ -399,15 +442,19 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                     # If the axis is dependent on another, perform
                     # translations on all dependent axes.
                     quantity_list = utils.cube._get_pixel_quantities_for_dependent_axes(
-                        dependent_axes[axis], cube_dimensions)
+                        dependent_axes[i], cube_dimensions)
                 # Perform wcs translation
                 dependent_axes_coords = self.pixel_to_world(*quantity_list)
                 # Place world coords into output list
-                for dependent_axis in dependent_axes[axis]:
-                    all_coords[dependent_axis] = dependent_axes_coords[dependent_axis]
-                # Remove axes from list that have now been translated.
-                axes_translated[dependent_axes[axis]] = True
-        return all_coords
+                for dependent_axis in dependent_axes[i]:
+                    if dependent_axis in int_axes:
+                        # Due to error check above we know dependent
+                        # axis can appear in int_axes at most once.
+                        j = np.where(int_axes == dependent_axis)[0][0]
+                        axes_coords[j] = dependent_axes_coords[dependent_axis]
+                        # Remove axis from list that have now been translated.
+                        axes_translated[j] = True
+        return axes_coords
 
     def __repr__(self):
         return (

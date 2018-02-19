@@ -142,8 +142,6 @@ def _get_pixel_quantities_for_dependent_axes(dependent_axes, cube_dimensions):
         Othogonal pixel quantities describing all pixels in cube in relevant dimensions.
 
     """
-
-    print(dependent_axes)
     n_dependent_axes = len(dependent_axes)
     n_dimensions = len(cube_dimensions)
     quantity_list = [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes])),
@@ -182,3 +180,30 @@ def _get_pixel_quantities_for_dependent_axes(dependent_axes, cube_dimensions):
         # Replace pixel array for this axis in quantity_list.
         quantity_list[dependent_axis] = u.Quantity(coord_axis_array, unit=u.pix)
     return quantity_list
+
+
+def _get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
+    """
+    Returns axis number (numpy ordering) given a substring unique to a world axis type string.
+
+    Parameters
+    ----------
+    axis_name: `str`
+        Name or substring of name of axis as defined by NDCube.world_axis_physical_types
+
+    world_axis_physical_types: iterable of `str`
+        Output from NDCube.world_axis_physical_types for relevant cube,
+        i.e. iterable of string axis names.
+
+    Returns
+    -------
+    axis_index[0]: `int`
+        Axis number (numpy ordering) corresponding to axis name
+    """
+    axis_index = [axis_name in world_axis_type for world_axis_type in world_axis_physical_types]
+    axis_index = np.arange(len(world_axis_physical_types))[axis_index]
+    if len(axis_index) != 1:
+        raise ValueError("User defined axis with a string that is not unique to "
+                         "a physical axis type. {0} not in any of {1}".format(
+                             str_axis, world_axis_types))
+    return axis_index[0]
