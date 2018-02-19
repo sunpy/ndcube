@@ -317,13 +317,13 @@ we would do::
 
   >>> import astropy.units as u
   >>> real_world_coords = my_cube.pixel_to_world(
-  ... [Quantity([2], unit=u.pix), Quantity([3], unit=u.pix), Quantity([4], unit=u.pix)])
+  ... Quantity([2], unit=u.pix), Quantity([3], unit=u.pix), Quantity([4], unit=u.pix))
 
 To convert two pixels with pixel coordinates (2, 3, 4) and (5, 6, 7),
 we would call pixel_to_world like so::
 
   >>> real_world_coords = my_cube.pixel_to_world(
-  ... [Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix)])
+  ... Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix))
 
 As can be seen, since each `~astropy.units.Quantity` describes a
 different pixel coordinate of the same number of pixels, the lengths
@@ -350,8 +350,8 @@ is a list of `~astropy.units.Quantity` objects in pixel units is
 returned::
 
   >>> pixel_coords = my_cube.world_to_pixel(
-  ... [Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
-  ...  Quantity(1.10000000e-09,  unit="m")])
+  ... Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
+  ...  Quantity(1.10000000e-09,  unit="m"))
   >>> pixel_coords
   [<Quantity 2.00000001 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
 
