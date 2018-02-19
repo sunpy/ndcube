@@ -370,7 +370,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
     @property
     def all_world_coords(self):
         """Returns WCS coordinate values of all pixels for all axes."""
-        cube_dimensions = np.array(self.dimensions.shape.value, dtype=int)
+        cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = len(cube_dimensions)
         all_coords = [None]*n_dimensions
         axes_translated = np.array([False] * n_dimensions)
@@ -401,7 +401,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                     quantity_list = utils.cube._get_pixel_quantities_for_dependent_axes(
                         dependent_axes[axis], cube_dimensions)
                 # Perform wcs translation
-                dependent_axes_coords = self.pixel_to_world(quantity_list)
+                dependent_axes_coords = self.pixel_to_world(*quantity_list)
                 # Place world coords into output list
                 for dependent_axis in dependent_axes[axis]:
                     all_coords[dependent_axis] = dependent_axes_coords[dependent_axis]
