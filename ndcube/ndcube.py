@@ -84,6 +84,18 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     def dimensions(self):
         pass
 
+    @abc.abstractproperty
+    def world_axis_physical_types(self):
+        """
+        Returns an iterable of strings describing the physical type for each world axis.
+
+        The strings conform to the International Virtual Observatory Alliance
+        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
+        definitions of the different strings and string components,
+        see http://www.ivoa.net/documents/latest/UCDlist.html.
+
+        """
+
     @abc.abstractmethod
     def crop_by_coords(self, min_coord_values, interval_widths):
         """
@@ -268,15 +280,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
 
     @property
     def world_axis_physical_types(self):
-        """
-        Returns an iterable of strings describing the physical type for each world axis.
+        # The docstring is defined in NDDataBase
 
-        The strings conform to the International Virtual Observatory Alliance
-        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
-        definitions of the different strings and string components,
-        see http://www.ivoa.net/documents/latest/UCDlist.html.
-
-        """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
@@ -413,7 +418,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                 int_axes = np.array(int_axes)
         # Ensure user has not entered the same axis twice.
         if len(np.unique(int_axes)) != len(int_axes):
-               raise ValueError("Same axis entered more than once.")
+            raise ValueError("Same axis entered more than once.")
         n_axes = len(int_axes)
         axes_coords = [None] * n_axes
         axes_translated = np.array([False] * n_axes)
