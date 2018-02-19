@@ -95,7 +95,7 @@ cube2_time_common = NDCube(data, wm, extra_coords=[
       for i in range(1, data.shape[1]+1)])])
 
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
-seq_bad_common_axis = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis='0')
+seq_bad_common_axis = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=None)
 seq_time_common = NDCubeSequence([cube1_time_common, cube2_time_common], common_axis=1)
 seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
 seq2 = NDCubeSequence([cube1, cube2_no_no, cube3_no_time, cube4])
@@ -218,7 +218,10 @@ def test_common_axis_extra_coords(test_input, expected):
     output = test_input.common_axis_extra_coords
     assert output.keys() == expected.keys()
     for key in output.keys():
-        assert (output[key] == expected[key]).all()
+        try:
+            assert output[key] == expected[key]
+        except ValueError:
+            assert (output[key] == expected[key]).all()
 
 
 @pytest.mark.parametrize(
