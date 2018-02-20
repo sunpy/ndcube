@@ -445,8 +445,17 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                 else:
                     # If the axis is dependent on another, perform
                     # translations on all dependent axes.
-                    quantity_list = utils.cube._get_pixel_quantities_for_dependent_axes(
-                        dependent_axes[i], cube_dimensions)
+                    # Construct pixel quantities in each dimension letting
+                    # other dimensions all have 0 pixel value.
+                    quantity_list = [u.Quantity(np.zeros(tuple(
+                        [cube_dimensions[k] for k in dependent_axes[i]])),
+                        unit=u.pix)] * n_dimensions
+                    # Construct orthogonal pixel index arrays for dependent axes.
+                    dependent_pixel_quantities = np.meshgrid(
+                        *[np.arange(cube_dimensions[k]) * u.pix
+                          for k in dependent_axes[i]], indexing="ij")
+                    for k, axis in enumerate(dependent_axes[i]):
+                        quantity_list[axis] = dependent_pixel_quantities[k]
                 # Perform wcs translation
                 dependent_axes_coords = self.pixel_to_world(*quantity_list)
                 # Place world coords into output list

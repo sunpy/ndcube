@@ -125,64 +125,6 @@ def convert_extra_coords_dict_to_input_format(extra_coords, missing_axis):
         return result
 
 
-def _get_pixel_quantities_for_dependent_axes(dependent_axes, cube_dimensions):
-    """
-    Returns list of othogonal pixel quantities for cube axes which have dependent WCS translations.
-
-    Parameters
-    ----------
-    dependent_axis: `list` of `int`
-        Axis numbers in the numpy convention.
-
-    cube_dimensions: Iterable of `int`
-        Number of pixels in each dimension
-
-    Returns
-    -------
-    quantity_list: `list` of `astropy.units.Quantity`
-        Othogonal pixel quantities describing all pixels in cube in relevant dimensions.
-
-    """
-    n_dependent_axes = len(dependent_axes)
-    n_dimensions = len(cube_dimensions)
-    quantity_list = [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes])),
-                                unit=u.pix)] * n_dimensions
-    for i, dependent_axis in enumerate(dependent_axes):
-        # Define list of indices/slice objects for accessing
-        # sections of dependent axis arrays that are to be
-        # replaced with orthogonal np.arange arrays.
-        slice_list = [0] * n_dependent_axes
-        slice_list[i] = slice(None)
-        # Define array of indices of axes in slice list not
-        # including the axis along which we are inserting
-        # np.arange.
-        other_axes_indices = list(range(n_dependent_axes))
-        del(other_axes_indices[i])
-        other_axes_indices = np.asarray(other_axes_indices)
-        other_axes_products = np.cumprod(cube_dimensions[other_axes_indices][::-1])[::-1]
-        other_axes_products = np.append(other_axes_products, 1)[1:]
-        # Determine total number of times we are going to
-        # insert np.arange into quantity array.
-        total_iters = np.prod(cube_dimensions[other_axes_indices])
-        coord_axis_array = copy.deepcopy(quantity_list[dependent_axis].value)
-        for j in range(total_iters):
-            # Determine mapping from iteration int to
-            # indices to insert to slice_list.
-            mod = j
-            k = 0
-            # Use while loop so that l will always equal
-            # n_dependent_axes[dependent_axis]-2 when loop is exited.
-            while k < n_dependent_axes-2:
-                slice_list[other_axes_indices[k]] = int(mod/other_axes_products[k])
-                mod = mod % other_axes_products[k]
-                k += 1
-            slice_list[other_axes_indices[k]] = mod
-            coord_axis_array[tuple(slice_list)] = np.arange(cube_dimensions[dependent_axis])
-        # Replace pixel array for this axis in quantity_list.
-        quantity_list[dependent_axis] = u.Quantity(coord_axis_array, unit=u.pix)
-    return quantity_list
-
-
 def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
     """
     Returns axis number (numpy ordering) given a substring unique to a world axis type string.
