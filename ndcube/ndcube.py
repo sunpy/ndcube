@@ -406,7 +406,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                 int_axes = np.array([axes])
             elif isinstance(axes, str):
                 int_axes = np.array([
-                    utils.cube._get_axis_number_from_axis_name(axes, world_axis_types)])
+                    utils.cube.get_axis_number_from_axis_name(axes, world_axis_types)])
             else:
                 int_axes = []
                 for axis in axes:
@@ -414,7 +414,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                         int_axes.append(axis)
                     elif isinstance(axis, str):
                         int_axes.append(
-                            utils.cube._get_axis_number_from_axis_name(axis, world_axis_types))
+                            utils.cube.get_axis_number_from_axis_name(axis, world_axis_types))
                 int_axes = np.array(int_axes)
         # Ensure user has not entered the same axis twice.
         if len(np.unique(int_axes)) != len(int_axes):
@@ -426,7 +426,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         # Ensure the axes are in numerical order.
         dependent_axes = np.empty(n_axes, dtype=object)
         for i, axis in enumerate(int_axes):
-            x = np.array(utils.wcs.dependent_axes(self.wcs, axis))
+            x = np.array(utils.wcs.get_dependent_axes(self.wcs, axis))
             x.sort()
             dependent_axes[i] = x
         n_dependent_axes = np.array([len(da) for da in dependent_axes])

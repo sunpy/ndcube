@@ -12,7 +12,7 @@ import numpy as np
 import astropy.units as u
 
 
-__all__ = ['SequenceSlice', 'SequenceItem', 'convert_item_to_sequence_items',
+__all__ = ['SequenceSlice', 'SequenceItem', 'slice_sequence', 'convert_item_to_sequence_items',
            'convert_cube_like_item_to_sequence_items', 'convert_slice_nones_to_ints']
 
 
@@ -245,7 +245,7 @@ def _index_sequence_as_cube(cubesequence, item):
     >>> # return zeroth time slice of cubeB in via normal CubeSequence indexing.
     >>> cs[1,:,0,:] # doctest: +SKIP
     >>> # Return same slice using this function
-    >>> index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0,
+    >>> _index_sequence_as_cube(cs, (slice(0, cubeB.shape[0]), 0,
     ...                             (slice(0, cubeB.shape[2])) # doctest: +SKIP
 
     """

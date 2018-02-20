@@ -9,7 +9,8 @@ import copy
 import numpy as np
 import astropy.units as u
 
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order']
+__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
+           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
 
 
 def data_axis_to_wcs_axis(data_axis, missing_axis):
@@ -182,7 +183,7 @@ def _get_pixel_quantities_for_dependent_axes(dependent_axes, cube_dimensions):
     return quantity_list
 
 
-def _get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
+def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
     """
     Returns axis number (numpy ordering) given a substring unique to a world axis type string.
 

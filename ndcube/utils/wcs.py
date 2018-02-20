@@ -11,7 +11,7 @@ import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
-__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping']
+__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_axes']
 
 
 class TwoWayDict(UserDict):
@@ -284,7 +284,7 @@ def reindex_wcs(wcs, inds):
     return outwcs
 
 
-def dependent_axes(wcs_object, axis):
+def get_dependent_axes(wcs_object, axis):
     # Given an axis number in numpy ordering, returns the axes whose
     # WCS translations are dependent, including itself.  Again,
     # returned axes are in numpy ordering convention.
