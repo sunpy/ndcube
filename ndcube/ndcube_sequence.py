@@ -103,10 +103,12 @@ Axis Types of 1st NDCube: {axis_type}
         # If there is a common axis, length of cube's along it may not
         # be the same. Therefore if the lengths are different,
         # represent them as a tuple of all the values, else as an int.
-        if self._common_axis:
-            common_axis_cube_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
-            if len(np.unique(common_axis_cube_lengths)) != 1:
-                dimensions[self._common_axis+1] = tuple(common_axis_dimension)
+        if self._common_axis is not None:
+            common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
+            if len(np.unique(common_axis_lengths)) != 1:
+                common_axis_dimensions = [cube.dimensions[self._common_axis] for cube in self.data]
+                dimensions[self._common_axis+1] = u.Quantity(
+                    common_axis_dimensions, unit=common_axis_dimensions[0].unit)
         return tuple(dimensions)
 
     @property
