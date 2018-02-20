@@ -459,7 +459,10 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                         axes_coords[j] = dependent_axes_coords[dependent_axis]
                         # Remove axis from list that have now been translated.
                         axes_translated[j] = True
-        return axes_coords
+        if len(axes_coords) == 1:
+            return axes_coords[0]
+        else:
+            return tuple(axes_coords)
 
     def __repr__(self):
         return (

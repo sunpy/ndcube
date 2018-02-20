@@ -870,8 +870,8 @@ def test_ndcubeordered(test_input, expected):
                      u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
                                  [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg),
                      u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)]),
-    ((cubem, 2), [u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)]),
-    ((cubem, 'em'), [u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)])
+    ((cubem, 2), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)),
+    ((cubem, 'em'), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))
     ])
 def test_all_world_coords(test_input, expected):
     all_coords = test_input[0].all_world_coords(axes=test_input[1])

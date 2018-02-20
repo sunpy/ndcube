@@ -379,7 +379,7 @@ coordinates for each pixel along a given data axis.  So in the case of
 we could call::
 
   >>> my_cube.all_world_coords(axes=2)
-  [<Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>]
+  <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
 order.  We can also define the axis we want using any unique substring
@@ -390,7 +390,7 @@ from the axis names defined in
   ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
   >>> # Since 'wl' is unique to the wavelength axis name, let's use that.
   >>> my_cube.all_world_coords(axes='wl')
-  [<Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>]
+  <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Notice how this returns the same result as when we set ``axes`` to
 the corresponding data axis number.  As discussed above, some WCS axes
@@ -408,19 +408,19 @@ longitude x latitude axis lengths.  For example::
   >>> longitude.shape
   (3, 4)
   >>> longitude
-  [<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
-            [1.        , 1.        , 1.        , 1.        ],
-            [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>]
+  <Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
+             [1.        , 1.        , 1.        , 1.        ],
+             [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>
 
 It is also possible to request more than one axis's world coordinates
 by setting ``axes`` to an iterable of data axis number and/or axis
 type strings.::
 
   >>> my_cube.all_world_coords(axes=(2, 'lon'))
-  [<Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,
+  (<Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,
    <Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
               [1.        , 1.        , 1.        , 1.        ],
-              [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>]
+              [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>)
 
 Notice that the axes' coordinates have been returned in the same order
 in which they were requested.  Finally, if the user wanted the world
@@ -428,7 +428,7 @@ coordinates for all the axes, ```axes`` can be set to ``None``, which
 is in fact the default.::
 
   >>> my_cube.all_world_coords()
-  [<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
+  (<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
             [1.        , 1.        , 1.        , 1.        ],
             [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>,
    <Quantity [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01, 
@@ -437,7 +437,7 @@ is in fact the default.::
              1.49989848e+00],
             [1.26915033e-05, 4.99987815e-01, 9.99962939e-01,
              1.49986193e+00]] deg>,
-   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>]
+   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>)
 
 As stated at the top of this guide, `~ndcube.NDCube` is only written
 to handle single arrays described by single WCS instances.  For cases
