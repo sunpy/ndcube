@@ -77,7 +77,7 @@ uncertainty.  However, this is not required.
 Dimensions
 ----------
 
-```NDCube``` has useful properties for inspecting its data shape and
+`~ndcube.NDCube` has useful properties for inspecting its data shape and
 axis types, `~ndcube.NDCube.dimensions` and
 `~ndcube.NDCube.world_axis_physical_types`::
 
@@ -194,7 +194,7 @@ integer (pixel) steps along an axis can be stored within the object
 and accessed via the `~ndcube.NDCube.extra_coords` property. To
 attach extra coordinates to an `~ndcube.NDCube` instance, provide an
 iterable of tuples of the form (`str`, `int`,
-`~astropy.units.Quantity` or `list`) during instantiation.  The 0th
+`~astropy.units.Quantity` or array-like) during instantiation.  The 0th
 entry gives the name of the coordinate, the 1st entry gives the data
 axis to which the extra coordinate corresponds, and the 2nd entry
 gives the value of that coordinate at each pixel along the axis.  So
@@ -278,7 +278,7 @@ In addition to this, some optional kwargs can be used to customize the
 plot.  The ``axis_ranges`` kwarg can be used to set the axes ticklabels.  See the
 `~sunpy.visualization.imageanimator.ImageAnimatorWCS` documentation for
 more detail.  However, if this is not set, the axis ticklabels are
-automatically derived as real world coordinates from the WCS obect
+automatically derived in real world coordinates from the WCS object
 within the `~ndcube.NDCube`.
 
 By default the final two data dimensions are used for the plot
@@ -372,17 +372,16 @@ different instruments with overlapping fields of view.
 
 There are times however, when you only want to know the real world
 coordinates of the `~ndcube.NDCube` field of view.  To make this easy,
-`~ndcube.NDCube.` has a another coordinate transformation method
+`~ndcube.NDCube` has a another coordinate transformation method
 `~ndcube.NDCube.all_world_coords`.  This method returns the real world
 coordinates for each pixel along a given data axis.  So in the case of
-``my_cube`` we've been using above, if we wanted the wavelength axis,
-we could call::
+``my_cube``, if we wanted the wavelength axis we could call::
 
   >>> my_cube.all_world_coords(axes=2)
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
-order.  We can also define the axis we want using any unique substring
+order.  We can also define the axis using any unique substring
 from the axis names defined in
 `ndcube.NDCube.world_axis_physical_types`::
 
@@ -393,14 +392,16 @@ from the axis names defined in
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Notice how this returns the same result as when we set ``axes`` to
-the corresponding data axis number.  As discussed above, some WCS axes
+the corresponding data axis number.
+
+As discussed above, some WCS axes
 are not independent.  For those axes,
 `~ndcube.NDCube.all_world_coords()` returns a
-`~astropy.units.Quantity` with the same number of dimensions are there
-are dependent axes.  For example, helioprojective longitude and
-latitude are dependent.  Therefore if we ask for longitude, we will
-get back a 2D `~astropy.units.Quantity` with the same shape as the
-longitude x latitude axis lengths.  For example::
+`~astropy.units.Quantity` with the same number of dimensions as
+dependent axes.  For example, helioprojective longitude and latitude
+are dependent.  Therefore if we ask for longitude, we will get back a
+2D `~astropy.units.Quantity` with the same shape as the longitude x
+latitude axes lengths.  For example::
 
   >>> longitude = my_cube.all_world_coords(axes='lon')
   >>> my_cube.dimensions
@@ -423,7 +424,9 @@ type strings.::
               [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>)
 
 Notice that the axes' coordinates have been returned in the same order
-in which they were requested.  Finally, if the user wanted the world
+in which they were requested.
+
+Finally, if the user wanted the world
 coordinates for all the axes, ```axes`` can be set to ``None``, which
 is in fact the default.::
 
@@ -443,4 +446,4 @@ As stated at the top of this guide, `~ndcube.NDCube` is only written
 to handle single arrays described by single WCS instances.  For cases
 where data is made up of multiple arrays, each described by different
 WCS translations, `ndcube` has another class,
-``~ndcube.NDCubeSequence`, which will discuss in the next section.
+`~ndcube.NDCubeSequence`, which will discuss in the next section.

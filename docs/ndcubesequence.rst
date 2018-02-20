@@ -73,12 +73,12 @@ N.B. The above warnings are due to the fact that
 `astropy.nddata.uncertainty` is recommended to have an
 ``uncertainty_type`` attribute giving a string describing the type of
 uncertainty.  However, this is not required.  Also note that due to
-laziness, we have used the same WCS instance in each
-`~ndcube.NDCube` above.  However, it would be more common for each
-`~ndcube.NDCube` to have a different WCS, and the usefulness of
-`~ndcube.NDCubeSequence` is more pronounced when they are
-different. Nonetheless, this can still be used to adequately
-demonstrate the power of `~ndcube.NDCubeSequence`.
+laziness, we have used the same WCS translations in each
+`~ndcube.NDCube` instance above.  However, it would be more common for
+each `~ndcube.NDCube` instance to have a different WCS, and in that
+case the usefulness of `~ndcube.NDCubeSequence` is more
+pronounced. Nonetheless, this case can still be used to adequately
+demonstrate the capabilities of `~ndcube.NDCubeSequence`.
 
 Finally, creating an `~ndcube.NDCubeSequence` becomes is simple::
   
@@ -133,29 +133,40 @@ Defining a common axis enables the full range of the
 `ndcube.NDCubeSequence.index_as_cube`. See following sections for
 more details on these features.
 
+.. _dimensions:
+
 Dimensions
 ----------
 
-Analagous to `ndcube.NDCube.dimensions`, there are also
-`~ndcube.NDCubeSequence.dimensions` and
-`~ndcube.NDCubeSequence.world_axis_physical_types` properties for
-easily inspecting the shape and phsyical axis types of an
-`~ndcube.NDCubeSequence` instance::
+Analagous to `ndcube.NDCube.dimensions`, there are also a
+`ndcube.NDCubeSequence.dimensions` property for
+easily inspecting the shape of an `~ndcube.NDCubeSequence` instance::
 
   >>> my_sequence.dimensions
   (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
 
-Slightly differently to `~ndcube.NDCube` it returns a tuple of
+Slightly differently to `ndcube.NDCube.dimensions`,
+`ndcube.NDCubeSequence.dimensions` returns a tuple of
 `astropy.units.Quantity` instances with pixel units, giving the length
-of each axis.  Meanwhile, the
-`~ndcube.NDCubeSequence.world_axis_physical_types` returns a tuple of
-the physical axis types, as it does for `~ndcube.NDCube`::
+of each axis.  This is in constrast to the single
+`~astropy.units.Quantity` returned by `~ndcube.NDCube`. This is
+because `~ndcube.NDCubeSequence` supports sub-cubes of different
+lengths along the common axis if it is set.  In that case, the
+corresponding quantity in the dimensions tuple will have a length
+greater than 1 and list the length of each sub-cube along the common
+axis.
+
+Equivalent to `ndcube.NDCube.world_axis_physical_types`,
+`ndcube.NDCubeSequence.world_axis_physical_types` returns a tuple of
+the physical axis types.  The same `IVOA UCD1+ controlled words
+<http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>` are
+used for the cube axes as is used in
+`ndcube.NDCube.world_axis_physical_types`.  The sequence axis is given
+the label ``'meta.obs.sequence'`` as it is the IVOA UCD1+ controlled
+word that best describes it.  To call, simply do::
   
   >>> my_sequence.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
-
-The sequence axis is given the label ``'meta.obs.sequence'`` as it is
-the IVOA UCD1+ controlled word that best describes it.
 
 .. _sequence_slicing:
 
@@ -226,9 +237,14 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
 
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
-  (<Quantity 3. pix>, <Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
+  (<Quantity 3. pix>, <Quantity [1., 3., 1.] pix>, <Quantity 2. pix>, <Quantity 3. pix>)
   >>> roi_across_subcubes.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+
+Notice that since the sub-cubes are now of lengths along the common
+axis, the corresponding `~astropy.units.Quantity` gives the lengths of
+each cube individually.  See section on :ref:`dimensions` for
+more detail.
 
 Common Axis Extra Coordinates
 -----------------------------
@@ -273,13 +289,13 @@ Sequence Axis Extra Coordinates
 -------------------------------
 Analgous to `~ndcube.NDCubeSequence.common_axis_extra_coords`, it is
 also possible to access the extra coordinates that are not assigned to any
-`ndcube.NDCube` data axis via the
+`~ndcube.NDCube` data axis via the
 `ndcube.NDCubeSequence.sequence_axis_extra_coords` property.  Whereas
 `~ndcube.NDCubeSequence.common_axis_extra_coords` returns all the
 extra coords with an ``'axis'`` value equal to the common axis,
 `~ndcube.NDCubeSequence.sequence_axis_extra_coords` returns all extra
 coords with an ``'axis'`` value of ``None``.  Another way of thinking
-about this is when there is no common axis set, is that they are
+about this when there is no common axis set, is that they are
 assigned to the sequence axis, hence the property name.::
 
   >>> my_sequence.sequence_axis_extra_coords
