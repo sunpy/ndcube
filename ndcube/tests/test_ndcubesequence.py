@@ -94,6 +94,9 @@ cube2_time_common = NDCube(data, wm, extra_coords=[
      [cube1_time_common.extra_coords["time"]["value"][-1] + datetime.timedelta(minutes=i)
       for i in range(1, data.shape[1]+1)])])
 
+cube1_no_extra_coords = NDCube(data, wt, missing_axis=[False, False, False, True])
+cube3_no_extra_coords = NDCube(data2, wt, missing_axis=[False, False, False, True])
+
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
 seq_bad_common_axis = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=None)
 seq_time_common = NDCubeSequence([cube1_time_common, cube2_time_common], common_axis=1)
@@ -101,6 +104,7 @@ seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
 seq2 = NDCubeSequence([cube1, cube2_no_no, cube3_no_time, cube4])
 seq3 = NDCubeSequence([cube1, cube2, cube3_diff_compatible_unit, cube4])
 seq4 = NDCubeSequence([cube1, cube2, cube3_diff_incompatible_unit, cube4])
+seq_no_extra_coords = NDCubeSequence([cube1_no_extra_coords, cube3_no_extra_coords], common_axis=0)
 
 nan_extra_coord = u.Quantity(range(4), unit=u.cm)
 nan_extra_coord.value[1] = np.nan
@@ -229,6 +233,11 @@ def test_common_axis_extra_coords(test_input, expected):
             assert (output[key] == expected[key]).all()
 
 
+@pytest.mark.parametrize("test_input", [(seq_no_extra_coords)])
+def test_no_common_axis_extra_coords(test_input):
+    assert seq_no_extra_coords.sequence_axis_extra_coords is None
+
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [(seq,
@@ -267,6 +276,11 @@ def test_sequence_axis_extra_coords(test_input, expected):
                 # Else, is output is not a float, assert it equals expected.
                 else:
                     assert output_value == expected[key][i]
+
+
+@pytest.mark.parametrize("test_input", [(seq_no_extra_coords)])
+def test_no_sequence_axis_extra_coords(test_input):
+    assert seq_no_extra_coords.sequence_axis_extra_coords is None
 
 
 @pytest.mark.parametrize("test_input", [(seq4)])

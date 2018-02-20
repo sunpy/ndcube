@@ -600,19 +600,24 @@ def _get_axis_extra_coord_names_and_units(cube_list, axis):
     # quantity) from each cube.
     for cube in cube_list:
         all_extra_coords = cube.extra_coords
-        all_extra_coords_keys = list(all_extra_coords.keys())
-        for coord_key in all_extra_coords_keys:
-            if all_extra_coords[coord_key]["axis"] == axis:
-                axis_coord_names.append(coord_key)
-                if isinstance(all_extra_coords[coord_key]["value"], u.Quantity):
-                    axis_coord_units.append(all_extra_coords[coord_key]["value"].unit)
-                else:
-                    axis_coord_units.append(None)
+        if all_extra_coords is not None:
+            all_extra_coords_keys = list(all_extra_coords.keys())
+            for coord_key in all_extra_coords_keys:
+                if all_extra_coords[coord_key]["axis"] == axis:
+                    axis_coord_names.append(coord_key)
+                    if isinstance(all_extra_coords[coord_key]["value"], u.Quantity):
+                        axis_coord_units.append(all_extra_coords[coord_key]["value"].unit)
+                    else:
+                        axis_coord_units.append(None)
     # Extra coords common between cubes will be repeated.  Get rid of
     # duplicate names and then only keep the units corresponding to
     # the first occurence of that name.
-    axis_coord_names, ind = np.unique(np.asarray(axis_coord_names), return_index=True)
-    axis_coord_units = np.asarray(axis_coord_units)[ind]
+    if len(axis_coord_names) > 0:
+        axis_coord_names, ind = np.unique(np.asarray(axis_coord_names), return_index=True)
+        axis_coord_units = np.asarray(axis_coord_units)[ind]
+    else:
+        axis_coord_names = None
+        axis_coord_units = None
     return axis_coord_names, axis_coord_units
 
 
