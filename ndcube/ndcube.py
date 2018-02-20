@@ -379,9 +379,10 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         Parameters
         ----------
         axes: `int` or `str`, or iterable of `int` or `str`
-            Axis number in numpy ordering or unique substring of world_axis_physical_types
+            Axis number in numpy ordering or unique substring of
+            `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
-            Default=None implies all axes will be returned.
+            axes=None implies all axes will be returned.
 
         Returns
         -------
@@ -396,7 +397,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         """
         # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
-        n_dimensions = len(cube_dimensions)
+        n_dimensions = cube_dimensions.size
         world_axis_types = self.world_axis_physical_types
         # Determine axis numbers of user supplied axes.
         if axes is None:
@@ -408,38 +409,36 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                 int_axes = np.array([
                     utils.cube.get_axis_number_from_axis_name(axes, world_axis_types)])
             else:
-                int_axes = []
-                for axis in axes:
+                int_axes = np.empty(len(axes), dtype=int)
+                for i, axis in enumerate(axes):
                     if isinstance(axis, int):
-                        int_axes.append(axis)
+                        int_axes[i] = axis
                     elif isinstance(axis, str):
-                        int_axes.append(
-                            utils.cube.get_axis_number_from_axis_name(axis, world_axis_types))
-                int_axes = np.array(int_axes)
+                        int_axes[i] = utils.cube.get_axis_number_from_axis_name(
+                            axis, world_axis_types)
         # Ensure user has not entered the same axis twice.
-        if len(np.unique(int_axes)) != len(int_axes):
-            raise ValueError("Same axis entered more than once.")
+        repeats = set([x for x in int_axes if np.where(int_axes == x)[0].size > 1])
+        if repeats:
+            raise ValueError("The following axes were specified more than once: {}".format(
+                ' '.join(map(str, repeats))))
         n_axes = len(int_axes)
         axes_coords = [None] * n_axes
-        axes_translated = np.array([False] * n_axes)
+        axes_translated = np.zeros_like(int_axes, dtype=bool)
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
-        dependent_axes = np.empty(n_axes, dtype=object)
-        for i, axis in enumerate(int_axes):
-            x = np.array(utils.wcs.get_dependent_axes(self.wcs, axis))
-            x.sort()
-            dependent_axes[i] = x
-        n_dependent_axes = np.array([len(da) for da in dependent_axes])
+        dependent_axes = [list(utils.wcs.get_dependent_axes(self.wcs, axis))
+                          for axis in int_axes]
+        n_dependent_axes = [len(da) for da in dependent_axes]
         # Iterate through each axis and perform WCS translation.
         for i, axis in enumerate(int_axes):
             # If axis has already been translated, do not do so again.
-            if axes_translated[i] == False:
+            if not axes_translated[i]:
                 if n_dependent_axes[i] == 1:
                     # Construct pixel quantities in each dimension letting
                     # other dimensions all have 0 pixel value.
-                    quantity_list = \
-                      [u.Quantity(np.zeros(tuple(cube_dimensions[dependent_axes[i]])),
-                                  unit=u.pix)] * n_dimensions
+                    quantity_list = [
+                        u.Quantity(np.zeros(cube_dimensions[dependent_axes[i]]),
+                                   unit=u.pix)] * n_dimensions
                     # Replace array in quantity list corresponding to current axis with
                     # np.arange array.
                     quantity_list[axis] = u.Quantity(np.arange(cube_dimensions[axis]), unit=u.pix)

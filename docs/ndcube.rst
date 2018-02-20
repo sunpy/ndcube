@@ -396,7 +396,7 @@ the corresponding data axis number.
 
 As discussed above, some WCS axes
 are not independent.  For those axes,
-`~ndcube.NDCube.all_world_coords()` returns a
+`~ndcube.NDCube.all_world_coords` returns a
 `~astropy.units.Quantity` with the same number of dimensions as
 dependent axes.  For example, helioprojective longitude and latitude
 are dependent.  Therefore if we ask for longitude, we will get back a
