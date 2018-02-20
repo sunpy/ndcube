@@ -22,5 +22,6 @@ dependencies:
     - suds-jurko
     - sunpy
     - sphinx<1.7
+    - sphinx==1.6.7
     - pip:
       - sunpy-sphinx-theme
