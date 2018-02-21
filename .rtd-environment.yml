@@ -21,7 +21,6 @@ dependencies:
     - glymur
     - suds-jurko
     - sunpy
-    - sphinx<1.7
-    - sphinx==1.6.7
+    - sphinx
     - pip:
       - sunpy-sphinx-theme
