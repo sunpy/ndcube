@@ -247,6 +247,31 @@ common axis, the corresponding `~astropy.units.Quantity` gives the
 lengths of each cube individually.  See section on :ref:`dimensions`
 for more detail.
 
+Cube-like Dimensions
+--------------------
+
+To help with handling an `~ndcube.NDCubeSequence` with a common axis
+as if it were a single cube, there exist cube-like equivalents of the
+`~ndcube.NDCubeSequence.dimensions`  and
+`~ndcube.NDCubeSequence.world_axis_physical_types` methods.  They are
+intuitively named `~ndcube.NDCubeSequence.cube_like_dimensions`  and
+`~ndcube.NDCubeSequence.cube_like_world_axis_physical_types`.  These
+give the lengths and physical types of the axes as if the data were
+stored in a single `~ndcube.NDCube`.  So in the case of
+``my_sequence``, with three sub-cubes, each with a length of 3 along
+the common axis, we get::
+
+  >>> my_sequence.cube_like_dimensions
+  <Quantity [9., 4., 5.] pix>
+  >>> my_sequence.cube_like_world_axis_physical_types
+  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+
+Note that `~ndcube.NDCubeSequence.cube_like_dimensions` returns a
+single `~astropy.units.Quantity` in pixel units, as if it were
+`ndcube.NDCube.dimensions`.  This is in contrast to
+`ndcube.NDCubeSequence.dimensions` that returns a `tuple` of
+`~astropy.units.Quantity`.
+
 Common Axis Extra Coordinates
 -----------------------------
 
