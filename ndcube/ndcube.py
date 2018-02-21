@@ -370,13 +370,13 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def all_world_coords(self, axes=None):
+    def axis_world_coords(self, *axes):
         """
         Returns WCS coordinate values of all pixels for all axes.
 
         Parameters
         ----------
-        axes: `int` or `str`, or iterable of `int` or `str`
+        axes: `int` or `str`, or multiple `int` or `str`
             Axis number in numpy ordering or unique substring of
             `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
@@ -398,7 +398,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         n_dimensions = cube_dimensions.size
         world_axis_types = self.world_axis_physical_types
         # Determine axis numbers of user supplied axes.
-        if axes is None:
+        if axes == ():
             int_axes = np.arange(n_dimensions)
         else:
             if isinstance(axes, int):

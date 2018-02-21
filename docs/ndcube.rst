@@ -301,7 +301,7 @@ translate between pixel and real world coordinates.  For this purpose,
 astropy functions, `astropy.wcs.WCS.all_pix2world` and
 `astropy.wcs.WCS.all_world2pix`. These are
 `~ndcube.NDCube.pixel_to_world`, `~ndcube.NDCube.world_to_pixel`, and
-`~ndcube.NDCube.all_world_coords`. It is highly recommended that when
+`~ndcube.NDCube.axis_world_coords`. It is highly recommended that when
 using `~ndcube.NDCube` these convenience wrappers are used rather than
 the original astropy functions for a few reasons. For example, they
 can track house-keeping data, are aware of "missing" WCS axis, are
@@ -368,11 +368,11 @@ different instruments with overlapping fields of view.
 There are times however, when you only want to know the real world
 coordinates of the `~ndcube.NDCube` field of view.  To make this easy,
 `~ndcube.NDCube` has a another coordinate transformation method
-`~ndcube.NDCube.all_world_coords`.  This method returns the real world
+`~ndcube.NDCube.axis_world_coords`.  This method returns the real world
 coordinates for each pixel along a given data axis.  So in the case of
 ``my_cube``, if we wanted the wavelength axis we could call::
 
-  >>> my_cube.all_world_coords(axes=2)
+  >>> my_cube.axis_world_coords(2)
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
@@ -383,7 +383,7 @@ from the axis names defined in
   >>> my_cube.world_axis_physical_types
   ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
   >>> # Since 'wl' is unique to the wavelength axis name, let's use that.
-  >>> my_cube.all_world_coords(axes='wl')
+  >>> my_cube.axis_world_coords('wl')
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Notice how this returns the same result as when we set ``axes`` to
@@ -391,14 +391,14 @@ the corresponding data axis number.
 
 As discussed above, some WCS axes
 are not independent.  For those axes,
-`~ndcube.NDCube.all_world_coords` returns a
+`~ndcube.NDCube.axis_world_coords` returns a
 `~astropy.units.Quantity` with the same number of dimensions as
 dependent axes.  For example, helioprojective longitude and latitude
 are dependent.  Therefore if we ask for longitude, we will get back a
 2D `~astropy.units.Quantity` with the same shape as the longitude x
 latitude axes lengths.  For example::
 
-  >>> longitude = my_cube.all_world_coords(axes='lon')
+  >>> longitude = my_cube.axis_world_coords('lon')
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
   >>> longitude.shape
@@ -412,7 +412,7 @@ It is also possible to request more than one axis's world coordinates
 by setting ``axes`` to an iterable of data axis number and/or axis
 type strings.::
 
-  >>> my_cube.all_world_coords(axes=(2, 'lon'))
+  >>> my_cube.axis_world_coords(2, 'lon')
   (<Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,
    <Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
               [1.        , 1.        , 1.        , 1.        ],
@@ -425,7 +425,7 @@ Finally, if the user wants the world
 coordinates for all the axes, ``axes`` can be set to ``None``, which
 is in fact the default.::
 
-  >>> my_cube.all_world_coords()
+  >>> my_cube.axis_world_coords()
   (<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
             [1.        , 1.        , 1.        , 1.        ],
             [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>,
