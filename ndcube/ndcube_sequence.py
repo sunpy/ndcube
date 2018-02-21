@@ -202,15 +202,6 @@ class NDCubeSequence:
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, meta=self.meta)
 
-    def to_sunpy(self, *args, **kwargs):
-        result = None
-        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
-               for instance_sequence in self.data):
-            result = MapCube(self.data, *args, **kwargs)
-        else:
-            raise NotImplementedError("Sequence type not Implemented")
-        return result
-
     def __repr__(self):
         return (
             """NDCubeSequence

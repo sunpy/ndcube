@@ -110,12 +110,6 @@ nan_time_extra_coord = np.array([datetime.datetime(2000, 1, 1)+datetime.timedelt
                                  for i in range(len(seq.data))])
 nan_time_extra_coord[2] = np.nan
 
-map1 = cube2[:, :, 0].to_sunpy()
-map2 = cube2[:, :, 1].to_sunpy()
-map3 = cube2[:, :, 2].to_sunpy()
-map4 = cube2[:, :, 3].to_sunpy()
-mapcube_seq = NDCubeSequence([map1, map2, map3, map4], common_axis=0)
-
 
 @pytest.mark.parametrize("test_input,expected", [
     (seq[0], NDCube),
@@ -174,22 +168,6 @@ def test_explode_along_axis(test_input, expected):
 def test_explode_along_axis_error():
     with pytest.raises(ValueError):
         seq.explode_along_axis(1)
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    (mapcube_seq.to_sunpy(), sunpy.map.mapcube.MapCube)
-])
-def test_to_sunpy(test_input, expected):
-    assert isinstance(test_input, expected)
-
-
-@pytest.mark.parametrize("test_input", [
-    (seq),
-    (seq1),
-])
-def test_to_sunpy_error(test_input):
-    with pytest.raises(NotImplementedError):
-        test_input.to_sunpy()
 
 
 @pytest.mark.parametrize(

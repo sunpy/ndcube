@@ -456,20 +456,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
         return self[tuple(item)]
 
-    def to_sunpy(self):
-        wcs_axes = list(self.wcs.wcs.ctype)
-        missing_axis = self.missing_axis
-        if 'TIME' in wcs_axes and len(self.dimensions) is 1:
-            result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
-        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes \
-                and len(self.dimensions) is 2:
-            if not missing_axis[wcs_axes.index("HPLT-TAN")] \
-                    and not missing_axis[wcs_axes.index("HPLN-TAN")]:
-                result = sunpy.map.Map(self.data, self.meta)
-        else:
-            raise NotImplementedError("Object type not Implemented")
-        return result
-
     def __repr__(self):
         return (
             """NDCube

@@ -813,22 +813,6 @@ def test_world_to_pixel(test_input, expected):
     assert np.allclose(test_input.value, expected)
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [(cubem[:, :, 0].to_sunpy(), sunpy.map.mapbase.GenericMap),
-     (cubem[:, 0:2, 1].to_sunpy(), sunpy.map.mapbase.GenericMap),
-     (cubem[0:2, :, 2].to_sunpy(), sunpy.map.mapbase.GenericMap)])
-def test_to_sunpy(test_input, expected):
-    assert isinstance(test_input, expected)
-
-
-@pytest.mark.parametrize("test_input", [(cubem[0, :, 0]), (cubem[:, 1, 1]),
-                                        (cubem[0:2, :, 0:2])])
-def test_to_sunpy_error(test_input):
-    with pytest.raises(NotImplementedError):
-        test_input.to_sunpy()
-
-
 @pytest.mark.parametrize("test_input,expected", [
     ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 1.06*u.m]), cubem[:, :2])])
 def test_crop_by_coords(test_input, expected):
