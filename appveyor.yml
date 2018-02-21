@@ -10,25 +10,13 @@ environment:
       PYTHON_ARCH: "64" # needs to be set for CMD_IN_ENV to succeed. If a mix
                         # of 32 bit and 64 bit builds are needed, move this
                         # to the matrix section.
-
-      # For this package-template, we include examples of Cython modules,
-      # so Cython is required for testing. If your package does not include
-      # Cython code, you can set CONDA_DEPENDENCIES=''
-      CONDA_DEPENDENCIES: "Cython"
-
-      # Conda packages for affiliated packages are hosted in channel
-      # "astropy" while builds for astropy LTS with recent numpy versions
-      # are in astropy-ci-extras. If your package uses either of these,
-      # add the channels to CONDA_CHANNELS along with any other channels
-      # you want to use.
-      # CONDA_CHANNELS: "astropy-ci-extras astropy"
+      CONDA_CHANNELS: "astropy-ci-extras sunpy"
+      CONDA_DEPENDENCIES: "Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas pytest-cov coverage glymur suds-jurko sphinx sunpy"
+      PIP_DEPENDENCIES: "sunpy-sphinx-theme pytest-astropy"
 
   matrix:
 
-      # We test Python 2.7 and 3.6 because 2.7 is the supported Python 2
-      # release of Astropy and Python 3.6 is the latest Python 3 release.
-
-      - PYTHON_VERSION: "2.7"
+      - PYTHON_VERSION: "3.5"
         ASTROPY_VERSION: "stable"
         NUMPY_VERSION: "stable"
 
