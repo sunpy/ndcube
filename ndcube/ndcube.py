@@ -192,6 +192,37 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
+    @property
+    def dimensions(self):
+        """
+        Returns a named tuple with two attributes: 'shape' gives the shape
+        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
+        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
+
+        """
+        return u.Quantity(self.data.shape, unit=u.pix)
+
+    @property
+    def world_axis_physical_types(self):
+        """
+        Returns an iterable of strings describing the physical type for each world axis.
+
+        The strings conform to the International Virtual Observatory Alliance
+        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
+        definitions of the different strings and string components,
+        see http://www.ivoa.net/documents/latest/UCDlist.html.
+
+        """
+        ctype = list(self.wcs.wcs.ctype)
+        axes_ctype = []
+        for i, axis in enumerate(self.missing_axis):
+            if not axis:
+                key = ctype[i]
+                if "-TAN" in key:
+                    key = key[:-4]
+                axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
+        return tuple(axes_ctype[::-1])
+
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
@@ -244,131 +275,6 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         for index in indexed_not_as_one[::-1]:
             result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
         return result[::-1]
-
-    def to_sunpy(self):
-        wcs_axes = list(self.wcs.wcs.ctype)
-        missing_axis = self.missing_axis
-        if 'TIME' in wcs_axes and len(self.dimensions) is 1:
-            result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
-        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes \
-                and len(self.dimensions) is 2:
-            if not missing_axis[wcs_axes.index("HPLT-TAN")] \
-                    and not missing_axis[wcs_axes.index("HPLN-TAN")]:
-                result = sunpy.map.Map(self.data, self.meta)
-        else:
-            raise NotImplementedError("Object type not Implemented")
-        return result
-
-    @property
-    def dimensions(self):
-        """
-        Returns a named tuple with two attributes: 'shape' gives the shape
-        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
-        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-
-        """
-        return u.Quantity(self.data.shape, unit=u.pix)
-
-    @property
-    def world_axis_physical_types(self):
-        """
-        Returns an iterable of strings describing the physical type for each world axis.
-
-        The strings conform to the International Virtual Observatory Alliance
-        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
-        definitions of the different strings and string components,
-        see http://www.ivoa.net/documents/latest/UCDlist.html.
-
-        """
-        ctype = list(self.wcs.wcs.ctype)
-        axes_ctype = []
-        for i, axis in enumerate(self.missing_axis):
-            if not axis:
-                key = ctype[i]
-                if "-TAN" in key:
-                    key = key[:-4]
-                axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
-        return tuple(axes_ctype[::-1])
-
-    def crop_by_coords(self, min_coord_values, interval_widths):
-        # The docstring is defined in NDDataBase
-
-        n_dim = len(self.dimensions)
-        if len(min_coord_values) != len(interval_widths) != n_dim:
-            raise ValueError("min_coord_values and interval_widths must have "
-                             "same number of elements as number of data dimensions.")
-        # Convert coords of lower left corner to pixel units.
-        lower_pixels = self.world_to_pixel(*min_coord_values)
-        upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
-                                             for i in range(n_dim)])
-        # Round pixel values to nearest integer.
-        lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
-        upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
-        item = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
-        return self[item]
-
-    def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
-        """
-        Crops an NDCube given a minimum value and interval width along an extra coord.
-
-        Parameters
-        ----------
-        min_coord_value: Single value `astropy.units.Quantity`
-            The minimum desired value of the extra coord after cropping.
-            Unit must be consistent with the extra coord on which cropping is based.
-
-        interval_width: Single value `astropy.units.Quantity`
-            The width of the interval along the extra coord axis in physical units
-            consistent with the extra coord.  Unit must be consistent with the extra
-            coord on which cropping is based.
-
-        extra_coord: `str`
-            Name of extra coordinate.
-
-        Returns
-        -------
-        result: `ndcube.NDCube`
-
-        """
-        extra_coord_dict = self.extra_coords[coord_name]
-        if isinstance(extra_coord_dict["value"], u.Quantity):
-            extra_coord_values = extra_coord_dict["value"]
-        else:
-            extra_coord_values = np.asarray(extra_coord_dict["value"])
-        w = np.logical_and(extra_coord_values >= min_coord_value,
-                           extra_coord_values < min_coord_value + interval_width)
-        w = np.arange(len(extra_coord_values))[w]
-        item = [slice(None)]*len(self.dimensions)
-        item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
-        return self[tuple(item)]
-
-    @property
-    def extra_coords(self):
-        """
-        Dictionary of extra coords where each key is the name of an extra
-        coordinate supplied by user during instantiation of the NDCube.
-
-        The value of each key is itself a dictionary with the following keys:
-          | 'axis': `int`
-          |     The number of the data axis to which the extra coordinate corresponds.
-          | 'value': `astropy.units.Quantity` or array-like
-          |     The value of the extra coordinate at each pixel/array element along the
-          |     corresponding axis (given by the 'axis' key, above).  Note this means
-          |     that the length of 'value' must be equal to the length of the data axis
-          |     to which is corresponds.
-        """
-
-        if not self._extra_coords_wcs_axis:
-            result = None
-        else:
-            result = {}
-            for key in list(self._extra_coords_wcs_axis.keys()):
-                result[key] = {
-                    "axis": utils.cube.wcs_axis_to_data_axis(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],
-                        self.missing_axis),
-                    "value": self._extra_coords_wcs_axis[key]["value"]}
-        return result
 
     def axis_world_coords(self, *axes):
         """
@@ -469,6 +375,100 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
             return axes_coords[0]
         else:
             return tuple(axes_coords)
+
+    @property
+    def extra_coords(self):
+        """
+        Dictionary of extra coords where each key is the name of an extra
+        coordinate supplied by user during instantiation of the NDCube.
+
+        The value of each key is itself a dictionary with the following keys:
+          | 'axis': `int`
+          |     The number of the data axis to which the extra coordinate corresponds.
+          | 'value': `astropy.units.Quantity` or array-like
+          |     The value of the extra coordinate at each pixel/array element along the
+          |     corresponding axis (given by the 'axis' key, above).  Note this means
+          |     that the length of 'value' must be equal to the length of the data axis
+          |     to which is corresponds.
+        """
+
+        if not self._extra_coords_wcs_axis:
+            result = None
+        else:
+            result = {}
+            for key in list(self._extra_coords_wcs_axis.keys()):
+                result[key] = {
+                    "axis": utils.cube.wcs_axis_to_data_axis(
+                        self._extra_coords_wcs_axis[key]["wcs axis"],
+                        self.missing_axis),
+                    "value": self._extra_coords_wcs_axis[key]["value"]}
+        return result
+
+    def crop_by_coords(self, min_coord_values, interval_widths):
+        # The docstring is defined in NDDataBase
+
+        n_dim = len(self.dimensions)
+        if len(min_coord_values) != len(interval_widths) != n_dim:
+            raise ValueError("min_coord_values and interval_widths must have "
+                             "same number of elements as number of data dimensions.")
+        # Convert coords of lower left corner to pixel units.
+        lower_pixels = self.world_to_pixel(*min_coord_values)
+        upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
+                                             for i in range(n_dim)])
+        # Round pixel values to nearest integer.
+        lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
+        upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
+        item = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
+        return self[item]
+
+    def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
+        """
+        Crops an NDCube given a minimum value and interval width along an extra coord.
+
+        Parameters
+        ----------
+        min_coord_value: Single value `astropy.units.Quantity`
+            The minimum desired value of the extra coord after cropping.
+            Unit must be consistent with the extra coord on which cropping is based.
+
+        interval_width: Single value `astropy.units.Quantity`
+            The width of the interval along the extra coord axis in physical units
+            consistent with the extra coord.  Unit must be consistent with the extra
+            coord on which cropping is based.
+
+        extra_coord: `str`
+            Name of extra coordinate.
+
+        Returns
+        -------
+        result: `ndcube.NDCube`
+
+        """
+        extra_coord_dict = self.extra_coords[coord_name]
+        if isinstance(extra_coord_dict["value"], u.Quantity):
+            extra_coord_values = extra_coord_dict["value"]
+        else:
+            extra_coord_values = np.asarray(extra_coord_dict["value"])
+        w = np.logical_and(extra_coord_values >= min_coord_value,
+                           extra_coord_values < min_coord_value + interval_width)
+        w = np.arange(len(extra_coord_values))[w]
+        item = [slice(None)]*len(self.dimensions)
+        item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
+        return self[tuple(item)]
+
+    def to_sunpy(self):
+        wcs_axes = list(self.wcs.wcs.ctype)
+        missing_axis = self.missing_axis
+        if 'TIME' in wcs_axes and len(self.dimensions) is 1:
+            result = self.pixel_to_world([u.Quantity(self.data, unit=u.pix)])
+        elif 'HPLT-TAN' in wcs_axes and 'HPLN-TAN' in wcs_axes \
+                and len(self.dimensions) is 2:
+            if not missing_axis[wcs_axes.index("HPLT-TAN")] \
+                    and not missing_axis[wcs_axes.index("HPLN-TAN")]:
+                result = sunpy.map.Map(self.data, self.meta)
+        else:
+            raise NotImplementedError("Object type not Implemented")
+        return result
 
     def __repr__(self):
         return (

@@ -38,64 +38,6 @@ class NDCubeSequence:
         else:
             self._common_axis = common_axis
 
-    def __getitem__(self, item):
-        return utils.sequence.slice_sequence(self, item)
-
-    def plot(self, *args, **kwargs):
-        i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
-        return i
-
-    def to_sunpy(self, *args, **kwargs):
-        result = None
-        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
-               for instance_sequence in self.data):
-            result = MapCube(self.data, *args, **kwargs)
-        else:
-            raise NotImplementedError("Sequence type not Implemented")
-        return result
-
-    def explode_along_axis(self, axis):
-        """
-        Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
-
-        Parameters
-        ----------
-
-        axis : `int`
-            The axis along which the data is to be changed.
-        """
-        # if axis is None then set axis as common axis.
-        if self._common_axis is not None:
-            if self._common_axis != axis:
-                raise ValueError("axis and common_axis should be equal.")
-        # is axis is -ve then calculate the axis from the length of the dimensions of one cube
-        if axis < 0:
-            axis = len(self.dimensions[1::]) + axis
-        # To store the resultant cube
-        result_cubes = []
-        # All slices are initially initialised as slice(None, None, None)
-        result_cubes_slice = [slice(None, None, None)] * len(self[0].data.shape)
-        # the range of the axis that needs to be sliced
-        range_of_axis = self[0].data.shape[axis]
-        for ndcube in self.data:
-            for index in range(range_of_axis):
-                # setting the slice value to the index so that the slices are done correctly.
-                result_cubes_slice[axis] = index
-                # appending the sliced cubes in the result_cube list
-                result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
-        # creating a new sequence with the result_cubes keeping the meta and common axis as axis
-        return self._new_instance(result_cubes, meta=self.meta)
-
-    def __repr__(self):
-        return (
-            """NDCubeSequence
----------------------
-Length of NDCubeSequence:  {length}
-Shape of 1st NDCube: {shapeNDCube}
-Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
-           axis_type=self.world_axis_physical_types[1:]))
-
     @property
     def dimensions(self):
         dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
@@ -132,6 +74,28 @@ Axis Types of 1st NDCube: {axis_type}
     @property
     def cube_like_world_axis_physical_types(self):
         return self.data[0].world_axis_physical_types
+
+    def __getitem__(self, item):
+        return utils.sequence.slice_sequence(self, item)
+
+    @property
+    def index_as_cube(self):
+        """
+        Method to slice the NDCubesequence instance as a single cube
+
+        Example
+        -------
+        >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
+        >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
+        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0) # doctest: +SKIP
+        >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
+        >>> cs[1,:,0,:] # doctest: +SKIP
+        >>> # Return same slice using this function
+        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
+        """
+        if self._common_axis is None:
+            raise ValueError("common_axis cannot be None")
+        return _IndexAsCubeSlicer(self)
 
     @property
     def common_axis_extra_coords(self):
@@ -202,31 +166,67 @@ Axis Types of 1st NDCube: {axis_type}
             sequence_extra_coords = None
         return sequence_extra_coords
 
+    def plot(self, *args, **kwargs):
+        i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
+        return i
+
+    def explode_along_axis(self, axis):
+        """
+        Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
+
+        Parameters
+        ----------
+
+        axis : `int`
+            The axis along which the data is to be changed.
+        """
+        # if axis is None then set axis as common axis.
+        if self._common_axis is not None:
+            if self._common_axis != axis:
+                raise ValueError("axis and common_axis should be equal.")
+        # is axis is -ve then calculate the axis from the length of the dimensions of one cube
+        if axis < 0:
+            axis = len(self.dimensions[1::]) + axis
+        # To store the resultant cube
+        result_cubes = []
+        # All slices are initially initialised as slice(None, None, None)
+        result_cubes_slice = [slice(None, None, None)] * len(self[0].data.shape)
+        # the range of the axis that needs to be sliced
+        range_of_axis = self[0].data.shape[axis]
+        for ndcube in self.data:
+            for index in range(range_of_axis):
+                # setting the slice value to the index so that the slices are done correctly.
+                result_cubes_slice[axis] = index
+                # appending the sliced cubes in the result_cube list
+                result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
+        # creating a new sequence with the result_cubes keeping the meta and common axis as axis
+        return self._new_instance(result_cubes, meta=self.meta)
+
+    def to_sunpy(self, *args, **kwargs):
+        result = None
+        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
+               for instance_sequence in self.data):
+            result = MapCube(self.data, *args, **kwargs)
+        else:
+            raise NotImplementedError("Sequence type not Implemented")
+        return result
+
+    def __repr__(self):
+        return (
+            """NDCubeSequence
+---------------------
+Length of NDCubeSequence:  {length}
+Shape of 1st NDCube: {shapeNDCube}
+Axis Types of 1st NDCube: {axis_type}
+""".format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
+           axis_type=self.world_axis_physical_types[1:]))
+
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """
         Instantiate a new instance of this class using given data.
         """
         return cls(data_list, meta=meta, common_axis=common_axis)
-
-    @property
-    def index_as_cube(self):
-        """
-        Method to slice the NDCubesequence instance as a single cube
-
-        Example
-        -------
-        >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
-        >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
-        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0) # doctest: +SKIP
-        >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
-        >>> cs[1,:,0,:] # doctest: +SKIP
-        >>> # Return same slice using this function
-        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
-        """
-        if self._common_axis is None:
-            raise ValueError("common_axis cannot be None")
-        return _IndexAsCubeSlicer(self)
 
 
 """
