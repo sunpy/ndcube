@@ -473,7 +473,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
 
     def __repr__(self):
         return (
-            """Sunpy NDCube
+            """NDCube
 ---------------------
 {wcs}
 ---------------------

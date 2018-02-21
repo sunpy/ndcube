@@ -88,7 +88,7 @@ class NDCubeSequence:
 
     def __repr__(self):
         return (
-            """Sunpy NDCubeSequence
+            """NDCubeSequence
 ---------------------
 Length of NDCubeSequence:  {length}
 Shape of 1st NDCube: {shapeNDCube}
