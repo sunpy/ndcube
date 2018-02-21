@@ -14,8 +14,6 @@ from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
 from ndcube.tests import helpers
 
-DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
-
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,

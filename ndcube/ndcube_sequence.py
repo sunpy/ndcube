@@ -5,7 +5,6 @@ import sunpy.map
 from sunpy.map import MapCube
 
 from ndcube import utils
-from ndcube import SequenceDimensionPair
 from ndcube.visualization import animation as ani
 
 __all__ = ['NDCubeSequence']

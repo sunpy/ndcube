@@ -13,7 +13,6 @@ import sunpy.map
 from ndcube import utils
 from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
-from ndcube import DimensionPair
 
 
 __all__ = ['NDCubeBase', 'NDCube', 'NDCubeOrdered']

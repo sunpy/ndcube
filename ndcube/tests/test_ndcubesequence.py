@@ -12,8 +12,6 @@ from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.wcs import WCS
 
 
-SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
-
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
