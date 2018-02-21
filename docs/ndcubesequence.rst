@@ -15,10 +15,11 @@ methods attached.
 Initialization
 --------------
 
-To initialize the most basic `~ndcube.NDCube` object, all you need is
-a list of `~ndcube.NDCube` instances.  So let us first define three 3-D
-NDCubes for slit-spectrograph data as we did in the NDCube section of
-this tutorial.  First we define the data arrays and WCS objects::
+To initialize the most basic `~ndcube.NDCubeSequence` object, all you
+need is a list of `~ndcube.NDCube` instances.  So let us first define
+three 3-D NDCubes for slit-spectrograph data as we did in the NDCube
+section of this tutorial.  First we define the data arrays and WCS
+objects::
   
   >>> # Define data for cubes
   >>> import numpy as np
@@ -138,7 +139,7 @@ more details on these features.
 Dimensions
 ----------
 
-Analagous to `ndcube.NDCube.dimensions`, there are also a
+Analagous to `ndcube.NDCube.dimensions`, there is also a
 `ndcube.NDCubeSequence.dimensions` property for
 easily inspecting the shape of an `~ndcube.NDCubeSequence` instance::
 
@@ -241,10 +242,10 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
   >>> roi_across_subcubes.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
-Notice that since the sub-cubes are now of lengths along the common
-axis, the corresponding `~astropy.units.Quantity` gives the lengths of
-each cube individually.  See section on :ref:`dimensions` for
-more detail.
+Notice that since the sub-cubes are now of different lengths along the
+common axis, the corresponding `~astropy.units.Quantity` gives the
+lengths of each cube individually.  See section on :ref:`dimensions`
+for more detail.
 
 Common Axis Extra Coordinates
 -----------------------------
@@ -266,7 +267,7 @@ one contiguous Cube.  This can be done using the
         datetime.datetime(2000, 1, 1, 0, 7),
         datetime.datetime(2000, 1, 1, 0, 8)], dtype=object)}
 
-This returns a dictionary where each key gives the name of the
+This returns a dictionary where each key gives the name of a
 coordinate.  The value of each key is the values of that coordinate
 at each pixel along the common axis.  Since all these coordinates must
 be along the common axis, it is not necessary to supply axis
@@ -296,7 +297,7 @@ extra coords with an ``'axis'`` value equal to the common axis,
 `~ndcube.NDCubeSequence.sequence_axis_extra_coords` returns all extra
 coords with an ``'axis'`` value of ``None``.  Another way of thinking
 about this when there is no common axis set, is that they are
-assigned to the sequence axis, hence the property name.::
+assigned to the sequence axis.  Hence the property's name.::
 
   >>> my_sequence.sequence_axis_extra_coords
   {'label': array(['hello', 'world', '!'], dtype=object)}
@@ -316,12 +317,12 @@ Explode Along Axis
 
 During analysis of some data - say of a stack of images - it may be
 necessary to make some different fine-pointing adjustments to each
-image that isn't accounted for the in the original WCS translations in
-your data, e.g. due to satellite wobble.  If these changes are not
-describable with a single WCS object, it may be desirable to break up
-the N-D sub-cubes of an `~ndcube.NDCubeSequence` into an sequence of
-sub-cubes with dimension N-1. This would enable a separate WCS object
-to be associated with each image and hence allow individual pointing
+image that isn't accounted for the in the original WCS translations,
+e.g. due to satellite wobble.  If these changes are not describable
+with a single WCS object, it may be desirable to break up the N-D
+sub-cubes of an `~ndcube.NDCubeSequence` into an sequence of sub-cubes
+with dimension N-1. This would enable a separate WCS object to be
+associated with each image and hence allow individual pointing
 adjustments.
 
 Rather than manually dividing the datacubes up and deriving the

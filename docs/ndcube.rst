@@ -4,11 +4,12 @@ NDCube
 
 `~ndcube.NDCube` is the fundamental class of the ndcube package and is designed
 to handle data contained in a single N-D array described by a single
-WCS transformation.  `~ndcube.NDCube` is subclassed from `astropy.nddata.NDData`
-and so inherits the same attributes for data, wcs, uncertainty, mask,
-meta, and unit.  The WCS object contained in the ``.wcs`` attribute is
-subclassed from `astropy.wcs.WCS` and contains a few additional
-attributes to enable to keep track of its relationship to the data.
+set of WCS transformation.  `~ndcube.NDCube` is subclassed from
+`astropy.nddata.NDData` and so inherits the same attributes for data,
+wcs, uncertainty, mask, meta, and unit.  The WCS object contained in
+the ``.wcs`` attribute is subclassed from `astropy.wcs.WCS` and
+contains a few additional attributes to enable to keep track of its
+relationship to the data.
 
 Initialization
 --------------
@@ -62,8 +63,7 @@ example, reliable and unreliable pixels; an uncertainty array
 uncertainty of each data array value;  and a unit
 (`astropy.units.Unit` or unit `str`). For example::
 
-  >>> mask = np.empty((3, 4, 5), dtype=object)
-  >>> mask[:, :, :] = False
+  >>> mask = np.zeros_like(my_cube.data, dtype=bool)
   >>> meta = {"Description": "This is example NDCube metadata."}
   >>> my_cube = NDCube(data, input_wcs, uncertainty=np.sqrt(data),
   ...                         mask=mask, meta=meta, unit=None)
@@ -154,24 +154,22 @@ the Sun's equator. Therefore, knowledge of both the latitude and
 longitude must be known to derive the pixel position along a single
 spatial axis and vice versa.
 
-However, there are occasions where a data array may only contain one
-spatial axis, e.g. in data from a slit-spectrograph instrument.  In
-this case, simply extracting the corresponding latitude or longitude
-axis from the WCS object would cause the translations to break.
+However, there are occasions when a data array may only contain one
+spatial axis, e.g. data from a slit-spectrograph.  In this case,
+simply extracting the corresponding latitude or longitude axis from
+the WCS object would cause the translations to break.
 
 To deal with this scenario, `~ndcube.NDCube` supports "missing" WCS
 axes.  An additional attribute is added to the WCS object
 (`NDCube.wcs.missing_axis`) which  is a list of `bool` type indicating
 which WCS axes do not have a corresponding data axis.  This allows
 translation information on coupled axes to persist even if the data
-axes do not.  This feature makes in possible for `~ndcube.NDCube` to
-seamlessly reduce the data dimensionality via slicing and handle
-data with only one spatial dimension, like those from a
-slit-spectrograph, which would have otherwise been
-impossible.  In the majority of cases a user will not need to worry
-about this feature.  But it is useful to be aware of as many of the
-coordinate transformation functionalities of `~ndcube.NDCube` are only
-made possible by the missing axis feature.
+axes do not.  This feature also makes it possible for `~ndcube.NDCube`
+to seamlessly reduce the data dimensionality via slicing.  In the
+majority of cases a user will not need to worry about this feature.
+But it is useful to be aware of as many of the coordinate
+transformation functionalities of `~ndcube.NDCube` are only made
+possible by the missing axis feature.
 
 Extra Coordinates
 -----------------
@@ -184,10 +182,9 @@ x-position of the slit as it steps across a region of interest in a
 given pattern.  The second corresponds to latitude along the slit.  And
 the third axis corresponds to wavelength.  However, the first axis also
 corresponds to time, as it takes time for the slit to move and then
-take another exposure which results in a new spectrogram (y-position
-vs. wavelength). It would be very useful to have the measurement times
-also associated with the x-axis.  However, the WCS may only handle one
-translation per axis.
+take another exposure. It would be very useful to have the measurement
+times also associated with the x-axis.  However, the WCS may only
+handle one translation per axis.
 
 Fortunately, `~ndcube.NDCube` has a solution to this.  Values at
 integer (pixel) steps along an axis can be stored within the object
@@ -274,7 +271,7 @@ interest and then calling the plot method, e.g.::
 
   >>> my_cube[0, 10:100, :].plot() # doctest: +SKIP
 
-In addition to this, some optional kwargs can be used to customize the
+In addition, some optional kwargs can be used to customize the
 plot.  The ``axis_ranges`` kwarg can be used to set the axes ticklabels.  See the
 `~sunpy.visualization.imageanimator.ImageAnimatorWCS` documentation for
 more detail.  However, if this is not set, the axis ticklabels are
@@ -310,16 +307,15 @@ the original astropy functions for a few reasons. For example, they
 can track house-keeping data, are aware of "missing" WCS axis, are
 unit-aware, etc.
 
-To use `~ndcube.NDCube.pixel_to_world`, simply input a list of
+To use `~ndcube.NDCube.pixel_to_world`, simply input
 `~astropy.units.Quantity` objects with pixel units. Each
 `~astropy.units.Quantity` corresponds to an axis so the number of
 `~astropy.units.Quantity` objects should equal the number of data
 axes.  Also, the order of the quantities should correspond to the
 data axes' order, not the WCS order.  The nth element of each
-`~astropy.units.Quantity` describes the pixel coordinate in each axis
-of the nth pixel to be transformed. For example, if we wanted to
-transform the pixel coordinates of the pixel (2, 3, 4) in ``my_cube``
-we would do::
+`~astropy.units.Quantity` describes the pixel coordinate in that
+axis. For example, if we wanted to transform the pixel coordinates of
+the pixel (2, 3, 4) in ``my_cube`` we would do::
 
   >>> import astropy.units as u
   >>> real_world_coords = my_cube.pixel_to_world(
@@ -352,8 +348,7 @@ coordinates to pixel coordinates is exactly the same, but in reverse.
 This time the input `~astropy.units.Quantity` objects must be in real
 world coordinates compatible with those defined in the
 `~ndcube.NDCube` instance's `~ndcube.utils.wcs.WCS` object.  The output
-is a list of `~astropy.units.Quantity` objects in pixel units is
-returned::
+is a list of `~astropy.units.Quantity` objects in pixel unit.::
 
   >>> pixel_coords = my_cube.world_to_pixel(
   ... Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
@@ -426,8 +421,8 @@ type strings.::
 Notice that the axes' coordinates have been returned in the same order
 in which they were requested.
 
-Finally, if the user wanted the world
-coordinates for all the axes, ```axes`` can be set to ``None``, which
+Finally, if the user wants the world
+coordinates for all the axes, ``axes`` can be set to ``None``, which
 is in fact the default.::
 
   >>> my_cube.all_world_coords()
@@ -442,7 +437,7 @@ is in fact the default.::
              1.49986193e+00]] deg>,
    <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>)
 
-As stated at the top of this guide, `~ndcube.NDCube` is only written
+As stated previously, `~ndcube.NDCube` is only written
 to handle single arrays described by single WCS instances.  For cases
 where data is made up of multiple arrays, each described by different
 WCS translations, `ndcube` has another class,

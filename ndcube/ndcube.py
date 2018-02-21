@@ -85,15 +85,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractproperty
     def world_axis_physical_types(self):
-        """
-        Returns an iterable of strings describing the physical type for each world axis.
-
-        The strings conform to the International Virtual Observatory Alliance
-        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
-        definitions of the different strings and string components,
-        see http://www.ivoa.net/documents/latest/UCDlist.html.
-
-        """
+        pass
 
     @abc.abstractmethod
     def crop_by_coords(self, min_coord_values, interval_widths):
@@ -279,8 +271,15 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
 
     @property
     def world_axis_physical_types(self):
-        # The docstring is defined in NDDataBase
+        """
+        Returns an iterable of strings describing the physical type for each world axis.
 
+        The strings conform to the International Virtual Observatory Alliance
+        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
+        definitions of the different strings and string components,
+        see http://www.ivoa.net/documents/latest/UCDlist.html.
+
+        """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
