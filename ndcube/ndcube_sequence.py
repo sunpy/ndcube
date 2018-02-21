@@ -5,7 +5,6 @@ import sunpy.map
 from sunpy.map import MapCube
 
 from ndcube import utils
-from ndcube import SequenceDimensionPair
 from ndcube.visualization import animation as ani
 
 __all__ = ['NDCubeSequence']
@@ -39,21 +38,137 @@ class NDCubeSequence:
         else:
             self._common_axis = common_axis
 
+    @property
+    def dimensions(self):
+        dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
+        # If there is a common axis, length of cube's along it may not
+        # be the same. Therefore if the lengths are different,
+        # represent them as a tuple of all the values, else as an int.
+        if self._common_axis is not None:
+            common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
+            if len(np.unique(common_axis_lengths)) != 1:
+                common_axis_dimensions = [cube.dimensions[self._common_axis] for cube in self.data]
+                dimensions[self._common_axis+1] = u.Quantity(
+                    common_axis_dimensions, unit=common_axis_dimensions[0].unit)
+        return tuple(dimensions)
+
+    @property
+    def world_axis_physical_types(self):
+        return tuple(["meta.obs.sequence"]+list(self.data[0].world_axis_physical_types))
+
+    @property
+    def cube_like_dimensions(self):
+        if type(self._common_axis) is not int:
+            raise TypeError("Common axis must be set.")
+        dimensions = list(self.dimensions)
+        cube_like_dimensions = list(self.dimensions[1:])
+        if dimensions[self._common_axis+1].isscalar:
+            cube_like_dimensions[self._common_axis] = \
+              u.Quantity(dimensions[0].value * dimensions[self._common_axis+1].value, unit=u.pix)
+        else:
+            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis+1])
+        # Combine into single Quantity
+        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
+        return cube_like_dimensions
+
+    @property
+    def cube_like_world_axis_physical_types(self):
+        return self.data[0].world_axis_physical_types
+
     def __getitem__(self, item):
         return utils.sequence.slice_sequence(self, item)
+
+    @property
+    def index_as_cube(self):
+        """
+        Method to slice the NDCubesequence instance as a single cube
+
+        Example
+        -------
+        >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
+        >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
+        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0) # doctest: +SKIP
+        >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
+        >>> cs[1,:,0,:] # doctest: +SKIP
+        >>> # Return same slice using this function
+        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
+        """
+        if self._common_axis is None:
+            raise ValueError("common_axis cannot be None")
+        return _IndexAsCubeSlicer(self)
+
+    @property
+    def common_axis_extra_coords(self):
+        if not isinstance(self._common_axis, int):
+            raise ValueError("Common axis is not set.")
+        # Get names and units of coords along common axis.
+        axis_coord_names, axis_coord_units = utils.sequence._get_axis_extra_coord_names_and_units(
+            self.data, self._common_axis)
+        # Compile dictionary of common axis extra coords.
+        if axis_coord_names is not None:
+            return utils.sequence._get_int_axis_extra_coords(
+                self.data, axis_coord_names, axis_coord_units, self._common_axis)
+        else:
+            return None
+
+    @property
+    def sequence_axis_extra_coords(self):
+        sequence_coord_names, sequence_coord_units = \
+          utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)
+        if sequence_coord_names is not None:
+            # Define empty dictionary which will hold the extra coord
+            # values not assigned a cube data axis.
+            sequence_extra_coords = {}
+            # Define list of None signifying unit of each coord.  It will
+            # be filled in in for loop below.
+            sequence_coord_units = [None]*len(sequence_coord_names)
+            # Iterate through cubes and populate values of each extra coord
+            # not assigned a cube data axis.
+            cube_extra_coords = [cube.extra_coords for cube in self.data]
+            for i, coord_key in enumerate(sequence_coord_names):
+                coord_values = np.array([None]*len(self.data), dtype=object)
+                for j, cube in enumerate(self.data):
+                    # Construct list of coord values from each cube for given extra coord.
+                    try:
+                        coord_values[j] = cube_extra_coords[j][coord_key]["value"]
+                        # Determine whether extra coord is a quantity by checking
+                        # whether any one value has a unit. As we are not
+                        # assuming that all cubes have the same extra coords
+                        # along the sequence axis, we will keep checking as we
+                        # move through the cubes until all cubes are checked or
+                        # we have found a unit.
+                        if (isinstance(cube_extra_coords[j][coord_key]["value"], u.Quantity) and
+                                not sequence_coord_units[i]):
+                            sequence_coord_units[i] = cube_extra_coords[j][coord_key]["value"].unit
+                    except KeyError:
+                        pass
+                # If the extra coord is normally a Quantity, replace all
+                # None occurrences in coord value array with a NaN, and
+                # convert coord_values from an array of Quantities to a
+                # single Quantity of length equal to number of cubes in
+                # sequence.
+                w_none = np.where(coord_values == None)[0]
+                if sequence_coord_units[i]:
+                    # This part of if statement is coded in an apparently
+                    # round about way but necessitated because you can't
+                    # put a NaN quantity into an array and keep its unit.
+                    w_not_none = np.where(coord_values != None)[0]
+                    coord_values = u.Quantity(list(coord_values[w_not_none]),
+                                              unit=sequence_coord_units[i])
+                    coord_values = list(coord_values.value)
+                    for index in w_none:
+                        coord_values.insert(index, np.nan)
+                    coord_values = u.Quantity(coord_values, unit=sequence_coord_units[i]).flatten()
+                else:
+                    coord_values[w_none] = np.nan
+                sequence_extra_coords[coord_key] = coord_values
+        else:
+            sequence_extra_coords = None
+        return sequence_extra_coords
 
     def plot(self, *args, **kwargs):
         i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
         return i
-
-    def to_sunpy(self, *args, **kwargs):
-        result = None
-        if all(isinstance(instance_sequence, sunpy.map.mapbase.GenericMap)
-               for instance_sequence in self.data):
-            result = MapCube(self.data, *args, **kwargs)
-        else:
-            raise NotImplementedError("Sequence type not Implemented")
-        return result
 
     def explode_along_axis(self, axis):
         """
@@ -89,7 +204,7 @@ class NDCubeSequence:
 
     def __repr__(self):
         return (
-            """Sunpy NDCubeSequence
+            """NDCubeSequence
 ---------------------
 Length of NDCubeSequence:  {length}
 Shape of 1st NDCube: {shapeNDCube}
@@ -97,129 +212,12 @@ Axis Types of 1st NDCube: {axis_type}
 """.format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
            axis_type=self.world_axis_physical_types[1:]))
 
-    @property
-    def dimensions(self):
-        dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
-        # If there is a common axis, length of cube's along it may not
-        # be the same. Therefore if the lengths are different,
-        # represent them as a tuple of all the values, else as an int.
-        if self._common_axis:
-            common_axis_cube_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
-            if len(np.unique(common_axis_cube_lengths)) != 1:
-                dimensions[self._common_axis+1] = tuple(common_axis_dimension)
-        return tuple(dimensions)
-
-    @property
-    def world_axis_physical_types(self):
-        return tuple(["meta.obs.sequence"]+list(self.data[0].world_axis_physical_types))
-
-    @property
-    def cube_like_dimensions(self):
-        if type(self._common_axis) is not int:
-            raise TypeError("Common axis must be set.")
-        dimensions = list(self.dimensions)
-        cube_like_dimensions = list(self.dimensions[1:])
-        if dimensions[self._common_axis+1].isscalar:
-            cube_like_dimensions[self._common_axis] = \
-              u.Quantity(dimensions[0].value * dimensions[self._common_axis+1].value, unit=u.pix)
-        else:
-            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis+1])
-        # Combine into single Quantity
-        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
-        return cube_like_dimensions
-
-    @property
-    def cube_like_world_axis_physical_types(self):
-        return self.data[0].world_axis_physical_types
-
-    @property
-    def common_axis_extra_coords(self):
-        if not isinstance(self._common_axis, int):
-            raise ValueError("Common axis is not set.")
-        # Get names and units of coords along common axis.
-        axis_coord_names, axis_coord_units = utils.sequence._get_axis_extra_coord_names_and_units(
-            self.data, self._common_axis)
-        # Compile dictionary of common axis extra coords.
-        return utils.sequence._get_int_axis_extra_coords(
-            self.data, axis_coord_names, axis_coord_units, self._common_axis)
-
-    @property
-    def sequence_axis_extra_coords(self):
-        sequence_coord_names, sequence_coord_units = \
-          utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)
-        # Define empty dictionary which will hold the extra coord
-        # values not assigned a cube data axis.
-        sequence_extra_coords = {}
-        # Define list of None signifying unit of each coord.  It will
-        # be filled in in for loop below.
-        sequence_coord_units = [None]*len(sequence_coord_names)
-        # Iterate through cubes and populate values of each extra coord
-        # not assigned a cube data axis.
-        cube_extra_coords = [cube.extra_coords for cube in self.data]
-        for i, coord_key in enumerate(sequence_coord_names):
-            coord_values = np.array([None]*len(self.data), dtype=object)
-            for j, cube in enumerate(self.data):
-                # Construct list of coord values from each cube for given extra coord.
-                try:
-                    coord_values[j] = cube_extra_coords[j][coord_key]["value"]
-                    # Determine whether extra coord is a quantity by checking
-                    # whether any one value has a unit. As we are not
-                    # assuming that all cubes have the same extra coords
-                    # along the sequence axis, we will keep checking as we
-                    # move through the cubes until all cubes are checked or
-                    # we have found a unit.
-                    if (isinstance(cube_extra_coords[j][coord_key]["value"], u.Quantity) and
-                            not sequence_coord_units[i]):
-                        sequence_coord_units[i] = cube_extra_coords[j][coord_key]["value"].unit
-                except KeyError:
-                    pass
-            # If the extra coord is normally a Quantity, replace all
-            # None occurrences in coord value array with a NaN, and
-            # convert coord_values from an array of Quantities to a
-            # single Quantity of length equal to number of cubes in
-            # sequence.
-            w_none = np.where(coord_values == None)[0]
-            if sequence_coord_units[i]:
-                # This part of if statement is coded in an apparently
-                # round about way but necessitated because you can't
-                # put a NaN quantity into an array and keep its unit.
-                w_not_none = np.where(coord_values != None)[0]
-                coord_values = u.Quantity(list(coord_values[w_not_none]),
-                                          unit=sequence_coord_units[i])
-                coord_values = list(coord_values.value)
-                for index in w_none:
-                    coord_values.insert(index, np.nan)
-                coord_values = u.Quantity(coord_values, unit=sequence_coord_units[i]).flatten()
-            else:
-                coord_values[w_none] = np.nan
-            sequence_extra_coords[coord_key] = coord_values
-        return sequence_extra_coords
-
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """
         Instantiate a new instance of this class using given data.
         """
         return cls(data_list, meta=meta, common_axis=common_axis)
-
-    @property
-    def index_as_cube(self):
-        """
-        Method to slice the NDCubesequence instance as a single cube
-
-        Example
-        -------
-        >>> # Say we have three Cubes each cube has common_axis=0 is time and shape=(3,3,3)
-        >>> data_list = [cubeA, cubeB, cubeC] # doctest: +SKIP
-        >>> cs = NDCubeSequence(data_list, meta=None, common_axis=0) # doctest: +SKIP
-        >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
-        >>> cs[1,:,0,:] # doctest: +SKIP
-        >>> # Return same slice using this function
-        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
-        """
-        if self._common_axis is None:
-            raise ValueError("common_axis cannot be None")
-        return _IndexAsCubeSlicer(self)
 
 
 """

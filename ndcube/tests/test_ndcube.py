@@ -14,8 +14,6 @@ from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
 from ndcube.tests import helpers
 
-DimensionPair = namedtuple('DimensionPair', 'shape axis_types')
-
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
@@ -815,22 +813,6 @@ def test_world_to_pixel(test_input, expected):
     assert np.allclose(test_input.value, expected)
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [(cubem[:, :, 0].to_sunpy(), sunpy.map.mapbase.GenericMap),
-     (cubem[:, 0:2, 1].to_sunpy(), sunpy.map.mapbase.GenericMap),
-     (cubem[0:2, :, 2].to_sunpy(), sunpy.map.mapbase.GenericMap)])
-def test_to_sunpy(test_input, expected):
-    assert isinstance(test_input, expected)
-
-
-@pytest.mark.parametrize("test_input", [(cubem[0, :, 0]), (cubem[:, 1, 1]),
-                                        (cubem[0:2, :, 0:2])])
-def test_to_sunpy_error(test_input):
-    with pytest.raises(NotImplementedError):
-        test_input.to_sunpy()
-
-
 @pytest.mark.parametrize("test_input,expected", [
     ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 1.06*u.m]), cubem[:, :2])])
 def test_crop_by_coords(test_input, expected):
@@ -862,3 +844,28 @@ def test_ndcubeordered(test_input, expected):
         NDCubeOrdered(test_input[0], test_input[1], mask=test_input[2],
                       uncertainty=test_input[3], extra_coords=test_input[4]),
         expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((cubem, [2]), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)),
+    ((cubem, ['em']), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))
+    ])
+def test_all_world_coords_with_input(test_input, expected):
+    all_coords = test_input[0].axis_world_coords(*test_input[1])
+    for i in range(len(all_coords)):
+        np.testing.assert_allclose(all_coords[i].value, expected[i].value)
+        assert all_coords[i].unit == expected[i].unit
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem, (u.Quantity([[0.60002173, 0.59999127, 0.5999608],
+                                 [1., 1., 1.]], unit=u.deg),
+                     u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
+                                 [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg),
+                     u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)))
+    ])
+def test_axis_world_coords_without_input(test_input, expected):
+    all_coords = test_input.axis_world_coords()
+    for i in range(len(all_coords)):
+        np.testing.assert_allclose(all_coords[i].value, expected[i].value)
+        assert all_coords[i].unit == expected[i].unit

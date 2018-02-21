@@ -4,9 +4,13 @@
 Utilities for ndcube.
 """
 
-import numpy as np
+import copy
 
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order']
+import numpy as np
+import astropy.units as u
+
+__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
+           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
 
 
 def data_axis_to_wcs_axis(data_axis, missing_axis):
@@ -119,3 +123,30 @@ def convert_extra_coords_dict_to_input_format(extra_coords, missing_axis):
                 raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
             result.append((name, axis, extra_coords[name]["value"]))
         return result
+
+
+def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
+    """
+    Returns axis number (numpy ordering) given a substring unique to a world axis type string.
+
+    Parameters
+    ----------
+    axis_name: `str`
+        Name or substring of name of axis as defined by NDCube.world_axis_physical_types
+
+    world_axis_physical_types: iterable of `str`
+        Output from NDCube.world_axis_physical_types for relevant cube,
+        i.e. iterable of string axis names.
+
+    Returns
+    -------
+    axis_index[0]: `int`
+        Axis number (numpy ordering) corresponding to axis name
+    """
+    axis_index = [axis_name in world_axis_type for world_axis_type in world_axis_physical_types]
+    axis_index = np.arange(len(world_axis_physical_types))[axis_index]
+    if len(axis_index) != 1:
+        raise ValueError("User defined axis with a string that is not unique to "
+                         "a physical axis type. {0} not in any of {1}".format(
+                             str_axis, world_axis_types))
+    return axis_index[0]

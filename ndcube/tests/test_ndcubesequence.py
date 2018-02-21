@@ -12,8 +12,6 @@ from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.wcs import WCS
 
 
-SequenceDimensionPair = namedtuple('SequenceDimensionPair', 'shape axis_types')
-
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
@@ -94,6 +92,9 @@ cube2_time_common = NDCube(data, wm, extra_coords=[
      [cube1_time_common.extra_coords["time"]["value"][-1] + datetime.timedelta(minutes=i)
       for i in range(1, data.shape[1]+1)])])
 
+cube1_no_extra_coords = NDCube(data, wt, missing_axis=[False, False, False, True])
+cube3_no_extra_coords = NDCube(data2, wt, missing_axis=[False, False, False, True])
+
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
 seq_bad_common_axis = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=None)
 seq_time_common = NDCubeSequence([cube1_time_common, cube2_time_common], common_axis=1)
@@ -101,18 +102,13 @@ seq1 = NDCubeSequence([cube1, cube2, cube3, cube4])
 seq2 = NDCubeSequence([cube1, cube2_no_no, cube3_no_time, cube4])
 seq3 = NDCubeSequence([cube1, cube2, cube3_diff_compatible_unit, cube4])
 seq4 = NDCubeSequence([cube1, cube2, cube3_diff_incompatible_unit, cube4])
+seq_no_extra_coords = NDCubeSequence([cube1_no_extra_coords, cube3_no_extra_coords], common_axis=0)
 
 nan_extra_coord = u.Quantity(range(4), unit=u.cm)
 nan_extra_coord.value[1] = np.nan
 nan_time_extra_coord = np.array([datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
                                  for i in range(len(seq.data))])
 nan_time_extra_coord[2] = np.nan
-
-map1 = cube2[:, :, 0].to_sunpy()
-map2 = cube2[:, :, 1].to_sunpy()
-map3 = cube2[:, :, 2].to_sunpy()
-map4 = cube2[:, :, 3].to_sunpy()
-mapcube_seq = NDCubeSequence([map1, map2, map3, map4], common_axis=0)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -142,17 +138,22 @@ def test_slice_first_index_sequence(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (seq.index_as_cube[0:5].dimensions, (3*u.pix, 2*u.pix, 3*u.pix, 4*u.pix)),
+    (seq.index_as_cube[0:5].dimensions, (3*u.pix, [2., 2., 1.]*u.pix, 3*u.pix, 4*u.pix)),
     (seq.index_as_cube[1:3].dimensions, (2*u.pix, 1*u.pix, 3*u.pix, 4*u.pix)),
     (seq.index_as_cube[0:6].dimensions, (3*u.pix, 2*u.pix, 3*u.pix, 4*u.pix)),
     (seq.index_as_cube[0::].dimensions, (4*u.pix, 2*u.pix, 3*u.pix, 4*u.pix)),
-    (seq.index_as_cube[0:5, 0].dimensions, (3*u.pix, 2*u.pix, 4*u.pix)),
+    (seq.index_as_cube[0:5, 0].dimensions, (3*u.pix, [2., 2., 1.]*u.pix, 4*u.pix)),
     (seq.index_as_cube[1:3, 0:2].dimensions, (2*u.pix, 1*u.pix, 2*u.pix, 4*u.pix)),
     (seq.index_as_cube[0:6, 0, 0:1].dimensions, (3*u.pix, 2*u.pix, 1*u.pix)),
     (seq.index_as_cube[0::, 0, 0].dimensions, (4*u.pix, 2*u.pix)),
 ])
 def test_index_as_cube(test_input, expected):
-    assert test_input == expected
+    for i in range(len(test_input)):
+        try:
+            assert test_input[i] == expected[i]
+        except ValueError:
+            assert (test_input[i].value == expected[i].value).all()
+            assert test_input[i].unit == expected[i].unit
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -167,22 +168,6 @@ def test_explode_along_axis(test_input, expected):
 def test_explode_along_axis_error():
     with pytest.raises(ValueError):
         seq.explode_along_axis(1)
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    (mapcube_seq.to_sunpy(), sunpy.map.mapcube.MapCube)
-])
-def test_to_sunpy(test_input, expected):
-    assert isinstance(test_input, expected)
-
-
-@pytest.mark.parametrize("test_input", [
-    (seq),
-    (seq1),
-])
-def test_to_sunpy_error(test_input):
-    with pytest.raises(NotImplementedError):
-        test_input.to_sunpy()
 
 
 @pytest.mark.parametrize(
@@ -224,6 +209,11 @@ def test_common_axis_extra_coords(test_input, expected):
             assert (output[key] == expected[key]).all()
 
 
+@pytest.mark.parametrize("test_input", [(seq_no_extra_coords)])
+def test_no_common_axis_extra_coords(test_input):
+    assert seq_no_extra_coords.sequence_axis_extra_coords is None
+
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [(seq,
@@ -262,6 +252,11 @@ def test_sequence_axis_extra_coords(test_input, expected):
                 # Else, is output is not a float, assert it equals expected.
                 else:
                     assert output_value == expected[key][i]
+
+
+@pytest.mark.parametrize("test_input", [(seq_no_extra_coords)])
+def test_no_sequence_axis_extra_coords(test_input):
+    assert seq_no_extra_coords.sequence_axis_extra_coords is None
 
 
 @pytest.mark.parametrize("test_input", [(seq4)])
