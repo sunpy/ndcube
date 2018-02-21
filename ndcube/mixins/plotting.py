@@ -151,7 +151,7 @@ class NDCubePlotMixin:
                 index_not_one.append(i)
         if unit is None:
             unit = self.wcs.wcs.cunit[index_not_one[0]]
-        plot = plt.plot(self.pixel_to_world(
-            [u.Quantity(np.arange(self.data.shape[0]), unit=u.pix)], origin=origin)[0].to(unit),
+        plot = plt.plot(self.pixel_to_world(*[u.Quantity(np.arange(self.data.shape[0]),
+                                                         unit=u.pix)])[0].to(unit),
                         self.data)
         return plot
