@@ -29,9 +29,9 @@ or via pip:
 ::
     $ pip install ndcube
 
-If you want to to install the bleeding edge version or develop NDcube you will need to install from git.
+If you want to to install the bleeding edge version or develop ndcube you will need to install from git.
 The best way to do this is to create a new conda environment and install the git
-version of SunPy in it:
+version of ndcube in it:
 
 ::
 
