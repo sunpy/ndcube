@@ -14,8 +14,6 @@ software impact| |Powered by NumFOCUS| |Powered by Sunpy|
    :target: https://ci.appveyor.com/project/sunpy/ndcube
 .. |codecov| image:: https://codecov.io/gh/sunpy/ndcube/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/sunpy/ndcube
-.. |Research software impact| image:: http://depsy.org/api/package/pypi/sunpy/badge.svg
-   :target: http://depsy.org/package/python/ndcube
 .. |Powered by NumFOCUS| image:: https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A
    :target: http://numfocus.org
 
