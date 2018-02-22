@@ -4,15 +4,15 @@
 |Latest Version| |Build Status| |Build status| |codecov| |Research
 software impact| |Powered by NumFOCUS| |Powered by Sunpy|
 
-.. image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
+.. |Powered by Sunpy| image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
    :target: http://www.sunpy.org
 .. |Latest Version| image:: https://img.shields.io/pypi/v/ndcube.svg
    :target: https://pypi.python.org/pypi/ndcube/
 .. |Build Status| image:: https://secure.travis-ci.org/sunpy/sunpy.svg
    :target: http://travis-ci.org/sunpy/ndcube
-.. |Build status| image:: https://ci.appveyor.com/api/projects/status/xow461iejsjvp9vl?svg=true
+.. |Build status| image:: https://ci.appveyor.com/api/projects/status/github/sunpy/ndcube?branch=master&svg=true
    :target: https://ci.appveyor.com/project/sunpy/ndcube
-.. |codecov| image:: https://codecov.io/gh/sunpy/sunpy/branch/master/graph/badge.svg
+.. |codecov| image:: https://codecov.io/gh/sunpy/ndcube/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/sunpy/ndcube
 .. |Research software impact| image:: http://depsy.org/api/package/pypi/sunpy/badge.svg
    :target: http://depsy.org/package/python/ndcube
