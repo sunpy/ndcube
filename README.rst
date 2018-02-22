@@ -60,7 +60,7 @@ If you would like to get involved, start by joining the `SunPy mailing list`_ an
 Stop by our chat room `#sunpy:matrix.org`_ if you have any questions.
 Help is always welcome so let us know what you like to work on, or check out the `issues page`_ for the list of known outstanding items.
 
-For more information on contributing to SunPy, please read our `contributing guide`_.
+For more information on contributing to ncdube or the SunPy organization, please read our `contributing guide`_.
 
 Code of Conduct
 ---------------
