@@ -28,11 +28,11 @@ env:
         - ASTROPY_VERSION=stable
         - SUNPY_VERSION=stable
         - MAIN_CMD='python setup.py'
-        - SETUP_CMD='test'
+        - SETUP_CMD='test --coverage'
         - EVENT_TYPE='pull_request push cron'
         - CONDA_DEPENDENCIES='openjpeg Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas nomkl pytest-cov coverage glymur suds-jurko sphinx'
         - PIP_DEPENDENCIES='sunpy-sphinx-theme pytest-astropy'
-        - CONDA_CHANNELS='sunpy astropy-ci-extras'
+        - CONDA_CHANNELS='sunpy'
     matrix:
         # Make sure that egg_info works without dependencies
         - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
@@ -57,7 +57,7 @@ matrix:
         # Do a basic test.
         - os: linux
           stage: Initial tests
-          env: SETUP_CMD='test'
+          env: SETUP_CMD='test --coverage'
 
         # Do a PEP8 test with pycodestyle
         - os: linux
@@ -93,7 +93,7 @@ matrix:
         # Mac OS (CRON)
         - os: osx
           stage: Cron tests
-          env: SETUP_CMD='test'
+          env: SETUP_CMD='test --coverage'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
@@ -101,3 +101,6 @@ install:
 
 script:
    - $MAIN_CMD $SETUP_CMD
+
+after_success:
+   - if [[ $SETUP_CMD = *"cov"* ]]; then pip install codecov; codecov; fi
