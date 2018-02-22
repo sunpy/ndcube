@@ -1,4 +1,4 @@
-`NDCube`
+`ndcube`
 ========
 
 |Latest Version| |Build Status| |Build status| |codecov| |Research
@@ -17,12 +17,19 @@ software impact| |Powered by NumFOCUS| |Powered by Sunpy|
 .. |Powered by NumFOCUS| image:: https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A
    :target: http://numfocus.org
 
-NDcube is a a open-source package for multi-dimensional contiguious and non-contiguious spatially aware arrays.
+ndcube is a a open-source package for multi-dimensional contiguious and non-contiguious spatially aware arrays.
 
 Installation
 ------------
 
-If you want to develop NDcube you will need to install from git.
+The stable version of ndcube can be installed simply via the anaconda distribution using the `conda-forge channel`:
+:: 
+    $ conda install --channel conda-forge ndcube
+or via pip:
+::
+    $ pip install ndcube
+
+If you want to to install the bleeding edge version or develop NDcube you will need to install from git.
 The best way to do this is to create a new conda environment and install the git
 version of SunPy in it:
 
@@ -41,7 +48,7 @@ the SunPy docs.
 Getting Help
 ------------
 
-For more information or to ask questions about SunPy, check out:
+For more information or to ask questions about ndcube, check out:
 
 -  `SunPy Mailing List`_
 -  `SunPy Matrix Channel`_
