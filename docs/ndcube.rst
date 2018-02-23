@@ -4,7 +4,7 @@ NDCube
 
 `~ndcube.NDCube` is the fundamental class of the ndcube package and is designed
 to handle data contained in a single N-D array described by a single
-set of WCS transformation.  `~ndcube.NDCube` is subclassed from
+set of WCS transformations.  `~ndcube.NDCube` is subclassed from
 `astropy.nddata.NDData` and so inherits the same attributes for data,
 wcs, uncertainty, mask, meta, and unit.  The WCS object contained in
 the ``.wcs`` attribute is subclassed from `astropy.wcs.WCS` and
@@ -57,7 +57,7 @@ Thanks to the fact that `~ndcube.NDCube` is subclassed from
 `astropy.nddata.NDData`, you can also supply additional data to the
 `~ndcube.NDCube` instance.  These include: metadata (`dict` or
 dict-like) located at `NDCube.meta`; a data mask
-(boolean `numpy.ndarray`) located at`NDCube.mask` highlighting, for
+(boolean `numpy.ndarray`) located at `NDCube.mask` marking, for
 example, reliable and unreliable pixels; an uncertainty array
 (`numpy.ndarray`) located at `NDCube.uncertainty` describing the
 uncertainty of each data array value;  and a unit
