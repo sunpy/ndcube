@@ -319,4 +319,4 @@ def get_dependent_axes(wcs_object, axis, missing_axis):
 
     # in some cases, even the celestial coordinates are
     # independent. We don't catch that here.
-    return tuple([i for i, a in enumerate(axes) if a.get('coordinate_type') == 'celestial'])
+    return tuple(i for i, a in enumerate(axes) if a.get('coordinate_type') == 'celestial')
