@@ -284,7 +284,7 @@ def reindex_wcs(wcs, inds):
     return outwcs
 
 
-def get_dependent_axes(wcs_object, axis):
+def get_dependent_axes(wcs_object, axis, missing_axis):
     # Given an axis number in numpy ordering, returns the axes whose
     # WCS translations are dependent, including itself.  Again,
     # returned axes are in numpy ordering convention.
@@ -305,11 +305,13 @@ def get_dependent_axes(wcs_object, axis):
     pc = np.array(wcs_object.wcs.get_pc()[::-1, ::-1])
     ndim = pc.shape[0]
     pc[np.eye(ndim, dtype=np.bool)] = 0
-    axes = wcs_object.get_axis_types()[::-1]
+    axes = wcs_object.get_axis_types()
+    axes = np.array(axes)[np.invert(missing_axis)][::-1]
 
-    # axes rotated
+    # axes rotated.  In a departure from where this was copied,
+    # ensure any missing axes are not returned.
     if pc[axis, :].any() or pc[:, axis].any():
-        return tuple(range(ndim))
+        return tuple(np.arange(ndim)[np.invert(missing_axis[::-1])])
 
     # XXX can spectral still couple with other axes by this point??
     if axes[axis].get('coordinate_type') != 'celestial':
