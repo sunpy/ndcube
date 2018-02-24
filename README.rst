@@ -1,8 +1,7 @@
 `ndcube`
 ========
 
-|Latest Version| |Build Status| |Build status| |codecov| |Research
-software impact| |Powered by NumFOCUS| |Powered by Sunpy|
+|Latest Version| |Build Status| |Build status| |codecov| |Research software impact| |Powered by NumFOCUS| |Powered by Sunpy|
 
 .. |Powered by Sunpy| image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
    :target: http://www.sunpy.org
@@ -17,60 +16,132 @@ software impact| |Powered by NumFOCUS| |Powered by Sunpy|
 .. |Powered by NumFOCUS| image:: https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A
    :target: http://numfocus.org
 
-ndcube is a a open-source package for multi-dimensional contiguious and non-contiguious spatially aware arrays.
+ndcube is an open-source Python-based SunPy-affiliated package for
+manipulating, inspecting and visualizing multi-dimensional contiguous
+and non-contiguous coordinate-aware arrays.  It combines data,
+uncertainties, units, metadata, masking, and coordinate
+transformations into classes with unified slicing and generic
+coordinate transformations and plotting/animation capabilities.  It is
+designed to handle data of any number of dimensions and axis types
+(e.g. spatial, temporal, spectral, etc.) whose relationship between
+the array elements and the real world can be described by World
+Coordinate System (WCS) translations.  See the package docs for more
+details.
 
 Installation
 ------------
 
-The stable version of ndcube can be installed simply via the anaconda distribution using the `conda-forge channel`:
-:: 
-    $ conda install --channel conda-forge ndcube
-or via pip:
+There are two options for installing the stable version of ndcube.
+The first is via the anaconda distribution using the `conda-forge
+channel`:
+::
+   $ conda install --channel conda-forge ndcube
+For more information on installing the anaconda distribution, see the
+`anaconda website`_.
+
+To update ndcube do:
+::
+   $ conda update ndcube
+
+The second option for installing the stable verison of ndcube is via
+pip:
 ::
     $ pip install ndcube
-
-If you want to to install the bleeding edge version or develop ndcube you will need to install from git.
-The best way to do this is to create a new conda environment and install the git
-version of ndcube in it:
-
+Then to update ndcube do:
 ::
+   $ pip install ndcube --upgrade
 
+The stable version of ndcube will be relatively reliable.  However, if
+you want to get the latest updates immediately, or to contribute to the
+development of ndcube, you will need to install the bleeding edge
+version via github.  The recommended way to set up your system is
+to first fork the `ndcube github repository`_ to
+your github account and then clone your forked repo to your local
+machine.  This setup has the advantage of being able to push any
+changes you make to in local version to your github account.  From
+there you can issue pull requests to have your changes merged into the
+main repo and thus shared with other users.  You can also set up a
+remote between your local version and the main repo so that you can
+stay updated with the latest changes to ndcube.  Let's step through
+how to do this.
+
+Once you've forked the main `ndcube github repository`_ to your github
+account, create a conda environment on your local machine to hold the
+ndcube bleeding edge version and activate that environment.  Type the
+following into a terminal:
+::
     $ conda config --append channels conda-forge
     $ conda create -n ndcube-dev python sunpy hypothesis pytest-mock
     $ source activate ndcube-dev
-    $ git clone https://github.com/sunpy/ndcube.git ndcube-git
+
+Next clone the ndcube repo from your github account to a new
+directory.  Let's call it `ndcude-git`:
+::
+    $ git clone https://github.com/your-github-name/ndcube.git ndcube-git
+
+To install, change into the new directory and run the install script:
+::
     $ cd ndcube-git
     $ pip install -e .
 
-For detailed (general) installation instructions, see the `installation guide`_ in
-the SunPy docs.
+Finally add a remote to the main repo so you can pull the latest
+version:
+::
+   $ git remote add upstream https://github.com/sunpy/ndcube.git
+
+Then to ensure you stay up-to-date with the latest version of ndcube,
+regularly do:
+::
+   $ git pull upstream master
+
+To push changes to ndcube to your github account do:
+::
+   $ git push origin branch-name
+where `branch-name` is the name of the branch you're working on.  Then
+from your github account you can request your changes to be merged to
+the main repo.
+
 
 Getting Help
 ------------
 
-For more information or to ask questions about ndcube, check out:
+ndcube is SunPy-affiliated package and relies on the SunPy support
+infrastructure.  To pose questions to ndcube and SunPy developers and
+to get annoucements regarding ndcube and SunPy in general, sign up to
+the
 
--  `SunPy Mailing List`_
--  `SunPy Matrix Channel`_
+- `SunPy Mailing List`_
+
+To get quicker feedback and chat directly to ndcube and SunPy
+developers check out the
+
+- `SunPy Matrix Channel`_.
 
 Contributing
 ------------
 
-If you would like to get involved, start by joining the `SunPy mailing list`_ and check out the `Developer’s Guide`_ section of the SunPy docs.
-Stop by our chat room `#sunpy:matrix.org`_ if you have any questions.
-Help is always welcome so let us know what you like to work on, or check out the `issues page`_ for the list of known outstanding items.
+If you would like to get involved, start by joining the `SunPy mailing
+list`_ and check out the `Developer’s Guide`_ section of the SunPy
+docs.  Stop by our chat room `#sunpy:matrix.org`_ if you have any
+questions. Help is always welcome so let us know what you like to work
+on, or check out the `issues page`_ for the list of known outstanding
+items.
 
-For more information on contributing to ncdube or the SunPy organization, please read our `contributing guide`_.
+For more information on contributing to ncdube or the SunPy
+organization, please read our `contributing guide`_.
 
 Code of Conduct
 ---------------
 
-When you are interacting with the SunPy community you are asked to follow our `Code of Conduct`_.
+When you are interacting with the SunPy community you are asked to
+follow our `Code of Conduct`_.
 
 License
 -------
 
-This project is Copyright (c) SunPy Developers and licensed under the terms of the BSD 3-Clause license. See the licenses folder for more information.
+This project is Copyright (c) SunPy Developers and licensed under the
+terms of the BSD 3-Clause license. See the licenses folder for more
+information.
 
 .. _installation guide: http://docs.sunpy.org/en/stable/guide/installation/index.html
 .. _SunPy Matrix Channel: https://riot.im/app/#/room/#sunpy:matrix.org
@@ -80,3 +151,5 @@ This project is Copyright (c) SunPy Developers and licensed under the terms of t
 .. _issues page: https://github.com/sunpy/ndcube/issues
 .. _contributing guide: http://docs.sunpy.org/en/stable/dev_guide/newcomers.html#newcomers
 .. _Code of Conduct: http://docs.sunpy.org/en/stable/coc.html
+.. _anaconda website: https://docs.anaconda.com/anaconda/install.html
+.. _`ndcube github repository`: https://github.com/sunpy/ndcube
