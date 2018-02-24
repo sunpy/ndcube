@@ -11,7 +11,8 @@ import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
-__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_axes']
+__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_axes',
+           'append_sequence_axis_to_wcs']
 
 
 class TwoWayDict(UserDict):
@@ -320,3 +321,21 @@ def get_dependent_axes(wcs_object, axis, missing_axis):
     # in some cases, even the celestial coordinates are
     # independent. We don't catch that here.
     return tuple(i for i, a in enumerate(axes) if a.get('coordinate_type') == 'celestial')
+
+
+def append_sequence_axis_to_wcs(wcs_object):
+    """Appends a 1-to-1 dummy axis to a WCS object."""
+    dummy_number = wcs_object.naxis+1
+    wcs_header = wcs_object.to_header()
+    wcs_header.append(("CTYPE{0}".format(dummy_number), "ITER",
+                       "A unitless iteration-by-one axis."))
+    wcs_header.append(("CRPIX{0}".format(dummy_number), 0.,
+                       "Pixel coordinate of reference point"))
+    wcs_header.append(("CDELT{0}".format(dummy_number), 1.,
+                       "Coordinate increment at reference point"))
+    wcs_header.append(("CRVAL{0}".format(dummy_number), 0.,
+                       "Coordinate value at reference point"))
+    wcs_header.append(("CUNIT{0}".format(dummy_number), "pix",
+                       "Coordinate value at reference point"))
+    wcs_header["WCSAXES"] = dummy_number
+    return WCS(wcs_header)

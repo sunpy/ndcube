@@ -167,7 +167,10 @@ class NDCubeSequence:
         return sequence_extra_coords
 
     def plot(self, *args, **kwargs):
-        i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
+        if self._common_axis is None:
+            i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
+        else:
+            i = ani.ImageAnimatorCommonAxisNDCubeSequence(self, *args, **kwargs)
         return i
 
     def explode_along_axis(self, axis):
