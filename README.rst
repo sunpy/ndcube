@@ -16,26 +16,23 @@
 .. |Powered by NumFOCUS| image:: https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A
    :target: http://numfocus.org
 
-ndcube is an open-source Python-based SunPy-affiliated package for
-manipulating, inspecting and visualizing multi-dimensional contiguous
-and non-contiguous coordinate-aware data arrays.  It combines data,
-uncertainties, units, metadata, masking, and coordinate
-transformations into classes with unified slicing and generic
-coordinate transformations and plotting/animation capabilities.  It is
-designed to handle data of any number of dimensions and axis types
-(e.g. spatial, temporal, spectral, etc.) whose relationship between
-the array elements and the real world can be described by World
-Coordinate System (WCS) translations.  See the package docs for more
-details.
+ndcube is an open-source Python-based SunPy-affiliated package for manipulating,
+inspecting and visualizing multi-dimensional contiguous and non-contiguous
+coordinate-aware data arrays. It combines data, uncertainties, units, metadata,
+masking, and coordinate transformations into classes with unified slicing and
+generic coordinate transformations and plotting/animation capabilities. It is
+designed to handle data of any number of dimensions and axis types (e.g.
+spatial, temporal, spectral, etc.) whose relationship between the array elements
+and the real world can be described by World Coordinate System (WCS)
+translations. See the `ndcube docs`_ for more details.
 
 Installation
 ------------
 
 Stable Version
 ##############
-There are two options for installing the stable version of ndcube.
-The first is via the anaconda distribution using the `conda-forge
-channel`:
+There are two options for installing the stable version of ndcube. The first is
+via the anaconda distribution using the conda-forge channel:
 ::
    $ conda install --channel conda-forge ndcube
 For more information on installing the anaconda distribution, see the
@@ -45,35 +42,31 @@ To update ndcube do:
 ::
    $ conda update ndcube
 
-The second option for installing the stable verison of ndcube is via
-pip:
+The second option for installing the stable verison of ndcube is via pip:
 ::
     $ pip install ndcube
 Then to update ndcube do:
 ::
    $ pip install ndcube --upgrade
 
-Bleeding Edge Version
-#####################
+Development Version
+###################
 
-The stable version of ndcube will be relatively reliable.  However, if
-you value getting the latest updates immediately over reliablility, or
-want to contribute to the development of ndcube, you will need to
-install the bleeding edge version via github.  The recommended way to
-set up your system is to first fork the `ndcube github repository`_ to
-your github account and then clone your forked repo to your local
-machine.  This setup has the advantage of being able to push any
-changes you make in local version to your github account.  From
-there you can issue pull requests to have your changes merged into the
-main repo and thus shared with other users.  You can also set up a
-remote between your local version and the main repo so that you can
-stay updated with the latest changes to ndcube.  Let's step through
-how to do this.
+The stable version of ndcube will be relatively reliable. However, if you value
+getting the latest updates immediately over reliablility, or want to contribute
+to the development of ndcube, you will need to install the bleeding edge version
+via github. The recommended way to set up your system is to first fork the
+`ndcube github repository`_ to your github account and then clone your forked
+repo to your local machine. This setup has the advantage of being able to push
+any changes you make in local version to your github account. From there you can
+issue pull requests to have your changes merged into the main repo and thus
+shared with other users. You can also set up a remote between your local version
+and the main repo so that you can stay updated with the latest changes to
+ndcube. Let's step through how to do this.
 
-Once you've forked the main `ndcube github repository`_ to your github
-account, create a conda environment on your local machine to hold the
-ndcube bleeding edge version and activate that environment.  Type the
-following into a terminal:
+Once you've forked the main `ndcube github repository`_ to your github account,
+create a conda environment on your local machine to hold the ndcube bleeding
+edge version and activate that environment. Type the following into a terminal:
 ::
     $ conda config --append channels conda-forge
     $ conda create -n ndcube-dev python sunpy hypothesis pytest-mock
@@ -102,6 +95,7 @@ regularly do:
 To push any changes you make to your github account by doing:
 ::
    $ git push origin branch-name
+
 where ``branch-name`` is the name of the branch you're working on.  Then
 from your github account you can request your changes to be merged to
 the main repo.  For more information on on git version control,
@@ -148,11 +142,12 @@ This project is Copyright (c) SunPy Developers and licensed under the
 terms of the BSD 3-Clause license. See the licenses folder for more
 information.
 
+.. _ndcube docs: http://docs.sunpy.org/projects/ndcube/
 .. _installation guide: http://docs.sunpy.org/en/stable/guide/installation/index.html
 .. _SunPy Matrix Channel: https://riot.im/app/#/room/#sunpy:matrix.org
+.. _`#sunpy:matrix.org`: https://riot.im/app/#/room/#sunpy:matrix.org
 .. _SunPy mailing list: https://groups.google.com/forum/#!forum/sunpy
 .. _Developer’s Guide: http://docs.sunpy.org/en/latest/dev_guide/index.html
-.. _`#sunpy:matrix.org`: https://riot.im/app/#/room/#sunpy:matrix.org
 .. _issues page: https://github.com/sunpy/ndcube/issues
 .. _contributing guide: http://docs.sunpy.org/en/stable/dev_guide/newcomers.html#newcomers
 .. _Code of Conduct: http://docs.sunpy.org/en/stable/coc.html
