@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import abc
-import copy
 
 import numpy as np
 import astropy.nddata
 import astropy.units as u
 from astropy.utils.misc import InheritDocstrings
-
-import sunpy.map
 
 from ndcube import utils
 from ndcube.utils.wcs import wcs_ivoa_mapping
