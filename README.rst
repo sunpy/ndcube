@@ -16,7 +16,7 @@
 .. |Powered by NumFOCUS| image:: https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A
    :target: http://numfocus.org
 
-ndcube is an open-source Python-based SunPy-affiliated package for manipulating,
+ndcube is an open-source SunPy affiliated package for manipulating,
 inspecting and visualizing multi-dimensional contiguous and non-contiguous
 coordinate-aware data arrays. It combines data, uncertainties, units, metadata,
 masking, and coordinate transformations into classes with unified slicing and
@@ -28,6 +28,8 @@ translations. See the `ndcube docs`_ for more details.
 
 Installation
 ------------
+
+ndcube requires Python 3.5+, SunPy 0.8+, astropy and matplotlib.
 
 Stable Version
 ##############
