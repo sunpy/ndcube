@@ -1,7 +1,7 @@
 `ndcube`
 ========
 
-|Latest Version| |Build Status| |Build status| |codecov| |Research software impact| |Powered by NumFOCUS| |Powered by Sunpy|
+|Latest Version| |Build Status| |Build status| |codecov| |Powered by NumFOCUS| |Powered by Sunpy|
 
 .. |Powered by Sunpy| image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
    :target: http://www.sunpy.org
