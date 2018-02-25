@@ -32,8 +32,8 @@ if not _ASTROPY_SETUP_:  # noqa
 
     # Create the test function for 
     from astropy.tests.helper import TestRunner
-    self_test = TestRunner.make_test_runner_in(os.path.dirname(__file__))
-    __all__ += ['self_test']
+    test = TestRunner.make_test_runner_in(os.path.dirname(__file__))
+    __all__ += ['test']
 
     # add these here so we only need to cleanup the namespace at the end
     config_dir = None
