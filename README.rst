@@ -104,8 +104,8 @@ To push any changes you make to your github account by doing:
    $ git push origin branch-name
 where ``branch-name`` is the name of the branch you're working on.  Then
 from your github account you can request your changes to be merged to
-the main repo.  For more information on on git versioning control,
-github, and issueing pull requests, see ??????
+the main repo.  For more information on on git version control,
+github, and issuing pull requests, see `SunPy's version control guide`_.
 
 Getting Help
 ------------
@@ -158,3 +158,4 @@ information.
 .. _Code of Conduct: http://docs.sunpy.org/en/stable/coc.html
 .. _anaconda website: https://docs.anaconda.com/anaconda/install.html
 .. _`ndcube github repository`: https://github.com/sunpy/ndcube
+.. _`SunPy's version control guide`: http://docs.sunpy.org/en/stable/dev_guide/version_control.html
