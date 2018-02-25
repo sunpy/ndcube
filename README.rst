@@ -18,7 +18,7 @@
 
 ndcube is an open-source Python-based SunPy-affiliated package for
 manipulating, inspecting and visualizing multi-dimensional contiguous
-and non-contiguous coordinate-aware arrays.  It combines data,
+and non-contiguous coordinate-aware data arrays.  It combines data,
 uncertainties, units, metadata, masking, and coordinate
 transformations into classes with unified slicing and generic
 coordinate transformations and plotting/animation capabilities.  It is
@@ -31,6 +31,8 @@ details.
 Installation
 ------------
 
+Stable Version
+##############
 There are two options for installing the stable version of ndcube.
 The first is via the anaconda distribution using the `conda-forge
 channel`:
@@ -51,14 +53,17 @@ Then to update ndcube do:
 ::
    $ pip install ndcube --upgrade
 
+Bleeding Edge Version
+#####################
+
 The stable version of ndcube will be relatively reliable.  However, if
-you want to get the latest updates immediately, or to contribute to the
-development of ndcube, you will need to install the bleeding edge
-version via github.  The recommended way to set up your system is
-to first fork the `ndcube github repository`_ to
+you value getting the latest updates immediately over reliablility, or
+want to contribute to the development of ndcube, you will need to
+install the bleeding edge version via github.  The recommended way to
+set up your system is to first fork the `ndcube github repository`_ to
 your github account and then clone your forked repo to your local
 machine.  This setup has the advantage of being able to push any
-changes you make to in local version to your github account.  From
+changes you make in local version to your github account.  From
 there you can issue pull requests to have your changes merged into the
 main repo and thus shared with other users.  You can also set up a
 remote between your local version and the main repo so that you can
@@ -75,7 +80,7 @@ following into a terminal:
     $ source activate ndcube-dev
 
 Next clone the ndcube repo from your github account to a new
-directory.  Let's call it `ndcude-git`:
+directory.  Let's call it ``ndcude-git``:
 ::
     $ git clone https://github.com/your-github-name/ndcube.git ndcube-git
 
@@ -94,18 +99,18 @@ regularly do:
 ::
    $ git pull upstream master
 
-To push changes to ndcube to your github account do:
+To push any changes you make to your github account by doing:
 ::
    $ git push origin branch-name
-where `branch-name` is the name of the branch you're working on.  Then
+where ``branch-name`` is the name of the branch you're working on.  Then
 from your github account you can request your changes to be merged to
-the main repo.
-
+the main repo.  For more information on on git versioning control,
+github, and issueing pull requests, see ??????
 
 Getting Help
 ------------
 
-ndcube is SunPy-affiliated package and relies on the SunPy support
+As a SunPy-affiliated package, ndcube relies on the SunPy support
 infrastructure.  To pose questions to ndcube and SunPy developers and
 to get annoucements regarding ndcube and SunPy in general, sign up to
 the
@@ -128,7 +133,7 @@ on, or check out the `issues page`_ for the list of known outstanding
 items.
 
 For more information on contributing to ncdube or the SunPy
-organization, please read our `contributing guide`_.
+organization, please read the SunPy `contributing guide`_.
 
 Code of Conduct
 ---------------
