@@ -4,10 +4,7 @@
 Utilities for ndcube.
 """
 
-import copy
-
 import numpy as np
-import astropy.units as u
 
 __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
            'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
@@ -148,5 +145,5 @@ def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
     if len(axis_index) != 1:
         raise ValueError("User defined axis with a string that is not unique to "
                          "a physical axis type. {0} not in any of {1}".format(
-                             str_axis, world_axis_types))
+                             axis_name, world_axis_physical_types))
     return axis_index[0]
