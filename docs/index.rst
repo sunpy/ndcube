@@ -10,6 +10,7 @@ by a WCS (World Coordinate System) translation.
    :maxdepth: 3
 
    introduction
+   installation
    ndcube
    ndcubesequence
    api
