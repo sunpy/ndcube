@@ -41,15 +41,17 @@ class NDCubeSequence:
     @property
     def dimensions(self):
         dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
-        # If there is a common axis, length of cube's along it may not
-        # be the same. Therefore if the lengths are different,
-        # represent them as a tuple of all the values, else as an int.
-        if self._common_axis is not None:
-            common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
-            if len(np.unique(common_axis_lengths)) != 1:
-                common_axis_dimensions = [cube.dimensions[self._common_axis] for cube in self.data]
-                dimensions[self._common_axis+1] = u.Quantity(
-                    common_axis_dimensions, unit=common_axis_dimensions[0].unit)
+        if len(dimensions) > 1:
+            # If there is a common axis, length of cube's along it may not
+            # be the same. Therefore if the lengths are different,
+            # represent them as a tuple of all the values, else as an int.
+            if self._common_axis is not None:
+                common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
+                if len(np.unique(common_axis_lengths)) != 1:
+                    common_axis_dimensions = [cube.dimensions[self._common_axis]
+                                              for cube in self.data]
+                    dimensions[self._common_axis+1] = u.Quantity(
+                        common_axis_dimensions, unit=common_axis_dimensions[0].unit)
         return tuple(dimensions)
 
     @property
@@ -76,7 +78,10 @@ class NDCubeSequence:
         return self.data[0].world_axis_physical_types
 
     def __getitem__(self, item):
-        return utils.sequence.slice_sequence(self, item)
+        if len(self.dimensions) == 1:
+            return self.data[item]
+        else:
+            return utils.sequence.slice_sequence(self, item)
 
     @property
     def index_as_cube(self):
