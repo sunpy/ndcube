@@ -13,15 +13,15 @@ class NDCubePlotMixin:
     Add plotting functionality to a NDCube class.
     """
 
-    def plot(self, axes=None, image_axes=[-1, -2], unit_x_axis=None, unit_y_axis=None,
-             axis_ranges=None, unit=None, origin=0, **kwargs):
+    def plot(self, axes=None, image_axes=None, unit_x_axis=None, unit_y_axis=None,
+             axis_ranges=None, unit=None, **kwargs):
         """
         Plots an interactive visualization of this cube with a slider
         controlling the wavelength axis for data having dimensions greater than 2.
-        Plots an x-y graph onto the current axes for 2D or 1D data. Keyword arguments are passed
-        on to matplotlib.
-        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
-        passes them to imshow for data greater than 2D.
+        Plots an x-y graph onto the current axes for 2D or 1D data.
+        Keyword arguments are passed on to matplotlib.
+        Parameters other than data and wcs are passed to ImageAnimatorWCS,
+        which in turn passes them to imshow for data greater than 2D.
 
         Parameters
         ----------
@@ -51,8 +51,11 @@ class NDCubePlotMixin:
             same length as the axis which will provide all values for that slider.
             If None is specified for an axis then the array indices will be used
             for that axis.
+
         """
-        axis_data = ['x' for i in range(2)]
+        if not image_axes:
+            image_axes = [-1, -2]
+        axis_data = ['x', 'x']
         axis_data[image_axes[1]] = 'y'
         if self.data.ndim >= 3:
             plot = self._plot_3D_cube(image_axes=image_axes, unit_x_axis=unit_x_axis,
@@ -60,7 +63,7 @@ class NDCubePlotMixin:
         elif self.data.ndim is 2:
             plot = self._plot_2D_cube(axes=axes, image_axes=axis_data[::-1], **kwargs)
         elif self.data.ndim is 1:
-            plot = self._plot_1D_cube(unit=unit, origin=origin)
+            plot = self._plot_1D_cube(unit=unit)
         return plot
 
     def _plot_3D_cube(self, image_axes=None, unit_x_axis=None, unit_y_axis=None,
@@ -93,6 +96,7 @@ class NDCubePlotMixin:
             same length as the axis which will provide all values for that slider.
             If None is specified for an axis then the array indices will be used
             for that axis.
+
         """
         if not image_axes:
             image_axes = [-1, -2]
@@ -115,6 +119,7 @@ class NDCubePlotMixin:
             The first axis in WCS object will become the first axis of image_axes and
             second axis in WCS object will become the second axis of image_axes.
             Default: ['x', 'y']
+
         """
         if not image_axes:
             image_axes = ['x', 'y']
@@ -135,7 +140,7 @@ class NDCubePlotMixin:
         plot = axes.imshow(self.data, **kwargs)
         return plot
 
-    def _plot_1D_cube(self, unit=None, origin=0):
+    def _plot_1D_cube(self, unit=None):
         """
         Plots a graph.
         Keyword arguments are passed on to matplotlib.
@@ -144,6 +149,7 @@ class NDCubePlotMixin:
         ----------
         unit: `astropy.unit.Unit`
             The data is changed to the unit given or the cube.unit if not given.
+
         """
         index_not_one = []
         for i, _bool in enumerate(self.missing_axis):
