@@ -11,7 +11,10 @@ import numpy as np
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 
-__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_axes',
+from ndcube.utils import cube as utils_cube
+
+__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_data_axes',
+           'get_dependent_data_axes', 'axis_correlation_matrix',
            'append_sequence_axis_to_wcs']
 
 
@@ -119,8 +122,6 @@ def _wcs_slicer(wcs, missing_axis, item):
 
     missing_axis: `list` of `bool`
         Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
-        Note that unlike in other places in this package, missing_axis has the same axis
-        ordering as the WCS object, i.e. the reverse of the data order.
 
     item: `int`, `slice` or `tuple` of `int` and/or `slice`.
         Slicing item.  Note that unlike in other places in this package, the item has the
@@ -285,42 +286,124 @@ def reindex_wcs(wcs, inds):
     return outwcs
 
 
-def get_dependent_axes(wcs_object, axis, missing_axis):
-    # Given an axis number in numpy ordering, returns the axes whose
-    # WCS translations are dependent, including itself.  Again,
-    # returned axes are in numpy ordering convention.
-    # Copied from WCSCoordinates class in glue-viz/glue github repo.
+def get_dependent_data_axes(wcs_object, data_axis, missing_axis):
+    """
+    Given a data axis index, return indices of dependent data axes.
 
-    # TODO: we should cache this
+    Both input and output axis indices are in the numpy ordering convention
+    (reverse of WCS ordering convention). The returned axis indices include the input axis.
+    Returned axis indices do NOT include any WCS axes that do not have a
+    corresponding data axis, i.e. "missing" axes.
 
-    # if distorted, all bets are off
-    try:
-        if any([wcs_object.sip, wcs_object.det2im1, wcs_object.det2im2]):
-            return tuple(range(wcs_object.naxis))
-    except AttributeError:
-        pass
+    Parameters
+    ----------
+    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
+        The WCS object describing the axes.
 
-    # here, axis is the index number in numpy convention
-    # we flip with [::-1] because WCS and numpy index
-    # conventions are reversed
-    pc = np.array(wcs_object.wcs.get_pc()[::-1, ::-1])
-    ndim = pc.shape[0]
-    pc[np.eye(ndim, dtype=np.bool)] = 0
-    axes = wcs_object.get_axis_types()
-    axes = np.array(axes)[np.invert(missing_axis)][::-1]
+    data_axis: `int`
+        Index of axis (in numpy ordering convention) for which dependent axes are desired.
 
-    # axes rotated.  In a departure from where this was copied,
-    # ensure any missing axes are not returned.
-    if pc[axis, :].any() or pc[:, axis].any():
-        return tuple(np.arange(ndim)[np.invert(missing_axis[::-1])])
+    missing_axis: iterable of `bool`
+        Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
 
-    # XXX can spectral still couple with other axes by this point??
-    if axes[axis].get('coordinate_type') != 'celestial':
-        return (axis,)
+    Returns
+    -------
+    dependent_data_axes: `tuple` of `int`
+        Sorted indices of axes dependent on input data_axis in numpy ordering convention.
 
-    # in some cases, even the celestial coordinates are
-    # independent. We don't catch that here.
-    return tuple(i for i, a in enumerate(axes) if a.get('coordinate_type') == 'celestial')
+    """
+    # In order to correctly account for "missing" axes in this process,
+    # we must determine what axes are dependent based on WCS axis indices.
+    # Convert input data axis index to WCS axis index.
+    wcs_axis = utils_cube.data_axis_to_wcs_axis(data_axis, missing_axis)
+    # Determine dependent axes, including "missing" axes, using WCS ordering.
+    wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
+    # Remove "missing" axes from output.
+    non_missing_wcs_dependent_axes = wcs_dependent_axes[
+        np.invert(missing_axis)[wcs_dependent_axes]]
+    # Convert dependent axes back to numpy/data ordering.
+    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_axis(i, missing_axis)
+                                         for i in non_missing_wcs_dependent_axes]))
+    return dependent_data_axes
+
+
+def get_dependent_wcs_axes(wcs_object, wcs_axis):
+    """
+    Given a WCS axis index, return indices of dependent WCS axes.
+
+    Both input and output axis indices are in the WCS ordering convention
+    (reverse of numpy ordering convention). The returned axis indices include the input axis.
+    Returned axis indices DO include WCS axes that do not have a
+    corresponding data axis, i.e. "missing" axes.
+
+    Parameters
+    ----------
+    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
+        The WCS object describing the axes.
+
+    wcs_axis: `int`
+        Index of axis (in WCS ordering convention) for which dependent axes are desired.
+
+    Returns
+    -------
+    dependent_data_axes: `tuple` of `int`
+        Sorted indices of axes dependent on input data_axis in WCS ordering convention.
+
+    """
+    # Pre-compute dependent axes. The matrix returned by
+    # axis_correlation_matrix is (n_world, n_pixel) but we want to know
+    # which pixel coordinates are linked to which other pixel coordinates.
+    # So to do this we take a column from the matrix and find if there are
+    # any entries in common with all other columns in the matrix.
+    matrix = axis_correlation_matrix(wcs_object)
+    world_dep = matrix[:, wcs_axis:wcs_axis + 1]
+    dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
+    return dependent_wcs_axes
+
+
+def axis_correlation_matrix(wcs_object):
+    """
+    Return True/False matrix indicating which WCS axes are dependent on others.
+
+    Parameters
+    ----------
+    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
+        The WCS object describing the axes.
+
+    Returns
+    -------
+    matrix: `numpy.ndarray` of `bool`
+        Square True/False matrix indicating which axes are dependent.
+        For example, whether WCS axis 0 is dependent on WCS axis 1 is given by matrix[0, 1].
+
+    """
+    n_world = len(wcs_object.wcs.ctype)
+    n_pixel = wcs_object.naxis
+
+    # If there are any distortions present, we assume that there may be
+    # correlations between all axes. Maybe if some distortions only apply
+    # to the image plane we can improve this
+    for distortion_attribute in ('sip', 'det2im1', 'det2im2'):
+        if getattr(wcs_object, distortion_attribute):
+            return np.ones((n_world, n_pixel), dtype=bool)
+
+    # Assuming linear world coordinates along each axis, the correlation
+    # matrix would be given by whether or not the PC matrix is zero
+    matrix = wcs_object.wcs.get_pc() != 0
+
+    # We now need to check specifically for celestial coordinates since
+    # these can assume correlations because of spherical distortions. For
+    # each celestial coordinate we copy over the pixel dependencies from
+    # the other celestial coordinates.
+    celestial = (wcs_object.wcs.axis_types // 1000) % 10 == 2
+    celestial_indices = np.nonzero(celestial)[0]
+    for world1 in celestial_indices:
+        for world2 in celestial_indices:
+            if world1 != world2:
+                matrix[world1] |= matrix[world2]
+                matrix[world2] |= matrix[world1]
+
+    return matrix
 
 
 def append_sequence_axis_to_wcs(wcs_object):
