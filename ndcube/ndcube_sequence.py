@@ -172,11 +172,20 @@ class NDCubeSequence:
         return sequence_extra_coords
 
     def plot(self, *args, **kwargs):
-        if self._common_axis is None:
-            i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
+        naxis = len(self.dimensions)
+        if naxis == 1:
+            plot = ani._plot_1D_sequence(self, *args, **kwargs)
+        elif naxis == 2:
+            if self._common_axis == 0:
+                plot = ani._plot_2D_sequence_with_common_axis(self, *args, **kwargs)
+            else:
+                plot = ani._plot_2D_sequence_without_common_axis(self, *args, **kwargs)
         else:
-            i = ani.ImageAnimatorCommonAxisNDCubeSequence(self, *args, **kwargs)
-        return i
+            if self._common_axis is None:
+                plot = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
+            else:
+                plot = ani.ImageAnimatorCommonAxisNDCubeSequence(self, *args, **kwargs)
+        return plot
 
     def explode_along_axis(self, axis):
         """
