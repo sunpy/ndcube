@@ -197,7 +197,18 @@ def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], uni
         Default: ['x', 'y']
 
     """
-    pass
+    # Check that the unit attribute is set of all cubes and
+    # derive unit_y_axis if not set.
+    sequence_units, unit = _determine_sequence_units(cubesequence.data, unit)
+    # If all cubes have unit set, create a y data quantity from cube's data.
+    if sequence_units is not None:
+        data = np.stack([(cube.data * sequence_units[i]).to(unit).value
+                         for i, cube in enumerate(cubesequence.data)])
+    else:
+        data = np.stack([cube.data for i, cube in enumerate(cubesequence.data)])
+    # Plot image.  !!!!This implementation does not plot real world axes!!!!!
+    plot = plt.imshow(data, **kwargs)
+    return plot
 
 
 def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_axis=None,
