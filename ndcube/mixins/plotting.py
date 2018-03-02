@@ -77,7 +77,8 @@ class NDCubePlotMixin:
                 plot = self._plot_2D_cube(axes=axes, image_axes=axis_data[::-1], **kwargs)
 
             elif self.data.ndim == 1:
-                plot = self._plot_1D_cube(unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis, **kwargs)
+                plot = self._plot_1D_cube(unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
+                                          **kwargs)
 
         return plot
 
