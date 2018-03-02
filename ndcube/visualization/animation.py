@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 
 from ndcube import utils
@@ -177,3 +178,83 @@ class ImageAnimatorCommonAxisNDCubeSequence(ImageAnimatorWCS):
             self._set_unit_in_axis(self.axes)
             im.set_array(self.data[self.frame_slice])
             slider.cval = val
+
+
+def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], **kwargs):
+    """
+    Plots an NDCubeSequence of 1D NDCubes without a common axis as an image.
+
+    Parameters
+    ----------
+    cubesequence: `ndcube.NDCubeSequence`
+       NDCubeSequence instance to be plotted.
+
+    image_axes: `list`
+        The first axis in WCS object will become the first axis of image_axes and
+        second axis in WCS object will become the second axis of image_axes.
+        Default: ['x', 'y']
+
+    """
+    pass
+
+
+def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_axis=None,
+                                       **kwargs):
+    """
+    Plots an NDCubeSequence of 1D NDCubes with a common axis as line plot.
+
+    Parameters
+    ----------
+    cubesequence: `ndcube.NDCubeSequence`
+       NDCubeSequence instance to be plotted.
+
+    unit_x_axis: `astropy.units.unit` or valid unit `str`
+        The units into which the x-axis should be displayed.
+
+    unit_y_axis: `astropy.units.unit` or valid unit `str`
+        The units into which the y-axis should be displayed.  The unit attribute of all
+        the sub-cubes must be set to a compatible unit to set this kwarg.
+
+    """
+    pass
+
+
+def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
+    """
+    Plots an NDCubeSequence of scalar NDCubes as line plot.
+
+    A scalar NDCube is one whose NDCube.data is a scalar rather than an array.
+
+    Parameters
+    ----------
+    cubesequence: `ndcube.NDCubeSequence`
+       NDCubeSequence instance to be plotted.
+
+    unit_x_axis: `astropy.units.unit` or valid unit `str`
+        The units into which the x-axis should be displayed.
+
+    unit_y_axis: `astropy.units.unit` or valid unit `str`
+        The units into which the y-axis should be displayed.  The unit attribute of all
+        the sub-cubes must be set to a compatible unit to set this kwarg.
+
+    """
+    # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
+    try:
+        sequence_units = np.array(utils.sequence._get_all_cube_units(cubesequence.data))
+    except ValueError:
+        sequence_units = None
+    # If all cubes have unit set, create a data quantity from cube's data.
+    if sequence_units is not None:
+        if unit_y_axis is None:
+           unit_y_axis = sequence_units[0]
+        ydata = u.Quantity([cube.data * sequence_units[i]
+                            for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis)
+    # If not all cubes have their unit set, create a data array from cube's data.
+    else:
+        unit_y_axis = None
+        ydata = np.array([cube.data for cube in cubesequence.data])
+    # Define xdata
+    xdata = np.arange(ydata.size)
+    # Plot data
+    plot = plt.plot(xdata, ydata, **kwargs)
+    return plot
