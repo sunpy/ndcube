@@ -286,6 +286,8 @@ def _determine_sequence_units(cubesequence_data, unit=None):
     """
     Returns units of cubes in sequence and derives data unit if not set.
 
+    If not all cubes have their unit attribute set, an error is raised.
+
     Parameters
     ----------
     cubesequence_data: `list` of `ndcube.NDCube`
@@ -293,6 +295,15 @@ def _determine_sequence_units(cubesequence_data, unit=None):
 
     unit: `astropy.units.Unit` or `None`
         If None, an appropriate unit is derived from first cube in sequence.
+
+    Returns
+    -------
+    sequence_units: `list` of `astropy.units.Unit`
+        Unit of each cube.
+
+    unit: `astropy.units.Unit`
+        If input unit is not None, then the same as input.  Otherwise it is
+        the unit of the first cube in the sequence.
 
     """
     # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
@@ -303,7 +314,7 @@ def _determine_sequence_units(cubesequence_data, unit=None):
     # If all cubes have unit set, create a data quantity from cube's data.
     if sequence_units is not None:
         if unit is None:
-           unit = sequence_units[0]
+            unit = sequence_units[0]
     else:
         unit = None
     return sequence_units, unit
