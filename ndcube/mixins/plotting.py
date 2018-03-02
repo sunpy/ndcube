@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import astropy.units as u
-from sunpy.visualization.imageanimator import ImageAnimatorWCS
+from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 
 __all__ = ['NDCubePlotMixin']
@@ -55,15 +55,30 @@ class NDCubePlotMixin:
         """
         if not image_axes:
             image_axes = [-1, -2]
-        axis_data = ['x', 'x']
-        axis_data[image_axes[1]] = 'y'
-        if self.data.ndim >= 3:
-            plot = self._plot_3D_cube(image_axes=image_axes, unit_x_axis=unit_x_axis,
-                                      unit_y_axis=unit_y_axis, axis_ranges=axis_ranges, **kwargs)
-        elif self.data.ndim is 2:
-            plot = self._plot_2D_cube(axes=axes, image_axes=axis_data[::-1], **kwargs)
-        elif self.data.ndim is 1:
-            plot = self._plot_1D_cube(unit=unit)
+        try:
+            plot_axis_index = int(image_axes)
+        except TypeError:
+            if len(image_axes) == 1:
+                plot_axis_index = int(image_axes[0])
+            else:
+                plot_axis_index = None
+        if isinstance(plot_axis_index, int) and self.data.ndim > 1:
+            plot = self._animate_cube_1D(plot_axis_index=plot_axis_index,
+                                         unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
+                                         **kwargs)
+        else:
+            axis_data = ['x', 'x']
+            axis_data[image_axes[1]] = 'y'
+            if self.data.ndim >= 3:
+                plot = self._plot_3D_cube(image_axes=image_axes, unit_x_axis=unit_x_axis,
+                                          unit_y_axis=unit_y_axis, axis_ranges=axis_ranges,
+                                          **kwargs)
+            elif self.data.ndim == 2:
+                plot = self._plot_2D_cube(axes=axes, image_axes=axis_data[::-1], **kwargs)
+
+            elif self.data.ndim == 1:
+                plot = self._plot_1D_cube(unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis, **kwargs)
+
         return plot
 
     def _plot_3D_cube(self, image_axes=None, unit_x_axis=None, unit_y_axis=None,
@@ -140,7 +155,7 @@ class NDCubePlotMixin:
         plot = axes.imshow(self.data, **kwargs)
         return plot
 
-    def _plot_1D_cube(self, unit=None):
+    def _plot_1D_cube(self, unit_x_axis=None, unit_y_axis=None, **kwargs):
         """
         Plots a graph.
         Keyword arguments are passed on to matplotlib.
@@ -155,9 +170,41 @@ class NDCubePlotMixin:
         for i, _bool in enumerate(self.missing_axis):
             if not _bool:
                 index_not_one.append(i)
-        if unit is None:
-            unit = self.wcs.wcs.cunit[index_not_one[0]]
-        plot = plt.plot(self.pixel_to_world(*[u.Quantity(np.arange(self.data.shape[0]),
-                                                         unit=u.pix)])[0].to(unit),
-                        self.data)
+        xdata = self.pixel_to_world(u.Quantity(np.arange(self.data.shape[0]), unit=u.pix))[0]
+        if unit_x_axis is not None:
+            xdata = xdata.to(unit_x_axis)
+        if unit_y_axis is None:
+            ydata = self.data
+            unit_y_axis = self.unit
+        else:
+            if self.unit is None:
+                raise TypeError("NDCube.unit is None.  Must be an astropy.units.unit or "
+                                "valid unit string in order to set unit_y_axis.")
+            else:
+                ydata = (self.data * self.unit).to(unit_y_axis)
+        plot = plt.plot(xdata, ydata,
+                        xlabel="{0} [{1}]".format(self.world_axis_physical_types[0], unit_x_axis),
+                        ylabel="Data [{0}]".format(unit_y_axis), **kwargs)
+        return plot
+
+    def _animate_cube_1D(self, plot_axis_index=-1, unit_x_axis=None, unit_y_axis=None, **kwargs):
+        """Animates an axis of a cube as a line plot with sliders for other axes."""
+        # Get real world axis values along axis to be plotted and enter into axes_ranges kwarg.
+        xdata = self.axis_world_coords(plot_axis_index)
+        # Change x data to desired units it set by user.
+        if unit_x_axis:
+            xdata = xdata.to(unit_x_axis)
+        axis_ranges = [None] * self.data.ndim
+        axis_ranges[plot_axis_index] = xdata.value
+        if unit_y_axis:
+            if self.unit is None:
+                raise TypeError("NDCube.unit is None.  Must be an astropy.units.unit or "
+                                "valid unit string in order to set unit_y_axis.")
+            else:
+                data = (self.data * self.unit).to(unit_y_axis)
+        # Initiate line animator object.
+        plot = LineAnimator(data.value, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
+                            xlabel="{0} [{1}]".format(
+                                self.world_axis_physical_types[plot_axis_index], unit_x_axis),
+                            ylabel="Data [{0}]".format(unit_y_axis), **kwargs)
         return plot
