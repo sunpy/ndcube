@@ -181,7 +181,8 @@ class ImageAnimatorCommonAxisNDCubeSequence(ImageAnimatorWCS):
             slider.cval = val
 
 
-def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], **kwargs):
+def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], unit=None,
+                                          **kwargs):
     """
     Plots an NDCubeSequence of 1D NDCubes without a common axis as an image.
 
@@ -217,20 +218,15 @@ def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_ax
         the sub-cubes must be set to a compatible unit to set this kwarg.
 
     """
-    # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
-    try:
-        sequence_units = np.array(utils.sequence._get_all_cube_units(cubesequence.data))
-    except ValueError:
-        sequence_units = None
+    # Check that the unit attribute is set of all cubes and
+    # derive unit_y_axis if not set.
+    sequence_units, unit_y_axis = _determine_sequence_units(cubesequence.data, unit_y_axis)
     # If all cubes have unit set, create a y data quantity from cube's data.
     if sequence_units is not None:
-        if unit_y_axis is None:
-           unit_y_axis = sequence_units[0]
         ydata = np.concatenate([(cube.data * sequence_units[i]).to(unit_y_axis).value
                                 for i, cube in enumerate(cubesequence.data)])
     else:
         # If not all cubes have unit set, create a y data array from cube's data.
-        unit_y_axis = None
         ydata = np.concatenate([cube.data for i, cube in enumerate(cubesequence.data)])
     # Derive x data from wcs
     xdata = np.arange(ydata.size)
@@ -258,23 +254,45 @@ def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
         the sub-cubes must be set to a compatible unit to set this kwarg.
 
     """
-    # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
-    try:
-        sequence_units = np.array(utils.sequence._get_all_cube_units(cubesequence.data))
-    except ValueError:
-        sequence_units = None
+    # Check that the unit attribute is set of all cubes and
+    # derive unit_y_axis if not set.
+    sequence_units, unit_y_axis = _determine_sequence_units(cubesequence.data, unit_y_axis)
     # If all cubes have unit set, create a data quantity from cube's data.
     if sequence_units is not None:
-        if unit_y_axis is None:
-           unit_y_axis = sequence_units[0]
         ydata = u.Quantity([cube.data * sequence_units[i]
                             for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis)
     # If not all cubes have their unit set, create a data array from cube's data.
     else:
-        unit_y_axis = None
         ydata = np.array([cube.data for cube in cubesequence.data])
     # Define xdata
     xdata = np.arange(ydata.size)
     # Plot data
     plot = plt.plot(xdata, ydata, **kwargs)
     return plot
+
+
+def _determine_sequence_units(cubesequence_data, unit=None):
+    """
+    Returns units of cubes in sequence and derives data unit if not set.
+
+    Parameters
+    ----------
+    cubesequence_data: `list` of `ndcube.NDCube`
+        Taken from NDCubeSequence.data attribute.
+
+    unit: `astropy.units.Unit` or `None`
+        If None, an appropriate unit is derived from first cube in sequence.
+
+    """
+    # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
+    try:
+        sequence_units = np.array(utils.sequence._get_all_cube_units(cubesequence_data))
+    except ValueError:
+        sequence_units = None
+    # If all cubes have unit set, create a data quantity from cube's data.
+    if sequence_units is not None:
+        if unit is None:
+           unit = sequence_units[0]
+    else:
+        unit = None
+    return sequence_units, unit
