@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 
 from ndcube import utils
@@ -216,7 +217,26 @@ def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_ax
         the sub-cubes must be set to a compatible unit to set this kwarg.
 
     """
-    pass
+    # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
+    try:
+        sequence_units = np.array(utils.sequence._get_all_cube_units(cubesequence.data))
+    except ValueError:
+        sequence_units = None
+    # If all cubes have unit set, create a y data quantity from cube's data.
+    if sequence_units is not None:
+        if unit_y_axis is None:
+           unit_y_axis = sequence_units[0]
+        ydata = np.concatenate([(cube.data * sequence_units[i]).to(unit_y_axis).value
+                                for i, cube in enumerate(cubesequence.data)])
+    else:
+        # If not all cubes have unit set, create a y data array from cube's data.
+        unit_y_axis = None
+        ydata = np.concatenate([cube.data for i, cube in enumerate(cubesequence.data)])
+    # Derive x data from wcs
+    xdata = np.arange(ydata.size)
+    # Plot data
+    plot = plt.plot(xdata, ydata, **kwargs)
+    return plot
 
 
 def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
