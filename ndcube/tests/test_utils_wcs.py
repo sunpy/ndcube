@@ -84,3 +84,35 @@ def test_reindex_wcs(test_input, expected):
 def test_reindex_wcs_errors(test_input):
     with pytest.raises(test_input[0]):
         utils.wcs.reindex_wcs(*test_input[1:])
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((wm, 0, [False, False, False]), (0, 1)),
+    ((wm, 1, [False, False, False]), (0, 1)),
+    ((wm, 2, [False, False, False]), (2,)),
+    ((wm, 1, [False, False, True]), (1,))
+    ])
+def test_get_dependent_data_axes(test_input, expected):
+    output = utils.wcs.get_dependent_data_axes(*test_input)
+    assert output == expected
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((wm, 0), (0,)),
+    ((wm, 1), (1, 2)),
+    ((wm, 2), (1, 2)),
+    ])
+def test_get_dependent_wcs_axes(test_input, expected):
+    output = utils.wcs.get_dependent_wcs_axes(*test_input)
+    assert output == expected
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (wm, np.array([[True, False, False], [False, True, True], [False, True, True]])),
+    (wt, np.array([[True, False, False, False], [False, True, False, False],
+                   [False, False, True, True], [False, False, True, True]])),
+    (wm_reindexed_102, np.array([[True, False, True], [False, True, False],
+                                 [True, False, True]]))
+    ])
+def test_axis_correlation_matrix(test_input, expected):
+    assert (utils.wcs.axis_correlation_matrix(test_input) == expected).all()
