@@ -257,9 +257,6 @@ def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
     cubesequence: `ndcube.NDCubeSequence`
        NDCubeSequence instance to be plotted.
 
-    unit_x_axis: `astropy.units.unit` or valid unit `str`
-        The units into which the x-axis should be displayed.
-
     unit_y_axis: `astropy.units.unit` or valid unit `str`
         The units into which the y-axis should be displayed.  The unit attribute of all
         the sub-cubes must be set to a compatible unit to set this kwarg.
@@ -272,14 +269,31 @@ def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
     if sequence_units is not None:
         ydata = u.Quantity([cube.data * sequence_units[i]
                             for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis)
+        y_error = u.Quantity([cube.uncertainty * sequence_units[i]
+                              for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis)
     # If not all cubes have their unit set, create a data array from cube's data.
     else:
         ydata = np.array([cube.data for cube in cubesequence.data])
-    # Define xdata
+        yerror = np.array([cube.uncertainty for cube in cubesequence.data])
+    if all(yerror == None):
+        yerror = None
+    # Define x-axis data.
     xdata = np.arange(ydata.size)
+    # Define plot settings if not set in kwargs.
+    xlabel = kwargs.pop("xlabel", cubesequence.world_axis_physical_types[0])
+    ylabel = kwargs.pop("ylabel", "Data [{0}]".format(unit_y_axis))
+    title = kwargs.pop("title", "")
+    xlim = kwargs.pop("xlim", None)
+    ylim = kwargs.pop("ylim", None)
     # Plot data
-    plot = plt.plot(xdata, ydata, **kwargs)
-    return plot
+    fig, ax = plt.subplots(1, 1)
+    ax.errorbar(xdata, ydata, yerr=yerror, **kwargs)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    return ax
 
 
 def _determine_sequence_units(cubesequence_data, unit=None):
