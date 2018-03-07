@@ -220,6 +220,7 @@ def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_ax
     ----------
     cubesequence: `ndcube.NDCubeSequence`
        NDCubeSequence instance to be plotted.
+       Each sub-cube must have 1 and only 1 dimension.
 
     unit_x_axis: `astropy.units.unit` or valid unit `str`
         The units into which the x-axis should be displayed.
@@ -236,14 +237,31 @@ def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_ax
     if sequence_units is not None:
         ydata = np.concatenate([(cube.data * sequence_units[i]).to(unit_y_axis).value
                                 for i, cube in enumerate(cubesequence.data)])
+        yerror = np.concatenate([(cube.uncertainty * sequence_units[i]).to(unit_y_axis).value
+                                for i, cube in enumerate(cubesequence.data)])
     else:
         # If not all cubes have unit set, create a y data array from cube's data.
-        ydata = np.concatenate([cube.data for i, cube in enumerate(cubesequence.data)])
+        ydata = np.concatenate([cube.data for cube in cubesequence.data])
+        yerror = np.array([cube.uncertainty for cube in cubesequence.data])
+        if all(yerror == None):
+            yerror = None
+        else:
+            if any(yerror == None):
+                w = np.where(yerror == None)[0]
+                for i in w:
+                    yerror[i] = np.zeros(int(cubesequence[i].dimensions.value))
+            yerror = np.concatenate(yerror)
     # Derive x data from wcs
-    xdata = np.arange(ydata.size)
+    if unit_x_axis is None:
+        unit_x_axis = np.asarray(cubesequence[0].wcs.wcs.cunit)[
+            np.invert(cubesequence[0].missing_axis)][0]
+    xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
+                                       for cube in cubesequence]), unit=unit_x_axis)
+    default_xlabel = "{0} [{1}]".format(cubesequence.cube_like_world_axis_physical_types[0],
+                                        unit_x_axis)
     # Plot data
-    plot = plt.plot(xdata, ydata, **kwargs)
-    return plot
+    fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
+    return ax
 
 
 def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
@@ -279,20 +297,8 @@ def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
         yerror = None
     # Define x-axis data.
     xdata = np.arange(ydata.size)
-    # Define plot settings if not set in kwargs.
-    xlabel = kwargs.pop("xlabel", cubesequence.world_axis_physical_types[0])
-    ylabel = kwargs.pop("ylabel", "Data [{0}]".format(unit_y_axis))
-    title = kwargs.pop("title", "")
-    xlim = kwargs.pop("xlim", None)
-    ylim = kwargs.pop("ylim", None)
-    # Plot data
-    fig, ax = plt.subplots(1, 1)
-    ax.errorbar(xdata, ydata, yerr=yerror, **kwargs)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    default_xlabel = cubesequence.world_axis_physical_types[0]
+    fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
     return ax
 
 
@@ -332,3 +338,21 @@ def _determine_sequence_units(cubesequence_data, unit=None):
     else:
         unit = None
     return sequence_units, unit
+
+
+def _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs):
+    # Define plot settings if not set in kwargs.
+    xlabel = kwargs.pop("xlabel", default_xlabel)
+    ylabel = kwargs.pop("ylabel", "Data [{0}]".format(unit_y_axis))
+    title = kwargs.pop("title", "")
+    xlim = kwargs.pop("xlim", None)
+    ylim = kwargs.pop("ylim", None)
+    # Plot data
+    fig, ax = plt.subplots(1, 1)
+    ax.errorbar(xdata, ydata, yerr=yerror, **kwargs)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    return fig, ax
