@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
@@ -181,10 +182,12 @@ class ImageAnimatorCommonAxisNDCubeSequence(ImageAnimatorWCS):
             slider.cval = val
 
 
-def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], unit=None,
-                                          **kwargs):
+def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], data_unit=None,
+                                          cube_axis_unit=None, **kwargs):
     """
     Plots an NDCubeSequence of 1D NDCubes without a common axis as an image.
+
+    **kwargs are fed into matplotlib.image.NonUniformImage.
 
     Parameters
     ----------
@@ -196,19 +199,56 @@ def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], uni
         second axis in WCS object will become the second axis of image_axes.
         Default: ['x', 'y']
 
+    data_unit: `astropy.units.Unit` or unit `str`
+        The unit the data in the sequence should be displayed in.  Can only be set it
+        the unit attributes of all sub-cubes is set to a compatible unit.
+        Default is data unit of first sub-cube.
+
+    cube_axis_unit: `astropy.units.Unit` or unit `str`
+        The unit in which to display the axis corresponding to the cube axis
+        (i.e. not the sequence axis.). Default is WCS unit of axis of 0th sub-cube.
+
     """
+    image_axes = [len(cubesequence.dimensions)+i if i < 0 else i for i in image_axes]
     # Check that the unit attribute is set of all cubes and
     # derive unit_y_axis if not set.
-    sequence_units, unit = _determine_sequence_units(cubesequence.data, unit)
-    # If all cubes have unit set, create a y data quantity from cube's data.
+    sequence_units, data_unit = _determine_sequence_units(cubesequence.data, data_unit)
+    # If all cubes have unit set, create a data quantity from cube's data.
     if sequence_units is not None:
-        data = np.stack([(cube.data * sequence_units[i]).to(unit).value
+        data = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
                          for i, cube in enumerate(cubesequence.data)])
     else:
         data = np.stack([cube.data for i, cube in enumerate(cubesequence.data)])
-    # Plot image.  !!!!This implementation does not plot real world axes!!!!!
-    plot = plt.imshow(data, **kwargs)
-    return plot
+    # Transpose data if user-defined images_axes require it.
+    if image_axes[0] < image_axes[1]:
+        data = data.transpose()
+    # Derive the x and y axes.
+    if cube_axis_unit is None:
+        cube_axis_unit = np.array(cubesequence[0].wcs.wcs.cunit)[
+            np.invert(cubesequence[0].missing_axis)][0]
+    cube_axis = cubesequence[0].axis_world_coords().to(cube_axis_unit)
+    sequence_axis = np.arange(len(cubesequence.data))
+    axes_values = [sequence_axis, cube_axis.value]
+    axes_labels = ["{0} [None]".format(cubesequence.world_axis_physical_types[0]),
+                   "{0} [{1}]".format(cubesequence.world_axis_physical_types[1], cube_axis_unit)]
+    # Plot image.
+    # Create figure and axes objects.
+    fig, ax = plt.subplots(1, 1)
+    # Since we can't assume the x-axis will be uniform, create NonUniformImage
+    # axes and add it to the axes object.
+    im_ax = mpl.image.NonUniformImage(
+        ax, extent=(axes_values[image_axes[0]][0], axes_values[image_axes[0]][-1],
+                    axes_values[image_axes[1]][0], axes_values[image_axes[1]][-1]),
+        **kwargs)
+    im_ax.set_data(axes_values[image_axes[0]], axes_values[image_axes[1]], data)
+    ax.add_image(im_ax)
+    # Set the limits, labels, etc. of the axes.
+    ax.set_xlim((axes_values[image_axes[0]][0], axes_values[image_axes[0]][-1]))
+    ax.set_ylim((axes_values[image_axes[1]][0], axes_values[image_axes[1]][-1]))
+    ax.set_xlabel(axes_labels[image_axes[0]])
+    ax.set_ylabel(axes_labels[image_axes[1]])
+
+    return ax
 
 
 def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_axis=None,
