@@ -405,7 +405,7 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         # The docstring is defined in NDDataBase
 
         n_dim = len(self.dimensions)
-        if len(min_coord_values) != len(interval_widths) != n_dim:
+        if (len(min_coord_values) != len(interval_widths)) or len(min_coord_values) != n_dim:
             raise ValueError("min_coord_values and interval_widths must have "
                              "same number of elements as number of data dimensions.")
         # Convert coords of lower left corner to pixel units.
