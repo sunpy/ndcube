@@ -10,7 +10,7 @@ from ndcube.visualization import animation as ani
 __all__ = ['NDCubeSequence']
 
 
-class NDCubeSequence:
+class NDCubeSequence(object):
     """
     Class representing list of cubes.
 
@@ -171,13 +171,19 @@ class NDCubeSequence:
             sequence_extra_coords = None
         return sequence_extra_coords
 
-    def plot(self, *args, **kwargs):
+    def plot(self, axis_ranges=None, plot_as_cube=False, *args, **kwargs):
+        # axis_ranges is list of same length as number of dimensions
         naxis = len(self.dimensions)
         if naxis == 1:
             plot = ani._plot_1D_sequence(self, *args, **kwargs)
         elif naxis == 2:
-            if self._common_axis == 0:
-                plot = ani._plot_2D_sequence_with_common_axis(self, *args, **kwargs)
+            if (self._common_axis is not None) and (plot_as_cube is True):
+                if (axis_ranges is not None) and isinstance(axis_ranges[self._common_axis], str):
+                    x_axis_extra_coord = axis_ranges[self._common_axis]
+                else:
+                    x_axis_extra_coord = None
+                plot = ani._plot_2D_sequence_with_common_axis(
+                    self, x_axis_extra_coord=x_axis_extra_coord, *args, **kwargs)
             else:
                 plot = ani._plot_2D_sequence_without_common_axis(self, *args, **kwargs)
         else:

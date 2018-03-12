@@ -251,21 +251,27 @@ def _plot_2D_sequence_without_common_axis(cubesequence, image_axes=[-1, -2], dat
     return ax
 
 
-def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_axis=None,
-                                       **kwargs):
+def _plot_2D_sequence_with_common_axis(cubesequence, x_axis_extra_coord=None,
+                                       unit_x_axis=None, unit_y_axis=None, **kwargs):
     """
     Plots an NDCubeSequence of 1D NDCubes with a common axis as line plot.
 
     Parameters
     ----------
     cubesequence: `ndcube.NDCubeSequence`
-       NDCubeSequence instance to be plotted.
-       Each sub-cube must have 1 and only 1 dimension.
+        NDCubeSequence instance to be plotted.
+        Each sub-cube must have 1 and only 1 dimension.
 
-    unit_x_axis: `astropy.units.unit` or valid unit `str`
+    x_axis_extra_coord: `str` (Optional)
+        The name of the extra coord along common axis to be used to describe
+        the x-axis if preferred to the WCS.
+        Default=None, implies the x-axis is derived from the WCS objects in
+        the sequence, rather than an extra coord.
+
+    unit_x_axis: `astropy.units.unit` or valid unit `str` (Optional)
         The units into which the x-axis should be displayed.
 
-    unit_y_axis: `astropy.units.unit` or valid unit `str`
+    unit_y_axis: `astropy.units.unit` or valid unit `str` (Optional)
         The units into which the y-axis should be displayed.  The unit attribute of all
         the sub-cubes must be set to a compatible unit to set this kwarg.
 
@@ -277,8 +283,9 @@ def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_ax
     if sequence_units is not None:
         ydata = np.concatenate([(cube.data * sequence_units[i]).to(unit_y_axis).value
                                 for i, cube in enumerate(cubesequence.data)])
-        yerror = np.concatenate([(cube.uncertainty * sequence_units[i]).to(unit_y_axis).value
-                                for i, cube in enumerate(cubesequence.data)])
+        yerror = np.concatenate(
+            [(cube.uncertainty.array * sequence_units[i]).to(unit_y_axis).value
+             for i, cube in enumerate(cubesequence.data)])
     else:
         # If not all cubes have unit set, create a y data array from cube's data.
         ydata = np.concatenate([cube.data for cube in cubesequence.data])
@@ -292,13 +299,19 @@ def _plot_2D_sequence_with_common_axis(cubesequence, unit_x_axis=None, unit_y_ax
                     yerror[i] = np.zeros(int(cubesequence[i].dimensions.value))
             yerror = np.concatenate(yerror)
     # Derive x data from wcs
-    if unit_x_axis is None:
-        unit_x_axis = np.asarray(cubesequence[0].wcs.wcs.cunit)[
-            np.invert(cubesequence[0].missing_axis)][0]
-    xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
-                                       for cube in cubesequence]), unit=unit_x_axis)
-    default_xlabel = "{0} [{1}]".format(cubesequence.cube_like_world_axis_physical_types[0],
-                                        unit_x_axis)
+    if x_axis_extra_coord is None:
+        if unit_x_axis is None:
+            unit_x_axis = np.asarray(cubesequence[0].wcs.wcs.cunit)[
+                np.invert(cubesequence[0].missing_axis)][0]
+        xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
+                                           for cube in cubesequence]), unit=unit_x_axis)
+        default_xlabel = "{0} [{1}]".format(cubesequence.cube_like_world_axis_physical_types[0],
+                                            unit_x_axis)
+    else:
+        xdata = cubesequence.common_axis_extra_coords[x_axis_extra_coord]
+        if unit_x_axis is None and isinstance(xdata, u.Quantity):
+            unit_x_axis = xdata.unit
+        default_xlabel = "{0} [{1}]".format(x_axis_extra_coord, unit_x_axis)
     # Plot data
     fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
     return ax
