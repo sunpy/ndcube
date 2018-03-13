@@ -298,26 +298,16 @@ def _plot_2D_sequence_with_common_axis(cubesequence, x_axis_extra_coord=None,
                 for i in w:
                     yerror[i] = np.zeros(int(cubesequence[i].dimensions.value))
             yerror = np.concatenate(yerror)
-    # Derive x data from wcs
-    if x_axis_extra_coord is None:
-        if unit_x_axis is None:
-            unit_x_axis = np.asarray(cubesequence[0].wcs.wcs.cunit)[
-                np.invert(cubesequence[0].missing_axis)][0]
-        xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
-                                           for cube in cubesequence]), unit=unit_x_axis)
-        default_xlabel = "{0} [{1}]".format(cubesequence.cube_like_world_axis_physical_types[0],
-                                            unit_x_axis)
-    else:
-        xdata = cubesequence.common_axis_extra_coords[x_axis_extra_coord]
-        if unit_x_axis is None and isinstance(xdata, u.Quantity):
-            unit_x_axis = xdata.unit
-        default_xlabel = "{0} [{1}]".format(x_axis_extra_coord, unit_x_axis)
+    # Define x-axis data.
+    xdata, unit_x_axis, default_xlabel = _derive_1D_x_data(
+        cubesequence, unit_x_axis, x_axis_extra_coord, sequence_1d=False)
     # Plot data
     fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
     return ax
 
 
-def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
+def _plot_1D_sequence(cubesequence, x_axis_extra_coord=None,
+                      unit_x_axis=None, unit_y_axis=None, **kwargs):
     """
     Plots an NDCubeSequence of scalar NDCubes as line plot.
 
@@ -339,9 +329,9 @@ def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
     # If all cubes have unit set, create a data quantity from cube's data.
     if sequence_units is not None:
         ydata = u.Quantity([cube.data * sequence_units[i]
-                            for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis)
-        y_error = u.Quantity([cube.uncertainty * sequence_units[i]
-                              for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis)
+                            for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis).value
+        yerror = u.Quantity([cube.uncertainty.array * sequence_units[i]
+                             for i, cube in enumerate(cubesequence.data)], unit=unit_y_axis).value
     # If not all cubes have their unit set, create a data array from cube's data.
     else:
         ydata = np.array([cube.data for cube in cubesequence.data])
@@ -349,8 +339,11 @@ def _plot_1D_sequence(cubesequence, unit_y_axis=None, **kwargs):
     if all(yerror == None):
         yerror = None
     # Define x-axis data.
-    xdata = np.arange(ydata.size)
-    default_xlabel = cubesequence.world_axis_physical_types[0]
+    xdata, unit_x_axis, default_xlabel = _derive_1D_x_data(
+        cubesequence, unit_x_axis, x_axis_extra_coord, sequence_1d=True)
+    #xdata = np.arange(ydata.size)
+    #default_xlabel = cubesequence.world_axis_physical_types[0]
+    #return xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs
     fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
     return ax
 
@@ -391,6 +384,29 @@ def _determine_sequence_units(cubesequence_data, unit=None):
     else:
         unit = None
     return sequence_units, unit
+
+
+def _derive_1D_x_data(cubesequence, unit_x_axis, x_axis_extra_coord, sequence_1d=True):
+    # Derive x data from wcs is extra_coord not set.
+    if x_axis_extra_coord is None:
+        if unit_x_axis is None:
+            unit_x_axis = np.asarray(cubesequence[0].wcs.wcs.cunit)[
+                np.invert(cubesequence[0].missing_axis)][0]
+        xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
+                                           for cube in cubesequence]), unit=unit_x_axis)
+        default_xlabel = "{0} [{1}]".format(cubesequence.cube_like_world_axis_physical_types[0],
+                                            unit_x_axis)
+    else:
+        # Else derive x-axis from extra coord.
+        if sequence_1d is True:
+            xdata = cubesequence.sequence_axis_extra_coords[x_axis_extra_coord]
+        else:
+            xdata = cubesequence.common_axis_extra_coords[x_axis_extra_coord]
+        if unit_x_axis is None and isinstance(xdata, u.Quantity):
+            unit_x_axis = xdata.unit
+        default_xlabel = "{0} [{1}]".format(x_axis_extra_coord, unit_x_axis)
+
+    return xdata, unit_x_axis, default_xlabel
 
 
 def _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs):

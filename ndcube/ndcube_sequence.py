@@ -171,11 +171,18 @@ class NDCubeSequence(object):
             sequence_extra_coords = None
         return sequence_extra_coords
 
-    def plot(self, axis_ranges=None, plot_as_cube=False, *args, **kwargs):
+    def plot(self, axis_ranges=None, plot_as_cube=False, unit_x_axis=None, unit_y_axis=None,
+             *args, **kwargs):
         # axis_ranges is list of same length as number of dimensions
         naxis = len(self.dimensions)
         if naxis == 1:
-            plot = ani._plot_1D_sequence(self, *args, **kwargs)
+            if (axis_ranges is not None) and isinstance(axis_ranges[0], str):
+                x_axis_extra_coord = axis_ranges[0]
+            else:
+                x_axis_extra_coord = None
+            plot = ani._plot_1D_sequence(self, x_axis_extra_coord=x_axis_extra_coord,
+                                         unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
+                                         *args, **kwargs)
         elif naxis == 2:
             if (self._common_axis is not None) and (plot_as_cube is True):
                 if (axis_ranges is not None) and isinstance(axis_ranges[self._common_axis], str):
