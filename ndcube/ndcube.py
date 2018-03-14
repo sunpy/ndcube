@@ -166,6 +166,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
+        if mask is None:
+            mask = np.zeros_like(data, dtype=bool)
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
         else:
