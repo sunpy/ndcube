@@ -1,4 +1,7 @@
+import copy
+
 import numpy as np
+import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 
 from ndcube import utils
@@ -248,17 +251,22 @@ class LineAnimatorNDCubeSequence(LineAnimator):
         #else:
         #    data_concat = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
         #                            for i, cube in enumerate(seq.data)])
-        data_concat = np.stack([cube.data for i, cube in enumerate(seq.data)])
+        datas = []
+        masks = []
+        for i, cube in enumerate(seq.data):
+            datas.append(cube.data)
+            masks.append(cube.mask)
+        data_concat = np.ma.masked_array(np.stack(datas), np.stack(masks))
         # Ensure plot_axis_index is represented in the positive convention.
         if plot_axis_index < 0:
             plot_axis_index = len(seq.dimensions) + plot_axis_index
         # Calculate the x-axis values if axis_ranges not supplied.
+        cube_plot_axis_index = plot_axis_index - 1
         if axis_ranges is None:
             axis_ranges = [None] * len(seq.dimensions)
             if plot_axis_index == 0:
                 axis_ranges[plot_axis_index] = np.arange(len(seq.data))
             else:
-                cube_plot_axis_index = plot_axis_index - 1
                 # Define unit of x-axis if not supplied by user.
                 if unit_x_axis is None:
                     wcs_plot_axis_index = utils.cube.data_axis_to_wcs_axis(
@@ -269,12 +277,84 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                 # array for axis_ranges kwargs.
                 x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, cube_plot_axis_index)
                 axis_ranges[plot_axis_index] = np.stack(x_axis_coords)
-            # Set axis labels and limits, etc.
+            # Set x-axis label.
             if xlabel is None:
                 xlabel = "{0} [{1}]".format(seq.world_axis_physical_types[plot_axis_index],
                                             unit_x_axis)
-            if ylabel is None:
-                ylabel = "Data [{0}]".format(data_unit)
+        else:
+            # If the axis range is being defined by an extra coordinate...
+            if isinstance(axis_ranges[plot_axis_index], str):
+                axis_extra_coord = axis_ranges[plot_axis_index]
+                if plot_axis_index == 0:
+                    # If the sequence axis is the plot axis, use
+                    # sequence_axis_extra_coords to get the extra coord values
+                    # for whole sequence.
+                    x_axis_coords = seq.sequence_axis_extra_coords[axis_extra_coord]
+                    if isinstance(x_axis_coords, u.Quantity) and (unit_x_axis is not None):
+                        x_axis_coords = x_axis_coords.to(unit_x_axis).value
+                else:
+                    # Else get extra coord values from each cube and
+                    # combine into a single array for axis_ranges kwargs.
+                    # First, confirm extra coord is of same type and corresponds
+                    # to same axes in each cube.
+                    extra_coord_type = np.empty(len(seq.data), dtype=object)
+                    extra_coord_axes = np.empty(len(seq.data), dtype=object)
+                    x_axis_coords = []
+                    for i, cube in enumerate(seq.data):
+                        cube_axis_extra_coord = cube.extra_coords[axis_extra_coord]
+                        extra_coord_type[i] = type(cube_axis_extra_coord["value"])
+                        extra_coord_axes[i] = cube_axis_extra_coord["axis"]
+                        x_axis_coords.append(cube_axis_extra_coord["value"])
+                    if not extra_coord_type.all() == extra_coord_type[0]:
+                        raise TypeError("Extra coord {0} must be of same type for all NDCubes to "
+                                        "use it to define a plot axis.".format(axis_extra_coord))
+                    else:
+                        extra_coord_type = extra_coord_type[0]
+                    if not extra_coord_axes.all() == extra_coord_axes[0]:
+                        raise ValueError("Extra coord {0} must correspond to same axes in each "
+                                         "NDCube to use it to define a plot axis.".format(
+                                             axis_extra_coord))
+                    else:
+                        if isinstance(extra_coord_axes[0], (int, np.int64)):
+                            extra_coord_axes = [int(extra_coord_axes[0])]
+                        else:
+                            extra_coord_axes = list(extra_coord_axes[0]).sort()
+                    # If the extra coord is a quantity, convert to the correct unit.
+                    if extra_coord_type is u.Quantity:
+                        if unit_x_axis is None and extra_coord_type is u.Quantity:
+                            unit_x_axis = seq[0].extra_coords[axis_extra_coord]["value"].unit
+                        x_axis_coords = [x_axis_value.to(unit_x_axis).value
+                                         for x_axis_value in x_axis_coords]
+                    # If extra coord is same for each cube, storing
+                    # values as single 1D axis range will suffice.
+                    if ((np.array(x_axis_coords) == x_axis_coords[0]).all() and
+                        (len(extra_coord_axes) == 1)):
+                        x_axis_coords = x_axis_coords[0]
+                    else:
+                        if len(extra_coord_axes) != data_concat.ndim:
+                            independent_axes = list(range(seq[0].data.ndim))
+                            for i in list(extra_coord_axes)[::-1]:
+                                independent_axes.pop(i)
+                            x_axis_coords_copy = copy.deepcopy(x_axis_coords)
+                            x_axis_coords = []
+                            for i, x_axis_cube_coords in enumerate(x_axis_coords_copy):
+                                tile_shape = tuple(list(
+                                    np.array(seq[i].data.shape)[independent_axes]) + \
+                                    [1]*len(x_axis_cube_coords))
+                                x_axis_cube_coords = np.tile(x_axis_cube_coords, tile_shape)
+                                # Since np.tile puts original array's dimensions as last,
+                                # reshape x_axis_cube_coords to cube's shape.
+                                x_axis_cube_coords = x_axis_cube_coords.reshape(seq[i].data.shape)
+                                x_axis_coords.append(x_axis_cube_coords)
+                        x_axis_coords = np.stack(x_axis_coords)
+                # Set x-axis label.
+                if xlabel is None:
+                    xlabel = "{0} [{1}]".format(axis_extra_coord, unit_x_axis)
+                # Re-enter x-axis values into axis_ranges
+                axis_ranges[plot_axis_index] = x_axis_coords
+        # Make label for y-axis.
+        if ylabel is None:
+            ylabel = "Data [{0}]".format(data_unit)
 
         super(LineAnimatorNDCubeSequence, self).__init__(
             data_concat, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
