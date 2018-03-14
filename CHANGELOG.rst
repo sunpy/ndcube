@@ -21,4 +21,6 @@ Bug Fixes
   scalar ``.data``. [#79]
 - Fixed ``NDCube.world_axis_physical_types`` in cases where there is a
   ``missing`` WCS axis. [#80]
+- Fixed bugs in converting between negative data and WCS axis
+  numbers. [#91]
 
