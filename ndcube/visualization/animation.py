@@ -251,12 +251,22 @@ class LineAnimatorNDCubeSequence(LineAnimator):
         #else:
         #    data_concat = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
         #                            for i, cube in enumerate(seq.data)])
-        datas = []
-        masks = []
-        for i, cube in enumerate(seq.data):
-            datas.append(cube.data)
-            masks.append(cube.mask)
-        data_concat = np.ma.masked_array(np.stack(datas), np.stack(masks))
+
+        # Combine data from cubes in sequence.
+        # If cubes have masks, make result a masked array.
+        cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
+        if not cubes_with_mask.all():
+            data_concat = np.stack([cube.data for cube in seq.data])
+        else:
+            datas = []
+            masks = []
+            for i, cube in enumerate(seq.data):
+                datas.append(cube.data)
+                if cubes_with_mask[i]:
+                    masks.append(cube.mask)
+                else:
+                    masks.append(np.zeros_like(cube.data, dtype=bool))
+            data_concat = np.ma.masked_array(np.stack(datas), np.stack(masks))
         # Ensure plot_axis_index is represented in the positive convention.
         if plot_axis_index < 0:
             plot_axis_index = len(seq.dimensions) + plot_axis_index
