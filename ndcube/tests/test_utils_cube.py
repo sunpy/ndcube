@@ -28,9 +28,18 @@ extra_coords_dict_wcs = {"time": {"wcs axis": 0,
      ((0, missing_axis_none), 2),
      ((1, missing_axis_none), 1),
      ((0, missing_axis_0_2), 1),
-     ((1, missing_axis_1), 0)])
+     ((1, missing_axis_1), 0),
+     ((-1, missing_axis_0_2), 1),
+     ((-2, missing_axis_1), 2),
+     ((-1, missing_axis_none), 0)])
 def test_data_axis_to_wcs_axis(test_input, expected):
     assert utils.cube.data_axis_to_wcs_axis(*test_input) == expected
+
+
+@pytest.mark.parametrize("test_input", [(-2, missing_axis_0_2), (1, missing_axis_0_2)])
+def test_data_axis_to_wcs_axis_error(test_input):
+    with pytest.raises(IndexError):
+        utils.cube.data_axis_to_wcs_axis(*test_input)
 
 
 @pytest.mark.parametrize(
@@ -39,9 +48,20 @@ def test_data_axis_to_wcs_axis(test_input, expected):
      ((0, missing_axis_none), 2),
      ((1, missing_axis_none), 1),
      ((1, missing_axis_0_2), 0),
-     ((0, missing_axis_1), 1)])
+     ((0, missing_axis_1), 1),
+     ((-1, missing_axis_0_2), None),
+     ((-2, missing_axis_0_2), 0),
+     ((-2, missing_axis_1), None),
+     ((-3, missing_axis_1), 1),
+     ((-1, missing_axis_none), 0)])
 def test_wcs_axis_to_data_axis(test_input, expected):
     assert utils.cube.wcs_axis_to_data_axis(*test_input) == expected
+
+
+@pytest.mark.parametrize("test_input", [(-10, missing_axis_0_2), (10, missing_axis_0_2)])
+def test_wcs_axis_to_data_axis_error(test_input):
+    with pytest.raises(IndexError):
+        utils.cube.data_axis_to_wcs_axis(*test_input)
 
 
 def test_select_order():
