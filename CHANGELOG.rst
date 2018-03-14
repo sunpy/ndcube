@@ -13,6 +13,8 @@ API Changes
   implementation in ``glue-viz`` which is intended to be merged into
   ``astropy`` in the future.  This API change helped fix the
   ``NDCube.world_axis_physical_type`` bug listed below. [#80]
+- ``NDCube`` generates a False mask (all pixels unmasked) on
+  instantiation if one is not provided by the user. [#89]
 
 Bug Fixes
 ---------
