@@ -92,7 +92,7 @@ pixel units giving the length of each dimension in the
 returns an iterable of strings denoting the type of physical property
 represented by each axis.  The axis names are in accordance with the
 International Virtual Observatory Alliance (IVOA)
-`UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`.
+`UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
 Here the shape and axis types are given in data order, not WCS order.
 
 .. _ndcube_slicing:
