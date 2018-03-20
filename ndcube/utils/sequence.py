@@ -671,3 +671,28 @@ def _get_int_axis_extra_coords(cube_list, axis_coord_names, axis_coord_units, ax
         else:
             axis_extra_coords[coord_key] = np.asarray(coord_values)
     return axis_extra_coords
+
+
+def _get_all_cube_units(sequence_data):
+    """
+    Return units of a sequence of NDCubes.
+
+    Raises an error if any of the cube's don't have the unit attribute set.
+
+    Parameters
+    ----------
+    sequence_data: iterable of `ndcube.NDCube` of `astropy.nddata.NDData`.
+
+    Returns
+    -------
+    sequence_units: `list` of `astropy.units.Unit`
+       The unit of each cube in the sequence.
+
+    """
+    sequence_units = []
+    for i, cube in enumerate(sequence_data):
+        if cube.unit is None:
+            raise ValueError("{0}th cube in sequence does not have unit set.".format(i))
+        else:
+            sequence_units.append(cube.unit)
+    return sequence_units
