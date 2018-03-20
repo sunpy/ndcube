@@ -491,7 +491,7 @@ def _convert_sequence_slice_to_sequence_item(sequence_slice, common_axis, cube_l
     sequence_slice: SequenceSlice `namedtuple`
         0th element gives index of cube along sequence axis.
         1st element each index along common axis of relevant cube.
-        Must be same format as output from _convert_cube_like_index_to_sequence_indices.
+        Must be same format as output from _convert_cube_like_index_to_sequence_slice.
 
     common_axis: `int`
         Common axis as defined in NDCubeSequence.
