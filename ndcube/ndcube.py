@@ -12,7 +12,7 @@ from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
-__all__ = ['NDCubeBase', 'NDCube', 'NDCubeOrdered']
+__all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
 
 class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
@@ -21,7 +21,7 @@ class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
     """
 
 
-class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
+class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractmethod
     def pixel_to_world(self, *quantity_axis_list):
@@ -109,7 +109,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
 
 
-class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin, NDCubeBase):
+class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
     Class representing N dimensional cubes.
     Extra arguments are passed on to `~astropy.nddata.NDData`.
@@ -463,6 +463,10 @@ Length of NDCube: {lengthNDCube}
 Axis Types of NDCube: {axis_type}
 """.format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
            axis_type=self.world_axis_physical_types))
+
+
+class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
+    pass
 
 
 class NDCubeOrdered(NDCube):
