@@ -62,9 +62,6 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
 
     """
     def __init__(self, seq, wcs=None, **kwargs):
-        if seq._common_axis is not None:
-            raise ValueError("Common axis can't set set to use this class. "
-                             "Use ImageAnimatorCommonAxisNDCubeSequence.")
         if wcs is None:
             wcs = seq[0].wcs
         self.sequence = seq.data
