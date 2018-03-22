@@ -107,13 +107,12 @@ class NDCubeSequencePlotMixin:
                         unit_x_axis = axes_units[plot_axis_indices[0]]
                     else:
                         unit_x_axis = None
-                    print(plot_axis_indices[0], axes_coordinates, unit_x_axis)
                     ax = LineAnimatorNDCubeSequence(
                         cubesequence, plot_axis_index=plot_axis_indices[0],
                         axis_ranges=axes_coordinates,
                         unit_x_axis=unit_x_axis,
-                        data_unit=data_unit)#, xlabel=xlabel, ylabel=ylabel,
-#                        xlim=xlim, ylim=ylim)
+                        data_unit=data_unit, xlabel=xlabel, ylabel=ylabel,
+                        xlim=xlim, ylim=ylim)
         else:
             if plot_axis_indices is None:
                 plot_axis_indices = [-1, -2]
@@ -132,8 +131,30 @@ class NDCubeSequencePlotMixin:
                         cubesequence, image_axes=plot_axis_indices,
                         axis_ranges=axes_coordinates, unit_x_axis=axes_units[plot_axis_indices[0]],
                         unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
-            else:
-                raise NotImplementedError("Will depend on LineAnimator class in SunPy 0.9")
+            elif len(plot_axis_indices) == 1:
+                xlabel = kwargs.pop("xlabel", None)
+                ylabel = kwargs.pop("ylabel", None)
+                xlim = kwargs.pop("xlim", None)
+                ylim = kwargs.pop("ylim", None)
+                if axes_units is not None:
+                    unit_x_axis = axes_units[plot_axis_indices[0]]
+                else:
+                    unit_x_axis = None
+                if not plot_as_cube:
+                    ax = LineAnimatorNDCubeSequence(
+                        cubesequence, plot_axis_index=plot_axis_indices[0],
+                        axis_ranges=axes_coordinates,
+                        unit_x_axis=unit_x_axis,
+                        data_unit=data_unit, xlabel=xlabel, ylabel=ylabel,
+                        xlim=xlim, ylim=ylim)
+                else:
+                    ax = LineAnimatorCubeLikeNDCubeSequence(
+                        cubesequence, plot_axis_index=plot_axis_indices[0],
+                        axis_ranges=axes_coordinates,
+                        unit_x_axis=unit_x_axis,
+                        data_unit=data_unit, xlabel=xlabel, ylabel=ylabel,
+                        xlim=xlim, ylim=ylim)
+                #raise NotImplementedError("Will depend on LineAnimator class in SunPy 0.9")
         return ax
 
     def _plot_1D_sequence(self, cubesequence, x_axis_coordinates=None,
