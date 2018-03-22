@@ -53,7 +53,7 @@ class NDCubePlotMixin:
             for that axis.
 
         """
-        if not image_axes:
+        if image_axes is None:
             image_axes = [-1, -2]
         try:
             plot_axis_index = int(image_axes)
