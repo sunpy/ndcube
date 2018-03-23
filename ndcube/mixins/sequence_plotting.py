@@ -9,7 +9,7 @@ from ndcube import utils
 __all__ = ['NDCubePlotMixin']
 
 NON_COMPATIBLE_UNIT_MESSAGE = \
-  "All sequence sub-cubes' unit attribute are not compatible with unit_y_axis set by user."
+  "All sequence sub-cubes' unit attribute are not compatible with data_unit set by user."
 
 class NDCubeSequencePlotMixin:
     def plot(self, cubesequence, axes=None, plot_axis_indices=None,
@@ -89,8 +89,8 @@ class NDCubeSequencePlotMixin:
             naxis, plot_axis_indices, axes_coordinates, axes_units)
         if naxis == 1:
             # Make 1D line plot.
-            ax = self._plot_1D_sequence(cubesequence, x_axis_coordinates,
-                                        unit_x_axis, data_unit, **kwargs)
+            ax = self._plot_1D_sequence(cubesequence, axes_coordinates,
+                                        axes_units, data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
                 # Since sequence has more than 1 dimension and number of plot axes is 1,
@@ -463,15 +463,20 @@ class NDCubeSequencePlotMixin:
         fig, ax = plt.subplots(1, 1)
         # Since we can't assume the x-axis will be uniform, create NonUniformImage
         # axes and add it to the axes object.
-        im_ax = mpl.image.NonUniformImage(
-            ax, extent=(axes_coordinates[plot_axis_indices[0]][0], axes_coordinates[plot_axis_indices[0]][-1],
-                        axes_coordinates[plot_axis_indices[1]][0], axes_coordinates[plot_axis_indices[1]][-1]),
-            **kwargs)
-        im_ax.set_data(axes_coordinates[plot_axis_indices[0]], axes_coordinates[plot_axis_indices[1]], data)
+        im_ax = mpl.image.NonUniformImage(ax,
+                                          extent=(axes_coordinates[plot_axis_indices[0]][0],
+                                                  axes_coordinates[plot_axis_indices[0]][-1],
+                                                  axes_coordinates[plot_axis_indices[1]][0],
+                                                  axes_coordinates[plot_axis_indices[1]][-1]),
+                                          **kwargs)
+        im_ax.set_data(axes_coordinates[plot_axis_indices[0]],
+                       axes_coordinates[plot_axis_indices[1]], data)
         ax.add_image(im_ax)
         # Set the limits, labels, etc. of the axes.
-        ax.set_xlim((axes_coordinates[plot_axis_indices[0]][0], axes_coordinates[plot_axis_indices[0]][-1]))
-        ax.set_ylim((axes_coordinates[plot_axis_indices[1]][0], axes_coordinates[plot_axis_indices[1]][-1]))
+        ax.set_xlim((axes_coordinates[plot_axis_indices[0]][0],
+                     axes_coordinates[plot_axis_indices[0]][-1]))
+        ax.set_ylim((axes_coordinates[plot_axis_indices[1]][0],
+                     axes_coordinates[plot_axis_indices[1]][-1]))
         ax.set_xlabel(axes_labels[plot_axis_indices[0]])
         ax.set_ylabel(axes_labels[plot_axis_indices[1]])
 
@@ -591,23 +596,6 @@ class NDCubeSequencePlotMixin:
         ax.set_ylabel(axes_labels[plot_axis_indices[1]])
 
         return ax
-
-
-    def _animate_ND_sequence(self, cubesequence, *args, **kwargs):
-        """
-        Visualizes an NDCubeSequence of >2D NDCubes as 2D an animation with N-2 sliders.
-
-        """
-        return ImageAnimatorNDCubeSequence(cubesequence, *args, **kwargs)
-
-    def _animate_ND_sequence_as_Nminus1Danimation(self, cubesequence, *args, **kwargs):
-        """
-        Visualizes a common axis NDCubeSequence of >3D NDCubes as 2D animation with N-3 sliders.
-
-        Called if plot_as_cube=True.
-
-        """
-        return ImageAnimatorCommonAxisNDCubeSequence(cubesequence, *args, **kwargs)
 
 
 class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
@@ -1148,9 +1136,14 @@ def _determine_sequence_units(cubesequence_data, unit=None):
 
     """
     # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
+    sequence_units = []
     try:
-        sequence_units = np.array(_get_all_cube_units(cubesequence_data))
-    except ValueError:
+        for i, cube in enumerate(sequence_data):
+            if cube.unit is None:
+                break
+            else:
+                sequence_units.append(cube.unit)
+    if len(sequence_units) != len(cubesequence_data):
         sequence_units = None
     # If all cubes have unit set, create a data quantity from cube's data.
     if sequence_units is not None:
@@ -1159,38 +1152,6 @@ def _determine_sequence_units(cubesequence_data, unit=None):
     else:
         unit = None
     return sequence_units, unit
-
-
-def _derive_1D_x_data(cubesequence, x_axis_values, unit_x_axis, sequence_is_1d=True):
-    # Derive x data from wcs is extra_coord not set.
-    if x_axis_values is None:
-        if sequence_is_1d:
-            # Since scalar NDCubes have no array/pixel indices, WCS translations don't work.
-            # Therefore x-axis values will be unitless sequence indices unless supplied by user
-            # or an extra coordinate is designated.
-            unit_x_axis = None
-            xdata = np.arange(int(cubesequence.dimensions[0].value))
-            default_xlabel = "{0} [{1}]".format(cubesequence.world_axis_physical_types[0],
-                                                unit_x_axis)
-        else:
-            if unit_x_axis is None:
-                unit_x_axis = np.asarray(cubesequence[0].wcs.wcs.cunit)[
-                    np.invert(cubesequence[0].missing_axis)][0]
-            xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
-                                               for cube in cubesequence]), unit=unit_x_axis)
-            default_xlabel = "{0} [{1}]".format(cubesequence.cube_like_world_axis_physical_types[0],
-                                                unit_x_axis)
-    elif isinstance(x_axis_values, str):
-        # Else derive x-axis from extra coord.
-        if sequence_is_1d:
-            xdata = cubesequence.sequence_axis_extra_coords[x_axis_extra_coord]
-        else:
-            xdata = cubesequence.common_axis_extra_coords[x_axis_extra_coord]
-        if unit_x_axis is None and isinstance(xdata, u.Quantity):
-            unit_x_axis = xdata.unit
-        default_xlabel = "{0} [{1}]".format(x_axis_extra_coord, unit_x_axis)
-
-    return xdata, unit_x_axis, default_xlabel
 
 
 def _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs):
@@ -1209,31 +1170,6 @@ def _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kw
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     return fig, ax
-
-
-def _get_all_cube_units(sequence_data):
-    """
-    Return units of a sequence of NDCubes.
-
-    Raises an error if any of the cube's don't have the unit attribute set.
-
-    Parameters
-    ----------
-    sequence_data: iterable of `ndcube.NDCube` of `astropy.nddata.NDData`.
-
-    Returns
-    -------
-    sequence_units: `list` of `astropy.units.Unit`
-       The unit of each cube in the sequence.
-
-    """
-    sequence_units = []
-    for i, cube in enumerate(sequence_data):
-        if cube.unit is None:
-            raise ValueError("{0}th cube in sequence does not have unit set.".format(i))
-        else:
-            sequence_units.append(cube.unit)
-    return sequence_units
 
 
 def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
@@ -1275,7 +1211,7 @@ def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
     # No need to check case where number of sequence dimensions is 1
     # as plot_axis_indices is ignored in that case.
     if naxis > 1:
-        len(plot_axis_indices) not in [1, 2]:
+        if len(plot_axis_indices) not in [1, 2]:
             raise ValueError("plot_axis_indices can have at most length 2.")
         # If convention of axes_coordinates and axes_units being length of
         # plot_axis_index is being used, convert to convention where their
@@ -1294,7 +1230,7 @@ def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
     if axes_coordinates is not None:
         # Now axes_coordinates have been converted to a consistent convention,
         # ensure their length equals the number of sequence dimensions.
-        len(axes_coordinates) != naxis:
+        if len(axes_coordinates) != naxis:
             raise ValueError("length of axes_coordinates must be {0}.".format(naxis))
         # Ensure all elements in axes_coordinates are of correct types.
         ax_coord_types = (u.Quantity, np.ndarray, str)
