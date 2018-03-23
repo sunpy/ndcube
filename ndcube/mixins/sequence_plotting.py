@@ -94,7 +94,10 @@ class NDCubeSequencePlotMixin:
         # Ensure length of kwargs is consistent with dimensionality of sequence
         # and setting of plot_as_cube.
         naxis = len(cubesequence.dimensions)
-        _check_kwargs_dimensions(naxis, plot_as_cube, plot_axis_indices, axes_coordinates, axes_units)
+        _check_kwargs_dimensions(naxis, plot_axis_indices, axes_coordinates, axes_units)
+        # Set default values of kwargs is not det by user.
+        if plot_axis_indices is None:
+            plot_axis_indices = [-1, -2]
         if naxis == 1:
             x_axis_coordinates, unit_x_axis = _derive_1D_coordinates_and_units(axes_coordinates,
                                                                                axes_units)
@@ -102,79 +105,33 @@ class NDCubeSequencePlotMixin:
             ax = self._plot_1D_sequence(
                 cubesequence, x_axis_coordinates=x_axis_coordinates,
                 unit_x_axis=unit_x_axis, data_unit=data_unit, **kwargs)
-        elif naxis == 2:
-            if plot_as_cube:
-                if cubesequence._common_axis is None:
-                    raise TypeError("Common axis must be set to plot sequence as cube.")
-                x_axis_coordinates, unit_x_axis = _derive_1D_coordinates_and_units(
-                    axes_coordinates, axes_units)
-                ax = self._plot_2D_sequence_as_1Dline(
-                    cubesequence, x_axis_coordinates=x_axis_coordinates,
-                    unit_x_axis=unit_x_axis, data_unit=data_unit, **kwargs)
-            else:
+        else:
+            if len(plot_axis_indices) == 1:
+                if axes_units is not None:
+                    unit_x_axis = axes_units[plot_axis_indices[0]]
+                else:
+                    unit_x_axis = None
+                ax = LineAnimatorNDCubeSequence(
+                    cubesequence, plot_axis_index=plot_axis_indices[0],
+                    axis_ranges=axes_coordinates,
+                    unit_x_axis=unit_x_axis,
+                    data_unit=data_unit, **kwargs)
+            elif len(plot_axis_indices) == 2:
                 if plot_axis_indices is None:
                     plot_axis_indices = [-1, -2]
-                if len(plot_axis_indices) == 2:
+                if naxis == 2:
                     ax = self._plot_2D_sequence(
                         cubesequence, plot_axis_indices=plot_axis_indices,
                         axes_coordinates=axes_coordinates, axes_units=axes_units,
                         data_unit=data_unit, **kwargs)
-                elif len(plot_axis_indices) == 1:
-                    xlabel = kwargs.pop("xlabel", None)
-                    ylabel = kwargs.pop("ylabel", None)
-                    xlim = kwargs.pop("xlim", None)
-                    ylim = kwargs.pop("ylim", None)
-                    if axes_units is not None:
-                        unit_x_axis = axes_units[plot_axis_indices[0]]
-                    else:
-                        unit_x_axis = None
-                    ax = LineAnimatorNDCubeSequence(
-                        cubesequence, plot_axis_index=plot_axis_indices[0],
-                        axis_ranges=axes_coordinates,
-                        unit_x_axis=unit_x_axis,
-                        data_unit=data_unit, xlabel=xlabel, ylabel=ylabel,
-                        xlim=xlim, ylim=ylim)
-        else:
-            if plot_axis_indices is None:
-                plot_axis_indices = [-1, -2]
-            if len(plot_axis_indices) == 2:
-                if not plot_as_cube:
+                else:
                     if axes_units is None:
                         axes_units = [None] * naxis
                     ax = ImageAnimatorNDCubeSequence(
                         cubesequence, image_axes=plot_axis_indices,
                         axis_ranges=axes_coordinates, unit_x_axis=axes_units[plot_axis_indices[0]],
                         unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
-                else:
-                    if axes_units is None:
-                        axes_units = [None] * (naxis-1)
-                    ax = ImageAnimatorCubeLikeNDCubeSequence(
-                        cubesequence, image_axes=plot_axis_indices,
-                        axis_ranges=axes_coordinates, unit_x_axis=axes_units[plot_axis_indices[0]],
-                        unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
-            elif len(plot_axis_indices) == 1:
-                xlabel = kwargs.pop("xlabel", None)
-                ylabel = kwargs.pop("ylabel", None)
-                xlim = kwargs.pop("xlim", None)
-                ylim = kwargs.pop("ylim", None)
-                if axes_units is not None:
-                    unit_x_axis = axes_units[plot_axis_indices[0]]
-                else:
-                    unit_x_axis = None
-                if not plot_as_cube:
-                    ax = LineAnimatorNDCubeSequence(
-                        cubesequence, plot_axis_index=plot_axis_indices[0],
-                        axis_ranges=axes_coordinates,
-                        unit_x_axis=unit_x_axis,
-                        data_unit=data_unit, xlabel=xlabel, ylabel=ylabel,
-                        xlim=xlim, ylim=ylim)
-                else:
-                    ax = LineAnimatorCubeLikeNDCubeSequence(
-                        cubesequence, plot_axis_index=plot_axis_indices[0],
-                        axis_ranges=axes_coordinates,
-                        unit_x_axis=unit_x_axis,
-                        data_unit=data_unit, xlabel=xlabel, ylabel=ylabel,
-                        xlim=xlim, ylim=ylim)
+
         return ax
 
     def plot_as_cube(self, cubesequence, axes=None, plot_axis_indices=None,
@@ -263,8 +220,7 @@ class NDCubeSequencePlotMixin:
         # Ensure length of kwargs is consistent with dimensionality of sequence
         # and setting of plot_as_cube.
         naxis = len(cubesequence.cube_like_dimensions)
-        _check_kwargs_dimensions(naxis, plot_as_cube=True,
-                                 plot_axis_indices, axes_coordinates, axes_units)
+        _check_kwargs_dimensions(naxis, plot_axis_indices, axes_coordinates, axes_units)
         # Set default values of kwargs is not det by user.
         if plot_axis_indices is None:
             plot_axis_indices = [-1, -2]
@@ -1298,9 +1254,7 @@ def _get_all_cube_units(sequence_data):
     return sequence_units
 
 
-def _check_kwargs_dimensions(naxis, plot_as_cube, plot_axis_indices, axes_coordinates, axes_units):
-    if plot_as_cube is True:
-        naxis = naxis - 1
+def _check_kwargs_dimensions(naxis, plot_axis_indices, axes_coordinates, axes_units):
     if (plot_axis_indices is not None) and (naxis > 1):
             if len(plot_axis_indices) not in [1, 2]:
                 raise ValueError("plot_axis_indices can have at most length 2.")
