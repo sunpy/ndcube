@@ -1026,20 +1026,37 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
                  data_unit=None, xlabel=None, ylabel=None, xlim=None, ylim=None, **kwargs):
         if plot_axis_index is None:
             plot_axis_index = -1
-        #try:
-        #    sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
-        #except ValueError:
-        #    sequence_error = None
-        # Form single cube of data from sequence.
-        #if sequence_error is None:
-        #    data_concat = np.concatenate([cube.data for i, cube in enumerate(seq.data)],
-        #                                 axis=seq._common_axis))
-        #else:
-        #    data_concat = np.concatenate([(cube.data * sequence_units[i]).to(data_unit).value
-        #                                  for i, cube in enumerate(seq.data)],
-        #                                 axis=seq._common_axis)
-        data_concat = np.concatenate([cube.data for i, cube in enumerate(seq.data)],
-                                     axis=seq._common_axis)
+        # Combine data from cubes in sequence. If all cubes have a unit,
+        # put data into data_unit.
+        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
+        if sequence_units is None:
+            if data_unit is None:
+                data_concat = np.concatenate([cube.data for i, cube in enumerate(seq.data)],
+                                             axis=seq._common_axis)
+            else:
+                raise TypeError(NON_COMPATIBLE_UNIT_MESSAGE)
+        else:
+            data_concat = np.concatenate([(cube.data * sequence_units[i]).to(data_unit).value
+                                          for i, cube in enumerate(seq.data)],
+                                         axis=seq._common_axis)
+
+        # If some cubes have a mask set, convert data to masked array.
+        # If other cubes do not have a mask set, set all mask to False.
+        # If no cubes have a mask, keep data as a simple array.
+        cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
+        if cubes_with_mask.any():
+            if cubes_with_mask.all():
+                mask_concat = np.concatenate([cube.mask for cube in seq.data], axis=seq._common_axis)
+            else:
+                masks = []
+                for i, cube in enumerate(seq.data):
+                    if cubes_with_mask[i]:
+                        masks.append(cube.mask)
+                    else:
+                        masks.append(np.zeros_like(cube.data, dtype=bool))
+                mask_concat = np.concatenate(masks, axis=seq._common_axis)
+            data_concat = np.ma.masked_array(data_concat, mask_concat)
+
         # Ensure plot_axis_index is represented in the positive convention.
         if plot_axis_index < 0:
             plot_axis_index = len(seq.cube_like_dimensions) + plot_axis_index
