@@ -833,32 +833,35 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                  data_unit=None, xlabel=None, ylabel=None, xlim=None, ylim=None, **kwargs):
         if plot_axis_index is None:
             plot_axis_index = -1
-        #try:
-        #    sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
-        #except ValueError:
-        #    sequence_error = None
-        # Form single cube of data from sequence.
-        #if sequence_error is None:
-        #    data_concat = np.stack([cube.data for i, cube in enumerate(seq.data)])
-        #else:
-        #    data_concat = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
-        #                            for i, cube in enumerate(seq.data)])
-
-        # Combine data from cubes in sequence.
-        # If cubes have masks, make result a masked array.
-        cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
-        if not cubes_with_mask.all():
-            data_concat = np.stack([cube.data for cube in seq.data])
+        # Combine data from cubes in sequence. If all cubes have a unit,
+        # put data into data_unit.
+        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
+        if sequence_units is None:
+            if data_unit is None:
+                data_concat = np.stack([cube.data for i, cube in enumerate(seq.data)])
+            else:
+                raise TypeError(NON_COMPATIBLE_UNIT_MESSAGE)
         else:
-            datas = []
-            masks = []
-            for i, cube in enumerate(seq.data):
-                datas.append(cube.data)
-                if cubes_with_mask[i]:
-                    masks.append(cube.mask)
-                else:
-                    masks.append(np.zeros_like(cube.data, dtype=bool))
-            data_concat = np.ma.masked_array(np.stack(datas), np.stack(masks))
+            data_concat = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
+                                    for i, cube in enumerate(seq.data)])
+
+        # If some cubes have a mask set, convert data to masked array.
+        # If other cubes do not have a mask set, set all mask to False.
+        # If no cubes have a mask, keep data as a simple array.
+        cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
+        if cubes_with_mask.any():
+            if cubes_with_mask.all():
+                mask_concat = np.stack([cube.mask for cube in seq.data])
+            else:
+                masks = []
+                for i, cube in enumerate(seq.data):
+                    if cubes_with_mask[i]:
+                        masks.append(cube.mask)
+                    else:
+                        masks.append(np.zeros_like(cube.data, dtype=bool))
+                mask_concat = np.stack(masks)
+            data_concat = np.ma.masked_array(data_concat, mask_concat)
+
         # Ensure plot_axis_index is represented in the positive convention.
         if plot_axis_index < 0:
             plot_axis_index = len(seq.dimensions) + plot_axis_index
@@ -1137,20 +1140,19 @@ def _determine_sequence_units(cubesequence_data, unit=None):
     """
     # Check that the unit attribute is set of all cubes.  If not, unit_y_axis
     sequence_units = []
-    try:
-        for i, cube in enumerate(sequence_data):
-            if cube.unit is None:
-                break
-            else:
-                sequence_units.append(cube.unit)
+    for i, cube in enumerate(cubesequence_data):
+        if cube.unit is None:
+            break
+        else:
+            sequence_units.append(cube.unit)
     if len(sequence_units) != len(cubesequence_data):
         sequence_units = None
     # If all cubes have unit set, create a data quantity from cube's data.
-    if sequence_units is not None:
+    if sequence_units is None:
+        unit = None
+    else:
         if unit is None:
             unit = sequence_units[0]
-    else:
-        unit = None
     return sequence_units, unit
 
 
