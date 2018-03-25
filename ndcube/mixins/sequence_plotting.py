@@ -89,7 +89,7 @@ class NDCubeSequencePlotMixin:
             naxis, plot_axis_indices, axes_coordinates, axes_units)
         if naxis == 1:
             # Make 1D line plot.
-            ax = self._plot_1D_sequence(self, axes_coordinates,
+            ax = self._plot_1D_sequence(axes_coordinates,
                                         axes_units, data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
@@ -105,7 +105,7 @@ class NDCubeSequencePlotMixin:
                 if naxis == 2:
                     # Since sequence has 2 dimensions and number of plot axes is 2,
                     # produce a 2D image.
-                    ax = self._plot_2D_sequence(self, plot_axis_indices, axes_coordinates,
+                    ax = self._plot_2D_sequence(plot_axis_indices, axes_coordinates,
                                                 axes_units, data_unit, **kwargs)
                 else:
                     # Since sequence has more than 2 dimensions and number of plot axes is 2,
@@ -202,7 +202,7 @@ class NDCubeSequencePlotMixin:
         if naxis == 1:
             # Since sequence has 1 cube-like dimension, produce a 1D line plot.
             ax = self._plot_2D_sequence_as_1Dline(
-                self, x_axis_coordinates=x_axis_coordinates,
+                x_axis_coordinates=x_axis_coordinates,
                 unit_x_axis=unit_x_axis, data_unit=data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
@@ -1243,28 +1243,23 @@ def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
     # Set default value of plot_axis_indices if not set by user.
     if plot_axis_indices is None:
         plot_axis_indices = [-1, -2]
-    # If number of sequence dimensions is greater than 1,
-    # ensure length of plot_axis_indices is 1 or 2.
-    # No need to check case where number of sequence dimensions is 1
-    # as plot_axis_indices is ignored in that case.
-    if naxis > 1:
-        if len(plot_axis_indices) not in [1, 2]:
+    else:
+        # If number of sequence dimensions is greater than 1,
+        # ensure length of plot_axis_indices is 1 or 2.
+        # No need to check case where number of sequence dimensions is 1
+        # as plot_axis_indices is ignored in that case.
+        if naxis > 1 and len(plot_axis_indices) not in [1, 2]:
             raise ValueError("plot_axis_indices can have at most length 2.")
-        # If convention of axes_coordinates and axes_units being length of
-        # plot_axis_index is being used, convert to convention where their
-        # length equals sequence dimensions.  Only do this if number of dimensions if
-        # greater than 1 as the conventions are equivalent if there is only one dimension.
-        if axes_coordinates is not None:
+    if axes_coordinates is not None:
+        if naxis > 1:
+            # If convention of axes_coordinates and axes_units being length of
+            # plot_axis_index is being used, convert to convention where their
+            # length equals sequence dimensions.  Only do this if number of dimensions if
+            # greater than 1 as the conventions are equivalent if there is only one dimension.
             if len(axes_coordinates) == len(plot_axis_indices):
                 none_axes_coordinates = np.array([None] * naxis)
-                none_axes_coordinates[plot_axis_indices] = plot_axis_indices
+                none_axes_coordinates[plot_axis_indices] = axes_coordinates
                 axes_coordinates = list(none_axes_coordinates)
-        if axes_units is not None:
-            if len(axes_units) == len(plot_axis_indices):
-                none_axes_units = np.array([None] * naxis)
-                none_axes_units[plot_axis_indices] = plot_axis_indices
-                axes_units = list(none_axes_units)
-    if axes_coordinates is not None:
         # Now axes_coordinates have been converted to a consistent convention,
         # ensure their length equals the number of sequence dimensions.
         if len(axes_coordinates) != naxis:
@@ -1272,18 +1267,23 @@ def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
         # Ensure all elements in axes_coordinates are of correct types.
         ax_coord_types = (u.Quantity, np.ndarray, str)
         for axis_coordinate in axes_coordinates:
-            if axis_coordinate is not None and not instance(axis_coordinate, ax_coord_types):
-                raise TypeError("axes_coordinates must be one of {0} or list of {0}.".format(
+            if axis_coordinate is not None and not isinstance(axis_coordinate, ax_coord_types):
+                raise TypeError("axes_coordinates must be one of {0} or list of those.".format(
                     [None] + list(ax_coord_types)))
     if axes_units is not None:
+        if naxis > 1:
+            if len(axes_units) == len(plot_axis_indices):
+                none_axes_units = np.array([None] * naxis)
+                none_axes_units[plot_axis_indices] = axes_units
+                axes_units = list(none_axes_units)
         # Now axes_units have been converted to a consistent convention,
         # ensure their length equals the number of sequence dimensions.
         if len(axes_units) != naxis:
             raise ValueError("length of axes_units must be {0}.".format(naxis))
         # Ensure all elements in axes_units are of correct types.
-        ax_unit_types = (u.Unit, str)
+        ax_unit_types = (u.UnitBase, str)
         for axis_unit in axes_units:
-            if axis_unit is not None and not instance(axis_unit, ax_unit_types):
+            if axis_unit is not None and not isinstance(axis_unit, ax_unit_types):
                 raise TypeError("axes_units must be one of {0} or list of {0}.".format(
                     ax_unit_types))
 
