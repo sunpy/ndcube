@@ -550,47 +550,28 @@ def test_sequence_plot_as_cube_2D_image_errors(test_input, test_kwargs, expected
     with pytest.raises(expected_error):
         output = test_input.plot_as_cube(**test_kwargs)
 
-@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-    (seq, {},
-     (seq_stack.reshape(4, 1, 2, 3, 4),
-      [np.linspace(0, len(seq.data), len(seq.data)), np.array([0]), np.array([0, 2]),
-       [0, 3], [0, 4]], "", "", (-0.5, 3.5, -0.5, 2.5)))
+@pytest.mark.parametrize("test_input, test_kwargs, expected_data", [
+    (seq, {}, seq_stack.reshape(4, 1, 2, 3, 4)),
+    (seq_with_units, {}, seq_stack_km.reshape(4, 1, 2, 3, 4))
     ])
-def test_sequence_plot_ImageAnimator(test_input, test_kwargs, expected_values):
-    # Unpack expected values
-    expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel, \
-      expected_extent = expected_values
+def test_sequence_plot_ImageAnimator(test_input, test_kwargs, expected_data):
     # Run plot method
     output = test_input.plot(**test_kwargs)
     # Check plot object properties are correct.
     assert type(output) == ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence
-    #np.testing.assert_array_equal(output.data, expected_data)
-    #for i in range(len(expected_axis_ranges)):
-    #    np.testing.assert_array_equal(output.axis_ranges[i], expected_axis_ranges[i])
-    #assert output.axes.get_xaxis().get_label_text() == expected_xlabel
-    #assert output.axes.get_yaxis().get_label_text() == expected_ylabel
-    #assert np.allclose(output.im.get_extent(), expected_extent)
+    np.testing.assert_array_equal(output.data, expected_data)
 
-@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-    (seq, {},
-     (seq_concat.reshape(1, 8, 3, 4),
-      [np.array([0]), np.linspace(0, 8, 8), [0, 3], [0, 4]],
-     "", "", (-0.5, 3.5, -0.5, 2.5)))
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_data", [
+    (seq, {}, seq_concat.reshape(1, 8, 3, 4)),
+    (seq_with_units, {}, seq_concat_km.reshape(1, 8, 3, 4))
     ])
-def test_sequence_plot_as_cube_ImageAnimator(test_input, test_kwargs, expected_values):
-    # Unpack expected values
-    expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel, \
-      expected_extent = expected_values
+def test_sequence_plot_as_cube_ImageAnimator(test_input, test_kwargs, expected_data):
     # Run plot method
     output = test_input.plot_as_cube(**test_kwargs)
     # Check plot object properties are correct.
     assert type(output) == ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence
-    #np.testing.assert_array_equal(output.data, expected_data)
-    #for i in range(len(expected_axis_ranges)):
-    #    np.testing.assert_array_equal(output.axis_ranges[i], expected_axis_ranges[i])
-    #assert output.axes.get_xaxis().get_label_text() == expected_xlabel
-    #assert output.axes.get_yaxis().get_label_text() == expected_ylabel
-    #assert np.allclose(output.im.get_extent(), expected_extent)
+    np.testing.assert_array_equal(output.data, expected_data)
 
 
 @pytest.mark.parametrize("test_input, expected", [

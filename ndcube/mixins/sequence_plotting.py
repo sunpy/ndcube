@@ -112,12 +112,9 @@ class NDCubeSequencePlotMixin:
                 else:
                     # Since sequence has more than 2 dimensions and number of plot axes is 2,
                     # produce a 2D animation.
-                    if axes_units is None:
-                        axes_units = [None] * naxis
                     ax = ImageAnimatorNDCubeSequence(
-                        self, image_axes=plot_axis_indices,
-                        axis_ranges=axes_coordinates, unit_x_axis=axes_units[plot_axis_indices[0]],
-                        unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
+                        self, plot_axis_indices=plot_axis_indices,
+                        axes_coordinates=axes_coordinates, axes_units=axes_units, **kwargs)
 
         return ax
 
@@ -226,12 +223,9 @@ class NDCubeSequencePlotMixin:
                 else:
                     # Since sequence has more than 2 cube-like dimensions and
                     # number of plot axes is 2, produce a 2D animation.
-                    if axes_units is None:
-                        axes_units = [None] * naxis
                     ax = ImageAnimatorCubeLikeNDCubeSequence(
-                        self, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
-                        unit_x_axis=axes_units[plot_axis_indices[0]],
-                        unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
+                        self, plot_axis_indices=plot_axis_indices,
+                        axes_coordinates=axes_coordinates, axes_units=axes_units, **kwargs)
         return ax
 
     def _plot_1D_sequence(self, axes_coordinates=None,
@@ -658,7 +652,7 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
 
     Parameters
     ----------
-    seq: `ndcube.datacube.CubeSequence`
+    seq: `ndcube.NDCubeSequence`
         The list of cubes.
 
     image_axes: `list`
@@ -698,23 +692,42 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
     Extra keywords are passed to imshow.
 
     """
-    def __init__(self, seq, wcs=None, **kwargs):
+    def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
+                 axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
+        self.sequence = seq.data # Required by parent class.
+        # Set default values of kwargs if not set.
         if wcs is None:
             wcs = seq[0].wcs
-        self.sequence = seq.data
-        self.cumul_cube_lengths = np.cumsum(np.ones(len(self.sequence)))
-        data_concat = np.stack([cube.data for cube in seq.data])
+        if axes_coordinates is None:
+            axes_coordinates = [None] * len(seq.dimensions)
+        if axes_units is None:
+            axes_units = [None]  * len(seq.dimensions)
+        # Determine units of each cube in sequence.
+        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
+        # If all cubes have unit set, create a data quantity from cube's data.
+        if sequence_units is None:
+            data_stack = np.stack([cube.data for i, cube in enumerate(seq.data)])
+        else:
+            data_stack = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
+                                   for i, cube in enumerate(seq.data)])
+        self.cumul_cube_lengths = np.cumsum(np.ones(len(seq.data)))
         # Add dimensions of length 1 of concatenated data array
         # shape for an missing axes.
         if seq[0].wcs.naxis != len(seq.dimensions) - 1:
-            new_shape = list(data_concat.shape)
+            new_shape = list(data_stack.shape)
             for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axis[::-1]]:
                 new_shape.insert(i+1, 1)
-            data_concat = data_concat.reshape(new_shape)
+                # Also insert dummy coordinates and units.
+                axes_coordinates.insert(i+1, None)
+                axes_units.insert(i+1, None)
+            data_stack = data_stack.reshape(new_shape)
         # Add dummy axis to WCS object to represent sequence axis.
         new_wcs = utils.wcs.append_sequence_axis_to_wcs(wcs)
 
-        super(ImageAnimatorNDCubeSequence, self).__init__(data_concat, wcs=new_wcs, **kwargs)
+        super(ImageAnimatorNDCubeSequence, self).__init__(
+            data_stack, wcs=new_wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
+            unit_x_axis=axes_units[plot_axis_indices[0]],
+            unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
 
 
 class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
@@ -774,26 +787,45 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
     Extra keywords are passed to imshow.
 
     """
-    def __init__(self, seq, wcs=None, **kwargs):
+    def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
+                 axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
         if seq._common_axis is None:
-            raise ValueError("Common axis must be set to use this class. "
-                             "Use ImageAnimatorNDCubeSequence.")
+            raise TypeError("Common axis must be set to use this class. "
+                            "Use ImageAnimatorNDCubeSequence.")
+        self.sequence = seq.data # Required by parent class.
+        # Set default values of kwargs if not set.
         if wcs is None:
             wcs = seq[0].wcs
-        self.sequence = seq.data
+        if axes_coordinates is None:
+            axes_coordinates = [None] * len(seq.cube_like_dimensions)
+        if axes_units is None:
+            axes_units = [None]  * len(seq.cube_like_dimensions)
+        # Determine units of each cube in sequence.
+        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
+        # If all cubes have unit set, create a data quantity from cube's data.
+        if sequence_units is None:
+            data_concat = np.concatenate([cube.data for cube in seq.data], axis=seq._common_axis)
+        else:
+            data_concat = np.concatenate(
+                [(cube.data * sequence_units[i]).to(data_unit).value
+                 for i, cube in enumerate(seq.data)], axis=seq._common_axis)
         self.cumul_cube_lengths = np.cumsum(np.array(
-            [c.dimensions[0].value for c in self.sequence], dtype=int))
-        data_concat = np.concatenate([cube.data for cube in seq.data], axis=seq._common_axis)
+            [c.dimensions[0].value for c in seq.data], dtype=int))
         # Add dimensions of length 1 of concatenated data array
         # shape for an missing axes.
         if seq[0].wcs.naxis != len(seq.dimensions) - 1:
             new_shape = list(data_concat.shape)
             for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axis[::-1]]:
                 new_shape.insert(i, 1)
+                # Also insert dummy coordinates and units.
+                axes_coordinates.insert(i, None)
+                axes_units.insert(i, None)
             data_concat = data_concat.reshape(new_shape)
 
         super(ImageAnimatorCubeLikeNDCubeSequence, self).__init__(
-            data_concat, wcs=wcs, **kwargs)
+            data_concat, wcs=wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
+            unit_x_axis=axes_units[plot_axis_indices[0]],
+            unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
 
     def update_plot(self, val, im, slider):
         val = int(val)
