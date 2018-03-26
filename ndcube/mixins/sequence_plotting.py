@@ -424,8 +424,6 @@ class NDCubeSequencePlotMixin:
             axes_coordinates = [None, None]
         if axes_units is None:
             axes_units = [None, None]
-        if plot_axis_indices is None:
-            plot_axis_indices = [-1, -2]
         # Convert plot_axis_indices to array for function operations.
         plot_axis_indices = np.asarray(plot_axis_indices)
         # Check that the unit attribute is set of all cubes and derive unit_y_axis if not set.
@@ -436,13 +434,15 @@ class NDCubeSequencePlotMixin:
                              for i, cube in enumerate(self.data)])
         else:
             data = np.stack([cube.data for i, cube in enumerate(self.data)])
-        # Transpose data if user-defined images_axes require it.
         if plot_axis_indices[0] < plot_axis_indices[1]:
+            # Transpose data if user-defined images_axes require it.
             data = data.transpose()
-        # Determine index of above axes variables corresponding to cube axis.
-        cube_axis_index = 1
-        # Determine index of above variables corresponding to sequence axis.
+        # Determine index of above axes variables corresponding to sequence and cube axes.
+        # Since the axes variables have been re-oriented before this function was called
+        # so the 0th element corresponds to the sequence axis, and the 1st to the cube axis,
+        # determining this is trivial.
         sequence_axis_index = 0
+        cube_axis_index = 1
         # Derive the coordinates, unit, and default label of the cube axis.
         cube_axis_unit = axes_units[cube_axis_index]
         if axes_coordinates[cube_axis_index] is None:
@@ -458,7 +458,7 @@ class NDCubeSequencePlotMixin:
                 cube_axis_name = axes_coordinates[cube_axis_index]
             else:
                 cube_axis_coords = axes_coordinates[cube_axis_index]
-                cube_axis_name = self.world_axis_physical_types[1]
+                cube_axis_name = ""
             if isinstance(cube_axis_coords, u.Quantity):
                 if cube_axis_unit is None:
                     cube_axis_unit = cube_axis_coords.unit
@@ -466,7 +466,9 @@ class NDCubeSequencePlotMixin:
                 else:
                     cube_axis_coords = cube_axis_coords.to(cube_axis_unit).value
             else:
-                cube_axis_coords = None
+                if cube_axis_unit is not None:
+                    raise ValueError("axes_unit element must be None unless corresponding "
+                                     "axes_coordinate is None or a Quantity.")
         default_cube_axis_label = "{0} [{1}]".format(cube_axis_name, cube_axis_unit)
         axes_coordinates[cube_axis_index] = cube_axis_coords
         axes_units[cube_axis_index] = cube_axis_unit
@@ -489,7 +491,9 @@ class NDCubeSequencePlotMixin:
             else:
                 sequence_axis_coords = sequence_axis_coords.to(sequence_axis_unit).value
         else:
-            sequence_axis_unit = None
+            if sequence_axis_unit is not None:
+                raise ValueError("axes_unit element must be None unless corresponding "
+                                 "axes_coordinate is None or a Quantity.")
         default_sequence_axis_label = "{0} [{1}]".format(sequence_axis_name, sequence_axis_unit)
         axes_coordinates[sequence_axis_index] = sequence_axis_coords
         axes_units[sequence_axis_index] = sequence_axis_unit
