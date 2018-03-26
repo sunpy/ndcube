@@ -201,9 +201,8 @@ class NDCubeSequencePlotMixin:
         # Produce plot/image/animation based on cube-like dimensions of sequence.
         if naxis == 1:
             # Since sequence has 1 cube-like dimension, produce a 1D line plot.
-            ax = self._plot_2D_sequence_as_1Dline(
-                x_axis_coordinates=x_axis_coordinates,
-                unit_x_axis=unit_x_axis, data_unit=data_unit, **kwargs)
+            ax = self._plot_2D_sequence_as_1Dline(axes_coordinates, axes_units, data_unit,
+                                                  **kwargs)
         else:
             if len(plot_axis_indices) == 1:
                 # Since sequence has more than 1 cube-like dimension and
@@ -266,20 +265,36 @@ class NDCubeSequencePlotMixin:
         # Check that the unit attribute is a set in all cubes and derive unit_y_axis if not set.
         unit_y_axis = data_unit
         sequence_units, unit_y_axis = _determine_sequence_units(self.data, unit_y_axis)
-        # If all cubes have unit set, create a data quantity from cubes' data.
-        if sequence_units is not None:
+        # If not all cubes have their unit set, create a data array from cube's data.
+        if sequence_units is None:
+            ydata = np.array([cube.data for cube in self.data])
+        else:
+            # If all cubes have unit set, create a data quantity from cubes' data.
             ydata = u.Quantity([cube.data * sequence_units[i]
                                 for i, cube in enumerate(self.data)], unit=unit_y_axis).value
-            yerror = u.Quantity([cube.uncertainty.array * sequence_units[i]
-                                 for i, cube in enumerate(self.data)], unit=unit_y_axis).value
-        # If not all cubes have their unit set, create a data array from cube's data.
-        else:
-            if unit_y_axis is not None:
-                raise ValueError(NON_COMPATIBLE_UNIT_MESSAGE)
-            ydata = np.array([cube.data for cube in self.data])
-            yerror = np.array([cube.uncertainty for cube in self.data])
-        if all(yerror == None):
+        # Determine uncertainties.
+        sequence_uncertainty_nones = []
+        for i, cube in enumerate(self.data):
+            if cube.uncertainty is None:
+                sequence_uncertainty_nones.append(i)
+        if sequence_uncertainty_nones == list(range(len(self.data))):
+            # If all cube uncertainties are None, make yerror also None.
             yerror = None
+        else:
+            # Else determine uncertainties, giving 0 uncertainty for
+            # cubes with uncertainty of None.
+            if sequence_units is None:
+                yerror = np.array([cube.uncertainty.array for cube in self.data])
+                yerror[sequence_uncertainty_nones] = 0.
+            else:
+                # If all cubes have compatible units, ensure uncertainties are in the same unit.
+                yerror = []
+                for i, cube in enumerate(self.data):
+                    if i in sequence_uncertainty_nones:
+                        yerror.append(0. * sequence_units[i])
+                    else:
+                        yerror.append(cube.uncertainty.array * sequence_units[i])
+                yerror = u.Quantity(yerror, unit=unit_y_axis).value
         # Define x-axis data.
         if x_axis_coordinates is None:
             # Since scalar NDCubes have no array/pixel indices, WCS translations don't work.
@@ -289,7 +304,7 @@ class NDCubeSequencePlotMixin:
             xname = self.world_axis_physical_types[0]
         elif isinstance(x_axis_coordinates, str):
             xdata = self.sequence_axis_extra_coords[x_axis_coordinates]
-            xname = x_axis_coordinate
+            xname = x_axis_coordinates
         else:
             xdata = x_axis_coordinates
             xname = self.world_axis_physical_types[0]
@@ -304,7 +319,7 @@ class NDCubeSequencePlotMixin:
         fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
         return ax
 
-    def _plot_2D_sequence_as_1Dline(self, x_axis_coordinates=None,
+    def _plot_2D_sequence_as_1Dline(self, axes_coordinates=None,
                                     axes_units=None, data_unit=None, **kwargs):
         """
         Visualizes an NDCubeSequence of 1D NDCubes with a common axis as a line plot.
@@ -323,39 +338,58 @@ class NDCubeSequencePlotMixin:
         unit_y_axis = data_unit
         sequence_units, unit_y_axis = _determine_sequence_units(self.data, unit_y_axis)
         # If all cubes have unit set, create a y data quantity from cube's data.
-        if sequence_units is not None:
+        if sequence_units is None:
+            ydata = np.concatenate([cube.data for cube in self.data])
+        else:
+            # If all cubes have unit set, create a data quantity from cubes' data.
             ydata = np.concatenate([(cube.data * sequence_units[i]).to(unit_y_axis).value
                                     for i, cube in enumerate(self.data)])
-            yerror = np.concatenate(
-                [(cube.uncertainty.array * sequence_units[i]).to(unit_y_axis).value
-                 for i, cube in enumerate(self.data)])
+        # Determine uncertainties.
+        # Check which cubes don't have uncertainties.
+        sequence_uncertainty_nones = []
+        for i, cube in enumerate(self.data):
+            if cube.uncertainty is None:
+                sequence_uncertainty_nones.append(i)
+        if sequence_uncertainty_nones == list(range(len(self.data))):
+            # If no sub-cubes have uncertainty, set overall yerror to None.
+            yerror = None
         else:
-            if unit_y_axis is not None:
-                raise ValueError(NON_COMPATIBLE_UNIT_MESSAGE)
-            # If not all cubes have unit set, create a y data array from cube's data.
-            ydata = np.concatenate([cube.data for cube in self.data])
-            yerror = np.array([cube.uncertainty for cube in self.data])
-            if all(yerror == None):
-                yerror = None
+            # Else determine uncertainties, giving 0 uncertainty for
+            # cubes with uncertainty of None.
+            yerror = []
+            if sequence_units is None:
+                for i, cube in enumerate(self.data):
+                    if i in sequence_uncertainty_nones:
+                        yerror.append(np.zeros(cube.data.shape))
+                    else:
+                        yerror.append(cube.uncertainty.array)
             else:
-                if any(yerror == None):
-                    w = np.where(yerror == None)[0]
-                    for i in w:
-                        yerror[i] = np.zeros(int(self[i].dimensions.value))
-                yerror = np.concatenate(yerror)
+                for i, cube in enumerate(self.data):
+                    if i in sequence_uncertainty_nones:
+                        yerror.append((np.zeros(cube.data.shape) * sequence_units[i]).to(
+                            unit_y_axis).value)
+                    else:
+                        yerror.append((cube.uncertainty.array * sequence_units[i]).to(
+                            unit_y_axis).value)
+            yerror = np.concatenate(yerror)
         # Define x-axis data.
         if x_axis_coordinates is None:
+            print('a', unit_x_axis)
             if unit_x_axis is None:
+                print('b', unit_x_axis)
                 unit_x_axis = np.asarray(self[0].wcs.wcs.cunit)[
                     np.invert(self[0].missing_axis)][0]
+                print('c', unit_x_axis)
             xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
-                                               for cube in self]), unit=unit_x_axis)
+                                               for cube in self.data]), unit=unit_x_axis)
             xname = self.cube_like_world_axis_physical_types[0]
+            print('d', unit_x_axis)
         elif isinstance(x_axis_coordinates, str):
             xdata = self.common_axis_extra_coords[x_axis_coordinates]
             xname = x_axis_coordinates
         else:
             xdata = x_axis_coordinates
+            xname = ""
         if isinstance(xdata, u.Quantity):
             if unit_x_axis is None:
                 unit_x_axis = xdata.unit
@@ -364,6 +398,10 @@ class NDCubeSequencePlotMixin:
         else:
             unit_x_axis = None
         default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
+        # For consistency, make xdata an array if a Quantity. Wait until now
+        # because if xdata is a Quantity, its unit is needed until now.
+        if isinstance(xdata, u.Quantity):
+            xdata = xdata.value
         # Plot data
         fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
         return ax
@@ -1184,7 +1222,8 @@ def _determine_sequence_units(cubesequence_data, unit=None):
         sequence_units = None
     # If all cubes have unit set, create a data quantity from cube's data.
     if sequence_units is None:
-        unit = None
+        if unit is not None:
+            raise ValueError(NON_COMPATIBLE_UNIT_MESSAGE)
     else:
         if unit is None:
             unit = sequence_units[0]

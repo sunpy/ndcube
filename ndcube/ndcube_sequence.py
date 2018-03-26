@@ -5,12 +5,12 @@ import sunpy.map
 from sunpy.map import MapCube
 
 from ndcube import utils
-from ndcube.visualization import animation as ani
+from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin
 
 __all__ = ['NDCubeSequence']
 
 
-class NDCubeSequence:
+class NDCubeSequenceBase:
     """
     Class representing list of cubes.
 
@@ -171,13 +171,6 @@ class NDCubeSequence:
             sequence_extra_coords = None
         return sequence_extra_coords
 
-    def plot(self, *args, **kwargs):
-        if self._common_axis is None:
-            i = ani.ImageAnimatorNDCubeSequence(self, *args, **kwargs)
-        else:
-            i = ani.ImageAnimatorCommonAxisNDCubeSequence(self, *args, **kwargs)
-        return i
-
     def explode_along_axis(self, axis):
         """
         Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
@@ -226,6 +219,10 @@ Axis Types of 1st NDCube: {axis_type}
         Instantiate a new instance of this class using given data.
         """
         return cls(data_list, meta=meta, common_axis=common_axis)
+
+
+class NDCubeSequence(NDCubeSequenceBase, NDCubeSequencePlotMixin):
+    pass
 
 
 """
