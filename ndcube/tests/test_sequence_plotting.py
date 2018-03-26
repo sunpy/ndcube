@@ -380,49 +380,6 @@ def test_sequence_plot_as_cube_error():
         seq_no_common_axis.plot_as_cube()
 
 
-"""
-@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-    (seq, {"plot_axis_indices": 3},
-     (ndcube.mixins.sequence_plotting.LineAnimatorNDCubeSequence, seq_stack.data,
-      none_axis_ranges_axis3, "time [min]", "Data [None]",
-      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-    (seq, {"plot_axis_indices": -1, "data_unit": u.km},
-     (ndcube.mixins.sequence_plotting.LineAnimatorNDCubeSequence, seq_stack_km.data,
-      none_axis_ranges_axis3, "time [min]", "Data [None]",
-      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
-    (seq_stack.data.min(), seq_stack.data.max()))),
-    (seq, {"plot_axis_indices": -1},
-     (ndcube.mixins.sequence_plotting.LineAnimatorNDCubeSequence, seq_stack,
-      none_axis_ranges_axis3, "time [min]", "Data [None]",
-      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
-    (seq_stack.data.min(), seq_stack.data.max())))])
-def test_sequence_plot_LineAnimator(test_input, test_kwargs, expected_values):
-    # Unpack expected values
-    expected_type, expected_data, expected_axis_ranges, expected_xlabel, \
-      expected_ylabel, expected_xlim, expected_ylim = expected_values
-    # Run plot method.
-    output = seq.plot(**test_kwargs)
-    # Check right type of plot object is produced.
-    assert type(output) is expected_type
-    # Check data being plotted is correct
-    np.testing.assert_array_equal(output.data, expected_data)
-    if type(expected_data) is np.ma.core.MaskedArray:
-        np.testing.assert_array_equal(output.data.mask, expected_data.mask)
-    # Check values of axes and sliders is correct.
-    for i in range(len(output.axis_ranges)):
-        print(i)
-        np.testing.assert_array_equal(output.axis_ranges[i], expected_axis_ranges[i])
-    # Check plot axis labels and limits are correct
-    assert output.xlabel == expected_xlabel
-    assert output.ylabel == expected_ylabel
-    assert output.xlim == expected_xlim
-    assert output.ylim == expected_ylim
-"""
-
-def test_sequence_plot_as_cube_LineAnimator():
-    pass
-
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (seq[:, :, 0, 0], {},
      (seq_stack[:, :, 0, 0],
