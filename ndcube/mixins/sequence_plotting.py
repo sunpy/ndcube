@@ -226,11 +226,12 @@ class NDCubeSequencePlotMixin:
                 else:
                     # Since sequence has more than 2 cube-like dimensions and
                     # number of plot axes is 2, produce a 2D animation.
-                    ax = ImageAnimatorCubeLikeNDCubeSequence(self, plot_axis_indices,
-                                                             axes_coordinates,
-                                                             axes_units[plot_axis_indices[0]],
-                                                             axes_units[plot_axis_indices[1]],
-                                                             **kwargs)
+                    if axes_units is None:
+                        axes_units = [None] * naxis
+                    ax = ImageAnimatorCubeLikeNDCubeSequence(
+                        self, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
+                        unit_x_axis=axes_units[plot_axis_indices[0]],
+                        unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
         return ax
 
     def _plot_1D_sequence(self, axes_coordinates=None,
@@ -791,7 +792,7 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
                 new_shape.insert(i, 1)
             data_concat = data_concat.reshape(new_shape)
 
-        super(ImageAnimatorCommonAxisNDCubeSequence, self).__init__(
+        super(ImageAnimatorCubeLikeNDCubeSequence, self).__init__(
             data_concat, wcs=wcs, **kwargs)
 
     def update_plot(self, val, im, slider):
