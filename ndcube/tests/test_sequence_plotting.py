@@ -190,13 +190,13 @@ seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (seq[:, 0, 0, 0], {},
-     (np.arange(len(seq.data)), np.array([ 1, 11,  1, 11]),
+     (np.arange(len(seq.data)), np.array([1, 11,  1, 11]),
       "meta.obs.sequence [None]", "Data [None]", (0, len(seq[:, 0, 0, 0].data)-1),
       (min([cube.data.min() for cube in seq[:, 0, 0, 0].data]),
        max([cube.data.max() for cube in seq[:, 0, 0, 0].data])))),
 
     (seq_with_units[:, 0, 0, 0], {},
-     (np.arange(len(seq_with_units.data)), np.array([ 1, 0.011,  1, 0.011]),
+     (np.arange(len(seq_with_units.data)), np.array([1, 0.011,  1, 0.011]),
       "meta.obs.sequence [None]", "Data [km]", (0, len(seq_with_units[:, 0, 0, 0].data)-1),
       (min([(cube.data * cube.unit).to(seq_with_units[:, 0, 0, 0].data[0].unit).value
             for cube in seq_with_units[:, 0, 0, 0].data]),
@@ -204,13 +204,13 @@ seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
             for cube in seq_with_units[:, 0, 0, 0].data])))),
 
     (seq_with_uncertainty[:, 0, 0, 0], {},
-     (np.arange(len(seq_with_uncertainty.data)), np.array([ 1, 11,  1, 11]),
+     (np.arange(len(seq_with_uncertainty.data)), np.array([1, 11,  1, 11]),
       "meta.obs.sequence [None]", "Data [None]", (0, len(seq_with_uncertainty[:, 0, 0, 0].data)-1),
       (min([cube.data for cube in seq_with_uncertainty[:, 0, 0, 0].data]),
        max([cube.data for cube in seq_with_uncertainty[:, 0, 0, 0].data])))),
 
     (seq_with_units_and_uncertainty[:, 0, 0, 0], {},
-     (np.arange(len(seq_with_units_and_uncertainty.data)), np.array([ 1, 0.011,  1, 0.011]),
+     (np.arange(len(seq_with_units_and_uncertainty.data)), np.array([1, 0.011,  1, 0.011]),
       "meta.obs.sequence [None]", "Data [km]",
       (0, len(seq_with_units_and_uncertainty[:, 0, 0, 0].data)-1),
       (min([(cube.data*cube.unit).to(seq_with_units_and_uncertainty[:, 0, 0, 0].data[0].unit).value
@@ -219,35 +219,37 @@ seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
             for cube in seq_with_units_and_uncertainty[:, 0, 0, 0].data])))),
 
     (seq_with_units_and_some_uncertainty[:, 0, 0, 0], {},
-     (np.arange(len(seq_with_units_and_some_uncertainty.data)), np.array([ 1, 0.011,  1, 0.011]),
+     (np.arange(len(seq_with_units_and_some_uncertainty.data)), np.array([1, 0.011,  1, 0.011]),
       "meta.obs.sequence [None]", "Data [km]",
       (0, len(seq_with_units_and_some_uncertainty[:, 0, 0, 0].data)-1),
-      (min([(cube.data*cube.unit).to(seq_with_units_and_some_uncertainty[:, 0, 0, 0].data[0].unit).value
-            for cube in seq_with_units_and_some_uncertainty[:, 0, 0, 0].data]),
-       max([(cube.data*cube.unit).to(seq_with_units_and_some_uncertainty[:, 0, 0, 0].data[0].unit).value
-            for cube in seq_with_units_and_some_uncertainty[:, 0, 0, 0].data])))),
+      (min([(cube.data*cube.unit).to(
+          seq_with_units_and_some_uncertainty[:, 0, 0, 0].data[0].unit).value
+          for cube in seq_with_units_and_some_uncertainty[:, 0, 0, 0].data]),
+       max([(cube.data*cube.unit).to(
+           seq_with_units_and_some_uncertainty[:, 0, 0, 0].data[0].unit).value
+           for cube in seq_with_units_and_some_uncertainty[:, 0, 0, 0].data])))),
 
     (seq[:, 0, 0, 0], {"axes_coordinates": "distance"},
-     ((seq.sequence_axis_extra_coords["distance"]), np.array([ 1, 11,  1, 11]),
+     ((seq.sequence_axis_extra_coords["distance"]), np.array([1, 11,  1, 11]),
       "distance [{0}]".format(seq.sequence_axis_extra_coords["distance"].unit), "Data [None]",
      (min(seq.sequence_axis_extra_coords["distance"].value),
       max(seq.sequence_axis_extra_coords["distance"].value)),
      (min([cube.data.min() for cube in seq[:, 0, 0, 0].data]),
-       max([cube.data.max() for cube in seq[:, 0, 0, 0].data])))),
+      max([cube.data.max() for cube in seq[:, 0, 0, 0].data])))),
 
     (seq[:, 0, 0, 0], {"axes_coordinates": u.Quantity(np.arange(len(seq.data)), unit=u.cm),
                        "axes_units": u.km},
-     (u.Quantity(np.arange(len(seq.data)), unit=u.cm).to(u.km), np.array([ 1, 11,  1, 11]),
+     (u.Quantity(np.arange(len(seq.data)), unit=u.cm).to(u.km), np.array([1, 11,  1, 11]),
       "meta.obs.sequence [km]", "Data [None]",
      (min((u.Quantity(np.arange(len(seq.data)), unit=u.cm).to(u.km).value)),
       max((u.Quantity(np.arange(len(seq.data)), unit=u.cm).to(u.km).value))),
      (min([cube.data.min() for cube in seq[:, 0, 0, 0].data]),
-       max([cube.data.max() for cube in seq[:, 0, 0, 0].data]))))
+      max([cube.data.max() for cube in seq[:, 0, 0, 0].data]))))
     ])
 def test_sequence_plot_1D_plot(test_input, test_kwargs, expected_values):
     # Unpack expected values
     expected_x_data, expected_y_data, expected_xlabel, expected_ylabel, \
-    expected_xlim, expected_ylim = expected_values
+      expected_xlim, expected_ylim = expected_values
     # Run plot method
     output = test_input.plot(**test_kwargs)
     # Check values are correct
@@ -268,18 +270,18 @@ def test_sequence_plot_1D_plot(test_input, test_kwargs, expected_values):
     (seq[:, :, 0, 0], {},
      (np.array([0.49998731, 0.99989848, 0.49998731, 0.99989848,
                 0.49998731, 0.99989848, 0.49998731, 0.99989848]),
-      np.array([ 1, 2, 11, 22,  1, 2, 11, 22]),
-       "{0} [{1}]".format(seq[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis], "deg"),
-       "Data [None]", tuple(seq_axis1_lim_deg),
+      np.array([1, 2, 11, 22,  1, 2, 11, 22]),
+      "{0} [{1}]".format(seq[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis], "deg"),
+      "Data [None]", tuple(seq_axis1_lim_deg),
       (min([cube.data.min() for cube in seq[:, :, 0, 0].data]),
        max([cube.data.max() for cube in seq[:, :, 0, 0].data])))),
 
     (seq_with_units[:, :, 0, 0], {},
      (np.array([0.49998731, 0.99989848, 0.49998731, 0.99989848,
                 0.49998731, 0.99989848, 0.49998731, 0.99989848]),
-      np.array([ 1, 2, 0.011, 0.022,  1, 2, 0.011, 0.022]),
-       "{0} [{1}]".format(seq[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis], "deg"),
-       "Data [km]", tuple(seq_axis1_lim_deg),
+      np.array([1, 2, 0.011, 0.022,  1, 2, 0.011, 0.022]),
+      "{0} [{1}]".format(seq[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis], "deg"),
+      "Data [km]", tuple(seq_axis1_lim_deg),
       (min([min((cube.data * cube.unit).to(u.km).value)
             for cube in seq_with_units[:, :, 0, 0].data]),
        max([max((cube.data * cube.unit).to(u.km).value)
@@ -288,32 +290,32 @@ def test_sequence_plot_1D_plot(test_input, test_kwargs, expected_values):
     (seq_with_uncertainty[:, :, 0, 0], {},
      (np.array([0.49998731, 0.99989848, 0.49998731, 0.99989848,
                 0.49998731, 0.99989848, 0.49998731, 0.99989848]),
-      np.array([ 1, 2, 11, 22,  1, 2, 11, 22]),
-       "{0} [{1}]".format(
-           seq_with_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis],
-           "deg"),
-       "Data [None]", tuple(seq_axis1_lim_deg),
+      np.array([1, 2, 11, 22,  1, 2, 11, 22]),
+      "{0} [{1}]".format(
+          seq_with_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[
+              common_axis], "deg"),
+      "Data [None]", tuple(seq_axis1_lim_deg),
       (min([cube.data.min() for cube in seq_with_uncertainty[:, :, 0, 0].data]),
        max([cube.data.max() for cube in seq_with_uncertainty[:, :, 0, 0].data])))),
 
     (seq_with_some_uncertainty[:, :, 0, 0], {},
      (np.array([0.49998731, 0.99989848, 0.49998731, 0.99989848,
                 0.49998731, 0.99989848, 0.49998731, 0.99989848]),
-      np.array([ 1, 2, 11, 22,  1, 2, 11, 22]),
-       "{0} [{1}]".format(
-           seq_with_some_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis],
-           "deg"),
-       "Data [None]", tuple(seq_axis1_lim_deg),
+      np.array([1, 2, 11, 22,  1, 2, 11, 22]),
+      "{0} [{1}]".format(
+          seq_with_some_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[
+              common_axis], "deg"),
+      "Data [None]", tuple(seq_axis1_lim_deg),
       (min([cube.data.min() for cube in seq_with_some_uncertainty[:, :, 0, 0].data]),
        max([cube.data.max() for cube in seq_with_some_uncertainty[:, :, 0, 0].data])))),
 
     (seq_with_units_and_uncertainty[:, :, 0, 0], {},
      (np.array([0.49998731, 0.99989848, 0.49998731, 0.99989848,
                 0.49998731, 0.99989848, 0.49998731, 0.99989848]),
-      np.array([ 1, 2, 0.011, 0.022,  1, 2, 0.011, 0.022]),
+      np.array([1, 2, 0.011, 0.022,  1, 2, 0.011, 0.022]),
       "{0} [{1}]".format(
-          seq_with_units_and_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis],
-          "deg"),
+          seq_with_units_and_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[
+              common_axis], "deg"),
       "Data [km]", tuple(seq_axis1_lim_deg),
       (min([min((cube.data * cube.unit).to(u.km).value)
             for cube in seq_with_units[:, :, 0, 0].data]),
@@ -323,10 +325,10 @@ def test_sequence_plot_1D_plot(test_input, test_kwargs, expected_values):
     (seq_with_units_and_some_uncertainty[:, :, 0, 0], {},
      (np.array([0.49998731, 0.99989848, 0.49998731, 0.99989848,
                 0.49998731, 0.99989848, 0.49998731, 0.99989848]),
-      np.array([ 1, 2, 0.011, 0.022,  1, 2, 0.011, 0.022]),
+      np.array([1, 2, 0.011, 0.022,  1, 2, 0.011, 0.022]),
       "{0} [{1}]".format(
-          seq_with_units_and_some_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[common_axis],
-          "deg"),
+          seq_with_units_and_some_uncertainty[:, :, 0, 0].cube_like_world_axis_physical_types[
+              common_axis], "deg"),
       "Data [km]", tuple(seq_axis1_lim_deg),
       (min([min((cube.data * cube.unit).to(u.km).value)
             for cube in seq_with_units[:, :, 0, 0].data]),
@@ -335,26 +337,25 @@ def test_sequence_plot_1D_plot(test_input, test_kwargs, expected_values):
 
     (seq[:, :, 0, 0], {"axes_coordinates": "pix"},
      (seq[:, :, 0, 0].common_axis_extra_coords["pix"].value,
-      np.array([ 1, 2, 11, 22,  1, 2, 11, 22]),
-       "pix [pix]", "Data [None]",
-       (min(seq[:, :, 0, 0].common_axis_extra_coords["pix"].value),
-        max(seq[:, :, 0, 0].common_axis_extra_coords["pix"].value)),
+      np.array([1, 2, 11, 22,  1, 2, 11, 22]), "pix [pix]", "Data [None]",
+      (min(seq[:, :, 0, 0].common_axis_extra_coords["pix"].value),
+       max(seq[:, :, 0, 0].common_axis_extra_coords["pix"].value)),
       (min([cube.data.min() for cube in seq[:, :, 0, 0].data]),
        max([cube.data.max() for cube in seq[:, :, 0, 0].data])))),
 
     (seq[:, :, 0, 0],
      {"axes_coordinates": np.arange(10, 10+seq[:, :, 0, 0].cube_like_dimensions[0].value)},
-     (np.arange(10, 10+seq[:, :, 0, 0].cube_like_dimensions[0].value),
-      np.array([ 1, 2, 11, 22,  1, 2, 11, 22]),
-       "{0} [{1}]".format("", None),
-       "Data [None]", (10, 10 + seq[:, :, 0, 0].cube_like_dimensions[0].value - 1),
+     (np.arange(10, 10 + seq[:, :, 0, 0].cube_like_dimensions[0].value),
+      np.array([1, 2, 11, 22,  1, 2, 11, 22]),
+      "{0} [{1}]".format("", None), "Data [None]",
+      (10, 10 + seq[:, :, 0, 0].cube_like_dimensions[0].value - 1),
       (min([cube.data.min() for cube in seq[:, :, 0, 0].data]),
        max([cube.data.max() for cube in seq[:, :, 0, 0].data]))))
     ])
 def test_sequence_plot_as_cube_1D_plot(test_input, test_kwargs, expected_values):
     # Unpack expected values
     expected_x_data, expected_y_data, expected_xlabel, expected_ylabel, \
-    expected_xlim, expected_ylim = expected_values
+      expected_xlim, expected_ylim = expected_values
     # Run plot method
     output = test_input.plot_as_cube(**test_kwargs)
     # Check values are correct
@@ -402,7 +403,9 @@ def test_sequence_plot_as_cube_error():
       (min(seq[0, :, 0, 0].extra_coords["pix"]["value"].value),
        max(seq[0, :, 0, 0].extra_coords["pix"]["value"].value),
        min(seq[:, :, 0, 0].sequence_axis_extra_coords["distance"].value),
-       max(seq[:, :, 0, 0].sequence_axis_extra_coords["distance"].value)))), ## This shows weakness of current extra coord axis values on 2D plotting!
+       max(seq[:, :, 0, 0].sequence_axis_extra_coords["distance"].value)))),
+    # This example shows weakness of current extra coord axis values on 2D plotting!
+    # Only the coordinates from the first cube are shown.
 
     (seq[:, :, 0, 0], {"axes_coordinates": [np.arange(
         10, 10+seq[:, :, 0, 0].dimensions[-1].value), "distance"], "axes_units": [None, u.m]},
@@ -416,9 +419,9 @@ def test_sequence_plot_as_cube_error():
         10, 10+seq[:, :, 0, 0].dimensions[-1].value)*u.deg, None], "axes_units": [u.arcsec, None]},
      (seq_stack[:, :, 0, 0],
       " [arcsec]", "meta.obs.sequence [None]",
-      tuple(
-          list((np.arange(10, 10+seq[:, :, 0, 0].dimensions[-1].value)*u.deg).to(u.arcsec).value) + \
-          [0, len(seq.data)-1])))
+      tuple(list(
+          (np.arange(10, 10+seq[:, :, 0, 0].dimensions[-1].value)*u.deg).to(u.arcsec).value) \
+          + [0, len(seq.data)-1])))
        ])
 def test_sequence_plot_2D_image(test_input, test_kwargs, expected_values):
     # Unpack expected values
@@ -507,6 +510,7 @@ def test_sequence_plot_as_cube_2D_image_errors(test_input, test_kwargs, expected
     with pytest.raises(expected_error):
         output = test_input.plot_as_cube(**test_kwargs)
 
+
 @pytest.mark.parametrize("test_input, test_kwargs, expected_data", [
     (seq, {}, seq_stack.reshape(4, 1, 2, 3, 4)),
     (seq_with_units, {}, seq_stack_km.reshape(4, 1, 2, 3, 4))
@@ -547,6 +551,7 @@ def test_determine_sequence_units():
     with pytest.raises(ValueError):
         output_seq_unit, output_unit = ndcube.mixins.sequence_plotting._determine_sequence_units(
             seq.data, u.m)
+
 
 @pytest.mark.parametrize("test_input, expected", [
     ((3, 1, "time", u.s), ([1], [None, 'time', None], [None, u.s, None])),

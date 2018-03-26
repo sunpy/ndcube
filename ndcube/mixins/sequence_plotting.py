@@ -13,6 +13,7 @@ NON_COMPATIBLE_UNIT_MESSAGE = \
 AXES_UNIT_ERRONESLY_SET_MESSAGE = \
   "axes_unit element must be None unless corresponding axes_coordinate is None or a Quantity."
 
+
 class NDCubeSequencePlotMixin:
     def plot(self, axes=None, plot_axis_indices=None,
              axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
@@ -83,7 +84,7 @@ class NDCubeSequencePlotMixin:
         Returns
         -------
         ax: ???
-        
+
         """
         # Check kwargs are in consistent formats and set default values if not done so by user.
         naxis = len(self.dimensions)
@@ -183,7 +184,7 @@ class NDCubeSequencePlotMixin:
         Returns
         -------
         ax: ???
-        
+
         """
         # Verify common axis is set.
         if self._common_axis is None:
@@ -392,7 +393,6 @@ class NDCubeSequencePlotMixin:
         fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
         return ax
 
-
     def _plot_2D_sequence(self, plot_axis_indices=None, axes_coordinates=None,
                           axes_units=None, data_unit=None, **kwargs):
         """
@@ -530,7 +530,7 @@ class NDCubeSequencePlotMixin:
         if sequence_units is not None:
             data = np.concatenate([(cube.data * sequence_units[i]).to(data_unit).value
                                    for i, cube in enumerate(self.data)],
-                                   axis=self._common_axis)
+                                  axis=self._common_axis)
         else:
             data = np.concatenate([cube.data for cube in self.data],
                                   axis=self._common_axis)
@@ -548,7 +548,7 @@ class NDCubeSequencePlotMixin:
                 cube_axis_unit = np.array(self[0].wcs.wcs.cunit)[
                     np.invert(self[0].missing_axis)][0]
             cube_axis_coords = \
-              self[0].axis_world_coords()[cube_axis_index].to(cube_axis_unit).value
+                self[0].axis_world_coords()[cube_axis_index].to(cube_axis_unit).value
             cube_axis_name = self.cube_like_world_axis_physical_types[1]
         else:
             if isinstance(axes_coordinates[cube_axis_index], str):
@@ -610,14 +610,19 @@ class NDCubeSequencePlotMixin:
         # Since we can't assume the x-axis will be uniform, create NonUniformImage
         # axes and add it to the axes object.
         im_ax = mpl.image.NonUniformImage(
-            ax, extent=(axes_coordinates[plot_axis_indices[0]][0], axes_coordinates[plot_axis_indices[0]][-1],
-                        axes_coordinates[plot_axis_indices[1]][0], axes_coordinates[plot_axis_indices[1]][-1]),
+            ax, extent=(axes_coordinates[plot_axis_indices[0]][0],
+                        axes_coordinates[plot_axis_indices[0]][-1],
+                        axes_coordinates[plot_axis_indices[1]][0],
+                        axes_coordinates[plot_axis_indices[1]][-1]),
             **kwargs)
-        im_ax.set_data(axes_coordinates[plot_axis_indices[0]], axes_coordinates[plot_axis_indices[1]], data)
+        im_ax.set_data(axes_coordinates[plot_axis_indices[0]],
+                       axes_coordinates[plot_axis_indices[1]], data)
         ax.add_image(im_ax)
         # Set the limits, labels, etc. of the axes.
-        ax.set_xlim((axes_coordinates[plot_axis_indices[0]][0], axes_coordinates[plot_axis_indices[0]][-1]))
-        ax.set_ylim((axes_coordinates[plot_axis_indices[1]][0], axes_coordinates[plot_axis_indices[1]][-1]))
+        ax.set_xlim((axes_coordinates[plot_axis_indices[0]][0],
+                     axes_coordinates[plot_axis_indices[0]][-1]))
+        ax.set_ylim((axes_coordinates[plot_axis_indices[1]][0],
+                     axes_coordinates[plot_axis_indices[1]][-1]))
         ax.set_xlabel(axes_labels[plot_axis_indices[0]])
         ax.set_ylabel(axes_labels[plot_axis_indices[1]])
 
@@ -683,14 +688,14 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
     """
     def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
                  axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
-        self.sequence = seq.data # Required by parent class.
+        self.sequence = seq.data  # Required by parent class.
         # Set default values of kwargs if not set.
         if wcs is None:
             wcs = seq[0].wcs
         if axes_coordinates is None:
             axes_coordinates = [None] * len(seq.dimensions)
         if axes_units is None:
-            axes_units = [None]  * len(seq.dimensions)
+            axes_units = [None] * len(seq.dimensions)
         # Determine units of each cube in sequence.
         sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
         # If all cubes have unit set, create a data quantity from cube's data.
@@ -781,14 +786,14 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
         if seq._common_axis is None:
             raise TypeError("Common axis must be set to use this class. "
                             "Use ImageAnimatorNDCubeSequence.")
-        self.sequence = seq.data # Required by parent class.
+        self.sequence = seq.data  # Required by parent class.
         # Set default values of kwargs if not set.
         if wcs is None:
             wcs = seq[0].wcs
         if axes_coordinates is None:
             axes_coordinates = [None] * len(seq.cube_like_dimensions)
         if axes_units is None:
-            axes_units = [None]  * len(seq.cube_like_dimensions)
+            axes_units = [None] * len(seq.cube_like_dimensions)
         # Determine units of each cube in sequence.
         sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
         # If all cubes have unit set, create a data quantity from cube's data.
