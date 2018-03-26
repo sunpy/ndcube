@@ -29,6 +29,7 @@ cube1 = NDCube(
     data, wt, missing_axis=[False, False, False, True],
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(0, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
@@ -37,6 +38,7 @@ cube1_with_unit = NDCube(
     unit=u.km,
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(0, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
@@ -45,6 +47,7 @@ cube1_with_mask = NDCube(
     mask=np.zeros_like(data, dtype=bool),
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(0, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
@@ -53,6 +56,7 @@ cube1_with_uncertainty = NDCube(
     uncertainty=np.sqrt(data),
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(0, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
@@ -61,6 +65,7 @@ cube1_with_unit_and_uncertainty = NDCube(
     unit=u.km, uncertainty=np.sqrt(data),
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(0, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
@@ -69,6 +74,7 @@ cube3 = NDCube(
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
          cube1.extra_coords['pix']['value'][-1]),
+        ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
@@ -78,6 +84,7 @@ cube3_with_unit = NDCube(
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
          cube1.extra_coords['pix']['value'][-1]),
+        ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
@@ -87,6 +94,7 @@ cube3_with_mask = NDCube(
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
          cube1.extra_coords['pix']['value'][-1]),
+        ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
@@ -96,6 +104,7 @@ cube3_with_uncertainty = NDCube(
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
          cube1.extra_coords['pix']['value'][-1]),
+        ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
@@ -105,6 +114,7 @@ cube3_with_unit_and_uncertainty = NDCube(
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
          cube1.extra_coords['pix']['value'][-1]),
+        ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
@@ -157,7 +167,12 @@ seq_stack_km = np.ma.masked_array(
 
 seq_data_concat = np.concatenate([cube.data for cube in seq_with_masks.data], axis=common_axis)
 seq_mask_concat = np.concatenate([cube.mask for cube in seq_with_masks.data], axis=common_axis)
+
 seq_concat = np.ma.masked_array(seq_data_concat, seq_mask_concat)
+seq_concat_km = np.ma.masked_array(
+    np.concatenate([(cube.data * cube.unit).to(u.km).value
+                    for cube in seq_with_units.data], axis=common_axis),
+    seq_mask_concat)
 
 # Derive expected axis_ranges
 x_axis_coords = np.array([0.4, 0.8, 1.2, 1.6]).reshape((1, 1, 4))
@@ -169,6 +184,8 @@ none_axis_ranges_axis3 = [np.arange(len(seq.data)), np.array([0., 2.]), np.array
 # Derive expected extents
 seq_axis1_lim_deg = [0.49998731, 0.99989848]
 seq_axis1_lim_arcsec = [(axis1_xlim*u.deg).to(u.arcsec).value for axis1_xlim in seq_axis1_lim_deg]
+seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
+                   seq[:, :, :, 0].data[0].axis_world_coords()[-1][-1].value]
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
@@ -473,12 +490,65 @@ def test_sequence_plot_2D_image_errors(test_input, test_kwargs, expected_error):
         output = test_input.plot(**test_kwargs)
 
 
-def test_sequence_as_cube_plot_2D_image():
-    #p.images[0].get_extent() # xlim and ylim
-    #p.images[0].get_array() # data
-    #p.xaxis.get_label_text()
-    #p.yaxis.get_label_text()
-    pass
+@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
+    (seq[:, :, :, 0], {},
+     (seq_concat[:, :, 0],
+      "em.wl [m]", "custom:pos.helioprojective.lat [deg]",
+      tuple(seq_axis2_lim_m + seq_axis1_lim_deg))),
+
+    (seq_with_units[:, :, :, 0], {},
+     (seq_concat_km[:, :, 0],
+      "em.wl [m]", "custom:pos.helioprojective.lat [deg]",
+      tuple(seq_axis2_lim_m + seq_axis1_lim_deg))),
+
+    (seq[:, :, :, 0], {"plot_axis_indices": [0, 1],
+                       "axes_coordinates": ["pix", "hi"]},
+     (seq_concat[:, :, 0].transpose(), "pix [pix]", "hi [s]",
+      ((seq[:, :, :, 0].common_axis_extra_coords["pix"][0].value,
+        seq[:, :, :, 0].common_axis_extra_coords["pix"][-1].value,
+        seq[:, :, :, 0].data[0].extra_coords["hi"]["value"][0].value,
+        seq[:, :, :, 0].data[0].extra_coords["hi"]["value"][-1].value)))),
+
+    (seq[:, :, :, 0], {"axes_coordinates": [
+        np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[-1].value) * u.m,
+        np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[0].value) * u.m]},
+     (seq_concat[:, :, 0], " [m]", " [m]",
+      (10, 10+seq[:, :, :, 0].cube_like_dimensions[-1].value-1,
+       10, 10+seq[:, :, :, 0].cube_like_dimensions[0].value-1))),
+
+    (seq[:, :, :, 0], {"axes_coordinates": [
+        np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[-1].value) * u.m,
+        np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[0].value) * u.m],
+        "axes_units": ["cm", u.cm]},
+     (seq_concat[:, :, 0], " [cm]", " [cm]",
+      (10*100, (10+seq[:, :, :, 0].cube_like_dimensions[-1].value-1)*100,
+       10*100, (10+seq[:, :, :, 0].cube_like_dimensions[0].value-1)*100)))
+    ])
+def test_sequence_plot_as_cube_2D_image(test_input, test_kwargs, expected_values):
+    # Unpack expected values
+    expected_data, expected_xlabel, expected_ylabel, expected_extent = expected_values
+    # Run plot method
+    output = test_input.plot_as_cube(**test_kwargs)
+    # Check values are correct
+    np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
+    assert output.xaxis.get_label_text() == expected_xlabel
+    assert output.yaxis.get_label_text() == expected_ylabel
+    assert np.allclose(output.images[0].get_extent(), expected_extent, rtol=1e-3)
+    # Also check x and y values?????
+
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
+    (seq[:, :, :, 0], {"axes_coordinates": [
+        np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[-1].value), None],
+        "axes_units": [u.m, None]}, ValueError),
+
+    (seq[:, :, :, 0], {"axes_coordinates": [
+        None, np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[0].value)],
+        "axes_units": [None, u.m]}, ValueError)
+    ])
+def test_sequence_plot_as_cube_2D_image_errors(test_input, test_kwargs, expected_error):
+    with pytest.raises(expected_error):
+        output = test_input.plot_as_cube(**test_kwargs)
 
 
 def test_sequence_plot_ImageAnimator():
