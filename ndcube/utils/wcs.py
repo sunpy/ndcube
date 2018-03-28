@@ -34,7 +34,11 @@ wcs_to_ivoa = {
     "HPLT": "custom:pos.helioprojective.lat",
     "HPLN": "custom:pos.helioprojective.lon",
     "TIME": "time",
-    "WAVE": "em.wl"
+    "WAVE": "em.wl",
+    "RA--": "pos.eq.ra",
+    "DEC-": "pos.eq.dec",
+    "FREQ": "em.freq",
+    "STOKES": "phys.polarization.stokes "
     }
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
