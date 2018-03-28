@@ -12,7 +12,7 @@ from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
-__all__ = ['NDCubeBase', 'NDCube', 'NDCubeOrdered']
+__all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
 
 class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
@@ -21,7 +21,7 @@ class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
     """
 
 
-class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
+class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractmethod
     def pixel_to_world(self, *quantity_axis_list):
@@ -109,7 +109,7 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
 
 
-class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin, NDCubeBase):
+class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
     Class representing N dimensional cubes.
     Extra arguments are passed on to `~astropy.nddata.NDData`.
@@ -214,9 +214,16 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
             if not axis:
-                key = ctype[i]
-                if "-TAN" in key:
-                    key = key[:-4]
+                # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
+                keys = list(filter(lambda key: ctype[i].startswith(key), wcs_ivoa_mapping))
+                # If there are multiple valid keys, raise an error.
+                if len(keys) != 1:
+                    raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
+                                     "https://github.com/sunpy/ndcube/issues citing the"
+                                     "following  CTYPE and non-unique keys: "
+                                     "CTYPE = {0}; keys = {1}".format(ctype, key))
+                else:
+                    key = keys[0]
                 axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
         return tuple(axes_ctype[::-1])
 
@@ -463,6 +470,10 @@ Length of NDCube: {lengthNDCube}
 Axis Types of NDCube: {axis_type}
 """.format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
            axis_type=self.world_axis_physical_types))
+
+
+class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
+    pass
 
 
 class NDCubeOrdered(NDCube):
