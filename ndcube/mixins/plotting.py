@@ -51,52 +51,40 @@ class NDCubePlotMixin:
             for that axis.
         """
         # If old API is used, convert to new API.
-        plot_axis_indices, axes_coordiantes, axes_units, data_unit = _support_101_plot_API(
+        plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
         axis_data = ['x' for i in range(2)]
         axis_data[plot_axis_indices[1]] = 'y'
-        if self.data.ndim >= 3:
-            plot = self._plot_3D_cube(plot_axis_indices=plot_axis_indices, unit_x_axis=unit_x_axis,
-                                      unit_y_axis=unit_y_axis, axes_coordinates=axes_coordinates, **kwargs)
+        if self.data.ndim is 1:
+            plot = self._plot_1D_cube(data_unit=data_unit, origin=origin)
         elif self.data.ndim is 2:
             plot = self._plot_2D_cube(axes=axes, plot_axis_indices=axis_data[::-1], **kwargs)
-        elif self.data.ndim is 1:
-            plot = self._plot_1D_cube(data_unit=data_unit, origin=origin)
+        else:
+            plot = self._plot_3D_cube(plot_axis_indices=plot_axis_indices,
+                                      axes_coordinates=axes_coordinates, axes_units=axes_units,
+                                      **kwargs)
         return plot
 
-    def _plot_3D_cube(self, plot_axis_indices=None, axes_units=None,
-                      axes_coordinates=None, **kwargs):
+    def _plot_1D_cube(self, data_unit=None, origin=0):
         """
-        Plots an interactive visualization of this cube using sliders to move through axes
-        plot using in the image.
-        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
-        passes them to imshow.
+        Plots a graph.
+        Keyword arguments are passed on to matplotlib.
 
         Parameters
         ----------
-        plot_axis_indices: `list`
-            The two axes that make the image.
-            Like [-1,-2] this implies cube instance -1 dimension
-            will be x-axis and -2 dimension will be y-axis.
-
-        axes_unit: `list` of `astropy.units.Unit`
-
-        axes_coordinates: `list` of physical coordinates for array or None
-            If None array indices will be used for all axes.
-            If a list it should contain one element for each axis of the numpy array.
-            For the image axes a [min, max] pair should be specified which will be
-            passed to :func:`matplotlib.pyplot.imshow` as extent.
-            For the slider axes a [min, max] pair can be specified or an array the
-            same length as the axis which will provide all values for that slider.
-            If None is specified for an axis then the array indices will be used
-            for that axis.
+        data_unit: `astropy.unit.Unit`
+            The data is changed to the unit given or the cube.unit if not given.
         """
-        if not plot_axis_indices:
-            plot_axis_indices = [-1, -2]
-        i = ImageAnimatorWCS(self.data, wcs=self.wcs, plot_axis_indices=plot_axis_indices,
-                             unit_x_axis=unit_x_axis, unit_y_axis=unit_y_axis,
-                             axes_coordinates=axes_coordinates, **kwargs)
-        return i
+        index_not_one = []
+        for i, _bool in enumerate(self.missing_axis):
+            if not _bool:
+                index_not_one.append(i)
+        if data_unit is None:
+            data_unit = self.wcs.wcs.cunit[index_not_one[0]]
+        plot = plt.plot(self.pixel_to_world(*[u.Quantity(np.arange(self.data.shape[0]),
+                                                         unit=u.pix)])[0].to(data_unit),
+                        self.data)
+        return plot
 
     def _plot_2D_cube(self, axes=None, plot_axis_indices=None, **kwargs):
         """
@@ -132,26 +120,41 @@ class NDCubePlotMixin:
         plot = axes.imshow(self.data, **kwargs)
         return plot
 
-    def _plot_1D_cube(self, data_unit=None, origin=0):
+    def _plot_3D_cube(self, plot_axis_indices=None, axes_units=None,
+                      axes_coordinates=None, **kwargs):
         """
-        Plots a graph.
-        Keyword arguments are passed on to matplotlib.
+        Plots an interactive visualization of this cube using sliders to move through axes
+        plot using in the image.
+        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
+        passes them to imshow.
 
         Parameters
         ----------
-        data_unit: `astropy.unit.Unit`
-            The data is changed to the unit given or the cube.unit if not given.
+        plot_axis_indices: `list`
+            The two axes that make the image.
+            Like [-1,-2] this implies cube instance -1 dimension
+            will be x-axis and -2 dimension will be y-axis.
+
+        axes_unit: `list` of `astropy.units.Unit`
+
+        axes_coordinates: `list` of physical coordinates for array or None
+            If None array indices will be used for all axes.
+            If a list it should contain one element for each axis of the numpy array.
+            For the image axes a [min, max] pair should be specified which will be
+            passed to :func:`matplotlib.pyplot.imshow` as extent.
+            For the slider axes a [min, max] pair can be specified or an array the
+            same length as the axis which will provide all values for that slider.
+            If None is specified for an axis then the array indices will be used
+            for that axis.
         """
-        index_not_one = []
-        for i, _bool in enumerate(self.missing_axis):
-            if not _bool:
-                index_not_one.append(i)
-        if data_unit is None:
-            data_unit = self.wcs.wcs.cunit[index_not_one[0]]
-        plot = plt.plot(self.pixel_to_world(*[u.Quantity(np.arange(self.data.shape[0]),
-                                                         unit=u.pix)])[0].to(data_unit),
-                        self.data)
-        return plot
+        if plot_axis_indices is None:
+            plot_axis_indices = [-1, -2]
+        if axes_units is None:
+           axes_units = [None, None]
+        i = ImageAnimatorWCS(self.data, wcs=self.wcs, image_axes=plot_axis_indices,
+                             unit_x_axis=axes_units[0], unit_y_axis=axes_units[1],
+                             axis_ranges=axes_coordinates, **kwargs)
+        return i
 
 
 def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs):
@@ -205,7 +208,7 @@ def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_
         else:
             _raise_API_error(*variable_names)
     # Return values of new API
-    return plot_axis_indices, axes_coordinates, axes_units, data_unit
+    return plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs
 
 
 def _raise_API_error(old_name, new_name):
