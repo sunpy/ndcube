@@ -2,10 +2,11 @@ from warnings import warn
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+
+from ndcube.mixins.sequence_plotting import _prep_axes_kwargs
 
 __all__ = ['NDCubePlotMixin']
 
@@ -53,12 +54,14 @@ class NDCubePlotMixin:
         # If old API is used, convert to new API.
         plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
-        axis_data = ['x' for i in range(2)]
-        axis_data[plot_axis_indices[1]] = 'y'
+        # Check kwargs are in consistent formats and set default values if not done so by user.
+        naxis = len(self.dimensions)
+        plot_axis_indices, axes_coordinates, axes_units = _prep_axes_kwargs(
+            naxis, plot_axis_indices, axes_coordinates, axes_units)
         if self.data.ndim is 1:
             plot = self._plot_1D_cube(data_unit=data_unit, origin=origin)
         elif self.data.ndim is 2:
-            plot = self._plot_2D_cube(axes=axes, plot_axis_indices=axis_data[::-1], **kwargs)
+            plot = self._plot_2D_cube(axes=axes, plot_axis_indices=plot_axis_indices, **kwargs)
         else:
             plot = self._plot_3D_cube(plot_axis_indices=plot_axis_indices,
                                       axes_coordinates=axes_coordinates, axes_units=axes_units,
@@ -101,8 +104,12 @@ class NDCubePlotMixin:
             second axis in WCS object will become the second axis of plot_axis_indices.
             Default: ['x', 'y']
         """
-        if not plot_axis_indices:
-            plot_axis_indices = ['x', 'y']
+        if plot_axis_indices is None:
+            axis_data = ['x', 'y']
+        else:
+            axis_data = ['x' for i in range(2)]
+            axis_data[plot_axis_indices[1]] = 'y'
+            axis_data = axis_data[::-1]
         if axes is None:
             if self.wcs.naxis is not 2:
                 missing_axis = self.missing_axis
@@ -110,7 +117,7 @@ class NDCubePlotMixin:
                 index = 0
                 for i, bool_ in enumerate(missing_axis):
                     if not bool_:
-                        slice_list.append(plot_axis_indices[index])
+                        slice_list.append(axis_data[index])
                         index += 1
                     else:
                         slice_list.append(1)
