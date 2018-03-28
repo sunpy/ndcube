@@ -87,7 +87,7 @@ def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     output_ylim = output.axes.get_ylim()
     assert output_ylim[0] <= expected_ylim[0]
     assert output_ylim[1] >= expected_ylim[1]
-    
+
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0], {},

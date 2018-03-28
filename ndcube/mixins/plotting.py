@@ -150,7 +150,7 @@ class NDCubePlotMixin:
         if plot_axis_indices is None:
             plot_axis_indices = [-1, -2]
         if axes_units is None:
-           axes_units = [None, None]
+            axes_units = [None, None]
         i = ImageAnimatorWCS(self.data, wcs=self.wcs, image_axes=plot_axis_indices,
                              unit_x_axis=axes_units[0], unit_y_axis=axes_units[1],
                              axis_ranges=axes_coordinates, **kwargs)
