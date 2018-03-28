@@ -253,7 +253,7 @@ def test_sequence_plot_1D_plot(test_input, test_kwargs, expected_values):
     # Run plot method
     output = test_input.plot(**test_kwargs)
     # Check values are correct
-    #assert isinstance(output, matplotlib.axes._subplots.AxesSubplot)
+    assert isinstance(output, matplotlib.axes.Axes)
     np.testing.assert_array_equal(output.lines[0].get_xdata(), expected_x_data)
     np.testing.assert_array_equal(output.lines[0].get_ydata(), expected_y_data)
     assert output.axes.get_xlabel() == expected_xlabel
@@ -360,7 +360,7 @@ def test_sequence_plot_as_cube_1D_plot(test_input, test_kwargs, expected_values)
     output = test_input.plot_as_cube(**test_kwargs)
     # Check values are correct
     # Check type of ouput plot object
-    #assert isinstance(output, matplotlib.axes._subplots.AxesSubplot)
+    assert isinstance(output, matplotlib.axes.Axes)
     # Check x and y data are correct.
     assert np.allclose(output.lines[0].get_xdata(), expected_x_data)
     assert np.allclose(output.lines[0].get_ydata(), expected_y_data)
@@ -429,6 +429,7 @@ def test_sequence_plot_2D_image(test_input, test_kwargs, expected_values):
     # Run plot method
     output = test_input.plot(**test_kwargs)
     # Check values are correct
+    assert isinstance(output, matplotlib.axes.Axes)
     np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
     assert output.xaxis.get_label_text() == expected_xlabel
     assert output.yaxis.get_label_text() == expected_ylabel
@@ -490,6 +491,7 @@ def test_sequence_plot_as_cube_2D_image(test_input, test_kwargs, expected_values
     # Run plot method
     output = test_input.plot_as_cube(**test_kwargs)
     # Check values are correct
+    assert isinstance(output, matplotlib.axes.Axes)
     np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
     assert output.xaxis.get_label_text() == expected_xlabel
     assert output.yaxis.get_label_text() == expected_ylabel
@@ -519,7 +521,7 @@ def test_sequence_plot_ImageAnimator(test_input, test_kwargs, expected_data):
     # Run plot method
     output = test_input.plot(**test_kwargs)
     # Check plot object properties are correct.
-    assert type(output) == ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence
+    assert isinstance(output, ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence)
     np.testing.assert_array_equal(output.data, expected_data)
 
 
@@ -531,7 +533,7 @@ def test_sequence_plot_as_cube_ImageAnimator(test_input, test_kwargs, expected_d
     # Run plot method
     output = test_input.plot_as_cube(**test_kwargs)
     # Check plot object properties are correct.
-    assert type(output) == ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence
+    assert isinstance(output, ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence)
     np.testing.assert_array_equal(output.data, expected_data)
 
 
