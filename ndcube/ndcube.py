@@ -215,8 +215,8 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
         for i, axis in enumerate(self.missing_axis):
             if not axis:
                 # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
-		keys = list(filter(lambda key: ctype.startswith(key), wcs_ivoa_mapping))
-		# If there are multiple valid keys, raise an error.
+                keys = list(filter(lambda key: ctype.startswith(key), wcs_ivoa_mapping))
+                # If there are multiple valid keys, raise an error.
                 if len(keys) != 1:
                     raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
                                      "https://github.com/sunpy/ndcube/issues citing the"
