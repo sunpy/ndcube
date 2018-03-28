@@ -35,8 +35,8 @@ wcs_to_ivoa = {
     "HPLN": "custom:pos.helioprojective.lon",
     "TIME": "time",
     "WAVE": "em.wl",
-    "RA---SIN": "pos.eq.ra",
-    "DEC--SIN": "pos.eq.dec",
+    "RA--": "pos.eq.ra",
+    "DEC-": "pos.eq.dec",
     "FREQ": "em.freq",
     "STOKES": "phys.polarization.stokes "
     }
