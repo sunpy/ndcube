@@ -83,7 +83,7 @@ class NDCubeSequencePlotMixin:
 
         Returns
         -------
-        ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence` # noqa
+        ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
             Axes or animation object depending on dimensionality of NDCubeSequence
 
         """
@@ -184,7 +184,7 @@ class NDCubeSequencePlotMixin:
 
         Returns
         -------
-        ax: ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence` # noqa
+        ax: ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
             Axes or animation object depending on dimensionality of NDCubeSequence
 
         """
