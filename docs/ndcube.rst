@@ -91,10 +91,9 @@ pixel units giving the length of each dimension in the
 `~ndcube.NDCube` while `~ndcube.NDCube.world_axis_physical_types`
 returns an iterable of strings denoting the type of physical property
 represented by each axis.  The axis names are in accordance with the
-International Virtual Observatory Alliance (IVOA) `UCD1+ controlled
-vocabulary <
-http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`. Here 
-the shape and axis types are given in data order, not WCS order. 
+International Virtual Observatory Alliance (IVOA)
+`UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
+Here the shape and axis types are given in data order, not WCS order.
 
 .. _ndcube_slicing:
 
