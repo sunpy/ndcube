@@ -3,7 +3,12 @@
 
 New Features
 ------------
-- Added installation instructions to docs. [#77]
+- Created a new `~ndcube.NDCubeBase` which has all the functionality
+  of `~ncube.NDCube` except the plotting.  The old ``NDCubeBase``
+  which outlined the ``NDCube`` API was renamed ``NDCubeABC``.
+  `~ndcube.NDCube` has all the same functionality as before except is
+  now simply inherits from `~ndcube.NDCubeBase` and
+  `~ndcube.mixins.plotting.NDCubePlotMixin`.
 
 API Changes
 -----------
@@ -18,8 +23,12 @@ Bug Fixes
 ---------
 
 
-1.0.1 (Unreleased)
+1.0.1
 ==================
+
+New Features
+------------
+- Added installation instructions to docs. [#77]
 
 Bug Fixes
 ---------
