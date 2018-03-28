@@ -54,6 +54,9 @@ matrix:
 
     include:
 
+        # Add a matploblib backend for generating plots in tests.
+	- env: MPLBACKEND='Agg' 
+
         # Do a basic test.
         - os: linux
           stage: Initial tests
