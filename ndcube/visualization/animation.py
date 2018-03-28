@@ -170,8 +170,10 @@ class ImageAnimatorCommonAxisNDCubeSequence(ImageAnimatorWCS):
         ind = np.argmin(np.abs(self.axis_ranges[ax_ind] - val))
         self.frame_slice[ax_ind] = ind
         list_slices_wcsaxes = list(self.slices_wcsaxes)
-        sequence_index, cube_index = utils.sequence._convert_cube_like_index_to_sequence_indices(
+        sequence_slice = utils.sequence._convert_cube_like_index_to_sequence_slice(
             val, self.cumul_cube_lengths)
+        sequence_index = sequence_slice.sequence_index
+        cube_index = sequence_slice.common_axis_item
         list_slices_wcsaxes[self.wcs.naxis-ax_ind-1] = cube_index
         self.slices_wcsaxes = list_slices_wcsaxes
         if val != slider.cval:
