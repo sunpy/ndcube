@@ -10,9 +10,6 @@ from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.wcs import WCS
 import ndcube.mixins.sequence_plotting
 
-# Set matplotlib display for testing
-#matplotlib.use('Agg')
-
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
@@ -159,6 +156,9 @@ seq_with_units_and_some_uncertainty = NDCubeSequence(
                cube1_with_unit, cube3_with_unit_and_uncertainty],
     common_axis=common_axis)
 
+seq_with_some_masks = NDCubeSequence(data_list=[cube1_with_mask, cube3, cube1, cube3_with_mask],
+    common_axis=common_axis)
+
 # Derive some expected data arrays in plot objects.
 seq_data_stack = np.stack([cube.data for cube in seq_with_masks.data])
 seq_mask_stack = np.stack([cube.mask for cube in seq_with_masks.data])
@@ -178,11 +178,53 @@ seq_concat_km = np.ma.masked_array(
     seq_mask_concat)
 
 # Derive expected axis_ranges
-x_axis_coords = np.array([0.4, 0.8, 1.2, 1.6]).reshape((1, 1, 4))
-new_x_axis_coords_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
-new_x_axis_coords_shape[-1] = 1
-none_axis_ranges_axis3 = [np.arange(len(seq.data)), np.array([0., 2.]), np.array([0., 1.5, 3.]),
-                          np.tile(np.array(x_axis_coords), new_x_axis_coords_shape)]
+x_axis_coords3 = np.array([0.4, 0.8, 1.2, 1.6]).reshape((1, 1, 4))
+new_x_axis_coords3_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
+new_x_axis_coords3_shape[-1] = 1
+none_axis_ranges_axis3 = [np.linspace(0, len(seq.data), len(seq.data)),
+                          np.array([0., 2.]), np.array([0., 1.5, 3.]),
+                          np.tile(np.array(x_axis_coords3), new_x_axis_coords3_shape)]
+none_axis_ranges_axis0 = [np.arange(len(seq.data)),
+                          np.array([0., 2.]), np.array([0., 1.5, 3.]),
+                          np.linspace(0, int(seq.dimensions[-1].value),
+                                      int(seq.dimensions[-1].value))]
+distance0_none_axis_ranges_axis0 = [seq.sequence_axis_extra_coords["distance"].value,
+                                    np.array([0., 2.]), np.array([0., 1.5, 3.]),
+                                    np.linspace(0, int(seq.dimensions[-1].value),
+                                                int(seq.dimensions[-1].value))]
+distance0_none_axis_ranges_axis0_mm = [seq.sequence_axis_extra_coords["distance"].to("mm").value,
+                                       np.array([0., 2.]), np.array([0., 1.5, 3.]),
+                                       np.linspace(0, int(seq.dimensions[-1].value),
+                                                int(seq.dimensions[-1].value))]
+userrangequantity_none_axis_ranges_axis0 = [
+    np.arange(int(seq.dimensions[0].value)),
+    np.array([0., 2.]), np.array([0., 1.5, 3.]),
+     np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+
+userrangequantity_none_axis_ranges_axis0_1e7 = [
+    (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value,
+    np.array([0., 2.]), np.array([0., 1.5, 3.]),
+     np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+
+#x_axis_coords2 = np.array([2.e-11, 4.e-11, 6.e-11]).reshape((1, 3, 1))
+#new_x_axis_coords2_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
+#new_x_axis_coords2_shape[2] = 1
+hi2_none_axis_ranges_axis2 = [
+    np.linspace(0, len(seq.data), len(seq.data)), np.array([0., 2.]),
+    #np.tile(x_axis_coords2, new_x_axis_coords2_shape),
+    np.arange(int(seq.dimensions[2].value)),
+    np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+
+x_axis_coords1 = np.zeros(tuple([int(s.value) for s in seq.dimensions]))
+x_axis_coords1[0, 1] = 1.
+x_axis_coords1[1, 0] = 2.
+x_axis_coords1[1, 1] = 3.
+x_axis_coords1[2, 1] = 1.
+x_axis_coords1[3, 0] = 2.
+x_axis_coords1[3, 1] = 3.
+pix1_none_axis_ranges_axis1 =  [
+    np.linspace(0, len(seq.data), len(seq.data)), x_axis_coords1, np.array([0., 1.5, 3.]),
+    np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
 
 # Derive expected extents
 seq_axis1_lim_deg = [0.49998731, 0.99989848]
@@ -576,3 +618,95 @@ def test_prep_axes_kwargs(test_input, expected):
 def test_prep_axes_kwargs_errors(test_input, expected_error):
     with pytest.raises(expected_error):
         output = ndcube.mixins.sequence_plotting._prep_axes_kwargs(*test_input)
+
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
+    (seq, {"plot_axis_indices": 3},
+     (seq_stack.data, none_axis_ranges_axis3, "time [min]", "Data [None]",
+      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq_with_units, {"plot_axis_indices": -1, "data_unit": u.km},
+     (seq_stack_km.data, none_axis_ranges_axis3, "time [min]", "Data [km]",
+      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
+      (seq_stack_km.data.min(), seq_stack_km.data.max()))),
+
+    (seq_with_masks, {"plot_axis_indices": 0},
+     (seq_stack, none_axis_ranges_axis0, "meta.obs.sequence [None]", "Data [None]",
+      (none_axis_ranges_axis0[0].min(), none_axis_ranges_axis0[0].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq_with_some_masks, {"plot_axis_indices": 0},
+     (seq_stack, none_axis_ranges_axis0, "meta.obs.sequence [None]", "Data [None]",
+      (none_axis_ranges_axis0[0].min(), none_axis_ranges_axis0[0].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 0, "axes_coordinates": "distance"},
+     (seq_stack.data, distance0_none_axis_ranges_axis0, "distance [cm]", "Data [None]",
+      (seq.sequence_axis_extra_coords["distance"].value.min(),
+       seq.sequence_axis_extra_coords["distance"].value.max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 0, "axes_coordinates": "distance", "axes_units": "mm"},
+     (seq_stack.data, distance0_none_axis_ranges_axis0_mm, "distance [mm]", "Data [None]",
+      (seq.sequence_axis_extra_coords["distance"].to("mm").value.min(),
+       seq.sequence_axis_extra_coords["distance"].to("mm").value.max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 0,
+           "axes_coordinates": userrangequantity_none_axis_ranges_axis0[0]*u.J},
+     (seq_stack.data, userrangequantity_none_axis_ranges_axis0, " [J]", "Data [None]",
+      (userrangequantity_none_axis_ranges_axis0[0].min(),
+       userrangequantity_none_axis_ranges_axis0[0].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 0, "axes_units": u.erg,
+           "axes_coordinates": userrangequantity_none_axis_ranges_axis0[0]*u.J},
+     (seq_stack.data, userrangequantity_none_axis_ranges_axis0_1e7, " [erg]", "Data [None]",
+      (userrangequantity_none_axis_ranges_axis0_1e7[0].min(),
+       userrangequantity_none_axis_ranges_axis0_1e7[0].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 2, "axes_coordinates": "hi"},
+     (seq_stack.data, hi2_none_axis_ranges_axis2, "hi [s]", "Data [None]",
+      (hi2_none_axis_ranges_axis2[2].min(), hi2_none_axis_ranges_axis2[2].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 1, "axes_coordinates": "pix"},
+     (seq_stack.data, pix1_none_axis_ranges_axis1, "pix [pix]", "Data [None]",
+      (pix1_none_axis_ranges_axis1[1].min(), pix1_none_axis_ranges_axis1[1].max()),
+      (seq_stack.data.min(), seq_stack.data.max())))
+    ])
+def test_sequence_plot_LineAnimator(test_input, test_kwargs, expected_values):
+    # Unpack expected values
+    expected_data, expected_axis_ranges, expected_xlabel, \
+      expected_ylabel, expected_xlim, expected_ylim = expected_values
+    # Run plot method.
+    output = test_input.plot(**test_kwargs)
+    # Check right type of plot object is produced.
+    assert type(output) is ndcube.mixins.sequence_plotting.LineAnimatorNDCubeSequence
+    # Check data being plotted is correct
+    np.testing.assert_array_equal(output.data, expected_data)
+    if type(expected_data) is np.ma.core.MaskedArray:
+        np.testing.assert_array_equal(output.data.mask, expected_data.mask)
+    # Check values of axes and sliders is correct.
+    for i in range(len(output.axis_ranges)):
+        print(i)
+        assert np.allclose(output.axis_ranges[i], expected_axis_ranges[i])
+    # Check plot axis labels and limits are correct
+    assert output.xlabel == expected_xlabel
+    assert output.ylabel == expected_ylabel
+    assert output.xlim == expected_xlim
+    assert output.ylim == expected_ylim
+
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
+    ()
+    ])
+def test_sequence_plot_as_cube_LineAnimator():
+    # Unpack expected values
+    expected_type, expected_data, expected_axis_ranges, expected_xlabel, \
+      expected_ylabel, expected_xlim, expected_ylim = expected_values
+    # Run plot method.
+    output = test_input.plot(**test_kwargs)
+    # 
