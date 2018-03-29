@@ -6,7 +6,7 @@ import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 
-from ndcube.mixins.sequence_plotting import _prep_axes_kwargs
+from ndcube.mixins.sequence_plotting import _prep_axes_kwargs, _derive_1D_coordinates_and_units, _determine_sequence_units, _make_1D_sequence_plot
 
 __all__ = ['NDCubePlotMixin']
 
@@ -17,7 +17,7 @@ class NDCubePlotMixin:
     """
 
     def plot(self, axes=None, plot_axis_indices=[-1, -2], axes_coordinates=None,
-             axes_units=None, data_unit=None, origin=0, **kwargs):
+             axes_units=None, data_unit=None, **kwargs):
         """
         Plots an interactive visualization of this cube with a slider
         controlling the wavelength axis for data having dimensions greater than 2.
@@ -50,6 +50,7 @@ class NDCubePlotMixin:
             same length as the axis which will provide all values for that slider.
             If None is specified for an axis then the array indices will be used
             for that axis.
+
         """
         # If old API is used, convert to new API.
         plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
@@ -68,7 +69,8 @@ class NDCubePlotMixin:
                                       **kwargs)
         return plot
 
-    def _plot_1D_cube(self, data_unit=None, origin=0):
+    def _plot_1D_cube(self, axes=None, axes_coordinates=None, axes_units=None, data_unit=None,
+                      **kwargs):
         """
         Plots a graph.
         Keyword arguments are passed on to matplotlib.
@@ -77,17 +79,58 @@ class NDCubePlotMixin:
         ----------
         data_unit: `astropy.unit.Unit`
             The data is changed to the unit given or the cube.unit if not given.
+
         """
-        index_not_one = []
-        for i, _bool in enumerate(self.missing_axis):
-            if not _bool:
-                index_not_one.append(i)
-        if data_unit is None:
-            data_unit = self.wcs.wcs.cunit[index_not_one[0]]
-        plot = plt.plot(self.pixel_to_world(*[u.Quantity(np.arange(self.data.shape[0]),
-                                                         unit=u.pix)])[0].to(data_unit),
-                        self.data)
-        return plot
+        # Derive x-axis coordinates and unit from inputs.
+        x_axis_coordinates, unit_x_axis = _derive_1D_coordinates_and_units(axes_coordinates,
+                                                                           axes_units)
+        if x_axis_coordinates is None:
+            # Default is to derive x coords and defaul xlabel from WCS object.
+            default_xlabel = self.world_axis_physical_types[0]
+            x_axis_coordinates = "{0} [{1}]".format(self.axis_world_coords(), unit_x_axis)
+        elif isinstance(x_axis_coordinates, str):
+            # User has entered a str as x coords, get that extra coord.
+            default_xlabel = "{0} [{1}]".format(x_axis_coordinates, unit_x_axis)
+            x_axis_coordinates = self.extra_coords[x_axis_coordinates]["value"]
+        # Else user must have set the x-values manually.
+        # If a unit has been set for the x-axis, try to convert x coords to that unit.
+        if isinstance(unit_x_axis, (u.UnitBase, str)):
+            if isinstance(x_axis_coordinates, u.Quantity):
+                default_xlabel = " [{0}]".format(unit_x_axis)
+                x_axis_coordinates = x_axis_coordinates.to(unit_x_axis)
+            else:
+                raise TypeError("Can only set unit for x axis if x-axis coordinates is input as "
+                                "None, an astropy Quantity or the name of an extra coord that "
+                                "is an astropy Quantity.")
+        # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
+        if self.unit is None:
+            if data_unit is not None:
+                raise ValueError("Can only set y-axis unit if self.unit is set to a "
+                                 "compatible unit.")
+            else:
+                ydata = self.data
+                yerror = self.uncertainty.array
+        else:
+            if data_unit is None:
+                data_unit = self.unit
+                ydata = self.data
+                if self.uncertainty is None:
+                    yerror = None
+                else:
+                    yerror = self.uncertainty.array
+            else:
+                ydata = (self.data * self.unit).to(data_unit).value
+                if self.uncertainty is None:
+                    yerror = None
+                else:
+                    yerror = (self.uncertainty.array * self.unit).to(data_unit).value
+        # Combine data and uncertainty with mask.
+        ydata = np.ma.masked_array(ydata, self.mask)
+        if yerror is not None:
+            yerror = np.ma.masked_array(yerror, self.mask)
+        # Create plot
+        fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
+        return ax
 
     def _plot_2D_cube(self, axes=None, plot_axis_indices=None, **kwargs):
         """
