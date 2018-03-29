@@ -1,6 +1,8 @@
 from warnings import warn
+import copy
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
@@ -68,7 +70,8 @@ class NDCubePlotMixin:
             plot = self._plot_1D_cube(axes, axes_coordinates,
                                       axes_units, data_unit, **kwargs)
         elif self.data.ndim is 2:
-            plot = self._plot_2D_cube(axes=axes, plot_axis_indices=plot_axis_indices, **kwargs)
+            plot = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
+                                      axes_units, data_unit, **kwargs)
         else:
             plot = self._plot_3D_cube(plot_axis_indices=plot_axis_indices,
                                       axes_coordinates=axes_coordinates, axes_units=axes_units,
@@ -172,12 +175,9 @@ class NDCubePlotMixin:
         if axes_units is None:
             axes_units = [None, None]
         # Set which cube dimensions are on the x an y axes.
-        if plot_axis_indices is None:
-            axis_data = ['x', 'y']
-        else:
-            axis_data = ['x', 'x']
-            axis_data[plot_axis_indices[1]] = 'y'
-            axis_data = axis_data[::-1]
+        axis_data = ['x', 'x']
+        axis_data[plot_axis_indices[1]] = 'y'
+        axis_data = axis_data[::-1]
         # Determine data to be plotted
         if data_unit is None:
             data = self.data
@@ -190,7 +190,11 @@ class NDCubePlotMixin:
         # Combine data with mask
         data = np.ma.masked_array(data, self.mask)
         if axes is None:
-            if axes_coordinates == [None, None]:
+            try:
+                axes_coord_check = axes_coordinates == [None, None]
+            except:
+                axes_coord_check = False
+            if axes_coord_check:
                 # Build slice list for WCS for initializing WCSAxes object.
                 if self.wcs.naxis is not 2:
                     slice_list = []
@@ -225,10 +229,10 @@ class NDCubePlotMixin:
                     # If axis coordinate is None, derive axis values from WCS.
                     if axes_coordinates[plot_axis_index] is None:
                         if axes_units[plot_axis_index] is None:
-                            # N.B. This assumed axes are independent.  Fix this before merging!!!
+                            # N.B. This assumes axes are independent.  Fix this before merging!!!
                             axis_value = self.axis_world_coords(plot_axis_index)
                             axes_units[plot_axis_index] = axis_value.unit
-                            axis_value = self.axis_world_coords(plot_axis_index).value
+                            axis_value = self.axis_world_coords()[plot_axis_index].value
                         else:
                             axis_value = self.axis_world_coords(plot_axis_index).to(
                                 axes_units[plot_axis_index]).value
@@ -240,26 +244,25 @@ class NDCubePlotMixin:
                         # If axis coordinate is a string, derive axis values from
                         # corresponding extra coord.
                         axis_label_text = copy.deepcopy(axes_coordinates[plot_axis_index])
-                        axis_value = self.extra_coord[axes_coordinates[plot_axis_index]]
+                        axis_value = self.extra_coords[axes_coordinates[plot_axis_index]]["value"]
                         if isinstance(axis_value, u.Quantity):
                             if axes_units[plot_axis_index] is None:
                                 axes_units[plot_axis_index] = axis_value.unit
-                                axis_value = axis_value.value
-                            else:
-                                if axes_units[plot_axis_index] is not None:
-                                    raise TypeError(INVALID_UNIT_SET_MESSAGE)
+                            axis_value = axis_value.value
+                        else:
+                            if axes_units[plot_axis_index] is not None:
+                                raise TypeError(INVALID_UNIT_SET_MESSAGE)
                         default_label = "{0} [{1}]".format(axis_label_text,
                                                            axes_units[plot_axis_index])
                     else:
                         # Else user must have manually set the axis coordinates.
                         if isinstance(axes_coordinates[plot_axis_index], u.Quantity):
                             if axes_units[plot_axis_index] is None:
+                                axes_units[plot_axis_index] = axes_coordinates[plot_axis_index].unit
                                 axis_value = axes_coordinates[plot_axis_index].value
                             else:
                                 axis_value = axes_coordinates[plot_axis_index].to(
-                                    axes_units[plot_axis_index])
-                                axes_units[plot_axis_index] = axis_value.unit
-                                axis_value = axis_value.value
+                                    axes_units[plot_axis_index]).value
                         else:
                             if axes_units[plot_axis_index] is None:
                                 axis_value = axes_coordinates[plot_axis_index]
@@ -272,17 +275,18 @@ class NDCubePlotMixin:
                 fig, ax = plt.subplots(1, 1)
                 # Since we can't assume the x-axis will be uniform, create NonUniformImage
                 # axes and add it to the axes object.
+                if plot_axis_indices[0] < plot_axis_indices[1]:
+                    data = data.transpose()
                 im_ax = mpl.image.NonUniformImage(
                     ax, extent=(axes_values[0][0], axes_values[0][-1],
                                 axes_values[1][0], axes_values[1][-1]), **kwargs)
-                im_ax.set_data(axes_coordinates[plot_axis_indices[0]],
-                               axes_coordinates[plot_axis_indices[1]], data)
+                im_ax.set_data(axes_values[0], axes_values[1], data)
                 ax.add_image(im_ax)
                 # Set the limits, labels, etc. of the axes.
-                ax.set_xlim((axes_coordinates[plot_axis_indices[0]][0],
-                             axes_coordinates[plot_axis_indices[0]][-1]))
-                ax.set_ylim((axes_coordinates[plot_axis_indices[1]][0],
-                             axes_coordinates[plot_axis_indices[1]][-1]))
+                xlim = kwargs.pop("xlim", (axes_values[0][0], axes_values[0][-1]))
+                ax.set_xlim(xlim)
+                ylim = kwargs.pop("xlim", (axes_values[1][0], axes_values[1][-1]))
+                ax.set_ylim(ylim)
                 xlabel = kwargs.pop("xlabel", default_labels[0])
                 ylabel = kwargs.pop("ylabel", default_labels[1])
                 ax.set_xlabel(xlabel)
