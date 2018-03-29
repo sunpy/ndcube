@@ -21,6 +21,8 @@ API Changes
 
 Bug Fixes
 ---------
+- Allowed `~ndcube.NDCubeBase.axis_world_coords` to accept negative
+  axis indices as arguments. [#106]
 
 
 1.0.1
