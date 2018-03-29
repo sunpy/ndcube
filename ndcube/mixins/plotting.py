@@ -6,6 +6,7 @@ import astropy.units as u
 from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 
+from ndcube import utils
 from ndcube.mixins.sequence_plotting import _prep_axes_kwargs, _derive_1D_coordinates_and_units, _determine_sequence_units, _make_1D_sequence_plot
 
 __all__ = ['NDCubePlotMixin']
@@ -64,7 +65,7 @@ class NDCubePlotMixin:
         plot_axis_indices, axes_coordinates, axes_units = _prep_axes_kwargs(
             naxis, plot_axis_indices, axes_coordinates, axes_units)
         if self.data.ndim is 1:
-            plot = self._plot_1D_cube(data_unit=data_unit, origin=origin)
+            plot = self._plot_1D_cube(data_unit=data_unit)
         elif self.data.ndim is 2:
             plot = self._plot_2D_cube(axes=axes, plot_axis_indices=plot_axis_indices, **kwargs)
         else:
@@ -90,19 +91,24 @@ class NDCubePlotMixin:
                                                                            axes_units)
         if x_axis_coordinates is None:
             # Default is to derive x coords and defaul xlabel from WCS object.
-            default_xlabel = self.world_axis_physical_types[0]
-            x_axis_coordinates = "{0} [{1}]".format(self.axis_world_coords(), unit_x_axis)
+            default_xlabel = "{0} [{1}]".format(self.world_axis_physical_types[0], unit_x_axis)
+            xdata = self.axis_world_coords()
         elif isinstance(x_axis_coordinates, str):
             # User has entered a str as x coords, get that extra coord.
             default_xlabel = "{0} [{1}]".format(x_axis_coordinates, unit_x_axis)
-            x_axis_coordinates = self.extra_coords[x_axis_coordinates]["value"]
-        # Else user must have set the x-values manually.
+            xdata = self.extra_coords[x_axis_coordinates]["value"]
+        else:
+            # Else user must have set the x-values manually.
+            default_xlabel = " [{0}]".format(unit_x_axis)
+            xdata = x_axis_coordinates
         # If a unit has been set for the x-axis, try to convert x coords to that unit.
-        if isinstance(unit_x_axis, (u.UnitBase, str)):
-            if isinstance(x_axis_coordinates, u.Quantity):
-                default_xlabel = " [{0}]".format(unit_x_axis)
-                x_axis_coordinates = x_axis_coordinates.to(unit_x_axis)
+        if isinstance(xdata, u.Quantity):
+            if unit_x_axis is None:
+                xdata = xdata.value
             else:
+                xdata = xdata.to(unit_x_axis).value
+        else:
+            if unit_x_axis is not None:
                 raise TypeError(INVALID_UNIT_SET_MESSAGE)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
         if self.unit is None:
@@ -131,10 +137,11 @@ class NDCubePlotMixin:
         if yerror is not None:
             yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
-        fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, unit_y_axis, default_xlabel, kwargs)
+        fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, data_unit, default_xlabel, kwargs)
         return ax
 
-    def _plot_2D_cube(self, axes=None, plot_axis_indices=None, **kwargs):
+    def _plot_2D_cube(self, axes=None, plot_axis_indices=None, axes_coordinates=None,
+                      axes_units=None, data_unit=None, **kwargs):
         """
         Plots a 2D image onto the current
         axes. Keyword arguments are passed on to matplotlib.
@@ -189,16 +196,16 @@ class NDCubePlotMixin:
                         raise ValueError("Dimensions of WCS and data don't match")
                 ax = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
                 # Set axis labels
-                x_wcs_axis = utils.wcs.data_axis_to_wcs_axis(plot_axis_indices[0],
+                x_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[0],
                                                              self.missing_axis)
                 ax.set_xlabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[0]],
-                    self.wcs.wcs.cunit[x_wcs_axis])
-                y_wcs_axis = utils.wcs.data_axis_to_wcs_axis(plot_axis_indices[1],
+                    self.wcs.wcs.cunit[x_wcs_axis]))
+                y_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[1],
                                                              self.missing_axis)
                 ax.set_ylabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[1]],
-                    self.wcs.wcs.cunit[y_wcs_axis])
+                    self.wcs.wcs.cunit[y_wcs_axis]))
                 # Plot data
                 ax.imshow(data, **kwargs)
             else:

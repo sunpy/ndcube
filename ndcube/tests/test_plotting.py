@@ -54,8 +54,8 @@ cubem = NDCube(
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0, 0], {},
-     (u.Quantity([0.4, 0.8, 1.2, 1.6], unit="min"), np.array([1, 2, 3, 4]),
-      "", "", (0.4, 1.6), (1, 4)))
+     (np.array([0.4, 0.8, 1.2, 1.6]), np.array([1, 2, 3, 4]),
+      "time [None]", "Data [None]", (0.4, 1.6), (1, 4)))
     ])
 def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
@@ -64,21 +64,19 @@ def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert type(output) is list
-    assert len(output) == 1
-    output = output[0]
-    assert type(output) is matplotlib.lines.Line2D
+    assert isinstance(output, matplotlib.axes.Axes)
     output_xdata = (output.axes.lines[0].get_xdata())
-    if type(expected_xdata) == u.Quantity:
+    if type(output_xdata) == u.Quantity:
         assert output_xdata.unit == expected_xdata.unit
         assert np.allclose(output_xdata.value, expected_xdata.value)
     else:
-        np.testing.assert_array_equal(output.axes.lines[0].get_xdata(), expected_xdata)
-    if type(expected_ydata) == u.Quantity:
+        assert np.allclose(output_xdata, expected_xdata)
+    output_ydata = (output.axes.lines[0].get_ydata())
+    if type(output_ydata) == u.Quantity:
         assert output_ydata.unit == expected_ydata.unit
         assert np.allclose(output_ydata.value, expected_ydata.value)
     else:
-        np.testing.assert_array_equal(output.axes.lines[0].get_ydata(), expected_ydata)
+        assert np.allclose(output.axes.lines[0].get_ydata(), expected_ydata)
     assert output.axes.get_xlabel() == expected_xlabel
     assert output.axes.get_ylabel() == expected_ylabel
     output_xlim = output.axes.get_xlim()
@@ -91,7 +89,7 @@ def test_cube_plot_1D(test_input, test_kwargs, expected_values):
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0], {},
-     (cube[0].data, "", "",
+     (cube[0].data, "time [min]", "em.wl [m]",
       (-0.5, 3.5, 2.5, -0.5)))
     ])
 def test_cube_plot_2D(test_input, test_kwargs, expected_values):
@@ -101,11 +99,11 @@ def test_cube_plot_2D(test_input, test_kwargs, expected_values):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert type(output) is matplotlib.image.AxesImage
-    np.testing.assert_array_equal(output.get_array(), expected_data)
+    assert isinstance(output, matplotlib.axes.Axes)
+    np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
     assert output.axes.xaxis.get_label_text() == expected_xlabel
     assert output.axes.yaxis.get_label_text() == expected_ylabel
-    assert np.allclose(output.get_extent(), expected_extent)
+    assert np.allclose(output.images[0].get_extent(), expected_extent)
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
