@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,7 +13,7 @@ __all__ = ['NDCubePlotMixin']
 NON_COMPATIBLE_UNIT_MESSAGE = \
   "All sequence sub-cubes' unit attribute are not compatible with data_unit set by user."
 AXES_UNIT_ERRONESLY_SET_MESSAGE = \
-  "axes_unit element must be None unless corresponding axes_coordinate is None or a Quantity."
+  "axes_units element must be None unless corresponding axes_coordinate is None or a Quantity."
 
 
 class NDCubeSequencePlotMixin:
@@ -976,8 +978,12 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                     # sequence_axis_extra_coords to get the extra coord values
                     # for whole sequence.
                     x_axis_coords = seq.sequence_axis_extra_coords[axis_extra_coord]
-                    if isinstance(x_axis_coords, u.Quantity) and (unit_x_axis is not None):
-                        x_axis_coords = x_axis_coords.to(unit_x_axis).value
+                    if isinstance(x_axis_coords, u.Quantity):
+                        if unit_x_axis is None:
+                            unit_x_axis = x_axis_coords.unit
+                        else:
+                            x_axis_coords = x_axis_coords.to(unit_x_axis)
+                        x_axis_coords = x_axis_coords.value
                 else:
                     # Else get extra coord values from each cube and
                     # combine into a single array for axis_ranges kwargs.
@@ -1044,6 +1050,8 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                                 # the number of dimensions of the cube's data array,
                                 # replicating the coords through the higher dimensions
                                 # is simple using np.tile.
+                                tile_shape = np.array(seq[i].data.shape)
+                                tile_shape[extra_coord_axes] = 1
                                 x_axis_cube_coords = np.tile(x_axis_cube_coords, tile_shape)
                                 # Append new dimension-ed x-axis coords array for this cube
                                 # sequence x-axis coords list.
@@ -1056,6 +1064,20 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                     xlabel = "{0} [{1}]".format(axis_extra_coord, unit_x_axis)
                 # Re-enter x-axis values into axis_ranges
                 axis_ranges[plot_axis_index] = x_axis_coords
+            # Else coordinate must have been defined manually.
+            else:
+                if isinstance(axis_ranges[plot_axis_index], u.Quantity):
+                    if unit_x_axis is None:
+                        unit_x_axis = axis_ranges[plot_axis_index].unit
+                        axis_ranges[plot_axis_index] = axis_ranges[plot_axis_index].value
+                    else:
+                        axis_ranges[plot_axis_index] = \
+                          axis_ranges[plot_axis_index].to(unit_x_axis).value
+                else:
+                    if unit_x_axis is not None:
+                        raise TypeError(AXES_UNIT_ERRONESLY_SET_MESSAGE)
+                if xlabel is None:
+                    xlabel = " [{0}]".format(unit_x_axis)
         # Make label for y-axis.
         if ylabel is None:
             ylabel = "Data [{0}]".format(data_unit)
