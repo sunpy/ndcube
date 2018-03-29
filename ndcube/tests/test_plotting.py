@@ -38,24 +38,105 @@ cube = NDCube(
     mask=mask_cube,
     uncertainty=uncertainty,
     missing_axis=[False, False, False, True],
-    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
-                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
-                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))])
+    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data.shape[2])]))
+                  ])
+
+cube_unit = NDCube(
+    data,
+    wt,
+    mask=mask_cube,
+    unit=u.J,
+    uncertainty=uncertainty,
+    missing_axis=[False, False, False, True],
+    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data.shape[2])]))
+                  ])
+
+cube_no_uncertainty = NDCube(
+    data,
+    wt,
+    mask=mask_cube,
+    missing_axis=[False, False, False, True],
+    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data.shape[2])]))
+                  ])
+
+cube_unit_no_uncertainty = NDCube(
+    data,
+    wt,
+    mask=mask_cube,
+    unit=u.J,
+    missing_axis=[False, False, False, True],
+    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data.shape[2])]))
+                  ])
 
 cubem = NDCube(
     data,
     wm,
     mask=mask_cube,
     uncertainty=uncertainty,
-    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
-                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
-                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))])
+    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data.shape[2])]))
+                 ])
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0, 0], {},
-     (np.array([0.4, 0.8, 1.2, 1.6]), np.array([1, 2, 3, 4]),
-      "time [None]", "Data [None]", (0.4, 1.6), (1, 4)))
+     (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube[0, 0].mask),
+      np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask),
+      "time [min]", "Data [None]", (0.4, 1.6), (1, 4))),
+
+    (cube_unit[0, 0], {"axes_coordinates": "bye", "axes_units": "km", "data_unit": u.erg},
+     (np.ma.masked_array(cube_unit[0, 0].extra_coords["bye"]["value"].to(u.km).value,
+                         cube_unit[0, 0].mask),
+      np.ma.masked_array(u.Quantity(cube_unit[0, 0].data,
+                                    unit=cube_unit[0, 0].unit).to(u.erg).value,
+                         cube_unit[0, 0].mask),
+      "bye [km]", "Data [erg]", (0, 0.003), (10000000, 40000000))),
+
+    (cube_unit[0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0].data.shape[0])},
+     (np.ma.masked_array(np.arange(10, 10+cube_unit[0, 0].data.shape[0]), cube_unit[0, 0].mask),
+      np.ma.masked_array(cube_unit[0, 0].data, cube_unit[0, 0].mask),
+      " [None]", "Data [J]", (10, 10+cube_unit[0, 0].data.shape[0]-1), (1, 4))),
+
+    (cube_no_uncertainty[0, 0], {},
+     (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_no_uncertainty[0, 0].mask),
+      np.ma.masked_array(cube_no_uncertainty[0, 0].data, cube_no_uncertainty[0, 0].mask),
+      "time [min]", "Data [None]", (0.4, 1.6), (1, 4))),
+
+    (cube_unit_no_uncertainty[0, 0], {},
+     (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_unit_no_uncertainty[0, 0].mask),
+      np.ma.masked_array(cube_no_uncertainty[0, 0].data, cube_unit_no_uncertainty[0, 0].mask),
+      "time [min]", "Data [J]", (0.4, 1.6), (1, 4))),
+
+    (cube_unit_no_uncertainty[0, 0], {"data_unit": u.erg},
+     (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_unit_no_uncertainty[0, 0].mask),
+      np.ma.masked_array(u.Quantity(cube_unit[0, 0].data,
+                                    unit=cube_unit[0, 0].unit).to(u.erg).value,
+                         cube_unit[0, 0].mask),
+      "time [min]", "Data [erg]", (0.4, 1.6), (10000000, 40000000)))
     ])
 def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
@@ -64,27 +145,42 @@ def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
+    # Type
     assert isinstance(output, matplotlib.axes.Axes)
+    # Check x axis data
     output_xdata = (output.axes.lines[0].get_xdata())
-    if type(output_xdata) == u.Quantity:
-        assert output_xdata.unit == expected_xdata.unit
-        assert np.allclose(output_xdata.value, expected_xdata.value)
+    assert np.allclose(output_xdata.data, expected_xdata.data)
+    if isinstance(output_xdata.mask, np.ndarray):
+        np.testing.assert_array_equal(output_xdata.mask, expected_xdata.mask)
     else:
-        assert np.allclose(output_xdata, expected_xdata)
+        assert output_xdata.mask == expected_xdata.mask
+    # Check y axis data
     output_ydata = (output.axes.lines[0].get_ydata())
-    if type(output_ydata) == u.Quantity:
-        assert output_ydata.unit == expected_ydata.unit
-        assert np.allclose(output_ydata.value, expected_ydata.value)
+    assert np.allclose(output_ydata.data, expected_ydata.data)
+    if isinstance(output_ydata.mask, np.ndarray):
+        np.testing.assert_array_equal(output_ydata.mask, expected_ydata.mask)
     else:
-        assert np.allclose(output.axes.lines[0].get_ydata(), expected_ydata)
+        assert output_ydata.mask == expected_ydata.mask
+    # Check axis labels
     assert output.axes.get_xlabel() == expected_xlabel
     assert output.axes.get_ylabel() == expected_ylabel
+    # Check axis limits
     output_xlim = output.axes.get_xlim()
     assert output_xlim[0] <= expected_xlim[0]
     assert output_xlim[1] >= expected_xlim[1]
     output_ylim = output.axes.get_ylim()
     assert output_ylim[0] <= expected_ylim[0]
     assert output_ylim[1] >= expected_ylim[1]
+
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
+    (cube[0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0].data.shape[0]),
+                  "axes_units": u.C}, TypeError),
+    (cube[0, 0], {"data_unit": u.C}, TypeError)
+    ])
+def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
+    with pytest.raises(expected_error):
+        output = test_input.plot(**test_kwargs)
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
@@ -110,7 +206,7 @@ def test_cube_plot_2D(test_input, test_kwargs, expected_values):
     (cubem, {},
      (cubem.data, [np.array([0., 2.]), [0, 3], [0, 4]], "", ""))
     ])
-def test_cube_animate_ND(test_input, test_kwargs, expected_values):
+def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
     expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel = expected_values
     # Run plot method.
@@ -120,10 +216,6 @@ def test_cube_animate_ND(test_input, test_kwargs, expected_values):
     np.testing.assert_array_equal(output.data, expected_data)
     assert output.axes.xaxis.get_label_text() == expected_xlabel
     assert output.axes.yaxis.get_label_text() == expected_ylabel
-
-
-def test_cube_plot_ND_as_2DAnimation():
-    pass
 
 
 @pytest.mark.parametrize("input_values, expected_values", [

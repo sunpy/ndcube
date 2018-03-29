@@ -21,7 +21,7 @@ class NDCubePlotMixin:
     Add plotting functionality to a NDCube class.
     """
 
-    def plot(self, axes=None, plot_axis_indices=[-1, -2], axes_coordinates=None,
+    def plot(self, axes=None, plot_axis_indices=None, axes_coordinates=None,
              axes_units=None, data_unit=None, **kwargs):
         """
         Plots an interactive visualization of this cube with a slider
@@ -35,7 +35,7 @@ class NDCubePlotMixin:
         ----------
         plot_axis_indices: `list`
             The two axes that make the image.
-            Like [-1,-2] this implies cube instance -1 dimension
+            Default=[-1,-2].  This implies cube instance -1 dimension
             will be x-axis and -2 dimension will be y-axis.
 
         axes: `astropy.visualization.wcsaxes.core.WCSAxes` or None:
@@ -65,7 +65,8 @@ class NDCubePlotMixin:
         plot_axis_indices, axes_coordinates, axes_units = _prep_axes_kwargs(
             naxis, plot_axis_indices, axes_coordinates, axes_units)
         if self.data.ndim is 1:
-            plot = self._plot_1D_cube(data_unit=data_unit)
+            plot = self._plot_1D_cube(axes, axes_coordinates,
+                                      axes_units, data_unit, **kwargs)
         elif self.data.ndim is 2:
             plot = self._plot_2D_cube(axes=axes, plot_axis_indices=plot_axis_indices, **kwargs)
         else:
@@ -91,25 +92,30 @@ class NDCubePlotMixin:
                                                                            axes_units)
         if x_axis_coordinates is None:
             # Default is to derive x coords and defaul xlabel from WCS object.
-            default_xlabel = "{0} [{1}]".format(self.world_axis_physical_types[0], unit_x_axis)
+            xname = self.world_axis_physical_types[0]
             xdata = self.axis_world_coords()
         elif isinstance(x_axis_coordinates, str):
             # User has entered a str as x coords, get that extra coord.
-            default_xlabel = "{0} [{1}]".format(x_axis_coordinates, unit_x_axis)
+            xname = x_axis_coordinates
             xdata = self.extra_coords[x_axis_coordinates]["value"]
         else:
             # Else user must have set the x-values manually.
-            default_xlabel = " [{0}]".format(unit_x_axis)
+            xname = ""
             xdata = x_axis_coordinates
         # If a unit has been set for the x-axis, try to convert x coords to that unit.
         if isinstance(xdata, u.Quantity):
             if unit_x_axis is None:
+                unit_x_axis = xdata.unit
                 xdata = xdata.value
             else:
                 xdata = xdata.to(unit_x_axis).value
         else:
             if unit_x_axis is not None:
                 raise TypeError(INVALID_UNIT_SET_MESSAGE)
+        # Define default x axis label.
+        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
+        # Combine data and uncertainty with mask.
+        xdata = np.ma.masked_array(xdata, self.mask)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
         if self.unit is None:
             if data_unit is not None:
@@ -117,7 +123,10 @@ class NDCubePlotMixin:
                                 "compatible unit.")
             else:
                 ydata = self.data
-                yerror = self.uncertainty.array
+                if self.uncertainty is None:
+                    yerror = None
+                else:
+                    yerror = self.uncertainty.array
         else:
             if data_unit is None:
                 data_unit = self.unit
