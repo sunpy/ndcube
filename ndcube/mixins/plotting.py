@@ -293,8 +293,8 @@ class NDCubePlotMixin:
                 ax.set_ylabel(ylabel)
         return ax
 
-    def _plot_3D_cube(self, plot_axis_indices=None, axes_units=None,
-                      axes_coordinates=None, **kwargs):
+    def _plot_3D_cube(self, plot_axis_indices=None, axes_coordinates=None,
+                      axes_units=None, data_unit=None, **kwargs):
         """
         Plots an interactive visualization of this cube using sliders to move through axes
         plot using in the image.
@@ -320,14 +320,42 @@ class NDCubePlotMixin:
             If None is specified for an axis then the array indices will be used
             for that axis.
         """
-        if plot_axis_indices is None:
-            plot_axis_indices = [-1, -2]
+        # For convenience in inserting dummy variables later, ensure
+        # plot_axis_indices are all positive.
+        plot_axis_indices = [i if i >= 0 else self.data.ndim + i for i in plot_axis_indices]
+        # If axes kwargs not set by user, set them as list of Nones for
+        # each axis for consistent behaviour.
+        if axes_coordinates is None:
+            axes_coordinates = [None] * self.data.ndim
         if axes_units is None:
-            axes_units = [None, None]
-        i = ImageAnimatorWCS(self.data, wcs=self.wcs, image_axes=plot_axis_indices,
-                             unit_x_axis=axes_units[0], unit_y_axis=axes_units[1],
-                             axis_ranges=axes_coordinates, **kwargs)
-        return i
+            axes_units = [None] * self.data.ndim
+        # If data_unit set, convert data to that unit
+        if data_unit is None:
+            data = self.data
+        else:
+            data = (self.data * self.unit).to(data_unit).value
+        # Combine data values with mask.
+        data = np.ma.masked_array(data, self.mask)
+        # If there are missing axes in WCS object, add corresponding dummy axes to data.
+        if data.ndim < self.wcs.naxis:
+            new_shape = list(data.shape)
+            for i in np.arange(self.wcs.naxis)[self.missing_axis[::-1]]:
+                new_shape.insert(i, 1)
+                # Also insert dummy coordinates and units.
+                axes_coordinates.insert(i, None)
+                axes_units.insert(i, None)
+                # Iterate plot_axis_indices if neccessary
+                for j, pai in enumerate(plot_axis_indices):
+                    if pai >= i:
+                        plot_axis_indices[j] = plot_axis_indices[j] + 1
+            # Reshape data
+            data = data.reshape(new_shape)
+
+        ax = ImageAnimatorWCS(data, wcs=self.wcs, image_axes=plot_axis_indices,
+                              unit_x_axis=axes_units[plot_axis_indices[0]],
+                              unit_y_axis=axes_units[plot_axis_indices[1]],
+                              axis_ranges=axes_coordinates[1], **kwargs)
+        return ax
 
 
 def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs):
