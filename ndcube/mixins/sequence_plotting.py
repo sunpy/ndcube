@@ -83,7 +83,8 @@ class NDCubeSequencePlotMixin:
 
         Returns
         -------
-        ax: ???
+        ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
+            Axes or animation object depending on dimensionality of NDCubeSequence
 
         """
         # Check kwargs are in consistent formats and set default values if not done so by user.
@@ -183,7 +184,8 @@ class NDCubeSequencePlotMixin:
 
         Returns
         -------
-        ax: ???
+        ax: ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
+            Axes or animation object depending on dimensionality of NDCubeSequence
 
         """
         # Verify common axis is set.
