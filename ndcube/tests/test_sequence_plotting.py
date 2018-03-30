@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 import datetime
+import copy
 
 import numpy as np
 import astropy.units as u
@@ -22,8 +23,15 @@ ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3
       'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
       'NAXIS2': 3,
       'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
-
 wt = WCS(header=ht, naxis=3)
+
+hm = {
+    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
+    'NAXIS1': 4,
+    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 3,
+    'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
+wm = WCS(header=hm, naxis=3)
+
 
 cube1 = NDCube(
     data, wt, missing_axis=[False, False, False, True],
@@ -118,6 +126,22 @@ cube3_with_unit_and_uncertainty = NDCube(
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
+cubem1 = NDCube(
+    data, wm,
+    extra_coords=[
+        ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
+        ('distance', None, u.Quantity(0, unit=u.cm)),
+        ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
+
+cubem3 = NDCube(
+    data2, wm,
+    extra_coords=[
+        ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
+        ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
+        ('distance', None, u.Quantity(0, unit=u.cm)),
+        ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
+
 # Define some test NDCubeSequences.
 common_axis = 0
 seq = NDCubeSequence(data_list=[cube1, cube3, cube1, cube3], common_axis=common_axis)
@@ -159,6 +183,8 @@ seq_with_units_and_some_uncertainty = NDCubeSequence(
 seq_with_some_masks = NDCubeSequence(data_list=[cube1_with_mask, cube3, cube1, cube3_with_mask],
     common_axis=common_axis)
 
+seqm = NDCubeSequence(data_list=[cubem1, cubem3, cubem1, cubem3], common_axis=common_axis)
+
 # Derive some expected data arrays in plot objects.
 seq_data_stack = np.stack([cube.data for cube in seq_with_masks.data])
 seq_mask_stack = np.stack([cube.mask for cube in seq_with_masks.data])
@@ -177,7 +203,7 @@ seq_concat_km = np.ma.masked_array(
                     for cube in seq_with_units.data], axis=common_axis),
     seq_mask_concat)
 
-# Derive expected axis_ranges
+# Derive expected axis_ranges for non-cube-like cases.
 x_axis_coords3 = np.array([0.4, 0.8, 1.2, 1.6]).reshape((1, 1, 4))
 new_x_axis_coords3_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
 new_x_axis_coords3_shape[-1] = 1
@@ -206,12 +232,8 @@ userrangequantity_none_axis_ranges_axis0_1e7 = [
     np.array([0., 2.]), np.array([0., 1.5, 3.]),
      np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
 
-#x_axis_coords2 = np.array([2.e-11, 4.e-11, 6.e-11]).reshape((1, 3, 1))
-#new_x_axis_coords2_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
-#new_x_axis_coords2_shape[2] = 1
 hi2_none_axis_ranges_axis2 = [
     np.linspace(0, len(seq.data), len(seq.data)), np.array([0., 2.]),
-    #np.tile(x_axis_coords2, new_x_axis_coords2_shape),
     np.arange(int(seq.dimensions[2].value)),
     np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
 
@@ -231,6 +253,21 @@ seq_axis1_lim_deg = [0.49998731, 0.99989848]
 seq_axis1_lim_arcsec = [(axis1_xlim*u.deg).to(u.arcsec).value for axis1_xlim in seq_axis1_lim_deg]
 seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
                    seq[:, :, :, 0].data[0].axis_world_coords()[-1][-1].value]
+
+# Derive expected axis_ranges for cube-like cases.
+cube_like_new_x_axis_coords2_shape = u.Quantity(seq.cube_like_dimensions, unit=u.pix).value.astype(int)
+cube_like_new_x_axis_coords2_shape[-1] = 1
+cubelike_none_axis_ranges_axis2 = [
+    np.linspace(0, int(seq.cube_like_dimensions[0].value), int(seq.cube_like_dimensions[0].value)),
+    np.array([0., 1.5, 3.]), np.tile(x_axis_coords3, cube_like_new_x_axis_coords2_shape)]
+
+cubelike_none_axis_ranges_axis2_s = copy.deepcopy(cubelike_none_axis_ranges_axis2)
+cubelike_none_axis_ranges_axis2_s[2] = cubelike_none_axis_ranges_axis2_s[2] * 60.
+
+cubelike_none_axis_ranges_axis0 = [
+    [0, 8], np.array([0., 1.5, 3.]),
+    np.linspace(0, int(seq.cube_like_dimensions[-1].value),
+                int(seq.cube_like_dimensions[-1].value))]
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
@@ -701,12 +738,48 @@ def test_sequence_plot_LineAnimator(test_input, test_kwargs, expected_values):
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-    ()
+    (seq, {"plot_axis_indices": 2, "axes_units": u.s},
+     (seq_concat.data, cubelike_none_axis_ranges_axis2_s, "time [s]", "Data [None]",
+      (cubelike_none_axis_ranges_axis2_s[2].min(), cubelike_none_axis_ranges_axis2_s[2].max()),
+      (seq_concat.data.min(), seq_concat.data.max()))),
+
+    (seq, {"plot_axis_indices": 0},
+     (seq_concat.data, cubelike_none_axis_ranges_axis0,
+      "custom:pos.helioprojective.lat [deg]", "Data [None]",
+      (0, 7), (seq_concat.data.min(), seq_concat.data.max()))),
+
+    (seq_with_masks, {"plot_axis_indices": 0},
+     (seq_concat.data, cubelike_none_axis_ranges_axis0,
+      "custom:pos.helioprojective.lat [deg]", "Data [None]",
+      (0, 7), (seq_concat.data.min(), seq_concat.data.max()))),
+
+    (seq_with_some_masks, {"plot_axis_indices": -3},
+     (seq_concat.data, cubelike_none_axis_ranges_axis0,
+      "custom:pos.helioprojective.lat [deg]", "Data [None]",
+      (0, 7), (seq_concat.data.min(), seq_concat.data.max()))),
+
+    (seqm, {"plot_axis_indices": 0},
+     (seq_concat.data, cubelike_none_axis_ranges_axis0,
+      "custom:pos.helioprojective.lon [deg]", "Data [None]",
+      (0, 7), (seq_concat.data.min(), seq_concat.data.max())))
     ])
-def test_sequence_plot_as_cube_LineAnimator():
+def test_sequence_plot_as_cube_LineAnimator(test_input, test_kwargs, expected_values):
     # Unpack expected values
-    expected_type, expected_data, expected_axis_ranges, expected_xlabel, \
+    expected_data, expected_axis_ranges, expected_xlabel, \
       expected_ylabel, expected_xlim, expected_ylim = expected_values
     # Run plot method.
-    output = test_input.plot(**test_kwargs)
-    # 
+    output = test_input.plot_as_cube(**test_kwargs)
+    # Check right type of plot object is produced.
+    assert type(output) is ndcube.mixins.sequence_plotting.LineAnimatorCubeLikeNDCubeSequence
+    # Check data being plotted is correct
+    np.testing.assert_array_equal(output.data, expected_data)
+    if type(expected_data) is np.ma.core.MaskedArray:
+        np.testing.assert_array_equal(output.data.mask, expected_data.mask)
+    # Check values of axes and sliders is correct.
+    for i in range(len(output.axis_ranges)):
+        assert np.allclose(output.axis_ranges[i], expected_axis_ranges[i])
+    # Check plot axis labels and limits are correct
+    assert output.xlabel == expected_xlabel
+    assert output.ylabel == expected_ylabel
+    assert output.xlim == expected_xlim
+    assert output.ylim == expected_ylim
