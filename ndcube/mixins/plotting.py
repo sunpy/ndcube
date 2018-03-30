@@ -66,17 +66,21 @@ class NDCubePlotMixin:
         naxis = len(self.dimensions)
         plot_axis_indices, axes_coordinates, axes_units = _prep_axes_kwargs(
             naxis, plot_axis_indices, axes_coordinates, axes_units)
-        if self.data.ndim is 1:
-            plot = self._plot_1D_cube(axes, axes_coordinates,
-                                      axes_units, data_unit, **kwargs)
-        elif self.data.ndim is 2:
-            plot = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
+        if naxis is 1:
+            ax = self._plot_1D_cube(axes, axes_coordinates,
                                       axes_units, data_unit, **kwargs)
         else:
-            plot = self._plot_3D_cube(plot_axis_indices=plot_axis_indices,
-                                      axes_coordinates=axes_coordinates, axes_units=axes_units,
-                                      **kwargs)
-        return plot
+            if len(plot_axis_indices) == 1:
+                raise NotImplementedError()
+            else:
+                if naxis == 2:
+                    ax = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
+                                              axes_units, data_unit, **kwargs)
+                else:
+                    ax = self._plot_3D_cube(
+                        plot_axis_indices=plot_axis_indices, axes_coordinates=axes_coordinates,
+                        axes_units=axes_units, **kwargs)
+        return ax
 
     def _plot_1D_cube(self, axes=None, axes_coordinates=None, axes_units=None, data_unit=None,
                       **kwargs):
