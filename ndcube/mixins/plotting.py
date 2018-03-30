@@ -329,13 +329,7 @@ class NDCubePlotMixin:
             new_axes_coordinates, new_axes_units, default_labels = \
               self._derive_axes_coordinates(axes_coordinates, axes_units)
             # If axis labels not set by user add to kwargs.
-            if "xlabel" not in kwargs:
-                kwargs["xlabel"] = default_labels[plot_axis_indices[0]]
-            if "ylabel" not in kwargs:
-                kwargs["ylabel"] = default_labels[plot_axis_indices[1]]
             ax = ImageAnimator(data, image_axes=plot_axis_indices,
-                               unit_x_axis=new_axes_units[plot_axis_indices[0]],
-                               unit_y_axis=new_axes_units[plot_axis_indices[1]],
                                axis_ranges=new_axes_coordinates, **kwargs)
         return ax
 
@@ -367,6 +361,12 @@ class NDCubePlotMixin:
                 else:
                     new_axis_unit = axes_units[i]
                     new_axis_coordinate = new_axis_coordinate.to(new_axis_unit).value
+            elif isinstance(new_axis_coordinate[0], datetime.datetime):
+                axis_label_text = "{0}/sec since {1}".format(
+                    axis_label_text, new_axis_coordinate[0])
+                new_axis_coordinate = np.array([(t-new_axis_coordinate[0]).total_seconds()
+                                                for t in new_axis_coordinate])
+                new_axis_unit = u.s
             else:
                 if axes_units[i] is None:
                     new_axis_unit = None
