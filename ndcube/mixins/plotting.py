@@ -71,7 +71,9 @@ class NDCubePlotMixin:
                                       axes_units, data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
-                raise NotImplementedError()
+                ax = self._animate_cube_1D(
+                    plot_axis_index=plot_axis_indices[0], axes_coordinates=axes_coordinates,
+                    axes_units=axes_units, data_unit=data_unit, **kwargs)
             else:
                 if naxis == 2:
                     ax = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
@@ -361,27 +363,58 @@ class NDCubePlotMixin:
                               axis_ranges=axes_coordinates[1], **kwargs)
         return ax
 
-    def _animate_cube_1D(self, plot_axis_index=-1, unit_x_axis=None, unit_y_axis=None, **kwargs):
+    def _animate_cube_1D(self, plot_axis_index=-1, axes_coordinates=None,
+                         axes_units=None, data_unit=None, **kwargs):
         """Animates an axis of a cube as a line plot with sliders for other axes."""
+        if axes_coordinates is None:
+            axes_coordinates = [None] * self.data.ndim
+        if axes_units is None:
+            axes_units = [None] * self.data.ndim
         # Get real world axis values along axis to be plotted and enter into axes_ranges kwarg.
-        xdata = self.axis_world_coords(plot_axis_index)
+        if axes_coordinates[plot_axis_index] is None:
+            xname = self.world_axis_physical_types[plot_axis_index]
+            xdata = self.axis_world_coords(plot_axis_index)
+        elif isinstance(axes_coordinates[plot_axis_index], str):
+            xname = axes_coordinates[plot_axis_index]
+            xdata = self.extra_coords[xname]["value"]
+        else:
+            xname = ""
+            xdata = axes_coordinates[plot_axis_index]
         # Change x data to desired units it set by user.
-        if unit_x_axis:
-            xdata = xdata.to(unit_x_axis)
-        axis_ranges = [None] * self.data.ndim
-        axis_ranges[plot_axis_index] = xdata.value
-        if unit_y_axis:
+        if isinstance(xdata, u.Quantity):
+            if axes_units[plot_axis_index] is None:
+                unit_x_axis = xdata.unit
+            else:
+                unit_x_axis = axes_units[plot_axis_index]
+                xdata = xdata.to(unit_x_axis).value
+        else:
+            if axes_units[plot_axis_index] is not None:
+                raise TypeError(INVALID_UNIT_SET_MESSAGE)
+            else:
+                unit_x_axis = None
+        # Put xdata back into axes_coordinates as a masked array.
+        axes_coordinates[plot_axis_index] = xdata
+        # Set default x label
+        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
+        # Derive y axis data
+        if data_unit is None:
+            data = self.data
+            data_unit = self.unit
+        else:
             if self.unit is None:
                 raise TypeError("NDCube.unit is None.  Must be an astropy.units.unit or "
-                                "valid unit string in order to set unit_y_axis.")
+                                "valid unit string in order to set data_unit.")
             else:
-                data = (self.data * self.unit).to(unit_y_axis)
+                data = (self.data * self.unit).to(data_unit).value
+        # Combine data with mask
+        #data = np.ma.masked_array(data, self.mask)
+        # Set default y label
+        default_ylabel = "Data [{0}]".format(unit_x_axis)
         # Initiate line animator object.
-        plot = LineAnimator(data.value, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
-                            xlabel="{0} [{1}]".format(
-                                self.world_axis_physical_types[plot_axis_index], unit_x_axis),
-                            ylabel="Data [{0}]".format(unit_y_axis), **kwargs)
-        return plot
+        ax = LineAnimator(data, plot_axis_index=plot_axis_index, axis_ranges=axes_coordinates,
+                          xlabel=default_xlabel,
+                          ylabel="Data [{0}]".format(data_unit), **kwargs)
+        return ax
 
 
 def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs):
