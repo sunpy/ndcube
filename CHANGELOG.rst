@@ -8,7 +8,10 @@ New Features
   which outlined the ``NDCube`` API was renamed ``NDCubeABC``.
   `~ndcube.NDCube` has all the same functionality as before except is
   now simply inherits from `~ndcube.NDCubeBase` and
-  `~ndcube.mixins.plotting.NDCubePlotMixin`.
+  `~ndcube.mixins.plotting.NDCubePlotMixin`. [#101]
+- Moved NDCubSequence plotting to a new mixin class,
+  NDCubSequencePlotMixin, making the plotting an optional extra.  All
+  the non-plotting functionality now lives in the NDCubeSequenceBase class. [#98]
 
 API Changes
 -----------
@@ -18,6 +21,12 @@ API Changes
   implementation in ``glue-viz`` which is intended to be merged into
   ``astropy`` in the future.  This API change helped fix the
   ``NDCube.world_axis_physical_type`` bug listed below. [#80]
+- Give users more control in plotting both for NDCubePlotMixin and
+  NDCubeSequencePlotMixin.  In most cases the axes coordinates, axes
+  units, and data unit can be supplied manually or via supplying the
+  name of an extra coordinate if it is wanted to describe an
+  axis. In the case of NDCube, the old API is currently still
+  supported by will be removed in future versions. [#98 #103]
 
 Bug Fixes
 ---------
