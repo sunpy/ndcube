@@ -1,5 +1,6 @@
 from warnings import warn
 import copy
+import datetime
 
 import numpy as np
 import matplotlib as mpl
@@ -195,7 +196,7 @@ class NDCubePlotMixin:
         data = np.ma.masked_array(data, self.mask)
         if axes is None:
             try:
-                axes_coord_check = axes_coordinates == [None, None]
+                axes_coord_check == [None, None]
             except:
                 axes_coord_check = False
             if axes_coord_check:
@@ -227,54 +228,8 @@ class NDCubePlotMixin:
                 ax.imshow(data, **kwargs)
             else:
                 # Else manually set axes x and y values based on user's input for axes_coordinates.
-                axes_values = []
-                default_labels = []
-                for i, plot_axis_index in enumerate(plot_axis_indices):
-                    # If axis coordinate is None, derive axis values from WCS.
-                    if axes_coordinates[plot_axis_index] is None:
-                        if axes_units[plot_axis_index] is None:
-                            # N.B. This assumes axes are independent.  Fix this before merging!!!
-                            axis_value = self.axis_world_coords(plot_axis_index)
-                            axes_units[plot_axis_index] = axis_value.unit
-                            axis_value = self.axis_world_coords()[plot_axis_index].value
-                        else:
-                            axis_value = self.axis_world_coords(plot_axis_index).to(
-                                axes_units[plot_axis_index]).value
-                        # Derive default axis label.
-                        default_label = "{0} [{1}]".format(
-                            self.world_axis_physical_types[plot_axis_index],
-                            axes_units[plot_axis_index])
-                    elif isinstance(axes_coordinates[plot_axis_index], str):
-                        # If axis coordinate is a string, derive axis values from
-                        # corresponding extra coord.
-                        axis_label_text = copy.deepcopy(axes_coordinates[plot_axis_index])
-                        axis_value = self.extra_coords[axes_coordinates[plot_axis_index]]["value"]
-                        if isinstance(axis_value, u.Quantity):
-                            if axes_units[plot_axis_index] is None:
-                                axes_units[plot_axis_index] = axis_value.unit
-                            axis_value = axis_value.value
-                        else:
-                            if axes_units[plot_axis_index] is not None:
-                                raise TypeError(INVALID_UNIT_SET_MESSAGE)
-                        default_label = "{0} [{1}]".format(axis_label_text,
-                                                           axes_units[plot_axis_index])
-                    else:
-                        # Else user must have manually set the axis coordinates.
-                        if isinstance(axes_coordinates[plot_axis_index], u.Quantity):
-                            if axes_units[plot_axis_index] is None:
-                                axes_units[plot_axis_index] = axes_coordinates[plot_axis_index].unit
-                                axis_value = axes_coordinates[plot_axis_index].value
-                            else:
-                                axis_value = axes_coordinates[plot_axis_index].to(
-                                    axes_units[plot_axis_index]).value
-                        else:
-                            if axes_units[plot_axis_index] is None:
-                                axis_value = axes_coordinates[plot_axis_index]
-                            else:
-                                raise TypeError(INVALID_UNIT_SET_MESSAGE)
-                        default_label = " [{0}]".format(axes_units[plot_axis_index])
-                    axes_values.append(axis_value)
-                    default_labels.append(default_label)
+                new_axes_coordinates, new_axis_units, default_labels = \
+                  self._derive_axes_coordinates(axes_coordinates, axes_units)
                 # Initialize axes object and set values along axis.
                 fig, ax = plt.subplots(1, 1)
                 # Since we can't assume the x-axis will be uniform, create NonUniformImage
@@ -282,17 +237,22 @@ class NDCubePlotMixin:
                 if plot_axis_indices[0] < plot_axis_indices[1]:
                     data = data.transpose()
                 im_ax = mpl.image.NonUniformImage(
-                    ax, extent=(axes_values[0][0], axes_values[0][-1],
-                                axes_values[1][0], axes_values[1][-1]), **kwargs)
-                im_ax.set_data(axes_values[0], axes_values[1], data)
+                    ax, extent=(new_axes_coordinates[plot_axis_indices[0]][0],
+                                new_axes_coordinates[plot_axis_indices[0]][-1],
+                                new_axes_coordinates[plot_axis_indices[1]][0],
+                                new_axes_coordinates[plot_axis_indices[1]][-1]), **kwargs)
+                im_ax.set_data(new_axes_coordinates[plot_axis_indices[0]],
+                               new_axes_coordinates[plot_axis_indices[1]], data)
                 ax.add_image(im_ax)
                 # Set the limits, labels, etc. of the axes.
-                xlim = kwargs.pop("xlim", (axes_values[0][0], axes_values[0][-1]))
+                xlim = kwargs.pop("xlim", (new_axes_coordinates[plot_axis_indices[0]][0],
+                                           new_axes_coordinates[plot_axis_indices[0]][-1]))
                 ax.set_xlim(xlim)
-                ylim = kwargs.pop("xlim", (axes_values[1][0], axes_values[1][-1]))
+                ylim = kwargs.pop("xlim", (new_axes_coordinates[plot_axis_indices[1]][0],
+                                           new_axes_coordinates[plot_axis_indices[1]][-1]))
                 ax.set_ylim(ylim)
-                xlabel = kwargs.pop("xlabel", default_labels[0])
-                ylabel = kwargs.pop("ylabel", default_labels[1])
+                xlabel = kwargs.pop("xlabel", default_labels[plot_axis_indices[0]])
+                ylabel = kwargs.pop("ylabel", default_labels[plot_axis_indices[1]])
                 ax.set_xlabel(xlabel)
                 ax.set_ylabel(ylabel)
         return ax
@@ -323,6 +283,7 @@ class NDCubePlotMixin:
             same length as the axis which will provide all values for that slider.
             If None is specified for an axis then the array indices will be used
             for that axis.
+
         """
         # For convenience in inserting dummy variables later, ensure
         # plot_axis_indices are all positive.
@@ -360,6 +321,55 @@ class NDCubePlotMixin:
                               unit_y_axis=axes_units[plot_axis_indices[1]],
                               axis_ranges=axes_coordinates[1], **kwargs)
         return ax
+
+    def _derive_axes_coordinates(self, axes_coordinates, axes_units):
+        new_axes_coordinates = []
+        new_axes_units = []
+        default_labels = []
+        default_label_text = ""
+        for i, axis_coordinate in enumerate(axes_coordinates):
+            # If axis coordinate is None, derive axis values from WCS.
+            if axis_coordinate is None:
+                # N.B. This assumes axes are independent.  Fix this before merging!!!
+                new_axis_coordinate = self.axis_world_coords(i)
+                axis_label_text = self.world_axis_physical_types[i]
+            elif isinstance(axis_coordinate, str):
+                # If axis coordinate is a string, derive axis values from
+                # corresponding extra coord.
+                new_axis_coordinate = self.extra_coords[axis_coordinate]["value"]
+                axis_label_text = axis_coordinate
+            else:
+                # Else user must have manually set the axis coordinates.
+                new_axis_coordinate = axis_coordinate
+                axis_label_text = default_label_text
+            # If axis coordinate is a Quantity, convert to unit supplied by user.
+            if isinstance(new_axis_coordinate, u.Quantity):
+                if axes_units[i] is None:
+                    new_axis_unit = new_axis_coordinate.unit
+                    new_axis_coordinate = new_axis_coordinate.value
+                else:
+                    new_axis_unit = axes_units[i]
+                    new_axis_coordinate = new_axis_coordinate.to(new_axis_unit).value
+            else:
+                if axes_units[i] is None:
+                    new_axis_unit = None
+                else:
+                    raise TypeError(INVALID_UNIT_SET_MESSAGE)
+            # Derive default axis label
+            if type(new_axis_coordinate[0]) is datetime.datetime:
+                if axis_label_text  == default_label_text:
+                    default_label = "{0}".format(new_axis_coordinate[0].strftime("%Y/%m/%d %H:%M"))
+                else:
+                    default_label = "{0} [{1}]".format(
+                        axis_label_text, new_axis_coordinate[0].strftime("%Y/%m/%d %H:%M"))
+            else:
+                default_label = "{0} [{1}]".format(axis_label_text, new_axis_unit)
+            # Append new coordinates, units and labels to output list.
+            new_axes_coordinates.append(new_axis_coordinate)
+            new_axes_units.append(new_axis_unit)
+            default_labels.append(default_label)
+        return new_axes_coordinates, new_axes_units, default_labels
+
 
 
 def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs):
