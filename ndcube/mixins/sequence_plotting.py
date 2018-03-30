@@ -1229,6 +1229,8 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
                     seq.cube_like_world_axis_physical_types[plot_axis_index], unit_x_axis)
             if ylabel is None:
                 ylabel = "Data [{0}]".format(data_unit)
+            if axis_ranges == None:
+                axis_ranges = [None] * data_concat.ndim
 
         super(LineAnimatorCubeLikeNDCubeSequence, self).__init__(
             data_concat, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
