@@ -3,10 +3,12 @@
 
 New Features
 ------------
-- Added installation instructions to docs. [#77]
-- Moved NDCube plotting to a new mixin class, NDCubePlotMixin, making
-  the plotting an optional extra. All the non-plotting functionality
-  now lives in the NDCubeBase class. [#101]
+- Created a new `~ndcube.NDCubeBase` which has all the functionality
+  of `~ncube.NDCube` except the plotting.  The old ``NDCubeBase``
+  which outlined the ``NDCube`` API was renamed ``NDCubeABC``.
+  `~ndcube.NDCube` has all the same functionality as before except is
+  now simply inherits from `~ndcube.NDCubeBase` and
+  `~ndcube.mixins.plotting.NDCubePlotMixin`. [#101]
 - Moved NDCubSequence plotting to a new mixin class,
   NDCubSequencePlotMixin, making the plotting an optional extra.  All
   the non-plotting functionality now lives in the NDCubeSequenceBase class. [#98]
@@ -30,8 +32,12 @@ Bug Fixes
 ---------
 
 
-1.0.1 (Unreleased)
+1.0.1
 ==================
+
+New Features
+------------
+- Added installation instructions to docs. [#77]
 
 Bug Fixes
 ---------
