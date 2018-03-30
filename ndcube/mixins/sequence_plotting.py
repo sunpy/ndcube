@@ -966,7 +966,8 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                     unit_x_axis = np.asarray(seq[0].wcs.wcs.cunit)[wcs_plot_axis_index]
                 # Get x-axis values from each cube and combine into a single
                 # array for axis_ranges kwargs.
-                x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, cube_plot_axis_index)
+                x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, cube_plot_axis_index,
+                                                                   unit_x_axis)
                 axis_ranges[plot_axis_index] = np.stack(x_axis_coords)
             # Set x-axis label.
             if xlabel is None:
@@ -1196,9 +1197,9 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
                     seq[0].wcs.wcs.cunit)[np.invert(seq[0].missing_axis)][wcs_plot_axis_index]
             if plot_axis_index == seq._common_axis:
                 # Determine whether common axis is dependent.
-                x_axis_coords = np.concatenate(
+                x_axis_cube_coords = np.concatenate(
                     [cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
-                    for cube in seq.data], axis=plot_axis_index)
+                     for cube in seq.data], axis=plot_axis_index)
                 dependent_axes = utils.wcs.get_dependent_data_axes(
                     seq[0].wcs, plot_axis_index, seq[0].missing_axis)
                 if len(dependent_axes) > 1:
@@ -1206,16 +1207,21 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
                     for i in list(dependent_axes)[::-1]:
                         independent_axes.pop(i)
                     # Expand dimensionality of x_axis_cube_coords using np.tile
-                    tile_shape = tuple(list(np.array(
-                        data_concat.shape)[independent_axes]) + [1]*len(dependent_axes))
+                    # Create dummy axes for non-dependent axes
+                    cube_like_shape = np.array([int(s.value) for s in seq.cube_like_dimensions])
+                    dummy_reshape = copy.deepcopy(cube_like_shape)
+                    dummy_reshape[independent_axes] = 1
+                    x_axis_cube_coords = x_axis_cube_coords.reshape(dummy_reshape)
+                    # Now get inverse of number of repeats to create full shaped array.
+                    # The repeats is the inverse of dummy_reshape.
+                    tile_shape = copy.deepcopy(cube_like_shape)
+                    tile_shape[np.array(dependent_axes)] = 1
                     x_axis_coords = np.tile(x_axis_cube_coords, tile_shape)
-                    # Since np.tile puts original array's dimensions as last,
-                    # reshape x_axis_cube_coords to cube's shape.
-                    x_axis_coords = x_axis_coords.reshape(seq.cube_like_dimensions.value)
             else:
                 # Get x-axis values from each cube and combine into a single
                 # array for axis_ranges kwargs.
-                x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, plot_axis_index)
+                x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, plot_axis_index,
+                                                                   unit_x_axis)
                 axis_ranges[plot_axis_index] = np.concatenate(x_axis_coords, axis=seq._common_axis)
             # Set axis labels and limits, etc.
             if xlabel is None:
@@ -1229,13 +1235,15 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
             xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, **kwargs)
 
 
-def _get_non_common_axis_x_axis_coords(seq_data, plot_axis_index):
+def _get_non_common_axis_x_axis_coords(seq_data, plot_axis_index, unit_x_axis):
     """Get coords of an axis from NDCubes and combine into single array."""
     x_axis_coords = []
     for i, cube in enumerate(seq_data):
         # Get the x-axis coordinates for each cube.
-        #x_axis_cube_coords = cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
-        x_axis_cube_coords = cube.axis_world_coords(plot_axis_index).value
+        if unit_x_axis is None:
+            x_axis_cube_coords = cube.axis_world_coords(plot_axis_index).value
+        else:
+            x_axis_cube_coords = cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
         # If the returned x-values have fewer dimensions than the cube,
         # repeat the x-values through the higher dimensions.
         if x_axis_cube_coords.shape != cube.data.shape:
