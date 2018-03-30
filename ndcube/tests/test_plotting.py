@@ -175,3 +175,18 @@ def test_support_101_plot_API(input_values, expected_values):
 def test_support_101_plot_API_errors(input_values):
     with pytest.raises(ValueError):
         output = plotting._support_101_plot_API(*input_values)
+
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
+    (cube, {"plot_axis_indices": -1}, ())
+    ])
+def test_cube_plot_ND_as_1DAnimation():
+    # Unpack expected properties.
+    expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel = expected_values
+    # Run plot method.
+    output = test_input.plot(**test_kwargs)
+    # Check plot properties are correct.
+    assert type(output) is sunpy.visualization.imageanimator.LineAnimator
+    np.testing.assert_array_equal(output.data, expected_data)
+    assert output.axes.xaxis.get_label_text() == expected_xlabel
+    assert output.axes.yaxis.get_label_text() == expected_ylabel
