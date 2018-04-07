@@ -215,13 +215,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         for i, axis in enumerate(self.missing_axis):
             if not axis:
                 # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
-                keys = list(filter(lambda key: ctype[i].startswith(key), wcs_ivoa_mapping))
+                # Ensure CTYPE is capitalized.
+                keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
                 # If there are multiple valid keys, raise an error.
                 if len(keys) != 1:
                     raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
                                      "https://github.com/sunpy/ndcube/issues citing the"
                                      "following  CTYPE and non-unique keys: "
-                                     "CTYPE = {0}; keys = {1}".format(ctype, key))
+                                     "CTYPE = {0}; keys = {1}".format(ctype[i], keys))
                 else:
                     key = keys[0]
                 axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
