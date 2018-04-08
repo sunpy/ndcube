@@ -100,7 +100,7 @@ cubem = NDCube(
                   ('another time', 2, np.array(
                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
-                 ])
+                  ])
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [

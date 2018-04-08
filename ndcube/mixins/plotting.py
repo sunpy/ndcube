@@ -10,7 +10,7 @@ from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 
 from ndcube import utils
-from ndcube.mixins.sequence_plotting import _prep_axes_kwargs, _derive_1D_coordinates_and_units, _determine_sequence_units, _make_1D_sequence_plot
+from ndcube.mixins import sequence_plotting
 
 __all__ = ['NDCubePlotMixin']
 
@@ -65,18 +65,18 @@ class NDCubePlotMixin:
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
         # Check kwargs are in consistent formats and set default values if not done so by user.
         naxis = len(self.dimensions)
-        plot_axis_indices, axes_coordinates, axes_units = _prep_axes_kwargs(
+        plot_axis_indices, axes_coordinates, axes_units = sequence_plotting._prep_axes_kwargs(
             naxis, plot_axis_indices, axes_coordinates, axes_units)
         if naxis is 1:
             ax = self._plot_1D_cube(axes, axes_coordinates,
-                                      axes_units, data_unit, **kwargs)
+                                    axes_units, data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
                 raise NotImplementedError()
             else:
                 if naxis == 2:
                     ax = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
-                                              axes_units, data_unit, **kwargs)
+                                            axes_units, data_unit, **kwargs)
                 else:
                     ax = self._plot_3D_cube(
                         plot_axis_indices=plot_axis_indices, axes_coordinates=axes_coordinates,
@@ -96,8 +96,8 @@ class NDCubePlotMixin:
 
         """
         # Derive x-axis coordinates and unit from inputs.
-        x_axis_coordinates, unit_x_axis = _derive_1D_coordinates_and_units(axes_coordinates,
-                                                                           axes_units)
+        x_axis_coordinates, unit_x_axis = sequence_plotting._derive_1D_coordinates_and_units(
+            axes_coordinates, axes_units)
         if x_axis_coordinates is None:
             # Default is to derive x coords and defaul xlabel from WCS object.
             xname = self.world_axis_physical_types[0]
@@ -154,7 +154,8 @@ class NDCubePlotMixin:
         if yerror is not None:
             yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
-        fig, ax = _make_1D_sequence_plot(xdata, ydata, yerror, data_unit, default_xlabel, kwargs)
+        fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
+                                                           data_unit, default_xlabel, kwargs)
         return ax
 
     def _plot_2D_cube(self, axes=None, plot_axis_indices=None, axes_coordinates=None,
@@ -215,12 +216,12 @@ class NDCubePlotMixin:
                 ax = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
                 # Set axis labels
                 x_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[0],
-                                                             self.missing_axis)
+                                                              self.missing_axis)
                 ax.set_xlabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[0]],
                     self.wcs.wcs.cunit[x_wcs_axis]))
                 y_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[1],
-                                                             self.missing_axis)
+                                                              self.missing_axis)
                 ax.set_ylabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[1]],
                     self.wcs.wcs.cunit[y_wcs_axis]))
@@ -304,7 +305,7 @@ class NDCubePlotMixin:
         # If axes_coordinates not provided generate an ImageAnimatorWCS plot
         # using NDCube's wcs object.
         if (axes_coordinates[plot_axis_indices[0]] is None and
-            axes_coordinates[plot_axis_indices[1]] is None):
+                axes_coordinates[plot_axis_indices[1]] is None):
             # If there are missing axes in WCS object, add corresponding dummy axes to data.
             if data.ndim < self.wcs.naxis:
                 new_shape = list(data.shape)
@@ -374,7 +375,7 @@ class NDCubePlotMixin:
                     raise TypeError(INVALID_UNIT_SET_MESSAGE)
             # Derive default axis label
             if type(new_axis_coordinate[0]) is datetime.datetime:
-                if axis_label_text  == default_label_text:
+                if axis_label_text == default_label_text:
                     default_label = "{0}".format(new_axis_coordinate[0].strftime("%Y/%m/%d %H:%M"))
                 else:
                     default_label = "{0} [{1}]".format(
