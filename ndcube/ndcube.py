@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import abc
+import warnings
+from itertools import product
 
 import numpy as np
 import astropy.nddata
@@ -85,22 +87,30 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractmethod
-    def crop_by_coords(self, min_coord_values, interval_widths):
+    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None):
         """
         Crops an NDCube given minimum values and interval widths along axes.
 
         Parameters
         ----------
-        min_coord_values: iterable of `astropy.units.Quantity`
+        lower_corner: iterable of `astropy.units.Quantity`
             The minimum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
-            The length of the iterable must equal the number of data dimensions and must
-            have the same order as the data.
+            The length of the iterable must equal the number of data dimensions
+            and must have the same order as the data.
 
         interval_widths: iterable of `astropy.units.Quantity`
-            The width of the region of interest in each dimension in physical units
-            consistent with the NDCube's wcs object.  The length of the iterable must
-            equal the number of data dimensions and must have the same order as the data.
+            The width of the region of interest in each dimension in physical
+            units consistent with the NDCube's wcs object. The length of the
+            iterable must equal the number of data dimensions and must have
+            the same order as the data. This argument will be removed in versions
+            2.0, please use upper_corner argument.
+
+        upper_corner: iterable of `astropy.units.Quantity`
+            The maximum desired values along each relevant axis after cropping
+            described in physical units consistent with the NDCube's wcs object.
+            The length of the iterable must equal the number of data dimensions
+            and must have the same order as the data.
 
         Returns
         -------
@@ -409,21 +419,46 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def crop_by_coords(self, min_coord_values, interval_widths):
+    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None):
         # The docstring is defined in NDDataBase
 
         n_dim = len(self.dimensions)
-        if (len(min_coord_values) != len(interval_widths)) or len(min_coord_values) != n_dim:
-            raise ValueError("min_coord_values and interval_widths must have "
-                             "same number of elements as number of data dimensions.")
-        # Convert coords of lower left corner to pixel units.
-        lower_pixels = self.world_to_pixel(*min_coord_values)
-        upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
-                                             for i in range(n_dim)])
-        # Round pixel values to nearest integer.
-        lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
-        upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
-        item = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
+        # Raising a value error if the arguments have not the same dimensions.
+        if upper_corner:
+            if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
+                raise ValueError("lower_corner and upper_corner must have "
+                                 "same number of elements as number of data "
+                                 "dimensions.")
+        # Raising a value error if the arguments have not the same dimensions.
+        # Calculation of upper_corner with the inputing interval_widths
+        # This part of the code will be removed in version 2.0
+        if interval_widths:
+            warnings.warn("interval_widths will be removed from the API in "
+                          "version 2.0, please use upper_corner argument.")
+            if (len(lower_corner) != len(interval_widths)) or (len(lower_corner) != n_dim):
+                raise ValueError("lower_corner and interval_widths must have "
+                                 "same number of elements as number of data "
+                                 "dimensions.")
+            upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
+        # Derive all corners coordinates
+        quantity_list = [[lower_corner[i], upper_corner[i]] for i in range(n_dim)]
+        all_corners = [self.world_to_pixel(*a) for a in product(*quantity_list)]
+        # Inputing of all corners coordinates inside a numpy array
+        # According to the boundary conditions
+        corners_array = np.zeros((2**n_dim, n_dim))
+        for i in range(2**n_dim):
+            for j in range(n_dim):
+                corners_array[i, j] = u.Quantity(all_corners[i][j]).value
+                if corners_array[i, j] > self.data.shape[j]:
+                    corners_array[i, j] = self.data.shape[j]
+                if corners_array[i, j] < 0:
+                    corners_array[i, j] = 0
+        # Taking the maximum and minimum values of coordinates
+        lower_pixels = corners_array.min(0)
+        upper_pixels = corners_array.max(0)
+        # Creating a tuple to crop the data with inputed coordinates
+        item = tuple([slice(int(lower_pixels[i]), int(upper_pixels[i])) for i in range(n_dim)])
+
         return self[item]
 
     def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
@@ -502,7 +537,7 @@ class NDCubeOrdered(NDCube):
         for standard deviation or "var" for variance. A metaclass defining
         such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
         has no such attribute the uncertainty is stored as UnknownUncertainty.
-        Defaults to None.
+        Defaults to None.list
 
     mask : any type, optional
         Mask for the dataset. Masks should follow the numpy convention
