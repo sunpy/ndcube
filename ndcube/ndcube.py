@@ -422,24 +422,27 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None):
         # The docstring is defined in NDDataBase
 
-        n_dim = len(self.dimensions)
-        # Raising a value error if the arguments have not the same dimensions.
-        if upper_corner:
-            if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
-                raise ValueError("lower_corner and upper_corner must have "
-                                 "same number of elements as number of data "
-                                 "dimensions.")
+        n_dim = self.data.ndim
         # Raising a value error if the arguments have not the same dimensions.
         # Calculation of upper_corner with the inputing interval_widths
         # This part of the code will be removed in version 2.0
         if interval_widths:
             warnings.warn("interval_widths will be removed from the API in "
                           "version 2.0, please use upper_corner argument.")
+            if upper_corner:
+                raise ValueError("Only one of interval_widths or upper_corner "
+                                 "can be set. Recommend using upper_corner as "
+                                 "interval_widths is deprecated.")
             if (len(lower_corner) != len(interval_widths)) or (len(lower_corner) != n_dim):
                 raise ValueError("lower_corner and interval_widths must have "
                                  "same number of elements as number of data "
                                  "dimensions.")
-            upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
+            upper_corner = [lower_corner[i] + interval_widths[i]
+                            for i in range(n_dim)]
+        # Raising a value error if the arguments have not the same dimensions.
+        if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
+            raise ValueError("lower_corner and upper_corner must have same"
+                             "number of elements as number of data dimensions.")
         # Derive all corners coordinates
         quantity_list = [[lower_corner[i], upper_corner[i]] for i in range(n_dim)]
         all_corners = [self.world_to_pixel(*a) for a in product(*quantity_list)]
@@ -457,8 +460,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         lower_pixels = corners_array.min(0)
         upper_pixels = corners_array.max(0)
         # Creating a tuple to crop the data with inputed coordinates
-        item = tuple([slice(int(lower_pixels[i]), int(upper_pixels[i])) for i in range(n_dim)])
-
+        item = tuple([slice(int(lower_pixels[i]), int(upper_pixels[i]))
+                      for i in range(n_dim)])
         return self[item]
 
     def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
@@ -537,7 +540,7 @@ class NDCubeOrdered(NDCube):
         for standard deviation or "var" for variance. A metaclass defining
         such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
         has no such attribute the uncertainty is stored as UnknownUncertainty.
-        Defaults to None.list
+        Defaults to None.
 
     mask : any type, optional
         Mask for the dataset. Masks should follow the numpy convention
