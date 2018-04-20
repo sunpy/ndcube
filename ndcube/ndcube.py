@@ -437,8 +437,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 raise ValueError("lower_corner and interval_widths must have "
                                  "same number of elements as number of data "
                                  "dimensions.")
-            upper_corner = [lower_corner[i] + interval_widths[i]
-                            for i in range(n_dim)]
+            upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
         # Raising a value error if the arguments have not the same dimensions.
         if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
             raise ValueError("lower_corner and upper_corner must have same"
@@ -460,8 +459,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         lower_pixels = corners_array.min(0)
         upper_pixels = corners_array.max(0)
         # Creating a tuple to crop the data with inputed coordinates
-        item = tuple([slice(int(lower_pixels[i]), int(upper_pixels[i]))
-                      for i in range(n_dim)])
+        item = tuple([slice(int(lower_pixels[i]), int(upper_pixels[i]) + 1) for i in range(n_dim)])
         return self[item]
 
     def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
