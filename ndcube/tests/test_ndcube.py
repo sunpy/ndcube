@@ -59,15 +59,15 @@ data_ordered = np.zeros((2, 4, 3, 2))
 data_ordered[0] = data.transpose()
 data_ordered[1] = data.transpose()
 
-h_rotated = {'CTYPE1' : 'HPLN-TAN', 'CUNIT1' : 'arcsec', 'CDELT1' : 0.4, 'CRPIX1' : 0,
-             'CRVAL1' : 0, 'NAXIS1' : 5,
-             'CTYPE2' : 'HPLT-TAN', 'CUNIT2' : 'arcsec', 'CDELT2' : 0.5, 'CRPIX2' : 0,
-             'CRVAL2' : 0, 'NAXIS2' : 5,
-             'CTYPE3' : 'Time    ', 'CUNIT3' : 'seconds', 'CDELT3' : 0.3, 'CRPIX3' : 0,
-             'CRVAL3' : 0, 'NAXIS3' : 2,
-             'PC1_1' : 0.714963912964, 'PC1_2' : -0.699137151241, 'PC1_3' : 0.0,
-             'PC2_1' : 0.699137151241, 'PC2_2' : 0.714963912964, 'PC2_3' : 0.0,
-             'PC3_1' : 0.0, 'PC3_2' : 0.0, 'PC3_3' : 1.0}
+h_rotated = {'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'arcsec', 'CDELT1': 0.4, 'CRPIX1': 0,
+             'CRVAL1': 0, 'NAXIS1': 5,
+             'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'arcsec', 'CDELT2': 0.5, 'CRPIX2': 0,
+             'CRVAL2': 0, 'NAXIS2': 5,
+             'CTYPE3': 'Time    ', 'CUNIT3': 'seconds', 'CDELT3': 0.3, 'CRPIX3': 0,
+             'CRVAL3': 0, 'NAXIS3': 2,
+             'PC1_1': 0.714963912964, 'PC1_2': -0.699137151241, 'PC1_3': 0.0,
+             'PC2_1': 0.699137151241, 'PC2_2': 0.714963912964, 'PC2_3': 0.0,
+             'PC3_1': 0.0, 'PC3_2': 0.0, 'PC3_3': 1.0}
 w_rotated = WCS(header=h_rotated, naxis=3)
 
 data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
@@ -139,7 +139,7 @@ cube_rotated = NDCube(
     missing_axis=[False, False, False],
     extra_coords=[('time', 0, u.Quantity(range(data_rotated.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
-                  ('bye', 2,u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
+                  ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
 
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
