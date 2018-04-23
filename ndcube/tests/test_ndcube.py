@@ -837,7 +837,7 @@ def test_world_to_pixel(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 1.06*u.m]), cubem[:, :2]),
+    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 5.e-11*u.m]), cubem[:, :, :3]),
     ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], [1*u.s, 1*u.arcsec, 0.5*u.arcsec]),
      cube_rotated[:, :3, 1:4])])
 def test_crop_by_coords(test_input, expected):
