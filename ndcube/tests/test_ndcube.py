@@ -837,8 +837,13 @@ def test_world_to_pixel(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 5.e-11*u.m]), cubem[:, :, :3]),
-    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], [1*u.s, 1*u.arcsec, 0.5*u.arcsec]),
+    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 5.e-11*u.m], None),
+     cubem[:, :, :3]),
+    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], [1*u.s, 1*u.arcsec, 0.5*u.arcsec], None),
+     cube_rotated[:, :3, 1:4]),
+    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], None, [1.7*u.deg, 1*u.deg, 1.07e-9*u.m]),
+     cubem[:, :, :3]),
+    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], None, [1*u.s, 2.5*u.arcsec, 0.5*u.arcsec]),
      cube_rotated[:, :3, 1:4])])
 def test_crop_by_coords(test_input, expected):
     helpers.assert_cubes_equal(
@@ -846,10 +851,12 @@ def test_crop_by_coords(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input", [
-    (cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg))])
+    (ValueError, cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg), None),
+    (ValueError, cubem, 1*u.s, 1*u.s, 1*u.s),
+    (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg))])
 def test_crop_by_coords_error(test_input):
-    with pytest.raises(ValueError):
-        test_input[0].crop_by_coords(*test_input[1:])
+    with pytest.raises(test_input[0]):
+        test_input[1].crop_by_coords(*test_input[2:])
 
 
 @pytest.mark.parametrize(
