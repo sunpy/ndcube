@@ -454,17 +454,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 raise ValueError('units must have same number of elements as '
                                  'number of data dimensions.')
             # If inputs are not Quantity objects, they are modified into specified units
-            for i in range(n_dim):
-                if type(lower_corner[i]) is not u.quantity.Quantity:
-                    lower_corner[i] = u.Quantity(lower_corner[i], unit=units[i])
-                if type(upper_corner[i]) is not u.quantity.Quantity:
-                    upper_corner[i] = u.Quantity(upper_corner[i], unit=units[i])
+            lower_corner = [u.Quantity(lower_corner[i], unit=units[i])
+                            for i in range(self.data.ndim)]
+            upper_corner = [u.Quantity(upper_corner[i], unit=units[i])
+                            for i in range(self.data.ndim)]
         else:
             for i in range(n_dim):
                 if type(lower_corner[i]) is not u.quantity.Quantity or \
                    type(upper_corner[i]) is not u.quantity.Quantity:
-                    raise ValueError("The inputs are not Quantity objects, you "
-                                     "can use the units argument to set it")
+                    raise TypeError("lower_corner and interval_widths/upper_corner must be "
+                                    "of type astropy.units.Quantity or the units kwarg "
+                                    "must be set.")
         # Derive all corners coordinates
         quantity_list = [[lower_corner[i], upper_corner[i]] for i in range(n_dim)]
         all_corners = [self.world_to_pixel(*a) for a in product(*quantity_list)]
