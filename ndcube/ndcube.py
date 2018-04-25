@@ -87,28 +87,34 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractmethod
-    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None):
+    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         """
         Crops an NDCube given minimum values and interval widths along axes.
 
         Parameters
         ----------
-        lower_corner: iterable of `astropy.units.Quantity`
+        lower_corner: iterable of `astropy.units.Quantity` or `float`
             The minimum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
 
-        interval_widths: iterable of `astropy.units.Quantity`
+        interval_widths: iterable of `astropy.units.Quantity` or `float`
             The width of the region of interest in each dimension in physical
             units consistent with the NDCube's wcs object. The length of the
             iterable must equal the number of data dimensions and must have
             the same order as the data. This argument will be removed in versions
             2.0, please use upper_corner argument.
 
-        upper_corner: iterable of `astropy.units.Quantity`
+        upper_corner: iterable of `astropy.units.Quantity` or `float`
             The maximum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
+            The length of the iterable must equal the number of data dimensions
+            and must have the same order as the data.
+
+        units: iterable of `astropy.units.quantity.Quantity`, optionnal
+            If the inputs are set without units, the user must set the units
+            inside this argument as `str`.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
 
@@ -419,7 +425,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None):
+    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         # The docstring is defined in NDDataBase
 
         n_dim = self.data.ndim
@@ -442,6 +448,23 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
             raise ValueError("lower_corner and upper_corner must have same"
                              "number of elements as number of data dimensions.")
+        if units:
+            # Raising a value error if units have not the data dimensions.
+            if len(units) != n_dim:
+                raise ValueError('units must have same number of elements as '
+                                 'number of data dimensions.')
+            # If inputs are not Quantity objects, they are modified into specified units
+            for i in range(n_dim):
+                if type(lower_corner[i]) is not u.quantity.Quantity:
+                    lower_corner[i] = u.Quantity(lower_corner[i], unit=units[i])
+                if type(upper_corner[i]) is not u.quantity.Quantity:
+                    upper_corner[i] = u.Quantity(upper_corner[i], unit=units[i])
+        else:
+            for i in range(n_dim):
+                if type(lower_corner[i]) is not u.quantity.Quantity or \
+                   type(upper_corner[i]) is not u.quantity.Quantity:
+                    raise ValueError("The inputs are not Quantity objects, you "
+                                     "can use the units argument to set it")
         # Derive all corners coordinates
         quantity_list = [[lower_corner[i], upper_corner[i]] for i in range(n_dim)]
         all_corners = [self.world_to_pixel(*a) for a in product(*quantity_list)]
