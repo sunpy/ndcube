@@ -857,7 +857,7 @@ def test_crop_by_coords(test_input, expected):
     (ValueError, cubem, [1*u.s], [1*u.s], [1*u.s]),
     (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg)),
     (ValueError, cubem, [1], None, [1], ['s', 'deg']),
-    (TypeError, cubem, [1], None, [1])])
+    (TypeError, cubem, [1, 2, 3], None, [2, 3, 4])])
 def test_crop_by_coords_error(test_input):
     with pytest.raises(test_input[0]):
         test_input[1].crop_by_coords(*test_input[2:])
