@@ -473,7 +473,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         all_pix_corners = self.world_to_pixel(*all_world_corners)
         # Derive slicing item with which to slice NDCube.
         # Be sure to round down min pixel and round up + 1 the max pixel.
-        item = tuple([slice(int(axis_pixels.value.min()),
+        item = tuple([slice(int(np.clip(axis_pixels.value.min(), 0, None)),
                             int(np.ceil(axis_pixels.value.max()))+1)
                       for axis_pixels in all_pix_corners])
         return self[item]
