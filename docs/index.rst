@@ -14,4 +14,5 @@ by a WCS (World Coordinate System) translation.
    installation
    ndcube
    ndcubesequence
+   contributing
    api
