@@ -89,12 +89,12 @@ Example Workflow for Contributing Code to ndcube
 ------------------------------------------------
 
 In the rest of this section we will outline a simple workflow that
-will allow you to get started in contributing to ndcube.  We will
+will allow you to get started with contributing to ndcube.  We will
 assume you have installed the development version exactly as outlined
 in :ref:`dev_install`.  Once that's done, open a new terminal.
 Change into the directory containing the ndcube repository (repo) and
-activate the conda environment with the development version of ndcube
-installed.  In Windows type:
+activate the conda environment in which the development version of
+ndcube installed.  In Windows type:
 .. code-block:: console
 
 		$ activate ndcube-dev
@@ -105,12 +105,12 @@ In Linux or MacOS, type:
 		$ source activate ndcube-dev
 
 First let's check what git branch we are on.  Git branches are a way
-of having different versions of the same code within the repo.
-Assuming you have just installed the ndcube development version, you
-will only have one branch, called master.  If you have more, the *
-next to the branch name will indicate which branch you are currently on.
-To check what branches you have and which one you are current on, type
-in the terminal:
+of having different versions of the same code within the repo
+simultaneously. Assuming you have just installed the ndcube
+development version, you will only have one branch, called master.  If
+you have more, the * next to the branch name will indicate which
+branch you are currently on. To check what branches you have and which
+one you are on, type in the terminal:
 .. code-block:: console
 
 		$ git branch
@@ -133,7 +133,7 @@ i.e. the original ndcube GitHub repo.
 
 At this point let's quickly talk about git remotes.  Remotes are
 variables that point to URLs of GitHub repos.  In this example,
-upstream is a remote pointing to the original online ndcube GitHub
+upstream is a remote pointing to the original ndcube GitHub
 repo at https://github.com/sunpy/ndcube.  To see what remotes you have
 attached to your local repo, and the URLs they point to, type:
 .. code-block:: console
@@ -144,26 +144,28 @@ If you have installed the ndcube development version as outlined in
 :ref:`dev_install`, you will have two remotes:
 * origin: https://github.com/my_github_handle/ndcube
 * upstream: https://github.com/sunpy/ndcube
-If you've following the :ref:`dev_install` instructions, you should
-have "forked" (copied) the original ndcube repo to your own GitHub
-account and then "cloned" (copied) it from there to you local machine.
-So the origin remote points where the local repo was "cloned" from.
-The upstream remote, which you added manually as part of the installation
-process, points to the original ndcube repo.  This enables you to get
-the latest updates as above.  The remote names can be different
-depending on how you set them up so it's a good idea to use the above
-command to confirm the names and URLs of your remotes. Find out more
-about `git remotes`_ from the git online guide.
+The :ref:`dev_install` instructions instruct you "fork" (copy between
+GitHub accounts) the original ndcube repo to your own GitHub account.
+You then "clone" it, i.e. copy the repo from GitHub to your local machine.
+Therefore, the origin remote points where the local repo was "cloned"
+from, i.e. the ndcube repo on your personal GitHub account.
+The upstream remote, which the :ref:`dev_install` instructions
+required you to add manually, points back to the main ndcube repo.
+This enables you to get the latest updates as we did above.  The
+remote names can be different depending on how you set them up so it's
+a good idea to use the above command to confirm the names and URLs of
+your remotes. Find out more about `git remotes`_ from the git online
+guide.
 
-Now, you are comfortable with git remotes, say you have found a bug in
-ndcube and would like to fix it. As outlined above in
-:ref:`contributing_code`, it is strongly recommended you talk to the
-ndcube developers before you start coding to get guidance on how and
-whether you should proceed.  Let's say you've done that and have a
-clear plan on how to start.  The next task is create a new branch on
-which to make your changes.  This will allow you to reserve your local
-master branch as a copy of the latest upstream master branch. To
-create a new branch called my_fix, type:
+Now, you are comfortable with git remotes, you are ready to start
+coding!  Say you have found a bug in ndcube and would like to fix
+it. As outlined above in :ref:`contributing_code`, it is strongly
+recommended you talk to the ndcube community before you start coding
+to get guidance on how and whether you should proceed.  Let's say
+you've done that and have a clear plan on how to start.  The next task
+is create a new git branch on which to make your changes.  This will allow
+you to reserve your local master branch as a copy of the latest
+upstream master branch. To create a new branch called my_fix, type:
 .. code-block:: console
 
 		$ git checkout -b my_fix
@@ -172,7 +174,7 @@ This will not only create the new branch but also check it out,
 i.e. move you onto it. The new branch will now be an exact
 copy of the branch from which you created it, in this case, the master
 branch. But now you can edit files so that the new branch diverges
-while keeping you master branch copy intact.
+while keeping you master branch intact.
 
 After a while, you've made some changes that partially or completely
 fix the bug.  We now want to commit that change.  Committing is a bit
@@ -192,14 +194,14 @@ We can also get a summary of those changes, line by line:
 		$ git diff
 
 Once we're happy with the changes, we must add the changed files to
-the set of changed files to be included in the commit.  We can add
-only some changed files:
+the set of changed files to be included in the commit.  We do not have
+to include all changed file.  We can add files one by one:
 .. code-block:: console
 
 		$ git add file1.py
 		$ git add file2.py
 
-or all changed files at once:
+or add all changed files at once:
 .. code-block:: console
 
 		$ git add --all
@@ -222,24 +224,27 @@ desired:
 
 		$ git commit -am 'My first commit.'
 
-But CAUTION!  Make sure you know what files have changed and how
-they've changed before doing this.  Many a developer have accidentally
-committed extra things using this command and have had to spend wasted
+But CAUTION!  This adds and commits all changed files.  So make sure
+you know what files have changed and how they've changed before doing
+this.  Many a developer (inlcuding yours truly) have accidentally
+committed extra files using this command and have had to spend wasted
 time undoing their mistake.
 
 Say it's the next day and you want to continue working on your bugfix.
-Open a terminal, change into the ndcube repo directory and make sure
-you are on the correct branch.  Also make sure you pull any new
-updates on the upstream master branch to your local bugfix branch:
+Open a terminal, activate your ndcube dev conda environent, change
+into the ndcube repo directory and make sure you are on the correct
+branch.  Also make sure you pull any new updates on the upstream
+master branch to your local bugfix branch:
 .. code-block:: console
 
+		$ source activate ndcube-dev (Just "activate ndcube-dev" in Windows)
 		$ cd my_ndcube_repo
 		$ git branch
 		$ git checkout my_fix
 		$ git pull upstream master
 
 Assuming there are no updates that have caused conflicts with the
-changes you made the other day, you're good to continue working.
+changes you made the other day, you're ready to continue working.
 
 After more work and more commits, let's say you are ready to
 issue a pull request (PR) to ndcube to get feedback on your work and
@@ -254,26 +259,26 @@ a PR:
 #. In a browser, go to your GitHub account and find your version of the git
    repo.  The URL should look like this:
    https://github.com/my_github_handle/ndcube/
-#. Click on the "Pull Requests" tab near the top of the page.  The URL
-   should look like this:
+#. There should be a green button on the right marked "Compare & pull
+   request".  Click it.  If it is not there, click on the "Pull
+   Requests" tab near the top of the page.  The URL should look like this:
    https://github.com/my_github_handle/ndcube/pulls
-#. Click on the green "New Pull Request" button.  This will make four
-   drop down menus appear.
+   Then click on the green "New Pull Request" button.  This will make
+   a new page with four drop down menus appear near the top.
 #. Set first drop down menu ("base fork") to "sunpy/ndcube" and the
    second one ("base") to "master".  This describes the repo and branch
    the changes are to be merged into.  Set the third drop down menu
    ("head fork") to "my_github_handle/ndcube" and the fourth
    ("compare") to "my_fix". This sets the repo and branch in which you
-   have made the changes you want to merge. The code difference
-   between the branches should now be shown.
-#. You should be prompted to enter a title and a description of the
-   pull request (PR).  To so, so other developers can udnerstand what
-   changes you've made and why.
-#. All that's left is to push the green "Create Pull Request" button
-   and you've created your PR!
+   have made the changes you want to merge.
+#. Enter a title and a description of the PR in the appropriate
+   boxes.  Try to be descriptive so other developers can understand
+   the purpose of the PR.
+#. Finally, click the green "Create Pull Request" button.  Well done!
+   You've opened your first PR!
 
-Now the process of code review, described above in
-:ref:`contributing_code` begins.  You can make updates to your PR
+Now begins the process of code review, described above in
+:ref:`contributing_code`.  You can make updates to your PR
 based on suggestions from other members of the ndcube community by
 editing your local my_fix branch, committing the new changes and
 pushing them to you origin branch.  The PR will then be automatically
