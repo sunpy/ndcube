@@ -459,12 +459,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             upper_corner = [u.Quantity(upper_corner[i], unit=units[i])
                             for i in range(self.data.ndim)]
         else:
-            for i in range(n_dim):
-                if type(lower_corner[i]) is not u.quantity.Quantity or \
-                   type(upper_corner[i]) is not u.quantity.Quantity:
-                    raise TypeError("lower_corner and interval_widths/upper_corner must be "
-                                    "of type astropy.units.Quantity or the units kwarg "
-                                    "must be set.")
+            if any([not isinstance(x, u.Quantity) for x in lower_corner + upper_corner]):
+                raise TypeError("lower_corner and interval_widths/upper_corner must be "
+                                "of type astropy.units.Quantity or the units kwarg "
+                                "must be set.")
         # Derive all corners coordinates
         quantity_list = [[lower_corner[i], upper_corner[i]] for i in range(n_dim)]
         all_corners = [self.world_to_pixel(*a) for a in product(*quantity_list)]
