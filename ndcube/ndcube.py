@@ -464,9 +464,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                 "of type astropy.units.Quantity or the units kwarg "
                                 "must be set.")
         # Get all corners of region of interest.
-        all_world_corners_grid = np.meshgrid(*[u.Quantity([lower_corner[i], upper_corner[i]],
-                                                          unit=lower_corner[i].unit).value
-                                               for i in range(self.data.ndim)])
+        all_world_corners_grid = np.meshgrid(
+            *[u.Quantity([lower_corner[i], upper_corner[i]], unit=lower_corner[i].unit).value
+              for i in range(self.data.ndim)])
         all_world_corners = [all_world_corners_grid[i].flatten()*lower_corner[i].unit
                              for i in range(n_dim)]
         # Convert to pixel coordinates
