@@ -463,24 +463,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 raise TypeError("lower_corner and interval_widths/upper_corner must be "
                                 "of type astropy.units.Quantity or the units kwarg "
                                 "must be set.")
-        # Derive all corners coordinates
-        quantity_list = [[lower_corner[i], upper_corner[i]] for i in range(n_dim)]
-        all_corners = [self.world_to_pixel(*a) for a in product(*quantity_list)]
-        # Inputing of all corners coordinates inside a numpy array
-        # According to the boundary conditions
-        corners_array = np.zeros((2**n_dim, n_dim))
-        for i in range(2**n_dim):
-            for j in range(n_dim):
-                corners_array[i, j] = u.Quantity(all_corners[i][j]).value
-                if corners_array[i, j] > self.data.shape[j]:
-                    corners_array[i, j] = self.data.shape[j]
-                if corners_array[i, j] < 0:
-                    corners_array[i, j] = 0
-        # Taking the maximum and minimum values of coordinates
-        lower_pixels = corners_array.min(0)
-        upper_pixels = corners_array.max(0)
-        # Creating a tuple to crop the data with inputed coordinates
-        item = tuple([slice(int(lower_pixels[i]), int(upper_pixels[i]) + 1) for i in range(n_dim)])
+        # Get all corners of region of interest.
+        all_world_corners_grid = np.meshgrid(*[u.Quantity([lower_corner[i], upper_corner[i]],
+                                                          unit=lower_corner[i].unit).value
+                                               for i in range(self.data.ndim)])
+        all_world_corners = [all_world_corners_grid[i].flatten()*lower_corner[i].unit
+                             for i in range(n_dim)]
+        # Convert to pixel coordinates
+        all_pix_corners = self.world_to_pixel(*all_world_corners)
+        # Derive slicing item with which to slice NDCube.
+        # Be sure to round down min pixel and round up + 1 the max pixel.
+        item = tuple([slice(int(axis_pixels.value.min()),
+                            int(np.ceil(axis_pixels.value.max()))+1)
+                      for axis_pixels in all_pix_corners])
         return self[item]
 
     def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
