@@ -4,8 +4,8 @@ Installation
 
 ndcube requires Python 3.5+, SunPy 0.8+, astropy and matplotlib.
 
-Stable Version
---------------
+Installing the Stable Version
+-----------------------------
 There are two options for installing the stable version of ndcube. The first is
 via the anaconda distribution using the conda-forge channel.
 .. code-block:: console
@@ -31,8 +31,10 @@ Then to update ndcube do:
 
 		$ pip install ndcube --upgrade
 
-Development Version
--------------------
+.. _dev_install:
+
+Installing the Development Version
+----------------------------------
 
 The stable version of ndcube will be relatively reliable. However, if you value
 getting the latest updates immediately over reliablility, or want to contribute
@@ -48,13 +50,22 @@ ndcube. Let's step through how to do this.
 
 Once you've forked the main `ndcube github repository`_ to your github account,
 create a conda environment on your local machine to hold the ndcube bleeding
-edge version and activate that environment. Type the following into a
-terminal:
+edge version. Let's call the conda environment ndcube-dev. Type the
+following into a terminal:
 .. code-block:: console
 
 		$ conda config --append channels conda-forge
 		$ conda create -n ndcube-dev python sunpy hypothesis pytest-mock
+
+Be sure to activate the environment.  In Linux or MacOS, type:
+.. code-block:: console
+
 		$ source activate ndcube-dev
+
+In Windows, type:
+.. code-block:: console
+
+		$ activate ndcube-dev
 
 Next clone the ndcube repo from your github account to a new
 directory.  Let's call it ``ndcude-git``.
@@ -80,16 +91,10 @@ regularly do:
 
 		$ git pull upstream master
 
-To push any changes you make to your github account by doing:
-.. code-block:: console
-
-		$ git push origin branch-name
-
-where ``branch-name`` is the name of the branch you're working on.  Then
-from your github account you can request your changes to be merged to
-the main repo.  For more information on on git version control,
-github, and issuing pull requests, see `SunPy's version control guide`_.
+If you wish to make changes to ndcube, it is strongly recommended that
+you create a new branch and keep the master branch as a copy of the
+latest upstream master branch.  See the :ref:`contributing_code`
+section of this guide under the Contributing Code subsection.
 
 .. _anaconda website: https://docs.anaconda.com/anaconda/install.html
-.. _`ndcube github repository`: https://github.com/sunpy/ndcube
-.. _`SunPy's version control guide`: http://docs.sunpy.org/en/stable/dev_guide/version_control.html
+.. _ndcube github repository: https://github.com/sunpy/ndcube
