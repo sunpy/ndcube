@@ -2,19 +2,18 @@
 Installation
 ============
 
-ndcube requires Python 3.5+, SunPy 0.8+, astropy and matplotlib.
+ndcube requires Python 3.5+, SunPy 0.9+, astropy and matplotlib.
 
 Installing the Stable Version
 -----------------------------
 There are two options for installing the stable version of ndcube. The first is
-via the anaconda distribution using the conda-forge channel.
+via the anaconda distribution using the conda-forge channel.  For more
+information on installing the anaconda distribution, see the `anaconda
+website`_.
 
 .. code-block:: console
 
 		$ conda install --channel conda-forge ndcube
-
-For more information on installing the anaconda distribution, see the
-`anaconda website`_.
 
 To update ndcube do:
 
@@ -22,7 +21,7 @@ To update ndcube do:
 
 		$ conda update ndcube
 
-The second option for installing the stable verison of ndcube is via
+The second option for installing the stable version of ndcube is via
 pip.
 
 .. code-block:: console
@@ -40,31 +39,25 @@ Then to update ndcube do:
 Installing the Development Version
 ----------------------------------
 
-The stable version of ndcube will be relatively reliable. However, if you value
+The stable version of ndcube will be reliable. However, if you value
 getting the latest updates over reliablility, or want to contribute
-to the development of ndcube, you will need to install the bleeding edge version
-via `GitHub`_. The recommended way to set up your system is to first fork the
-`ndcube GitHub repository`_ (repo) to your GitHub account and then
-clone your forked repo to your local machine. This setup has the
-advantage that you can push any changes you make in your local version
-to your GitHub account.  From there your changes can be merged
-into the main repo via a pull request and hence shared with other
-users.  See :ref:`contributing_code` to learn more about this process.
-You can also set up a remote between your local version and the main
-repo so that you can stay updated with the latest changes to
-ndcube. Let's step through how to do this.
+to the development of ndcube, you will need to install the development
+version via `GitHub`_. Let's step through how to do this using
+anaconda.  For information on installing the anaconda
+distribution, see the `anaconda website`_.
 
-Once you've forked the main `ndcube GitHub repository`_ to your github account,
-create a conda environment on your local machine to hold the ndcube bleeding
-edge version. Let's call the conda environment ndcube-dev. Type the
-following into a terminal:
+First, create a conda environment on your local machine to hold the
+ndcube bleeding edge version. Using a new environment allows you to
+keep your root environment for stable package releases.  Let's call
+the new conda environment ``ndcube-dev``. Type the following into a
+terminal:
 
 .. code-block:: console
 
 		$ conda config --append channels conda-forge
-		$ conda create -n ndcube-dev python sunpy hypothesis pytest-mock
+		$ conda create -n ndcube-dev sunpy hypothesis pytest-mock pip sphinx coverage ipython jupyter
 
-Be sure to activate the environment.  In Linux or MacOS, type:
+Be sure to activate the environment, i.e. switch into it.  In Linux or MacOS, type:
 
 .. code-block:: console
 
@@ -76,12 +69,12 @@ In Windows, type:
 
 		> activate ndcube-dev
 
-Next clone the ndcube repo from your github account to a new
-directory.  Let's call it ``ndcude-git``.
+Next clone the ndcube repo from GitHub to a new directory.  Let's call
+it ndcude-git.
 
 .. code-block:: console
 
-		$ git clone https://github.com/your-github-name/ndcube.git ndcube-git
+		$ git clone https://github.com/sunpy/ndcube.git ndcube-git
 
 To install, change into the new directory and run the install script.
 
@@ -90,23 +83,12 @@ To install, change into the new directory and run the install script.
 		$ cd ndcube-git
 		$ pip install -e .
 
-Finally add a remote to the main repo so you can pull the latest
-version.
+Voila!  The ndcube development version is now installed!  Be sure you
+get the latest updates by regularly doing:
 
 .. code-block:: console
 
-		$ git remote add upstream https://github.com/sunpy/ndcube.git
-
-Then to ensure you stay up-to-date with the latest version of ndcube,
-regularly do:
-
-.. code-block:: console
-
-		$ git pull upstream master
-
-If you wish to make changes to ndcube, it is strongly recommended that
-you create a new branch and keep the master branch as a copy of the
-latest upstream master branch.  See the :ref:`contributing_code`.
+		$ git pull origin master
 
 .. _anaconda website: https://docs.anaconda.com/anaconda/install.html
 .. _GitHub: https://github.com/
