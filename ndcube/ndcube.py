@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import abc
+import warnings
 
 import numpy as np
 import astropy.nddata
@@ -85,22 +86,36 @@ class NDCubeBase(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractmethod
-    def crop_by_coords(self, min_coord_values, interval_widths):
+    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         """
         Crops an NDCube given minimum values and interval widths along axes.
 
         Parameters
         ----------
-        min_coord_values: iterable of `astropy.units.Quantity`
+        lower_corner: iterable of `astropy.units.Quantity` or `float`
             The minimum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
-            The length of the iterable must equal the number of data dimensions and must
-            have the same order as the data.
+            The length of the iterable must equal the number of data dimensions
+            and must have the same order as the data.
 
-        interval_widths: iterable of `astropy.units.Quantity`
-            The width of the region of interest in each dimension in physical units
-            consistent with the NDCube's wcs object.  The length of the iterable must
-            equal the number of data dimensions and must have the same order as the data.
+        interval_widths: iterable of `astropy.units.Quantity` or `float`
+            The width of the region of interest in each dimension in physical
+            units consistent with the NDCube's wcs object. The length of the
+            iterable must equal the number of data dimensions and must have
+            the same order as the data. This argument will be removed in versions
+            2.0, please use upper_corner argument.
+
+        upper_corner: iterable of `astropy.units.Quantity` or `float`
+            The maximum desired values along each relevant axis after cropping
+            described in physical units consistent with the NDCube's wcs object.
+            The length of the iterable must equal the number of data dimensions
+            and must have the same order as the data.
+
+        units: iterable of `astropy.units.quantity.Quantity`, optionnal
+            If the inputs are set without units, the user must set the units
+            inside this argument as `str`.
+            The length of the iterable must equal the number of data dimensions
+            and must have the same order as the data.
 
         Returns
         -------
@@ -401,21 +416,57 @@ class NDCube(NDCubeSlicingMixin, NDCubePlotMixin, astropy.nddata.NDArithmeticMix
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def crop_by_coords(self, min_coord_values, interval_widths):
+    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         # The docstring is defined in NDDataBase
 
-        n_dim = len(self.dimensions)
-        if (len(min_coord_values) != len(interval_widths)) or len(min_coord_values) != n_dim:
-            raise ValueError("min_coord_values and interval_widths must have "
-                             "same number of elements as number of data dimensions.")
-        # Convert coords of lower left corner to pixel units.
-        lower_pixels = self.world_to_pixel(*min_coord_values)
-        upper_pixels = self.world_to_pixel(*[min_coord_values[i] + interval_widths[i]
-                                             for i in range(n_dim)])
-        # Round pixel values to nearest integer.
-        lower_pixels = [int(np.rint(l.value)) for l in lower_pixels]
-        upper_pixels = [int(np.rint(u.value)) for u in upper_pixels]
-        item = tuple([slice(lower_pixels[i], upper_pixels[i]) for i in range(n_dim)])
+        n_dim = self.data.ndim
+        # Raising a value error if the arguments have not the same dimensions.
+        # Calculation of upper_corner with the inputing interval_widths
+        # This part of the code will be removed in version 2.0
+        if interval_widths:
+            warnings.warn("interval_widths will be removed from the API in "
+                          "version 2.0, please use upper_corner argument.")
+            if upper_corner:
+                raise ValueError("Only one of interval_widths or upper_corner "
+                                 "can be set. Recommend using upper_corner as "
+                                 "interval_widths is deprecated.")
+            if (len(lower_corner) != len(interval_widths)) or (len(lower_corner) != n_dim):
+                raise ValueError("lower_corner and interval_widths must have "
+                                 "same number of elements as number of data "
+                                 "dimensions.")
+            upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
+        # Raising a value error if the arguments have not the same dimensions.
+        if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
+            raise ValueError("lower_corner and upper_corner must have same"
+                             "number of elements as number of data dimensions.")
+        if units:
+            # Raising a value error if units have not the data dimensions.
+            if len(units) != n_dim:
+                raise ValueError('units must have same number of elements as '
+                                 'number of data dimensions.')
+            # If inputs are not Quantity objects, they are modified into specified units
+            lower_corner = [u.Quantity(lower_corner[i], unit=units[i])
+                            for i in range(self.data.ndim)]
+            upper_corner = [u.Quantity(upper_corner[i], unit=units[i])
+                            for i in range(self.data.ndim)]
+        else:
+            if any([not isinstance(x, u.Quantity) for x in lower_corner + upper_corner]):
+                raise TypeError("lower_corner and interval_widths/upper_corner must be "
+                                "of type astropy.units.Quantity or the units kwarg "
+                                "must be set.")
+        # Get all corners of region of interest.
+        all_world_corners_grid = np.meshgrid(
+            *[u.Quantity([lower_corner[i], upper_corner[i]], unit=lower_corner[i].unit).value
+              for i in range(self.data.ndim)])
+        all_world_corners = [all_world_corners_grid[i].flatten()*lower_corner[i].unit
+                             for i in range(n_dim)]
+        # Convert to pixel coordinates
+        all_pix_corners = self.world_to_pixel(*all_world_corners)
+        # Derive slicing item with which to slice NDCube.
+        # Be sure to round down min pixel and round up + 1 the max pixel.
+        item = tuple([slice(int(np.clip(axis_pixels.value.min(), 0, None)),
+                            int(np.ceil(axis_pixels.value.max()))+1)
+                      for axis_pixels in all_pix_corners])
         return self[item]
 
     def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
