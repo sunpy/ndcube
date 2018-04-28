@@ -10,9 +10,9 @@ by a WCS (World Coordinate System) translation.
    :maxdepth: 3
 
    introduction
-   getting_help
    installation
    ndcube
    ndcubesequence
    contributing
+   getting_help
    api
