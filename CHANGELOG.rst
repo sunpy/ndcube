@@ -30,6 +30,8 @@ API Changes
 
 Bug Fixes
 ---------
+- Fixed bug in ``NDCube.crop_by_coords`` in case where real world
+  coordinate system was rotated relative to pixel grid. [#113].
 
 
 1.0.1
