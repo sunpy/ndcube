@@ -44,7 +44,8 @@ cube = NDCube(
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-                       for i in range(data.shape[2])]))
+                       for i in range(data.shape[2])])),
+                  ('array coord', 2, np.arange(100, 100+data.shape[2]))
                   ])
 
 cube_unit = NDCube(
@@ -100,7 +101,7 @@ cubem = NDCube(
                   ('another time', 2, np.array(
                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
-                 ])
+                  ])
 
 # Derive expected data values
 cube_data = np.ma.masked_array(cube.data, cube.mask)
@@ -202,7 +203,7 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0], {},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "time [min]", "em.wl [m]",
-      (-0.5, 3.5, 2.5, -0.5))),
+      (0.4, 1.6, 2e-11, 6e-11))),
 
     (cube[0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "bye [m]", "em.wl [cm]",
@@ -238,7 +239,7 @@ def test_cube_plot_2D(test_input, test_kwargs, expected_values):
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
-    (cube[0], {"axes_coordinates": ["another time", None], "axes_units": [u.cm, None]}, TypeError),
+    (cube[0], {"axes_coordinates": ["array coord", None], "axes_units": [u.cm, None]}, TypeError),
     (cube[0], {"axes_coordinates": [np.arange(10, 10+cube[0].data.shape[1]), None],
                "axes_units": [u.cm, None]}, TypeError),
     (cube[0], {"data_unit": u.cm}, TypeError)
@@ -246,6 +247,7 @@ def test_cube_plot_2D(test_input, test_kwargs, expected_values):
 def test_cube_plot_2D_errors(test_input, test_kwargs, expected_error):
     with pytest.raises(expected_error):
         output = test_input.plot(**test_kwargs)
+
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cubem, {},
