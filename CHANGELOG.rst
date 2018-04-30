@@ -30,6 +30,8 @@ API Changes
 
 Bug Fixes
 ---------
+- Allowed `~ndcube.NDCubeBase.axis_world_coords` to accept negative
+  axis indices as arguments. [#106]
 - Fixed bug in ``NDCube.crop_by_coords`` in case where real world
   coordinate system was rotated relative to pixel grid. [#113].
 
