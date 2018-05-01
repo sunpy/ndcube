@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
-from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS
+from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 
 from ndcube import utils
@@ -29,10 +29,10 @@ class NDCubePlotMixin:
         """
         Plots an interactive visualization of this cube with a slider
         controlling the wavelength axis for data having dimensions greater than 2.
-        Plots an x-y graph onto the current axes for 2D or 1D data. Keyword arguments are passed
-        on to matplotlib.
-        Parameters other than data and wcs are passed to ImageAnimatorWCS, which in turn
-        passes them to imshow for data greater than 2D.
+        Plots an x-y graph onto the current axes for 2D or 1D data.
+        Keyword arguments are passed on to matplotlib.
+        Parameters other than data and wcs are passed to ImageAnimatorWCS,
+        which in turn passes them to imshow for data greater than 2D.
 
         Parameters
         ----------
@@ -72,7 +72,9 @@ class NDCubePlotMixin:
                                     axes_units, data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
-                raise NotImplementedError()
+                ax = self._animate_cube_1D(
+                    plot_axis_index=plot_axis_indices[0], axes_coordinates=axes_coordinates,
+                    axes_units=axes_units, data_unit=data_unit, **kwargs)
             else:
                 if naxis == 2:
                     ax = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
@@ -334,6 +336,59 @@ class NDCubePlotMixin:
                                axis_ranges=new_axes_coordinates, **kwargs)
         return ax
 
+    def _animate_cube_1D(self, plot_axis_index=-1, axes_coordinates=None,
+                         axes_units=None, data_unit=None, **kwargs):
+        """Animates an axis of a cube as a line plot with sliders for other axes."""
+        if axes_coordinates is None:
+            axes_coordinates = [None] * self.data.ndim
+        if axes_units is None:
+            axes_units = [None] * self.data.ndim
+        # Get real world axis values along axis to be plotted and enter into axes_ranges kwarg.
+        if axes_coordinates[plot_axis_index] is None:
+            xname = self.world_axis_physical_types[plot_axis_index]
+            xdata = self.axis_world_coords(plot_axis_index)
+        elif isinstance(axes_coordinates[plot_axis_index], str):
+            xname = axes_coordinates[plot_axis_index]
+            xdata = self.extra_coords[xname]["value"]
+        else:
+            xname = ""
+            xdata = axes_coordinates[plot_axis_index]
+        # Change x data to desired units it set by user.
+        if isinstance(xdata, u.Quantity):
+            if axes_units[plot_axis_index] is None:
+                unit_x_axis = xdata.unit
+            else:
+                unit_x_axis = axes_units[plot_axis_index]
+                xdata = xdata.to(unit_x_axis).value
+        else:
+            if axes_units[plot_axis_index] is not None:
+                raise TypeError(INVALID_UNIT_SET_MESSAGE)
+            else:
+                unit_x_axis = None
+        # Put xdata back into axes_coordinates as a masked array.
+        axes_coordinates[plot_axis_index] = xdata
+        # Set default x label
+        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
+        # Derive y axis data
+        if data_unit is None:
+            data = self.data
+            data_unit = self.unit
+        else:
+            if self.unit is None:
+                raise TypeError("NDCube.unit is None.  Must be an astropy.units.unit or "
+                                "valid unit string in order to set data_unit.")
+            else:
+                data = (self.data * self.unit).to(data_unit).value
+        # Combine data with mask
+        #data = np.ma.masked_array(data, self.mask)
+        # Set default y label
+        default_ylabel = "Data [{0}]".format(unit_x_axis)
+        # Initiate line animator object.
+        ax = LineAnimator(data, plot_axis_index=plot_axis_index, axis_ranges=axes_coordinates,
+                          xlabel=default_xlabel,
+                          ylabel="Data [{0}]".format(data_unit), **kwargs)
+        return ax
+
     def _derive_axes_coordinates(self, axes_coordinates, axes_units):
         new_axes_coordinates = []
         new_axes_units = []
@@ -387,7 +442,6 @@ class NDCubePlotMixin:
             new_axes_units.append(new_axis_unit)
             default_labels.append(default_label)
         return new_axes_coordinates, new_axes_units, default_labels
-
 
 
 def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs):
