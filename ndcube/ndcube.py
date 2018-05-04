@@ -540,7 +540,7 @@ class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
         Returns
         -------
         result : `ndcube_sequence.NDCubeSequence`
-        
+
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
