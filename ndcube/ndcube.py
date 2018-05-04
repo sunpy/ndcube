@@ -9,6 +9,7 @@ import astropy.units as u
 from astropy.utils.misc import InheritDocstrings
 
 from ndcube import utils
+from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -525,7 +526,50 @@ Axis Types of NDCube: {axis_type}
 
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
-    pass
+
+    def explode_along_axis(self, axis):
+        """
+        Separates slices of NDCubes in sequence along a given cube axis into a NDCubeSequence
+        of (N-1)DCubes.
+
+        Parameters
+        ----------
+        axis : `int`
+            The axis along which the data is to be changed.
+
+        Returns
+        -------
+        result : `ndcube_sequence.NDCubeSequence`
+        
+        """
+        # If axis is -ve then calculate the axis from the length of the dimensions of one cube
+        if axis < 0:
+            axis = len(self.dimensions) + axis
+        # the range of the axis that needs to be sliced
+        range_of_axis = self.data.shape[axis]
+        # To store the resultant cube
+        result_cubes = []
+        # We need to convert extra_coords dictionnary to a liste of tuple to create a new NDCube
+        extra_coords_formated = utils.cube.convert_extra_coords_dict_to_input_format(
+            self.extra_coords, missing_axis=[False, False, True])
+        # Creating a (N-1)Dcube list
+        for i in range(range_of_axis):
+            cube = self._new_instance(
+                self[i].data, self[i].wcs, uncertainty=self[i].uncertainty, unit=self.unit,
+                meta=self.meta, mask=self[i].mask, missing_axis=[False, False, True],
+                extra_coords=extra_coords_formated)
+            result_cubes.append(cube)
+        return NDCubeSequence(result_cubes, meta=self.meta)
+
+    @classmethod
+    def _new_instance(cls, data, wcs, uncertainty, unit, meta,
+                      mask, extra_coords, missing_axis=None):
+        """
+        Instantiate a new instance of this class using given data.
+        """
+        return cls(data=data, wcs=wcs, uncertainty=uncertainty, unit=unit,
+                   meta=meta, mask=mask, extra_coords=extra_coords,
+                   missing_axis=missing_axis)
 
 
 class NDCubeOrdered(NDCube):
