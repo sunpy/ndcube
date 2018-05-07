@@ -539,7 +539,7 @@ Axis Types of NDCube: {axis_type}
         result : `ndcube_sequence.NDCubeSequence`
 
         """
-        # is axis is -ve then calculate the axis from the length of the dimensions of one cube
+        # If axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
             axis = len(self.dimensions) + axis
         # To store the resultant cube
@@ -550,10 +550,13 @@ Axis Types of NDCube: {axis_type}
         for i in range(self.data.shape[axis]):
             # Setting the slice value to the index so that the slices are done correctly.
             cube_slices[axis] = i
+            # Set to None the metadata of sliced cubes.
+            sliced_cube = self[cube_slices]
+            sliced_cube.meta = None
             # Appending the sliced cubes in the result_cube list
             result_cubes.append(self[cube_slices])
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
-        return NDCubeSequence(result_cubes, common_axis=axis)
+        return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
     pass
