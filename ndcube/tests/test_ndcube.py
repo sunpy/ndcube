@@ -3,6 +3,7 @@
 Tests for NDCube
 '''
 from collections import namedtuple
+from collections import OrderedDict
 import datetime
 
 import pytest
@@ -914,9 +915,12 @@ def test_axis_world_coords_without_input(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (cubem.explode_along_axis(0), (2*u.pix, 3*u.pix, 4*u.pix)),
-    (cubem.explode_along_axis(1), (3*u.pix, 2*u.pix, 4*u.pix)),
-    (cubem.explode_along_axis(-2), (3*u.pix, 2*u.pix, 4*u.pix))
+    (cubem.explode_along_axis(0).dimensions, (2*u.pix, 3*u.pix, 4*u.pix)),
+    (cubem.explode_along_axis(1).dimensions, (3*u.pix, 2*u.pix, 4*u.pix)),
+    (cubem.explode_along_axis(-2).dimensions, (3*u.pix, 2*u.pix, 4*u.pix)),
+    (cubem.explode_along_axis(0)[0].meta, OrderedDict()),
+    (type(cubem.explode_along_axis(0)), NDCubeSequence),
+    (type(cubem.explode_along_axis(0)[0]), NDCube)
 ])
 def test_explode_along_axis(test_input, expected):
-    assert test_input.dimensions == expected
+    assert test_input == expected

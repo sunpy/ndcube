@@ -555,7 +555,7 @@ Axis Types of NDCube: {axis_type}
             sliced_cube = self[item]
             sliced_cube.meta = None
             # Appending the sliced cubes in the result_cube list
-            result_cubes.append(self[item])
+            result_cubes.append(sliced_cube)
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
 
