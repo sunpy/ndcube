@@ -545,16 +545,17 @@ Axis Types of NDCube: {axis_type}
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
-        cube_slices = [slice(None, None, None)] * len(self.data.ndim)
+        cube_slices = [slice(None, None, None)] * self.data.ndim
         # Slicing the cube inside result_cube
         for i in range(self.data.shape[axis]):
             # Setting the slice value to the index so that the slices are done correctly.
             cube_slices[axis] = i
             # Set to None the metadata of sliced cubes.
-            sliced_cube = self[cube_slices]
+            item = tuple(cube_slices)
+            sliced_cube = self[item]
             sliced_cube.meta = None
             # Appending the sliced cubes in the result_cube list
-            result_cubes.append(self[cube_slices])
+            result_cubes.append(self[item])
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
 

@@ -13,6 +13,7 @@ import astropy.units as u
 from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
 from ndcube.tests import helpers
+from ndcube.ndcube_sequence import NDCubeSequence
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
@@ -910,3 +911,12 @@ def test_axis_world_coords_without_input(test_input, expected):
     for i in range(len(all_coords)):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem.explode_along_axis(0), (2*u.pix, 3*u.pix, 4*u.pix)),
+    (cubem.explode_along_axis(1), (3*u.pix, 2*u.pix, 4*u.pix)),
+    (cubem.explode_along_axis(-2), (3*u.pix, 2*u.pix, 4*u.pix))
+])
+def test_explode_along_axis(test_input, expected):
+    assert test_input.dimensions == expected
