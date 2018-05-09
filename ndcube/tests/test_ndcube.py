@@ -915,12 +915,20 @@ def test_axis_world_coords_without_input(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (cubem.explode_along_axis(0).dimensions, (2*u.pix, 3*u.pix, 4*u.pix)),
-    (cubem.explode_along_axis(1).dimensions, (3*u.pix, 2*u.pix, 4*u.pix)),
-    (cubem.explode_along_axis(-2).dimensions, (3*u.pix, 2*u.pix, 4*u.pix)),
-    (cubem.explode_along_axis(0)[0].meta, OrderedDict()),
-    (type(cubem.explode_along_axis(0)), NDCubeSequence),
-    (type(cubem.explode_along_axis(0)[0]), NDCube)
+    (cubem.explode_along_axis(0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence)),
+    (cubem.explode_along_axis(1), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence)),
+    (cubem.explode_along_axis(-2), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence)),
 ])
 def test_explode_along_axis(test_input, expected):
-    assert test_input == expected
+    expected_dimensions, expected_type = expected
+    assert test_input.dimensions == expected_dimensions
+    assert isinstance(test_input, expected_type)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem.explode_along_axis(0)[0], (NDCube, OrderedDict))
+])
+def test_explode_along_axis_meta(test_input, expected):
+    expected_type, expected_meta = expected
+    assert isinstance(test_input, expected_type)
+    assert isinstance(test_input.meta, expected_meta)
