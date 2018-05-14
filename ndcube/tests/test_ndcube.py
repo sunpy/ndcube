@@ -915,20 +915,13 @@ def test_axis_world_coords_without_input(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (cubem.explode_along_axis(0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence)),
-    (cubem.explode_along_axis(1), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence)),
-    (cubem.explode_along_axis(-2), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence)),
+    (cubem.explode_along_axis(0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence, dict)),
+    (cubem.explode_along_axis(1), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict)),
+    (cubem.explode_along_axis(-2), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict)),
+    (cubem.explode_along_axis(0)[0], ([3., 4.]*u.pix, NDCube, OrderedDict))
 ])
-def test_explode_along_axis(test_input, expected):
-    expected_dimensions, expected_type = expected
-    assert test_input.dimensions == expected_dimensions
-    assert isinstance(test_input, expected_type)
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    (cubem.explode_along_axis(0)[0], (NDCube, OrderedDict))
-])
-def test_explode_along_axis_meta(test_input, expected):
-    expected_type, expected_meta = expected
+def test_explode_along_axis_v2(test_input, expected):
+    expected_dimensions, expected_type, expected_meta = expected
+    assert tuple(test_input.dimensions) == tuple(expected_dimensions)
     assert isinstance(test_input, expected_type)
     assert isinstance(test_input.meta, expected_meta)
