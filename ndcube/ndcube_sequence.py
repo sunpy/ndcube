@@ -77,7 +77,6 @@ class NDCubeSequenceBase:
         cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
         return cube_like_dimensions
 
-
     @property
     def cube_like_world_axis_physical_types(self):
         return self.data[0].world_axis_physical_types
