@@ -920,12 +920,13 @@ def test_axis_world_coords_without_input(test_input, expected):
     ((cubem, -2, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict))
 ])
 def test_explode_along_axis(test_input, expected):
-    output = test_input[0].explode_along_axis(test_input[1])
+    inp_cube, inp_axis, inp_slice = test_input
     exp_dimensions, exp_type_seq, exp_meta_seq, exp_type_cube, exp_meta_cube = expected
+    output = inp_cube.explode_along_axis(inp_axis)
     assert tuple(output.dimensions) == tuple(exp_dimensions)
-    assert any(output[test_input[2]].dimensions == \
+    assert any(output[inp_slice].dimensions == \
         u.Quantity((exp_dimensions[1], exp_dimensions[2]), unit='pix'))
     assert isinstance(output, exp_type_seq)
-    assert isinstance(output[test_input[2]], exp_type_cube)
+    assert isinstance(output[inp_slice], exp_type_cube)
     assert isinstance(output.meta, exp_meta_seq)
-    assert isinstance(output[test_input[2]].meta, exp_meta_cube)
+    assert isinstance(output[inp_slice].meta, exp_meta_cube)
