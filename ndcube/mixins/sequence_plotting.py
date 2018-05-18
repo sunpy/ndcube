@@ -2,11 +2,14 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
-from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+try:
+    from sunpy.visualization.animator import ImageAnimatorWCS
+except ImportError:
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS
 
 from ndcube import utils
 
-__all__ = ['NDCubePlotMixin']
+__all__ = ['NDCubeSequencePlotMixin']
 
 NON_COMPATIBLE_UNIT_MESSAGE = \
   "All sequence sub-cubes' unit attribute are not compatible with data_unit set by user."

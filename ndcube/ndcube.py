@@ -337,7 +337,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 int_axes = np.empty(len(axes), dtype=int)
                 for i, axis in enumerate(axes):
                     if isinstance(axis, int):
-                        int_axes[i] = axis
+                        if axis < 0:
+                            int_axes[i] = n_dimensions + axis
+                        else:
+                            int_axes[i] = axis
                     elif isinstance(axis, str):
                         int_axes[i] = utils.cube.get_axis_number_from_axis_name(
                             axis, world_axis_types)

@@ -38,6 +38,10 @@ class NDCubeSequenceBase:
 
     @property
     def dimensions(self):
+        return self._dimensions
+
+    @property
+    def _dimensions(self):
         dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
@@ -60,8 +64,8 @@ class NDCubeSequenceBase:
     def cube_like_dimensions(self):
         if type(self._common_axis) is not int:
             raise TypeError("Common axis must be set.")
-        dimensions = list(self.dimensions)
-        cube_like_dimensions = list(self.dimensions[1:])
+        dimensions = list(self._dimensions)
+        cube_like_dimensions = list(self._dimensions[1:])
         if dimensions[self._common_axis+1].isscalar:
             cube_like_dimensions[self._common_axis] = \
               u.Quantity(dimensions[0].value * dimensions[self._common_axis+1].value, unit=u.pix)
