@@ -1,13 +1,15 @@
-from warnings import warn
-import copy
 import datetime
+from warnings import warn
 
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
-from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+try:
+    from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
+except ImportError:
+    from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
 
 from ndcube import utils
 from ndcube.mixins import sequence_plotting
