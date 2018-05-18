@@ -2,8 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import astropy.units as u
-from sunpy.visualization.imageanimator import ImageAnimatorWCS
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+try:
+    from sunpy.visualization.animator import ImageAnimatorWCS
+except ImportError:
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS
+
 
 __all__ = ['NDCubePlotMixin']
 
