@@ -1,8 +1,6 @@
 import numpy as np
 
 import astropy.units as u
-import sunpy.map
-from sunpy.map import MapCube
 
 from ndcube import utils
 from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin

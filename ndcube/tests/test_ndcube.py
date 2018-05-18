@@ -2,12 +2,10 @@
 '''
 Tests for NDCube
 '''
-from collections import namedtuple
 from collections import OrderedDict
 import datetime
 
 import pytest
-import sunpy.map
 import numpy as np
 import astropy.units as u
 
