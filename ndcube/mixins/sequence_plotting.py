@@ -5,9 +5,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
 try:
-    from sunpy.visualization.animator import ImageAnimatorWCS
+    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
 except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimatorWCS
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 
 from ndcube import utils
 
