@@ -9,6 +9,7 @@ import astropy.units as u
 from astropy.utils.misc import InheritDocstrings
 
 from ndcube import utils
+from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -526,6 +527,40 @@ Axis Types of NDCube: {axis_type}
 """.format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
            axis_type=self.world_axis_physical_types))
 
+    def explode_along_axis(self, axis):
+        """
+        Separates slices of NDCubes along a given cube axis into a NDCubeSequence
+        of (N-1)DCubes.
+
+        Parameters
+        ----------
+        axis : `int`
+            The axis along which the data is to be changed.
+
+        Returns
+        -------
+        result : `ndcube_sequence.NDCubeSequence`
+
+        """
+        # If axis is -ve then calculate the axis from the length of the dimensions of one cube
+        if axis < 0:
+            axis = len(self.dimensions) + axis
+        # To store the resultant cube
+        result_cubes = []
+        # All slices are initially initialised as slice(None, None, None)
+        cube_slices = [slice(None, None, None)] * self.data.ndim
+        # Slicing the cube inside result_cube
+        for i in range(self.data.shape[axis]):
+            # Setting the slice value to the index so that the slices are done correctly.
+            cube_slices[axis] = i
+            # Set to None the metadata of sliced cubes.
+            item = tuple(cube_slices)
+            sliced_cube = self[item]
+            sliced_cube.meta = None
+            # Appending the sliced cubes in the result_cube list
+            result_cubes.append(sliced_cube)
+        # Creating a new NDCubeSequence with the result_cubes and common axis as axis
+        return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
     pass

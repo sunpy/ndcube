@@ -2,17 +2,17 @@
 '''
 Tests for NDCube
 '''
-from collections import namedtuple
+from collections import OrderedDict
 import datetime
 
 import pytest
-import sunpy.map
 import numpy as np
 import astropy.units as u
 
 from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
 from ndcube.tests import helpers
+from ndcube.ndcube_sequence import NDCubeSequence
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
@@ -910,3 +910,21 @@ def test_axis_world_coords_without_input(test_input, expected):
     for i in range(len(all_coords)):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((cubem, 0, 0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
+    ((cubem, 1, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
+    ((cubem, -2, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict))
+])
+def test_explode_along_axis(test_input, expected):
+    inp_cube, inp_axis, inp_slice = test_input
+    exp_dimensions, exp_type_seq, exp_meta_seq, exp_type_cube, exp_meta_cube = expected
+    output = inp_cube.explode_along_axis(inp_axis)
+    assert tuple(output.dimensions) == tuple(exp_dimensions)
+    assert any(output[inp_slice].dimensions == \
+        u.Quantity((exp_dimensions[1], exp_dimensions[2]), unit='pix'))
+    assert isinstance(output, exp_type_seq)
+    assert isinstance(output[inp_slice], exp_type_cube)
+    assert isinstance(output.meta, exp_meta_seq)
+    assert isinstance(output[inp_slice].meta, exp_meta_cube)

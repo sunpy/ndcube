@@ -4,11 +4,14 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
-from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+try:
+    from sunpy.visualization.animator import ImageAnimatorWCS
+except ImportError:
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS
 
 from ndcube import utils
 
-__all__ = ['NDCubePlotMixin']
+__all__ = ['NDCubeSequencePlotMixin']
 
 NON_COMPATIBLE_UNIT_MESSAGE = \
   "All sequence sub-cubes' unit attribute are not compatible with data_unit set by user."
@@ -822,7 +825,7 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
             [c.dimensions[0].value for c in seq.data], dtype=int))
         # Add dimensions of length 1 of concatenated data array
         # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq.dimensions) - 1:
+        if seq[0].wcs.naxis != len(seq._dimensions) - 1:
             new_shape = list(data_concat.shape)
             for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axis[::-1]]:
                 new_shape.insert(i, 1)
