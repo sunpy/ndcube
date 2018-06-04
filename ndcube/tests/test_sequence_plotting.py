@@ -207,35 +207,29 @@ seq_concat_km = np.ma.masked_array(
 x_axis_coords3 = np.array([0.4, 0.8, 1.2, 1.6]).reshape((1, 1, 4))
 new_x_axis_coords3_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
 new_x_axis_coords3_shape[-1] = 1
-none_axis_ranges_axis3 = [np.linspace(0, len(seq.data), len(seq.data)),
-                          np.array([0., 2.]), np.array([0., 1.5, 3.]),
+none_axis_ranges_axis3 = [np.arange(0, len(seq.data)+1),
+                          np.array([0., 1., 2.]), np.arange(0, 4),
                           np.tile(np.array(x_axis_coords3), new_x_axis_coords3_shape)]
 none_axis_ranges_axis0 = [np.arange(len(seq.data)),
-                          np.array([0., 2.]), np.array([0., 1.5, 3.]),
-                          np.linspace(0, int(seq.dimensions[-1].value),
-                                      int(seq.dimensions[-1].value))]
+                          np.array([0., 1., 2.]), np.arange(0, 4),
+                          np.arange(0, int(seq.dimensions[-1].value)+1)]
 distance0_none_axis_ranges_axis0 = [seq.sequence_axis_extra_coords["distance"].value,
-                                    np.array([0., 2.]), np.array([0., 1.5, 3.]),
-                                    np.linspace(0, int(seq.dimensions[-1].value),
-                                                int(seq.dimensions[-1].value))]
+                                    np.array([0., 1., 2.]), np.arange(0, 4),
+                                    np.arange(0, int(seq.dimensions[-1].value)+1)]
 distance0_none_axis_ranges_axis0_mm = [seq.sequence_axis_extra_coords["distance"].to("mm").value,
-                                       np.array([0., 2.]), np.array([0., 1.5, 3.]),
-                                       np.linspace(0, int(seq.dimensions[-1].value),
-                                                int(seq.dimensions[-1].value))]
+                                       np.array([0., 1., 2.]), np.arange(0, 4),
+                                       np.arange(0, int(seq.dimensions[-1].value)+1)]
 userrangequantity_none_axis_ranges_axis0 = [
-    np.arange(int(seq.dimensions[0].value)),
-    np.array([0., 2.]), np.array([0., 1.5, 3.]),
-     np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+    np.arange(int(seq.dimensions[0].value)), np.array([0., 1., 2.]), np.arange(0, 4),
+    np.arange(0, int(seq.dimensions[-1].value)+1)]
 
 userrangequantity_none_axis_ranges_axis0_1e7 = [
-    (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value,
-    np.array([0., 2.]), np.array([0., 1.5, 3.]),
-     np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+    (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value, np.array([0., 1., 2.]),
+     np.arange(0, 4), np.arange(0, int(seq.dimensions[-1].value)+1)]
 
 hi2_none_axis_ranges_axis2 = [
-    np.linspace(0, len(seq.data), len(seq.data)), np.array([0., 2.]),
-    np.arange(int(seq.dimensions[2].value)),
-    np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+    np.arange(0, len(seq.data)+1), np.array([0., 1., 2.]),
+    np.arange(int(seq.dimensions[2].value)), np.arange(0, int(seq.dimensions[-1].value)+1)]
 
 x_axis_coords1 = np.zeros(tuple([int(s.value) for s in seq.dimensions]))
 x_axis_coords1[0, 1] = 1.
@@ -245,8 +239,8 @@ x_axis_coords1[2, 1] = 1.
 x_axis_coords1[3, 0] = 2.
 x_axis_coords1[3, 1] = 3.
 pix1_none_axis_ranges_axis1 =  [
-    np.linspace(0, len(seq.data), len(seq.data)), x_axis_coords1, np.array([0., 1.5, 3.]),
-    np.linspace(0, int(seq.dimensions[-1].value), int(seq.dimensions[-1].value))]
+    np.arange(0, len(seq.data)+1), x_axis_coords1, np.arange(0, 4),
+    np.arange(0, int(seq.dimensions[-1].value)+1)]
 
 # Derive expected extents
 seq_axis1_lim_deg = [0.49998731, 0.99989848]
@@ -258,16 +252,14 @@ seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
 cube_like_new_x_axis_coords2_shape = u.Quantity(seq.cube_like_dimensions, unit=u.pix).value.astype(int)
 cube_like_new_x_axis_coords2_shape[-1] = 1
 cubelike_none_axis_ranges_axis2 = [
-    np.linspace(0, int(seq.cube_like_dimensions[0].value), int(seq.cube_like_dimensions[0].value)),
-    np.array([0., 1.5, 3.]), np.tile(x_axis_coords3, cube_like_new_x_axis_coords2_shape)]
+    np.arange(0, int(seq.cube_like_dimensions[0].value)+1), np.arange(0, 4),
+    np.tile(x_axis_coords3, cube_like_new_x_axis_coords2_shape)]
 
 cubelike_none_axis_ranges_axis2_s = copy.deepcopy(cubelike_none_axis_ranges_axis2)
 cubelike_none_axis_ranges_axis2_s[2] = cubelike_none_axis_ranges_axis2_s[2] * 60.
 
-cubelike_none_axis_ranges_axis0 = [
-    [0, 8], np.array([0., 1.5, 3.]),
-    np.linspace(0, int(seq.cube_like_dimensions[-1].value),
-                int(seq.cube_like_dimensions[-1].value))]
+cubelike_none_axis_ranges_axis0 = [[0, 8], np.arange(0, 4),
+                                   np.arange(0, int(seq.cube_like_dimensions[-1].value)+1)]
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
