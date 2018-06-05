@@ -1024,7 +1024,7 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                     # If extra coord is same for each cube, storing
                     # values as single 1D axis range will suffice.
                     if ((np.array(x_axis_coords) == x_axis_coords[0]).all() and
-                        (len(extra_coord_axes) == 1)):
+                            (len(extra_coord_axes) == 1)):
                         x_axis_coords = x_axis_coords[0]
                     else:
                         # Else if all axes are not dependent, create an array of x-axis
@@ -1172,7 +1172,8 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
         cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
         if cubes_with_mask.any():
             if cubes_with_mask.all():
-                mask_concat = np.concatenate([cube.mask for cube in seq.data], axis=seq._common_axis)
+                mask_concat = np.concatenate(
+                    [cube.mask for cube in seq.data], axis=seq._common_axis)
             else:
                 masks = []
                 for i, cube in enumerate(seq.data):

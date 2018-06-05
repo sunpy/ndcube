@@ -181,7 +181,7 @@ seq_with_units_and_some_uncertainty = NDCubeSequence(
     common_axis=common_axis)
 
 seq_with_some_masks = NDCubeSequence(data_list=[cube1_with_mask, cube3, cube1, cube3_with_mask],
-    common_axis=common_axis)
+                                     common_axis=common_axis)
 
 seqm = NDCubeSequence(data_list=[cubem1, cubem3, cubem1, cubem3], common_axis=common_axis)
 
@@ -225,7 +225,7 @@ userrangequantity_none_axis_ranges_axis0 = [
 
 userrangequantity_none_axis_ranges_axis0_1e7 = [
     (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value, np.array([0., 1., 2.]),
-     np.arange(0, 4), np.arange(0, int(seq.dimensions[-1].value)+1)]
+    np.arange(0, 4), np.arange(0, int(seq.dimensions[-1].value)+1)]
 
 hi2_none_axis_ranges_axis2 = [
     np.arange(0, len(seq.data)+1), np.array([0., 1., 2.]),
@@ -238,7 +238,7 @@ x_axis_coords1[1, 1] = 3.
 x_axis_coords1[2, 1] = 1.
 x_axis_coords1[3, 0] = 2.
 x_axis_coords1[3, 1] = 3.
-pix1_none_axis_ranges_axis1 =  [
+pix1_none_axis_ranges_axis1 = [
     np.arange(0, len(seq.data)+1), x_axis_coords1, np.arange(0, 4),
     np.arange(0, int(seq.dimensions[-1].value)+1)]
 
@@ -249,7 +249,8 @@ seq_axis2_lim_m = [seq[:, :, :, 0].data[0].axis_world_coords()[-1][0].value,
                    seq[:, :, :, 0].data[0].axis_world_coords()[-1][-1].value]
 
 # Derive expected axis_ranges for cube-like cases.
-cube_like_new_x_axis_coords2_shape = u.Quantity(seq.cube_like_dimensions, unit=u.pix).value.astype(int)
+cube_like_new_x_axis_coords2_shape = u.Quantity(
+    seq.cube_like_dimensions, unit=u.pix).value.astype(int)
 cube_like_new_x_axis_coords2_shape[-1] = 1
 cubelike_none_axis_ranges_axis2 = [
     np.arange(0, int(seq.cube_like_dimensions[0].value)+1), np.arange(0, 4),
