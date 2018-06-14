@@ -11,7 +11,7 @@ environment:
                         # of 32 bit and 64 bit builds are needed, move this
                         # to the matrix section.
       CONDA_CHANNELS: "astropy-ci-extras sunpy"
-      CONDA_DEPENDENCIES: "Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas pytest-cov coverage glymur suds-jurko sphinx sunpy>0.8"
+      CONDA_DEPENDENCIES: "Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas pytest-cov coverage glymur suds-jurko sphinx"
       PIP_DEPENDENCIES: "sunpy-sphinx-theme pytest-astropy"
 
   matrix:
@@ -19,10 +19,12 @@ environment:
       - PYTHON_VERSION: "3.5"
         ASTROPY_VERSION: "stable"
         NUMPY_VERSION: "stable"
+        SUNPY_VERSION: "stable"
 
       - PYTHON_VERSION: "3.6"
         ASTROPY_VERSION: "stable"
         NUMPY_VERSION: "stable"
+        SUNPY_VERSION: "stable"
 
 platform:
     -x64
