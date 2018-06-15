@@ -6,7 +6,10 @@ import copy
 import numpy as np
 import astropy.units as u
 import matplotlib
-import sunpy.visualization.imageanimator
+try:
+    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
+except ImportError:
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 
 from ndcube import NDCube
 from ndcube.utils.wcs import WCS
@@ -259,7 +262,7 @@ def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert type(output) is sunpy.visualization.imageanimator.ImageAnimatorWCS
+    assert type(output) is ImageAnimatorWCS
     np.testing.assert_array_equal(output.data, expected_data)
     assert output.axes.xaxis.get_label_text() == expected_xlabel
     assert output.axes.yaxis.get_label_text() == expected_ylabel
@@ -333,7 +336,7 @@ def test_cube_plot_ND_as_1DAnimation(test_input, test_kwargs, expected_values):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert type(output) is sunpy.visualization.imageanimator.LineAnimator
+    assert type(output) is LineAnimator
     np.testing.assert_array_equal(output.data, expected_data)
     for i, output_axis_range in enumerate(output.axis_ranges):
         if expected_axis_ranges[i] is not False:
