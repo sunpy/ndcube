@@ -375,3 +375,33 @@ dimensions.shape ``(<Quantity 3.0 pix>, <Quantity 3.0 pix>, <Quantity
 
 Note that any cube axis can be input.  A common axis need not be
 defined.
+
+Extracting `numpy` Arrays
+-------------------------
+
+It is possible that you may have some procedures that are designed to operate on arrays instead of
+`~ndcube.NDCubeSequence` objects.
+Therefore, it may be useful to extract the data in the `~ndcube.NDCubeSequence` into a single `ndarray`.
+A succinct way of doing this operation is using python's list comprehension features.
+For example, say we wanted to make a 4D array out of the `my_sequence` object defined earlier.::
+
+    >>> # Make a single 4D array of data in sequence.
+    >>> data = np.stack([cube.data for cube in sequence.data])
+    >>> print(data.shape)
+    (3, 3, 4, 5)
+
+If instead, we want to define a 3D array where every `~ndcube.NDCube` in the `~ndcube.NDCubeSequence` is appended
+together, we can use `numpy`'s `vstack` function::
+
+    >>> # Make a 3D array
+    >>> data = np.vstack([cube.data for cube in my_sequence.data])
+    >>> print(data.shape)
+    (9, 4, 5)
+
+Finally, we can also create 3D arrays by slicing `~ndcube.NDCubeSequence` objects.
+Here we slice the `~ndcube.NDCubeSequence` along the fastest-changing dimension::
+
+    >>> # Slice sequence to make 3D array
+    >>> data = np.stack([cube[2].data for cube in my_sequence.data])
+    >>> print(data.shape)
+    (3, 4, 5)
