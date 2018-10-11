@@ -386,7 +386,7 @@ A succinct way of doing this operation is using python's list comprehension feat
 For example, say we wanted to make a 4D array out of the `my_sequence` object defined earlier.::
 
     >>> # Make a single 4D array of data in sequence.
-    >>> data = np.stack([cube.data for cube in sequence.data])
+    >>> data = np.stack([cube.data for cube in my_sequence.data])
     >>> print(data.shape)
     (3, 3, 4, 5)
 
