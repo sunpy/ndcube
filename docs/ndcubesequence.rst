@@ -376,14 +376,23 @@ dimensions.shape ``(<Quantity 3.0 pix>, <Quantity 3.0 pix>, <Quantity
 Note that any cube axis can be input.  A common axis need not be
 defined.
 
-Extracting `numpy` Arrays
+Extracting Data Arrays
 -------------------------
 
 It is possible that you may have some procedures that are designed to operate on arrays instead of
 `~ndcube.NDCubeSequence` objects.
-Therefore, it may be useful to extract the data in the `~ndcube.NDCubeSequence` into a single `ndarray`.
+Therefore, it may be useful to extract the `data` (or any other information such as `mask`) in the `~ndcube.NDCubeSequence`
+into a single `~numpy.ndarray`.
 A succinct way of doing this operation is using python's list comprehension features.
-For example, say we wanted to make a 4D array out of the `my_sequence` object defined earlier.::
+
+In the above examples we defined the `my_sequence` `~ndcube.NDCubeSequence` obejct.::
+
+    >>> # Print dimensions of my_sequence as a reminder
+    >>> print(my_sequence.dimensions)
+    (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+
+In this section we will use this object to demonstrate extracting data arrays from `~ndcube.NDCubeSequence` objects.
+For example, say we wanted to make a 4D array out of `my_sequence`.::
 
     >>> # Make a single 4D array of data in sequence.
     >>> data = np.stack([cube.data for cube in my_sequence.data])
