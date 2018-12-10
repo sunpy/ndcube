@@ -11,7 +11,16 @@ New Features
   `~ndcube.mixins.plotting.NDCubePlotMixin`. [#101]
 - Moved NDCubSequence plotting to a new mixin class,
   NDCubSequencePlotMixin, making the plotting an optional extra.  All
-  the non-plotting functionality now lives in the NDCubeSequenceBase class. [#98]
+  the non-plotting functionality now lives in the NDCubeSequenceBase
+  class. [#98]
+- Created a new `~ndcube.NDCubeBase.explode_along_axis` method that
+  breaks an NDCube out into an NDCubeSequence along a chosen axis.  It
+  is equivalent to
+  `~ndcube.NDCubeSequenceBase.explode_along_axis`. [#118]
+- NDCubeSequence plot mixin can now animate a cube as a 1-D line if a single
+  axis number is supplied to plot_axis_indices kwarg.
+
+  
 
 API Changes
 -----------
@@ -34,6 +43,10 @@ Bug Fixes
   axis indices as arguments. [#106]
 - Fixed bug in ``NDCube.crop_by_coords`` in case where real world
   coordinate system was rotated relative to pixel grid. [#113].
+- `~ndcube.NDCubeBase.world_axis_physical_types` is now not
+  case-sensitive to the CTYPE values in the WCS. [#109]
+- `~ndcube.NDCubeBase.plot` now generates a 1-D line animation when
+  image_axis is an integer.
 
 
 1.0.1
