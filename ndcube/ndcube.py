@@ -503,7 +503,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         result: `ndcube.NDCube`
 
         """
-        if isinstance(coord_name, str):
+        if not isinstance(coord_name, str):
             raise TypeError("The API for this function has changed. "
                             "Please give coord_name, min_coord_value, max_coord_value")
         extra_coord_dict = self.extra_coords[coord_name]
@@ -512,7 +512,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             extra_coord_values = np.asarray(extra_coord_dict["value"])
         w = np.logical_and(extra_coord_values >= min_coord_value,
-                           extra_coord_values < min_coord_value + interval_width)
+                           extra_coord_values < max_coord_value)
         w = np.arange(len(extra_coord_values))[w]
         item = [slice(None)]*len(self.dimensions)
         item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
