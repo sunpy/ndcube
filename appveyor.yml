@@ -12,7 +12,7 @@ environment:
                         # to the matrix section.
       CONDA_CHANNELS: "astropy-ci-extras sunpy"
       CONDA_DEPENDENCIES: "Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas pytest-cov coverage glymur suds-jurko sphinx"
-      PIP_DEPENDENCIES: "sunpy-sphinx-theme pytest-astropy"
+      PIP_DEPENDENCIES: "sunpy-sphinx-theme pytest-astropy sphinx-astropy"
 
   matrix:
 
