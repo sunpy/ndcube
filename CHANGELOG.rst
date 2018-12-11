@@ -1,4 +1,4 @@
-1.1 (Unreleased)
+1.1
 ================
 
 API-Breaking Changes
