@@ -1,7 +1,7 @@
 1.1 (Unreleased)
 ================
 
-API Breaking Changes
+API-Breaking Changes
 --------------------
 - `~ndcube.NDCubeBase.crop_by_extra_coord` API has been broken and
   replaced.
@@ -9,7 +9,7 @@ API Breaking Changes
   ``crop_by_extra_coord(min_coord_value, interval_width, coord_name)``.
   New version:
   ``crop_by_extra_coord(coord_name, min_coord_value,  max_coord_value)``.
-  [#140]
+  [#142]
 
 New Features
 ------------
