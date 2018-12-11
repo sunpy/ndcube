@@ -865,9 +865,9 @@ def test_crop_by_coords_error(test_input):
 
 @pytest.mark.parametrize(
     "test_input,expected",
-    [((cubem, 0*u.pix, 1.5*u.pix, "time"), cubem[0:2]),
-     ((cube, 0*u.pix, 1.5*u.pix, "bye"), cube[:, :, 0:2]),
-     ((cubet, datetime.datetime(2000, 1, 1), datetime.timedelta(minutes=2), "time"), cubet[:2])])
+    [((cubem, "time", 0*u.pix, 1.5*u.pix, ), cubem[0:2]),
+     ((cube, "bye", 0*u.pix, 1.5*u.pix, ), cube[:, :, 0:2]),
+     ((cubet, "time", datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 3)), cubet[:2])])
 def test_crop_by_extra_coord(test_input, expected):
     helpers.assert_cubes_equal(
         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
