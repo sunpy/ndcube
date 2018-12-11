@@ -436,8 +436,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Calculation of upper_corner with the inputing interval_widths
         # This part of the code will be removed in version 2.0
         if interval_widths:
-            warnings.warn("interval_widths will be removed from the API in "
-                          "version 2.0, please use upper_corner argument.")
+            warnings.warn(
+                "interval_widths will be removed from the API in version 2.0, please use upper_corner argument.")
             if upper_corner:
                 raise ValueError("Only one of interval_widths or upper_corner "
                                  "can be set. Recommend using upper_corner as "
