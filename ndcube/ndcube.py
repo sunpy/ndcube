@@ -481,36 +481,38 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                       for axis_pixels in all_pix_corners])
         return self[item]
 
-    def crop_by_extra_coord(self, min_coord_value, interval_width, coord_name):
+    def crop_by_extra_coord(self, coord_name, min_coord_value, max_coord_value):
         """
         Crops an NDCube given a minimum value and interval width along an extra coord.
 
         Parameters
         ----------
+        coord_name: `str`
+            Name of extra coordinate by which to crop.
+
         min_coord_value: Single value `astropy.units.Quantity`
             The minimum desired value of the extra coord after cropping.
             Unit must be consistent with the extra coord on which cropping is based.
 
-        interval_width: Single value `astropy.units.Quantity`
-            The width of the interval along the extra coord axis in physical units
-            consistent with the extra coord.  Unit must be consistent with the extra
-            coord on which cropping is based.
-
-        extra_coord: `str`
-            Name of extra coordinate.
+        min_coord_value: Single value `astropy.units.Quantity`
+            The maximum desired value of the extra coord after cropping.
+            Unit must be consistent with the extra coord on which cropping is based.
 
         Returns
         -------
         result: `ndcube.NDCube`
 
         """
+        if not isinstance(coord_name, str):
+            raise TypeError("The API for this function has changed. "
+                            "Please give coord_name, min_coord_value, max_coord_value")
         extra_coord_dict = self.extra_coords[coord_name]
         if isinstance(extra_coord_dict["value"], u.Quantity):
             extra_coord_values = extra_coord_dict["value"]
         else:
             extra_coord_values = np.asarray(extra_coord_dict["value"])
         w = np.logical_and(extra_coord_values >= min_coord_value,
-                           extra_coord_values < min_coord_value + interval_width)
+                           extra_coord_values < max_coord_value)
         w = np.arange(len(extra_coord_values))[w]
         item = [slice(None)]*len(self.dimensions)
         item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
