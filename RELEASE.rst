@@ -1,4 +1,4 @@
-The SunPy project is very happy to announce the release of a new package "ndcube".
+The SunPy project is very happy to announce a new release of "ndcube".
 
 ndcube is a package built for handling, inspecting and visualizing a wide
 variety of data, of any number of dimensions, along with coordinate information
@@ -7,24 +7,23 @@ described by FITS-WCS. The `~ndcube.NDCube` object is based on the astropy
 and the WCS simultaneously, plotting with matplotlib and support for extra
 coordinate information along any of the axes not described by WCS.
 
-In addition to this the ndcube package provides the `~nddata.NDCubeSequence`
+In addition the ndcube package provides the `~nddata.NDCubeSequence`
 class for representing sequences of `~ndcube.NDCube` objects where the
 coordinate information may or may not align, and accessing these sequences in a
 way consistent with a singular cube.
 
-The ndcube development has been lead by Daniel Ryan with contributions from the
-following people:
+This release of ndcube contains 205 commits in 35 merged pull requests
+closing 51 issues from 6 people, 3 of whom are first time
+contributors to ndcube.
+
+The people who have contributed to the code for this release are:
 
 *  Daniel Ryan
-*  Ankit Baruah
+*  Baptiste Pellorce  *
 *  Stuart Mumford
-*  Mateo Inchaurrandieta
+*  Aoife Maria Ryan  *
+*  Roy Smart  *
 *  Nabil Freij
-*  Drew Leonard
-*  Shelbe Timothy
-
-A lot of the design and development of ndcube was done as part of Ankit's Google
-Summer of Code project in the summer of 2017.
 
 For more information about ndcube see the `documentation <http://docs.sunpy.org/projects/ndcube/>`_.
 
