@@ -515,7 +515,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                            extra_coord_values < max_coord_value)
         w = np.arange(len(extra_coord_values))[w]
         item = [slice(None)]*len(self.dimensions)
-        item[extra_coord_dict["axis"]] = slice(w[0], w[1]+1)
+        item[extra_coord_dict["axis"]] = slice(w[0], w[-1]+1)
         return self[tuple(item)]
 
     def __repr__(self):
