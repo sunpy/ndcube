@@ -1,9 +1,10 @@
 1.1.1
-=====
+================
+
 Bug Fixes
 ---------
-- Fixed NDCube.crop_by_extra_coord.  It would always crop the chsoen
-  dimension to length 2. [#144]
+- Fixed NDCube.crop_by_extra_coord.  This method would always crop the
+  chosen dimension to length 2 but is now fixed. [#144]
 - Updated dependency on sunpy to >=0.9 due to required new animator
   features. [#145]
 
