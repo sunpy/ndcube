@@ -1,19 +1,41 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 
-trigger:
-- master
+variables:
+  "System.PreferGit": true
+  Agent.Source.Git.ShallowFetchDepth: 1
+  CI_NAME: Azure Pipelines
+  CI_BUILD_ID: $(Build.BuildId)
+  CI_BUILD_URL: "https://dev.azure.com/sunpy/ndcube/_build/results?buildId=$(Build.BuildId)"
+  GIT_BRANCH: $[ coalesce(variables['System.PullRequest.SourceBranch'], variables['Build.SourceBranchName'], 'not-found') ]
+  GIT_COMMIT_SHA: $[ coalesce(variables['System.PullRequest.SourceCommitId'], variables['Build.SourceVersion'], 'not-found') ]
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+jobs:
+- template: azure-templates.yml
+  parameters:
+    name: Linux_36_offline
+    os: linux
+    tox: py36-offline
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- template: azure-templates.yml
+  parameters:
+    name: pycodestyle
+    os: linux
+    tox: pycodestyle
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- template: azure-templates.yml
+  parameters:
+    name: macOS_37_offline
+    os: macos
+    tox: py37-offline
+
+- template: azure-templates.yml
+  parameters:
+    name: Windows_36_offline
+    os: windows
+    tox: py36-offline
+
+- template: azure-templates.yml
+  parameters:
+    name: Linux_36_Conda_offline
+    os: linux
+    tox: conda

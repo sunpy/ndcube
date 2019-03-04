@@ -1,0 +1,93 @@
+skip-check: &skip-check
+  name: Check for [ci skip]
+  command: bash .circleci/early_exit.sh
+
+merge-check: &merge-check
+  name: Check if we need to merge upstream master
+  command: |
+    if [[ -n "${CIRCLE_PR_NUMBER}" ]]; then
+      git fetch origin +refs/pull/$CIRCLE_PR_NUMBER/merge:pr/$CIRCLE_PR_NUMBER/merge
+      git checkout -qf pr/$CIRCLE_PR_NUMBER/merge
+    fi
+
+apt-run: &apt-install
+  name: Install apt packages
+  command: |
+    apt update
+    apt install -y graphviz build-essential
+
+tox-install: &tox-install
+  name: Install Tox
+  command: |
+    pip install tox
+
+version: 2
+jobs:
+  egg-info-36:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run: *skip-check
+      - run: *merge-check
+      - run: python setup.py egg_info
+
+  egg-info-37:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run: *skip-check
+      - run: *merge-check
+      - run: python setup.py egg_info
+
+  pip-install:
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run: *skip-check
+      - run: *merge-check
+      - run: *apt-install
+      - run:
+          name: Update pip
+          command: pip install -U pip
+      - run:
+          name: Install ndcube
+          command: pip install --progress-bar off -e .[all,dev]
+
+  html-docs:
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run: *skip-check
+      - run: *merge-check
+      - run: *apt-install
+      - run: *tox-install
+      - run: tox -e py37-build_docs
+      - store_artifacts:
+          path: docs/_build/html
+      - run:
+          name: "Built documentation is available at:"
+          command: DOCS_URL="${CIRCLE_BUILD_URL}/artifacts/${CIRCLE_NODE_INDEX}/${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}/docs/_build/html/index.html"; echo $DOCS_URL
+
+workflows:
+  version: 2
+
+  egg-info:
+    jobs:
+      - egg-info-36
+      - egg-info-37
+
+  pip-install:
+    jobs:
+      - pip-install
+
+  test-documentation:
+    jobs:
+      - html-docs
+
+notify:
+  webhooks:
+    - url: https://giles.cadair.com/circleci
