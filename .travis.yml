@@ -1,108 +1,66 @@
-# We set the language to c because python isn't supported on the MacOS X nodes
-# on Travis. However, the language ends up being irrelevant anyway, since we
-# install Python ourselves using conda.
-language: c
-
-os:
-    - linux
-
-# Build Stage first step
-stage: Initial tests
-
-# Setting sudo to false opts in to Travis-CI container-based builds.
+language: minimal
+group: travis_latest
+dist: xenial
+os: linux
 sudo: false
 
-# The apt packages below are needed for sphinx builds.
-
-addons:
-    apt:
-        packages:
-            - graphviz
-            - texlive-latex-extra
-            - dvipng
-
 env:
-    global:
-        - PYTHON_VERSION=3.6
-        - NUMPY_VERSION=stable
-        - ASTROPY_VERSION=stable
-        - SUNPY_VERSION=stable
-        - MAIN_CMD='python setup.py'
-        - SETUP_CMD='test --coverage'
-        - EVENT_TYPE='pull_request push cron'
-        - CONDA_DEPENDENCIES='openjpeg Cython jinja2 scipy matplotlib mock requests beautifulsoup4 sqlalchemy scikit-image pytest-mock pandas nomkl pytest-cov coverage glymur suds-jurko sphinx'
-        - PIP_DEPENDENCIES='sunpy-sphinx-theme pytest-astropy sphinx-astropy'
-        - CONDA_CHANNELS='sunpy'
-        # Add a matplotlib backend for generating plots in tests.
-        - MPLBACKEND='Agg'
-    matrix:
-        # Make sure that egg_info works without dependencies
-        - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=3.6 SETUP_CMD='egg_info'
+  global:
+    - TOX_ARG=''
 
-stages:
-   # Do the install jobs and one offline test, it will not proceed if any fail
-   - name: Initial tests
-   # Cron only tests
-   - name: Cron tests
-     if: type = cron
-   # Do the rest of the tests
-   - name: Comprehensive tests
+name: "Cron jobs"
+if: type = cron
 
 matrix:
+  fast_finish: true
+  include:
+    - os: osx
+      name: "macOS 3.7 (py37-offline)"
+      env: TOX_ENV='py37-offline'
 
-    # Don't wait for allowed failures
-    fast_finish: true
+    - name: "3.6 offline (py36-offline)"
+      env: TOX_ENV='py36-offline'
 
-    include:
+    - name: "3.7 offline (py37-offline)"
+      env: TOX_ENV='py37-offline'
 
-        # Do a basic test.
-        - os: linux
-          stage: Initial tests
-          env: SETUP_CMD='test --coverage'
+    - name: "AstroPy dev (py37-astropydev)"
+      env:
+        - TOX_ENV='py37-astropydev'
+      addons:
+        apt:
+          packages:
+            - httpie
 
-        # Do a PEP8 test with pycodestyle
-        - os: linux
-          stage: Initial tests
-          env: MAIN_CMD='pycodestyle ndcube --count' SETUP_CMD=''
+    - name: "NumPy dev (py37-numpydev)"
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - libatlas-dev
+            - libatlas-base-dev
+      env: TOX_ENV='py37-numpydev'
 
-        # Do a coverage test.
-        - os: linux
-          stage: Comprehensive tests
-          env: SETUP_CMD='test --coverage'
+  allow_failures:
+    - name: "3.7 online (py37-online)"
+      env:
+        - TOX_ENV='py37-online'
+        - TOX_ARG='-- -n=8'
 
-        # Check for sphinx doc build warnings - we do this first because it
-        # may run for a long time
-        - os: linux
-          stage: Comprehensive tests
-          env: SETUP_CMD='build_docs -w'
-
-        # Astropy LTS
-        - os: linux
-          stage: Comprehensive tests
-          env: ASTROPY_VERSION=lts
-
-        # Astropy Master (CRON)
-        - os: linux
-          stage: Cron tests
-          env: ASTROPY_VERSION=development
-
-        # SunPy Master (CRON)
-        - os: linux
-          stage: Cron tests
-          env: SUNPY_VERSION=development
-
-        # Mac OS (CRON)
-        - os: osx
-          stage: Cron tests
-          env: SETUP_CMD='test --coverage'
-
-install:
-    - git clone git://github.com/astropy/ci-helpers.git
-    - source ci-helpers/travis/setup_conda.sh
+before_install:
+  - git clone --depth 1 git://github.com/astropy/ci-helpers.git
+  # We do not want to create the test env
+  - echo "" > ci-helpers/travis/setup_dependencies_common.sh
+  - source ci-helpers/travis/setup_conda.sh
+  - pip install tox tox-conda
 
 script:
-    - $MAIN_CMD $SETUP_CMD
+  - tox -e $TOX_ENV $TOX_ARG
+  - pip install --upgrade codecov
+  - codecov
 
-after_success:
-    - if [[ $SETUP_CMD = *"cov"* ]]; then pip install codecov; codecov; fi
+after_failure:
+  # Send a nice matrix notification if the Astropy-dev job fails
+  - NOTIF_TEXT='Build '$TRAVIS_BUILD_NUMBER' (Astropy-dev) Failed:'$TRAVIS_BUILD_WEB_URL
+  - AVATAR_URL='https://s3-eu-west-1.amazonaws.com/cadair.com/Tessa-pride.png'
+  - if [[ -n "$NOTIFURL" && $TOX_ENV == *astropydev* ]]; then http --verify=no POST $NOTIFURL displayName="Travis Bot" avatarUrl="$AVATAR_URL" text="$NOTIF_TEXT"; fi
