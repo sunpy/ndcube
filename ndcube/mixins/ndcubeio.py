@@ -16,7 +16,7 @@ _unc_cls_to_name = {cls: cls.__name__ for cls in _known_uncertainties}
 __all__ = ['NDCubeIOMixin']
 
 # This file is written to define a mixin class to support
-# write option in ndcube. Uses `astropy.io.registry` 
+# write option in ndcube. Uses `astropy.io.registry`
 # to register the write function
 
 
@@ -25,12 +25,12 @@ def flatten(lst):
        resulted out of the form :
        {Key1:Value1, {Key2:Value2, Key3:Value3}}
 
-    
+
     Parameters
     ----------
     lst : list
         list of dictionary
-    
+
     Returns
     -------
     list
@@ -56,7 +56,7 @@ def flatten(lst):
 def _insert_in_metadata_fits_safe(meta, key, value):
     """Helper function to insert key-value pair into metadata in a way that
        FITS can serialize
-    
+
     Parameters
     ----------
     key : str
@@ -78,7 +78,7 @@ def _insert_in_metadata_fits_safe(meta, key, value):
     ---------
     This helper method is taken from `astropy.nddata.cddata`. Not imported
     as this is a private method, subject to change
-    
+
     """
 
     if len(key) > 8 and len(value) > 72:
@@ -109,7 +109,7 @@ class NDCubeIOMixin(NDIOMixin):
 
     def __init__(self, data, wcs, uncertainty, mask, meta,
                  unit, copy, extra_coords=None, missing_axis=None, **kwargs):
-        
+
         super().__init__(data, wcs, uncertainty, mask, meta,
                  unit, copy, **kwargs)
 
@@ -126,11 +126,11 @@ class NDCubeIOMixin(NDIOMixin):
 
     def to_hdu(self, hdu_mask='MASK', hdu_uncertainty='UNCERT', key_uncertainty_type='UTYPE'):
         """Create a HDUList from a ImageHDU object
-        
+
         Parameters
         ----------
         hdu_mask, hdu_uncertainty : str, optional
-            If it is a string append this attribute to the HDUList as 
+            If it is a string append this attribute to the HDUList as
             `astropy.io.fits.ImageHDU` with the string as the extension name.
             Default is `MASK` for hdu_mask, `UNCERT` for uncertainty and `None`
             for flags.
@@ -138,14 +138,14 @@ class NDCubeIOMixin(NDIOMixin):
         key_uncertainty_type : str, optional
             The header key name for the class name of the uncertainty (if any)
             that is used to store the uncertainty type in the uncertainty hdu.
-        
+
         Raises
         ------
         ValueError
             - If `self.__mask` is set but not a `numpy.ndarray`.
             - If `self.__uncertainty` is set but not a astropy uncertainty type
             - If `self.__uncertainty` is set but has another unit than `self.__data`.
-        
+
         Returns
         -------
         hdulist:
@@ -168,7 +168,7 @@ class NDCubeIOMixin(NDIOMixin):
 
         if self.__wcs:
             # Create a header for a given wcs object
-            # Hard-Coded relax parameter to write all 
+            # Hard-Coded relax parameter to write all
             # recognized informal extensions of the WCS standard.
             wcs_header = self.__wcs.to_header(relax=True)
             header.extend(wcs_header, useblanks=False, update=True)
@@ -186,17 +186,17 @@ class NDCubeIOMixin(NDIOMixin):
 
             for k, v in header0.items():
                 _insert_in_metadata_fits_safe(header0, k, v)
-            
+
             header.extend(header0, useblanks=False, update=True)
 
 
         # PrimaryHDU list contains only meta, missing_axis and wcs as headers, no data
         hdus = [fits.PrimaryHDU(data=None, header=header)]
-        
+
         #------------------------------HDU0----------------------------------
-        
+
         #------------------------------HDU1----------------------------------
-        # Header for unit 
+        # Header for unit
         if self.__unit:
             header_unit = fits.Header()
             if self.__unit is not u.dimensionless_unscaled:
@@ -236,7 +236,7 @@ class NDCubeIOMixin(NDIOMixin):
             hduUncert = fits.ImageHDU(self.__uncertainty, hdr_uncertainty, name='UNCERT')
             hdus.append(hduUncert)
         #----------------------------HDU2--------------------------------
-        
+
         #----------------------------HDU3------------------------------
         # Store the mask
         if self.__mask is not None:
@@ -253,7 +253,7 @@ class NDCubeIOMixin(NDIOMixin):
 
             # Set up the data
             flattened_list_of_dict = flatten(self.__extra_coords)
-            
+
             # We convert the list of dictionary to pandas dataframe
             # and then to numpy.ndarray
             dframe = pd.DataFrame(flattened_list_of_dict)
@@ -263,19 +263,17 @@ class NDCubeIOMixin(NDIOMixin):
             header3 = fits.Header()
             for index, _, value in enumerate(extra_coords):
                 header3[EXTRA_COORDS.format(index)] = value
-            
+
             # Make sure all the keywords are FITS safe
             for k, v in header3.items():
                 _insert_in_metadata_fits_safe(header3, k, v)
-            
+
             # Setting up the Header
             hdu_extra_coords = fits.Header()
             hdu_extra_coords.extend(header3, useblanks=False, update=True)
-        
+
             hdus.append(fits.TableHDU(data=extra_coords, header=hdu_extra_coords, name='EXTRA_COORDS'))
         #--------------------------HDU3---------------------------------
 
         hdulist = fits.HDUList(hdus)
         return hdulist
-
-        
