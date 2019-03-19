@@ -110,13 +110,13 @@ class NDCubeIOMixin(NDIOMixin):
     def __init__(self, data, wcs, uncertainty, mask, meta,
                  unit, copy, extra_coords=None, missing_axis=None, **kwargs):
 
-        super().__init__(data, wcs, uncertainty, mask, meta,
-                 unit, copy, **kwargs)
-
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
+                         meta=meta, unit=unit, copy=copy, **kwargs)
         self.__data = data
         self.__wcs = wcs
         self.__meta = meta
-        self.__uncertainty = uncertainty
+        self.__uncertainty = super().uncertainty
+        self.__uncertainty_type = None
         self.__mask = mask
         self.__unit = unit
         self.__missing_axis = missing_axis
@@ -124,7 +124,7 @@ class NDCubeIOMixin(NDIOMixin):
 
 
 
-    def to_hdu(self, hdu_mask='MASK', hdu_uncertainty='UNCERT', key_uncertainty_type='UTYPE'):
+    def to_hdu(self, hdu_mask='MASK', hdu_uncertainty='UNCERT'):
         """Create a HDUList from a ImageHDU object
 
         Parameters
@@ -135,9 +135,6 @@ class NDCubeIOMixin(NDIOMixin):
             Default is `MASK` for hdu_mask, `UNCERT` for uncertainty and `None`
             for flags.
 
-        key_uncertainty_type : str, optional
-            The header key name for the class name of the uncertainty (if any)
-            that is used to store the uncertainty type in the uncertainty hdu.
 
         Raises
         ------
@@ -208,32 +205,13 @@ class NDCubeIOMixin(NDIOMixin):
         #------------------------------HDU2----------------------------------
         # Store the uncertainty
         if self.__uncertainty is not None:
-            # NOTE: Comments copied from `astropy.nddata.ccdata`, displayed here for reference
-            # We need to save some kind of information which uncertainty was
-            # used so that loading the HDUList can infer the uncertainty type.
-            # No idea how this can be done so only allow StdDevUncertainty.
-            uncertainty_cls =self.__uncertainty.__class__
-            if uncertainty_cls not in _known_uncertainties:
-                raise ValueError('only uncertainties of type {} can be saved.'
-                                .format(_known_uncertainties))
-            uncertainty_name = _unc_cls_to_name[uncertainty_cls]
-
+            
+            # Set the initial header, and the type of uncertainty
             hdr_uncertainty = fits.Header()
-            hdr_uncertainty[key_uncertainty_type] = uncertainty_name
+            hdr_uncertainty['UTYPE'] = self.__uncertainty.uncertainty_type
 
-            # Assuming uncertainty is an StdDevUncertainty save just the array
-            # this might be problematic if the Uncertainty has a unit differing
-            # from the data so abort for different units. This is important for
-            # astropy > 1.2
-            if (hasattr(self.__uncertainty, 'unit') and
-                    self.__uncertainty.unit is not None):
-                if not _uncertainty_unit_equivalent_to_parent(
-                        uncertainty_cls, self.__uncertainty.unit, self.__unit):
-                    raise ValueError(
-                        'saving uncertainties with a unit that is not '
-                        'equivalent to the unit from the data unit is not '
-                        'supported.')
-            hduUncert = fits.ImageHDU(self.__uncertainty, hdr_uncertainty, name='UNCERT')
+            # Set the data of the uncertainty and header
+            hduUncert = fits.ImageHDU(self.__uncertainty.array, hdr_uncertainty, name='UTYPE')
             hdus.append(hduUncert)
         #----------------------------HDU2--------------------------------
 
