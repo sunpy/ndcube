@@ -159,7 +159,7 @@ class NDCubeIOMixin(NDIOMixin):
             if axis:
                 header0[MISSING.format(index)] = 1
             else:
-                continue
+                header0[MISSING.format(index)] = 0
 
         for k, v in header0.items():
             _insert_in_metadata_fits_safe(header0, k, v)
