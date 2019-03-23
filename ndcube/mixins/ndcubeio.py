@@ -103,26 +103,6 @@ class NDCubeIOMixin(NDIOMixin):
     # For different formats, we can define different helper functions, and based on the file type
     # we can call them. Currently only FITS is supported.
 
-    # Here we create a constructor for a mixin class, which is quite rare for a mixin
-    # Since the data of the NDCube needs to be used in this mixin, the
-    # constructor seems to be useful
-
-    def __init__(self, data, wcs, uncertainty, mask, meta,
-                 unit, copy, extra_coords=None, missing_axis=None, **kwargs):
-
-        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
-                         meta=meta, unit=unit, copy=copy, **kwargs)
-        self.__data = data
-        self.__wcs = wcs
-        self.__meta = meta
-        self.__uncertainty = super().uncertainty
-        self.__uncertainty_type = None
-        self.__mask = mask
-        self.__unit = unit
-        self.__missing_axis = missing_axis
-        self.__extra_coords = extra_coords
-
-
 
     def to_hdu(self, hdu_mask='MASK', hdu_uncertainty='UNCERT'):
         """Create a HDUList from a ImageHDU object
@@ -139,9 +119,9 @@ class NDCubeIOMixin(NDIOMixin):
         Raises
         ------
         ValueError
-            - If `self.__mask` is set but not a `numpy.ndarray`.
-            - If `self.__uncertainty` is set but not a astropy uncertainty type
-            - If `self.__uncertainty` is set but has another unit than `self.__data`.
+            - If `self._mask` is set but not a `numpy.ndarray`.
+            - If `self._uncertainty` is set but not a astropy uncertainty type
+            - If `self._uncertainty` is set but has another unit than `self.__data`.
 
         Returns
         -------
@@ -152,8 +132,8 @@ class NDCubeIOMixin(NDIOMixin):
 
         # ----------------------------------HDU0------------------------------
         # Create a copy of the meta data to avoid changing of the header of data
-        if self.__meta is not None:
-            header = fits.Header(self.__meta.copy())
+        if self._meta is not None:
+            header = fits.Header(self._meta.copy())
 
         else:
             header = fits.Header()
@@ -163,19 +143,19 @@ class NDCubeIOMixin(NDIOMixin):
         for k, v in header.items():
             _insert_in_metadata_fits_safe(header, k, v)
 
-        if self.__wcs:
+        if self._wcs:
             # Create a header for a given wcs object
             # Hard-Coded relax parameter to write all
             # recognized informal extensions of the WCS standard.
-            wcs_header = self.__wcs.to_header(relax=True)
+            wcs_header = self._wcs.to_header(relax=True)
             header.extend(wcs_header, useblanks=False, update=True)
 
         # Create a FITS header for storing missing_axis
         # MISSING0 : 1 if axis 1 is missing
         # other keywords are skipped, if the axis is present
-        if self.__missing_axis:
+        if self.missing_axis:
             header0 = fits.Header()
-            for index, axis in enumerate(self.__missing_axis):
+            for index, axis in enumerate(self.missing_axis):
                 if axis:
                     header0[MISSING.format(index)] = 1
                 else:
@@ -194,43 +174,43 @@ class NDCubeIOMixin(NDIOMixin):
 
         #------------------------------HDU1----------------------------------
         # Header for unit
-        if self.__unit:
+        if self._unit:
             header_unit = fits.Header()
-            if self.__unit is not u.dimensionless_unscaled:
-                header_unit['bunit'] = self.__unit.to_string()
-            hdus.append(fits.ImageHDU(self.__data, header_unit, name='UNIT'))
+            if self._unit is not u.dimensionless_unscaled:
+                header_unit['bunit'] = self._unit.to_string()
+            hdus.append(fits.ImageHDU(self._data, header_unit, name='UNIT'))
 
         #------------------------------HDU1----------------------------------
 
         #------------------------------HDU2----------------------------------
         # Store the uncertainty
-        if self.__uncertainty is not None:
+        if self._uncertainty is not None:
             
             # Set the initial header, and the type of uncertainty
             hdr_uncertainty = fits.Header()
-            hdr_uncertainty['UTYPE'] = self.__uncertainty.uncertainty_type
+            hdr_uncertainty['UTYPE'] = self._uncertainty.uncertainty_type
 
             # Set the data of the uncertainty and header
-            hduUncert = fits.ImageHDU(self.__uncertainty.array, hdr_uncertainty, name='UTYPE')
+            hduUncert = fits.ImageHDU(self._uncertainty.array, hdr_uncertainty, name='UTYPE')
             hdus.append(hduUncert)
         #----------------------------HDU2--------------------------------
 
         #----------------------------HDU3------------------------------
         # Store the mask
-        if self.__mask is not None:
+        if self._mask is not None:
             # Always assuming that the mask is a np.ndarray
             # by checking that it has a shape
-            if not hasattr(self.__mask, 'shape'):
+            if not hasattr(self._mask, 'shape'):
                 raise ValueError('only a numpy.ndarray mask can be saved.')
-            hduMask = fits.ImageHDU(self.__mask.astype(np.uint8), name=hdu_mask)
+            hduMask = fits.ImageHDU(self._mask.astype(np.uint8), name=hdu_mask)
             hdus.append(hduMask)
 
         #----------------------------HDU3-------------------------------
         # Store the extra_coords
-        if self.__extra_coords is not None:
+        if self._extra_coords_wcs_axis is not None:
 
             # Set up the data
-            flattened_list_of_dict = flatten(self.__extra_coords)
+            flattened_list_of_dict = flatten(self._extra_coords_wcs_axis)
 
             # We convert the list of dictionary to pandas dataframe
             # and then to numpy.ndarray
