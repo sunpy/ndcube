@@ -29,12 +29,12 @@ def flatten(lst):
     Parameters
     ----------
     lst : list
-        list of dictionary
+        dictionary of dictionary
 
     Returns
     -------
     list
-        list of flattened list
+        list of flattened dictionary
     Notes
     -----
     Format of the output:
@@ -84,7 +84,7 @@ def _insert_in_metadata_fits_safe(meta, key, value):
     if len(key) > 8 and len(value) > 72:
         short_name = key[:8]
         meta['HIERARCH {0}'.format(key.upper())] = (short_name, "Shortened name for {}".format(key))
-        meta['short_name'] = value
+        meta[short_name] = value
     else:
         meta[key] = value
 
@@ -95,7 +95,7 @@ class NDCubeIOMixin(NDIOMixin):
     __doc__ = NDIOMixin.__doc__
 
     MISSING = 'MISNG{0}'
-    EXTRA_COORDS = 'EXTCR{0}'
+    EXTRA_COORDS_LABEL = 'EXTCR{0}'
 
     # Here we create a read and write function to support I/O of NDCube files
     # Currently read option is not supported
@@ -104,7 +104,7 @@ class NDCubeIOMixin(NDIOMixin):
     # we can call them. Currently only FITS is supported.
 
 
-    def to_hdu(self, hdu_mask='MASK', hdu_uncertainty='UNCERT'):
+    def to_hdulist(self, hdu_mask='MASK', hdu_uncertainty='UNCERT'):
         """Create a HDUList from a ImageHDU object
 
         Parameters
@@ -166,7 +166,6 @@ class NDCubeIOMixin(NDIOMixin):
 
         header.extend(header0, useblanks=False, update=True)
 
-
         # PrimaryHDU list contains only meta, missing_axis and wcs as headers, no data
         hdus = [fits.PrimaryHDU(data=None, header=header)]
 
@@ -178,7 +177,7 @@ class NDCubeIOMixin(NDIOMixin):
             header_unit = fits.Header()
             if self._unit is not u.dimensionless_unscaled:
                 header_unit['bunit'] = self._unit.to_string()
-            hdus.append(fits.ImageHDU(self._data, header_unit, name='UNIT'))
+            hdus.append(fits.ImageHDU(self._data, header_unit, name='DATA'))
 
         #------------------------------HDU1----------------------------------
 
@@ -191,7 +190,7 @@ class NDCubeIOMixin(NDIOMixin):
             hdr_uncertainty['UTYPE'] = self._uncertainty.uncertainty_type
 
             # Set the data of the uncertainty and header
-            hduUncert = fits.ImageHDU(self._uncertainty.array, hdr_uncertainty, name='UTYPE')
+            hduUncert = fits.ImageHDU(self._uncertainty.array, hdr_uncertainty, name=hdu_uncertainty)
             hdus.append(hduUncert)
         #----------------------------HDU2--------------------------------
 
@@ -200,8 +199,8 @@ class NDCubeIOMixin(NDIOMixin):
         if self._mask is not None:
             # Always assuming that the mask is a np.ndarray
             # by checking that it has a shape
-            if not hasattr(self._mask, 'shape'):
-                raise ValueError('only a numpy.ndarray mask can be saved.')
+            if not isinstance(self.__mask, np.ndarray):
+                raise ValueError('Only a numpy.ndarray mask can be saved.')
             hduMask = fits.ImageHDU(self._mask.astype(np.uint8), name=hdu_mask)
             hdus.append(hduMask)
 
@@ -220,7 +219,7 @@ class NDCubeIOMixin(NDIOMixin):
             # Set up the header
             header3 = fits.Header()
             for index, _, value in enumerate(extra_coords):
-                header3[EXTRA_COORDS.format(index)] = value
+                header3[EXTRA_COORDS_LABEL.format(index)] = value
 
             # Make sure all the keywords are FITS safe
             for k, v in header3.items():

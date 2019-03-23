@@ -157,3 +157,31 @@ def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
                          "a physical axis type. {0} not in any of {1}".format(
                              axis_name, world_axis_physical_types))
     return axis_index[0]
+
+
+def fits_ndcube_writer(ndcube_data, filename, hdu_mask='MASK', hdu_uncertainty='UNCERT',  key_uncertainty_type='UTYPE', **kwargs):
+    """Writer function which writes the NDCube object to FITS file
+ 
+    Parameters
+    ----------
+    ndcube_data : `ndcube.NDCube` object
+        NDCube object
+
+    filename : `str`
+        Name of the file
+
+    hdu_mask, hdu_uncertainty : str, optional
+        If it is a string append this attribute to the HDUList as
+        `astropy.io.fits.ImageHDU` with the string as extension name.
+        Default is `MASK` for mask, `UNCERT` for uncertainty and `None` for flags.
+ 
+    key_uncertainty_type : str, optional
+        Th header key name for the class name of the uncertainty (if any) that
+        is used to store the uncertainty type in the uncertainty type in the
+        uncertainty hdu.
+    
+    """
+
+    hdu = ndcube_data.to_hdulist(hdu_mask, hdu_uncertainty)
+    hdu.writeto(filename, **kwargs)
+

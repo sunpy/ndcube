@@ -10,6 +10,7 @@ from astropy.io import registry, fits
 from astropy.utils.misc import InheritDocstrings
 
 from ndcube import utils
+from ndcube.utils import fits_ndcube_writer
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin, NDCubeIOMixin
@@ -642,33 +643,6 @@ class NDCubeOrdered(NDCube):
                          mask=result_mask, meta=meta, unit=unit,
                          extra_coords=reordered_extra_coords,
                          copy=copy, missing_axis=missing_axis, **kwargs)
-
-
-def fits_ndcube_writer(ndcube_data, filename, hdu_mask='MASK', hdu_uncertainty='UNCERT',  key_uncertainty_type='UTYPE', **kwargs):
-    """Writer function which writes the NDCube object to FITS file
- 
-    Parameters
-    ----------
-    ndcube_data : `ndcube.NDCube` object
-        NDCube object
-
-    filename : `str`
-        Name of the file
-
-    hdu_mask, hdu_uncertainty : str, optional
-        If it is a string append this attribute to the HDUList as
-        `astropy.io.fits.ImageHDU` with the string as extension name.
-        Default is `MASK` for mask, `UNCERT` for uncertainty and `None` for flags.
- 
-    key_uncertainty_type : str, optional
-        Th header key name for the class name of the uncertainty (if any) that
-        is used to store the uncertainty type in the uncertainty type in the
-        uncertainty hdu.
-    
-    """
-
-    hdu = ndcube_data.to_hdu(hdu_mask, hdu_uncertainty)
-    hdu.writeto(filename, **kwargs)
 
 
 # Registering the writer function for writing NDCube files to fits format
