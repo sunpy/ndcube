@@ -7,7 +7,7 @@ Utilities for ndcube.
 import numpy as np
 
 __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
-           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
+           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name','fits_ndcube_writer']
 
 
 def data_axis_to_wcs_axis(data_axis, missing_axis):
