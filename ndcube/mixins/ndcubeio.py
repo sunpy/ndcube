@@ -132,8 +132,8 @@ class NDCubeIOMixin(NDIOMixin):
 
         # ----------------------------------HDU0------------------------------
         # Create a copy of the meta data to avoid changing of the header of data
-        if self._meta is not None:
-            header = fits.Header(self._meta.copy())
+        if self.meta is not None:
+            header = fits.Header(self.meta.copy())
 
         else:
             header = fits.Header()
@@ -143,11 +143,11 @@ class NDCubeIOMixin(NDIOMixin):
         for k, v in header.items():
             _insert_in_metadata_fits_safe(header, k, v)
 
-        if self._wcs:
+        if self.wcs:
             # Create a header for a given wcs object
             # Hard-Coded relax parameter to write all
             # recognized informal extensions of the WCS standard.
-            wcs_header = self._wcs.to_header(relax=True)
+            wcs_header = self.wcs.to_header(relax=True)
             header.extend(wcs_header, useblanks=False, update=True)
 
         # Create a FITS header for storing missing_axis
@@ -173,35 +173,35 @@ class NDCubeIOMixin(NDIOMixin):
 
         #------------------------------HDU1----------------------------------
         # Header for unit
-        if self._unit:
+        if self.unit:
             header_unit = fits.Header()
             if self._unit is not u.dimensionless_unscaled:
-                header_unit['bunit'] = self._unit.to_string()
+                header_unit['bunit'] = self.unit.to_string()
             hdus.append(fits.ImageHDU(self._data, header_unit, name='DATA'))
 
         #------------------------------HDU1----------------------------------
 
         #------------------------------HDU2----------------------------------
         # Store the uncertainty
-        if self._uncertainty is not None:
+        if self.uncertainty is not None:
             
             # Set the initial header, and the type of uncertainty
             hdr_uncertainty = fits.Header()
-            hdr_uncertainty['UTYPE'] = self._uncertainty.uncertainty_type
+            hdr_uncertainty['UTYPE'] = self.uncertainty.uncertainty_type
 
             # Set the data of the uncertainty and header
-            hduUncert = fits.ImageHDU(self._uncertainty.array, hdr_uncertainty, name=hdu_uncertainty)
+            hduUncert = fits.ImageHDU(self.uncertainty.array, hdr_uncertainty, name=hdu_uncertainty)
             hdus.append(hduUncert)
         #----------------------------HDU2--------------------------------
 
         #----------------------------HDU3------------------------------
         # Store the mask
-        if self._mask is not None:
+        if self.mask is not None:
             # Always assuming that the mask is a np.ndarray
             # by checking that it has a shape
-            if not isinstance(self._mask, np.ndarray):
+            if not isinstance(self.mask, np.ndarray):
                 raise ValueError('Only a numpy.ndarray mask can be saved.')
-            hduMask = fits.ImageHDU(self._mask.astype(np.uint8), name=hdu_mask)
+            hduMask = fits.ImageHDU(self.mask.astype(np.uint8), name=hdu_mask)
             hdus.append(hduMask)
 
         #----------------------------HDU3-------------------------------
