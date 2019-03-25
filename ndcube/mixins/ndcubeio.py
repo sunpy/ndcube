@@ -94,8 +94,7 @@ class NDCubeIOMixin(NDIOMixin):
     # Inherit docstring from parent class
     __doc__ = NDIOMixin.__doc__
 
-    MISSING = 'MISNG{0}'
-    EXTRA_COORDS_LABEL = 'EXTCR{0}'
+    
 
     # Here we create a read and write function to support I/O of NDCube files
     # Currently read option is not supported
@@ -128,7 +127,8 @@ class NDCubeIOMixin(NDIOMixin):
         hdulist:
             `astropy.io.fits.HDUList`
         """
-
+        MISSING = 'MISNG{0}'
+        EXTRA_COORDS_LABEL = 'EXTCR{0}'
 
         # ----------------------------------HDU0------------------------------
         # Create a copy of the meta data to avoid changing of the header of data
@@ -199,7 +199,7 @@ class NDCubeIOMixin(NDIOMixin):
         if self._mask is not None:
             # Always assuming that the mask is a np.ndarray
             # by checking that it has a shape
-            if not isinstance(self.__mask, np.ndarray):
+            if not isinstance(self._mask, np.ndarray):
                 raise ValueError('Only a numpy.ndarray mask can be saved.')
             hduMask = fits.ImageHDU(self._mask.astype(np.uint8), name=hdu_mask)
             hdus.append(hduMask)
