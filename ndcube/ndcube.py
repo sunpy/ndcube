@@ -10,7 +10,7 @@ from astropy.io import registry, fits
 from astropy.utils.misc import InheritDocstrings
 
 from ndcube import utils
-from ndcube.utils import fits_ndcube_writer
+from ndcube.utils.cube import fits_ndcube_writer
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin, NDCubeIOMixin
