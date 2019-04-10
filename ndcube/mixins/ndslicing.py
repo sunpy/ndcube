@@ -37,25 +37,25 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
 
         This method extends the `~astropy.nddata.mixins.NDSlicingMixin` method
-        to add support for ``missing_axis`` and ``extra_coords`` and overwrites
+        to add support for ``missing_axes`` and ``extra_coords`` and overwrites
         the astropy handling of wcs slicing.
         """
         kwargs = super()._slice(item)
 
-        wcs, missing_axis = self._slice_wcs_missing_axis(item)
+        wcs, missing_axes = self._slice_wcs_missing_axes(item)
         kwargs['wcs'] = wcs
-        kwargs['missing_axis'] = missing_axis
-        kwargs['extra_coords'] = self._slice_extra_coords(item, missing_axis)
+        kwargs['missing_axes'] = missing_axes
+        kwargs['extra_coords'] = self._slice_extra_coords(item, missing_axes)
 
         return kwargs
 
-    def _slice_wcs_missing_axis(self, item):
+    def _slice_wcs_missing_axes(self, item):
         # here missing axis is reversed as the item comes already in the reverse order
         # of the input
         return utils.wcs._wcs_slicer(
-            self.wcs, copy.deepcopy(self.missing_axis[::-1]), item)
+            self.wcs, copy.deepcopy(self.missing_axes[::-1]), item)
 
-    def _slice_extra_coords(self, item, missing_axis):
+    def _slice_extra_coords(self, item, missing_axes):
         if self.extra_coords is None:
             new_extra_coords_dict = None
         else:
@@ -77,5 +77,5 @@ class NDCubeSlicingMixin(NDSlicingMixin):
                     except TypeError:
                         pass
                 new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
-                    new_extra_coords, missing_axis)
+                    new_extra_coords, missing_axes)
         return new_extra_coords_dict
