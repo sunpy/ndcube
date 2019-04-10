@@ -10,6 +10,7 @@ API-Breaking Changes
   New version:
   ``crop_by_extra_coord(coord_name, min_coord_value,  max_coord_value)``.
   [#142]
+- Changed all instances of "missing_axis" to "missing_axes"
 
 New Features
 ------------
@@ -30,7 +31,7 @@ New Features
 - NDCubeSequence plot mixin can now animate a cube as a 1-D line if a single
   axis number is supplied to plot_axis_indices kwarg.
 
-  
+
 
 API Changes
 -----------
