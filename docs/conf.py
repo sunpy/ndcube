@@ -171,3 +171,15 @@ if eval(setup_cfg.get('edit_on_github')):
 
 # -- Resolving issue number to links in changelog -----------------------------
 github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_project'])
+
+"""
+Write the latest changelog into the documentation.
+"""
+target_file = os.path.abspath("./whatsnew/latest_changelog.txt")
+try:
+    from sunpy.util.towncrier import generate_changelog_for_docs
+    generate_changelog_for_docs("../", target_file)
+except:
+    # If we can't generate it, we need to make sure it exists or else sphinx
+    # will complain.
+    open(target_file, 'a').close()
