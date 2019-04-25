@@ -244,6 +244,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 axes_ctype.append(wcs_ivoa_mapping.get(key, default=None))
         return tuple(axes_ctype[::-1])
 
+    @property
+    def missing_axis(self):
+        warnings.warn(
+            "The missing_axis list has been deprecated by missing_axes and will no longer be supported after ndcube 2.0.",
+            DeprecationWarning
+        )
+        return self.missing_axes
+
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
