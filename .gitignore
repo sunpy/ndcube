@@ -59,3 +59,6 @@ distribute-*.tar.gz
 
 # Mac OSX
 .DS_Store
+
+# changelog
+docs/whatsnew/latest_changelog.txt
