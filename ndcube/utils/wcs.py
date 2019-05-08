@@ -38,7 +38,11 @@ wcs_to_ivoa = {
     "RA--": "pos.eq.ra",
     "DEC-": "pos.eq.dec",
     "FREQ": "em.freq",
-    "STOKES": "phys.polarization.stokes "
+    "STOKES": "phys.polarization.stokes",
+    "PIXEL": "instr.pixel",
+    "XPIXEL": "custom:instr.pixel.x",
+    "YPIXEL": "custom:instr.pixel.y",
+    "ZPIXEL": "custom:instr.pixel.z"
     }
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
