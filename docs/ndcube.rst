@@ -351,7 +351,7 @@ is a list of `~astropy.units.Quantity` objects in pixel unit.::
   >>> pixel_coords = my_cube.world_to_pixel(
   ... 1.400069678 * u.deg, 1.49986193 * u.deg, 1.10000000e-09 * u.m)
   >>> pixel_coords
-  [<Quantity 2.00000001 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
+  [<Quantity 2.00000003 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
 
 Note that both `~ndcube.NDCube.pixel_to_pixel` and
 `~ndcube.NDCube.world_to_pixel` can handle non-integer pixels.
