@@ -235,7 +235,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
                 # Assuming CTYPE is supported by wcs_ivoa_mapping, use its corresponding axis name.
                 if len(keys) == 1:
-                    key = key[0]
+                    axis_name = wcs_ivoa_mapping.get(keys[0])
                 # If CTYPE not supported, raise a warning and set the axis name to CTYPE.
                 elif len(keys) == 0:
                     warnings.warn("CTYPE not recognized by ndcube. "
@@ -243,13 +243,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                   "https://github.com/sunpy/ndcube/issues citing the "
                                   "unsupported CTYPE as we'll include it: "
                                   "CTYPE = {0}".format(ctype[i]))
+                    axis_name = ctype[i]
                 # If there are multiple valid keys, raise an error.
                 else:
                     raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
                                      "https://github.com/sunpy/ndcube/issues citing the "
                                      "following  CTYPE and non-unique keys: "
                                      "CTYPE = {0}; keys = {1}".format(ctype[i], keys))
-                axes_ctype.append(wcs_ivoa_mapping.get(key, default=ctype[i]))
+                axes_ctype.append(axis_name)
         return tuple(axes_ctype[::-1])
 
     def pixel_to_world(self, *quantity_axis_list):
