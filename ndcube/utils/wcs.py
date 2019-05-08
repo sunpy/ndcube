@@ -206,6 +206,8 @@ def _wcs_slicer(wcs, missing_axis, item):
             for i, it in enumerate(item_checked):
                 if isinstance(it, int):
                     missing_axis[i] = True
+    else:
+        raise NotImplementedError("Slicing FITS-WCS by {0} not supported.".format(type(item)))
     # returning the reverse list of missing axis as in the item here was reverse of
     # what was inputed so we had a reverse missing_axis.
     return new_wcs, missing_axis[::-1]
