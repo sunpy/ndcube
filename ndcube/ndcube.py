@@ -243,7 +243,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                   "https://github.com/sunpy/ndcube/issues citing the "
                                   "unsupported CTYPE as we'll include it: "
                                   "CTYPE = {0}".format(ctype[i]))
-                    axis_name = ctype[i]
+                    axis_name = "custom:{0}".format(ctype[i])
                 # If there are multiple valid keys, raise an error.
                 else:
                     raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
