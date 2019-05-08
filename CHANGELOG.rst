@@ -1,3 +1,18 @@
+ndcube 1.1.2
+============
+
+Bug Fixes
+---------
+
+- `ndcube.NDCube.world_axis_physical_types` now sets the axis label to the WCS CTYPE if no corresponding IVOA name can be found. (`#164 <https://github.com/sunpy/ndcube/pull/164>`__)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Include more helpful error when invalid item type is used to slice an `~ndcube.NDCube`. (`#158 <https://github.com/sunpy/ndcube/pull/158>`__)
+
+
 1.1.1
 ================
 
