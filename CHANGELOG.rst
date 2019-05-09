@@ -31,8 +31,6 @@ New Features
 - NDCubeSequence plot mixin can now animate a cube as a 1-D line if a single
   axis number is supplied to plot_axis_indices kwarg.
 
-
-
 API Changes
 -----------
 - Replaced API of what was previously ``utils.wcs.get_dependent_axes``,

@@ -127,10 +127,9 @@ axes.  A second iterable of `~astropy.units.Quantity` must also be
 provided which gives the widths of the region of interest in each data
 axis::
 
-  >>> from astropy.units import Quantity
-  >>> my_cube_roi = my_cube.crop_by_coords(
-  ... [Quantity(0.7, unit="deg"), Quantity(1.3e-5, unit="deg"), Quantity(1.04e-9, unit="m")],
-  ... [Quantity(0.6, unit="deg"), Quantity(1., unit="deg"), Quantity(0.08e-9, unit="m")])
+  >>> import astropy.units as u
+  >>> my_cube_roi = my_cube.crop_by_coords([0.7*u.deg, 1.3e-5*u.deg, 1.04e-9*u.m],
+  ...                                     [0.6*u.deg, 1.*u.deg, 0.08e-9*u.m])
 
 This method does not rebin or interpolate the data if the region of interest
 does not perfectly map onto the array's "pixel" grid.  Instead
@@ -319,14 +318,12 @@ axis. For example, if we wanted to transform the pixel coordinates of
 the pixel (2, 3, 4) in ``my_cube`` we would do::
 
   >>> import astropy.units as u
-  >>> real_world_coords = my_cube.pixel_to_world(
-  ... Quantity([2], unit=u.pix), Quantity([3], unit=u.pix), Quantity([4], unit=u.pix))
+  >>> real_world_coords = my_cube.pixel_to_world(2*u.pix, 3*u.pix, 4*u.pix)
 
 To convert two pixels with pixel coordinates (2, 3, 4) and (5, 6, 7),
 we would call pixel_to_world like so::
 
-  >>> real_world_coords = my_cube.pixel_to_world(
-  ... Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix))
+  >>> real_world_coords = my_cube.pixel_to_world([2, 5]*u.pix, [3, 6]*u.pix, [4, 7]*u.pix)
 
 As can be seen, since each `~astropy.units.Quantity` describes a
 different pixel coordinate of the same number of pixels, the lengths
@@ -352,10 +349,9 @@ world coordinates compatible with those defined in the
 is a list of `~astropy.units.Quantity` objects in pixel unit.::
 
   >>> pixel_coords = my_cube.world_to_pixel(
-  ... Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
-  ...  Quantity(1.10000000e-09,  unit="m"))
+  ... 1.400069678 * u.deg, 1.49986193 * u.deg, 1.10000000e-09 * u.m)
   >>> pixel_coords
-  [<Quantity 2.00000001 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
+  [<Quantity 2.00000003 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
 
 Note that both `~ndcube.NDCube.pixel_to_pixel` and
 `~ndcube.NDCube.world_to_pixel` can handle non-integer pixels.

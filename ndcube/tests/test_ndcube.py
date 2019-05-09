@@ -663,6 +663,8 @@ def test_slicing_error(test_input):
         test_input[None]
     with pytest.raises(IndexError):
         test_input[0, None]
+    with pytest.raises(NotImplementedError):
+        test_input[[0, 1]]
 
 
 @pytest.mark.parametrize("test_input,expected", [
