@@ -10,7 +10,6 @@ API-Breaking Changes
   New version:
   ``crop_by_extra_coord(coord_name, min_coord_value,  max_coord_value)``.
   [#142]
-- Changed all instances of "missing_axis" to "missing_axes"
 
 New Features
 ------------
