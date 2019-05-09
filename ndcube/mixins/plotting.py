@@ -5,12 +5,14 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
-import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 try:
-    from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
+    import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
+    try:
+        from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
+    except ImportError:
+        from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
 except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
-
+    pass
 from ndcube import utils
 from ndcube.mixins import sequence_plotting
 
