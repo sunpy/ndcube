@@ -38,7 +38,11 @@ wcs_to_ivoa = {
     "RA--": "pos.eq.ra",
     "DEC-": "pos.eq.dec",
     "FREQ": "em.freq",
-    "STOKES": "phys.polarization.stokes "
+    "STOKES": "phys.polarization.stokes",
+    "PIXEL": "instr.pixel",
+    "XPIXEL": "custom:instr.pixel.x",
+    "YPIXEL": "custom:instr.pixel.y",
+    "ZPIXEL": "custom:instr.pixel.z"
     }
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
@@ -206,6 +210,8 @@ def _wcs_slicer(wcs, missing_axis, item):
             for i, it in enumerate(item_checked):
                 if isinstance(it, int):
                     missing_axis[i] = True
+    else:
+        raise NotImplementedError("Slicing FITS-WCS by {0} not supported.".format(type(item)))
     # returning the reverse list of missing axis as in the item here was reverse of
     # what was inputed so we had a reverse missing_axis.
     return new_wcs, missing_axis[::-1]
