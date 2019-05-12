@@ -7,6 +7,7 @@ import numpy as np
 import astropy.nddata
 import astropy.units as u
 from astropy.utils.misc import InheritDocstrings
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, high_level_wcs_wrapper
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -201,9 +202,24 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                   extra_coords, self.missing_axis, data.shape)
         else:
             self._extra_coords_wcs_axis = None
-        # Initialize NDCube.
+        
+        # Enforce that the WCS object is a low_level_wcs object, complying APE14
+        if not isinstance(wcs, BaseLowLevelWCS):
+            raise TypeError(f'Expected a low_level_wcs object, got {type(wcs)}')
+        else:
+            # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
+            self.low_level_wcs = SlicedLowLevelWCS(wcs, [])
+
+        # Initialize NDCube. 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
+
+    @property
+    def high_level_wcs(self):
+        """
+        Returns the high level wcs API from the given low_level wcs API
+        """
+        return high_level_wcs_wrapper(wcs)
 
     @property
     def dimensions(self):
@@ -226,7 +242,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         see http://www.ivoa.net/documents/latest/UCDlist.html.
 
         """
+        # breakpoint()
         ctype = list(self.wcs.wcs.ctype)
+        # ctype = self.wcs.world_axis_physical_types
         axes_ctype = []
         for i, axis in enumerate(self.missing_axis):
             if not axis:
