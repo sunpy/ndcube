@@ -34,7 +34,7 @@ wm = WCS(header=hm, naxis=3)
 
 
 cube1 = NDCube(
-    data, wt, missing_axis=[False, False, False, True],
+    data, wt, missing_axes=[False, False, False, True],
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
         ('hi', 1, u.Quantity(range(data.shape[1]), unit=u.s)),
@@ -42,7 +42,7 @@ cube1 = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube1_with_unit = NDCube(
-    data, wt, missing_axis=[False, False, False, True],
+    data, wt, missing_axes=[False, False, False, True],
     unit=u.km,
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
@@ -51,7 +51,7 @@ cube1_with_unit = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube1_with_mask = NDCube(
-    data, wt, missing_axis=[False, False, False, True],
+    data, wt, missing_axes=[False, False, False, True],
     mask=np.zeros_like(data, dtype=bool),
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
@@ -60,7 +60,7 @@ cube1_with_mask = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube1_with_uncertainty = NDCube(
-    data, wt, missing_axis=[False, False, False, True],
+    data, wt, missing_axes=[False, False, False, True],
     uncertainty=np.sqrt(data),
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
@@ -69,7 +69,7 @@ cube1_with_uncertainty = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube1_with_unit_and_uncertainty = NDCube(
-    data, wt, missing_axis=[False, False, False, True],
+    data, wt, missing_axes=[False, False, False, True],
     unit=u.km, uncertainty=np.sqrt(data),
     extra_coords=[
         ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
@@ -78,7 +78,7 @@ cube1_with_unit_and_uncertainty = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
 
 cube3 = NDCube(
-    data2, wt, missing_axis=[False, False, False, True],
+    data2, wt, missing_axes=[False, False, False, True],
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
          cube1.extra_coords['pix']['value'][-1]),
@@ -87,7 +87,7 @@ cube3 = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube3_with_unit = NDCube(
-    data2, wt, missing_axis=[False, False, False, True],
+    data2, wt, missing_axes=[False, False, False, True],
     unit=u.m,
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
@@ -97,7 +97,7 @@ cube3_with_unit = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube3_with_mask = NDCube(
-    data2, wt, missing_axis=[False, False, False, True],
+    data2, wt, missing_axes=[False, False, False, True],
     mask=np.zeros_like(data2, dtype=bool),
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
@@ -107,7 +107,7 @@ cube3_with_mask = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube3_with_uncertainty = NDCube(
-    data2, wt, missing_axis=[False, False, False, True],
+    data2, wt, missing_axes=[False, False, False, True],
     uncertainty=np.sqrt(data2),
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
@@ -117,7 +117,7 @@ cube3_with_uncertainty = NDCube(
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube3_with_unit_and_uncertainty = NDCube(
-    data2, wt, missing_axis=[False, False, False, True],
+    data2, wt, missing_axes=[False, False, False, True],
     unit=u.m, uncertainty=np.sqrt(data2),
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +

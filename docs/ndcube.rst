@@ -161,7 +161,7 @@ the WCS object would cause the translations to break.
 
 To deal with this scenario, `~ndcube.NDCube` supports "missing" WCS
 axes.  An additional attribute is added to the WCS object
-(`NDCube.wcs.missing_axis`) which  is a list of `bool` type indicating
+(`NDCube.wcs.missing_axes`) which  is a list of `bool` type indicating
 which WCS axes do not have a corresponding data axis.  This allows
 translation information on coupled axes to persist even if the data
 axes do not.  This feature also makes it possible for `~ndcube.NDCube`
@@ -175,7 +175,7 @@ Extra Coordinates
 -----------------
 
 In the case of some datasets, there may be additional translations
-between the array elements and real world coordinates that are 
+between the array elements and real world coordinates that are
 not included in the WCS.  Consider a 3-D data cube from a rastering
 slit-spectrograph instrument.  The first axis corresponds to the
 x-position of the slit as it steps across a region of interest in a
@@ -195,7 +195,7 @@ iterable of tuples of the form (`str`, `int`,
 entry gives the name of the coordinate, the 1st entry gives the data
 axis to which the extra coordinate corresponds, and the 2nd entry
 gives the value of that coordinate at each pixel along the axis.  So
-to add timestamps along the 0th axis of ``my_cube`` we do:: 
+to add timestamps along the 0th axis of ``my_cube`` we do::
 
   >>> from datetime import datetime, timedelta
   >>> # Define our timestamps.  Must be same length as data axis.
@@ -296,7 +296,7 @@ Coordinate Transformations
 --------------------------
 
 The fundamental point the WCS system is the ability to easily
-translate between pixel and real world coordinates.  For this purpose, 
+translate between pixel and real world coordinates.  For this purpose,
 `~ndcube.NDCube` provides convenience wrappers for the better known
 astropy functions, `astropy.wcs.WCS.all_pix2world` and
 `astropy.wcs.WCS.all_world2pix`. These are
@@ -426,7 +426,7 @@ is in fact the default.::
   (<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
             [1.        , 1.        , 1.        , 1.        ],
             [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>,
-   <Quantity [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01, 
+   <Quantity [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01,
                1.49986193e+00],
             [1.26918126e-05, 5.00000000e-01, 9.99987308e-01,
              1.49989848e+00],
