@@ -10,7 +10,7 @@ from astropy.utils.misc import InheritDocstrings
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping
+from ndcube.utils.wcs import wcs_ivoa_mapping, _generate_default_wcs
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
@@ -180,8 +180,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     """
 
-    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
+    def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
+        if wcs is None:
+            wcs = _generate_default_wcs(data.shape)
         if missing_axis is None:
             self.missing_axis = [False]*wcs.naxis
         else:
