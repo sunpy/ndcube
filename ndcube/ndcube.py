@@ -220,7 +220,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Returns the high level wcs API from the given low_level wcs API
         """
-        return high_level_wcs_wrapper(wcs)
+        return high_level_wcs_wrapper(self.wcs)
 
     @property
     def dimensions(self):
@@ -257,26 +257,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        origin = 0
+        # List of arguments of the input
         list_arg = []
-        indexed_not_as_one = []
+        # Stores the final world coordinates
         result = []
         quantity_index = 0
-        for i in range(len(self.missing_axis)):
-            wcs_index = self.wcs.naxis-1-i
-            # the cases where the wcs dimension was made 1 and the missing_axis is True
-            if self.missing_axis[wcs_index]:
-                list_arg.append(self.wcs.wcs.crpix[wcs_index]-1+origin)
-            else:
-                # else it is not the case where the dimension of wcs is 1.
-                list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
-                quantity_index += 1
-                # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(wcs_index)
+        for i in range(self.wcs.world_n_dim):
+
+            # Appending all the quantity list to the list of the input arguments
+            list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
+            quantity_index += 1
+
         list_arguments = list_arg[::-1]
-        pixel_to_world = self.wcs.all_pix2world(*list_arguments, origin)
+        pixel_to_world = self.wcs.pixel_to_world_values(*list_arguments)
         # collecting all the needed answer in this list.
-        for index in indexed_not_as_one[::-1]:
+        for index in range(self.wcs.world_n_dim):
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
         return result[::-1]
 
