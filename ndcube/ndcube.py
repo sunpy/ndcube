@@ -13,7 +13,7 @@ import sunpy.coordinates
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping, _pixel_keep
+from ndcube.utils.wcs import wcs_ivoa_mapping, _pixel_keep, _generate_default_wcs
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, unique_data_axis
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -179,6 +179,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, **kwargs):
+        if wcs is None:
+            wcs = _generate_default_wcs(data.shape)
 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
