@@ -271,43 +271,41 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Stores the final world coordinates
         result = []
         quantity_index = 0
-        for i in range(self.wcs.world_n_dim):
+        for i in range(self.wcs.pixel_n_dim):
 
-            # Appending all the quantity list to the list of the input arguments
+            # Appending all the quantity list values to the list of the input arguments
             list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
             quantity_index += 1
 
         list_arguments = list_arg[::-1]
         pixel_to_world = self.wcs.pixel_to_world_values(*list_arguments)
+        
         # collecting all the needed answer in this list.
-        for index in range(self.wcs.world_n_dim):
-            result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
+        for index in range(self.wcs.pixel_n_dim):
+            result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.world_axis_units[index]))
         return result[::-1]
 
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        origin = 0
+        # List od arguments of the input
         list_arg = []
-        indexed_not_as_one = []
+        # Stores the final pixel coordinates
         result = []
         quantity_index = 0
-        for i in range(len(self.missing_axes)):
+        for i in range(self.wcs.world_n_dim):
+
             wcs_index = self.wcs.naxis-1-i
-            # the cases where the wcs dimension was made 1 and the missing_axes is True
-            if self.missing_axes[wcs_index]:
-                list_arg.append(self.wcs.wcs.crval[wcs_index]+1-origin)
-            else:
-                # else it is not the case where the dimension of wcs is 1.
-                list_arg.append(
-                    quantity_axis_list[quantity_index].to(self.wcs.wcs.cunit[wcs_index]).value)
-                quantity_index += 1
-                # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(wcs_index)
+
+            # Appending all the quantity list values to the list of the input arguments
+            list_arg.append(quantity_axis_list[quantity_index].to(self.wcs.world_axis_units[wcs_index]).value)
+            quantity_index += 1
+    
         list_arguments = list_arg[::-1]
-        world_to_pixel = self.wcs.all_world2pix(*list_arguments, origin)
+        world_to_pixel = self.wcs.world_to_pixel_values(*list_arguments)
+        
         # collecting all the needed answer in this list.
-        for index in indexed_not_as_one[::-1]:
+        for index in range(self.wcs.world_n_dim):
             result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
         return result[::-1]
 
