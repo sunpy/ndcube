@@ -221,7 +221,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Returns the high level wcs API from the given low_level wcs API
         """
-        return high_level_wcs_wrapper(wcs)
+        return high_level_wcs_wrapper(self.wcs)
 
     @property
     def dimensions(self):
@@ -244,63 +244,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         see http://www.ivoa.net/documents/latest/UCDlist.html.
 
         """
-<<<<<<< HEAD
-        # breakpoint()
-        ctype = list(self.wcs.wcs.ctype)
-        # ctype = self.wcs.world_axis_physical_types
-        axes_ctype = []
-        for i, axis in enumerate(self.missing_axes):
-            if not axis:
-                # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
-                # Ensure CTYPE is capitalized.
-                keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
-                # Assuming CTYPE is supported by wcs_ivoa_mapping, use its corresponding axis name.
-                if len(keys) == 1:
-                    axis_name = wcs_ivoa_mapping.get(keys[0])
-                # If CTYPE not supported, raise a warning and set the axis name to CTYPE.
-                elif len(keys) == 0:
-                    warnings.warn("CTYPE not recognized by ndcube. "
-                                  "Please raise an issue at "
-                                  "https://github.com/sunpy/ndcube/issues citing the "
-                                  "unsupported CTYPE as we'll include it: "
-                                  "CTYPE = {0}".format(ctype[i]))
-                    axis_name = "custom:{0}".format(ctype[i])
-                # If there are multiple valid keys, raise an error.
-                else:
-                    raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
-                                     "https://github.com/sunpy/ndcube/issues citing the "
-                                     "following  CTYPE and non-unique keys: "
-                                     "CTYPE = {0}; keys = {1}".format(ctype[i], keys))
-                axes_ctype.append(axis_name)
-||||||| parent of d15e2d6... Converted `world_axis_physical_types` to APE14 compliant
-        # breakpoint()
-        ctype = list(self.wcs.wcs.ctype)
-        # ctype = self.wcs.world_axis_physical_types
-        axes_ctype = []
-        for i, axis in enumerate(self.missing_axis):
-            if not axis:
-                # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
-                # Ensure CTYPE is capitalized.
-                keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
-                # Assuming CTYPE is supported by wcs_ivoa_mapping, use its corresponding axis name.
-                if len(keys) == 1:
-                    axis_name = wcs_ivoa_mapping.get(keys[0])
-                # If CTYPE not supported, raise a warning and set the axis name to CTYPE.
-                elif len(keys) == 0:
-                    warnings.warn("CTYPE not recognized by ndcube. "
-                                  "Please raise an issue at "
-                                  "https://github.com/sunpy/ndcube/issues citing the "
-                                  "unsupported CTYPE as we'll include it: "
-                                  "CTYPE = {0}".format(ctype[i]))
-                    axis_name = "custom:{0}".format(ctype[i])
-                # If there are multiple valid keys, raise an error.
-                else:
-                    raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
-                                     "https://github.com/sunpy/ndcube/issues citing the "
-                                     "following  CTYPE and non-unique keys: "
-                                     "CTYPE = {0}; keys = {1}".format(ctype[i], keys))
-                axes_ctype.append(axis_name)
-=======
 
         # Use the context manager to access the physical types, 
         # which are not present in the APE14.
@@ -310,7 +253,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         
         axes_ctype = ctype
                 
->>>>>>> d15e2d6... Converted `world_axis_physical_types` to APE14 compliant
         return tuple(axes_ctype[::-1])
 
     @property
@@ -324,26 +266,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        origin = 0
+        # List of arguments of the input
         list_arg = []
-        indexed_not_as_one = []
+        # Stores the final world coordinates
         result = []
         quantity_index = 0
-        for i in range(len(self.missing_axes)):
-            wcs_index = self.wcs.naxis-1-i
-            # the cases where the wcs dimension was made 1 and the missing_axes is True
-            if self.missing_axes[wcs_index]:
-                list_arg.append(self.wcs.wcs.crpix[wcs_index]-1+origin)
-            else:
-                # else it is not the case where the dimension of wcs is 1.
-                list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
-                quantity_index += 1
-                # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(wcs_index)
+        for i in range(self.wcs.world_n_dim):
+
+            # Appending all the quantity list to the list of the input arguments
+            list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
+            quantity_index += 1
+
         list_arguments = list_arg[::-1]
-        pixel_to_world = self.wcs.all_pix2world(*list_arguments, origin)
+        pixel_to_world = self.wcs.pixel_to_world_values(*list_arguments)
         # collecting all the needed answer in this list.
-        for index in indexed_not_as_one[::-1]:
+        for index in range(self.wcs.world_n_dim):
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
         return result[::-1]
 
