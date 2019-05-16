@@ -10,36 +10,36 @@ __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
            'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
 
 
-def data_axis_to_wcs_axis(data_axis, missing_axis):
+def data_axis_to_wcs_axis(data_axis, missing_axes):
     """Converts a data axis number to the corresponding wcs axis number."""
     if data_axis is None:
         result = None
     else:
         if data_axis < 0:
-            data_axis = np.invert(missing_axis).sum() + data_axis
-        if data_axis > np.invert(missing_axis).sum()-1 or data_axis < 0:
+            data_axis = np.invert(missing_axes).sum() + data_axis
+        if data_axis > np.invert(missing_axes).sum()-1 or data_axis < 0:
             raise IndexError("Data axis out of range.  Number data axes = {0}".format(
-                np.invert(missing_axis).sum()))
-        result = len(missing_axis)-np.where(np.cumsum(
-            [b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
+                np.invert(missing_axes).sum()))
+        result = len(missing_axes)-np.where(np.cumsum(
+            [b is False for b in missing_axes][::-1]) == data_axis+1)[0][0]-1
     return result
 
 
-def wcs_axis_to_data_axis(wcs_axis, missing_axis):
+def wcs_axis_to_data_axis(wcs_axis, missing_axes):
     """Converts a wcs axis number to the corresponding data axis number."""
     if wcs_axis is None:
         result = None
     else:
         if wcs_axis < 0:
-            wcs_axis = len(missing_axis) + wcs_axis
-        if wcs_axis > len(missing_axis)-1 or wcs_axis < 0:
+            wcs_axis = len(missing_axes) + wcs_axis
+        if wcs_axis > len(missing_axes)-1 or wcs_axis < 0:
             raise IndexError("WCS axis out of range.  Number WCS axes = {0}".format(
-                len(missing_axis)))
-        if missing_axis[wcs_axis]:
+                len(missing_axes)))
+        if missing_axes[wcs_axis]:
             result = None
         else:
-            data_ordered_wcs_axis = len(missing_axis)-wcs_axis-1
-            result = data_ordered_wcs_axis-sum(missing_axis[::-1][:data_ordered_wcs_axis])
+            data_ordered_wcs_axis = len(missing_axes)-wcs_axis-1
+            result = data_ordered_wcs_axis-sum(missing_axes[::-1][:data_ordered_wcs_axis])
     return result
 
 
@@ -66,7 +66,7 @@ def select_order(axtypes):
     return result
 
 
-def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_axis,
+def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_axes,
                                                         data_shape):
     extra_coords_wcs_axis = {}
     coord_format_error = ("Coord must have three properties supplied, "
@@ -91,19 +91,19 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
         # Unless extra coord corresponds to a missing axis, check length
         # of coord is same is data axis to which is corresponds.
         if coord[1] is not None:
-            if not missing_axis[::-1][coord[1]]:
+            if not missing_axes[::-1][coord[1]]:
 
                 if len(coord[2]) != data_shape[coord[1]]:
                     raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
                                                             data_shape[coord[1]]))
         # Determine wcs axis corresponding to data axis of coord
         extra_coords_wcs_axis[coord[0]] = {
-            "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axis),
+            "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axes),
             "value": coord[2]}
     return extra_coords_wcs_axis
 
 
-def convert_extra_coords_dict_to_input_format(extra_coords, missing_axis):
+def convert_extra_coords_dict_to_input_format(extra_coords, missing_axes):
         """
         Converts NDCube.extra_coords attribute to format required as input for new NDCube.
 
@@ -123,7 +123,7 @@ def convert_extra_coords_dict_to_input_format(extra_coords, missing_axis):
         for name in coord_names:
             coord_keys = list(extra_coords[name].keys())
             if "wcs axis" in coord_keys and "axis" not in coord_keys:
-                axis = wcs_axis_to_data_axis(extra_coords[name]["wcs axis"], missing_axis)
+                axis = wcs_axis_to_data_axis(extra_coords[name]["wcs axis"], missing_axes)
             elif "axis" in coord_keys and "wcs axis" not in coord_keys:
                 axis = extra_coords[name]["axis"]
             else:

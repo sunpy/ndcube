@@ -170,7 +170,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Note however that it is not always possible to save the input as reference.
         Default is False.
 
-    missing_axis : `list` of `bool`
+    missing_axes : `list` of `bool`
         Designates which axes in wcs object do not have a corresponding axis is the data.
         True means axis is "missing", False means axis corresponds to a data axis.
         Ordering corresponds to the axis ordering in the WCS object, i.e. reverse of data.
@@ -181,16 +181,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
+                 unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
         if wcs is None:
             wcs = _generate_default_wcs(data.shape)
-        if missing_axis is None:
-            self.missing_axis = [False]*wcs.naxis
+        if missing_axes is None:
+            self.missing_axes = [False]*wcs.naxis
         else:
-            self.missing_axis = missing_axis
+            self.missing_axes = missing_axes
         if data.ndim is not wcs.naxis:
             count = 0
-            for bool_ in self.missing_axis:
+            for bool_ in self.missing_axes:
                 if not bool_:
                     count += 1
             if count is not data.ndim:
@@ -200,7 +200,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if extra_coords:
             self._extra_coords_wcs_axis = \
               utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                  extra_coords, self.missing_axis, data.shape)
+                  extra_coords, self.missing_axes, data.shape)
         else:
             self._extra_coords_wcs_axis = None
         # Initialize NDCube.
@@ -230,7 +230,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         ctype = list(self.wcs.wcs.ctype)
         axes_ctype = []
-        for i, axis in enumerate(self.missing_axis):
+        for i, axis in enumerate(self.missing_axes):
             if not axis:
                 # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
                 # Ensure CTYPE is capitalized.
@@ -255,6 +255,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 axes_ctype.append(axis_name)
         return tuple(axes_ctype[::-1])
 
+    @property
+    def missing_axis(self):
+        warnings.warn(
+            "The missing_axis list has been deprecated by missing_axes and will no longer be supported after ndcube 2.0.",
+            DeprecationWarning
+        )
+        return self.missing_axes
+
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
@@ -263,10 +271,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         indexed_not_as_one = []
         result = []
         quantity_index = 0
-        for i in range(len(self.missing_axis)):
+        for i in range(len(self.missing_axes)):
             wcs_index = self.wcs.naxis-1-i
-            # the cases where the wcs dimension was made 1 and the missing_axis is True
-            if self.missing_axis[wcs_index]:
+            # the cases where the wcs dimension was made 1 and the missing_axes is True
+            if self.missing_axes[wcs_index]:
                 list_arg.append(self.wcs.wcs.crpix[wcs_index]-1+origin)
             else:
                 # else it is not the case where the dimension of wcs is 1.
@@ -289,10 +297,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         indexed_not_as_one = []
         result = []
         quantity_index = 0
-        for i in range(len(self.missing_axis)):
+        for i in range(len(self.missing_axes)):
             wcs_index = self.wcs.naxis-1-i
-            # the cases where the wcs dimension was made 1 and the missing_axis is True
-            if self.missing_axis[wcs_index]:
+            # the cases where the wcs dimension was made 1 and the missing_axes is True
+            if self.missing_axes[wcs_index]:
                 list_arg.append(self.wcs.wcs.crval[wcs_index]+1-origin)
             else:
                 # else it is not the case where the dimension of wcs is 1.
@@ -365,7 +373,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         axes_translated = np.zeros_like(int_axes, dtype=bool)
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
-        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis, self.missing_axis))
+        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis, self.missing_axes))
                           for axis in int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
         # Iterate through each axis and perform WCS translation.
@@ -435,7 +443,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_axis(
                         self._extra_coords_wcs_axis[key]["wcs axis"],
-                        self.missing_axis),
+                        self.missing_axes),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
@@ -627,7 +635,7 @@ class NDCubeOrdered(NDCube):
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, missing_axis=None, **kwargs):
+                 unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
         axtypes = list(wcs.wcs.ctype)[::-1]
         array_order = utils.cube.select_order(axtypes)
         result_data = data.transpose(array_order)
@@ -651,4 +659,4 @@ class NDCubeOrdered(NDCube):
         super().__init__(result_data, result_wcs, uncertainty=result_uncertainty,
                          mask=result_mask, meta=meta, unit=unit,
                          extra_coords=reordered_extra_coords,
-                         copy=copy, missing_axis=missing_axis, **kwargs)
+                         copy=copy, missing_axes=missing_axes, **kwargs)

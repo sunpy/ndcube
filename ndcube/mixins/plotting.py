@@ -209,7 +209,7 @@ class NDCubePlotMixin:
                 if self.wcs.naxis is not 2:
                     slice_list = []
                     index = 0
-                    for i, bool_ in enumerate(self.missing_axis):
+                    for i, bool_ in enumerate(self.missing_axes):
                         if not bool_:
                             slice_list.append(axis_data[index])
                             index += 1
@@ -220,12 +220,12 @@ class NDCubePlotMixin:
                 ax = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
                 # Set axis labels
                 x_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[0],
-                                                              self.missing_axis)
+                                                              self.missing_axes)
                 ax.set_xlabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[0]],
                     self.wcs.wcs.cunit[x_wcs_axis]))
                 y_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[1],
-                                                              self.missing_axis)
+                                                              self.missing_axes)
                 ax.set_ylabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[1]],
                     self.wcs.wcs.cunit[y_wcs_axis]))
@@ -313,7 +313,7 @@ class NDCubePlotMixin:
             # If there are missing axes in WCS object, add corresponding dummy axes to data.
             if data.ndim < self.wcs.naxis:
                 new_shape = list(data.shape)
-                for i in np.arange(self.wcs.naxis)[self.missing_axis[::-1]]:
+                for i in np.arange(self.wcs.naxis)[self.missing_axes[::-1]]:
                     new_shape.insert(i, 1)
                     # Also insert dummy coordinates and units.
                     axes_coordinates.insert(i, None)
