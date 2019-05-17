@@ -65,7 +65,7 @@ jobs:
       - run: *merge-check
       - run: *apt-install
       - run: *tox-install
-      - run: tox -e py37-build_docs
+      - run: tox -e build_docs
       - store_artifacts:
           path: docs/_build/html
       - run:
