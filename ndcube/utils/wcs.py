@@ -296,7 +296,7 @@ def reindex_wcs(wcs, inds):
     return outwcs
 
 
-def get_dependent_data_axes(wcs_object, data_axis, missing_axes):
+def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
     """
     Given a data axis index, return indices of dependent data axes.
 
@@ -322,6 +322,12 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axes):
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
 
     """
+    # Since we are using APE14, we do not need missing_axis anymore
+    # So instead of discarding missing_axis altogether, we can store the value
+    # of missing_axis as [False]*pixel_n_dim, which helps us in storing the
+    # all the data axes.
+    missing_axis = [False]*wcs_object.pixel_n_dim
+
     # In order to correctly account for "missing" axes in this process,
     # we must determine what axes are dependent based on WCS axis indices.
     # Convert input data axis index to WCS axis index.
@@ -365,7 +371,9 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     # which pixel coordinates are linked to which other pixel coordinates.
     # So to do this we take a column from the matrix and find if there are
     # any entries in common with all other columns in the matrix.
-    matrix = axis_correlation_matrix(wcs_object)
+    
+    # Using APE14 for generating the correlation matrix
+    matrix = wcs_object.axis_correlation_matrix
     world_dep = matrix[:, wcs_axis:wcs_axis + 1]
     dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
     return dependent_wcs_axes
