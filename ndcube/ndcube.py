@@ -293,9 +293,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Stores the final pixel coordinates
         result = []
         quantity_index = 0
-        for i in range(self.wcs.world_n_dim):
+        for i in range(self.wcs.pixel_n_dim):
 
-            wcs_index = self.wcs.naxis-1-i
+            wcs_index = self.wcs.pixel_n_dim-1-i
 
             # Appending all the quantity list values to the list of the input arguments
             list_arg.append(quantity_axis_list[quantity_index].to(self.wcs.world_axis_units[wcs_index]).value)
@@ -305,7 +305,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         world_to_pixel = self.wcs.world_to_pixel_values(*list_arguments)
         
         # collecting all the needed answer in this list.
-        for index in range(self.wcs.world_n_dim):
+        for index in range(self.wcs.pixel_n_dim):
             result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
         return result[::-1]
 
