@@ -443,7 +443,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_axis(
                         self._extra_coords_wcs_axis[key]["wcs axis"],
-                        self.missing_axes),
+                        [False]*self.wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
