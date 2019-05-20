@@ -7,9 +7,9 @@ import astropy.units as u
 
 from ndcube import utils
 
-missing_axis_none = [False]*3
-missing_axis_0_2 = [True, False, True]
-missing_axis_1 = [False, True, False]
+missing_axes_none = [False]*3
+missing_axes_0_2 = [True, False, True]
+missing_axes_1 = [False, True, False]
 
 axes_length = 3
 extra_coords_dict = {"time": {"axis": 0, "value": u.Quantity(range(axes_length), unit=u.pix)},
@@ -24,19 +24,19 @@ extra_coords_dict_wcs = {"time": {"wcs axis": 0,
 
 @pytest.mark.parametrize(
     "test_input,expected",
-    [((None, missing_axis_none), None),
-     ((0, missing_axis_none), 2),
-     ((1, missing_axis_none), 1),
-     ((0, missing_axis_0_2), 1),
-     ((1, missing_axis_1), 0),
-     ((-1, missing_axis_0_2), 1),
-     ((-2, missing_axis_1), 2),
-     ((-1, missing_axis_none), 0)])
+    [((None, missing_axes_none), None),
+     ((0, missing_axes_none), 2),
+     ((1, missing_axes_none), 1),
+     ((0, missing_axes_0_2), 1),
+     ((1, missing_axes_1), 0),
+     ((-1, missing_axes_0_2), 1),
+     ((-2, missing_axes_1), 2),
+     ((-1, missing_axes_none), 0)])
 def test_data_axis_to_wcs_axis(test_input, expected):
     assert utils.cube.data_axis_to_wcs_axis(*test_input) == expected
 
 
-@pytest.mark.parametrize("test_input", [(-2, missing_axis_0_2), (1, missing_axis_0_2)])
+@pytest.mark.parametrize("test_input", [(-2, missing_axes_0_2), (1, missing_axes_0_2)])
 def test_data_axis_to_wcs_axis_error(test_input):
     with pytest.raises(IndexError):
         utils.cube.data_axis_to_wcs_axis(*test_input)
@@ -44,21 +44,21 @@ def test_data_axis_to_wcs_axis_error(test_input):
 
 @pytest.mark.parametrize(
     "test_input,expected",
-    [((None, missing_axis_none), None),
-     ((0, missing_axis_none), 2),
-     ((1, missing_axis_none), 1),
-     ((1, missing_axis_0_2), 0),
-     ((0, missing_axis_1), 1),
-     ((-1, missing_axis_0_2), None),
-     ((-2, missing_axis_0_2), 0),
-     ((-2, missing_axis_1), None),
-     ((-3, missing_axis_1), 1),
-     ((-1, missing_axis_none), 0)])
+    [((None, missing_axes_none), None),
+     ((0, missing_axes_none), 2),
+     ((1, missing_axes_none), 1),
+     ((1, missing_axes_0_2), 0),
+     ((0, missing_axes_1), 1),
+     ((-1, missing_axes_0_2), None),
+     ((-2, missing_axes_0_2), 0),
+     ((-2, missing_axes_1), None),
+     ((-3, missing_axes_1), 1),
+     ((-1, missing_axes_none), 0)])
 def test_wcs_axis_to_data_axis(test_input, expected):
     assert utils.cube.wcs_axis_to_data_axis(*test_input) == expected
 
 
-@pytest.mark.parametrize("test_input", [(-10, missing_axis_0_2), (10, missing_axis_0_2)])
+@pytest.mark.parametrize("test_input", [(-10, missing_axes_0_2), (10, missing_axes_0_2)])
 def test_wcs_axis_to_data_axis_error(test_input):
     with pytest.raises(IndexError):
         utils.cube.data_axis_to_wcs_axis(*test_input)
@@ -96,13 +96,13 @@ def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((extra_coords_dict, missing_axis_none), extra_coords_input),
+    ((extra_coords_dict, missing_axes_none), extra_coords_input),
 
-    ((extra_coords_dict_wcs,  missing_axis_none),
+    ((extra_coords_dict_wcs,  missing_axes_none),
      [('time', 2, u.Quantity(range(axes_length), unit=u.pix)),
       ('hello', 1, u.Quantity(range(axes_length), unit=u.pix))]),
 
-    ((extra_coords_dict_wcs,  missing_axis_1),
+    ((extra_coords_dict_wcs,  missing_axes_1),
      [('time', 1, u.Quantity(range(axes_length), unit=u.pix)),
       ('hello', None, u.Quantity(range(axes_length), unit=u.pix))])
     ])
@@ -136,4 +136,4 @@ def test_convert_extra_coords_dict_to_input_format(test_input, expected):
 def test_convert_extra_coords_dict_to_input_format_error():
     with pytest.raises(KeyError):
         utils.cube.convert_extra_coords_dict_to_input_format(
-            {"time": {"not axis": 0, "value": []}}, missing_axis_none)
+            {"time": {"not axis": 0, "value": []}}, missing_axes_none)

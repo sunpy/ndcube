@@ -34,7 +34,7 @@ def assert_cubes_equal(test_input, expected_cube):
     assert type(test_input) == type(expected_cube)
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
-    assert test_input.missing_axis == expected_cube.missing_axis
+    assert test_input.missing_axes == expected_cube.missing_axes
     assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)

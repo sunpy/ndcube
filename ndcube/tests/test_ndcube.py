@@ -116,7 +116,7 @@ cube = NDCube(
     wt,
     mask=mask_cube,
     uncertainty=uncertainty,
-    missing_axis=[False, False, False, True],
+    missing_axes=[False, False, False, True],
     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))])
@@ -136,7 +136,7 @@ cube_rotated = NDCube(
     w_rotated,
     mask=mask_cube,
     uncertainty=uncertainty,
-    missing_axis=[False, False, False],
+    missing_axes=[False, False, False],
     extra_coords=[('time', 0, u.Quantity(range(data_rotated.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
@@ -281,7 +281,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
-    assert test_input.missing_axis == wcs[1]
+    assert test_input.missing_axes == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
@@ -362,7 +362,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
-    assert test_input.missing_axis == wcs[1]
+    assert test_input.missing_axes == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
@@ -649,7 +649,7 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty,
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
     helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
-    assert test_input.missing_axis == wcs[1]
+    assert test_input.missing_axes == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
