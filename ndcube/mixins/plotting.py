@@ -2,6 +2,7 @@ import datetime
 from warnings import warn
 
 import numpy as np
+import sunpy.version as vc
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
@@ -386,6 +387,10 @@ class NDCubePlotMixin:
         # Set default y label
         default_ylabel = "Data [{0}]".format(unit_x_axis)
         # Initiate line animator object.
+        if vc.version <= "0.9.8":
+            axes_coordinates=axes_coordinates
+        else:
+            axes_coordinates=axes_coordinates[::-1]
         ax = LineAnimator(data, plot_axis_index=plot_axis_index, axis_ranges=axes_coordinates,
                           xlabel=default_xlabel,
                           ylabel="Data [{0}]".format(data_unit), **kwargs)
