@@ -314,7 +314,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
         return result[::-1]
 
-    def axis_world_coords(self, *axes):
+    def axis_world_coords(self, *axes, edges=False):
         """
         Returns WCS coordinate values of all pixels for all axes.
 
@@ -325,6 +325,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
+        
+        edges: `bool`
+            The edges argument helps in returning `pixel_edges` 
+            instead of `pixel_values`. Default value is False,
+            which returns `pixel_values`.
 
         Returns
         -------
@@ -386,7 +391,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                    unit=u.pix)] * n_dimensions
                     # Replace array in quantity list corresponding to current axis with
                     # np.arange array.
-                    quantity_list[axis] = u.Quantity(np.arange(cube_dimensions[axis]), unit=u.pix)
+                    # Check for the edges arguments
+                    if edges:
+                        # Setting start and stop ranges for `pixel_edges`
+                        start = -0.5
+                        stop = cube_dimensions[axis] + 0.5
+                        quantity_list[axis] = u.Quantity(np.arange(start,stop), unit=u.pix)
+                    else:
+                        quantity_list[axis] = u.Quantity(np.arange(cube_dimensions[axis]), unit=u.pix)
                 else:
                     # If the axis is dependent on another, perform
                     # translations on all dependent axes.
@@ -396,9 +408,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         [cube_dimensions[k] for k in dependent_axes[i]])),
                         unit=u.pix)] * n_dimensions
                     # Construct orthogonal pixel index arrays for dependent axes.
-                    dependent_pixel_quantities = np.meshgrid(
-                        *[np.arange(cube_dimensions[k]) * u.pix
-                          for k in dependent_axes[i]], indexing="ij")
+                    # Check for edges arguments
+                    if edges:
+                        dependent_pixel_quantities = np.meshgrid(
+                            *[np.arange(-0.5, cube_dimensions[k] + 0.5) * u.pix
+                              for k in dependent_axes[i]], indexing="ij")
+                    else:
+                        dependent_pixel_quantities = np.meshgrid(
+                            *[np.arange(cube_dimensions[k]) * u.pix
+                              for k in dependent_axes[i]], indexing="ij")
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
                 # Perform wcs translation
