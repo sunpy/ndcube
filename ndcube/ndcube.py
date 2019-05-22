@@ -325,7 +325,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
-        
         edges: `bool`
             The edges argument helps in returning `pixel_edges` 
             instead of `pixel_values`. Default value is False,
@@ -346,7 +345,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = cube_dimensions.size
         world_axis_types = self.world_axis_physical_types
-        
         # Extract the kwarg `edges` if present.
         # True signifies pixel_edges
         # False signifies pixel_values
@@ -396,7 +394,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 if n_dependent_axes[i] == 1:
                     # Construct pixel quantities in each dimension letting
                     # other dimensions all have 0 pixel value.
-                    
                     # Replace array in quantity list corresponding to current axis with
                     # np.arange array.
 
@@ -419,9 +416,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # translations on all dependent axes.
                     # Construct pixel quantities in each dimension letting
                     # other dimensions all have 0 pixel value.
-                    
                     # Construct orthogonal pixel index arrays for dependent axes.
-                    
                     # Check for edges arguments
                     if edges:
                         quantity_list = [u.Quantity(np.zeros(tuple(
