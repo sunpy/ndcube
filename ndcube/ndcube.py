@@ -401,12 +401,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # other dimensions all have 0 pixel value.
                     # Construct orthogonal pixel index arrays for dependent axes.
                     quantity_list = [u.Quantity(np.zeros(tuple(
-                    [_get_dimension_for_pixel(cube_dimensions[k], edges) for k in dependent_axes[i]])),
-                    unit=u.pix)] * n_dimensions
+                        [_get_dimension_for_pixel(cube_dimensions[k], edges) for k in dependent_axes[i]])),
+                         unit=u.pix)] * n_dimensions
 
                     dependent_pixel_quantities = np.meshgrid(
                         *[_pixel_centers_or_edges(cube_dimensions[k], edges) * u.pix
-                        for k in dependent_axes[i]], indexing="ij")
+                          for k in dependent_axes[i]], indexing="ij")
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
                 # Perform wcs translation

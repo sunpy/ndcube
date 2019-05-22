@@ -170,6 +170,7 @@ def _pixel_centers_or_edges(axis_length, edges):
     edges: `bool`
         Boolean to signify whether pixel_edge or pixel_value requested
         False stands for pixel_value, while True stands for pixel_edge
+        
     Returns
     -------
     `np.ndarray`
