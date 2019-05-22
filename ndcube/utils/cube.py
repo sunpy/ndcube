@@ -158,7 +158,7 @@ def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
                              axis_name, world_axis_physical_types))
     return axis_index[0]
 
-def _pixel_centers_or_edges(axis_length, edges): 
+def _pixel_centers_or_edges(axis_length, edges):
     """
     Returns a range of pixel_values or pixel_edges
    
@@ -183,7 +183,7 @@ def _pixel_centers_or_edges(axis_length, edges):
 
 def _get_dimension_for_pixel(axis_length, edges):
     """
-    Returns the dimensions for the given edges. 
+    Returns the dimensions for the given edges.
     
     Parameters
     ----------

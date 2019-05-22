@@ -407,7 +407,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     dependent_pixel_quantities = np.meshgrid(
                         *[_pixel_centers_or_edges(cube_dimensions[k], edges) * u.pix
                         for k in dependent_axes[i]], indexing="ij")
-                        
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
                 # Perform wcs translation
