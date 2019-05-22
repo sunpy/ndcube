@@ -326,7 +326,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
         edges: `bool`
-            The edges argument helps in returning `pixel_edges` 
+            The edges argument helps in returning `pixel_edges`
             instead of `pixel_values`. Default value is False,
             which returns `pixel_values`. True return `pixel_edges`
 
