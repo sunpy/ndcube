@@ -349,10 +349,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # True signifies pixel_edges
         # False signifies pixel_values
         # Default value is False
-        if "edges" in kwargs:
-            edges = kwargs['edges']
-        else:
-            edges = False
+        edges = kwargs.get("edges",False)
 
         # Determine axis numbers of user supplied axes.
         if axes == ():
