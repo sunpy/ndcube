@@ -161,16 +161,16 @@ def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
 def _pixel_centers_or_edges(axis_length, edges):
     """
     Returns a range of pixel_values or pixel_edges
-   
+
     Parameters
     ----------
     axis_length: `int`
         The length of the axis
-    
+
     edges: `bool`
         Boolean to signify whether pixel_edge or pixel_value requested
         False stands for pixel_value, while True stands for pixel_edge
-        
+
     Returns
     -------
     `np.ndarray`
@@ -185,7 +185,7 @@ def _pixel_centers_or_edges(axis_length, edges):
 def _get_dimension_for_pixel(axis_length, edges):
     """
     Returns the dimensions for the given edges.
-    
+
     Parameters
     ----------
     axis_length : `int`
