@@ -350,7 +350,7 @@ class NDCubePlotMixin:
         # Get real world axis values along axis to be plotted and enter into axes_ranges kwarg.
         if axes_coordinates[plot_axis_index] is None:
             xname = self.world_axis_physical_types[plot_axis_index]
-            xdata = self.axis_world_coords(plot_axis_index)
+            xdata = self.axis_world_coords(plot_axis_index, edges=True)
         elif isinstance(axes_coordinates[plot_axis_index], str):
             xname = axes_coordinates[plot_axis_index]
             xdata = self.extra_coords[xname]["value"]
