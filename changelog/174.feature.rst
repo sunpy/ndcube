@@ -1,1 +1,1 @@
-- Added a feature to get the pixel_edges from axis_world_coords
+- Added a feature to get the pixel_edges from `ndcube.NDCube.axis_world_coords`
