@@ -11,6 +11,7 @@ from astropy.utils.misc import InheritDocstrings
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
+from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
@@ -314,7 +315,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
         return result[::-1]
 
-    def axis_world_coords(self, *axes):
+    def axis_world_coords(self, *axes, edges=False):
         """
         Returns WCS coordinate values of all pixels for all axes.
 
@@ -325,6 +326,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
+
+        edges: `bool`
+            The edges argument helps in returning `pixel_edges`
+            instead of `pixel_values`. Default value is False,
+            which returns `pixel_values`. True return `pixel_edges`
 
         Returns
         -------
@@ -341,6 +347,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = cube_dimensions.size
         world_axis_types = self.world_axis_physical_types
+
         # Determine axis numbers of user supplied axes.
         if axes == ():
             int_axes = np.arange(n_dimensions)
@@ -381,23 +388,24 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 if n_dependent_axes[i] == 1:
                     # Construct pixel quantities in each dimension letting
                     # other dimensions all have 0 pixel value.
-                    quantity_list = [
-                        u.Quantity(np.zeros(cube_dimensions[dependent_axes[i]]),
-                                   unit=u.pix)] * n_dimensions
                     # Replace array in quantity list corresponding to current axis with
                     # np.arange array.
-                    quantity_list[axis] = u.Quantity(np.arange(cube_dimensions[axis]), unit=u.pix)
+                        quantity_list = [
+                        u.Quantity(np.zeros(_get_dimension_for_pixel(cube_dimensions[dependent_axes[i]], edges)),
+                                   unit=u.pix)] * n_dimensions
+                        quantity_list[axis] = u.Quantity(_pixel_centers_or_edges(cube_dimensions[axis], edges), unit=u.pix)
                 else:
                     # If the axis is dependent on another, perform
                     # translations on all dependent axes.
                     # Construct pixel quantities in each dimension letting
                     # other dimensions all have 0 pixel value.
-                    quantity_list = [u.Quantity(np.zeros(tuple(
-                        [cube_dimensions[k] for k in dependent_axes[i]])),
-                        unit=u.pix)] * n_dimensions
                     # Construct orthogonal pixel index arrays for dependent axes.
+                    quantity_list = [u.Quantity(np.zeros(tuple(
+                        [_get_dimension_for_pixel(cube_dimensions[k], edges) for k in dependent_axes[i]])),
+                         unit=u.pix)] * n_dimensions
+
                     dependent_pixel_quantities = np.meshgrid(
-                        *[np.arange(cube_dimensions[k]) * u.pix
+                        *[_pixel_centers_or_edges(cube_dimensions[k], edges) * u.pix
                           for k in dependent_axes[i]], indexing="ij")
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
