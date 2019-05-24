@@ -1,0 +1,1 @@
+- Make supplying a WCS object optional and supply a default if one is not.
