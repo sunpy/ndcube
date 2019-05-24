@@ -80,7 +80,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
                             "to which the coordinate corresponds.")
     coord_len_error = ("extra coord ({0}) must have same length as data axis "
                        "to which it is assigned: coord length, {1} != data axis length, {2}")
-    for coord in extra_coords:
+    for coord in extra_coords_wcs_axis:
         # Check extra coord has the right number and types of info.
         if len(coord) != 3:
             raise ValueError(coord_format_error.format(coord))
@@ -93,10 +93,15 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
         # of coord is same is data axis to which is corresponds.
         if coord[1] is not None:
             if not missing_axes[::-1][coord[1]]:
-
-                if len(coord[2]) != data_shape[coord[1]]:
-                    raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
-                                                            data_shape[coord[1]]))
+                # Use a try ... except structure here in order to catch any
+                # ValueError arising from coord[1] not conforming an object
+                # with a valid length (such as a list, tuple, or np.ndarray).
+                try:
+                    if len(coord[2]) != data_shape[coord[1]]:
+                        raise ValueError(coord_len_error.format(coord[0], len(coord[2]), data_shape(coord[1])))
+                except:
+                    if data_shape[coord[1]] != 1:
+                        raise ValueError(coord_len_error.format(coord[0], 1, data_shape[coord[1]]))
         # Determine wcs axis corresponding to data axis of coord
         extra_coords_wcs_axis[coord[0]] = {
             "wcs axis": data_axis_to_wcs_axis(coord[1], missing_axes),

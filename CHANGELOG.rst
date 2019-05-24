@@ -29,6 +29,8 @@ New Features
   `~ndcube.NDCubeSequenceBase.explode_along_axis`. [#118]
 - NDCubeSequence plot mixin can now animate a cube as a 1-D line if a single
   axis number is supplied to plot_axis_indices kwarg.
+- Added real world coordinates from sliced out axes of wcs to extra_coords.
+  [#151]
 
 API Changes
 -----------

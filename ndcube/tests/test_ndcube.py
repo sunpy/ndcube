@@ -8,6 +8,7 @@ import datetime
 import pytest
 import numpy as np
 import astropy.units as u
+import astropy.wcs
 
 from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
@@ -24,6 +25,13 @@ wt = WCS(header=ht, naxis=3)
 
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
+
+wcs_input_dict = {
+'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
+'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
+'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
+
+data_ones = np.ones((3, 4, 5))
 
 hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
       'NAXIS1': 4,
@@ -44,7 +52,6 @@ w_disordered = WCS(header=h_disordered, naxis=4)
 data_disordered = np.zeros((2, 3, 4, 2))
 data_disordered[:, :, :, 0] = data
 data_disordered[:, :, :, 1] = data
-
 
 h_ordered = {
     'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.4, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 2,
@@ -938,3 +945,17 @@ def test_explode_along_axis(test_input, expected):
     assert isinstance(output[inp_slice], exp_type_cube)
     assert isinstance(output.meta, exp_meta_seq)
     assert isinstance(output[inp_slice].meta, exp_meta_cube)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ((data_ones, wcs_input_dict),
+     {'custom:pos.helioprojective.lat': {'axis': None, 'value': np.array(1.26915033e-05)}})
+])
+def test_extra_coords(test_input, expected):
+    data, wcs_input = test_input
+    input_wcs = astropy.wcs.WCS(wcs_input)
+    my_test_cube = NDCube(data_ones, input_wcs)
+    my_2d_test_cube = my_test_cube[0:3, 0, 0:5]
+    extra_coords_output = expected.keys()
+    output = my_2d_test_cube.extra_coords.keys()
+    assert output == extra_coords_output

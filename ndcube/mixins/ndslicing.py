@@ -28,7 +28,22 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
 
-        return super().__getitem__(item)
+        # Abort slicing if the data is a single scalar.
+        if self.data.shape == ():
+            raise TypeError('scalars cannot be sliced.')
+
+        # Let the other methods handle slicing.
+        kwargs, dropped_coords = self._slice(item)
+        new_cube = self.__class__(**kwargs)
+
+        # Add any WCS coords whose axes are missing after slicing to extra_coords.
+        if new_cube._extra_coords_wcs_axis is not None:
+            if dropped_coords != {}:
+                new_cube._extra_coords_wcs_axis.update(dropped_coords)
+            else:
+                new_cube._extra_coords_wcs_axis = dropped_coords
+
+        return new_cube
 
     def _slice(self, item):
         """
@@ -42,18 +57,18 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         """
         kwargs = super()._slice(item)
 
-        wcs, missing_axes = self._slice_wcs_missing_axes(item)
+        wcs, missing_axes, dropped_coords = self._slice_wcs_missing_axes(item)
         kwargs['wcs'] = wcs
         kwargs['missing_axes'] = missing_axes
         kwargs['extra_coords'] = self._slice_extra_coords(item, missing_axes)
 
-        return kwargs
+        return kwargs, dropped_coords
 
     def _slice_wcs_missing_axes(self, item):
         # here missing axis is reversed as the item comes already in the reverse order
         # of the input
         return utils.wcs._wcs_slicer(
-            self.wcs, copy.deepcopy(self.missing_axes[::-1]), item)
+            self.wcs, copy.deepcopy(self.missing_axes), item)
 
     def _slice_extra_coords(self, item, missing_axes):
         if self.extra_coords is None:

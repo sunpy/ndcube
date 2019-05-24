@@ -1,0 +1,1 @@
+Add real world coordinates from sliced out axes of WCS to extra_coords.

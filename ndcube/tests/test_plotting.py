@@ -34,7 +34,7 @@ wm = WCS(header=hm, naxis=3)
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
-uncertainty = np.sqrt(data)
+uncertainty = np.sqrt(np.abs(data))
 mask_cube = data < 0
 
 cube = NDCube(
