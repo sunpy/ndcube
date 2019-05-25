@@ -327,7 +327,7 @@ def test_support_101_plot_API_errors(input_values):
     (cube_unit, {"plot_axis_indices": -1, "axes_coordinates": "bye"},
      (cube_data, cube_none_axis_ranges_axis2_bye, "bye [m]", "Data [J]")),
 
-    (cube, {"plot_axis_indices": -1, "axes_coordinates": np.arange(10, 10+cube.data.shape[-1])},
+    (cube, {"plot_axis_indices": -1, "axes_coordinates": np.arange(10 - 0.5, 0.5+10 + cube.data.shape[-1])},
      (cube_data, cube_none_axis_ranges_axis2_array, " [None]", "Data [None]"))
     ])
 def test_cube_plot_ND_as_1DAnimation(test_input, test_kwargs, expected_values):
