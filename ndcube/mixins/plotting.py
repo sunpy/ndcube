@@ -12,6 +12,7 @@ except ImportError:
     from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
 
 from ndcube import utils
+from ndcube.utils.cube import _get_extra_coord_edges
 from ndcube.mixins import sequence_plotting
 
 __all__ = ['NDCubePlotMixin']
@@ -62,6 +63,7 @@ class NDCubePlotMixin:
             for that axis.
 
         """
+        # breakpoint()
         # If old API is used, convert to new API.
         plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
@@ -125,7 +127,7 @@ class NDCubePlotMixin:
             if unit_x_axis is not None:
                 raise TypeError(INVALID_UNIT_SET_MESSAGE)
         # Define default x axis label.
-        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
+        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)     
         # Combine data and uncertainty with mask.
         xdata = np.ma.masked_array(xdata, self.mask)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
@@ -353,7 +355,7 @@ class NDCubePlotMixin:
             xdata = self.axis_world_coords(plot_axis_index, edges=True)
         elif isinstance(axes_coordinates[plot_axis_index], str):
             xname = axes_coordinates[plot_axis_index]
-            xdata = self.extra_coords[xname]["value"]
+            xdata = _get_extra_coord_edges(self.extra_coords[xname]["value"])
         else:
             xname = ""
             xdata = axes_coordinates[plot_axis_index]
