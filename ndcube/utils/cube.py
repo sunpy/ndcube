@@ -5,6 +5,7 @@ Utilities for ndcube.
 """
 
 import numpy as np
+from astropy.units import Quantity
 
 __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
            'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
@@ -195,3 +196,25 @@ def _get_dimension_for_pixel(axis_length, edges):
         False stands for pixel_value, while True stands for pixel_edge
     """
     return axis_length+1 if edges else axis_length
+
+def _get_extra_coord_edges(value):
+    """Gets the pixel_edges from the pixel_values
+    
+    Parameters
+    ----------
+    value : `astropy.units.Quantity` or array-like
+        The Quantity object containing the values for a given `extra_coords`
+    """
+
+    # Get the shape of the Quantity object
+    shape = len(value)
+    if isinstance(value, Quantity):
+        edges = np.zeros(shape+1) * value.unit
+    else:
+        edges = np.zeros(shape+1)
+
+    # Calculate the pixel_edges from the given pixel_values
+    edges[1:-1] = value[:-1] + (value[1:] - value[:-1]) / 2
+    edges[0] = value[0] - (value[1] - value[0]) / 2
+    edges[-1] = value[-1] + (value[-1] - value[-2]) / 2
+    return edges
