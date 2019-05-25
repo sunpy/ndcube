@@ -13,8 +13,7 @@ from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 
 from ndcube import NDCube, NDCubeOrdered
-from astropy.wcs import WCS
-
+from ndcube.utils.wcs import WCS, _wcs_slicer, _generate_default_wcs
 from ndcube.tests import helpers
 from ndcube.tests.helpers import create_sliced_wcs
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -80,6 +79,8 @@ w_rotated = WCS(header=h_rotated)
 
 data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
                          [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]]])
+
+default_wcs = _generate_default_wcs((data.shape))
 
 mask_cubem = data > 0
 mask_cube = data_cube >= 0
@@ -160,6 +161,13 @@ cube_rotated = NDCube(
 def test_wcs_object(nd_cube):
     assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
     assert isinstance(nd_cube.high_level_wcs, BaseHighLevelWCS)
+
+
+def test_ndcube_default_wcs_input():
+    data = np.ones((2, 3, 4))
+    expected_wcs = _generate_default_wcs((data.shape))
+    output = NDCube(data)
+    helpers.assert_wcs_are_equal(output.wcs, expected_wcs)
 
 
 @pytest.mark.parametrize(

@@ -99,16 +99,3 @@ def test_get_dependent_wcs_axes(test_input, expected):
 def test_axis_correlation_matrix(test_input, expected):
     assert (utils.wcs.axis_correlation_matrix(test_input) == expected).all()
 
-def test_generate_default_wcs():
-    data_shape = (2,3,4)
-    output = utils.wcs._generate_default_wcs(data_shape)
-    wcs_dict = {'CTYPE1': 'PIXEL', 'CDELT1': 1, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2,
-                'CTYPE2': 'PIXEL', 'CDELT2': 1, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 3,
-                'CTYPE3': 'PIXEL', 'CDELT3': 1, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 4}
-    expected = astropy.wcs.WCS(header=wcs_dict, naxis=len(data_shape))
-    for i in range(3):
-        assert output.wcs.ctype[i] == expected.wcs.ctype[i]
-        assert output._naxis[i] == expected._naxis[i]
-    np.testing.assert_array_equal(output.wcs.cdelt, expected.wcs.cdelt)
-    np.testing.assert_array_equal(output.wcs.crpix, expected.wcs.crpix)
-    np.testing.assert_array_equal(output.wcs.crval, expected.wcs.crval)
