@@ -127,7 +127,7 @@ class NDCubePlotMixin:
             if unit_x_axis is not None:
                 raise TypeError(INVALID_UNIT_SET_MESSAGE)
         # Define default x axis label.
-        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)     
+        default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
         # Combine data and uncertainty with mask.
         xdata = np.ma.masked_array(xdata, self.mask)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.

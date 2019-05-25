@@ -199,7 +199,7 @@ def _get_dimension_for_pixel(axis_length, edges):
 
 def _get_extra_coord_edges(value):
     """Gets the pixel_edges from the pixel_values
-    
+
     Parameters
     ----------
     value : `astropy.units.Quantity` or array-like
