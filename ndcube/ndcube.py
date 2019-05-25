@@ -179,11 +179,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, **kwargs):
+        # If wcs not supplied, generate default wcs.
         if wcs is None:
-            # If missing_axes supplied without a wcs, raise an error.
-            if missing_axes is not None:
-                raise ValueError("Cannot set missing_axes without supplyinga WCS.")
-            # If wcs not supplied, generate default wcs.
             wcs = _generate_default_wcs(data.shape)
 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,

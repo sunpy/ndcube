@@ -98,4 +98,3 @@ def test_get_dependent_wcs_axes(test_input, expected):
     ])
 def test_axis_correlation_matrix(test_input, expected):
     assert (utils.wcs.axis_correlation_matrix(test_input) == expected).all()
-
