@@ -405,12 +405,13 @@ def _pixel_keep(wcs_object):
 
 
 def _generate_default_wcs(data_shape):
+    wcs_shape = data_shape[::-1]
     hm = {}
-    for i in range(1, len(data_shape)+1):
+    for i in range(1, len(wcs_shape)+1):
         hm["CTYPE{}".format(i)] = 'PIXEL'
         hm["CDELT{}".format(i)] = 1
         hm["CRPIX{}".format(i)] = 0
         hm["CRVAL{}".format(i)] = 0
-        hm["NAXIS{}".format(i)] = data_shape[i-1]
-    default_wcs = wcs.WCS(header=hm, naxis=len(data_shape))
+        hm["NAXIS{}".format(i)] = wcs_shape[i-1]
+    default_wcs = wcs.WCS(header=hm, naxis=len(wcs_shape))
     return default_wcs
