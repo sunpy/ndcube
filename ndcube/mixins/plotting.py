@@ -63,7 +63,6 @@ class NDCubePlotMixin:
             for that axis.
 
         """
-        # breakpoint()
         # If old API is used, convert to new API.
         plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
