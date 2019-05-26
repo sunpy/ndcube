@@ -6,7 +6,7 @@ Utilities for ndcube.
 
 import numpy as np
 
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
+__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'data_axis_to_wcs_axis_without_ms', 'select_order',
            'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name']
 
 
@@ -19,9 +19,21 @@ def data_axis_to_wcs_axis(data_axis, missing_axes):
             data_axis = np.invert(missing_axes).sum() + data_axis
         if data_axis > np.invert(missing_axes).sum()-1 or data_axis < 0:
             raise IndexError("Data axis out of range.  Number data axes = {0}".format(
-                np.invert(missing_axes).sum()))
-        result = len(missing_axes)-np.where(np.cumsum(
-            [b is False for b in missing_axes][::-1]) == data_axis+1)[0][0]-1
+                np.invert(missing_axis).sum()))
+        result = len(missing_axis)-np.where(np.cumsum([b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
+    return result
+
+def data_axis_to_wcs_axis_without_ms(data_axis, naxes):
+    """Converts a data axis number to corresponding wcs axis number without using missing axes"""
+    if data_axis is None:
+        result = None
+    else:
+        if data_axis < 0:
+            data_axis += naxes
+        if data_axis > naxes -1 or data_axis < 0:
+            raise IndexError("Data axis out of range.  Number data axes = {0}".format(naxes))
+    # Revert the position
+    result = naxes-1 - data_axis
     return result
 
 
@@ -42,6 +54,18 @@ def wcs_axis_to_data_axis(wcs_axis, missing_axes):
             result = data_ordered_wcs_axis-sum(missing_axes[::-1][:data_ordered_wcs_axis])
     return result
 
+def wcs_axis_to_data_axis_without_ms(wcs_axis, naxes):
+    """Converts a wcs axis number to the corresponding data axis number without missing_axes"""
+    if wcs_axis is None:
+        result = None
+    else:
+        if wcs_axis < 0:
+            wcs_axis += naxes
+        if wcs_axis > naxes -1 or wcs_axis < 0:
+            raise IndexError("WCS axis out of range.  Number WCS axes = {0}".format(
+                naxes))
+        result = naxes-1-wcs_axis
+    return result
 
 def select_order(axtypes):
     """

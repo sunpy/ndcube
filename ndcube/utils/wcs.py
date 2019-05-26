@@ -322,24 +322,15 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
 
     """
-    # Since we are using APE14, we do not need missing_axis anymore
-    # So instead of discarding missing_axis altogether, we can store the value
-    # of missing_axis as [False]*pixel_n_dim, which helps us in storing the
-    # all the data axes.
-    missing_axis = [False]*wcs_object.pixel_n_dim
 
-    # In order to correctly account for "missing" axes in this process,
-    # we must determine what axes are dependent based on WCS axis indices.
     # Convert input data axis index to WCS axis index.
-    wcs_axis = utils_cube.data_axis_to_wcs_axis(data_axis, missing_axes)
-    # Determine dependent axes, including "missing" axes, using WCS ordering.
+    wcs_axis = utils_cube.data_axis_to_wcs_axis_without_ms(data_axis, wcs_object.pixel_n_dim)
+    # Determine dependent axes, using WCS ordering.
     wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
-    # Remove "missing" axes from output.
-    non_missing_wcs_dependent_axes = wcs_dependent_axes[
-        np.invert(missing_axes)[wcs_dependent_axes]]
+    
     # Convert dependent axes back to numpy/data ordering.
-    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_axis(i, missing_axes)
-                                         for i in non_missing_wcs_dependent_axes]))
+    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_axis_without_ms(i, wcs_object.pixel_n_dim)
+                                         for i in wcs_dependent_axes]))
     return dependent_data_axes
 
 
@@ -378,7 +369,7 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
     return dependent_wcs_axes
 
-
+# TODO: Remove this redundant method, or return wcs_object.axis_correlation_matrix
 def axis_correlation_matrix(wcs_object):
     """
     Return True/False matrix indicating which WCS axes are dependent on others.
