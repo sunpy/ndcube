@@ -441,9 +441,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             result = {}
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
-                    "axis": utils.cube.wcs_axis_to_data_axis(
+                    "axis": utils.cube.wcs_axis_to_data_axis_without_ms(
                         self._extra_coords_wcs_axis[key]["wcs axis"],
-                        [False]*self.wcs.pixel_n_dim),
+                        self.wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
