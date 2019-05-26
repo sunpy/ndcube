@@ -89,8 +89,8 @@ def test_reindex_wcs_errors(test_input):
 @pytest.mark.parametrize("test_input,expected", [
     ((wm, 0, [False, False, False]), (0, 1)),
     ((wm, 1, [False, False, False]), (0, 1)),
-    ((wm, 2, [False, False, False]), (2,))
-    # ((wm, 1, [False, False, True]), (1,))
+    ((wm, 2, [False, False, False]), (2,)),
+    ((wm, 1, [False, False, True]), (1,))
     ])
 def test_get_dependent_data_axes(test_input, expected):
     output = utils.wcs.get_dependent_data_axes(*test_input)
