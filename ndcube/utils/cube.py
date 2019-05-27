@@ -27,6 +27,7 @@ def data_axis_to_wcs_axis_without_ms(data_axis, naxes):
     """Converts a data axis number to corresponding wcs axis number without using missing axes"""
     if data_axis is None:
         result = None
+        return result
     else:
         if data_axis < 0:
             data_axis += naxes
@@ -64,6 +65,7 @@ def wcs_axis_to_data_axis_without_ms(wcs_axis, naxes):
         if wcs_axis > naxes -1 or wcs_axis < 0:
             raise IndexError("WCS axis out of range.  Number WCS axes = {0}".format(
                 naxes))
+        # Revert the position
         result = naxes-1-wcs_axis
     return result
 

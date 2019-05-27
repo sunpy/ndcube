@@ -322,6 +322,8 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
 
     """
+    # TODO: Drop the support for missing_axes, as we are not using it.
+    # This can be done by dropping missing_axes parameter of functions calling it
 
     # Convert input data axis index to WCS axis index.
     wcs_axis = utils_cube.data_axis_to_wcs_axis_without_ms(data_axis, wcs_object.pixel_n_dim)
@@ -340,8 +342,6 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
 
     Both input and output axis indices are in the WCS ordering convention
     (reverse of numpy ordering convention). The returned axis indices include the input axis.
-    Returned axis indices DO include WCS axes that do not have a
-    corresponding data axis, i.e. "missing" axes.
 
     Parameters
     ----------

@@ -8,6 +8,7 @@ import datetime
 import pytest
 import numpy as np
 import astropy.units as u
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper
 
 from ndcube import NDCube, NDCubeOrdered
 from ndcube.utils.wcs import WCS, _wcs_slicer
@@ -140,6 +141,21 @@ cube_rotated = NDCube(
     extra_coords=[('time', 0, u.Quantity(range(data_rotated.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
+
+@pytest.mark.parametrize(
+    "nd_cube",[
+    cube,
+    cube_rotated,
+    cubem,
+    cubet])
+def test_wcs_object(nd_cube):
+
+    # Test if wcs object is a BaseLowLevelWCs, has a SlicedLowLevelWCS object 
+    # and has a high level wcs object associated 
+    assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
+    assert isinstance(nd_cube.low_level_wcs, SlicedLowLevelWCS)
+    assert isinstance(nd_cube.high_level_wcs, HighLevelWCSWrapper)
+    
 
 # @pytest.mark.parametrize(
 #     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
@@ -938,3 +954,4 @@ def test_explode_along_axis(test_input, expected):
     assert isinstance(output[inp_slice], exp_type_cube)
     assert isinstance(output.meta, exp_meta_seq)
     assert isinstance(output[inp_slice].meta, exp_meta_cube)
+
