@@ -288,7 +288,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        # List od arguments of the input
+        # List of arguments of the input
         list_arg = []
         # Stores the final pixel coordinates
         result = []
