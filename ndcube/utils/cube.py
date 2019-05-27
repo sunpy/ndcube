@@ -19,8 +19,8 @@ def data_axis_to_wcs_axis(data_axis, missing_axes):
             data_axis = np.invert(missing_axes).sum() + data_axis
         if data_axis > np.invert(missing_axes).sum()-1 or data_axis < 0:
             raise IndexError("Data axis out of range.  Number data axes = {0}".format(
-                np.invert(missing_axis).sum()))
-        result = len(missing_axis)-np.where(np.cumsum([b is False for b in missing_axis][::-1]) == data_axis+1)[0][0]-1
+                np.invert(missing_axes).sum()))
+        result = len(missing_axes)-np.where(np.cumsum([b is False for b in missing_axes][::-1]) == data_axis+1)[0][0]-1
     return result
 
 def data_axis_to_wcs_axis_without_ms(data_axis, naxes):
