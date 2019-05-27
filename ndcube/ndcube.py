@@ -6,6 +6,7 @@ import warnings
 import numpy as np
 import astropy.nddata
 import astropy.units as u
+from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
 from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, high_level_wcs_wrapper
 
@@ -243,6 +244,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         see http://www.ivoa.net/documents/latest/UCDlist.html.
 
         """
+<<<<<<< HEAD
         # breakpoint()
         ctype = list(self.wcs.wcs.ctype)
         # ctype = self.wcs.world_axis_physical_types
@@ -270,6 +272,45 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                      "following  CTYPE and non-unique keys: "
                                      "CTYPE = {0}; keys = {1}".format(ctype[i], keys))
                 axes_ctype.append(axis_name)
+||||||| parent of d15e2d6... Converted `world_axis_physical_types` to APE14 compliant
+        # breakpoint()
+        ctype = list(self.wcs.wcs.ctype)
+        # ctype = self.wcs.world_axis_physical_types
+        axes_ctype = []
+        for i, axis in enumerate(self.missing_axis):
+            if not axis:
+                # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
+                # Ensure CTYPE is capitalized.
+                keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
+                # Assuming CTYPE is supported by wcs_ivoa_mapping, use its corresponding axis name.
+                if len(keys) == 1:
+                    axis_name = wcs_ivoa_mapping.get(keys[0])
+                # If CTYPE not supported, raise a warning and set the axis name to CTYPE.
+                elif len(keys) == 0:
+                    warnings.warn("CTYPE not recognized by ndcube. "
+                                  "Please raise an issue at "
+                                  "https://github.com/sunpy/ndcube/issues citing the "
+                                  "unsupported CTYPE as we'll include it: "
+                                  "CTYPE = {0}".format(ctype[i]))
+                    axis_name = "custom:{0}".format(ctype[i])
+                # If there are multiple valid keys, raise an error.
+                else:
+                    raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
+                                     "https://github.com/sunpy/ndcube/issues citing the "
+                                     "following  CTYPE and non-unique keys: "
+                                     "CTYPE = {0}; keys = {1}".format(ctype[i], keys))
+                axes_ctype.append(axis_name)
+=======
+
+        # Use the context manager to access the physical types, 
+        # which are not present in the APE14.
+        # APE14 physical types are covered by default.
+        with custom_ctype_to_ucd_mapping(wcs_ivoa_mapping):
+            ctype = self.wcs.world_axis_physical_types
+        
+        axes_ctype = ctype
+                
+>>>>>>> d15e2d6... Converted `world_axis_physical_types` to APE14 compliant
         return tuple(axes_ctype[::-1])
 
     @property
