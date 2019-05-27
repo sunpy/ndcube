@@ -207,7 +207,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         
         # Enforce that the WCS object is a low_level_wcs object, complying APE14
         if not isinstance(wcs, BaseLowLevelWCS):
-            raise TypeError(f'Expected a low_level_wcs object, got {type(wcs)}')
+            raise TypeError(f'Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}')
         else:
             # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
             self.low_level_wcs = SlicedLowLevelWCS(wcs, [])
