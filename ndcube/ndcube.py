@@ -204,7 +204,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                   extra_coords, self.missing_axes, data.shape)
         else:
             self._extra_coords_wcs_axis = None
-        
+
         # Enforce that the WCS object is a low_level_wcs object, complying APE14
         if not isinstance(wcs, BaseLowLevelWCS):
             raise TypeError(f'Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}')
@@ -212,7 +212,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
             self.low_level_wcs = SlicedLowLevelWCS(wcs, [])
 
-        # Initialize NDCube. 
+        # Initialize NDCube.
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
@@ -245,14 +245,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         """
 
-        # Use the context manager to access the physical types, 
+        # Use the context manager to access the physical types,
         # which are not present in the APE14.
         # APE14 physical types are covered by default.
         with custom_ctype_to_ucd_mapping(wcs_ivoa_mapping):
             ctype = self.wcs.world_axis_physical_types
-        
+
         axes_ctype = ctype
-                
+
         return tuple(axes_ctype[::-1])
 
     @property
@@ -279,7 +279,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         list_arguments = list_arg[::-1]
         pixel_to_world = self.wcs.pixel_to_world_values(*list_arguments)
-        
+
         # collecting all the needed answer in this list.
         for index in range(self.wcs.pixel_n_dim):
             result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.world_axis_units[index]))
@@ -300,10 +300,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # Appending all the quantity list values to the list of the input arguments
             list_arg.append(quantity_axis_list[quantity_index].to(self.wcs.world_axis_units[wcs_index]).value)
             quantity_index += 1
-    
+
         list_arguments = list_arg[::-1]
         world_to_pixel = self.wcs.world_to_pixel_values(*list_arguments)
-        
+
         # collecting all the needed answer in this list.
         for index in range(self.wcs.pixel_n_dim):
             result.append(u.Quantity(world_to_pixel[index], unit=u.pix))

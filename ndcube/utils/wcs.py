@@ -329,7 +329,7 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
     wcs_axis = utils_cube.data_axis_to_wcs_axis_without_ms(data_axis, wcs_object.pixel_n_dim)
     # Determine dependent axes, using WCS ordering.
     wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
-    
+
     # Convert dependent axes back to numpy/data ordering.
     dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_axis_without_ms(i, wcs_object.pixel_n_dim)
                                          for i in wcs_dependent_axes]))
@@ -362,7 +362,7 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     # which pixel coordinates are linked to which other pixel coordinates.
     # So to do this we take a column from the matrix and find if there are
     # any entries in common with all other columns in the matrix.
-    
+
     # Using APE14 for generating the correlation matrix
     matrix = wcs_object.axis_correlation_matrix
     world_dep = matrix[:, wcs_axis:wcs_axis + 1]
