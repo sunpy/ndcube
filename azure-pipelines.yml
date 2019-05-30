@@ -41,3 +41,9 @@ jobs:
     name: Linux_37_sunpydev
     os: linux
     tox: py37-sunpydev --
+
+- template: azure-templates.yml
+  parameters:
+    name: Linux_37_astropydev
+    os: linux
+    tox: py37-astropydev --
