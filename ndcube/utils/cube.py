@@ -221,3 +221,15 @@ def _get_dimension_for_pixel(axis_length, edges):
         False stands for pixel_value, while True stands for pixel_edge
     """
     return axis_length+1 if edges else axis_length
+
+def ape14_axes(wcs_object, input_axis):
+
+    wcomp = wcs_object.world_axis_object_components
+    axis_type = np.array([item[0] for item in wcomp])
+    axis_type = axis_type[::-1]
+
+    ape14_axes = np.unique(axis_type, return_inverse=True)[1]
+
+    n_rep_ape14_axes = np.unique(ape14_axes[input_axis])
+
+    return n_rep_ape14_axes
