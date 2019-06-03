@@ -9,11 +9,12 @@ import astropy.units as u
 from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
 from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper
+import sunpy.coordinates
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
-from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
+from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, ape14_axes
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
@@ -266,43 +267,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        # List of arguments of the input
-        list_arg = []
-        # Stores the final world coordinates
-        result = []
-        quantity_index = 0
-        for i in range(self.wcs.pixel_n_dim):
-
-            # Appending all the quantity list values to the list of the input arguments
-            list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
-            quantity_index += 1
-
-        list_arguments = list_arg[::-1]
-        pixel_to_world = self.wcs.pixel_to_world_values(*list_arguments)
-
-        # collecting all the needed answer in this list.
-        for index in range(self.wcs.pixel_n_dim):
-            result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.world_axis_units[index]))
-        return result[::-1]
+        quantity_axis_list = quantity_axis_list[::-1]
+        pixel_to_world = self.wcs.pixel_to_world(*quantity_axis_list)
+        return pixel_to_world[::-1]
 
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
-
-        # List of arguments of the input
-        list_arg = []
-        # Stores the final pixel coordinates
-        result = []
-        quantity_index = 0
-        for i in range(self.wcs.pixel_n_dim):
-
-            wcs_index = self.wcs.pixel_n_dim-1-i
-
-            # Appending all the quantity list values to the list of the input arguments
-            list_arg.append(quantity_axis_list[quantity_index].to(self.wcs.world_axis_units[wcs_index]).value)
-            quantity_index += 1
-
-        list_arguments = list_arg[::-1]
-        world_to_pixel = self.wcs.world_to_pixel_values(*list_arguments)
+        
+        result = list()
+        world_to_pixel = self.wcs.world_to_pixel(*quantity_axis_list)
 
         # collecting all the needed answer in this list.
         for index in range(self.wcs.pixel_n_dim):
@@ -411,9 +384,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         # Due to error check above we know dependent
                         # axis can appear in int_axes at most once.
                         j = np.where(int_axes == dependent_axis)[0][0]
-                        axes_coords[j] = dependent_axes_coords[dependent_axis]
+                        
+                        # Since the dependent_axes_coords contains reduced number of results, adjust the index
+                        axes_coords[j] = dependent_axes_coords[ape14_axes(self.wcs, dependent_axis)[0]]
                         # Remove axis from list that have now been translated.
                         axes_translated[j] = True
+        
+        # Remove the duplicate results
+        result = list()
+        map(lambda x: not x in result and result.append(x), axes_coords)
+        axes_coords = result
+
         if len(axes_coords) == 1:
             return axes_coords[0]
         else:
