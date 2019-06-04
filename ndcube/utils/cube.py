@@ -80,7 +80,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
                             "to which the coordinate corresponds.")
     coord_len_error = ("extra coord ({0}) must have same length as data axis "
                        "to which it is assigned: coord length, {1} != data axis length, {2}")
-    for coord in extra_coords_wcs_axis:
+    for coord in extra_coords:
         # Check extra coord has the right number and types of info.
         if len(coord) != 3:
             raise ValueError(coord_format_error.format(coord))
