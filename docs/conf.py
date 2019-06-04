@@ -81,11 +81,11 @@ copyright = '{0}, {1}'.format(
 __import__(setup_cfg['package_name'])
 package = sys.modules[setup_cfg['package_name']]
 
-# The short X.Y version.
-version = package.__version__.split('-', 1)[0]
+version = '.'.join(package.__version__.split('.')[:3])
 # The full version, including alpha/beta/rc tags.
-release = package.__version__
-
+release = package.__version__.split('+')[0]
+# Is this version a development release
+is_development = '.dev' in release
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -171,3 +171,17 @@ if eval(setup_cfg.get('edit_on_github')):
 
 # -- Resolving issue number to links in changelog -----------------------------
 github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_project'])
+
+"""
+Write the latest changelog into the documentation.
+"""
+target_file = os.path.abspath("./whatsnew/latest_changelog.txt")
+try:
+    from sunpy.util.towncrier import generate_changelog_for_docs
+    generate_changelog_for_docs("../", target_file)
+    if is_development:
+        generate_changelog_for_docs("../", target_file)
+except:
+    # If we can't generate it, we need to make sure it exists or else sphinx
+    # will complain.
+    open(target_file, 'a').close()

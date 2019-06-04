@@ -47,10 +47,10 @@ requires = ["setuptools", "wheel"]
 """
 
 [tool.towncrier]
-    package = "sunpy"
+    package = "ndcube"
     filename = "CHANGELOG.rst"
     directory = "changelog/"
-    issue_format = "`#{issue} <https://github.com/sunpy/sunpy/pull/{issue}>`__"
+    issue_format = "`#{issue} <https://github.com/sunpy/ndcube/pull/{issue}>`__"
 
     [[tool.towncrier.type]]
         directory = "breaking"

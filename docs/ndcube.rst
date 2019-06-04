@@ -127,10 +127,9 @@ axes.  A second iterable of `~astropy.units.Quantity` must also be
 provided which gives the widths of the region of interest in each data
 axis::
 
-  >>> from astropy.units import Quantity
-  >>> my_cube_roi = my_cube.crop_by_coords(
-  ... [Quantity(0.7, unit="deg"), Quantity(1.3e-5, unit="deg"), Quantity(1.04e-9, unit="m")],
-  ... [Quantity(0.6, unit="deg"), Quantity(1., unit="deg"), Quantity(0.08e-9, unit="m")])
+  >>> import astropy.units as u
+  >>> my_cube_roi = my_cube.crop_by_coords([0.7*u.deg, 1.3e-5*u.deg, 1.04e-9*u.m],
+  ...                                     [0.6*u.deg, 1.*u.deg, 0.08e-9*u.m])
 
 This method does not rebin or interpolate the data if the region of interest
 does not perfectly map onto the array's "pixel" grid.  Instead
@@ -162,7 +161,7 @@ the WCS object would cause the translations to break.
 
 To deal with this scenario, `~ndcube.NDCube` supports "missing" WCS
 axes.  An additional attribute is added to the WCS object
-(`NDCube.wcs.missing_axis`) which  is a list of `bool` type indicating
+(`NDCube.wcs.missing_axes`) which  is a list of `bool` type indicating
 which WCS axes do not have a corresponding data axis.  This allows
 translation information on coupled axes to persist even if the data
 axes do not.  This feature also makes it possible for `~ndcube.NDCube`
@@ -176,7 +175,7 @@ Extra Coordinates
 -----------------
 
 In the case of some datasets, there may be additional translations
-between the array elements and real world coordinates that are 
+between the array elements and real world coordinates that are
 not included in the WCS.  Consider a 3-D data cube from a rastering
 slit-spectrograph instrument.  The first axis corresponds to the
 x-position of the slit as it steps across a region of interest in a
@@ -196,7 +195,7 @@ iterable of tuples of the form (`str`, `int`,
 entry gives the name of the coordinate, the 1st entry gives the data
 axis to which the extra coordinate corresponds, and the 2nd entry
 gives the value of that coordinate at each pixel along the axis.  So
-to add timestamps along the 0th axis of ``my_cube`` we do:: 
+to add timestamps along the 0th axis of ``my_cube`` we do::
 
   >>> from datetime import datetime, timedelta
   >>> # Define our timestamps.  Must be same length as data axis.
@@ -297,7 +296,7 @@ Coordinate Transformations
 --------------------------
 
 The fundamental point the WCS system is the ability to easily
-translate between pixel and real world coordinates.  For this purpose, 
+translate between pixel and real world coordinates.  For this purpose,
 `~ndcube.NDCube` provides convenience wrappers for the better known
 astropy functions, `astropy.wcs.WCS.all_pix2world` and
 `astropy.wcs.WCS.all_world2pix`. These are
@@ -319,14 +318,12 @@ axis. For example, if we wanted to transform the pixel coordinates of
 the pixel (2, 3, 4) in ``my_cube`` we would do::
 
   >>> import astropy.units as u
-  >>> real_world_coords = my_cube.pixel_to_world(
-  ... Quantity([2], unit=u.pix), Quantity([3], unit=u.pix), Quantity([4], unit=u.pix))
+  >>> real_world_coords = my_cube.pixel_to_world(2*u.pix, 3*u.pix, 4*u.pix)
 
 To convert two pixels with pixel coordinates (2, 3, 4) and (5, 6, 7),
 we would call pixel_to_world like so::
 
-  >>> real_world_coords = my_cube.pixel_to_world(
-  ... Quantity([2, 5], unit=u.pix), Quantity([3, 6], unit=u.pix), Quantity([4, 7], unit=u.pix))
+  >>> real_world_coords = my_cube.pixel_to_world([2, 5]*u.pix, [3, 6]*u.pix, [4, 7]*u.pix)
 
 As can be seen, since each `~astropy.units.Quantity` describes a
 different pixel coordinate of the same number of pixels, the lengths
@@ -352,10 +349,9 @@ world coordinates compatible with those defined in the
 is a list of `~astropy.units.Quantity` objects in pixel unit.::
 
   >>> pixel_coords = my_cube.world_to_pixel(
-  ... Quantity(1.40006967, unit="deg"), Quantity(1.49986193, unit="deg"),
-  ...  Quantity(1.10000000e-09,  unit="m"))
+  ... 1.400069678 * u.deg, 1.49986193 * u.deg, 1.10000000e-09 * u.m)
   >>> pixel_coords
-  [<Quantity 2.00000001 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
+  [<Quantity 2.00000003 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
 
 Note that both `~ndcube.NDCube.pixel_to_pixel` and
 `~ndcube.NDCube.world_to_pixel` can handle non-integer pixels.
@@ -430,13 +426,33 @@ is in fact the default.::
   (<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
             [1.        , 1.        , 1.        , 1.        ],
             [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>,
-   <Quantity [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01, 
+   <Quantity [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01,
                1.49986193e+00],
             [1.26918126e-05, 5.00000000e-01, 9.99987308e-01,
              1.49989848e+00],
             [1.26915033e-05, 4.99987815e-01, 9.99962939e-01,
              1.49986193e+00]] deg>,
    <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>)
+
+By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the
+center of each pixel. However, the pixel edges can be obtained by setting
+the ``edges`` kwarg to True.
+
+For example,
+  >>> my_cube.axis_world_coords(edges=True)
+  (<Quantity [[0.40006761, 0.40002193, 0.39997624, 0.39993054, 0.39988484],
+            [0.80001604, 0.80000081, 0.79998558, 0.79997035, 0.79995511],
+            [1.19998396, 1.19999919, 1.20001442, 1.20002965, 1.20004489],
+            [1.59993239, 1.59997807, 1.60002376, 1.60006946, 1.60011516]] deg>,
+   <Quantity [[-0.24994347,  0.24998788,  0.74995729,  1.24988864,
+              1.74970582],
+            [-0.24995565,  0.25000006,  0.74999384,  1.24994955,
+              1.74979108],
+            [-0.24995565,  0.25000006,  0.74999384,  1.24994955,
+              1.74979108],
+            [-0.24994347,  0.24998788,  0.74995729,  1.24988864,
+              1.74970582]] deg>,
+   <Quantity [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>)
 
 As stated previously, `~ndcube.NDCube` is only written
 to handle single arrays described by single WCS instances.  For cases
