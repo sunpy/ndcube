@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import pandas as pd
 import numpy as np
-from astropy.nddata import NDIOMixin, CCDData
-from astropy.io import fits, registry
+from astropy.nddata import NDIOMixin
+from astropy.io import fits
 from astropy import units as u
 from astropy.nddata.nduncertainty import (
-    StdDevUncertainty, NDUncertainty, VarianceUncertainty, InverseVariance)
+    StdDevUncertainty, VarianceUncertainty, InverseVariance)
 
 from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 
@@ -63,7 +62,7 @@ class NDCubeIOMixin(NDIOMixin):
     # Inherit docstring from parent class
     __doc__ = NDIOMixin.__doc__
 
-    
+
 
     # Here we create a read and write function to support I/O of NDCube files
     # Currently read option is not supported
@@ -153,7 +152,7 @@ class NDCubeIOMixin(NDIOMixin):
         #------------------------------HDU2----------------------------------
         # Store the uncertainty
         if self.uncertainty is not None:
-            
+
             # Set the initial header, and the type of uncertainty
             hdr_uncertainty = fits.Header()
             hdr_uncertainty['UTYPE'] = self.uncertainty.uncertainty_type
@@ -174,13 +173,14 @@ class NDCubeIOMixin(NDIOMixin):
             hdus.append(hduMask)
 
         #----------------------------HDU3------------------------------------
-        
+
         #----------------------------HDU4------------------------------------
         # Store the extra_coords
         if self._extra_coords_wcs_axis is not None:
 
             # Set up the data into the requisite format
-            data_value = convert_extra_coords_dict_to_input_format(self._extra_coords_wcs_axis, self.missing_axes)
+            data_value = convert_extra_coords_dict_to_input_format(self._extra_coords_wcs_axis,
+                                                                   self.missing_axes)
 
             # Extract the data and name from the extra_coords
             ex_name = [item[0] for item in data_value]
@@ -190,13 +190,13 @@ class NDCubeIOMixin(NDIOMixin):
             for index, data in enumerate(ex_data):
                 if hasattr(data, 'unit'):
                     column_list.append(fits.Column(
-                            name=ex_name[index], format='PI()',unit=data.unit.name,
-                            array=np.array([data], dtype=np.object)))
+                        name=ex_name[index], format='PI()', unit=data.unit.name,
+                        array=np.array([data], dtype=np.object)))
                 else:
                     column_list.append(fits.Column(
-                            name=ex_name[index], format='PI()',unit='unknown',
-                            array=np.array([data], dtype=np.object)))
-            
+                        name=ex_name[index], format='PI()', unit='unknown',
+                        array=np.array([data], dtype=np.object)))
+
             # Set up the header
             header4 = fits.Header()
             for index, value in enumerate(ex_name):
@@ -209,7 +209,8 @@ class NDCubeIOMixin(NDIOMixin):
             # Setting up the Header
             hdu_extra_coords = fits.Header()
             hdu_extra_coords.extend(header4, useblanks=False, update=True)
-            hdus.append(fits.BinTableHDU.from_columns(columns=column_list, header=hdu_extra_coords, name='EXTRA_COORDS'))
+            hdus.append(fits.BinTableHDU.from_columns(columns=column_list,
+                                                      header=hdu_extra_coords, name='EXTRA_COORDS'))
         #--------------------------HDU4--------------------------------------
 
         hdulist = fits.HDUList(hdus)
