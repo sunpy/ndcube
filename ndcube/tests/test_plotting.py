@@ -118,7 +118,7 @@ cube_none_axis_ranges_axis2_s = copy.deepcopy(cube_none_axis_ranges_axis2)
 cube_none_axis_ranges_axis2_s[2] = cube_none_axis_ranges_axis2[2] * 60.
 
 cube_none_axis_ranges_axis2_bye = copy.deepcopy(cube_none_axis_ranges_axis2)
-cube_none_axis_ranges_axis2_bye[2] = cube._extra_coords["bye"]["value"].value
+cube_none_axis_ranges_axis2_bye[2] = cube.extra_coords["bye"]["value"].value
 
 cube_none_axis_ranges_axis2_array = copy.deepcopy(cube_none_axis_ranges_axis2)
 cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
@@ -130,7 +130,7 @@ cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
       "time [min]", "Data [None]", (0.4, 1.6), (1, 4))),
 
     (cube_unit[0, 0], {"axes_coordinates": "bye", "axes_units": "km", "data_unit": u.erg},
-     (np.ma.masked_array(cube_unit[0, 0]._extra_coords["bye"]["value"].to(u.km).value,
+     (np.ma.masked_array(cube_unit[0, 0].extra_coords["bye"]["value"].to(u.km).value,
                          cube_unit[0, 0].mask),
       np.ma.masked_array(u.Quantity(cube_unit[0, 0].data,
                                     unit=cube_unit[0, 0].unit).to(u.erg).value,
