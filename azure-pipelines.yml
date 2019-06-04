@@ -1,13 +1,9 @@
-name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
-
 variables:
   "System.PreferGit": true
   Agent.Source.Git.ShallowFetchDepth: 1
   CI_NAME: Azure Pipelines
   CI_BUILD_ID: $(Build.BuildId)
   CI_BUILD_URL: "https://dev.azure.com/sunpy/ndcube/_build/results?buildId=$(Build.BuildId)"
-  GIT_BRANCH: $[ coalesce(variables['System.PullRequest.SourceBranch'], variables['Build.SourceBranchName'], 'not-found') ]
-  GIT_COMMIT_SHA: $[ coalesce(variables['System.PullRequest.SourceCommitId'], variables['Build.SourceVersion'], 'not-found') ]
 
 jobs:
 - template: azure-templates.yml
@@ -36,6 +32,18 @@ jobs:
 
 - template: azure-templates.yml
   parameters:
-    name: Linux_36_Conda_offline
+    name: Linux_36_conda_offline
     os: linux
     tox: conda --
+
+- template: azure-templates.yml
+  parameters:
+    name: Linux_37_sunpydev
+    os: linux
+    tox: py37-sunpydev --
+
+- template: azure-templates.yml
+  parameters:
+    name: Linux_37_astropydev
+    os: linux
+    tox: py37-astropydev --
