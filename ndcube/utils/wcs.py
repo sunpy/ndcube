@@ -176,7 +176,8 @@ def _wcs_slicer(wcs, missing_axes, item):
     # to account for those missing axes and any non-missing axes not to be sliced.
     # This will make the item the same length as the number of axes in the WCS object
     # meaning it can be safely reversed to WCS order.
-    missing_axes_numpy_order = missing_axes[::-1]
+    new_missing_axes = deepcopy(missing_axes)
+    missing_axes_numpy_order = new_missing_axes[::-1]
 
     # Next prep the item to include slices foe missing axes and
     # non-missing axes that aren't to be sliced.
@@ -253,7 +254,7 @@ def _wcs_slicer(wcs, missing_axes, item):
     for i, slice_element in enumerate(item_wcs_order):
         # If axis is not missing and the difference between its start and stop params is 1,
         # then the slicing will cause the axis to be dropped, i.e. become missing.
-        if missing_axes[i] is False:
+        if new_missing_axes[i] is False:
             if isinstance(slice_element, slice):
                 # Determine the start index.
                 if slice_element.start is None:
@@ -292,7 +293,7 @@ def _wcs_slicer(wcs, missing_axes, item):
                 # Add dropped coordinate's name, axis and value to dropped_coords dict of dicts.
                 dropped_coords[axis_name] = {"wcs axis": i,
                                              "value": real_world_coords * wcs.wcs.cunit[i]}
-                missing_axes[i] = True
+                new_missing_axes[i] = True
     # Use item_wcs_order to slice WCS.
     new_wcs = wcs.slice(item_wcs_order, numpy_order=False)
     return new_wcs, missing_axes, dropped_coords
