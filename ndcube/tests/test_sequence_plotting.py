@@ -95,7 +95,7 @@ cube3_with_unit = NDCube(
     unit=u.m,
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
-         cube1._extra_coords_wcs_axis['pix']['value'][-1]),
+         cube1.extra_coords['pix']['value'][-1]),
         ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
@@ -105,7 +105,7 @@ cube3_with_mask = NDCube(
     mask=np.zeros_like(data2, dtype=bool),
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
-         cube1._extra_coords_wcs_axis['pix']['value'][-1]),
+         cube1.extra_coords['pix']['value'][-1]),
         ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
@@ -115,7 +115,7 @@ cube3_with_uncertainty = NDCube(
     uncertainty=np.sqrt(data2),
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
-         cube1._extra_coords_wcs_axis['pix']['value'][-1]),
+         cube1.extra_coords['pix']['value'][-1]),
         ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
@@ -125,7 +125,7 @@ cube3_with_unit_and_uncertainty = NDCube(
     unit=u.m, uncertainty=np.sqrt(data2),
     extra_coords=[
         ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
-         cube1._extra_coords_wcs_axis['pix']['value'][-1]),
+         cube1.extra_coords['pix']['value'][-1]),
         ('hi', 1, u.Quantity(range(data2.shape[1]), unit=u.s)),
         ('distance', None, u.Quantity(2, unit=u.cm)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
@@ -479,8 +479,8 @@ def test_sequence_plot_as_cube_error():
     (seq[:, :, 0, 0], {"axes_coordinates": ["pix", "distance"]},
      (seq_stack[:, :, 0, 0],
       "pix [pix]", "distance [cm]",
-      (min(seq[0, :, 0, 0]._extra_coords_wcs_axis["pix"]["value"].value),
-       max(seq[0, :, 0, 0]._extra_coords_wcs_axis["pix"]["value"].value),
+      (min(seq[0, :, 0, 0].extra_coords["pix"]["value"].value),
+       max(seq[0, :, 0, 0].extra_coords["pix"]["value"].value),
        min(seq[:, :, 0, 0].sequence_axis_extra_coords["distance"].value),
        max(seq[:, :, 0, 0].sequence_axis_extra_coords["distance"].value)))),
     # This example shows weakness of current extra coord axis values on 2D plotting!
@@ -546,8 +546,8 @@ def test_sequence_plot_2D_image_errors(test_input, test_kwargs, expected_error):
      (seq_concat[:, :, 0].transpose(), "pix [pix]", "hi [s]",
       ((seq[:, :, :, 0].common_axis_extra_coords["pix"][0].value,
         seq[:, :, :, 0].common_axis_extra_coords["pix"][-1].value,
-        seq[:, :, :, 0].data[0]._extra_coords_wcs_axis["hi"]["value"][0].value,
-        seq[:, :, :, 0].data[0]._extra_coords_wcs_axis["hi"]["value"][-1].value)))),
+        seq[:, :, :, 0].data[0].extra_coords["hi"]["value"][0].value,
+        seq[:, :, :, 0].data[0].extra_coords["hi"]["value"][-1].value)))),
 
     (seq[:, :, :, 0], {"axes_coordinates": [
         np.arange(10, 10+seq[:, :, :, 0].cube_like_dimensions[-1].value) * u.m,
