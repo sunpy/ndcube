@@ -274,12 +274,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
         
-        result = list()
+        quantity_axis_list = quantity_axis_list[::-1]
         world_to_pixel = self.wcs.world_to_pixel(*quantity_axis_list)
 
-        # collecting all the needed answer in this list.
-        for index in range(self.wcs.pixel_n_dim):
-            result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
+        # Adding the units of the output
+        result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.wcs.pixel_n_dim)]
         return result[::-1]
 
     def axis_world_coords(self, *axes, edges=False):
