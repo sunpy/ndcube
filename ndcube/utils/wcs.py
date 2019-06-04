@@ -296,7 +296,7 @@ def _wcs_slicer(wcs, missing_axes, item):
                 new_missing_axes[i] = True
     # Use item_wcs_order to slice WCS.
     new_wcs = wcs.slice(item_wcs_order, numpy_order=False)
-    return new_wcs, missing_axes, dropped_coords
+    return new_wcs, new_missing_axes, dropped_coords
 
 
 def _get_ivoa_from_ctype(ctype):
