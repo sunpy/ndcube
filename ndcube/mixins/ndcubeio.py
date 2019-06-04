@@ -8,6 +8,8 @@ from astropy import units as u
 from astropy.nddata.nduncertainty import (
     StdDevUncertainty, NDUncertainty, VarianceUncertainty, InverseVariance)
 
+from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
+
 _known_uncertainties = (StdDevUncertainty, VarianceUncertainty, InverseVariance)
 _unc_name_to_cls = {cls.__name__: cls for cls in _known_uncertainties}
 _unc_cls_to_name = {cls: cls.__name__ for cls in _known_uncertainties}
@@ -18,39 +20,6 @@ __all__ = ['NDCubeIOMixin']
 # This file is written to define a mixin class to support
 # write option in ndcube. Uses `astropy.io.registry`
 # to register the write function
-
-
-def flatten(lst):
-    """Helper function to flatten a list of dictionary,
-       resulted out of the form :
-       {Key1:Value1, {Key2:Value2, Key3:Value3}}
-
-
-    Parameters
-    ----------
-    lst : list
-        dictionary of dictionary
-
-    Returns
-    -------
-    list
-        list of flattened dictionary
-    Notes
-    -----
-    Format of the output:
-    [{Key1:Value1, Key2:Value2, Key3:Value3}]
-    """
-
-    res1 = list()
-    for entry in lst:
-        for key, value in entry.items():
-            res = dict()
-            res['name'] = key
-            for k,v in value.items():
-                res[k] = v
-        res1.append(res)
-    return res1
-
 
 
 def _insert_in_metadata_fits_safe(meta, key, value):
@@ -130,7 +99,7 @@ class NDCubeIOMixin(NDIOMixin):
         MISSING = 'MISNG{0}'
         EXTRA_COORDS_LABEL = 'EXTCR{0}'
 
-        # ----------------------------------HDU0------------------------------
+        # ---------------------------------HDU0------------------------------
         # Create a copy of the meta data to avoid changing of the header of data
         if self.meta is not None:
             header = fits.Header(self.meta.copy())
@@ -192,9 +161,9 @@ class NDCubeIOMixin(NDIOMixin):
             # Set the data of the uncertainty and header
             hduUncert = fits.ImageHDU(self.uncertainty.array, hdr_uncertainty, name=hdu_uncertainty)
             hdus.append(hduUncert)
-        #----------------------------HDU2--------------------------------
+        #----------------------------HDU2------------------------------------
 
-        #----------------------------HDU3------------------------------
+        #----------------------------HDU3------------------------------------
         # Store the mask
         if self.mask is not None:
             # Always assuming that the mask is a np.ndarray
@@ -204,33 +173,44 @@ class NDCubeIOMixin(NDIOMixin):
             hduMask = fits.ImageHDU(self.mask.astype(np.uint8), name=hdu_mask)
             hdus.append(hduMask)
 
-        #----------------------------HDU3-------------------------------
+        #----------------------------HDU3------------------------------------
+        
+        #----------------------------HDU4------------------------------------
         # Store the extra_coords
         if self._extra_coords_wcs_axis is not None:
 
-            # Set up the data
-            flattened_list_of_dict = flatten(self._extra_coords_wcs_axis)
+            # Set up the data into the requisite format
+            data_value = convert_extra_coords_dict_to_input_format(self._extra_coords_wcs_axis, self.missing_axes)
 
-            # We convert the list of dictionary to pandas dataframe
-            # and then to numpy.ndarray
-            dframe = pd.DataFrame(flattened_list_of_dict)
-            extra_coords = dframe.values
+            # Extract the data and name from the extra_coords
+            ex_name = [item[0] for item in data_value]
+            ex_data = [item[-1] for item in data_value]
 
+            column_list = list()
+            for index, data in enumerate(ex_data):
+                if hasattr(data, 'unit'):
+                    column_list.append(fits.Column(
+                            name=ex_name[index], format='PI()',unit=data.unit.name,
+                            array=np.array([data], dtype=np.object)))
+                else:
+                    column_list.append(fits.Column(
+                            name=ex_name[index], format='PI()',unit='unknown',
+                            array=np.array([data], dtype=np.object)))
+            
             # Set up the header
-            header3 = fits.Header()
-            for index, _, value in enumerate(extra_coords):
-                header3[EXTRA_COORDS_LABEL.format(index)] = value
+            header4 = fits.Header()
+            for index, value in enumerate(ex_name):
+                header4[EXTRA_COORDS_LABEL.format(index)] = value
 
             # Make sure all the keywords are FITS safe
-            for k, v in header3.items():
-                _insert_in_metadata_fits_safe(header3, k, v)
+            for k, v in header4.items():
+                _insert_in_metadata_fits_safe(header4, k, v)
 
             # Setting up the Header
             hdu_extra_coords = fits.Header()
-            hdu_extra_coords.extend(header3, useblanks=False, update=True)
-
-            hdus.append(fits.TableHDU(data=extra_coords, header=hdu_extra_coords, name='EXTRA_COORDS'))
-        #--------------------------HDU3---------------------------------
+            hdu_extra_coords.extend(header4, useblanks=False, update=True)
+            hdus.append(fits.BinTableHDU.from_columns(columns=column_list, header=hdu_extra_coords, name='EXTRA_COORDS'))
+        #--------------------------HDU4--------------------------------------
 
         hdulist = fits.HDUList(hdus)
         return hdulist

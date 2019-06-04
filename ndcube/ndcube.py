@@ -14,7 +14,7 @@ from ndcube.utils.cube import fits_ndcube_writer
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
-from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
+from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin, NDCubeIOMixin
 
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
@@ -667,7 +667,7 @@ class NDCubeOrdered(NDCube):
         super().__init__(result_data, result_wcs, uncertainty=result_uncertainty,
                          mask=result_mask, meta=meta, unit=unit,
                          extra_coords=reordered_extra_coords,
-                         copy=copy, missing_axis=missing_axis, **kwargs)
+                         copy=copy, missing_axis=missing_axes, **kwargs)
 
 
 # Registering the writer function for writing NDCube files to fits format
