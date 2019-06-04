@@ -118,12 +118,12 @@ class NDCubeIOMixin(NDIOMixin):
             wcs_header = self.wcs.to_header(relax=True)
             header.extend(wcs_header, useblanks=False, update=True)
 
-        # Create a FITS header for storing missing_axis
+        # Create a FITS header for storing missing_axes
         # MISSING0 : 1 if axis 1 is missing
         # other keywords are skipped, if the axis is present
         # The missing axis are expected to be present, as it is a bool
         header0 = fits.Header()
-        for index, axis in enumerate(self.missing_axis):
+        for index, axis in enumerate(self.missing_axes):
             if axis:
                 header0[MISSING.format(index)] = 1
             else:
@@ -134,7 +134,7 @@ class NDCubeIOMixin(NDIOMixin):
 
         header.extend(header0, useblanks=False, update=True)
 
-        # PrimaryHDU list contains only meta, missing_axis and wcs as headers, no data
+        # PrimaryHDU list contains only meta, missing_axes and wcs as headers, no data
         hdus = [fits.PrimaryHDU(data=None, header=header)]
 
         #------------------------------HDU0----------------------------------
