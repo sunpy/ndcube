@@ -69,7 +69,7 @@ def comparerecords(a, b):
     Does this field by field, using approximation testing for float columns
     (Complex not yet handled.)
     Column names not compared, but column types and sizes are.
-    
+
     Note: This helper method has been taken from `astropy.io.fits.tests.test_table`
     """
 

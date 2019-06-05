@@ -141,10 +141,10 @@ class NDCubeIOMixin(NDIOMixin):
 
         #------------------------------HDU1----------------------------------
         # Header for unit
-        
+
         # Store the default value of unit in case it is None else store the unit
         unit_value = None if self.unit is None else self.unit
-        
+
         header_unit = fits.Header()
         header_unit['bunit'] = unit_value.to_string() if unit_value is not None else None
         hdus.append(fits.ImageHDU(self.data, header_unit, name='DATA'))
