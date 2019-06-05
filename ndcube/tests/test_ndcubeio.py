@@ -66,21 +66,20 @@ def test_meta_from_hdulist(header_obj, header_values1, header_values2, header_va
     ctype1, ctype2, ctype3 = header_values4
     crval1, crval2, crval3 = header_values5
     misng1, misng2, misng3 = missing_axes
-    # breakpoint()
-    
+
     assert isinstance(header_obj, fits.header.Header)
 
     # assert the header values
     assert header_obj['WCSAXES'] == wcs_axes
-    
+
     assert header_obj['CRPIX1'] == crpix1
     assert header_obj['CRPIX2'] == crpix2
     assert header_obj['CRPIX3'] == crpix3
-    
+
     assert header_obj['CDELT1'] == cdelt1
     assert header_obj['CDELT2'] == cdelt2
     assert header_obj['CDELT3'] == cdelt3
-    
+
     assert header_obj['CUNIT1'] == cunit1
     assert header_obj['CUNIT2'] == cunit2
     assert header_obj['CUNIT3'] == cunit3
@@ -229,7 +228,7 @@ def test_data_of_hdulist_mask(hdu_obj, data):
 # Test the data of HDU4
 @pytest.mark.parametrize(
     "hdu_obj, data",[(
-        (cubem_hdulist[4]),(np.array([([0, 1], [0, 1, 2], [0, 1, 2, 3])], 
+        (cubem_hdulist[4]),(np.array([([0, 1], [0, 1, 2], [0, 1, 2, 3])],
                             dtype=([('time', '<i4', (2,)), ('hello', '<i4', (3,)),
                                     ('bye', '<i4', (4,))])))
     )]
@@ -238,5 +237,3 @@ def test_data_of_hdulist_mask(hdu_obj, data):
 
     assert isinstance(hdu_obj, fits.hdu.table.BinTableHDU)
     assert comparerecords(hdu_obj.data, data.view(fits.FITS_rec))
-
-
