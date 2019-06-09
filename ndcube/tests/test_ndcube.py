@@ -83,7 +83,7 @@ data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3
 mask_cubem = data > 0
 mask_cube = data >= 0
 uncertaintym = data
-uncertainty = np.sqrt(data)
+uncertainty = np.sqrt(np.abs(data))
 
 mask_disordered = data_disordered > 0
 uncertainty_disordered = data_disordered
