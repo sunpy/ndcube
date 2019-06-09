@@ -138,13 +138,13 @@ def test_slice_first_index_sequence(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    (seq.index_as_cube[0:5].dimensions, (3*u.pix, [2., 2., 1.]*u.pix, 3*u.pix, 4*u.pix)),
-    (seq.index_as_cube[1:3].dimensions, (2*u.pix, 1*u.pix, 3*u.pix, 4*u.pix)),
+    (seq.index_as_cube[0:4].dimensions, (3*u.pix, [2., 2., 1.]*u.pix, 3*u.pix, 4*u.pix)),
     (seq.index_as_cube[0:6].dimensions, (3*u.pix, 2*u.pix, 3*u.pix, 4*u.pix)),
     (seq.index_as_cube[0::].dimensions, (4*u.pix, 2*u.pix, 3*u.pix, 4*u.pix)),
-    (seq.index_as_cube[0:5, 0].dimensions, (3*u.pix, [2., 2., 1.]*u.pix, 4*u.pix)),
-    (seq.index_as_cube[1:3, 0:2].dimensions, (2*u.pix, 1*u.pix, 2*u.pix, 4*u.pix)),
-    (seq.index_as_cube[0:6, 0, 0:1].dimensions, (3*u.pix, 2*u.pix, 1*u.pix)),
+    (seq.index_as_cube[2:6].dimensions, (2*u.pix, 1*u.pix, 3*u.pix, 4*u.pix)),
+    (seq.index_as_cube[0:4, 0].dimensions, (3*u.pix, [2., 2., 1.]*u.pix, 4*u.pix)),
+    (seq.index_as_cube[2:6, 0:2].dimensions, (2*u.pix, 1*u.pix, 2*u.pix, 4*u.pix)),
+    (seq.index_as_cube[0:6, 0, 0].dimensions, (3*u.pix, 2*u.pix, 1*u.pix)),
     (seq.index_as_cube[0::, 0, 0].dimensions, (4*u.pix, 2*u.pix)),
 ])
 def test_index_as_cube(test_input, expected):
