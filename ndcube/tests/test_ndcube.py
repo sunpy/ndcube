@@ -159,7 +159,7 @@ cube_rotated = NDCube(
       {'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
-      'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}}
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}}
       ),
      (cubem[:, 0:2],
       NDCube,
@@ -192,7 +192,9 @@ cube_rotated = NDCube(
       tuple(['em.wl']),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}, 'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}
+      }
       ),
      (cubem[1, 0:2],
       NDCube,
@@ -203,7 +205,9 @@ cube_rotated = NDCube(
       ('custom:pos.helioprojective.lat', 'em.wl'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}
+      }
       ),
      (cubem[1, :],
       NDCube,
@@ -214,18 +218,22 @@ cube_rotated = NDCube(
       ('custom:pos.helioprojective.lat', 'em.wl'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}
+      }
       ),
      (cube[:, 1],
       NDCube,
       mask_cube[:, 1],
-      _wcs_slicer(wt, [True, False, False, False], (slice(None, None, None), 1)),
+      _wcs_slicer(wt, [False, False, False, True], (slice(None, None, None), 1)),
       uncertainty[:, 1],
       u.Quantity((2, 4), unit=u.pix),
       ('custom:pos.helioprojective.lat', 'time'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+      'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}
+      }
       ),
      (cube[:, 0:2],
       NDCube,
@@ -287,6 +295,8 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                              dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
+    print("test_input.wcs: " + str(test_input.wcs))
+    print("wcs[0]: " +str(wcs[0]))
     helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axes == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
@@ -298,7 +308,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
     helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)  # Test fails here...
 
 @pytest.mark.parametrize(
-    "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
+    "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types, extra_coords",
     [(cubem[1],
       NDCube,
       mask_cubem[1],
