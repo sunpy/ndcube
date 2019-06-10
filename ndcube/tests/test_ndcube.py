@@ -26,13 +26,6 @@ wt = WCS(header=ht, naxis=3)
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
-wcs_input_dict = {
-'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
-
-data_ones = np.ones((3, 4, 5))
-
 hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
       'NAXIS1': 4,
       'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5,
@@ -392,7 +385,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
 
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
-    [(cubem[:, :, 1],
+    [(cubem[:, :, 1],  #1
       NDCube,
       mask_cubem[:, :, 1],
       _wcs_slicer(wm, [False, False, False],
@@ -402,9 +395,10 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(1.04e-09, unit=u.m)}}
       ),
-     (cubem[:, :, 0:2],
+     (cubem[:, :, 0:2],  #2
       NDCube,
       mask_cubem[:, :, 0:2],
       _wcs_slicer(wm, [False, False, False],
@@ -416,7 +410,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 2, 'value': u.Quantity(range(2), unit=u.pix)}}
       ),
-     (cubem[:, :, :],
+     (cubem[:, :, :],  #3
       NDCube,
       mask_cubem[:, :, :],
       _wcs_slicer(wm, [False, False, False],
@@ -428,7 +422,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 2, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
       ),
-     (cubem[:, 1, 1],
+     (cubem[:, 1, 1],  #4
       NDCube,
       mask_cubem[:, 1, 1],
       _wcs_slicer(wm, [False, False, False], (slice(None, None, None), 1, 1)),
@@ -437,9 +431,11 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       tuple(['custom:pos.helioprojective.lon']),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(1.04e-09, unit=u.m)},
+      'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}}
       ),
-     (cubem[:, 1, 0:2],
+     (cubem[:, 1, 0:2],  #5
       NDCube,
       mask_cubem[:, 1, 0:2],
       _wcs_slicer(wm, [False, False, False], (slice(None, None, None), 1, slice(0, 2, None))),
@@ -448,9 +444,11 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       ('custom:pos.helioprojective.lon', 'em.wl'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}
+      }
       ),
-     (cubem[:, 1, :],
+     (cubem[:, 1, :],  #6
       NDCube,
       mask_cubem[:, 1, :],
       _wcs_slicer(wm, [False, False, False], (slice(None, None, None), 1, slice(None, None, None))),
@@ -459,9 +457,10 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       ('custom:pos.helioprojective.lon', 'em.wl'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}}
       ),
-     (cubem[1, :, 1],
+     (cubem[1, :, 1],  #7
       NDCube,
       mask_cubem[1, :, 1],
       _wcs_slicer(wm, [False, False, False], (1, slice(None, None, None), 1)),
@@ -470,9 +469,11 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       tuple(['custom:pos.helioprojective.lat']),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(1.04e-09, unit=u.m)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
-     (cubem[1, :, 0:2],
+     (cubem[1, :, 0:2],  #8
       NDCube,
       mask_cubem[1, :, 0:2],
       _wcs_slicer(wm, [False, False, False], (1, slice(None, None, None), slice(0, 2, None))),
@@ -481,9 +482,10 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       ('custom:pos.helioprojective.lat', 'em.wl'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
-     (cubem[1, :, :],
+     (cubem[1, :, :],  #9
       NDCube,
       mask_cubem[1, :, :],
       _wcs_slicer(wm, [False, False, False], (1, slice(None, None, None), slice(None, None, None))),
@@ -492,9 +494,10 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       ('custom:pos.helioprojective.lat', 'em.wl'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
-     (cubem[1, 1, 1],
+     (cubem[1, 1, 1],  #10
       NDCube,
       mask_cubem[1, 1, 1],
       _wcs_slicer(wm, [False, False, False], (1, 1, 1)),
@@ -503,9 +506,12 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       (),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(1.04e-09, unit=u.m)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
-     (cubem[1, 1, 0:2],
+     (cubem[1, 1, 0:2],  #11
       NDCube,
       mask_cubem[1, 1, 0:2],
       _wcs_slicer(wm, [False, False, False], (1, 1, slice(0, 2, None))),
@@ -514,9 +520,11 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       tuple(['em.wl']),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)}}
+       'bye': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
-     (cubem[1, 1, :],
+     (cubem[1, 1, :],  #12
       NDCube,
       mask_cubem[1, 1, :],
       _wcs_slicer(wm, [False, False, False], (1, 1, slice(None, None, None))),
@@ -525,24 +533,26 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       tuple(['em.wl']),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
-     (cube[:, :, 1],
+     (cube[:, :, 1],  #13
       NDCube,
       mask_cube[:, :, 1],
-      _wcs_slicer(wt, [True, False, False, False],
+      _wcs_slicer(wt, [False, False, False, True],
                   (slice(None, None, None), slice(None, None, None), 1)),
       uncertainty[:, :, 1],
       u.Quantity((2, 3), unit=u.pix),
       ('custom:pos.helioprojective.lat', 'em.wl'),
-      {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
+      {'time': {'axis': None, 'value': u.Quantity(0.8, unit=u.min)},
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
       ),
-     (cube[:, :, 0:2],
+     (cube[:, :, 0:2],  #14
       NDCube,
       mask_cube[:, :, 0:2],
-      _wcs_slicer(wt, [True, False, False, False],
+      _wcs_slicer(wt, [False, False, False, True],
                   (slice(None, None, None), slice(None, None, None), slice(0, 2, None))),
       uncertainty[:, :, 0:2],
       u.Quantity((2, 3, 2), unit=u.pix),
@@ -551,10 +561,10 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 2, 'value': u.Quantity(range(2), unit=u.pix)}}
       ),
-     (cube[:, :, :],
+     (cube[:, :, :],  #15
       NDCube,
       mask_cube[:, :, :],
-      _wcs_slicer(wt, [True, False, False, False],
+      _wcs_slicer(wt, [False, False, False, True],
                   (slice(None, None, None), slice(None, None, None), slice(None, None, None))),
       uncertainty[:, :, :],
       u.Quantity((2, 3, 4), unit=u.pix),
@@ -563,121 +573,129 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 2, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
       ),
-     (cube[:, 1, 1],
+     (cube[:, 1, 1],  #16
       NDCube,
       mask_cube[:, 1, 1],
-      _wcs_slicer(wt, [True, False, False, False], (slice(None, None, None), 1, 1)),
+      _wcs_slicer(wt, [False, False, False, True], (slice(None, None, None), 1, 1)),
       uncertainty[:, 1, 1],
       u.Quantity((2, ), unit=u.pix),
       tuple(['custom:pos.helioprojective.lat']),
-      {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
+      {'time': {'axis': None, 'value': u.Quantity(0.8, unit=u.min)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}}
       ),
-     (cube[:, 1, 0:2],
+     (cube[:, 1, 0:2],  #17
       NDCube,
       mask_cube[:, 1, 0:2],
-      _wcs_slicer(wt, [True, False, False, False], (slice(None, None, None), 1, slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, True], (slice(None, None, None), 1, slice(0, 2, None))),
       uncertainty[:, 1, 0:2],
       u.Quantity((2, 2), unit=u.pix),
       ('custom:pos.helioprojective.lat', 'time'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}}
       ),
-     (cube[:, 1, :],
+     (cube[:, 1, :],  #18
       NDCube,
       mask_cube[:, 1, :],
-      _wcs_slicer(wt, [True, False, False, False],
+      _wcs_slicer(wt, [False, False, False, True],
                   (slice(None, None, None), 1, slice(None, None, None))),
       uncertainty[:, 1, :],
       u.Quantity((2, 4), unit=u.pix),
       ('custom:pos.helioprojective.lat', 'time'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}, 'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}}
       ),
-     (cube[1, :, 1],
+     (cube[1, :, 1],  #19
       NDCube,
       mask_cube[1, :, 1],
-      _wcs_slicer(wt, [True, False, False, False], (1, slice(None, None, None), 1)),
+      _wcs_slicer(wt, [False, False, False, True], (1, slice(None, None, None), 1)),
       uncertainty[1, :, 1],
       u.Quantity((3, ), unit=u.pix),
       tuple(['em.wl']),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+      {'time': {'axis': None, 'value': u.Quantity(0.8, unit=u.min)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}
+      }
       ),
-     (cube[1, :, 0:2],
+     (cube[1, :, 0:2],  #20
       NDCube,
       mask_cube[1, :, 0:2],
-      _wcs_slicer(wt, [True, False, False, False], (1, slice(None, None, None), slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, True], (1, slice(None, None, None), slice(0, 2, None))),
       uncertainty[1, :, 0:2],
       u.Quantity((3, 2), unit=u.pix),
       ('em.wl', 'time'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}}
       ),
-     (cube[1, :, :],
+     (cube[1, :, :],  #21
       NDCube,
       mask_cube[1, :, :],
-      _wcs_slicer(wt, [True, False, False, False],
+      _wcs_slicer(wt, [False, False, False, True],
                   (1, slice(None, None, None), slice(None, None, None))),
       uncertainty[1, :, :],
       u.Quantity((3, 4), unit=u.pix),
       ('em.wl', 'time'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}}
       ),
-     (cube[1, 1, 1],
+     (cube[1, 1, 1],  #22
       NDCube,
       mask_cube[1, 1, 1],
-      _wcs_slicer(wt, [True, False, False, False], (1, 1, 1)),
+      _wcs_slicer(wt, [False, False, False, True], (1, 1, 1)),
       uncertainty[1, 1, 1],
       u.Quantity((), unit=u.pix),
       (),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+      {'time': {'axis': None, 'value': u.Quantity(0.8, unit=u.min)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
+       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity( 0.99974625, unit=u.deg)}}
       ),
-     (cube[1, 1, 0:2],
+     (cube[1, 1, 0:2],  #23
       NDCube,
       mask_cube[1, 1, 0:2],
-      _wcs_slicer(wt, [True, False, False, False], (1, 1, slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, True], (1, 1, slice(0, 2, None))),
       uncertainty[1, 1, 0:2],
       u.Quantity((2, ), unit=u.pix),
       tuple(['time']),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)}}
+       'bye': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}}
       ),
-     (cube[1, 1, :],
+     (cube[1, 1, :],  #24
       NDCube,
       mask_cube[1, 1, :],
-      _wcs_slicer(wt, [True, False, False, False], (1, 1, slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, False], (0, 1, 1)),
       uncertainty[1, 1, :],
       u.Quantity((4, ), unit=u.pix),
       tuple(['time']),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}}
       )])
 def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty,
                             dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    print("test_input.wcs: " + str(test_input.wcs))
-    print("wcs[0]: " + str(wcs[0]))
     helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axes == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
     assert test_input.world_axis_physical_types == world_axis_physical_types
-    print("test_input.extra_coords: " + str(test_input.extra_coords))
-    print("extra_coords: " + str(extra_coords))
     helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
@@ -962,17 +980,3 @@ def test_explode_along_axis(test_input, expected):
     assert isinstance(output[inp_slice], exp_type_cube)
     assert isinstance(output.meta, exp_meta_seq)
     assert isinstance(output[inp_slice].meta, exp_meta_cube)
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    ((data_ones, wcs_input_dict),
-     {'custom:pos.helioprojective.lat': {'axis': None, 'value': np.array(1.26915033e-05)}})
-])
-def test_extra_coords(test_input, expected):
-    data, wcs_input = test_input
-    input_wcs = astropy.wcs.WCS(wcs_input)
-    my_test_cube = NDCube(data_ones, input_wcs)
-    my_2d_test_cube = my_test_cube[0:3, 0, 0:5]
-    extra_coords_output = expected.keys()
-    output = my_2d_test_cube.extra_coords.keys()
-    assert output == extra_coords_output
