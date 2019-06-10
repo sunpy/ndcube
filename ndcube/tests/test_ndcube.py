@@ -705,7 +705,7 @@ def test_slicing_error(test_input):
         test_input[None]
     with pytest.raises(IndexError):
         test_input[0, None]
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         test_input[[0, 1]]
 
 
