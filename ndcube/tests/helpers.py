@@ -20,7 +20,8 @@ def assert_extra_coords_equal(test_input, extra_coords):
     assert test_input.keys() == extra_coords.keys()
     for key in list(test_input.keys()):
         assert test_input[key]['axis'] == extra_coords[key]['axis']
-        assert (test_input[key]['value'] == extra_coords[key]['value']).all()
+        np.testing.assert_almost_equal(test_input[key]['value'].value, extra_coords[key]['value'].value, decimal=5)
+        #assert (test_input[key]['value'] == extra_coords[key]['value']).value.any()  #.all()
 
 
 def assert_metas_equal(test_input, expected_output):

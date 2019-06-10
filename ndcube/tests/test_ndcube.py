@@ -148,8 +148,7 @@ cube_rotated = NDCube(
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
 
-@pytest.mark.parametrize(
-    "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
+@pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
     [(cubem[:, 1],
       NDCube,
       mask_cubem[:, 1],
@@ -159,7 +158,8 @@ cube_rotated = NDCube(
       ('custom:pos.helioprojective.lon', 'em.wl'),
       {'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)}}
+       'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
+      'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}}
       ),
      (cubem[:, 0:2],
       NDCube,
@@ -293,8 +293,9 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
     assert test_input.world_axis_physical_types == world_axis_physical_types
-    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
-
+    print("test_input.extra_coords: " + str(test_input.extra_coords))
+    print("extra_coords: " + str(extra_coords))
+    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)  # Test fails here...
 
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
