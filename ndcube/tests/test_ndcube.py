@@ -235,10 +235,10 @@ cube_rotated = NDCube(
       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}
       }
       ),
-     (cube[:, 0:2],
+     (cube[:, 0:2], # 8th
       NDCube,
       mask_cube[:, 0:2],
-      _wcs_slicer(wt, [True, False, False, False], (slice(None, None, None), slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, False], (slice(None, None, None), slice(0, 2, None))),
       uncertainty[:, 0:2],
       u.Quantity((2, 2, 4), unit=u.pix),
       ('custom:pos.helioprojective.lat', 'em.wl', 'time'),
@@ -249,7 +249,7 @@ cube_rotated = NDCube(
      (cube[:, :],
       NDCube,
       mask_cube[:, :],
-      _wcs_slicer(wt, [True, False, False, False],
+      _wcs_slicer(wt, [False, False, False, True],
                   (slice(None, None, None), slice(None, None, None))),
       uncertainty[:, :],
       u.Quantity((2, 3, 4), unit=u.pix),
@@ -258,58 +258,58 @@ cube_rotated = NDCube(
        'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 2, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
       ),
-     (cube[1, 1],
+     (cube[0, 1],
       NDCube,
       mask_cube[1, 1],
-      _wcs_slicer(wt, [True, False, False, False], (1, 1)),
+      _wcs_slicer(wt, [False, False, True, False], (0, 1)),
       uncertainty[1, 1],
       u.Quantity((4, ), unit=u.pix),
       tuple(['time']),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+      {'time': {'axis': None, 'value': u.Quantity(0., unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)},
+      'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49991118, unit=u.deg)}}
       ),
      (cube[1, 0:2],
       NDCube,
       mask_cube[1, 0:2],
-      _wcs_slicer(wt, [True, False, False, False], (1, slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, True], (1, slice(0, 2, None))),
       uncertainty[1, 0:2],
       u.Quantity((2, 4), unit=u.pix),
       ('em.wl', 'time'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}}
       ),
      (cube[1, :],
       NDCube,
       mask_cube[1, :],
-      _wcs_slicer(wt, [True, False, False, False], (1, slice(0, 2, None))),
+      _wcs_slicer(wt, [False, False, False, False], (0, 1)),
       uncertainty[1, :],
       u.Quantity((3, 4), unit=u.pix),
       ('em.wl', 'time'),
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.99974625, unit=u.deg)}}
       )])
 def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                              dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    print("test_input.wcs: " + str(test_input.wcs))
-    print("wcs[0]: " +str(wcs[0]))
     helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
     assert test_input.missing_axes == wcs[1]
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
     assert test_input.world_axis_physical_types == world_axis_physical_types
-    print("test_input.extra_coords: " + str(test_input.extra_coords))
-    print("extra_coords: " + str(extra_coords))
-    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)  # Test fails here...
+    helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types, extra_coords",
-    [(cubem[1],
+    [(cubem[1],  #13
       NDCube,
       mask_cubem[1],
       _wcs_slicer(wm, [False, False, False], 1),
