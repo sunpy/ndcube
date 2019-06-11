@@ -700,11 +700,11 @@ def test_prep_axes_kwargs_errors(test_input, expected_error):
       (userrangequantity_none_axis_ranges_axis0_1e7[0].min(),
        userrangequantity_none_axis_ranges_axis0_1e7[0].max()),
       (seq_stack.data.min(), seq_stack.data.max()))),
-# Needs to be commented down||
-    # (seq, {"plot_axis_indices": 2, "axes_coordinates": "hi"},
-    #  (seq_stack.data, hi2_none_axis_ranges_axis2, "hi [s]", "Data [None]",
-    #   (hi2_none_axis_ranges_axis2[2].min(), hi2_none_axis_ranges_axis2[2].max()),
-    #   (seq_stack.data.min(), seq_stack.data.max()))),
+
+    (seq, {"plot_axis_indices": 2, "axes_coordinates": "hi"},
+     (seq_stack.data, hi2_none_axis_ranges_axis2, "hi [s]", "Data [None]",
+      (hi2_none_axis_ranges_axis2[2].min(), hi2_none_axis_ranges_axis2[2].max()),
+      (seq_stack.data.min(), seq_stack.data.max()))),
 
     (seq, {"plot_axis_indices": 1, "axes_coordinates": "pix"},
      (seq_stack.data, pix1_none_axis_ranges_axis1, "pix [pix]", "Data [None]",
