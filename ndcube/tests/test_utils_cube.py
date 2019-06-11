@@ -85,7 +85,8 @@ def test_select_order():
 
 
 @pytest.mark.parametrize("test_input", [
-    ([('name', 0)], [False, False], (1, 2)),
+    #([('name', 0)], [False, False], (1, 2)),
+    ([('name', 0, None)], [False, False], (1, 2)),
     ([(0, 0, 0)], [False, False], (1, 2)),
     ([('name', '0', 0)], [False, False], (1, 2)),
     ([('name', 0, [0, 1])], [False, False], (1, 2))
