@@ -10,6 +10,7 @@ except ImportError:
     from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 
 from ndcube import utils
+from ndcube.utils.cube import _get_extra_coord_edges
 
 __all__ = ['NDCubeSequencePlotMixin']
 
@@ -956,7 +957,7 @@ class LineAnimatorNDCubeSequence(LineAnimator):
         if axis_ranges is None:
             axis_ranges = [None] * len(seq.dimensions)
             if plot_axis_index == 0:
-                axis_ranges[plot_axis_index] = np.arange(len(seq.data))
+                axis_ranges[plot_axis_index] = _get_extra_coord_edges(np.arange(len(seq.data)), axis=plot_axis_index)
             else:
                 cube_plot_axis_index = plot_axis_index - 1
                 # Define unit of x-axis if not supplied by user.
@@ -966,8 +967,8 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                     unit_x_axis = np.asarray(seq[0].wcs.wcs.cunit)[wcs_plot_axis_index]
                 # Get x-axis values from each cube and combine into a single
                 # array for axis_ranges kwargs.
-                x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, cube_plot_axis_index,
-                                                                   unit_x_axis)
+                x_axis_coords = _get_extra_coord_edges(_get_non_common_axis_x_axis_coords(seq.data, cube_plot_axis_index,
+                                                                   unit_x_axis), axis=plot_axis_index)
                 axis_ranges[plot_axis_index] = np.stack(x_axis_coords)
             # Set x-axis label.
             if xlabel is None:
@@ -1067,7 +1068,7 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                 if xlabel is None:
                     xlabel = "{0} [{1}]".format(axis_extra_coord, unit_x_axis)
                 # Re-enter x-axis values into axis_ranges
-                axis_ranges[plot_axis_index] = x_axis_coords
+                axis_ranges[plot_axis_index] = _get_extra_coord_edges(x_axis_coords, axis=plot_axis_index)
             # Else coordinate must have been defined manually.
             else:
                 if isinstance(axis_ranges[plot_axis_index], u.Quantity):
@@ -1217,13 +1218,13 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
                     # The repeats is the inverse of dummy_reshape.
                     tile_shape = copy.deepcopy(cube_like_shape)
                     tile_shape[np.array(dependent_axes)] = 1
-                    x_axis_coords = np.tile(x_axis_cube_coords, tile_shape)
+                    x_axis_coords = _get_extra_coord_edges(np.tile(x_axis_cube_coords, tile_shape), axis=plot_axis_index)
             else:
                 # Get x-axis values from each cube and combine into a single
                 # array for axis_ranges kwargs.
                 x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, plot_axis_index,
                                                                    unit_x_axis)
-                axis_ranges[plot_axis_index] = np.concatenate(x_axis_coords, axis=seq._common_axis)
+                axis_ranges[plot_axis_index] = _get_extra_coord_edges(np.concatenate(x_axis_coords, axis=seq._common_axis), axis=plot_axis_index)
             # Set axis labels and limits, etc.
             if xlabel is None:
                 xlabel = "{0} [{1}]".format(
