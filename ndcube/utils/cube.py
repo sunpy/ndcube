@@ -197,24 +197,58 @@ def _get_dimension_for_pixel(axis_length, edges):
     """
     return axis_length+1 if edges else axis_length
 
-def _get_extra_coord_edges(value):
+def _get_extra_coord_edges(value, axis=-1):
     """Gets the pixel_edges from the pixel_values
-
-    Parameters
+     Parameters
     ----------
     value : `astropy.units.Quantity` or array-like
         The Quantity object containing the values for a given `extra_coords`
+     axis : `int`
+        The axis about which pixel_edges needs to be calculated
+        Default value is -1, which is the last axis for a ndarray
     """
 
-    # Get the shape of the Quantity object
-    shape = len(value)
-    if isinstance(value, Quantity):
-        edges = np.zeros(shape+1) * value.unit
-    else:
-        edges = np.zeros(shape+1)
+     # Checks for corner cases
+    if value is None:
+        return value
+    if not isinstance(value, np.ndarray):
+        value = np.array(value)
 
-    # Calculate the pixel_edges from the given pixel_values
-    edges[1:-1] = value[:-1] + (value[1:] - value[:-1]) / 2
-    edges[0] = value[0] - (value[1] - value[0]) / 2
-    edges[-1] = value[-1] + (value[-1] - value[-2]) / 2
+    # Get the shape of the Quantity object
+    shape = value.shape
+    if len(shape) == 1:
+
+        shape = len(value)
+        if isinstance(value, Quantity):
+            edges = np.zeros(shape+1) * value.unit
+        else:
+            edges = np.zeros(shape+1)
+
+         # Calculate the pixel_edges from the given pixel_values
+        edges[1:-1] = value[:-1] + (value[1:] - value[:-1]) / 2
+        edges[0] = value[0] - (value[1] - value[0]) / 2
+        edges[-1] = value[-1] + (value[-1] - value[-2]) / 2
+
+    else:
+        # Edit the shape of the new ndarray to increase the length
+        # by one for a given axis
+        shape = list(shape)
+        shape[axis] += 1
+        shape = tuple(shape)
+
+        if isinstance(value, Quantity):
+            edges = np.zeros(shape) * value.unit
+        else:
+            edges = np.zeros(shape)
+        # Shift the axis which is point of interest to last axis
+        value = np.moveaxis(value, axis, -1)
+        edges = np.moveaxis(edges, axis, -1)
+
+        # Calculate the pixel_edges from the given pixel_values
+        edges[...,1:-1] = value[...,:-1] + (value[...,1:] - value[...,:-1]) / 2
+        edges[...,0] = value[...,0] - (value[...,1] - value[...,0]) / 2
+        edges[...,-1] = value[...,-1] + (value[...,-1] - value[...,-2]) / 2
+
+        # Revert the shape of the edges array
+        edges = np.moveaxis(edges, -1, axis)
     return edges
