@@ -217,7 +217,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Returns the high level wcs API from the given low_level wcs API
         """
-        return HighLevelWCSWrapper(self.wcs)
+        if isinstance(self.wcs, HighLevelWCS):
+            return self.wcs
+        else:
+            return HighLevelWCSWrapper(self.wcs)
 
     @property
     def dimensions(self):
