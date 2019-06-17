@@ -370,51 +370,6 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
     return dependent_wcs_axes
 
-# TODO: Remove this redundant method, or return wcs_object.axis_correlation_matrix
-def axis_correlation_matrix(wcs_object):
-    """
-    Return True/False matrix indicating which WCS axes are dependent on others.
-
-    Parameters
-    ----------
-    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        The WCS object describing the axes.
-
-    Returns
-    -------
-    matrix: `numpy.ndarray` of `bool`
-        Square True/False matrix indicating which axes are dependent.
-        For example, whether WCS axis 0 is dependent on WCS axis 1 is given by matrix[0, 1].
-
-    """
-    n_world = len(wcs_object.wcs.ctype)
-    n_pixel = wcs_object.naxis
-
-    # If there are any distortions present, we assume that there may be
-    # correlations between all axes. Maybe if some distortions only apply
-    # to the image plane we can improve this
-    for distortion_attribute in ('sip', 'det2im1', 'det2im2'):
-        if getattr(wcs_object, distortion_attribute):
-            return np.ones((n_world, n_pixel), dtype=bool)
-
-    # Assuming linear world coordinates along each axis, the correlation
-    # matrix would be given by whether or not the PC matrix is zero
-    matrix = wcs_object.wcs.get_pc() != 0
-
-    # We now need to check specifically for celestial coordinates since
-    # these can assume correlations because of spherical distortions. For
-    # each celestial coordinate we copy over the pixel dependencies from
-    # the other celestial coordinates.
-    celestial = (wcs_object.wcs.axis_types // 1000) % 10 == 2
-    celestial_indices = np.nonzero(celestial)[0]
-    for world1 in celestial_indices:
-        for world2 in celestial_indices:
-            if world1 != world2:
-                matrix[world1] |= matrix[world2]
-                matrix[world2] |= matrix[world1]
-
-    return matrix
-
 
 def append_sequence_axis_to_wcs(wcs_object):
     """Appends a 1-to-1 dummy axis to a WCS object."""
