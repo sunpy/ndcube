@@ -9,7 +9,7 @@ import astropy.units as u
 from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
 from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
-from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper, HighLevelWCSMixin
 import sunpy.coordinates
 
 from ndcube import utils
@@ -217,7 +217,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Returns the high level wcs API from the given low_level wcs API
         """
-        if isinstance(self.wcs, HighLevelWCS):
+        if isinstance(self.wcs, HighLevelWCSMixin):
             return self.wcs
         else:
             return HighLevelWCSWrapper(self.wcs)
