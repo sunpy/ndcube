@@ -72,7 +72,6 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
     
     # First we check if the data_axis whose wcs_axis we want to calculate
     # is present in the old_data_order
-    # breakpoint()
     index = np.where(data_axis == old_data_order)[0]
     if index.size != 0:
         index = index.item()
@@ -154,7 +153,6 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
 
     # First we check if the wcs axis whose data_axis we want to calculate
     # is present in the old_wcs_order
-    # breakpoint()
     
     index = np.where(wcs_axis == pixel_keep)[0]
     if index.size != 0:
@@ -225,7 +223,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
         #             raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
         #                                                     data_shape[coord[1]]))
         # Determine wcs axis corresponding to data axis of coord
-        # breakpoint()
+
         extra_coords_wcs_axis[coord[0]] = {
             "wcs axis": data_axis_to_wcs_ape14(coord[1], pixel_keep, naxes),
             "value": coord[2]}
@@ -250,7 +248,7 @@ def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
         coord_names = list(extra_coords.keys())
         result = []
         for name in coord_names:
-            # breakpoint()
+
             coord_keys = list(extra_coords[name].keys())
             if "wcs axis" in coord_keys and "axis" not in coord_keys:
                 axis = wcs_axis_to_data_ape14(extra_coords[name]["wcs axis"], pixel_keep, naxes)
