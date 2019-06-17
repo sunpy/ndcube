@@ -59,7 +59,7 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
 
     # Try to convert the data_axis to its corresponding wcs_axis if present
     # If not present, return None
-    
+
     # pixel_keep is the old order of all wcs
     # Get the old order of all data axes
     old_data_order = naxes - 1 - pixel_keep
@@ -69,7 +69,7 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
 
     # Mapping of the order of new wcs axes
     new_data_order = new_wcs_order[::-1]
-    
+
     # First we check if the data_axis whose wcs_axis we want to calculate
     # is present in the old_data_order
     index = np.where(data_axis == old_data_order)[0]
@@ -79,9 +79,9 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
         index = None
 
     if index is None:
-        # As we have performed the check for bound, 
-        # so the data_axis must have been missing if 
-        # index is None 
+        # As we have performed the check for bound,
+        # so the data_axis must have been missing if
+        # index is None
         return None
 
     # Return the corresponding wcs_axis for the data axis
@@ -153,16 +153,16 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
 
     # First we check if the wcs axis whose data_axis we want to calculate
     # is present in the old_wcs_order
-    
+
     index = np.where(wcs_axis == pixel_keep)[0]
     if index.size != 0:
         index = index.item()
     else:
         index = None
     if index is None:
-        # As we have performed the check for bound, 
-        # so the wcs_axis must have been missing if 
-        # index is None 
+        # As we have performed the check for bound,
+        # so the wcs_axis must have been missing if
+        # index is None
         return None
 
     # Return the corresponding data_axis for the wcs_axis
