@@ -1,6 +1,8 @@
 import copy
 
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
+from astropy.wcs.wcsapi import SlicedLowLevelWCS
+from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 from ndcube import utils
 
@@ -40,22 +42,31 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         to add support for ``missing_axes`` and ``extra_coords`` and overwrites
         the astropy handling of wcs slicing.
         """
+
+        item = tuple(sanitize_slices(item, len(self.dimensions)))
         kwargs = super()._slice(item)
 
-        wcs, missing_axes = self._slice_wcs_missing_axes(item)
-        kwargs['wcs'] = wcs
-        kwargs['missing_axes'] = missing_axes
-        kwargs['extra_coords'] = self._slice_extra_coords(item, missing_axes)
+        # Store the original dimension of the wcs object before slicing
+        prev_dim = self.high_level_wcs.low_level_wcs.world_n_dim
 
+        # Sanitize the input arguments
+        wcs = self._slice_wcs(item)
+        print('ITEM {0}'.format(item))
+
+        # Set the kwargs values
+        kwargs['wcs'] = wcs
+        kwargs['missing_axes'] = None
+        kwargs['extra_coords'] = self._slice_extra_coords(item, wcs._pixel_keep, prev_dim)
         return kwargs
 
-    def _slice_wcs_missing_axes(self, item):
-        # here missing axis is reversed as the item comes already in the reverse order
-        # of the input
-        return utils.wcs._wcs_slicer(
-            self.wcs, copy.deepcopy(self.missing_axes[::-1]), item)
+    def _slice_wcs(self, item):
 
-    def _slice_extra_coords(self, item, missing_axes):
+        # Returns the sliced WCS object
+        return SlicedLowLevelWCS(self.wcs, item)
+        
+
+    def _slice_extra_coords(self, item, pixel_keep, naxes):
+
         if self.extra_coords is None:
             new_extra_coords_dict = None
         else:
@@ -76,6 +87,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
                         pass
                     except TypeError:
                         pass
-                new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
-                    new_extra_coords, missing_axes)
+        new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
+            new_extra_coords, pixel_keep, naxes)
         return new_extra_coords_dict
