@@ -66,12 +66,10 @@ def assert_wcs_are_equal(wcs1, wcs2):
 
 
 def create_sliced_wcs(wcs, item, dim):
-	"""
-	Creates a sliced `SlicedFITSWCS` object from the given slice item
-	"""
+    """
+    Creates a sliced `SlicedFITSWCS` object from the given slice item
+    """
 
-	# Sanitize the slices
-	item = sanitize_slices(item, dim)
-	return SlicedFITSWCS(wcs, item)
-
-	
+    # Sanitize the slices
+    item = sanitize_slices(item, dim)
+    return SlicedFITSWCS(wcs, item)

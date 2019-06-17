@@ -680,7 +680,7 @@ def test_slicing_error(test_input):
         test_input[None]
     with pytest.raises(IndexError):
         test_input[0, None]
-    
+
     # This works,i.e does not raise any error, do we want retain this?
     # with pytest.raises(NotImplementedError):
     #     test_input[[0, 1]]
@@ -852,7 +852,6 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
-    
     (cube[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
@@ -862,7 +861,6 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
-    
     (cube[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
@@ -881,7 +879,6 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
-    
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
@@ -891,7 +888,6 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
-    
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
@@ -901,7 +897,6 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[2]),
-
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),

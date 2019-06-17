@@ -191,7 +191,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             self.missing_axes = [False]*wcs.world_n_dim
         else:
             self.missing_axes = missing_axes
-        
+
         # Enforce that the WCS object is a low_level_wcs object, complying APE14
         if not isinstance(wcs, BaseLowLevelWCS):
             raise TypeError(f'Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}')
@@ -199,7 +199,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
             # Convert the WCS object into a SlicedLowLevelWCS
             wcs = SlicedLowLevelWCS(wcs, [])
-        
+
         # Format extra coords.
         if extra_coords:
             self._extra_coords_wcs_axis = \
@@ -269,7 +269,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
-        
+
         quantity_axis_list = quantity_axis_list[::-1]
         world_to_pixel = self.high_level_wcs.world_to_pixel(*quantity_axis_list)
 
@@ -379,12 +379,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         # Due to error check above we know dependent
                         # axis can appear in int_axes at most once.
                         j = np.where(int_axes == dependent_axis)[0][0]
-                        
+
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
                         axes_coords[j] = dependent_axes_coords[ape14_axes(self.high_level_wcs, dependent_axis)[0]]
                         # Remove axis from list that have now been translated.
                         axes_translated[j] = True
-        
+
         # Remove the duplicate results
         result = list()
         map(lambda x: not x in result and result.append(x), axes_coords)

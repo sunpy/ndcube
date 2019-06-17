@@ -63,7 +63,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
         # Returns the sliced WCS object
         return SlicedLowLevelWCS(self.wcs, item)
-        
+
 
     def _slice_extra_coords(self, item, pixel_keep, naxes):
 
