@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 
 from ndcube import NDCube, NDCubeOrdered
 from astropy.wcs import WCS
-# from ndcube.utils.wcs import WCS, _wcs_slicer
+
 from ndcube.tests import helpers
 from ndcube.tests.helpers import create_sliced_wcs
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -148,21 +148,21 @@ cube_rotated = NDCube(
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
 
-# @pytest.mark.parametrize(
-#     "nd_cube",[
-#     cube,
-#     cube_rotated,
-#     cubem,
-#     cubet])
-# def test_wcs_object(nd_cube):
+@pytest.mark.parametrize(
+    "nd_cube",[
+    cube,
+    cube_rotated,
+    cubem,
+    cubet])
+def test_wcs_object(nd_cube):
 
-#     # Test if wcs object is a BaseLowLevelWCS, has a SlicedLowLevelWCS object
-#     # and has a high level wcs object associated
-#     assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
-#     assert isinstance(nd_cube.low_level_wcs, SlicedLowLevelWCS)
-#     assert isinstance(nd_cube.high_level_wcs, HighLevelWCSWrapper)
+    # Test if wcs object is a BaseLowLevelWCS, instance of SlicedLowLevelWCS object
+    # and has a high level wcs object associated
+    assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
+    assert isinstance(nd_cube.wcs, SlicedLowLevelWCS)
+    assert isinstance(nd_cube.high_level_wcs, HighLevelWCSWrapper)
 
-# @pytest.mark.xfail(raises=ValueError)
+
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
     [
@@ -681,7 +681,7 @@ def test_slicing_error(test_input):
     with pytest.raises(IndexError):
         test_input[0, None]
     
-    # This works, do we want retain this?
+    # This works,i.e does not raise any error, do we want retain this?
     # with pytest.raises(NotImplementedError):
     #     test_input[[0, 1]]
 
@@ -915,7 +915,7 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
 def test_world_to_pixel(test_input, expected):
     assert np.allclose(test_input.value, expected)
 
-# @pytest.mark.skip
+
 @pytest.mark.parametrize("test_input,expected", [
     # ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 4.e-11*u.m], None),
     #  cubem[:, :, :3])
@@ -933,33 +933,33 @@ def test_crop_by_coords(test_input, expected):
         test_input[0].crop_by_coords(*test_input[1:]), expected)
 
 
-# @pytest.mark.parametrize("test_input", [
-#     (ValueError, cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg), None),
-#     (ValueError, cubem, [1*u.s], [1*u.s], [1*u.s]),
-#     (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg)),
-#     (ValueError, cubem, [1], None, [1], ['s', 'deg']),
-#     (TypeError, cubem, [1, 2, 3], None, [2, 3, 4])])
-# def test_crop_by_coords_error(test_input):
-#     with pytest.raises(test_input[0]):
-#         test_input[1].crop_by_coords(*test_input[2:])
-
-# # # @pytest.mark.skip
-# @pytest.mark.parametrize(
-#     "test_input,expected",
-#     [((cube, "bye", 0*u.pix, 1.5*u.pix), cube[:, :, 0:2]),
-#      ((cubet, "bye", 0.5*u.pix, 3.5*u.pix), cubet[:, :, 1:4])])
-# def test_crop_by_extra_coord(test_input, expected):
-#     helpers.assert_cubes_equal(
-#         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
+@pytest.mark.parametrize("test_input", [
+    (ValueError, cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg), None),
+    (ValueError, cubem, [1*u.s], [1*u.s], [1*u.s]),
+    (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg)),
+    (ValueError, cubem, [1], None, [1], ['s', 'deg']),
+    (TypeError, cubem, [1, 2, 3], None, [2, 3, 4])])
+def test_crop_by_coords_error(test_input):
+    with pytest.raises(test_input[0]):
+        test_input[1].crop_by_coords(*test_input[2:])
 
 
-# # @pytest.mark.parametrize("test_input,expected", [
-# #     (cube_disordered_inputs, cube_ordered)])
-# # def test_ndcubeordered(test_input, expected):
-# #     helpers.assert_cubes_equal(
-# #         NDCubeOrdered(test_input[0], test_input[1], mask=test_input[2],
-# #                       uncertainty=test_input[3], extra_coords=test_input[4]),
-# #         expected)
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [((cube, "bye", 0*u.pix, 1.5*u.pix), cube[:, :, 0:2]),
+     ((cubet, "bye", 0.5*u.pix, 3.5*u.pix), cubet[:, :, 1:4])])
+def test_crop_by_extra_coord(test_input, expected):
+    helpers.assert_cubes_equal(
+        test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (cube_disordered_inputs, cube_ordered)])
+def test_ndcubeordered(test_input, expected):
+    helpers.assert_cubes_equal(
+        NDCubeOrdered(test_input[0], test_input[1], mask=test_input[2],
+                      uncertainty=test_input[3], extra_coords=test_input[4]),
+        expected)
 
 
 # @pytest.mark.parametrize("test_input,expected", [
@@ -1004,19 +1004,19 @@ def test_crop_by_coords(test_input, expected):
 #             np.testing.assert_allclose(all_coords[i].Tx.degree, expected[i][0].value)
 #             np.testing.assert_allclose(all_coords[i].Ty.degree, expected[i][1].value)
 
-# # @pytest.mark.parametrize("test_input,expected", [
-# #     ((cubem, 0, 0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
-# #     ((cubem, 1, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
-# #     ((cubem, -2, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict))
-# # ])
-# # def test_explode_along_axis(test_input, expected):
-# #     inp_cube, inp_axis, inp_slice = test_input
-# #     exp_dimensions, exp_type_seq, exp_meta_seq, exp_type_cube, exp_meta_cube = expected
-# #     output = inp_cube.explode_along_axis(inp_axis)
-# #     assert tuple(output.dimensions) == tuple(exp_dimensions)
-# #     assert any(output[inp_slice].dimensions == \
-# #         u.Quantity((exp_dimensions[1], exp_dimensions[2]), unit='pix'))
-# #     assert isinstance(output, exp_type_seq)
-# #     assert isinstance(output[inp_slice], exp_type_cube)
-# #     assert isinstance(output.meta, exp_meta_seq)
-# #     assert isinstance(output[inp_slice].meta, exp_meta_cube)
+@pytest.mark.parametrize("test_input,expected", [
+    ((cubem, 0, 0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
+    ((cubem, 1, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
+    ((cubem, -2, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict))
+])
+def test_explode_along_axis(test_input, expected):
+    inp_cube, inp_axis, inp_slice = test_input
+    exp_dimensions, exp_type_seq, exp_meta_seq, exp_type_cube, exp_meta_cube = expected
+    output = inp_cube.explode_along_axis(inp_axis)
+    assert tuple(output.dimensions) == tuple(exp_dimensions)
+    assert any(output[inp_slice].dimensions == \
+        u.Quantity((exp_dimensions[1], exp_dimensions[2]), unit='pix'))
+    assert isinstance(output, exp_type_seq)
+    assert isinstance(output[inp_slice], exp_type_cube)
+    assert isinstance(output.meta, exp_meta_seq)
+    assert isinstance(output[inp_slice].meta, exp_meta_cube)
