@@ -119,6 +119,7 @@ class WCS(wcs.WCS):
         return newheader
 
 
+
 def _wcs_slicer(wcs, missing_axes, item):
     """
     Returns the new sliced wcs and changed missing axis.
@@ -326,7 +327,7 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
     # This can be done by dropping missing_axes parameter of functions calling it
 
     # Convert input data axis index to WCS axis index.
-    wcs_axis = utils_cube.data_axis_to_wcs_axis_without_ms(data_axis, wcs_object.pixel_n_dim)
+    wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis,wcs_object._pixel_keep, wcs_object.world_n_dim)
     # Determine dependent axes, using WCS ordering.
     wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
 
