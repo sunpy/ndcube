@@ -7,8 +7,10 @@ import unittest
 
 import numpy as np
 
+from numpy.testing import assert_equal
+
 from ndcube import utils
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
+from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 __all__ = ['assert_extra_coords_equal',
@@ -35,8 +37,7 @@ def assert_cubes_equal(test_input, expected_cube):
     unit_tester = unittest.TestCase()
     assert type(test_input) == type(expected_cube)
     assert np.all(test_input.mask == expected_cube.mask)
-#     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
-#     assert test_input.missing_axes == expected_cube.missing_axes
+    assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)
@@ -56,14 +57,25 @@ def assert_wcs_are_equal(wcs1, wcs2):
     """
     Assert function for testing two wcs object.
     Used in testing NDCube.
+    Also checks if both the wcs objects are instance
+    of `SlicedLowLevelWCS`
     """
-    assert list(wcs1.wcs.ctype) == list(wcs2.wcs.ctype)
-    assert list(wcs1.wcs.crval) == list(wcs2.wcs.crval)
-    assert list(wcs1.wcs.crpix) == list(wcs2.wcs.crpix)
-    assert list(wcs1.wcs.cdelt) == list(wcs2.wcs.cdelt)
-    assert list(wcs1.wcs.cunit) == list(wcs2.wcs.cunit)
-    assert wcs1.wcs.naxis == wcs2.wcs.naxis
+    
+    # Check if both the objects are instance of `SlicedLowLevelWCS`
+    assert isinstance(wcs1, SlicedLowLevelWCS)
+    assert isinstance(wcs2, SlicedLowLevelWCS)
 
+    # Check the APE14 attributes of both the WCS
+    assert wcs1.pixel_n_dim == wcs2.pixel_n_dim
+    assert wcs1.world_n_dim == wcs2.world_n_dim
+    assert wcs1.array_shape == wcs2.array_shape
+    assert wcs1.pixel_shape == wcs2.pixel_shape
+    assert wcs1.world_axis_physical_types == wcs2.world_axis_physical_types
+    assert wcs1.world_axis_units == wcs2.world_axis_units
+    assert_equal(wcs1.axis_correlation_matrix, wcs2.axis_correlation_matrix)
+    assert wcs1.world_axis_object_components == wcs2.world_axis_object_components
+    assert wcs1.pixel_bounds == wcs2.pixel_bounds
+    assert repr(wcs1) == repr(wcs2)
 
 def create_sliced_wcs(wcs, item, dim):
     """
