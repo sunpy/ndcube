@@ -60,7 +60,7 @@ def assert_wcs_are_equal(wcs1, wcs2):
     Also checks if both the wcs objects are instance
     of `SlicedLowLevelWCS`
     """
-    
+
     # Check if both the objects are instance of `SlicedLowLevelWCS`
     assert isinstance(wcs1, SlicedLowLevelWCS)
     assert isinstance(wcs2, SlicedLowLevelWCS)
