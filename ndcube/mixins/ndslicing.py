@@ -55,7 +55,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
         # Set the kwargs values
         kwargs['wcs'] = wcs
-        kwargs['missing_axes'] = None
         kwargs['extra_coords'] = self._slice_extra_coords(item, wcs._pixel_keep, prev_dim)
         return kwargs
 
