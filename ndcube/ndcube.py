@@ -175,22 +175,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Note however that it is not always possible to save the input as reference.
         Default is False.
 
-    missing_axes : `list` of `bool`
-        Designates which axes in wcs object do not have a corresponding axis is the data.
-        True means axis is "missing", False means axis corresponds to a data axis.
-        Ordering corresponds to the axis ordering in the WCS object, i.e. reverse of data.
-        For example, say the data's y-axis corresponds to latitude and x-axis corresponds
-        to wavelength.  In order the convert the y-axis to latitude the WCS must contain
-        a "missing" longitude axis as longitude and latitude are not separable.
-
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
-        if missing_axes is None:
-            self.missing_axes = [False]*wcs.world_n_dim
-        else:
-            self.missing_axes = missing_axes
+                 unit=None, extra_coords=None, copy=False, **kwargs):
 
         # Enforce that the WCS object is a low_level_wcs object, complying APE14
         if not isinstance(wcs, BaseLowLevelWCS):
@@ -251,14 +239,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             ctype = self.high_level_wcs.world_axis_physical_types
 
         return tuple(ctype[::-1])
-
-    @property
-    def missing_axis(self):
-        warnings.warn(
-            "The missing_axis list has been deprecated by missing_axes and will no longer be supported after ndcube 2.0.",
-            DeprecationWarning
-        )
-        return self.missing_axes
 
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
@@ -340,7 +320,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         axes_translated = np.zeros_like(int_axes, dtype=bool)
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
-        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.high_level_wcs, axis))
+        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.high_level_wcs.low_level_wcs, axis))
                           for axis in int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
         # Iterate through each axis and perform WCS translation.
@@ -381,7 +361,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         j = np.where(int_axes == dependent_axis)[0][0]
 
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
-                        axes_coords[j] = dependent_axes_coords[ape14_axes(self.high_level_wcs, dependent_axis)[0]]
+                        axes_coords[j] = dependent_axes_coords[ape14_axes(self.high_level_wcs.low_level_wcs, dependent_axis)[0]]
                         # Remove axis from list that have now been translated.
                         axes_translated[j] = True
 
@@ -611,7 +591,7 @@ class NDCubeOrdered(NDCube):
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
+                 unit=None, extra_coords=None, copy=False, **kwargs):
         axtypes = list(wcs.wcs.ctype)[::-1]
         array_order = utils.cube.select_order(axtypes)
         result_data = data.transpose(array_order)
@@ -635,4 +615,4 @@ class NDCubeOrdered(NDCube):
         super().__init__(result_data, result_wcs, uncertainty=result_uncertainty,
                          mask=result_mask, meta=meta, unit=unit,
                          extra_coords=reordered_extra_coords,
-                         copy=copy, missing_axes=missing_axes, **kwargs)
+                         copy=copy, **kwargs)
