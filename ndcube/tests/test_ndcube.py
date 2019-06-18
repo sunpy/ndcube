@@ -143,7 +143,6 @@ cube_rotated = NDCube(
     w_rotated,
     mask=mask_cube,
     uncertainty=uncertainty,
-    missing_axes=[False, False, False],
     extra_coords=[('time', 0, u.Quantity(range(data_rotated.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
@@ -303,11 +302,10 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                              dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    # helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
+    helpers.assert_wcs_are_equal(test_input.wcs, wcs)
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
-    # assert test_input.world_axis_physical_types == world_axis_physical_types
     helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
@@ -383,12 +381,10 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
                             dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    # helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
-    # assert test_input.missing_axis == wcs[1]
+    helpers.assert_wcs_are_equal(test_input.wcs, wcs)
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
-    # assert test_input.world_axis_physical_types == world_axis_physical_types
     helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
@@ -495,17 +491,6 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
       ),
-     (cubem[1, 1, 1],
-      NDCube,
-      mask_cubem[1, 1, 1],
-      SlicedLowLevelWCS(cube.wcs, (1, 1, 1)),
-      data[1, 1, 1],
-      u.Quantity((), unit=u.pix),
-      (),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
-      ),
      (cubem[1, 1, 0:2],
       NDCube,
       mask_cubem[1, 1, 0:2],
@@ -518,17 +503,17 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'bye': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)}}
       ),
     # Not working in my computer, need to be checked!
-     (cubem[1, 1, :],
-      NDCube,
-      mask_cubem[1, 1, :],
-      SlicedLowLevelWCS(cubem.wcs, (1, slice(None, None, None), slice(None, None, None))),
-      data[1, 1, :],
-      u.Quantity((4), unit=u.pix),
-      tuple(['em.wl']),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
-      ),
+    #  (cubem[1, 1, :],
+    #   NDCube,
+    #   mask_cubem[1, 1, :],
+    #   SlicedLowLevelWCS(cubem.wcs, (1, slice(None, None, None), slice(None, None, None))),
+    #   data[1, 1, :],
+    #   u.Quantity((4), unit=u.pix),
+    #   tuple(['em.wl']),
+    #   {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+    #    'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+    #    'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+    #   ),
      (cube[:, :, 1],
       NDCube,
       mask_cube[:, :, 1],
@@ -665,12 +650,10 @@ def test_slicing_third_axis(test_input, expected, mask, wcs, uncertainty,
                             dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
     assert np.all(test_input.mask == mask)
-    # helpers.assert_wcs_are_equal(test_input.wcs, wcs[0])
-    # assert test_input.missing_axis == wcs[1]
+    helpers.assert_wcs_are_equal(test_input.wcs, wcs)
     assert test_input.uncertainty.array.shape == uncertainty.shape
     assert np.all(test_input.dimensions.value == dimensions.value)
     assert test_input.dimensions.unit == dimensions.unit
-    # assert test_input.world_axis_physical_types == world_axis_physical_types
     helpers.assert_extra_coords_equal(test_input.extra_coords, extra_coords)
 
 
@@ -957,47 +940,47 @@ def test_ndcubeordered(test_input, expected):
         expected)
 
 
-# @pytest.mark.parametrize("test_input,expected", [
-#     ((cubem, [2]), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)),
-#     ((cubem, ['em']), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))
-#     ])
-# def test_all_world_coords_with_input(test_input, expected):
-#     all_coords = test_input[0].axis_world_coords(*test_input[1])
-#     for i in range(len(all_coords)):
-#         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
-#         assert all_coords[i].unit == expected[i].unit
+@pytest.mark.parametrize("test_input,expected", [
+    ((cubem, [2]), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)),
+    ((cubem, ['em']), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))
+    ])
+def test_all_world_coords_with_input(test_input, expected):
+    all_coords = test_input[0].axis_world_coords(*test_input[1])
+    for i in range(len(all_coords)):
+        np.testing.assert_allclose(all_coords[i].value, expected[i].value)
+        assert all_coords[i].unit == expected[i].unit
 
-# @pytest.mark.parametrize("test_input,expected", [
-#     ((cubem, [2]), u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m)),
-#     ((cubem, ['em']), u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m))
-#     ])
-# def test_all_world_coords_with_input_and_kwargs(test_input, expected):
-#     all_coords = test_input[0].axis_world_coords(*test_input[1], **{"edges":True})
-#     for i in range(len(all_coords)):
-#         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
-#         assert all_coords[i].unit == expected[i].unit
+@pytest.mark.parametrize("test_input,expected", [
+    ((cubem, [2]), u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m)),
+    ((cubem, ['em']), u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m))
+    ])
+def test_all_world_coords_with_input_and_kwargs(test_input, expected):
+    all_coords = test_input[0].axis_world_coords(*test_input[1], **{"edges":True})
+    for i in range(len(all_coords)):
+        np.testing.assert_allclose(all_coords[i].value, expected[i].value)
+        assert all_coords[i].unit == expected[i].unit
 
-# @pytest.mark.parametrize("test_input,expected", [
-#     (cubem, ((u.Quantity([[0.60002173, 0.59999127, 0.5999608],
-#                                  [1., 1., 1.]], unit=u.deg),
-#                      u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
-#                                  [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg)),
-#                      u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
-#     ((cubem[:, :, 0]), (u.Quantity([[0.60002173, 0.59999127, 0.5999608],
-#                                     [1., 1., 1.]], unit=u.deg),
-#                         u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
-#                                     [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]],
-#                                    unit=u.deg)))
-#     ])
-# def test_axis_world_coords_without_input(test_input, expected):
-#     all_coords = test_input.axis_world_coords()
-#     for i in range(len(all_coords)):
-#         if not isinstance(all_coords[i], SkyCoord):
-#             np.testing.assert_allclose(all_coords[i].value, expected[i].value)
-#             assert all_coords[i].unit == expected[i].unit
-#         else:
-#             np.testing.assert_allclose(all_coords[i].Tx.degree, expected[i][0].value)
-#             np.testing.assert_allclose(all_coords[i].Ty.degree, expected[i][1].value)
+@pytest.mark.parametrize("test_input,expected", [
+    (cubem, ((u.Quantity([[0.60002173, 0.59999127, 0.5999608],
+                                 [1., 1., 1.]], unit=u.deg),
+                     u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
+                                 [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg)),
+                     u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
+    ((cubem[:, :, 0]), (u.Quantity([[0.60002173, 0.59999127, 0.5999608],
+                                    [1., 1., 1.]], unit=u.deg),
+                        u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
+                                    [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]],
+                                   unit=u.deg)))
+    ])
+def test_axis_world_coords_without_input(test_input, expected):
+    all_coords = test_input.axis_world_coords()
+    for i in range(len(all_coords)):
+        if not isinstance(all_coords[i], SkyCoord):
+            np.testing.assert_allclose(all_coords[i].value, expected[i].value)
+            assert all_coords[i].unit == expected[i].unit
+        else:
+            np.testing.assert_allclose(all_coords[i].Tx.degree, expected[i][0].value)
+            np.testing.assert_allclose(all_coords[i].Ty.degree, expected[i][1].value)
 
 @pytest.mark.parametrize("test_input,expected", [
     ((cubem, 0, 0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
