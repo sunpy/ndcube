@@ -43,9 +43,9 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
 
     # Make sure that data_axis is a scalar item
     if data_axis is not None:
-        if not isinstance(data_axis, (int, np.int64)):
+        if not isinstance(data_axis, (int, np.int32, np.int64)):
             raise ValueError(f"The data_axis parameter accepts \
-                numpy.int64 datatype, got this {type(data_axis)}")
+                numpy.int64 or numpy.np.int32 datatype, got this {type(data_axis)}")
 
     # Sanitize the data_axis
     if data_axis is None:
@@ -124,9 +124,9 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
 
     # Make sure that wcs_axis is a scalar item
     if wcs_axis is not None:
-        if not isinstance(wcs_axis,(int, np.int64)):
+        if not isinstance(wcs_axis,(int, np.int32, np.int64)):
             raise ValueError(f"The wcs_axis parameter accepts \
-                numpy.int64 datatype, got this {type(wcs_axis)}")
+                numpy.int64 or np.int32 datatype, got this {type(wcs_axis)}")
 
     # Sanitize the wcs_axis
     if wcs_axis is None:
