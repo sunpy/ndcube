@@ -201,23 +201,25 @@ class NDCubePlotMixin:
         data = np.ma.masked_array(data, self.mask)
         if axes is None:
             try:
-                axes_coord_check == [None, None]
+                axes_coord_check = axes_coordinates == [None, None]
             except:
                 axes_coord_check = False
             if axes_coord_check:
                 # Build slice list for WCS for initializing WCSAxes object.
-                if self.wcs.naxis is not 2:
+                if self.wcs.naxis != 2:
                     slice_list = []
                     index = 0
-                    for i, bool_ in enumerate(self.missing_axis):
+                    for bool_ in self.missing_axis:
                         if not bool_:
                             slice_list.append(axis_data[index])
                             index += 1
                         else:
                             slice_list.append(1)
-                    if index is not 2:
+                    if index != 2:
                         raise ValueError("Dimensions of WCS and data don't match")
-                ax = wcsaxes_compat.gca_wcs(self.wcs, slices=slice_list)
+                    ax = wcsaxes_compat.gca_wcs(self.wcs, slices=tuple(slice_list))
+                else:
+                    ax = wcsaxes_compat.gca_wcs(self.wcs)
                 # Set axis labels
                 x_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[0],
                                                               self.missing_axis)
