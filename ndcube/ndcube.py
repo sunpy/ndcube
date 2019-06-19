@@ -184,9 +184,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
         if missing_axes is None:
-            self.missing_axes = [False]*wcs.naxis
-        else:
-            self.missing_axes = missing_axes
+            # Ensure old missing_axis name not being used. If so, raise deprecation warning.
+            missing_axes = kwargs.get("missing_axis", None)
+            if missing_axes is None:
+                missing_axes = [False]*wcs.naxis
+            else:
+                warnings.warn(
+                    "missing_axis has been deprecated by missing_axes and "
+                    "will no longer be supported after ndcube 2.0.",
+                    DeprecationWarning)
+        self.missing_axes = missing_axes
         if data.ndim is not wcs.naxis:
             count = 0
             for bool_ in self.missing_axes:
