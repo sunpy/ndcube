@@ -6,7 +6,7 @@ Utilities for ndcube.
 
 import numpy as np
 
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'data_axis_to_wcs_axis_without_ms', 'select_order',
+__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
            'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name','wcs_axis_to_data_ape14']
 
 
@@ -24,19 +24,6 @@ def data_axis_to_wcs_axis(data_axis, missing_axes):
         result = len(missing_axes)-np.where(np.cumsum([b is False for b in missing_axes][::-1]) == data_axis+1)[0][0]-1
     return result
 
-def data_axis_to_wcs_axis_without_ms(data_axis, naxes):
-    """Converts a data axis number to corresponding wcs axis number without using missing axes"""
-    if data_axis is None:
-        result = None
-        return result
-    else:
-        if data_axis < 0:
-            data_axis += naxes
-        if data_axis > naxes -1 or data_axis < 0:
-            raise IndexError("Data axis out of range.  Number data axes = {0}".format(naxes))
-    # Revert the position
-    result = naxes-1 - data_axis
-    return result
 
 def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
     """Converts a data axis number to wcs axis number taking care of the missing axes"""
@@ -105,19 +92,6 @@ def wcs_axis_to_data_axis(wcs_axis, missing_axes):
             result = data_ordered_wcs_axis-sum(missing_axes[::-1][:data_ordered_wcs_axis])
     return result
 
-def wcs_axis_to_data_axis_without_ms(wcs_axis, naxes):
-    """Converts a wcs axis number to the corresponding data axis number without missing_axes"""
-    if wcs_axis is None:
-        result = None
-    else:
-        if wcs_axis < 0:
-            wcs_axis += naxes
-        if wcs_axis > naxes -1 or wcs_axis < 0:
-            raise IndexError("WCS axis out of range.  Number WCS axes = {0}".format(
-                naxes))
-        # Revert the position
-        result = naxes-1-wcs_axis
-    return result
 
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
     """Converts a wcs axis number to data axis number taking care of the missing axes"""
@@ -214,14 +188,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
         if coord[1] is not None and not isinstance(coord[1], int) and \
                 not isinstance(coord[1], np.int64):
             raise ValueError(coord_1_format_error)
-        # # Unless extra coord corresponds to a missing axis, check length
-        # # of coord is same is data axis to which is corresponds.
-        # if coord[1] is not None:
-        #     if not missing_axes[::-1][coord[1]]:
 
-        #         if len(coord[2]) != data_shape[coord[1]]:
-        #             raise ValueError(coord_len_error.format(coord[0], len(coord[2]),
-        #                                                     data_shape[coord[1]]))
         # Determine wcs axis corresponding to data axis of coord
 
         extra_coords_wcs_axis[coord[0]] = {
