@@ -71,7 +71,7 @@ h_rotated = {'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'arcsec', 'CDELT1': 0.4, 'CRPIX1': 
              'CRVAL1': 0, 'NAXIS1': 5,
              'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'arcsec', 'CDELT2': 0.5, 'CRPIX2': 0,
              'CRVAL2': 0, 'NAXIS2': 5,
-             'CTYPE3': 'Time    ', 'CUNIT3': 'seconds', 'CDELT3': 0.3, 'CRPIX3': 0,
+             'CTYPE3': 'TIME    ', 'CUNIT3': 'seconds', 'CDELT3': 0.3, 'CRPIX3': 0,
              'CRVAL3': 0, 'NAXIS3': 2,
              'PC1_1': 0.714963912964, 'PC1_2': -0.699137151241, 'PC1_3': 0.0,
              'PC2_1': 0.699137151241, 'PC2_2': 0.714963912964, 'PC2_3': 0.0,
@@ -88,6 +88,9 @@ uncertainty = np.sqrt(data_cube)
 
 mask_disordered = data_disordered > 0
 uncertainty_disordered = data_disordered
+
+mask_rotated = data_rotated >=0
+uncertainty_rotated = data_rotated
 
 mask_ordered = data_ordered > 0
 uncertainty_ordered = data_ordered
@@ -141,11 +144,12 @@ cubet = NDCube(
 cube_rotated = NDCube(
     data_rotated,
     w_rotated,
-    mask=mask_cube,
-    uncertainty=uncertainty,
+    mask=mask_rotated,
+    uncertainty=uncertainty_rotated,
     extra_coords=[('time', 0, u.Quantity(range(data_rotated.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
+
 
 @pytest.mark.parametrize(
     "nd_cube",[
@@ -895,16 +899,16 @@ def test_world_to_pixel(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    # ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 4.e-11*u.m], None),
-    #  cubem[:, :, :3])
-    # ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], [1*u.s, 1*u.arcsec, 0.5*u.arcsec], None),
-    #  cube_rotated[:, :4, 1:5]),
-    # ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], None, [1.7*u.deg, 1*u.deg, 1.06e-9*u.m]),
-    #  cubem[:, :, :3]),
-    # ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], None, [1*u.s, 2.5*u.arcsec, 0.5*u.arcsec]),
-    #  cube_rotated[:, :4, 1:5]),
-    # ((cube_rotated, [0, 1.5, 0], None, [1, 2.5, 0.5], ['s', 'arcsec', 'arcsec']),
-    #  cube_rotated[:, :4, 1:5])
+    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 4.e-11*u.m], None),
+     cubem[:, :, :3]),
+    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], [1*u.s, 1*u.arcsec, 0.5*u.arcsec], None),
+     cube_rotated[:, :4, 1:5]),
+    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], None, [1.7*u.deg, 1*u.deg, 1.06e-9*u.m]),
+     cubem[:, :, :3]),
+    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], None, [1*u.s, 2.5*u.arcsec, 0.5*u.arcsec]),
+     cube_rotated[:, :4, 1:5]),
+    ((cube_rotated, [0, 1.5, 0], None, [1, 2.5, 0.5], ['s', 'arcsec', 'arcsec']),
+     cube_rotated[:, :4, 1:5])
     ])
 def test_crop_by_coords(test_input, expected):
     helpers.assert_cubes_equal(
