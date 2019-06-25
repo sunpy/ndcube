@@ -405,7 +405,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         # The docstring is defined in NDDataBase
-
         n_dim = self.data.ndim
         # Raising a value error if the arguments have not the same dimensions.
         # Calculation of upper_corner with the inputing interval_widths
@@ -447,12 +446,24 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
               for i in range(self.data.ndim)])
         all_world_corners = [all_world_corners_grid[i].flatten()*lower_corner[i].unit
                              for i in range(n_dim)]
+
+        # Convert them back to units of world_axis_units
+        world_axis_units = self.high_level_wcs.low_level_wcs.world_axis_units[::-1]
+        all_world_corners = [entries.to(world_axis_units[i]) for i, entries in enumerate(all_world_corners)]
+
+        # Here we are using `wcs.world_to_pixel_values` instead of NDCube's world_to_pixel as the latter
+        # requires high_level astropy objects to operate
+        # Since it is a low_level API, so input parameters need to be adjusted in wcs ordering.
+
         # Convert to pixel coordinates
-        all_pix_corners = self.world_to_pixel(*all_world_corners)
+        all_world_corners = all_world_corners[::-1]
+        all_pix_corners = self.high_level_wcs.low_level_wcs.world_to_pixel_values(*all_world_corners)
+        all_pix_corners = all_pix_corners[::-1]
+
         # Derive slicing item with which to slice NDCube.
         # Be sure to round down min pixel and round up + 1 the max pixel.
-        item = tuple([slice(int(np.clip(axis_pixels.value.min(), 0, None)),
-                            int(np.ceil(axis_pixels.value.max()))+1)
+        item = tuple([slice(int(np.clip(axis_pixels.min(), 0, None)),
+                            int(np.ceil(axis_pixels.max()))+1)
                       for axis_pixels in all_pix_corners])
         return self[item]
 
