@@ -396,6 +396,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
     [
     # For some reason, this is not working!
+    # Now it's working for the ndcube was cubem, not cube!
         (cubem[:, :, 1],
       NDCube,
       mask_cubem[:, :, 1],
@@ -404,7 +405,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       u.Quantity((2, 3), unit=u.pix),
       ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
-       'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
+       'hello': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': None, 'value': u.Quantity(1, unit=u.pix)}}
       ),
      (cubem[:, :, 0:2],
@@ -507,10 +508,11 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
        'bye': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)}}
       ),
     # Not working in my computer, need to be checked!
+    # Now it's working, the slice parameters were wrong!
      (cubem[1, 1, :],
       NDCube,
       mask_cubem[1, 1, :],
-      SlicedLowLevelWCS(cubem.wcs, (1, slice(None, None, None), slice(None, None, None))),
+      SlicedLowLevelWCS(cubem.wcs, (1, 1, slice(None, None, None))),
       data[1, 1, :],
       u.Quantity((4), unit=u.pix),
       tuple(['em.wl']),
