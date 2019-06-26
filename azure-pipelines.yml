@@ -38,6 +38,12 @@ jobs:
 
 - template: azure-templates.yml
   parameters:
+    name: Linux_37_sunpyold
+    os: linux
+    tox: py37-sunpyold --
+
+- template: azure-templates.yml
+  parameters:
     name: Linux_37_sunpydev
     os: linux
     tox: py37-sunpydev --
