@@ -14,7 +14,7 @@ import sunpy.coordinates
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping
+from ndcube.utils.wcs import wcs_ivoa_mapping, _pixel_keep
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, ape14_axes
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -192,13 +192,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if extra_coords:
             self._extra_coords_wcs_axis = \
               utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                  extra_coords, wcs._pixel_keep, wcs.pixel_n_dim, data.shape)
+                  extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
-
-        # Attach the _pixel_keep attribute to wcs object, if not present
-        if not hasattr(wcs, "_pixel_keep"):
-            wcs._pixel_keep = np.arange(wcs.pixel_n_dim)
 
         # Initialize NDCube.
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
@@ -402,7 +398,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],self.wcs._pixel_keep,
+                        self._extra_coords_wcs_axis[key]["wcs axis"],_pixel_keep(self.wcs),
                         self.wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
