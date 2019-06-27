@@ -105,14 +105,3 @@
 # def test_get_dependent_wcs_axes(test_input, expected):
 #     output = utils.wcs.get_dependent_wcs_axes(*test_input)
 #     assert output == expected
-
-
-# @pytest.mark.parametrize("test_input,expected", [
-#     (wm, np.array([[True, False, False], [False, True, True], [False, True, True]])),
-#     (wt, np.array([[True, False, False, False], [False, True, False, False],
-#                    [False, False, True, True], [False, False, True, True]])),
-#     (wm_reindexed_102, np.array([[True, False, True], [False, True, False],
-#                                  [True, False, True]]))
-#     ])
-# def test_axis_correlation_matrix(test_input, expected):
-#     assert (utils.wcs.axis_correlation_matrix(test_input) == expected).all()

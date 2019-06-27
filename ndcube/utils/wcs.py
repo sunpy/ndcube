@@ -14,8 +14,7 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 from ndcube.utils import cube as utils_cube
 
 __all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_data_axes',
-           'get_dependent_data_axes', 'axis_correlation_matrix',
-           'append_sequence_axis_to_wcs']
+           'get_dependent_data_axes', 'append_sequence_axis_to_wcs']
 
 
 class TwoWayDict(UserDict):

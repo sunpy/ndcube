@@ -24,25 +24,6 @@
 
 # @pytest.mark.parametrize(
 #     "test_input,expected",
-#     [((None,3), None),
-#      ((0, 3), 2),
-#      ((1, 3), 1),
-#      ((0, 3), 2),
-#      ((1, 3), 1),
-#      ((-1, 3), 0),
-#      ((-2, 3), 1),
-#      ((-1,3), 0)])
-# def test_data_axis_to_wcs_axis_without_ms(test_input, expected):
-#     assert utils.cube.data_axis_to_wcs_axis_without_ms(*test_input) == expected
-
-
-# @pytest.mark.parametrize("test_input", [(-4, 3), (4, 3)])
-# def test_data_axis_to_wcs_without_ms_axis_error(test_input):
-#     with pytest.raises(IndexError):
-#         utils.cube.data_axis_to_wcs_axis_without_ms(*test_input)
-
-# @pytest.mark.parametrize(
-#     "test_input,expected",
 #     [((None, missing_axes_none), None),
 #      ((0, missing_axes_none), 2),
 #      ((1, missing_axes_none), 1),
@@ -79,27 +60,6 @@
 # def test_wcs_axis_to_data_axis_error(test_input):
 #     with pytest.raises(IndexError):
 #         utils.cube.data_axis_to_wcs_axis(*test_input)
-
-# @pytest.mark.parametrize(
-#     "test_input,expected",
-#     [((None, 3), None),
-#      ((0, 3), 2),
-#      ((1, 3), 1),
-#      ((1, 3), 1),
-#      ((0, 3), 2),
-#      ((-1, 3), 0),
-#      ((-2, 3), 1),
-#      ((-2, 3), 1),
-#      ((-3, 3), 2),
-#      ((-1, 3), 0)])
-# def test_wcs_axis_to_data_axis_without_ms(test_input, expected):
-#     assert utils.cube.wcs_axis_to_data_axis_without_ms(*test_input) == expected
-
-
-# @pytest.mark.parametrize("test_input", [(-10, 3), (10, 3)])
-# def test_wcs_axis_to_data_axis_without_ms_error(test_input):
-#     with pytest.raises(IndexError):
-#         utils.cube.data_axis_to_wcs_axis_without_ms(*test_input)
 
 # def test_select_order():
 #     lists = [['TIME', 'WAVE', 'HPLT-TAN',

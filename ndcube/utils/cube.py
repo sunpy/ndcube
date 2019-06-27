@@ -6,7 +6,7 @@ Utilities for ndcube.
 
 import numpy as np
 
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order',
+__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order','_pixel_centers_or_edges','_get_dimension_for_pixel',
            'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name','wcs_axis_to_data_ape14']
 
 
