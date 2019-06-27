@@ -124,8 +124,7 @@
 .. coordinates of the region of interest in each dimension.  The
 .. order of the coordinates must be the same as the order of the data
 .. axes.  A second iterable of `~astropy.units.Quantity` must also be
-.. provided which gives the widths of the region of interest in each data
-.. axis::
+.. provided which gives the widths of the region of interest in each data axis::
 
 ..   >>> import astropy.units as u
 ..   >>> my_cube_roi = my_cube.crop_by_coords([0.7*u.deg, 1.3e-5*u.deg, 1.04e-9*u.m],
@@ -330,8 +329,7 @@
 .. of each `~astropy.units.Quantity` must be the same.
 
 .. `~ndcube.NDCube.pixel_to_world` returns a similar list of Quantities
-.. to those that were input, except that they are now in real world
-.. coordinates::
+.. to those that were input, except that they are now in real world coordinates::
 
 ..   >>> real_world_coords
 ..   [<Quantity [1.40006967, 2.6002542 ] deg>, <Quantity [1.49986193, 2.99724799] deg>, <Quantity [1.10e-09, 1.16e-09] m>]
