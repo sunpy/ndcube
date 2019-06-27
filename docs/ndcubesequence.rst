@@ -20,8 +20,7 @@
 .. To initialize the most basic `~ndcube.NDCubeSequence` object, all you
 .. need is a list of `~ndcube.NDCube` instances.  So let us first define
 .. three 3-D NDCubes for slit-spectrograph data as we did in the NDCube
-.. section of this tutorial.  First we define the data arrays and WCS
-.. objects::
+.. section of this tutorial.  First we define the data arrays and WCS objects::
   
 ..   >>> # Define data for cubes
 ..   >>> import numpy as np
@@ -356,8 +355,7 @@
 .. corresponding WCS object for each exposure, `~ndcube.NDCubeSequence`
 .. provides a useful method,
 .. `~ndcube.NDCubeSequence.explode_along_axis`. To call it, simply provide
-.. the number of the data cube axis along which you wish to break up the
-.. sub-cubes::
+.. the number of the data cube axis along which you wish to break up the sub-cubes::
 
 ..   >>> exploded_sequence = my_sequence.explode_along_axis(0)
 
