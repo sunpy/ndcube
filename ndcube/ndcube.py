@@ -9,7 +9,7 @@ import astropy.units as u
 from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
 from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
-from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper, HighLevelWCSMixin
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper, BaseHighLevelWCS
 import sunpy.coordinates
 
 from ndcube import utils
@@ -196,6 +196,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             self._extra_coords_wcs_axis = None
 
+        # Attach the _pixel_keep attribute to wcs object, if not present
+        if not hasattr(wcs, "_pixel_keep"):
+            wcs._pixel_keep = np.arange(wcs.pixel_n_dim)
+
         # Initialize NDCube.
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
@@ -205,11 +209,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Returns the high level wcs API from the given low_level wcs API
         """
-        if isinstance(self.wcs, HighLevelWCSMixin):
+        if isinstance(self.wcs, BaseHighLevelWCS):
             return self.wcs
         else:
             return HighLevelWCSWrapper(self.wcs)
-
+    
     @property
     def dimensions(self):
         """
@@ -236,7 +240,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # which are not present in the APE14.
         # APE14 physical types are covered by default.
         with custom_ctype_to_ucd_mapping(wcs_ivoa_mapping):
-            ctype = self.high_level_wcs.world_axis_physical_types
+            ctype = self.wcs.world_axis_physical_types
 
         return tuple(ctype[::-1])
 
@@ -254,7 +258,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         world_to_pixel = self.high_level_wcs.world_to_pixel(*quantity_axis_list)
 
         # Adding the units of the output
-        result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.high_level_wcs.pixel_n_dim)]
+        result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.wcs.pixel_n_dim)]
         return result[::-1]
 
     def axis_world_coords(self, *axes, edges=False):
@@ -320,7 +324,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         axes_translated = np.zeros_like(int_axes, dtype=bool)
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
-        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.high_level_wcs.low_level_wcs, axis))
+        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis))
                           for axis in int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
         # Iterate through each axis and perform WCS translation.
@@ -361,7 +365,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         j = np.where(int_axes == dependent_axis)[0][0]
 
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
-                        axes_coords[j] = dependent_axes_coords[ape14_axes(self.high_level_wcs.low_level_wcs, dependent_axis)[0]]
+                        axes_coords[j] = dependent_axes_coords[ape14_axes(self.wcs, dependent_axis)[0]]
                         # Remove axis from list that have now been translated.
                         axes_translated[j] = True
 
@@ -398,8 +402,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],self.high_level_wcs.low_level_wcs._pixel_keep,
-                        self.high_level_wcs.pixel_n_dim),
+                        self._extra_coords_wcs_axis[key]["wcs axis"],self.wcs._pixel_keep,
+                        self.wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
@@ -448,7 +452,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                              for i in range(n_dim)]
 
         # Convert them back to units of world_axis_units
-        world_axis_units = self.high_level_wcs.low_level_wcs.world_axis_units[::-1]
+        world_axis_units = self.wcs.world_axis_units[::-1]
         all_world_corners = [entries.to(world_axis_units[i]) for i, entries in enumerate(all_world_corners)]
 
         # Here we are using `wcs.world_to_pixel_values` instead of NDCube's world_to_pixel as the latter
@@ -457,7 +461,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Convert to pixel coordinates
         all_world_corners = all_world_corners[::-1]
-        all_pix_corners = self.high_level_wcs.low_level_wcs.world_to_pixel_values(*all_world_corners)
+        all_pix_corners = self.wcs.world_to_pixel_values(*all_world_corners)
         all_pix_corners = all_pix_corners[::-1]
 
         # Derive slicing item with which to slice NDCube.
@@ -512,7 +516,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 ---------------------
 Length of NDCube: {lengthNDCube}
 Axis Types of NDCube: {axis_type}
-""".format(wcs=self.high_level_wcs.low_level_wcs.__repr__(), lengthNDCube=self.dimensions,
+""".format(wcs=self.high_level_wcs.__repr__(), lengthNDCube=self.dimensions,
            axis_type=self.world_axis_physical_types))
 
     def explode_along_axis(self, axis):
