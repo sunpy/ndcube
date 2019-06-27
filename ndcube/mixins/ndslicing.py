@@ -38,15 +38,15 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
 
         This method extends the `~astropy.nddata.mixins.NDSlicingMixin` method
-        to add support for  ``extra_coords`` and overwrites the astropy 
+        to add support for  ``extra_coords`` and overwrites the astropy
         handling of wcs slicing.
-        
+
         Parameters
         ----------
         item : slice
-            The slice passed to ``__getitem__``. Note that the item parameter corresponds 
+            The slice passed to ``__getitem__``. Note that the item parameter corresponds
             to numpy ordering, keeping with the convention for NDCube.
-        
+
         Returns
         -------
         dict :
@@ -71,15 +71,15 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
     def _slice_wcs(self, item):
         """Helper function which returns the sliced WCS object
-        
+
         Parameters
         ----------
         item : slice
-            The slice parameter for slicing WCS object. Note that it accepts the 
+            The slice parameter for slicing WCS object. Note that it accepts the
             slice parameter in numpy order, and passes the slice parameter into
-            `SlicedLowLevelWCS` into numpy order, as `SlicedLowLevelWCS` currently 
-            takes the slice parameter in numpy ordering. 
-        
+            `SlicedLowLevelWCS` into numpy order, as `SlicedLowLevelWCS` currently
+            takes the slice parameter in numpy ordering.
+
         Returns
         -------
         SlicedLowLevelWCS object

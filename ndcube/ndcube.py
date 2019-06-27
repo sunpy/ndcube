@@ -213,7 +213,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             return self.wcs
         else:
             return HighLevelWCSWrapper(self.wcs)
-    
+
     @property
     def dimensions(self):
         """
