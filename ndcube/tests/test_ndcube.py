@@ -394,8 +394,7 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
 
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
-    [
-     (cubem[:, :, 1],
+    [(cubem[:, :, 1],
       NDCube,
       mask_cubem[:, :, 1],
       SlicedLowLevelWCS(cubem.wcs, (slice(None), slice(None), 1)),
