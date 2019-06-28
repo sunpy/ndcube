@@ -301,4 +301,4 @@ def ape14_axes(wcs_object, input_axis):
 
     n_rep_ape14_axes = np.unique(ape14_axes[input_axis])
 
-    return n_rep_ape14_axes
+    return n_rep_ape14_axes[::-1]
