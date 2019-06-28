@@ -315,16 +315,20 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if repeats:
             raise ValueError("The following axes were specified more than once: {}".format(
                 ' '.join(map(str, repeats))))
+
         n_axes = len(int_axes)
-        axes_coords = [None] * n_axes
-        axes_translated = np.zeros_like(int_axes, dtype=bool)
+        new_int_axes = np.arange(len(self.dimensions))
+        axes_coords = np.array([None] * len(ape14_axes(self.wcs, new_int_axes)))
+        axes_translated = np.array([False if entry in int_axes else True for entry in range(len(self.dimensions))])
+
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
         dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis))
-                          for axis in int_axes]
+                          for axis in new_int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
+
         # Iterate through each axis and perform WCS translation.
-        for i, axis in enumerate(int_axes):
+        for i, axis in enumerate(new_int_axes):
             # If axis has already been translated, do not do so again.
             if not axes_translated[i]:
                 if n_dependent_axes[i] == 1:
@@ -358,17 +362,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     if dependent_axis in int_axes:
                         # Due to error check above we know dependent
                         # axis can appear in int_axes at most once.
-                        j = np.where(int_axes == dependent_axis)[0][0]
+                        j = ape14_axes(self.wcs, dependent_axis)[0]
 
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
                         axes_coords[j] = dependent_axes_coords[ape14_axes(self.wcs, dependent_axis)[0]]
                         # Remove axis from list that have now been translated.
-                        axes_translated[j] = True
+                        axes_translated[dependent_axes[i]] = True
 
-        # Remove the duplicate results
-        result = list()
-        map(lambda x: not x in result and result.append(x), axes_coords)
-        axes_coords = result
+        # Remove the None values from axes_coords
+        axes_coords = axes_coords[axes_coords!=np.array(None)]
 
         if len(axes_coords) == 1:
             return axes_coords[0]
@@ -512,7 +514,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 ---------------------
 Length of NDCube: {lengthNDCube}
 Axis Types of NDCube: {axis_type}
-""".format(wcs=self.high_level_wcs.__repr__(), lengthNDCube=self.dimensions,
+""".format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
            axis_type=self.world_axis_physical_types))
 
     def explode_along_axis(self, axis):
