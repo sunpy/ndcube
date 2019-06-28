@@ -110,6 +110,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
                         pass
                     except TypeError:
                         pass
-        new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
-            new_extra_coords, pixel_keep, naxes)
+            new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
+                new_extra_coords, pixel_keep, naxes)
         return new_extra_coords_dict
