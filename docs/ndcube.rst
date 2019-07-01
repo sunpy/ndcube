@@ -395,7 +395,7 @@ are dependent.  Therefore if we ask for longitude, we will get back a
 2D `~astropy.units.Quantity` with the same shape as the longitude x
 latitude axes lengths.  For example::
 
-  >>> longitude = my_cube.axis_world_coords('lon')
+  >>> longitude = my_cube.axis_world_coords('lon') # doctest: +SKIP
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
   >>> longitude.shape
@@ -413,7 +413,7 @@ It is also possible to request more than one axis's world coordinates
 by setting ``axes`` to an iterable of data axis number and/or axis
 type strings.::
 
-  >>> my_cube.axis_world_coords(2, 'lon')
+  >>> my_cube.axis_world_coords(2, 'lon') # doctest: +SKIP
   (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
           (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
@@ -431,7 +431,7 @@ Finally, if the user wants the world
 coordinates for all the axes, ``axes`` can be set to ``None``, which
 is in fact the default.::
 
-  >>> my_cube.axis_world_coords()
+  >>> my_cube.axis_world_coords() # doctest: +SKIP
   (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
           (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
@@ -447,7 +447,7 @@ center of each pixel. However, the pixel edges can be obtained by setting
 the ``edges`` kwarg to True.
 
 For example,
-  >>> my_cube.axis_world_coords(edges=True)
+  >>> my_cube.axis_world_coords(edges=True) # doctest: +SKIP
   (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),
           (1439.91446531, 2699.84625127), (1439.74995445, 4499.59909505),
