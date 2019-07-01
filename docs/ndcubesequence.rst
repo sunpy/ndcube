@@ -193,7 +193,7 @@ simple as indexing a single array::
   >>> regions_of_interest_in_sequence.dimensions
   (<Quantity 2. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
   >>> regions_of_interest_in_sequence.world_axis_physical_types
-  ('meta.obs.sequence', 'custom:pos.helioprojective.lat', 'em.wl')
+  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis
