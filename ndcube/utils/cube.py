@@ -292,7 +292,23 @@ def _get_dimension_for_pixel(axis_length, edges):
     return axis_length+1 if edges else axis_length
 
 def ape14_axes(wcs_object, input_axis):
-
+    """Returns the corresponding wcs axes after a wcs object 
+    is sliced. The `_pixel_keep` attribute of wcs tells us
+    which axis is present, so returns the corresponding wcs
+    axes after slicing
+    
+    Parameters
+    ----------
+    wcs_object : `astropy.wcs.WCS` or similar object
+        The WCS object
+    input_axis : `int` or `list`
+        The list of wcs axes
+    
+    Returns
+    -------
+    `int` or `list`
+        The corresponding wcs axes of the sliced wcs object.
+    """
     wcomp = wcs_object.world_axis_object_components
     axis_type = np.array([item[0] for item in wcomp])
     axis_type = axis_type[::-1]
