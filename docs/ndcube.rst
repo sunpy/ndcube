@@ -398,9 +398,9 @@ latitude axes lengths.  For example::
   >>> longitude = my_cube.axis_world_coords('lon') # doctest: +SKIP
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
-  >>> longitude.shape
+  >>> longitude.shape # doctest: +SKIP
   (3, 4)
-  >>> longitude
+  >>> longitude # doctest: +SKIP
   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
           (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
