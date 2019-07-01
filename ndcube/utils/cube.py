@@ -34,6 +34,10 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
             raise ValueError(f"The data_axis parameter accepts \
                 numpy.int64 or numpy.np.int32 datatype, got this {type(data_axis)}")
 
+    # Make sure _pixel_keep is numpy array
+    if not isinstance(pixel_keep, np.ndarray):
+        raise TypeError(f"The pixel_keep parameter should be np.ndarray, got this {type(pixel_keep)}.")
+
     # Sanitize the data_axis
     if data_axis is None:
         return None
@@ -101,6 +105,10 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
         if not isinstance(wcs_axis,(int, np.int32, np.int64)):
             raise ValueError(f"The wcs_axis parameter accepts \
                 numpy.int64 or np.int32 datatype, got this {type(wcs_axis)}")
+
+    # Make sure _pixel_keep is numpy array
+    if not isinstance(pixel_keep, np.ndarray):
+        raise TypeError(f"The pixel_keep parameter should be np.ndarray, got this {type(pixel_keep)}.")
 
     # Sanitize the wcs_axis
     if wcs_axis is None:
@@ -292,18 +300,18 @@ def _get_dimension_for_pixel(axis_length, edges):
     return axis_length+1 if edges else axis_length
 
 def ape14_axes(wcs_object, input_axis):
-    """Returns the corresponding wcs axes after a wcs object 
+    """Returns the corresponding wcs axes after a wcs object
     is sliced. The `_pixel_keep` attribute of wcs tells us
     which axis is present, so returns the corresponding wcs
-    axes after slicing
-    
+    axes after slicing.
+
     Parameters
     ----------
     wcs_object : `astropy.wcs.WCS` or similar object
         The WCS object
     input_axis : `int` or `list`
         The list of wcs axes
-    
+
     Returns
     -------
     `int` or `list`
