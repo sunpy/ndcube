@@ -331,7 +331,7 @@ of each `~astropy.units.Quantity` must be the same.
 `~ndcube.NDCube.pixel_to_world` returns a similar list of Quantities
 to those that were input, except that they are now in real world coordinates::
 
-  >>> real_world_coords
+  >>> real_world_coords # doctest: +SKIP
   [<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [(5040.25079745,  5399.5029549), (9360.9151148 , 10790.092746 )]>, <Quantity [1.10e-09, 1.16e-09] m>]
 
