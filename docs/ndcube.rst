@@ -395,10 +395,10 @@ are dependent.  Therefore if we ask for longitude, we will get back a
 2D `~astropy.units.Quantity` with the same shape as the longitude x
 latitude axes lengths.  For example::
 
-  >>> longitude = my_cube.axis_world_coords('lon') # doctest: +SKIP
+  >>> longitude = my_cube.axis_world_coords('lon')
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
-  >>> longitude.shape # doctest: +SKIP
+  >>> longitude.shape
   (3, 4)
   >>> longitude # doctest: +SKIP
   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
