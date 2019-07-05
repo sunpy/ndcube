@@ -350,14 +350,14 @@ def unique_data_axis(wcs_object, input_axis):
         The WCS object
     input_axis : `int` or `list`
         The list of wcs axes
-    
+
     Examples
     --------
-    Suppose, we have a wcs object with such entries - 
-    Below here is a Numpy ordering 
+    Suppose, we have a wcs object with such entries:
+    Below here is a Numpy ordering
     ['lat','lon','time','wave']
     then the corresponding data entries after adjusting the axis of
-    dependent axis as same - 
+    dependent axis as same :
     np.array([0, 0, 1, 2]).
 
     As the lat and lon are dependent axes, so they get assigned the same data axis.
@@ -382,21 +382,20 @@ def unique_data_axis(wcs_object, input_axis):
         distinct_element_index.append(idx)
         if element not in distinct_element:
             distinct_element.append(element)
-            
+
         prev_el = element
 
     # Convert to numpy array for array indexing
     distinct_element_index = np.array(distinct_element_index)
 
     if(wcs_object.pixel_n_dim == wcs_object.world_n_dim):
-        # If the pixel_dim and world_dim are same, then return the 
+        # If the pixel_dim and world_dim are same, then return the
         # distinct_element_index as it is
         return distinct_element_index[input_axis], np.unique(distinct_element_index)
     else:
         sliced_axis = np.setdiff1d(wcs_object._world_keep, wcs_object._pixel_keep)
         index_sliced_axis = np.where(sliced_axis == wcs_object._world_keep)[0]
         distinct_element_index = np.delete(distinct_element_index[::-1], index_sliced_axis[0])[::-1]
-        
+
         # Return the corresponding axis/axes after denoting same axis to dependent axis
         return distinct_element_index[input_axis], np.unique(distinct_element_index)
-
