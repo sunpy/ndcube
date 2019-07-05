@@ -187,7 +187,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
             # Convert the WCS object into a SlicedLowLevelWCS
             if not isinstance(wcs, SlicedLowLevelWCS):
-                print('SLICIFIED!')
                 wcs = SlicedLowLevelWCS(wcs, [])
 
         # Format extra coords.
@@ -201,7 +200,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Initialize NDCube.
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
-
 
     @property
     def high_level_wcs(self):
