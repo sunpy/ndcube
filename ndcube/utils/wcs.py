@@ -326,12 +326,12 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
     # This can be done by dropping missing_axes parameter of functions calling it
 
     # Convert input data axis index to WCS axis index.
-    wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis,_pixel_keep(wcs_object), wcs_object.world_n_dim)
+    wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis,_pixel_keep(wcs_object), wcs_object.pixel_n_dim)
     # Determine dependent axes, using WCS ordering.
     wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
 
     # Convert dependent axes back to numpy/data ordering.
-    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_ape14(i, _pixel_keep(wcs_object), wcs_object.world_n_dim)
+    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_ape14(i, _pixel_keep(wcs_object), wcs_object.pixel_n_dim)
                                          for i in wcs_dependent_axes]))
     return dependent_data_axes
 
