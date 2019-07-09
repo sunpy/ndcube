@@ -1035,7 +1035,7 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                     # the final x-axis coord array is the same shape as the data array.
                     # This will be used in determining the correct x-axis coords for
                     # each frame of the animation.
-                    
+
                     if len(extra_coord_axes) != data_concat.ndim:
                         x_axis_coords_copy = copy.deepcopy(x_axis_coords)
                         x_axis_coords = []
