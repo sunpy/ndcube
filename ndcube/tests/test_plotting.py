@@ -256,7 +256,6 @@ def test_cube_plot_2D_errors(test_input, test_kwargs, expected_error):
     with pytest.raises(expected_error):
         output = test_input.plot(**test_kwargs)
 
-
 # @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
 #     (cubem, {},
 #      (cubem.data, [np.array([0., 2.]), [0, 3], [0, 4]], "", ""))

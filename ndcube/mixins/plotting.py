@@ -162,6 +162,7 @@ class NDCubePlotMixin:
         if yerror is not None:
             yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
+        # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
         fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
                                                            data_unit, default_xlabel, kwargs)
         return ax
@@ -183,6 +184,7 @@ class NDCubePlotMixin:
             Default: ['x', 'y']
         """
         # Set default values of kwargs if not set.
+        # breakpoint()
         if axes_coordinates is None:
             axes_coordinates = [None, None]
         if axes_units is None:
@@ -207,6 +209,7 @@ class NDCubePlotMixin:
                 axes_coord_check = axes_coordinates == [None, None]
             except Exception:
                 axes_coord_check = False
+            # breakpoint()
             if axes_coord_check:
                 # Build slice list for WCS for initializing WCSAxes object.
                 if self.wcs.pixel_n_dim != 2:
@@ -433,7 +436,6 @@ class NDCubePlotMixin:
         new_axes_units = []
         default_labels = []
         default_label_text = ""
-
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
@@ -470,7 +472,6 @@ class NDCubePlotMixin:
                     new_axis_unit = new_axis_coordinate.unit
                     new_axis_coordinate = new_axis_coordinate.value
                 else:
-
                     new_axis_unit = axes_units[i]
                     new_axis_coordinate = new_axis_coordinate.to(new_axis_unit).value
             elif isinstance(new_axis_coordinate[0], datetime.datetime):
