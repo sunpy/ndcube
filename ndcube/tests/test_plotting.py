@@ -1,162 +1,167 @@
-# # -*- coding: utf-8 -*-
-# import pytest
-# import datetime
-# import copy
+# -*- coding: utf-8 -*-
+import pytest
+import datetime
+import copy
 
-# import numpy as np
-# import astropy.units as u
-# import matplotlib
-# try:
-#     from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
-# except ImportError:
-#     from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+import numpy as np
+import astropy.units as u
+import matplotlib
+try:
+    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
+except ImportError:
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 
-# from ndcube import NDCube
-# from ndcube.utils.wcs import WCS
-# from ndcube.mixins import plotting
+from ndcube import NDCube
+from astropy.wcs import WCS
+from ndcube.mixins import plotting
 
 
-# # sample data for tests
-# # TODO: use a fixture reading from a test file. file TBD.
-# ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
-#       'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
-#       'NAXIS2': 3,
-#       'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
-# wt = WCS(header=ht, naxis=3)
+# sample data for tests
+# TODO: use a fixture reading from a test file. file TBD.
+ht = {'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 0.4, 'CRPIX4': 2, 'CRVAL4': 1, 'NAXIS4': 5,
+      'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
+      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
+      'NAXIS2': 3,
+      'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
+wt = WCS(header=ht)
 
-# hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
-#       'NAXIS1': 4,
-#       'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5,
-#       'NAXIS2': 3,
-#       'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
-# wm = WCS(header=hm, naxis=3)
+hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
+      'NAXIS1': 4,
+      'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5,
+      'NAXIS2': 3,
+      'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
+wm = WCS(header=hm)
 
-# data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
-#                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
-# uncertainty = np.sqrt(data)
-# mask_cube = data < 0
+data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
+                 [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
-# cube = NDCube(
-#     data,
-#     wt,
-#     mask=mask_cube,
-#     uncertainty=uncertainty,
-#     missing_axes=[False, False, False, True],
-#     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
-#                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
-#                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
-#                   ('another time', 2, np.array(
-#                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-#                        for i in range(data.shape[2])])),
-#                   ('array coord', 2, np.arange(100, 100+data.shape[2]))
-#                   ])
+data_cube = np.zeros((5, 2, 3, 4))
+data_cube = np.array([data for _ in range(5)])
 
-# cube_unit = NDCube(
-#     data,
-#     wt,
-#     mask=mask_cube,
-#     unit=u.J,
-#     uncertainty=uncertainty,
-#     missing_axes=[False, False, False, True],
-#     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
-#                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
-#                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
-#                   ('another time', 2, np.array(
-#                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-#                        for i in range(data.shape[2])]))
-#                   ])
+uncertaintyt = np.sqrt(data_cube)
+uncertainty = np.sqrt(data)
 
-# cube_no_uncertainty = NDCube(
-#     data,
-#     wt,
-#     mask=mask_cube,
-#     missing_axes=[False, False, False, True],
-#     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
-#                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
-#                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
-#                   ('another time', 2, np.array(
-#                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-#                        for i in range(data.shape[2])]))
-#                   ])
+mask = data < 0
+mask_cube = data_cube < 0
 
-# cube_unit_no_uncertainty = NDCube(
-#     data,
-#     wt,
-#     mask=mask_cube,
-#     unit=u.J,
-#     missing_axes=[False, False, False, True],
-#     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
-#                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
-#                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
-#                   ('another time', 2, np.array(
-#                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-#                        for i in range(data.shape[2])]))
-#                   ])
+cube = NDCube(
+    data_cube,
+    wt,
+    mask=mask_cube,
+    uncertainty=uncertaintyt,
+    extra_coords=[('time', 0, u.Quantity(range(data_cube.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data_cube.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data_cube.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data_cube.shape[2])])),
+                  ('array coord', 2, np.arange(100, 100+data_cube.shape[2]))
+                  ])
 
-# cubem = NDCube(
-#     data,
-#     wm,
-#     mask=mask_cube,
-#     uncertainty=uncertainty,
-#     extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
-#                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
-#                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
-#                   ('another time', 2, np.array(
-#                       [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
-#                        for i in range(data.shape[2])]))
-#                   ])
+cube_unit = NDCube(
+    data_cube,
+    wt,
+    mask=mask_cube,
+    unit=u.J,
+    uncertainty=uncertaintyt,
+    extra_coords=[('time', 0, u.Quantity(range(data_cube.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data_cube.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data_cube.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data_cube.shape[2])]))
+                  ])
 
-# # Derive expected data values
-# cube_data = np.ma.masked_array(cube.data, cube.mask)
+cube_no_uncertainty = NDCube(
+    data_cube,
+    wt,
+    mask=mask_cube,
+    extra_coords=[('time', 0, u.Quantity(range(data_cube.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data_cube.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data_cube.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data_cube.shape[2])]))
+                  ])
 
-# # Derive expected axis_ranges.
-# # Let False stand for ranges generated by SunPy classes and so not tested.
-# cube_none_axis_ranges_axis2 = [False, False, np.array([0.4, 0.8, 1.2, 1.6])]
+cube_unit_no_uncertainty = NDCube(
+    data_cube,
+    wt,
+    mask=mask_cube,
+    unit=u.J,
+    extra_coords=[('time', 0, u.Quantity(range(data_cube.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data_cube.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data_cube.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data_cube.shape[2])]))
+                  ])
 
-# cube_none_axis_ranges_axis2_s = copy.deepcopy(cube_none_axis_ranges_axis2)
-# cube_none_axis_ranges_axis2_s[2] = cube_none_axis_ranges_axis2[2] * 60.
+cubem = NDCube(
+    data,
+    wm,
+    mask=mask,
+    uncertainty=uncertainty,
+    extra_coords=[('time', 0, u.Quantity(range(data.shape[0]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
+                  ('another time', 2, np.array(
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                       for i in range(data.shape[2])]))
+                  ])
 
-# cube_none_axis_ranges_axis2_bye = copy.deepcopy(cube_none_axis_ranges_axis2)
-# cube_none_axis_ranges_axis2_bye[2] = cube.extra_coords["bye"]["value"].value
+# Derive expected data values
+cube_data_3 = np.ma.masked_array(cube.data, cube.mask)
 
-# cube_none_axis_ranges_axis2_array = copy.deepcopy(cube_none_axis_ranges_axis2)
-# cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
+# Derive expected axis_ranges.
+# Let False stand for ranges generated by SunPy classes and so not tested.
+cube_none_axis_ranges_axis2 = [False, False, np.array([0.4, 0.8, 1.2, 1.6])]
+
+cube_none_axis_ranges_axis2_s = copy.deepcopy(cube_none_axis_ranges_axis2)
+cube_none_axis_ranges_axis2_s[2] = cube_none_axis_ranges_axis2[2] * 60.
+
+cube_none_axis_ranges_axis2_bye = copy.deepcopy(cube_none_axis_ranges_axis2)
+cube_none_axis_ranges_axis2_bye[2] = cube.extra_coords["bye"]["value"].value
+
+cube_none_axis_ranges_axis2_array = copy.deepcopy(cube_none_axis_ranges_axis2)
+cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
 
 # @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-#     (cube[0, 0], {},
-#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube[0, 0].mask),
-#       np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask),
+#     (cube[0, 0, 0], {},
+#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube[0, 0, 0].mask),
+#       np.ma.masked_array(cube[0, 0, 0].data, cube[0, 0, 0].mask),
 #       "time [min]", "Data [None]", (0.4, 1.6), (1, 4))),
 
-#     (cube_unit[0, 0], {"axes_coordinates": "bye", "axes_units": "km", "data_unit": u.erg},
-#      (np.ma.masked_array(cube_unit[0, 0].extra_coords["bye"]["value"].to(u.km).value,
-#                          cube_unit[0, 0].mask),
-#       np.ma.masked_array(u.Quantity(cube_unit[0, 0].data,
-#                                     unit=cube_unit[0, 0].unit).to(u.erg).value,
-#                          cube_unit[0, 0].mask),
-#       "bye [km]", "Data [erg]", (0, 0.003), (10000000, 40000000))),
+#     (cube_unit[0, 0, :, 0], {"axes_coordinates": "bye", "axes_units": "km", "data_unit": u.erg},
+#      (np.ma.masked_array(cube_unit[0, 0, :, 0].extra_coords["bye"]["value"].to(u.km).value,
+#                          cube_unit[0, 0, :, 0].mask),
+#       np.ma.masked_array(u.Quantity(cube_unit[0, 0, :, 0].data,
+#                                     unit=cube_unit[0, 0, :, 0].unit).to(u.erg).value,
+#                          cube_unit[0, 0, :, 0].mask),
+#       "bye [km]", "Data [erg]", (0, 0.0021), (10000000, 20000000))),
 
-#     (cube_unit[0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0].data.shape[0])},
-#      (np.ma.masked_array(np.arange(10, 10+cube_unit[0, 0].data.shape[0]), cube_unit[0, 0].mask),
-#       np.ma.masked_array(cube_unit[0, 0].data, cube_unit[0, 0].mask),
-#       " [None]", "Data [J]", (10, 10+cube_unit[0, 0].data.shape[0]-1), (1, 4))),
+#     (cube_unit[0, 0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0, 0].data.shape[0])},
+#      (np.ma.masked_array(np.arange(10, 10+cube_unit[0, 0, 0].data.shape[0]), cube_unit[0, 0, 0].mask),
+#       np.ma.masked_array(cube_unit[0, 0, 0].data, cube_unit[0, 0, 0].mask),
+#       " [None]", "Data [J]", (10, 10+cube_unit[0, 0, 0].data.shape[0]-1), (1, 4))),
 
-#     (cube_no_uncertainty[0, 0], {},
-#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_no_uncertainty[0, 0].mask),
-#       np.ma.masked_array(cube_no_uncertainty[0, 0].data, cube_no_uncertainty[0, 0].mask),
+#     (cube_no_uncertainty[0, 0, 0], {},
+#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_no_uncertainty[0, 0, 0].mask),
+#       np.ma.masked_array(cube_no_uncertainty[0, 0, 0].data, cube_no_uncertainty[0, 0, 0].mask),
 #       "time [min]", "Data [None]", (0.4, 1.6), (1, 4))),
 
-#     (cube_unit_no_uncertainty[0, 0], {},
-#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_unit_no_uncertainty[0, 0].mask),
-#       np.ma.masked_array(cube_no_uncertainty[0, 0].data, cube_unit_no_uncertainty[0, 0].mask),
+#     (cube_unit_no_uncertainty[0, 0, 0], {},
+#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_unit_no_uncertainty[0, 0, 0].mask),
+#       np.ma.masked_array(cube_no_uncertainty[0, 0, 0].data, cube_unit_no_uncertainty[0, 0, 0].mask),
 #       "time [min]", "Data [J]", (0.4, 1.6), (1, 4))),
 
-#     (cube_unit_no_uncertainty[0, 0], {"data_unit": u.erg},
-#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_unit_no_uncertainty[0, 0].mask),
-#       np.ma.masked_array(u.Quantity(cube_unit[0, 0].data,
-#                                     unit=cube_unit[0, 0].unit).to(u.erg).value,
-#                          cube_unit[0, 0].mask),
-#       "time [min]", "Data [erg]", (0.4, 1.6), (10000000, 40000000)))
+#     (cube_unit_no_uncertainty[0, 0, 0], {"data_unit": u.erg},
+#      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_unit_no_uncertainty[0, 0, 0].mask),
+#       np.ma.masked_array(u.Quantity(cube_unit[0, 0, 0].data,
+#                                     unit=cube_unit[0, 0, 0].unit).to(u.erg).value,
+#                          cube_unit[0, 0, 0].mask),
+#       "time [min]", "Data [erg]", (0.4, 1.6), (10000000, 40000000))
+#       )
 #     ])
 # def test_cube_plot_1D(test_input, test_kwargs, expected_values):
 #     # Unpack expected properties.
@@ -194,51 +199,51 @@
 
 
 # @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
-#     (cube[0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0].data.shape[0]),
+#     (cube[0, 0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0, 0].data.shape[0]),
 #                   "axes_units": u.C}, TypeError),
-#     (cube[0, 0], {"data_unit": u.C}, TypeError)
+#     (cube[0, 0, 0], {"data_unit": u.C}, TypeError)
 #     ])
 # def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 #     with pytest.raises(expected_error):
 #         output = test_input.plot(**test_kwargs)
 
 
-# @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-#     (cube[0], {},
-#      (np.ma.masked_array(cube[0].data, cube[0].mask), "time [min]", "em.wl [m]",
-#       (0.4, 1.6, 2e-11, 6e-11))),
+@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
+    (cube[0, 0], {},
+     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "time [min]", "em.wl [m]",
+      (0.4, 1.6, 2e-11, 6e-11))),
 
-#     (cube[0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
-#      (np.ma.masked_array(cube[0].data, cube[0].mask), "bye [m]", "em.wl [cm]",
-#       (0.0, 3.0, 2e-9, 6e-9))),
+    (cube[0, 0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
+     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "bye [m]", "em.wl [cm]",
+      (0.0, 3.0, 2e-9, 6e-9))),
 
-#     (cube[0], {"axes_coordinates": [np.arange(10, 10+cube[0].data.shape[1]),
-#                                     u.Quantity(np.arange(10, 10+cube[0].data.shape[0]), unit=u.m)],
-#                "axes_units": [None, u.cm]},
-#      (np.ma.masked_array(cube[0].data, cube[0].mask), " [None]", " [cm]", (10, 13, 1000, 1200))),
+    (cube[0, 0], {"axes_coordinates": [np.arange(10, 10+cube[0, 0].data.shape[1]),
+                                    u.Quantity(np.arange(10, 10+cube[0, 0].data.shape[0]), unit=u.m)],
+               "axes_units": [None, u.cm]},
+     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), " [None]", " [cm]", (10, 13, 1000, 1200))),
 
-#     (cube[0], {"axes_coordinates": [np.arange(10, 10+cube[0].data.shape[1]),
-#                                     u.Quantity(np.arange(10, 10+cube[0].data.shape[0]), unit=u.m)]},
-#      (np.ma.masked_array(cube[0].data, cube[0].mask), " [None]", " [m]", (10, 13, 10, 12))),
+    (cube[0, 0], {"axes_coordinates": [np.arange(10, 10+cube[0, 0].data.shape[1]),
+                                    u.Quantity(np.arange(10, 10+cube[0, 0].data.shape[0]), unit=u.m)]},
+     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), " [None]", " [m]", (10, 13, 10, 12))),
 
-#     (cube_unit[0], {"plot_axis_indices": [0, 1], "axes_coordinates": [None, "bye"],
-#                     "data_unit": u.erg},
-#      (np.ma.masked_array((cube_unit[0].data * cube_unit[0].unit).to(u.erg).value,
-#                          cube_unit[0].mask).transpose(),
-#       "em.wl [m]", "bye [m]", (2e-11, 6e-11, 0.0, 3.0)))
-#     ])
-# def test_cube_plot_2D(test_input, test_kwargs, expected_values):
-#     # Unpack expected properties.
-#     expected_data, expected_xlabel, expected_ylabel, expected_extent = \
-#       expected_values
-#     # Run plot method.
-#     output = test_input.plot(**test_kwargs)
-#     # Check plot properties are correct.
-#     assert isinstance(output, matplotlib.axes.Axes)
-#     np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
-#     assert output.axes.xaxis.get_label_text() == expected_xlabel
-#     assert output.axes.yaxis.get_label_text() == expected_ylabel
-#     assert np.allclose(output.images[0].get_extent(), expected_extent)
+    # (cube_unit[0], {"plot_axis_indices": [0, 1], "axes_coordinates": [None, "bye"],
+    #                 "data_unit": u.erg},
+    #  (np.ma.masked_array((cube_unit[0].data * cube_unit[0].unit).to(u.erg).value,
+    #                      cube_unit[0].mask).transpose(),
+    #   "em.wl [m]", "bye [m]", (2e-11, 6e-11, 0.0, 3.0)))
+    ])
+def test_cube_plot_2D(test_input, test_kwargs, expected_values):
+    # Unpack expected properties.
+    expected_data, expected_xlabel, expected_ylabel, expected_extent = \
+      expected_values
+    # Run plot method.
+    output = test_input.plot(**test_kwargs)
+    # Check plot properties are correct.
+    assert isinstance(output, matplotlib.axes.Axes)
+    np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
+    assert output.axes.xaxis.get_label_text() == expected_xlabel
+    assert output.axes.yaxis.get_label_text() == expected_ylabel
+    assert np.allclose(output.images[0].get_extent(), expected_extent)
 
 
 # @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [

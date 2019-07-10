@@ -158,6 +158,7 @@ class NDCubePlotMixin:
         if yerror is not None:
             yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
+        # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
         fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
                                                            data_unit, default_xlabel, kwargs)
         return ax
@@ -180,6 +181,7 @@ class NDCubePlotMixin:
 
         """
         # Set default values of kwargs if not set.
+        # breakpoint()
         if axes_coordinates is None:
             axes_coordinates = [None, None]
         if axes_units is None:
@@ -204,9 +206,10 @@ class NDCubePlotMixin:
                 axes_coord_check = axes_coordinates == [None, None]
             except:
                 axes_coord_check = False
+            # breakpoint()
             if axes_coord_check:
                 # Build slice list for WCS for initializing WCSAxes object.
-                if self.wcs.naxis != 2:
+                if self.wcs.pixel_n_dim != 2:
                     slice_list = []
                     index = 0
                     for bool_ in self.missing_axes:
@@ -221,16 +224,17 @@ class NDCubePlotMixin:
                 else:
                     ax = wcsaxes_compat.gca_wcs(self.wcs)
                 # Set axis labels
-                x_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[0],
-                                                              self.missing_axes)
+                
+                x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(plot_axis_indices[0], utils.wcs._pixel_keep(self.wcs), 
+                                                                self.wcs.pixel_n_dim)
                 ax.set_xlabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[0]],
-                    self.wcs.wcs.cunit[x_wcs_axis]))
-                y_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[1],
-                                                              self.missing_axes)
+                    self.wcs.world_axis_units[x_wcs_axis]))
+                y_wcs_axis = utils.cube.data_axis_to_wcs_ape14(plot_axis_indices[1], utils.wcs._pixel_keep(self.wcs),
+                                                               self.wcs.pixel_n_dim)
                 ax.set_ylabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[1]],
-                    self.wcs.wcs.cunit[y_wcs_axis]))
+                    self.wcs.world_axis_units[y_wcs_axis]))
                 # Plot data
                 ax.imshow(data, **kwargs)
             else:
@@ -398,6 +402,7 @@ class NDCubePlotMixin:
         new_axes_units = []
         default_labels = []
         default_label_text = ""
+        breakpoint()
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
@@ -419,6 +424,7 @@ class NDCubePlotMixin:
                     new_axis_unit = new_axis_coordinate.unit
                     new_axis_coordinate = new_axis_coordinate.value
                 else:
+                    
                     new_axis_unit = axes_units[i]
                     new_axis_coordinate = new_axis_coordinate.to(new_axis_unit).value
             elif isinstance(new_axis_coordinate[0], datetime.datetime):
