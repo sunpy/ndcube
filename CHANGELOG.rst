@@ -1,3 +1,12 @@
+Ndcube 1.1.3 (2019-07-11)
+=========================
+
+Bug Fixes
+---------
+
+- Fix 2D plotting from crashing when both data and WCS are 2D. (`#182 <https://github.com/sunpy/ndcube/pull/182>`__)
+
+
 ndcube 1.1.2
 ============
 
