@@ -15,7 +15,7 @@ import sunpy.coordinates
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs import wcs_ivoa_mapping, _pixel_keep
-from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, ape14_axes
+from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, unique_data_axis
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
@@ -186,7 +186,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
             # Convert the WCS object into a SlicedLowLevelWCS
-            wcs = SlicedLowLevelWCS(wcs, [])
+            if not isinstance(wcs, SlicedLowLevelWCS):
+                wcs = SlicedLowLevelWCS(wcs, [])
 
         # Format extra coords.
         if extra_coords:
@@ -316,9 +317,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise ValueError("The following axes were specified more than once: {}".format(
                 ' '.join(map(str, repeats))))
 
-        n_axes = len(int_axes)
         new_int_axes = np.arange(len(self.dimensions))
-        axes_coords = np.array([None] * len(ape14_axes(self.wcs, new_int_axes)))
+        axes_coords = np.array([None] * len(unique_data_axis(self.wcs, new_int_axes)[1]))
         axes_translated = np.array([False if entry in int_axes else True for entry in range(len(self.dimensions))])
 
         # Determine which axes are dependent on others.
@@ -362,10 +362,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     if dependent_axis in int_axes:
                         # Due to error check above we know dependent
                         # axis can appear in int_axes at most once.
-                        j = ape14_axes(self.wcs, dependent_axis)[0]
-
+                        j = unique_data_axis(self.wcs, dependent_axis)[0]
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
-                        axes_coords[j] = dependent_axes_coords[ape14_axes(self.wcs, dependent_axis)[0]]
+                        axes_coords[j] = dependent_axes_coords[j]
                         # Remove axis from list that have now been translated.
                         axes_translated[dependent_axes[i]] = True
 

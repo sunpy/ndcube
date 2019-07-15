@@ -6,8 +6,10 @@ Utilities for ndcube.
 
 import numpy as np
 
+from ndcube.utils.wcs import _pixel_keep, get_dependent_wcs_axes
+
 __all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order','_pixel_centers_or_edges','_get_dimension_for_pixel',
-           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name','wcs_axis_to_data_ape14']
+           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name','wcs_axis_to_data_ape14','unique_data_axis']
 
 
 
@@ -25,8 +27,12 @@ def data_axis_to_wcs_axis(data_axis, missing_axes):
     return result
 
 
-def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
+def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
     """Converts a data axis number to wcs axis number taking care of the missing axes"""
+
+    # old_order tells us whether data_axis is an axis of before
+    # slicing or after slicing
+    # old_order=True tells us that data_axis is an axis before slicing
 
     # Make sure that data_axis is a scalar item
     if data_axis is not None:
@@ -47,36 +53,35 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes):
         if data_axis > naxes -1 or data_axis < 0:
             raise IndexError("Data axis out of range.  Number Data axes = {0} and the value requested is {1}".format(
                 naxes, data_axis))
-
-    # Try to convert the data_axis to its corresponding wcs_axis if present
-    # If not present, return None
-
-    # pixel_keep is the old order of all wcs
-    # Get the old order of all data axes
-    old_data_order = naxes - 1 - pixel_keep
-
-    # Get a mapping of the old order and new order of all data axes
-    new_wcs_order = np.unique(pixel_keep, return_inverse=True)[1]
-
-    # Mapping of the order of new wcs axes
-    new_data_order = new_wcs_order[::-1]
-
-    # First we check if the data_axis whose wcs_axis we want to calculate
-    # is present in the old_data_order
-    index = np.where(data_axis == old_data_order)[0]
-    if index.size != 0:
-        index = index.item()
+    if not old_order:
+        return naxes - 1 - data_axis
     else:
-        index = None
+        # pixel_keep is the old order of all wcs
+        # Get the old order of all data axes
+        old_data_order = naxes - 1 - pixel_keep
 
-    if index is None:
-        # As we have performed the check for bound,
-        # so the data_axis must have been missing if
-        # index is None
-        return None
+        # Get a mapping of the old order and new order of all data axes
+        new_wcs_order = np.unique(pixel_keep, return_inverse=True)[1]
 
-    # Return the corresponding wcs_axis for the data axis
-    return new_wcs_order[index]
+        # Mapping of the order of new wcs axes
+        new_data_order = new_wcs_order[::-1]
+
+        # First we check if the data_axis whose wcs_axis we want to calculate
+        # is present in the old_data_order
+        index = np.where(data_axis == old_data_order)[0]
+        if index.size != 0:
+            index = index.item()
+        else:
+            index = None
+
+        if index is None:
+            # As we have performed the check for bound,
+            # so the data_axis must have been missing if
+            # index is None
+            return None
+
+        # Return the corresponding wcs_axis for the data axis
+        return new_wcs_order[index]
 
 
 def wcs_axis_to_data_axis(wcs_axis, missing_axes):
@@ -97,8 +102,12 @@ def wcs_axis_to_data_axis(wcs_axis, missing_axes):
     return result
 
 
-def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
+def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
     """Converts a wcs axis number to data axis number taking care of the missing axes"""
+
+    # old_order tells us whether wcs_axis is an axis of before
+    # slicing or after slicing
+    # old_order=True tells us that wcs_axis is an axis before slicing
 
     # Make sure that wcs_axis is a scalar item
     if wcs_axis is not None:
@@ -120,35 +129,38 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes):
             raise IndexError("WCS axis out of range.  Number WCS axes = {0} and the value requested is {1}".format(
                 naxes, wcs_axis))
 
-    # Try to convert the wcs_axis to its corresponding data axis if present
-    # If not present, return None
-
-    # pixel_keep is the old order of all wcs axes
-    # Get the old order of all data axes
-    old_data_order = naxes - 1 - pixel_keep
-
-    # Get a mapping of the old order and new order of all data axes
-    new_wcs_order = np.unique(pixel_keep, return_inverse=True)[1]
-
-    # Mapping of the order of new wcs_axes
-    new_data_order = new_wcs_order[::-1]
-
-    # First we check if the wcs axis whose data_axis we want to calculate
-    # is present in the old_wcs_order
-
-    index = np.where(wcs_axis == pixel_keep)[0]
-    if index.size != 0:
-        index = index.item()
+    if not old_order:
+        return naxes - 1 - wcs_axis
     else:
-        index = None
-    if index is None:
-        # As we have performed the check for bound,
-        # so the wcs_axis must have been missing if
-        # index is None
-        return None
+        # Try to convert the wcs_axis to its corresponding data axis if present
+        # If not present, return None
 
-    # Return the corresponding data_axis for the wcs_axis
-    return new_data_order[index]
+        # pixel_keep is the old order of all wcs axes
+        # Get the old order of all data axes
+        old_data_order = naxes - 1 - pixel_keep
+
+        # Get a mapping of the old order and new order of all data axes
+        new_wcs_order = np.unique(pixel_keep, return_inverse=True)[1]
+
+        # Mapping of the order of new wcs_axes
+        new_data_order = new_wcs_order[::-1]
+
+        # First we check if the wcs axis whose data_axis we want to calculate
+        # is present in the old_wcs_order
+
+        index = np.where(wcs_axis == pixel_keep)[0]
+        if index.size != 0:
+            index = index.item()
+        else:
+            index = None
+        if index is None:
+            # As we have performed the check for bound,
+            # so the wcs_axis must have been missing if
+            # index is None
+            return None
+
+        # Return the corresponding data_axis for the wcs_axis
+        return new_data_order[index]
 
 
 def select_order(axtypes):
@@ -226,7 +238,7 @@ def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
 
             coord_keys = list(extra_coords[name].keys())
             if "wcs axis" in coord_keys and "axis" not in coord_keys:
-                axis = wcs_axis_to_data_ape14(extra_coords[name]["wcs axis"], pixel_keep, naxes)
+                axis = wcs_axis_to_data_ape14(extra_coords[name]["wcs axis"], pixel_keep, naxes, old_order=True)
             elif "axis" in coord_keys and "wcs axis" not in coord_keys:
                 axis = extra_coords[name]["axis"]
             else:
@@ -326,3 +338,64 @@ def ape14_axes(wcs_object, input_axis):
     n_rep_ape14_axes = np.unique(ape14_axes[input_axis])
 
     return n_rep_ape14_axes[::-1]
+
+
+def unique_data_axis(wcs_object, input_axis):
+    """This function helps in returning the corresponding data axis
+    after the assigning same data axis to a list of given dependent axis.
+
+    Parameters
+    ----------
+    wcs_object : `astropy.wcs.WCS` or similar object
+        The WCS object
+    input_axis : `int` or `list`
+        The list of wcs axes
+
+    Examples
+    --------
+    Suppose, we have a wcs object with such entries:
+    Below here is a Numpy ordering
+    ['lat','lon','time','wave']
+    then the corresponding data entries after adjusting the axis of
+    dependent axis as same :
+    np.array([0, 0, 1, 2]).
+
+    As the lat and lon are dependent axes, so they get assigned the same data axis.
+    """
+
+    wcomp = wcs_object.world_axis_object_components
+    axis_type = np.array([item[0] for item in wcomp])
+
+    # Numpy ordering
+    axis_type = axis_type[::-1]
+
+    distinct_element = list()
+    distinct_element_index = list()
+
+    # Pointer to each non-dependent axis
+    # gets incremented after each non-dependent axis
+    idx = 0
+    prev_el = axis_type[0]
+    for element in axis_type:
+        if element != prev_el:
+            idx += 1
+        distinct_element_index.append(idx)
+        if element not in distinct_element:
+            distinct_element.append(element)
+
+        prev_el = element
+
+    # Convert to numpy array for array indexing
+    distinct_element_index = np.array(distinct_element_index)
+
+    if(wcs_object.pixel_n_dim == wcs_object.world_n_dim):
+        # If the pixel_dim and world_dim are same, then return the
+        # distinct_element_index as it is
+        return distinct_element_index[input_axis], np.unique(distinct_element_index)
+    else:
+        sliced_axis = np.setdiff1d(wcs_object._world_keep, wcs_object._pixel_keep)
+        index_sliced_axis = np.where(sliced_axis == wcs_object._world_keep)[0]
+        distinct_element_index = np.delete(distinct_element_index[::-1], index_sliced_axis[0])[::-1]
+
+        # Return the corresponding axis/axes after denoting same axis to dependent axis
+        return distinct_element_index[input_axis], np.unique(distinct_element_index)
