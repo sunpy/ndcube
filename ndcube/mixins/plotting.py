@@ -229,8 +229,8 @@ class NDCubePlotMixin:
                 else:
                     ax = wcsaxes_compat.gca_wcs(self.wcs)
                 # Set axis labels
-                
-                x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(plot_axis_indices[0], utils.wcs._pixel_keep(self.wcs), 
+
+                x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(plot_axis_indices[0], utils.wcs._pixel_keep(self.wcs),
                                                                 self.wcs.pixel_n_dim)
                 ax.set_xlabel("{0} [{1}]".format(
                     self.world_axis_physical_types[plot_axis_indices[0]],
@@ -467,7 +467,7 @@ class NDCubePlotMixin:
                     new_axis_unit = new_axis_coordinate.unit
                     new_axis_coordinate = new_axis_coordinate.value
                 else:
-                    
+
                     new_axis_unit = axes_units[i]
                     new_axis_coordinate = new_axis_coordinate.to(new_axis_unit).value
             elif isinstance(new_axis_coordinate[0], datetime.datetime):
