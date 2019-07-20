@@ -188,7 +188,6 @@ class NDCubePlotMixin:
 
         """
         # Set default values of kwargs if not set.
-        # breakpoint()
         if axes_coordinates is None:
             axes_coordinates = [None, None]
         if axes_units is None:
@@ -213,7 +212,6 @@ class NDCubePlotMixin:
                 axes_coord_check = axes_coordinates == [None, None]
             except:
                 axes_coord_check = False
-            # breakpoint()
             if axes_coord_check:
                 # Build slice list for WCS for initializing WCSAxes object.
                 if self.wcs.pixel_n_dim != 2:
@@ -433,7 +431,7 @@ class NDCubePlotMixin:
         new_axes_units = []
         default_labels = []
         default_label_text = ""
-        breakpoint()
+
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
