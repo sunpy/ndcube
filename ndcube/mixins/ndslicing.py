@@ -57,7 +57,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
         item = tuple(sanitize_slices(item, len(self.dimensions)))
         kwargs = super()._slice(item)
-        
+
         # Store the original dimension of NDCube object before slicing
         prev_dim = len(self.dimensions)
 
