@@ -327,21 +327,6 @@ class NDCubePlotMixin:
 
         if (axes_coordinates[plot_axis_indices[0]] is None and
                 axes_coordinates[plot_axis_indices[1]] is None):
-
-            # If there are missing axes in WCS object, add corresponding dummy axes to data.
-            if data.ndim < self.wcs.naxis:
-                new_shape = list(data.shape)
-                for i in np.arange(self.wcs.naxis)[self.missing_axes[::-1]]:
-                    new_shape.insert(i, 1)
-                    # Also insert dummy coordinates and units.
-                    new_axes_coordinates.insert(i, None)
-                    new_axes_units.insert(i, None)
-                    # Iterate plot_axis_indices if neccessary
-                    for j, pai in enumerate(plot_axis_indices):
-                        if pai >= i:
-                            plot_axis_indices[j] = plot_axis_indices[j] + 1
-                # Reshape data
-                data = data.reshape(new_shape)
             # Generate plot
             ax = ImageAnimatorWCS(data, wcs=self.wcs, image_axes=plot_axis_indices,
                                   unit_x_axis=new_axes_units[plot_axis_indices[0]],
