@@ -371,6 +371,16 @@ class NDCubePlotMixin:
             else:
                 unit_x_axis = None
         # Put xdata back into axes_coordinates as a masked array.
+
+        if len(xdata.shape) > 1:
+            # Reduce the shape of the array into a 1D array by taking mean along all axis other than plot_axis_index
+            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index, self.missing_axes)
+            reduce_axis = np.where(index == np.array(plot_axis_index))[0]
+
+            index = np.delete(index, reduce_axis)
+            # Reduce the data by taking mean
+            xdata = np.mean(xdata, axis=tuple(index))
+
         axes_coordinates[plot_axis_index] = xdata
         # Set default x label
         default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)
