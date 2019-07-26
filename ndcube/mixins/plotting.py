@@ -373,7 +373,7 @@ class NDCubePlotMixin:
         # Put xdata back into axes_coordinates as a masked array.
 
         if len(xdata.shape) > 1:
-            
+
             # Since LineAnimator currently only accepts 1-D arrays for the x-axis, collapse xdata
             # to single dimension by taking mean along non-plotting axes.
             index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index, self.missing_axes)
