@@ -1024,47 +1024,49 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                                          for x_axis_value in x_axis_coords]
                     # If extra coord is same for each cube, storing
                     # values as single 1D axis range will suffice.
-                    # if ((np.array(x_axis_coords) == x_axis_coords[0]).all() and
-                    #         (len(extra_coord_axes) == 1)):
-                    #     x_axis_coords = x_axis_coords[0]
-                    # else:
-                    # Else if all axes are not dependent, create an array of x-axis
-                    # coords for each cube that are the same shape as the data in the
-                    # respective cubes where the x coords are replicated in the extra
-                    # dimensions.  Then stack them together along the sequence axis so
-                    # the final x-axis coord array is the same shape as the data array.
-                    # This will be used in determining the correct x-axis coords for
-                    # each frame of the animation.
+                    if ((np.array(x_axis_coords) == x_axis_coords[0]).all() and
+                            (len(extra_coord_axes) == 1)):
+                        x_axis_coords = x_axis_coords[0]
+                    else:
+                        # Else if all axes are not dependent, create an array of x-axis
+                        # coords for each cube that are the same shape as the data in the
+                        # respective cubes where the x coords are replicated in the extra
+                        # dimensions.  Then stack them together along the sequence axis so
+                        # the final x-axis coord array is the same shape as the data array.
+                        # This will be used in determining the correct x-axis coords for
+                        # each frame of the animation.
 
-                    if len(extra_coord_axes) != data_concat.ndim:
-                        x_axis_coords_copy = copy.deepcopy(x_axis_coords)
-                        x_axis_coords = []
-                        for i, x_axis_cube_coords in enumerate(x_axis_coords_copy):
-                            # For each cube in the sequence, use np.tile to replicate
-                            # the x-axis coords through the higher dimensions.
-                            # But first give extra dummy (length 1) dimensions to the
-                            # x-axis coords array so its number of dimensions is the
-                            # same as the cube's data array.
-                            # First, create shape of pre-np.tiled x-coord array for the cube.
-                            coords_reshape = np.array([1] * seq[i].data.ndim)
-                            coords_reshape[extra_coord_axes] = x_axis_cube_coords.shape
-                            # Then reshape x-axis array to give it the dummy dimensions.
-                            x_axis_cube_coords = x_axis_cube_coords.reshape(
-                                tuple(coords_reshape))
-                            # Now the correct dummy dimensions are in place so the
-                            # number of dimensions in the x-axis coord array equals
-                            # the number of dimensions of the cube's data array,
-                            # replicating the coords through the higher dimensions
-                            # is simple using np.tile.
-                            tile_shape = np.array(seq[i].data.shape)
-                            tile_shape[extra_coord_axes] = 1
-                            x_axis_cube_coords = np.tile(x_axis_cube_coords, tile_shape)
-                            # Append new dimension-ed x-axis coords array for this cube
-                            # sequence x-axis coords list.
-                            x_axis_coords.append(x_axis_cube_coords)
-                    # Stack the x-axis coords along a new axis for the sequence axis so
-                    # its the same shape as the data array.
-                    x_axis_coords = np.stack(x_axis_coords)
+                        if len(extra_coord_axes) != data_concat.ndim:
+                            x_axis_coords_copy = copy.deepcopy(x_axis_coords)
+                            x_axis_coords = []
+                            for i, x_axis_cube_coords in enumerate(x_axis_coords_copy):
+                                # For each cube in the sequence, use np.tile to replicate
+                                # the x-axis coords through the higher dimensions.
+                                # But first give extra dummy (length 1) dimensions to the
+                                # x-axis coords array so its number of dimensions is the
+                                # same as the cube's data array.
+                                # First, create shape of pre-np.tiled x-coord array for the cube.
+                                coords_reshape = np.array([1] * seq[i].data.ndim)
+                                # Convert x_axis_cube_coords to a numpy array
+                                x_axis_cube_coords = np.array(x_axis_cube_coords)
+                                coords_reshape[extra_coord_axes] = x_axis_cube_coords.shape
+                                # Then reshape x-axis array to give it the dummy dimensions.
+                                x_axis_cube_coords = x_axis_cube_coords.reshape(
+                                    tuple(coords_reshape))
+                                # Now the correct dummy dimensions are in place so the
+                                # number of dimensions in the x-axis coord array equals
+                                # the number of dimensions of the cube's data array,
+                                # replicating the coords through the higher dimensions
+                                # is simple using np.tile.
+                                tile_shape = np.array(seq[i].data.shape)
+                                tile_shape[extra_coord_axes] = 1
+                                x_axis_cube_coords = np.tile(x_axis_cube_coords, tile_shape)
+                                # Append new dimension-ed x-axis coords array for this cube
+                                # sequence x-axis coords list.
+                                x_axis_coords.append(x_axis_cube_coords)
+                        # Stack the x-axis coords along a new axis for the sequence axis so
+                        # its the same shape as the data array.
+                        x_axis_coords = np.stack(x_axis_coords)
                 # Set x-axis label.
                 if xlabel is None:
                     xlabel = "{0} [{1}]".format(axis_extra_coord, unit_x_axis)
@@ -1087,7 +1089,6 @@ class LineAnimatorNDCubeSequence(LineAnimator):
         # Make label for y-axis.
         if ylabel is None:
             ylabel = "Data [{0}]".format(data_unit)
-
         super(LineAnimatorNDCubeSequence, self).__init__(
             data_concat, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
             xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, **kwargs)
