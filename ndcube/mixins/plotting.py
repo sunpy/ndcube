@@ -237,7 +237,7 @@ class NDCubePlotMixin:
             else:
                 # Else manually set axes x and y values based on user's input for axes_coordinates.
                 new_axes_coordinates, new_axis_units, default_labels = \
-                  self._derive_axes_coordinates(axes_coordinates, axes_units)
+                  self._derive_axes_coordinates(axes_coordinates, axes_units, data.shape)
                 # Initialize axes object and set values along axis.
                 fig, ax = plt.subplots(1, 1)
                 # Since we can't assume the x-axis will be uniform, create NonUniformImage
@@ -298,7 +298,10 @@ class NDCubePlotMixin:
         plot_axis_indices = [i if i >= 0 else self.data.ndim + i for i in plot_axis_indices]
         # If axes kwargs not set by user, set them as list of Nones for
         # each axis for consistent behaviour.
-        if axes_coordinates is None:
+        # Or if the axes_coordinates values are None for plot_axis_indices indexes
+        # This ensures no extraneous values from the user.
+        if axes_coordinates is None or  (axes_coordinates[plot_axis_indices[0]] is None and
+                axes_coordinates[plot_axis_indices[1]] is None):
             axes_coordinates = [None] * self.data.ndim
         if axes_units is None:
             axes_units = [None] * self.data.ndim
@@ -335,7 +338,7 @@ class NDCubePlotMixin:
         # If one of the plot axes is set manually, produce a basic ImageAnimator object.
         else:
             new_axes_coordinates, new_axes_units, default_labels = \
-              self._derive_axes_coordinates(axes_coordinates, axes_units)
+              self._derive_axes_coordinates(axes_coordinates, axes_units, data.shape, edges=True)
             # If axis labels not set by user add to kwargs.
             ax = ImageAnimator(data, image_axes=plot_axis_indices,
                                axis_ranges=new_axes_coordinates, **kwargs)
@@ -406,7 +409,7 @@ class NDCubePlotMixin:
                           ylabel="Data [{0}]".format(data_unit), **kwargs)
         return ax
 
-    def _derive_axes_coordinates(self, axes_coordinates, axes_units):
+    def _derive_axes_coordinates(self, axes_coordinates, axes_units, data_shape, edges=False):
         new_axes_coordinates = []
         new_axes_units = []
         default_labels = []
@@ -414,13 +417,24 @@ class NDCubePlotMixin:
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
-                # N.B. This assumes axes are independent.  Fix this before merging!!!
-                new_axis_coordinate = self.axis_world_coords(i)
-                axis_label_text = self.world_axis_physical_types[i]
+                # Fix: We would downscale the dependent data into the shape of the axes.
+                xdata = self.axis_world_coords(i, edges=edges)
+                if xdata.ndim != data_shape[i]:
+                    axis_label_text = self.world_axis_physical_types[i]
+                    
+                    index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
+                    reduce_axis = np.where(index == np.array(i))[0]
+
+                    index = np.delete(index, reduce_axis)
+                    # Reduce the data by taking mean
+                    new_axis_coordinate = np.mean(xdata, axis=tuple(index))
+                new_axis_coordinate = xdata
             elif isinstance(axis_coordinate, str):
                 # If axis coordinate is a string, derive axis values from
                 # corresponding extra coord.
-                new_axis_coordinate = self.extra_coords[axis_coordinate]["value"]
+                # Calculate edge value if required
+                new_axis_coordinate = _get_extra_coord_edges(self.extra_coords[axis_coordinate]["value"]) if edges else \
+                                        self.extra_coords[axis_coordinate]["value"]
                 axis_label_text = axis_coordinate
             else:
                 # Else user must have manually set the axis coordinates.
