@@ -421,7 +421,7 @@ class NDCubePlotMixin:
                 xdata = self.axis_world_coords(i, edges=edges)
                 if xdata.ndim != data_shape[i]:
                     axis_label_text = self.world_axis_physical_types[i]
-                    
+
                     index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
                     reduce_axis = np.where(index == np.array(i))[0]
 
