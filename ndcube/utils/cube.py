@@ -209,8 +209,7 @@ def _get_extra_coord_edges(value, axis=-1):
     """
 
      # Checks for corner cases
-    if value is None:
-        return value
+
     if not isinstance(value, np.ndarray):
         value = np.array(value)
 
