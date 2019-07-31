@@ -22,6 +22,8 @@ def assert_extra_coords_equal(test_input, extra_coords):
         for key in list(test_input.keys()):
             assert test_input[key]['axis'] == extra_coords[key]['axis']
             np.testing.assert_almost_equal(test_input[key]['value'].value, extra_coords[key]['value'].value, decimal=5)
+    else:
+        assert test_input == extra_coords
 
 
 def assert_metas_equal(test_input, expected_output):

@@ -13,7 +13,6 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 from astropy.units import Quantity
 
 from ndcube.utils import cube as utils_cube
-# from ndcube.utils import wcs as utils_wcs
 
 __all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_data_axes',
            'get_dependent_data_axes', 'axis_correlation_matrix',
@@ -125,7 +124,7 @@ def _wcs_slicer(wcs, missing_axes, item):
     """
     Returns the new sliced wcs, changed missing axes, and coordinates of dropped axes.
 
-    Paramters
+    Parameters
     ---------
     wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
         WCS object to be sliced.
@@ -307,11 +306,14 @@ def _get_ivoa_from_ctype(ctype):
     """
     keys = list(filter(lambda key: ctype.upper().startswith(key), wcs_ivoa_mapping))
     # If there are multiple valid keys, raise an error.
-    if len(keys) != 1:
-        raise ValueError("Non-unique CTYPE key.")
+    n_keys = len(keys)
+    if n_keys == 0:
+        axis_name = ctype
+    elif n_keys == 1:
+        axis_name = wcs_ivoa_mapping[key[0]]
     else:
-        key = keys[0]
-    return wcs_ivoa_mapping[key]
+        raise ValueError("Non-unique CTYPE key.")
+    return axis_name
 
 
 def _all_slice(obj):

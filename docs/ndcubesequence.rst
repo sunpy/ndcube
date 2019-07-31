@@ -241,7 +241,7 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
   (<Quantity 3. pix>, <Quantity [1., 3., 1.] pix>, <Quantity 2. pix>, <Quantity 3. pix>)
-  >>> roi_across_subcubes.world_axis_physical_types  # doctest: +SKIP
+  >>> roi_across_subcubes.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
 Notice that since the sub-cubes are now of different lengths along the
@@ -305,7 +305,7 @@ each time from the constituent sub-cubes' `ndcube.NDCube.extra_coords`
 attributes, `ndcube.NDCubeSequence.common_axis_extra_coords` is
 effectively sliced when the `~ndcube.NDCubeSequence` is sliced, e.g.::
 
-  >>> my_sequence[1:3].common_axis_extra_coords  # doctest: +SKIP
+  >>> my_sequence[1:3].common_axis_extra_coords
   {'time': array([datetime.datetime(2000, 1, 1, 0, 3),
         datetime.datetime(2000, 1, 1, 0, 4),
         datetime.datetime(2000, 1, 1, 0, 5),
