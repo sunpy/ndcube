@@ -206,7 +206,7 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0], {},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "time [min]", "em.wl [m]",
-      (0.4, 1.6, 2e-11, 6e-11))),
+      (-0.5, 3.5, 2.5, -0.5))),
 
     (cube[0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "bye [m]", "em.wl [cm]",
@@ -327,7 +327,7 @@ def test_support_101_plot_API_errors(input_values):
     (cube_unit, {"plot_axis_indices": -1, "axes_coordinates": "bye"},
      (cube_data, cube_none_axis_ranges_axis2_bye, "bye [m]", "Data [J]")),
 
-    (cube, {"plot_axis_indices": -1, "axes_coordinates": np.arange(10, 10+cube.data.shape[-1])},
+    (cube, {"plot_axis_indices": -1, "axes_coordinates": np.arange(10 - 0.5, 0.5+10 + cube.data.shape[-1])},
      (cube_data, cube_none_axis_ranges_axis2_array, " [None]", "Data [None]"))
     ])
 def test_cube_plot_ND_as_1DAnimation(test_input, test_kwargs, expected_values):

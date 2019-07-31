@@ -12,6 +12,7 @@ except ImportError:
     from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
 
 from ndcube import utils
+from ndcube.utils.cube import _get_extra_coord_edges
 from ndcube.mixins import sequence_plotting
 
 __all__ = ['NDCubePlotMixin']
@@ -63,7 +64,7 @@ class NDCubePlotMixin:
 
         """
         # If old API is used, convert to new API.
-        plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
+        plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs = _support_101_plot_API(
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
         # Check kwargs are in consistent formats and set default values if not done so by user.
         naxis = len(self.dimensions)
@@ -350,10 +351,10 @@ class NDCubePlotMixin:
         # Get real world axis values along axis to be plotted and enter into axes_ranges kwarg.
         if axes_coordinates[plot_axis_index] is None:
             xname = self.world_axis_physical_types[plot_axis_index]
-            xdata = self.axis_world_coords(plot_axis_index)
+            xdata = self.axis_world_coords(plot_axis_index, edges=True)
         elif isinstance(axes_coordinates[plot_axis_index], str):
             xname = axes_coordinates[plot_axis_index]
-            xdata = self.extra_coords[xname]["value"]
+            xdata = _get_extra_coord_edges(self.extra_coords[xname]["value"])
         else:
             xname = ""
             xdata = axes_coordinates[plot_axis_index]
@@ -370,6 +371,18 @@ class NDCubePlotMixin:
             else:
                 unit_x_axis = None
         # Put xdata back into axes_coordinates as a masked array.
+
+        if len(xdata.shape) > 1:
+
+            # Since LineAnimator currently only accepts 1-D arrays for the x-axis, collapse xdata
+            # to single dimension by taking mean along non-plotting axes.
+            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index, self.missing_axes)
+            reduce_axis = np.where(index == np.array(plot_axis_index))[0]
+
+            index = np.delete(index, reduce_axis)
+            # Reduce the data by taking mean
+            xdata = np.mean(xdata, axis=tuple(index))
+
         axes_coordinates[plot_axis_index] = xdata
         # Set default x label
         default_xlabel = "{0} [{1}]".format(xname, unit_x_axis)

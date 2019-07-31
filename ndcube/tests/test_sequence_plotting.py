@@ -7,9 +7,13 @@ import numpy as np
 import astropy.units as u
 import matplotlib
 
+from sunpy.visualization.animator.base import edges_to_centers_nd
+
 from ndcube import NDCube, NDCubeSequence
+from ndcube.utils.cube import _get_extra_coord_edges
 from ndcube.utils.wcs import WCS
 import ndcube.mixins.sequence_plotting
+
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
@@ -207,29 +211,29 @@ seq_concat_km = np.ma.masked_array(
 x_axis_coords3 = np.array([0.4, 0.8, 1.2, 1.6]).reshape((1, 1, 4))
 new_x_axis_coords3_shape = u.Quantity(seq.dimensions, unit=u.pix).value.astype(int)
 new_x_axis_coords3_shape[-1] = 1
-none_axis_ranges_axis3 = [np.arange(0, len(seq.data)+1),
-                          np.array([0., 1., 2.]), np.arange(0, 4),
+none_axis_ranges_axis3 = [np.arange(0, len(seq.data)),
+                          np.array([0., 1.]), np.arange(0, 3),
                           np.tile(np.array(x_axis_coords3), new_x_axis_coords3_shape)]
 none_axis_ranges_axis0 = [np.arange(len(seq.data)),
-                          np.array([0., 1., 2.]), np.arange(0, 4),
-                          np.arange(0, int(seq.dimensions[-1].value)+1)]
-distance0_none_axis_ranges_axis0 = [seq.sequence_axis_extra_coords["distance"].value,
-                                    np.array([0., 1., 2.]), np.arange(0, 4),
-                                    np.arange(0, int(seq.dimensions[-1].value)+1)]
-distance0_none_axis_ranges_axis0_mm = [seq.sequence_axis_extra_coords["distance"].to("mm").value,
-                                       np.array([0., 1., 2.]), np.arange(0, 4),
-                                       np.arange(0, int(seq.dimensions[-1].value)+1)]
+                          np.array([0., 1.]), np.arange(0, 3),
+                          np.arange(0, int(seq.dimensions[-1].value))]
+distance0_none_axis_ranges_axis0 = [edges_to_centers_nd(_get_extra_coord_edges(seq.sequence_axis_extra_coords["distance"].value),0),
+                                    np.array([0., 1.]), np.arange(0, 3),
+                                    np.arange(0, int(seq.dimensions[-1].value))]
+distance0_none_axis_ranges_axis0_mm = [edges_to_centers_nd(_get_extra_coord_edges(seq.sequence_axis_extra_coords["distance"].to("mm").value),0),
+                                       np.array([0., 1.]), np.arange(0, 3),
+                                       np.arange(0, int(seq.dimensions[-1].value))]
 userrangequantity_none_axis_ranges_axis0 = [
-    np.arange(int(seq.dimensions[0].value)), np.array([0., 1., 2.]), np.arange(0, 4),
-    np.arange(0, int(seq.dimensions[-1].value)+1)]
+    np.arange(int(seq.dimensions[0].value)), np.array([0., 1.]), np.arange(0, 3),
+    np.arange(0, int(seq.dimensions[-1].value))]
 
 userrangequantity_none_axis_ranges_axis0_1e7 = [
-    (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value, np.array([0., 1., 2.]),
-    np.arange(0, 4), np.arange(0, int(seq.dimensions[-1].value)+1)]
+    (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value, np.array([0., 1.]),
+    np.arange(0, 3), np.arange(0, int(seq.dimensions[-1].value))]
 
 hi2_none_axis_ranges_axis2 = [
-    np.arange(0, len(seq.data)+1), np.array([0., 1., 2.]),
-    np.arange(int(seq.dimensions[2].value)), np.arange(0, int(seq.dimensions[-1].value)+1)]
+    np.arange(0, len(seq.data)), np.array([0., 1.]),
+    np.array([0, 1, 2]), np.arange(0, int(seq.dimensions[-1].value))]
 
 x_axis_coords1 = np.zeros(tuple([int(s.value) for s in seq.dimensions]))
 x_axis_coords1[0, 1] = 1.
@@ -239,8 +243,8 @@ x_axis_coords1[2, 1] = 1.
 x_axis_coords1[3, 0] = 2.
 x_axis_coords1[3, 1] = 3.
 pix1_none_axis_ranges_axis1 = [
-    np.arange(0, len(seq.data)+1), x_axis_coords1, np.arange(0, 4),
-    np.arange(0, int(seq.dimensions[-1].value)+1)]
+    np.arange(0, len(seq.data)), x_axis_coords1, np.arange(0, 3),
+    np.arange(0, int(seq.dimensions[-1].value))]
 
 # Derive expected extents
 seq_axis1_lim_deg = [0.49998731, 0.99989848]
@@ -253,14 +257,14 @@ cube_like_new_x_axis_coords2_shape = u.Quantity(
     seq.cube_like_dimensions, unit=u.pix).value.astype(int)
 cube_like_new_x_axis_coords2_shape[-1] = 1
 cubelike_none_axis_ranges_axis2 = [
-    np.arange(0, int(seq.cube_like_dimensions[0].value)+1), np.arange(0, 4),
+    np.arange(0, int(seq.cube_like_dimensions[0].value)), np.arange(0, 3),
     np.tile(x_axis_coords3, cube_like_new_x_axis_coords2_shape)]
 
 cubelike_none_axis_ranges_axis2_s = copy.deepcopy(cubelike_none_axis_ranges_axis2)
 cubelike_none_axis_ranges_axis2_s[2] = cubelike_none_axis_ranges_axis2_s[2] * 60.
 
-cubelike_none_axis_ranges_axis0 = [[0, 8], np.arange(0, 4),
-                                   np.arange(0, int(seq.cube_like_dimensions[-1].value)+1)]
+cubelike_none_axis_ranges_axis0 = [[-0.5, 7.5], np.arange(0, 3),
+                                   np.arange(0, int(seq.cube_like_dimensions[-1].value))]
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
@@ -684,14 +688,14 @@ def test_prep_axes_kwargs_errors(test_input, expected_error):
       (seq_stack.data.min(), seq_stack.data.max()))),
 
     (seq, {"plot_axis_indices": 0,
-           "axes_coordinates": userrangequantity_none_axis_ranges_axis0[0]*u.J},
+           "axes_coordinates": _get_extra_coord_edges(userrangequantity_none_axis_ranges_axis0[0])*u.J},
      (seq_stack.data, userrangequantity_none_axis_ranges_axis0, " [J]", "Data [None]",
       (userrangequantity_none_axis_ranges_axis0[0].min(),
        userrangequantity_none_axis_ranges_axis0[0].max()),
       (seq_stack.data.min(), seq_stack.data.max()))),
 
     (seq, {"plot_axis_indices": 0, "axes_units": u.erg,
-           "axes_coordinates": userrangequantity_none_axis_ranges_axis0[0]*u.J},
+           "axes_coordinates": _get_extra_coord_edges(userrangequantity_none_axis_ranges_axis0[0])*u.J},
      (seq_stack.data, userrangequantity_none_axis_ranges_axis0_1e7, " [erg]", "Data [None]",
       (userrangequantity_none_axis_ranges_axis0_1e7[0].min(),
        userrangequantity_none_axis_ranges_axis0_1e7[0].max()),

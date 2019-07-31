@@ -1,0 +1,1 @@
+Fixed the bug of using `pixel_edges` instead of `pixel_values` in plotting
