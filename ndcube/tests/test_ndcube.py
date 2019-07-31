@@ -186,7 +186,8 @@ cube_rotated = NDCube(
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
-       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)}, 'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49998782, unit=u.deg)},
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}
       }
       ),
      (cubem[1, 0:2],
@@ -225,7 +226,7 @@ cube_rotated = NDCube(
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
-      'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}
       }
       ),
      (cube[:, 0:2], # 8th
@@ -262,7 +263,7 @@ cube_rotated = NDCube(
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
        'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)},
-      'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49991118, unit=u.deg)}}
+       'custom:pos.helioprojective.lat': {'axis': None, 'value': u.Quantity(0.49991118, unit=u.deg)}}
       ),
      (cube[1, 0:2],
       NDCube,
@@ -312,7 +313,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
       {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
        'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
        'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
-      'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
+       'custom:pos.helioprojective.lon': {'axis': None, 'value': u.Quantity(1., unit=u.deg)}}
       ),
      (cubem[0:2],
       NDCube,
@@ -607,7 +608,8 @@ def test_slicing_first_axis(test_input, expected, mask, wcs, uncertainty,
       ('custom:pos.helioprojective.lat', 'time'),
       {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
        'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}, 'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}}
+       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)},
+       'em.wl': {'axis': None, 'value': u.Quantity(4.e-11, unit=u.m)}}
       ),
      (cube[1, :, 1],  #19
       NDCube,
@@ -705,8 +707,6 @@ def test_slicing_error(test_input):
         test_input[None]
     with pytest.raises(IndexError):
         test_input[0, None]
-    with pytest.raises(TypeError):
-        test_input[[0, 1]]
 
 
 @pytest.mark.parametrize("test_input,expected", [
