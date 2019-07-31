@@ -1,4 +1,4 @@
-import datetime
+ycodeimport datetime
 from warnings import warn
 
 import numpy as np
@@ -64,7 +64,7 @@ class NDCubePlotMixin:
 
         """
         # If old API is used, convert to new API.
-        plot_axis_indices, axes_coordiantes, axes_units, data_unit, kwargs = _support_101_plot_API(
+        plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs = _support_101_plot_API(
             plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
         # Check kwargs are in consistent formats and set default values if not done so by user.
         naxis = len(self.dimensions)
