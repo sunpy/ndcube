@@ -231,11 +231,9 @@ userrangequantity_none_axis_ranges_axis0_1e7 = [
     (np.arange(int(seq.dimensions[0].value)) * u.J).to(u.erg).value, np.array([0., 1.]),
     np.arange(0, 3), np.arange(0, int(seq.dimensions[-1].value))]
 
-x_axis_coords2 = np.array([[i]*4 for i in range(3)]*8).reshape(4, 2, 3, 4)
-
 hi2_none_axis_ranges_axis2 = [
     np.arange(0, len(seq.data)), np.array([0., 1.]),
-    x_axis_coords2, np.arange(0, int(seq.dimensions[-1].value))]
+    np.array([0, 1, 2]), np.arange(0, int(seq.dimensions[-1].value))]
 
 x_axis_coords1 = np.zeros(tuple([int(s.value) for s in seq.dimensions]))
 x_axis_coords1[0, 1] = 1.
