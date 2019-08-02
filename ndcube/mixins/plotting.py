@@ -421,7 +421,9 @@ class NDCubePlotMixin:
             if axis_coordinate is None:
                 # Fix: We would downscale the dependent data into the shape of the axes.
                 xdata = self.axis_world_coords(i, edges=edges)
-                if xdata.ndim != data_shape[i]:
+
+                # If the shape of the data is not 1, or all the axes are not dependent
+                if xdata.ndim != 1 and xdata.ndim != len(data_shape):
                     axis_label_text = self.world_axis_physical_types[i]
 
                     index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
@@ -430,7 +432,8 @@ class NDCubePlotMixin:
                     index = np.delete(index, reduce_axis)
                     # Reduce the data by taking mean
                     new_axis_coordinate = np.mean(xdata, axis=tuple(index))
-                new_axis_coordinate = xdata
+                else:
+                    new_axis_coordinate = xdata
             elif isinstance(axis_coordinate, str):
                 # If axis coordinate is a string, derive axis values from
                 # corresponding extra coord.
