@@ -310,7 +310,7 @@ def _get_ivoa_from_ctype(ctype):
     if n_keys == 0:
         axis_name = ctype
     elif n_keys == 1:
-        axis_name = wcs_ivoa_mapping[key[0]]
+        axis_name = wcs_ivoa_mapping[keys[0]]
     else:
         raise ValueError("Non-unique CTYPE key.")
     return axis_name
