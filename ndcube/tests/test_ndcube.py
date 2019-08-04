@@ -219,7 +219,7 @@ cube_rotated = NDCube(
      (cube[:, 1],
       NDCube,
       mask_cube[:, 1],
-      _wcs_slicer(wt, [False, False, False]),
+      _wcs_slicer(wt, [False, False, False], (slice(None, None, None), 1)),
       uncertainty[:, 1],
       u.Quantity((2, 4), unit=u.pix),
       ('custom:pos.helioprojective.lat', 'time'),

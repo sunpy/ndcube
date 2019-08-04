@@ -210,7 +210,7 @@ def slice_sequence_by_sequence_items(cubesequence, sequence_items):
     if len(sequence_items) == 1:
         return result.data[sequence_items[0].sequence_index][sequence_items[0].cube_item]
     else:
-         data = [result.data[sequence_item.sequence_index][sequence_item.cube_item] for sequence_item in sequence_items]
+        data = [result.data[sequence_item.sequence_index][sequence_item.cube_item] for sequence_item in sequence_items]
         return result
 
 
