@@ -61,6 +61,8 @@ class NDCubePlotMixin:
             same length as the axis which will provide all values for that slider.
             If None is specified for an axis then the array indices will be used
             for that axis.
+            The physical coordinates expected by axes_coordinates should be an array of
+            pixel_edges instead of pixel_centers.
 
         """
         # If old API is used, convert to new API.
@@ -291,6 +293,8 @@ class NDCubePlotMixin:
             same length as the axis which will provide all values for that slider.
             If None is specified for an axis then the array indices will be used
             for that axis.
+            The physical coordinates expected by axes_coordinates should be an array of
+            pixel_edges instead of pixel_centers.
 
         """
         # For convenience in inserting dummy variables later, ensure
@@ -467,7 +471,7 @@ class NDCubePlotMixin:
                     new_axis_unit = None
                 else:
                     raise TypeError(INVALID_UNIT_SET_MESSAGE)
-                    
+
             # Derive default axis label
             if type(new_axis_coordinate) is datetime.datetime:
                 if axis_label_text == default_label_text:

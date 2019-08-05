@@ -62,6 +62,8 @@ class NDCubeSequencePlotMixin:
             `None` (implies derive the coordinates from the WCS objects),
             an `astropy.units.Quantity` or a `numpy.ndarray` of coordinates for each pixel,
             or a `str` denoting a valid extra coordinate.
+            The physical coordinates expected by axes_coordinates should be an array of
+            pixel_edges instead of pixel_centers.
 
         axes_units: `None or `list` of `None`, `astropy.units.Unit` and/or `str`
             If None units derived from the WCS objects will be used for all axes.
@@ -168,6 +170,8 @@ class NDCubeSequencePlotMixin:
             `None` (implies derive the coordinates from the WCS objects),
             an `astropy.units.Quantity` or a `numpy.ndarray` of coordinates for each pixel,
             or a `str` denoting a valid extra coordinate.
+            The physical coordinates expected by axes_coordinates should be an array of
+            pixel_edges instead of pixel_centers.
 
         axes_units: `None or `list` of `None`, `astropy.units.Unit` and/or `str`
             If None units derived from the WCS objects will be used for all axes.
@@ -254,6 +258,8 @@ class NDCubeSequencePlotMixin:
             each pixel along the x-axis.
             If a `str`, denotes the extra coordinate to be used.  The extra coordinate must
             correspond to the sequence axis.
+            The physical coordinates expected by axes_coordinates should be an array of
+            pixel_edges instead of pixel_centers.
 
         axes_units: `astropy.unit.Unit` or valid unit `str` or length 1 `list` of those types.
             Unit in which X-axis should be displayed.  Must be compatible with the unit of
@@ -683,6 +689,8 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
         same length as the axis which will provide all values for that slider.
         If None is specified for an axis then the array indices will be used
         for that axis.
+        The physical coordinates expected by axis_ranges should be an array of
+        pixel_edges instead of pixel_centers.
 
     interval: `int`
         Animation interval in ms
@@ -778,6 +786,8 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
         same length as the axis which will provide all values for that slider.
         If None is specified for an axis then the array indices will be used
         for that axis.
+        The physical coordinates expected by axis_ranges should be an array of
+        pixel_edges instead of pixel_centers.
 
     interval: `int`
         Animation interval in ms
@@ -895,6 +905,8 @@ class LineAnimatorNDCubeSequence(LineAnimator):
         same length as the axis which will provide all values for that slider.
         If None is specified for an axis then the array indices will be used
         for that axis.
+        The physical coordinates expected by axis_ranges should be an array of
+        pixel_edges instead of pixel_centers.
 
     interval: `int`
         Animation interval in ms
@@ -1129,6 +1141,8 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
         same length as the axis which will provide all values for that slider.
         If None is specified for an axis then the array indices will be used
         for that axis.
+        The physical coordinates expected by axis_ranges should be an array of
+        pixel_edges instead of pixel_centers.
 
     interval: `int`
         Animation interval in ms
@@ -1349,6 +1363,8 @@ def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
 
     axes_coordinates: `None` or `list` of `None` `astropy.units.Quantity` `numpy.ndarray` `str`
         Length of list equals number of sequence axes.
+        The physical coordinates expected by axes_coordinates should be an array of
+        pixel_edges instead of pixel_centers.
 
     axes_units: None or `list` of `None` `astropy.units.Unit` or `str`
         Length of list equals number of sequence axes.
