@@ -427,7 +427,7 @@ class NDCubePlotMixin:
                     axis_label_text = self.world_axis_physical_types[i]
 
                     index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
-                    reduce_axis = np.where(index == np.array(i))[0]
+                    reduce_axis = np.where(index == i)[0]
 
                     index = np.delete(index, reduce_axis)
                     # Reduce the data by taking mean
