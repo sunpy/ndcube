@@ -337,16 +337,19 @@ class NDCubePlotMixin:
                                   unit_y_axis=new_axes_units[plot_axis_indices[1]],
                                   axis_ranges=new_axes_coordinates, **kwargs)
 
-            # ax.axes.coords[0].set_axislabel(self.wcs.world_axis_physical_types[plot_axis_indices[0]])
-            # ax.axes.coords[1].set_axislabel(self.wcs.world_axis_physical_types[plot_axis_indices[1]])
+            # Set the labels of the plot
+            ax.axes.coords[0].set_axislabel(self.wcs.world_axis_physical_types[plot_axis_indices[0]])
+            ax.axes.coords[1].set_axislabel(self.wcs.world_axis_physical_types[plot_axis_indices[1]])
+
         # If one of the plot axes is set manually, produce a basic ImageAnimator object.
         else:
             # If axis labels not set by user add to kwargs.
             ax = ImageAnimator(data, image_axes=plot_axis_indices,
                                axis_ranges=new_axes_coordinates, **kwargs)
+
             # Add the labels of the plot
-            # ax.axes.set_xlabel(default_labels[plot_axis_indices[0]])
-            # ax.axes.set_ylabel(default_labels[plot_axis_indices[1]])
+            ax.axes.set_xlabel(default_labels[plot_axis_indices[0]])
+            ax.axes.set_ylabel(default_labels[plot_axis_indices[1]])
         return ax
 
     def _animate_cube_1D(self, plot_axis_index=-1, axes_coordinates=None,
@@ -419,19 +422,20 @@ class NDCubePlotMixin:
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
-                # Fix: We would downscale the dependent data into the shape of the axes.
-                new_axes_coordinate = self.axis_world_coords(i, edges=edges)
 
+                # If the new_axis_coordinate is not independent, i.e. dimension is >2D
+                # and not equal to dimension of data, then the new_axis_coordinate must
+                # be reduced to a 1D ndarray by taking the mean along all non-plotting axes.
+                new_axis_coordinate = self.axis_world_coords(i, edges=edges)
+                axis_label_text = self.world_axis_physical_types[i]
                 # If the shape of the data is not 1, or all the axes are not dependent
-                if new_axes_coordinate.ndim != 1 and new_axes_coordinate.ndim != len(data_shape):
-                    axis_label_text = self.world_axis_physical_types[i]
-
+                if new_axis_coordinate.ndim != 1 and new_axis_coordinate.ndim != len(data_shape):
                     index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
-                    reduce_axis = np.where(index == i)[0]
+                    reduce_axis = np.where(index == np.array([i]))[0]
 
                     index = np.delete(index, reduce_axis)
                     # Reduce the data by taking mean
-                    new_axis_coordinate = np.mean(new_axes_coordinate, axis=tuple(index))
+                    new_axis_coordinate = np.mean(new_axis_coordinate, axis=tuple(index))
                 
             elif isinstance(axis_coordinate, str):
                 # If axis coordinate is a string, derive axis values from
@@ -463,13 +467,14 @@ class NDCubePlotMixin:
                     new_axis_unit = None
                 else:
                     raise TypeError(INVALID_UNIT_SET_MESSAGE)
+                    
             # Derive default axis label
-            if type(new_axis_coordinate[0]) is datetime.datetime:
+            if type(new_axis_coordinate) is datetime.datetime:
                 if axis_label_text == default_label_text:
-                    default_label = "{0}".format(new_axis_coordinate[0].strftime("%Y/%m/%d %H:%M"))
+                    default_label = "{0}".format(new_axis_coordinate.strftime("%Y/%m/%d %H:%M"))
                 else:
                     default_label = "{0} [{1}]".format(
-                        axis_label_text, new_axis_coordinate[0].strftime("%Y/%m/%d %H:%M"))
+                        axis_label_text, new_axis_coordinate.strftime("%Y/%m/%d %H:%M"))
             else:
                 default_label = "{0} [{1}]".format(axis_label_text, new_axis_unit)
             # Append new coordinates, units and labels to output list.
