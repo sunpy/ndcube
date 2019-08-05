@@ -62,7 +62,7 @@ class NDCubePlotMixin:
             If None is specified for an axis then the array indices will be used
             for that axis.
             The physical coordinates expected by axes_coordinates should be an array of
-            pixel_edges instead of pixel_centers.
+            pixel_edges.
 
         """
         # If old API is used, convert to new API.
@@ -294,7 +294,7 @@ class NDCubePlotMixin:
             If None is specified for an axis then the array indices will be used
             for that axis.
             The physical coordinates expected by axes_coordinates should be an array of
-            pixel_edges instead of pixel_centers.
+            pixel_edges.
 
         """
         # For convenience in inserting dummy variables later, ensure
