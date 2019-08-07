@@ -446,7 +446,7 @@ class NDCubePlotMixin:
                     index = np.delete(index, reduce_axis)
                     # Reduce the data by taking mean
                     new_axis_coordinate = np.mean(new_axis_coordinate, axis=tuple(index))
-                
+
             elif isinstance(axis_coordinate, str):
                 # If axis coordinate is a string, derive axis values from
                 # corresponding extra coord.
