@@ -64,6 +64,8 @@ class NDCubeSequencePlotMixin:
             or a `str` denoting a valid extra coordinate.
             The physical coordinates expected by axes_coordinates should be an array of
             pixel_edges.
+            A str entry in axes_coordinates signifies that an extra_coord will be used for the axis's coordinates.
+            The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
         axes_units: `None or `list` of `None`, `astropy.units.Unit` and/or `str`
             If None units derived from the WCS objects will be used for all axes.
@@ -172,6 +174,8 @@ class NDCubeSequencePlotMixin:
             or a `str` denoting a valid extra coordinate.
             The physical coordinates expected by axes_coordinates should be an array of
             pixel_edges.
+            A str entry in axes_coordinates signifies that an extra_coord will be used for the axis's coordinates.
+            The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
         axes_units: `None or `list` of `None`, `astropy.units.Unit` and/or `str`
             If None units derived from the WCS objects will be used for all axes.
@@ -260,6 +264,8 @@ class NDCubeSequencePlotMixin:
             correspond to the sequence axis.
             The physical coordinates expected by axes_coordinates should be an array of
             pixel_edges.
+            A str entry in axes_coordinates signifies that an extra_coord will be used for the axis's coordinates.
+            The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
         axes_units: `astropy.unit.Unit` or valid unit `str` or length 1 `list` of those types.
             Unit in which X-axis should be displayed.  Must be compatible with the unit of
@@ -691,6 +697,8 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
         for that axis.
         The physical coordinates expected by axis_ranges should be an array of
         pixel_edges.
+        A str entry in axis_ranges signifies that an extra_coord will be used for the axis's coordinates.
+        The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
     interval: `int`
         Animation interval in ms
@@ -788,6 +796,8 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
         for that axis.
         The physical coordinates expected by axis_ranges should be an array of
         pixel_edges.
+        A str entry in axis_ranges signifies that an extra_coord will be used for the axis's coordinates.
+        The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
     interval: `int`
         Animation interval in ms
@@ -907,6 +917,8 @@ class LineAnimatorNDCubeSequence(LineAnimator):
         for that axis.
         The physical coordinates expected by axis_ranges should be an array of
         pixel_edges.
+        A str entry in axis_ranges signifies that an extra_coord will be used for the axis's coordinates.
+        The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
     interval: `int`
         Animation interval in ms
@@ -1143,6 +1155,8 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
         for that axis.
         The physical coordinates expected by axis_ranges should be an array of
         pixel_edges.
+        A str entry in axis_ranges signifies that an extra_coord will be used for the axis's coordinates.
+        The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
     interval: `int`
         Animation interval in ms
@@ -1365,6 +1379,8 @@ def _prep_axes_kwargs(naxis, plot_axis_indices, axes_coordinates, axes_units):
         Length of list equals number of sequence axes.
         The physical coordinates expected by axes_coordinates should be an array of
         pixel_edges.
+        A str entry in axis_ranges signifies that an extra_coord will be used for the axis's coordinates.
+        The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
     axes_units: None or `list` of `None` `astropy.units.Unit` or `str`
         Length of list equals number of sequence axes.

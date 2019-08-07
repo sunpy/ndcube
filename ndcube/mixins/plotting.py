@@ -63,6 +63,10 @@ class NDCubePlotMixin:
             for that axis.
             The physical coordinates expected by axes_coordinates should be an array of
             pixel_edges.
+            A str entry in axes_coordinates signifies that an extra_coord will be used for the axis's coordinates.
+            The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
+
+
 
         """
         # If old API is used, convert to new API.
@@ -295,6 +299,8 @@ class NDCubePlotMixin:
             for that axis.
             The physical coordinates expected by axes_coordinates should be an array of
             pixel_edges.
+            A str entry in axes_coordinates signifies that an extra_coord will be used for the axis's coordinates.
+            The str must be a valid name of an extra_coord that corresponds to the same axis to which it is applied in the plot.
 
         """
         # For convenience in inserting dummy variables later, ensure
