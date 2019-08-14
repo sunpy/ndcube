@@ -382,7 +382,7 @@ class NDCubePlotMixin:
         if len(xdata.shape) > 1:
             # Since LineAnimator currently only accepts 1-D arrays for the x-axis, collapse xdata
             # to single dimension by taking mean along non-plotting axes.
-            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index, self.missing_axes)
+            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index)
             reduce_axis = np.where(index == np.array(plot_axis_index))[0]
 
             index = np.delete(index, reduce_axis)
