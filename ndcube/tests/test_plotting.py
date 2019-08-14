@@ -6,9 +6,9 @@ import numpy as np
 import astropy.units as u
 import matplotlib
 try:
-    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator, ImageAnimator
 except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator, ImageAnimator
 
 from ndcube import NDCube
 from astropy.wcs import WCS
@@ -23,6 +23,13 @@ ht = {'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 0.4, 'CRPIX4': 2, 'CRVAL4
       'NAXIS2': 3,
       'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
 wt = WCS(header=ht)
+
+# ht = {'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.1, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 5,
+#       'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 0, 'CRVAL2': 0, 'NAXIS2': 2,
+#       'CTYPE3': 'WAVE    ', 'CUNIT3': 'Angstrom', 'CDELT3': 0.3, 'CRPIX3': 0, 'CRVAL3': 0,
+#       'NAXIS3': 3,
+#       'CTYPE4': 'TIME    ', 'CUNIT4': 'min', 'CDELT4': 0.4, 'CRPIX4': 0, 'CRVAL4': 0, 'NAXIS4': 4}
+# wt = WCS(header=ht)
 
 hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10,
       'NAXIS1': 4,
@@ -48,13 +55,13 @@ cube = NDCube(
     wt,
     mask=mask_cube,
     uncertainty=uncertaintyt,
-    extra_coords=[('time', 0, u.Quantity(range(data_cube.shape[0]), unit=u.s)),
-                  ('hello', 1, u.Quantity(range(data_cube.shape[1]), unit=u.W)),
-                  ('bye', 2, u.Quantity(range(data_cube.shape[2]), unit=u.m)),
+    extra_coords=[('time', 0, u.Quantity(range(data_cube.shape[1]), unit=u.s)),
+                  ('hello', 1, u.Quantity(range(data_cube.shape[2]), unit=u.W)),
+                  ('bye', 2, u.Quantity(range(data_cube.shape[3]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
                        for i in range(data_cube.shape[2])])),
-                  ('array coord', 2, np.arange(100, 100 + data_cube.shape[2]))
+                  ('array coord', 2, np.arange(100, 100+data_cube.shape[3]))
                   ])
 
 cube_unit = NDCube(
@@ -213,9 +220,9 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
      (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "time [min]", "em.wl [m]",
       (-0.5, 3.5, 2.5, -0.5))),
 
-    # (cube[0, 0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
-    #  (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "bye [m]", "em.wl [cm]",
-    #   (0.0, 3.0, 2e-9, 6e-9))),
+    (cube[0, 0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
+     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "bye [m]", "em.wl [cm]",
+      (0.0, 3.0, 2e-9, 6e-9))),
 
     (cube[0, 0], {"axes_coordinates": [np.arange(10, 10 + cube[0, 0].data.shape[1]),
                                        u.Quantity(np.arange(10, 10 + cube[0, 0].data.shape[0]), unit=u.m)],
@@ -239,11 +246,13 @@ def test_cube_plot_2D(test_input, test_kwargs, expected_values):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert isinstance(output, matplotlib.axes.Axes)
-    np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
+    assert isinstance(output, (ImageAnimator, matplotlib.axes.Axes))
     assert output.axes.xaxis.get_label_text() == expected_xlabel
     assert output.axes.yaxis.get_label_text() == expected_ylabel
-    assert np.allclose(output.images[0].get_extent(), expected_extent)
+    
+    if isinstance(output, matplotlib.axes.Axes):
+        np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
+        assert np.allclose(output.images[0].get_extent(), expected_extent)
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
@@ -256,20 +265,21 @@ def test_cube_plot_2D_errors(test_input, test_kwargs, expected_error):
     with pytest.raises(expected_error):
         output = test_input.plot(**test_kwargs)
 
-# @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-#     (cubem, {},
-#      (cubem.data, [np.array([0., 2.]), [0, 3], [0, 4]], "", ""))
-#     ])
-# def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
-#     # Unpack expected properties.
-#     expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel = expected_values
-#     # Run plot method.
-#     output = test_input.plot(**test_kwargs)
-#     # Check plot properties are correct.
-#     assert type(output) is ImageAnimatorWCS
-#     np.testing.assert_array_equal(output.data, expected_data)
-#     assert output.axes.xaxis.get_label_text() == expected_xlabel
-#     assert output.axes.yaxis.get_label_text() == expected_ylabel
+
+@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
+    (cubem, {},
+     (cubem.data, [np.array([0., 2.]), [0, 3], [0, 4]], "", ""))
+    ])
+def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
+    # Unpack expected properties.
+    expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel = expected_values
+    # Run plot method.
+    output = test_input.plot(**test_kwargs)
+    # Check plot properties are correct.
+    assert type(output) is ImageAnimatorWCS
+    np.testing.assert_array_equal(output.data, expected_data)
+    assert output.axes.xaxis.get_label_text() == expected_xlabel
+    assert output.axes.yaxis.get_label_text() == expected_ylabel
 
 
 @pytest.mark.parametrize("input_values, expected_values", [

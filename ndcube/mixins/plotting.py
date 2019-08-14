@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 try:
     from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
@@ -422,15 +423,20 @@ class NDCubePlotMixin:
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
-
                 # If the new_axis_coordinate is not independent, i.e. dimension is >2D
                 # and not equal to dimension of data, then the new_axis_coordinate must
                 # be reduced to a 1D ndarray by taking the mean along all non-plotting axes.
                 new_axis_coordinate = self.axis_world_coords(i, edges=edges)
+                idx = utils.wcs.get_dependent_data_axes(self.wcs, i)[0]
+
+                # If the new_axis_coordinate is a SkyCoord, get the array from the SkyCoord object
+                if isinstance(new_axis_coordinate, SkyCoord):
+                    new_axis_coordinate = utils.cube.array_from_skycoord(new_axis_coordinate, i - idx)
+
                 axis_label_text = self.world_axis_physical_types[i]
                 # If the shape of the data is not 1, or all the axes are not dependent
                 if new_axis_coordinate.ndim != 1 and new_axis_coordinate.ndim != len(data_shape):
-                    index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
+                    index = utils.wcs.get_dependent_data_axes(self.wcs, i)
                     reduce_axis = np.where(index == np.array([i]))[0]
 
                     index = np.delete(index, reduce_axis)
