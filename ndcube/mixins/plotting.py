@@ -165,7 +165,6 @@ class NDCubePlotMixin:
         if yerror is not None:
             yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
-        # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
         fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
                                                            data_unit, default_xlabel, kwargs)
         return ax
