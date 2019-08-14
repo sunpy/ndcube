@@ -416,7 +416,7 @@ class NDCubePlotMixin:
         new_axes_units = []
         default_labels = []
         default_label_text = ""
-        
+
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:

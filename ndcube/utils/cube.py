@@ -476,6 +476,5 @@ def array_from_skycoord(sky_coord, index):
         array_val = sky_coord.Ty.deg
     else:
         raise ValueError("Index parameter should be 0 or 1")
-    
-    return array_val
 
+    return array_val
