@@ -472,3 +472,27 @@ def _get_extra_coord_edges(value, axis=-1):
         # Revert the shape of the edges array
         edges = np.moveaxis(edges, -1, axis)
     return edges
+
+
+def array_from_skycoord(sky_coord, index):
+    """Get the array value from the SkyCoord object
+
+    Parameters
+    ----------
+    sky_coord : `astropy.coordinates.SkyCoord`
+        The SkyCoord object
+    """
+
+    # Get the Tx and Ty value
+    array_val = None
+    if(index == 0):
+    # Get the Tx value in degree
+        array_val = sky_coord.Tx.deg
+    elif(index == 1):
+    # Get the Ty value in degree
+        array_val = sky_coord.Ty.deg
+    else:
+        raise ValueError("Index parameter should be 0 or 1")
+    
+    return array_val
+
