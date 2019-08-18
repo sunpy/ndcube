@@ -614,7 +614,6 @@ class NDCubeSequencePlotMixin:
             cube_axis_val = list()
             for cube in self.data:
                 axis_val = cube.axis_world_coords()[common_axis_index]
-                
                 if isinstance(axis_val, SkyCoord):
                     TS = u.Quantity(utils.cube.array_from_skycoord(axis_val, common_axis_index), unit=common_axis_unit)
                     cube_axis_val.append(TS.value)
