@@ -349,7 +349,7 @@ def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                              dimensions, world_axis_physical_types, extra_coords):
 
     if test_input[0] is not None:
-        
+
         assert isinstance(test_input[0], expected)
         assert np.all(test_input[0].mask == mask)
         helpers.assert_wcs_are_equal(test_input[0].wcs, wcs)
