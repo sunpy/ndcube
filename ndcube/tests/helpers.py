@@ -10,6 +10,7 @@ import astropy.modeling.projections as projections
 import astropy.modeling.rotations as rotations
 import gwcs as GWCS
 
+from astropy.time import Time
 from astropy import units as u
 from sunpy.coordinates.frames import Helioprojective
 import gwcs.coordinate_frames as cf
@@ -108,8 +109,8 @@ def convert_fits_to_gwcs(fitswcs):
 	3. HPLN-TAN
 	or
 
-	1. WAVE
-	2. TIME
+	1. TIME
+	2. WAVE
 	3. HPLT-TAN
 	4. HPLN-TAN
 	or
@@ -188,7 +189,7 @@ def convert_fits_to_gwcs(fitswcs):
 			trans = trans_sky & trans_time
 
 			# Define the frame for TIME
-			time_frame = cf.TemporalFrame(axes_order=(0, ), unit=u.Unit(fcunit[-3]))
+			time_frame = cf.TemporalFrame(axes_order=(0, ), unit=u.Unit(fcunit[-3]), reference_frame=Time("2000-01-01T00:00:00"))
 
 			# Stitch the TIME and CELESTIAL
 			frame = cf.CompositeFrame([sky_frame, time_frame])
@@ -211,8 +212,8 @@ def convert_fits_to_gwcs(fitswcs):
 		trans = trans_sky & trans_wave & trans_time
 
 		# Define the frame for TIME/WAVE
-		wave_frame = cf.SpectralFrame(axes_order=(1, ), unit=u.Unit(fcunit[-4]))
-		time_frame = cf.TemporalFrame(axes_order=(0, ), unit=u.Unit(fcunit[-3]))
+		wave_frame = cf.SpectralFrame(axes_order=(1, ), unit=u.Unit(fcunit[-3]))
+		time_frame = cf.TemporalFrame(axes_order=(0, ), unit=u.Unit(fcunit[-4]), reference_frame=Time("2000-01-01T00:00:00"))
 
 		# Stitch the TIME/WAVE/CELESTIAL
 		frame = cf.CompositeFrame([sky_frame, wave_frame, time_frame])
@@ -220,7 +221,7 @@ def convert_fits_to_gwcs(fitswcs):
 		detector_frame = cf.CoordinateFrame(name="detector", naxes=4,
                                         axes_order=(0, 1, 2, 3),
                                         axes_type=("pixel", "pixel", "pixel", "pixel"),
-                                        axes_names=("x", "y", "z", "s"),
+                                        axes_names=("s","z","y","x"),
 										unit=(u.pix, u.pix, u.pix, u.pix))
 
 		return GWCS.wcs.WCS(forward_transform=trans, output_frame=frame, input_frame=detector_frame)
