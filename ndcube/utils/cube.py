@@ -456,7 +456,6 @@ def _get_extra_coord_edges(value, axis=-1):
         edges = np.moveaxis(edges, -1, axis)
     return edges
 
-
 def array_from_skycoord(sky_coord, index):
     """Get the array value from the SkyCoord object
 

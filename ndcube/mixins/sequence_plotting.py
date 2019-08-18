@@ -8,9 +8,11 @@ try:
     from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
 except ImportError:
     from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+from astropy.coordinates import SkyCoord
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
+from ndcube.utils.wcs import _pixel_keep
 
 __all__ = ['NDCubeSequencePlotMixin']
 
@@ -122,6 +124,7 @@ class NDCubeSequencePlotMixin:
                     ax = self._plot_2D_sequence(plot_axis_indices, axes_coordinates,
                                                 axes_units, data_unit, **kwargs)
                 else:
+                    # This is creating the issue!!!
                     # Since sequence has more than 2 dimensions and number of plot axes is 2,
                     # produce a 2D animation.
                     ax = ImageAnimatorNDCubeSequence(
@@ -395,8 +398,7 @@ class NDCubeSequencePlotMixin:
             print('a', unit_x_axis)
             if unit_x_axis is None:
                 print('b', unit_x_axis)
-                unit_x_axis = np.asarray(self[0].wcs.wcs.cunit)[
-                    np.invert(self[0].missing_axes)][0]
+                unit_x_axis = np.asarray(self[0].wcs.world_axis_units)[0]
                 print('c', unit_x_axis)
             xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
                                                for cube in self.data]), unit=unit_x_axis)
@@ -464,8 +466,7 @@ class NDCubeSequencePlotMixin:
         cube_axis_unit = axes_units[cube_axis_index]
         if axes_coordinates[cube_axis_index] is None:
             if cube_axis_unit is None:
-                cube_axis_unit = np.array(self[0].wcs.wcs.cunit)[
-                    np.invert(self[0].missing_axes)][0]
+                cube_axis_unit = np.array(self[0].wcs.world_axis_units)[0]
             cube_axis_coords = self[0].axis_world_coords().to(cube_axis_unit).value
             cube_axis_name = self.world_axis_physical_types[1]
         else:
@@ -576,8 +577,7 @@ class NDCubeSequencePlotMixin:
         cube_axis_unit = axes_units[cube_axis_index]
         if axes_coordinates[cube_axis_index] is None:
             if cube_axis_unit is None:
-                cube_axis_unit = np.array(self[0].wcs.wcs.cunit)[
-                    np.invert(self[0].missing_axes)][0]
+                cube_axis_unit = np.array(self[0].wcs.world_axis_units)[0]
             cube_axis_coords = \
                 self[0].axis_world_coords()[cube_axis_index].to(cube_axis_unit).value
             cube_axis_name = self.cube_like_world_axis_physical_types[1]
@@ -606,12 +606,22 @@ class NDCubeSequencePlotMixin:
         if axes_coordinates[common_axis_index] is None:
             # Concatenate values along common axis for each cube.
             if common_axis_unit is None:
-                wcs_common_axis_index = utils.cube.data_axis_to_wcs_axis(
-                    common_axis_index, self[0].missing_axes)
-                common_axis_unit = np.array(self[0].wcs.wcs.cunit)[wcs_common_axis_index]
-            common_axis_coords = u.Quantity(np.concatenate(
-                [cube.axis_world_coords()[common_axis_index].to(common_axis_unit).value
-                 for cube in self.data]), unit=common_axis_unit)
+                wcs_common_axis_index = utils.cube.data_axis_to_wcs_ape14(
+                    common_axis_index, _pixel_keep(self[0].wcs), self[0].wcs.pixel_n_dim)
+                common_axis_unit = np.array(self[0].wcs.world_axis_units)[wcs_common_axis_index]
+
+            # Populate the axis_world_coords value for each cubes
+            cube_axis_val = list()
+            for cube in self.data:
+                axis_val = cube.axis_world_coords()[common_axis_index]
+                
+                if isinstance(axis_val, SkyCoord):
+                    TS = u.Quantity(utils.cube.array_from_skycoord(axis_val, common_axis_index), unit=common_axis_unit)
+                    cube_axis_val.append(TS.value)
+                else:
+                    cube_axis_val.append(axis_val.to(common_axis_unit).value)
+
+            common_axis_coords = u.Quantity(np.concatenate(cube_axis_val), unit=common_axis_unit)
             common_axis_name = self.cube_like_world_axis_physical_types[common_axis_index]
         elif isinstance(axes_coordinates[common_axis_index], str):
             common_axis_coords = \
@@ -738,19 +748,8 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
             data_stack = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
                                    for i, cube in enumerate(seq.data)])
         self.cumul_cube_lengths = np.cumsum(np.ones(len(seq.data)))
-        # Add dimensions of length 1 of concatenated data array
-        # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq.dimensions) - 1:
-            new_shape = list(data_stack.shape)
-            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
-                new_shape.insert(i+1, 1)
-                # Also insert dummy coordinates and units.
-                axes_coordinates.insert(i+1, None)
-                axes_units.insert(i+1, None)
-            data_stack = data_stack.reshape(new_shape)
         # Add dummy axis to WCS object to represent sequence axis.
         new_wcs = utils.wcs.append_sequence_axis_to_wcs(wcs)
-
         super(ImageAnimatorNDCubeSequence, self).__init__(
             data_stack, wcs=new_wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
             unit_x_axis=axes_units[plot_axis_indices[0]],
@@ -840,16 +839,6 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
                  for i, cube in enumerate(seq.data)], axis=seq._common_axis)
         self.cumul_cube_lengths = np.cumsum(np.array(
             [c.dimensions[0].value for c in seq.data], dtype=int))
-        # Add dimensions of length 1 of concatenated data array
-        # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq._dimensions) - 1:
-            new_shape = list(data_concat.shape)
-            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
-                new_shape.insert(i, 1)
-                # Also insert dummy coordinates and units.
-                axes_coordinates.insert(i, None)
-                axes_units.insert(i, None)
-            data_concat = data_concat.reshape(new_shape)
 
         super(ImageAnimatorCubeLikeNDCubeSequence, self).__init__(
             data_concat, wcs=wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
@@ -866,7 +855,7 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
             val, self.cumul_cube_lengths)
         sequence_index = sequence_slice.sequence_index
         cube_index = sequence_slice.common_axis_item
-        list_slices_wcsaxes[self.wcs.naxis-ax_ind-1] = cube_index
+        list_slices_wcsaxes[self.wcs.pixel_n_dim-ax_ind-1] = cube_index
         self.slices_wcsaxes = list_slices_wcsaxes
         if val != slider.cval:
             self.axes.reset_wcs(
@@ -980,9 +969,9 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                 cube_plot_axis_index = plot_axis_index - 1
                 # Define unit of x-axis if not supplied by user.
                 if unit_x_axis is None:
-                    wcs_plot_axis_index = utils.cube.data_axis_to_wcs_axis(
-                        cube_plot_axis_index, seq[0].missing_axes)
-                    unit_x_axis = np.asarray(seq[0].wcs.wcs.cunit)[wcs_plot_axis_index]
+                    wcs_plot_axis_index = utils.cube.data_axis_to_wcs_ape14(
+                        cube_plot_axis_index, _pixel_keep(seq[0].wcs), seq[0].wcs.pixel_n_dim)
+                    unit_x_axis = np.asarray(seq[0].wcs.world_axis_units)[wcs_plot_axis_index]
                 # Get x-axis values from each cube and combine into a single
                 # array for axis_ranges kwargs.
                 x_axis_coords = _get_extra_coord_edges(_get_non_common_axis_x_axis_coords(seq.data, cube_plot_axis_index,
@@ -1215,17 +1204,17 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
             axis_ranges = [None] * len(seq.cube_like_dimensions)
             # Define unit of x-axis if not supplied by user.
             if unit_x_axis is None:
-                wcs_plot_axis_index = utils.cube.data_axis_to_wcs_axis(
-                    plot_axis_index, seq[0].missing_axes)
+                wcs_plot_axis_index = utils.cube.data_axis_to_wcs_ape14(
+                    plot_axis_index, _pixel_keep(seq[0].wcs), seq[0].wcs.pixel_n_dim)
                 unit_x_axis = np.asarray(
-                    seq[0].wcs.wcs.cunit)[np.invert(seq[0].missing_axes)][wcs_plot_axis_index]
+                    seq[0].wcs.world_axis_units)[wcs_plot_axis_index]
             if plot_axis_index == seq._common_axis:
                 # Determine whether common axis is dependent.
                 x_axis_cube_coords = np.concatenate(
                     [cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
                      for cube in seq.data], axis=plot_axis_index)
                 dependent_axes = utils.wcs.get_dependent_data_axes(
-                    seq[0].wcs, plot_axis_index, seq[0].missing_axes)
+                    seq[0].wcs, plot_axis_index,)
                 if len(dependent_axes) > 1:
                     independent_axes = list(range(data_concat.ndim))
                     for i in list(dependent_axes)[::-1]:
@@ -1275,7 +1264,7 @@ def _get_non_common_axis_x_axis_coords(seq_data, plot_axis_index, unit_x_axis):
         if x_axis_cube_coords.shape != cube.data.shape:
             # Get sequence axes dependent and independent of plot_axis_index.
             dependent_axes = utils.wcs.get_dependent_data_axes(
-                cube.wcs, plot_axis_index, cube.missing_axes)
+                cube.wcs, plot_axis_index)
             independent_axes = list(range(len(cube.dimensions)))
             for i in list(dependent_axes)[::-1]:
                 independent_axes.pop(i)
