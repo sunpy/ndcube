@@ -463,7 +463,24 @@ def array_from_skycoord(sky_coord, index):
     ----------
     sky_coord : `astropy.coordinates.SkyCoord`
         The SkyCoord object
+    index : `int`
+        Tx / Ty for 0/1
+    Returns
+    -------
+    `numpy.ndarray`
+        The numpy array
+    
+    Raises
+    ------
+    ValueError
+        If index is not 0/1
     """
+
+    # The SkyCoord can be a 1D or a 2D array
+    # If 2D array, reduce it to 1D array
+    if(sky_coord.ndim == 2):
+        slice_list = (slice(None), 0) if index == 0 else (0, slice(None))
+        sky_coord = sky_coord[slice_list]
 
     # Get the Tx and Ty value
     array_val = None
@@ -476,4 +493,4 @@ def array_from_skycoord(sky_coord, index):
     else:
         raise ValueError("Index parameter should be 0 or 1")
 
-    return array_val
+    return np.array(array_val)
