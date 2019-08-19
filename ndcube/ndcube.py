@@ -259,7 +259,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.wcs.pixel_n_dim)]
         return result[::-1]
 
-    def axis_world_coords(self, edges=False, skycoord=True, *axes):
+    def axis_world_coords(self, axes=(), edges=False, skycoord=True):
         """
         Returns WCS coordinate values of all pixels for all axes.
 
@@ -279,8 +279,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         skycoord: `bool`
             The skycoord argument helps in returning the SkyCoord
             object if present. If False, then the individual lon/lat
-            arrays are returned. Note that this method wont work if
-            both lat/lon are returned.
+            arrays are returned.
 
         Returns
         -------
@@ -293,7 +292,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        # breakpoint()
         # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = cube_dimensions.size
@@ -326,7 +324,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 ' '.join(map(str, repeats))))
 
         new_int_axes = np.arange(len(self.dimensions))
-        axes_coords = np.array([None] * len(self.dimensions))
+        axes_coords = [None] * len(self.dimensions)
         axes_translated = np.array([False if entry in int_axes else True for entry in range(len(self.dimensions))])
 
         # Determine which axes are dependent on others.
@@ -334,6 +332,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis))
                           for axis in new_int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
+
+        # Store the lat/lon when skycoord=False
+        TS = None
+        index_of_skcoord = None
 
         # Iterate through each axis and perform WCS translation.
         for i, axis in enumerate(new_int_axes):
@@ -363,15 +365,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                           for k in dependent_axes[i]], indexing="ij")
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
+                
                 # Perform wcs translation
                 dependent_axes_coords = self.pixel_to_world(*quantity_list)
                 
                 # Wrap the dependent_axes_coords into a list if a single quantity
                 dependent_axes_coords = dependent_axes_coords if isinstance(dependent_axes_coords, list) else [dependent_axes_coords]
-                # breakpoint()
-                
                 # Place world coords into output list
-                visit = True
                 for dependent_axis in dependent_axes[i]:
                     if dependent_axis in int_axes:
                         # Due to error check above we know dependent
@@ -380,33 +380,31 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
                         # If dependent_axes_coords is a SkyCoord, then return the SkyCoord, no need to slice
                         if isinstance(dependent_axes_coords[j], SkyCoord):
+                            # Check if skycoord is True. If False then store the lat/lon
+                            # in axes_coords and insert the other lat/lon
                             if(skycoord==True):
-                                # breakpoint()
                                 axes_coords[j] = dependent_axes_coords[j]
-                                # print(dependent_axis - j)
-                                # print(i)
                             else:
-                                if visit:
-                                    # breakpoint()
-                                    k = dependent_axis - j
-                                    # breakpoint()
-                                    if dependent_axes_coords[j].ndim == 2:
-                                        # print(j)
-                                        axes_coords[j] = utils.cube.array_from_skycoord(dependent_axes_coords[j], 0)
-                                        axes_coords[j+1] = utils.cube.array_from_skycoord(dependent_axes_coords[j], 1)
-                                        # # breakpoint()
-                                        # axes_coords = np.insert(axes_coords, j+1, Ty)
-                                    else:
-                                        axes_coords[j] = utils.cube.array_from_skycoord(dependent_axes_coords[j], k)
-                                    visit = False
+                                k = dependent_axis - j
+                                if(k==0):
+                                    TS = dependent_axes_coords[j].data.lon.deg
+                                elif(k==1):
+                                    TS = dependent_axes_coords[j].data.lat.deg
+                                
+                                index_of_skcoord = j+1
+                                axes_coords[j] = dependent_axes_coords[j].data.lat.deg if k==0 else dependent_axes_coords[j].data.lon.deg
+                                
                         else:
                             axes_coords[j] = dependent_axes_coords[j]
                         # Remove axis from list that have now been translated.
                         axes_translated[dependent_axes[i]] = True
-        # print(axes_coords)
-        # Remove the None values from axes_coords
-        axes_coords = axes_coords[axes_coords!=np.array(None)]
-        # breakpoint()
+
+        if TS is not None and all(elem in int_axes for elem in dependent_axes[index_of_skcoord-1]):
+            axes_coords.insert(index_of_skcoord, TS)
+
+        # Remove the None entries
+        axes_coords = [entry for entry in axes_coords if entry is not None]
+
         if len(axes_coords) == 1:
             return axes_coords[0]
         else:
