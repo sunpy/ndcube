@@ -1277,8 +1277,7 @@ def _get_non_common_axis_x_axis_coords(seq_data, plot_axis_index, unit_x_axis):
         # Get the x-axis coordinates for each cube.
         axis_coords = cube.axis_world_coords(plot_axis_index, skycoord=False)
         x_axis_cube_coords = u.Quantity(axis_coords, unit=unit_x_axis) if isinstance(axis_coords, np.ndarray) else \
-        axis_coords.to(unit_x_axis).value
- 
+        axis_coords.to(unit_x_axis).value 
         # If the returned x-values have fewer dimensions than the cube,
         # repeat the x-values through the higher dimensions.
         if x_axis_cube_coords.shape != cube.data.shape:
