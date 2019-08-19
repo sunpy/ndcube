@@ -967,9 +967,8 @@ def test_all_world_coords_with_input_and_kwargs(test_input, expected):
                      u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
                                  [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg)),
                      u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
-    ((cubem[:, :, 0]), (u.Quantity([1., 1.26918126e-05], unit=u.deg),
-                        u.Quantity([1., 5.00000000e-01], unit=u.deg),
-                        u.Quantity([1., 9.99987308e-01], unit=u.deg)))
+    ((cubem[:, :, 0]), (u.Quantity([[1., 1., 1.],[1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg), 
+                        u.Quantity([[0.60002173, 0.59999127, 0.5999608],[1.26915033e-05, 4.99987815e-01, 9.99962939e-01]], unit=u.deg)))
     ])
 def test_axis_world_coords_without_input(test_input, expected):
     all_coords = test_input.axis_world_coords()
