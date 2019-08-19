@@ -365,10 +365,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                           for k in dependent_axes[i]], indexing="ij")
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
-                
+
                 # Perform wcs translation
                 dependent_axes_coords = self.pixel_to_world(*quantity_list)
-                
+
                 # Wrap the dependent_axes_coords into a list if a single quantity
                 dependent_axes_coords = dependent_axes_coords if isinstance(dependent_axes_coords, list) else [dependent_axes_coords]
                 # Place world coords into output list
@@ -390,10 +390,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                     TS = dependent_axes_coords[j].data.lon.deg
                                 elif(k==1):
                                     TS = dependent_axes_coords[j].data.lat.deg
-                                
+
                                 index_of_skcoord = j+1
                                 axes_coords[j] = dependent_axes_coords[j].data.lat.deg if k==0 else dependent_axes_coords[j].data.lon.deg
-                                
+
                         else:
                             axes_coords[j] = dependent_axes_coords[j]
                         # Remove axis from list that have now been translated.

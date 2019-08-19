@@ -469,7 +469,6 @@ def array_from_skycoord(sky_coord, index):
     -------
     `numpy.ndarray`
         The numpy array
-    
     Raises
     ------
     ValueError
