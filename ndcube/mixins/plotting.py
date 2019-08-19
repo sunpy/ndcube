@@ -352,6 +352,9 @@ class NDCubePlotMixin:
     def _animate_cube_1D(self, plot_axis_index=-1, axes_coordinates=None,
                          axes_units=None, data_unit=None, **kwargs):
         """Animates an axis of a cube as a line plot with sliders for other axes."""
+
+        # Convert the plot_axis_index into a positive integer
+        plot_axis_index = self.data.ndim + plot_axis_index
         if axes_coordinates is None:
             axes_coordinates = [None] * self.data.ndim
         if axes_units is None:
