@@ -209,8 +209,8 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0, 0], {},
-     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "", "",
-      (-0.5, 3.5, -0.5, 2.5))),
+     (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "time [min]", "em.wl [m]",
+      (-0.5, 3.5, 2.5, -0.5))),
 
     # (cube[0, 0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
     #  (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "bye [m]", "em.wl [cm]",
