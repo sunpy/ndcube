@@ -6,6 +6,7 @@ import warnings
 import numpy as np
 import astropy.nddata
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
 from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
@@ -35,20 +36,17 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
         Convert a pixel coordinate to a data (world) coordinate by using
         `~astropy.wcs.WCS.all_pix2world`.
-
         Parameters
         ----------
         quantity_axis_list : iterable
             An iterable of `~astropy.units.Quantity` with unit as pixel `pix`.
             Note that these quantities must be entered as separate arguments, not as one list.
-
         origin : `int`.
             Origin of the top-left corner. i.e. count from 0 or 1.
             Normally, origin should be 0 when passing numpy indices, or 1 if
             passing values from FITS header or map attributes.
             See `~astropy.wcs.WCS.wcs_pix2world` for more information.
             Default is 0.
-
         Returns
         -------
         coord : `list`
@@ -61,20 +59,17 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
         Convert a world coordinate to a data (pixel) coordinate by using
         `~astropy.wcs.WCS.all_world2pix`.
-
         Parameters
         ----------
         quantity_axis_list : iterable
             A iterable of `~astropy.units.Quantity`.
             Note that these quantities must be entered as separate arguments, not as one list.
-
         origin : `int`
             Origin of the top-left corner. i.e. count from 0 or 1.
             Normally, origin should be 0 when passing numpy indices, or 1 if
             passing values from FITS header or map attributes.
             See `~astropy.wcs.WCS.wcs_world2pix` for more information.
             Default is 0.
-
         Returns
         -------
         coord : `list`
@@ -95,7 +90,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         """
         Crops an NDCube given minimum values and interval widths along axes.
-
         Parameters
         ----------
         lower_corner: iterable of `astropy.units.Quantity` or `float`
@@ -103,30 +97,25 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             described in physical units consistent with the NDCube's wcs object.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
-
         interval_widths: iterable of `astropy.units.Quantity` or `float`
             The width of the region of interest in each dimension in physical
             units consistent with the NDCube's wcs object. The length of the
             iterable must equal the number of data dimensions and must have
             the same order as the data. This argument will be removed in versions
             2.0, please use upper_corner argument.
-
         upper_corner: iterable of `astropy.units.Quantity` or `float`
             The maximum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
-
         units: iterable of `astropy.units.quantity.Quantity`, optionnal
             If the inputs are set without units, the user must set the units
             inside this argument as `str`.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
-
         Returns
         -------
         result: NDCube
-
         """
 
 
@@ -134,15 +123,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
     Class representing N dimensional cubes.
     Extra arguments are passed on to `~astropy.nddata.NDData`.
-
     Parameters
     ----------
     data: `numpy.ndarray`
         The array holding the actual data in this object.
-
     wcs: `ndcube.wcs.wcs.WCS`
         The WCS object containing the axes' information
-
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
         that defines what kind of uncertainty is stored, for example "std"
@@ -150,31 +136,25 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
         has no such attribute the uncertainty is stored as UnknownUncertainty.
         Defaults to None.
-
     mask : any type, optional
         Mask for the dataset. Masks should follow the numpy convention
         that valid data points are marked by False and invalid ones with True.
         Defaults to None.
-
     meta : dict-like object, optional
         Additional meta information about the dataset. If no meta is provided
         an empty collections.OrderedDict is created. Default is None.
-
     unit : Unit-like or str, optional
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
-
     extra_coords : iterable of `tuple`, each with three entries
         (`str`, `int`, `astropy.units.quantity` or array-like)
         Gives the name, axis of data, and values of coordinates of a data axis not
         included in the WCS object.
-
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
         Note however that it is not always possible to save the input as reference.
         Default is False.
-
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
@@ -217,7 +197,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Returns a named tuple with two attributes: 'shape' gives the shape
         of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
         e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-
         """
         return u.Quantity(self.data.shape, unit=u.pix)
 
@@ -225,12 +204,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def world_axis_physical_types(self):
         """
         Returns an iterable of strings describing the physical type for each world axis.
-
         The strings conform to the International Virtual Observatory Alliance
         standard, UCD1+ controlled Vocabulary.  For a description of the standard and
         definitions of the different strings and string components,
         see http://www.ivoa.net/documents/latest/UCDlist.html.
-
         """
 
         # Use the context manager to access the physical types,
@@ -258,10 +235,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.wcs.pixel_n_dim)]
         return result[::-1]
 
-    def axis_world_coords(self, *axes, edges=False):
+    def axis_world_coords(self, axes=(), edges=False, skycoord=True):
         """
         Returns WCS coordinate values of all pixels for all axes.
-
         Parameters
         ----------
         axes: `int` or `str`, or multiple `int` or `str`
@@ -269,22 +245,22 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
-
         edges: `bool`
             The edges argument helps in returning `pixel_edges`
             instead of `pixel_values`. Default value is False,
             which returns `pixel_values`. True return `pixel_edges`
-
+        skycoord: `bool`
+            The skycoord argument helps in returning the SkyCoord
+            object if present. If False, then the individual lon/lat
+            arrays are returned.
         Returns
         -------
         axes_coords: `list` of `astropy.units.Quantity`
             Real world coords for axes in order requested by user.
-
         Example
         -------
         >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
-
         """
         # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
@@ -318,7 +294,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 ' '.join(map(str, repeats))))
 
         new_int_axes = np.arange(len(self.dimensions))
-        axes_coords = np.array([None] * len(unique_data_axis(self.wcs, new_int_axes)[1]))
+        axes_coords = [None] * len(self.dimensions)
         axes_translated = np.array([False if entry in int_axes else True for entry in range(len(self.dimensions))])
 
         # Determine which axes are dependent on others.
@@ -326,6 +302,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis))
                           for axis in new_int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
+
+        # Store the lat/lon when skycoord=False
+        TS = None
+        index_of_skcoord = None
 
         # Iterate through each axis and perform WCS translation.
         for i, axis in enumerate(new_int_axes):
@@ -355,8 +335,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                           for k in dependent_axes[i]], indexing="ij")
                     for k, axis in enumerate(dependent_axes[i]):
                         quantity_list[axis] = dependent_pixel_quantities[k]
+
                 # Perform wcs translation
                 dependent_axes_coords = self.pixel_to_world(*quantity_list)
+
+                # Wrap the dependent_axes_coords into a list if a single quantity
+                dependent_axes_coords = dependent_axes_coords if isinstance(dependent_axes_coords, list) else [dependent_axes_coords]
                 # Place world coords into output list
                 for dependent_axis in dependent_axes[i]:
                     if dependent_axis in int_axes:
@@ -364,12 +348,32 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         # axis can appear in int_axes at most once.
                         j = unique_data_axis(self.wcs, dependent_axis)[0]
                         # Since the dependent_axes_coords contains reduced number of results, adjust the index
-                        axes_coords[j] = dependent_axes_coords[j]
+                        # If dependent_axes_coords is a SkyCoord, then return the SkyCoord, no need to slice
+                        if isinstance(dependent_axes_coords[j], SkyCoord):
+                            # Check if skycoord is True. If False then store the lat/lon
+                            # in axes_coords and insert the other lat/lon
+                            if(skycoord==True):
+                                axes_coords[j] = dependent_axes_coords[j]
+                            else:
+                                k = dependent_axis - j
+                                if(k==0):
+                                    TS = dependent_axes_coords[j].data.lon.deg
+                                elif(k==1):
+                                    TS = dependent_axes_coords[j].data.lat.deg
+
+                                index_of_skcoord = j+1
+                                axes_coords[j] = dependent_axes_coords[j].data.lat.deg if k==0 else dependent_axes_coords[j].data.lon.deg
+
+                        else:
+                            axes_coords[j] = dependent_axes_coords[j]
                         # Remove axis from list that have now been translated.
                         axes_translated[dependent_axes[i]] = True
 
-        # Remove the None values from axes_coords
-        axes_coords = axes_coords[axes_coords!=np.array(None)]
+        if TS is not None and all(elem in int_axes for elem in dependent_axes[index_of_skcoord-1]):
+            axes_coords.insert(index_of_skcoord, TS)
+
+        # Remove the None entries
+        axes_coords = [entry for entry in axes_coords if entry is not None]
 
         if len(axes_coords) == 1:
             return axes_coords[0]
@@ -381,7 +385,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Dictionary of extra coords where each key is the name of an extra
         coordinate supplied by user during instantiation of the NDCube.
-
         The value of each key is itself a dictionary with the following keys:
           | 'axis': `int`
           |     The number of the data axis to which the extra coordinate corresponds.
@@ -471,24 +474,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def crop_by_extra_coord(self, coord_name, min_coord_value, max_coord_value):
         """
         Crops an NDCube given a minimum value and interval width along an extra coord.
-
         Parameters
         ----------
         coord_name: `str`
             Name of extra coordinate by which to crop.
-
         min_coord_value: Single value `astropy.units.Quantity`
             The minimum desired value of the extra coord after cropping.
             Unit must be consistent with the extra coord on which cropping is based.
-
         min_coord_value: Single value `astropy.units.Quantity`
             The maximum desired value of the extra coord after cropping.
             Unit must be consistent with the extra coord on which cropping is based.
-
         Returns
         -------
         result: `ndcube.NDCube`
-
         """
         if not isinstance(coord_name, str):
             raise TypeError("The API for this function has changed. "
@@ -520,16 +518,13 @@ Axis Types of NDCube: {axis_type}
         """
         Separates slices of NDCubes along a given cube axis into a NDCubeSequence
         of (N-1)DCubes.
-
         Parameters
         ----------
         axis : `int`
             The axis along which the data is to be changed.
-
         Returns
         -------
         result : `ndcube_sequence.NDCubeSequence`
-
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
@@ -563,17 +558,14 @@ class NDCubeOrdered(NDCube):
     For example, in an x, y, t cube the order would be (t,x,y) and in a
     lambda, t, y cube the order will be (t, lambda, y).
     Extra arguments are passed on to NDData's init.
-
     Parameters
     ----------
     data: `numpy.ndarray`
         The array holding the actual data in this object.
-
     wcs: `ndcube.wcs.wcs.WCS`
         The WCS object containing the axes' information. The axes'
         priorities are time, spectral, celestial. This means that if
         present, each of these axis will take precedence over the others.
-
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
         that defines what kind of uncertainty is stored, for example "std"
@@ -581,20 +573,16 @@ class NDCubeOrdered(NDCube):
         such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
         has no such attribute the uncertainty is stored as UnknownUncertainty.
         Defaults to None.
-
     mask : any type, optional
         Mask for the dataset. Masks should follow the numpy convention
         that valid data points are marked by False and invalid ones with True.
         Defaults to None.
-
     meta : dict-like object, optional
         Additional meta information about the dataset. If no meta is provided
         an empty collections.OrderedDict is created. Default is None.
-
     unit : Unit-like or str, optional
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
-
     copy : bool, optional
         Indicates whether to save the arguments as copy. True copies every attribute
         before saving it while False tries to save every parameter as reference.
