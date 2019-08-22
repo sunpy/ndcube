@@ -9,7 +9,7 @@ import pytest
 import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
-from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, BaseHighLevelWCS
 from astropy.coordinates import SkyCoord
 
 from ndcube import NDCube, NDCubeOrdered
@@ -158,12 +158,8 @@ cube_rotated = NDCube(
     cubem,
     cubet])
 def test_wcs_object(nd_cube):
-
-    # Test if wcs object is a BaseLowLevelWCS, instance of SlicedLowLevelWCS object
-    # and has a high level wcs object associated
     assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
-    assert isinstance(nd_cube.wcs, SlicedLowLevelWCS)
-    assert isinstance(nd_cube.high_level_wcs, HighLevelWCSWrapper)
+    assert isinstance(nd_cube.high_level_wcs, BaseHighLevelWCS)
 
 
 @pytest.mark.parametrize(
