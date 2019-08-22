@@ -183,11 +183,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Enforce that the WCS object is a low_level_wcs object, complying APE14
         if not isinstance(wcs, BaseLowLevelWCS):
             raise TypeError(f'Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}')
-        else:
-            # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
-            # Convert the WCS object into a SlicedLowLevelWCS
-            if not isinstance(wcs, SlicedLowLevelWCS):
-                wcs = SlicedLowLevelWCS(wcs, [])
 
         # Format extra coords.
         if extra_coords:
@@ -246,7 +241,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         quantity_axis_list = quantity_axis_list[::-1]
         pixel_to_world = self.high_level_wcs.pixel_to_world(*quantity_axis_list)
-        return pixel_to_world[::-1]
+        if isinstance(pixel_to_world, (tuple, list)):
+            return pixel_to_world[::-1]
+
+        return pixel_to_world
 
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
@@ -424,8 +422,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
         # Raising a value error if the arguments have not the same dimensions.
         if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
-            raise ValueError("lower_corner and upper_corner must have same"
+            raise ValueError("lower_corner and upper_corner must have the same "
                              "number of elements as number of data dimensions.")
+
+        lower_corner = list(lower_corner)
+        upper_corner = list(upper_corner)
+
         if units:
             # Raising a value error if units have not the data dimensions.
             if len(units) != n_dim:
@@ -460,6 +462,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         all_world_corners = all_world_corners[::-1]
         all_pix_corners = self.wcs.world_to_pixel_values(*all_world_corners)
         all_pix_corners = all_pix_corners[::-1]
+        all_pix_corners = tuple(u.Quantity(a, u.pix).value for a in all_pix_corners)
 
         # Derive slicing item with which to slice NDCube.
         # Be sure to round down min pixel and round up + 1 the max pixel.
