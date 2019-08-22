@@ -13,13 +13,13 @@ merge-check: &merge-check
 apt-run: &apt-install
   name: Install apt packages
   command: |
-    apt update
-    apt install -y graphviz build-essential
+    sudo apt update
+    sudo apt install -y graphviz build-essential
 
 tox-install: &tox-install
   name: Install Tox
   command: |
-    pip install tox
+    sudo pip install tox
 
 version: 2
 jobs:
@@ -43,22 +43,21 @@ jobs:
 
   pip-install:
     docker:
-      - image: continuumio/miniconda3
+      - image: circleci/python:3.7
     steps:
       - checkout
       - run: *skip-check
       - run: *merge-check
-      - run: *apt-install
       - run:
           name: Update pip
-          command: pip install -U pip
+          command: sudo pip install -U pip
       - run:
           name: Install ndcube
-          command: pip install --progress-bar off -e .[all,dev]
+          command: sudo pip install --progress-bar off -e .[all,dev]
 
   html-docs:
     docker:
-      - image: continuumio/miniconda3
+      - image: circleci/python:3.7
     steps:
       - checkout
       - run: *skip-check
