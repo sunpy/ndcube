@@ -26,6 +26,7 @@ There are two options for installing the stable version of ndcube. The first is
 via the anaconda distribution using the conda-forge channel:
 ::
    $ conda install --channel conda-forge ndcube
+
 For more information on installing the anaconda distribution, see the
 `anaconda website`_.
 
