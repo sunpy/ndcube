@@ -38,7 +38,7 @@ jobs:
     os: linux
     tox: py37-offline --
 
-- template: azure-templates.yml
+- template: run-tox-env.yml@sunpy
   parameters:
     name: Linux_36_offline
     os: linux

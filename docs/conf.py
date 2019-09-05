@@ -126,6 +126,7 @@ html_title = f'{project} v{release}'
 htmlhelp_basename = project + 'doc'
 
 # A dictionary of values to pass into the template engine’s context for all pages.
+html_context = {}
 html_context['to_be_indexed'] = ['stable', 'latest']
 
 # -- Options for LaTeX output --------------------------------------------------
