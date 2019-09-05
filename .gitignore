@@ -199,13 +199,13 @@ $RECYCLE.BIN/
 ### VScode: https://raw.githubusercontent.com/github/gitignore/master/Global/VisualStudioCode.gitignore
 .vscode/*
 
-### Extra Python Items and SunPy Specific
+### Extra Python Items and ndcube specific
 .hypothesis
 .pytest_cache
 sunpydata.sqlite
 sunpydata.sqlite-journal
-sunpy/_compiler.c
-sunpy/cython_version.py
+ndcube/_compiler.c
+ndcube/cython_version.py
 docs/_build
 docs/generated
 docs/api/

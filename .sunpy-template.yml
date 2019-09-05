@@ -12,7 +12,7 @@ default_context:
   include_example_cython_code: "n"
   include_cextern_folder: "n"
   edit_on_github_extension: "True"
-  github_project: "sunpy/github"
+  github_project: "sunpy/ndcube"
   use_azure_ci: "y"
   use_read_the_docs: "y"
   sphinx_theme: "sunpy-sphinx-theme"

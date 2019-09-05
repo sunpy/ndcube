@@ -13,12 +13,3 @@ try:
     from .version import version as __version__
 except ImportError:
     __version__ = ''
-
-
-if not _SUNPY_SETUP_:
-    import os
-    from sunpy.tests.runner import SunPyTestRunner
-
-    self_test = SunPyTestRunner.make_test_runner_in(os.path.dirname(__file__))
-    self_test.__test__ = False
-    __all__ += ["self_test"]

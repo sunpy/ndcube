@@ -25,11 +25,19 @@ trigger:
     - '*post*'
 
 jobs:
+
+- template: run-tox-env.yml@sunpy
+  parameters:
+    name: pycodestyle
+    os: linux
+    tox: pycodestyle --
+
 - template: run-tox-env.yml@sunpy
   parameters:
     name: Linux_37_offline
     os: linux
     tox: py37-offline --
+
 - template: azure-templates.yml
   parameters:
     name: Linux_36_offline

@@ -20,9 +20,9 @@ try:
     from sunpy.tests.setup_command import SunPyTest
     # Overwrite the Astropy Testing framework
     cmdclass['test'] = type('SunPyTest', (SunPyTest,),
-                            {'package_name': 'sunpy'})
+                            {'package_name': 'ndcube'})
 except Exception:
-    # Catch everything, if it doesn't work, we still want SunPy to install.
+    # Catch everything, if it doesn't work, we still want ndcube to install.
     pass
 
 ################################################################################

@@ -1,12 +1,9 @@
 ndcube
-==========
+======
 
 .. image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
     :target: http://www.sunpy.org
     :alt: Powered by SunPy Badge
-
-A package for multi-dimensional contiguious and non-contiguious coordinate aware arrays.
-----------------------------------------------------------------------------------------
 
 ndcube is an open-source SunPy affiliated package for manipulating,
 inspecting and visualizing multi-dimensional contiguous and non-contiguous
