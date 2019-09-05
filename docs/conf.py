@@ -71,7 +71,7 @@ check_sphinx_version(needs_sphinx)
 
 # Add any custom intersphinx for SunPy
 intersphinx_mapping.pop('h5py', None)
-intersphinx_mapping['sunpy'] = ('https://docs.sunpy.io/en/stable/', None)
+intersphinx_mapping['sunpy'] = ('https://docs.sunpy.org/en/stable/', None)
 intersphinx_mapping['sqlalchemy'] = ('https://docs.sqlalchemy.org/en/latest/', None)
 intersphinx_mapping['pandas'] = ('https://pandas.pydata.org/pandas-docs/stable/', None)
 intersphinx_mapping['skimage'] = ('https://scikit-image.org/docs/stable/', None)
