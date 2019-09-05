@@ -1,49 +1,61 @@
+name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 variables:
-  "System.PreferGit": true
-  Agent.Source.Git.ShallowFetchDepth: 1
   CI_NAME: Azure Pipelines
   CI_BUILD_ID: $(Build.BuildId)
+  # These will need to be changed  for your project.
   CI_BUILD_URL: "https://dev.azure.com/sunpy/ndcube/_build/results?buildId=$(Build.BuildId)"
 
+# These resources need to be setup on the Azure Pipeline website
+# as a service connection (if it has not been already).
+resources:
+  repositories:
+  - repository: sunpy
+    type: github
+    endpoint: sunpy
+    name: sunpy/azure-pipelines-template
+    ref: master
+
+trigger:
+  tags:
+    include:
+    - 'v*'
+    exclude:
+    - '*dev*'
+    - '*pre*'
+    - '*post*'
+
 jobs:
+- template: run-tox-env.yml@sunpy
+  parameters:
+    name: Linux_37_offline
+    os: linux
+    tox: py37-offline --
 - template: azure-templates.yml
   parameters:
     name: Linux_36_offline
     os: linux
     tox: py36-offline --
 
-- template: azure-templates.yml
-  parameters:
-    name: pycodestyle
-    os: linux
-    tox: pycodestyle --
-
-- template: azure-templates.yml
-  parameters:
-    name: macOS_37_offline
-    os: macos
-    tox: py37-offline --
-
-- template: azure-templates.yml
+- template: run-tox-env.yml@sunpy
   parameters:
     name: Windows_36_offline
     os: windows
     tox: py36-offline --
 
-- template: azure-templates.yml
+- template: run-tox-env.yml@sunpy
   parameters:
-    name: Linux_36_conda_offline
-    os: linux
-    tox: conda --
+    name: macOS_37_online
+    os: macos
+    tox: py37-online --
 
-- template: azure-templates.yml
-  parameters:
-    name: Linux_37_sunpydev
-    os: linux
-    tox: py37-sunpydev --
-
-- template: azure-templates.yml
+- template: run-tox-env.yml@sunpy
   parameters:
     name: Linux_37_astropydev
     os: linux
     tox: py37-astropydev --
+
+- template: run-tox-env.yml@sunpy
+  parameters:
+    name: Linux_37_sunpydev
+    os: linux
+    tox: py37-sunpydev --
