@@ -22,8 +22,8 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         """
         Override the parent class method to explicitly catch `None` indices.
 
-        This method calls ``_slice`` and then constructs a new object using the
-        kwargs returned by ``_slice``.
+        This method calls ``_slice`` and then constructs a new object
+        using the kwargs returned by ``_slice``.
         """
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
@@ -36,9 +36,9 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         instance of the class. This method is called in
         `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
 
-        This method extends the `~astropy.nddata.mixins.NDSlicingMixin` method
-        to add support for ``missing_axes`` and ``extra_coords`` and overwrites
-        the astropy handling of wcs slicing.
+        This method extends the `~astropy.nddata.mixins.NDSlicingMixin`
+        method to add support for ``missing_axes`` and ``extra_coords``
+        and overwrites the astropy handling of wcs slicing.
         """
         kwargs = super()._slice(item)
 

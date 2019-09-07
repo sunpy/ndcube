@@ -25,6 +25,8 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
+import numpy as np
+from pkg_resources import get_distribution
 import os
 import sys
 import pathlib
@@ -43,7 +45,6 @@ if on_rtd:
     os.environ['LANG'] = 'C'
     os.environ['LC_ALL'] = 'C'
 
-from pkg_resources import get_distribution
 versionmod = get_distribution('ndcube')
 
 # The version info for the project you're documenting, acts as replacement for
@@ -57,7 +58,6 @@ release = versionmod.version.split('+')[0]
 is_development = '.dev' in release
 
 # -- Shut up numpy warnings from WCSAxes --------------------------------------
-import numpy as np
 np.seterr(invalid='ignore')
 
 # -- General configuration ----------------------------------------------------

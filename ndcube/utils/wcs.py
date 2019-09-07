@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
 # Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
 
-"""Miscellaneous WCS utilities"""
+"""
+Miscellaneous WCS utilities.
+"""
 
 import re
 from copy import deepcopy
@@ -43,7 +44,7 @@ wcs_to_ivoa = {
     "XPIXEL": "custom:instr.pixel.x",
     "YPIXEL": "custom:instr.pixel.y",
     "ZPIXEL": "custom:instr.pixel.z"
-    }
+}
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
@@ -67,7 +68,6 @@ class WCS(wcs.WCS):
 
         naxis: `int`
             Number of axis described by the header.
-
         """
         self.oriented = False
         self.was_augmented = WCS._needs_augmenting(header)
@@ -75,12 +75,13 @@ class WCS(wcs.WCS):
             header = WCS._augment(header, naxis)
             if naxis is not None:
                 naxis = naxis + 1
-        super(WCS, self).__init__(header=header, naxis=naxis, **kwargs)
+        super().__init__(header=header, naxis=naxis, **kwargs)
 
     @classmethod
     def _needs_augmenting(cls, header):
         """
-        Determines whether a missing dependent axis is missing from the WCS object.
+        Determines whether a missing dependent axis is missing from the WCS
+        object.
 
         WCS cannot be created with only one spacial dimension. If
         WCS detects that returns that it needs to be augmented.
@@ -88,7 +89,6 @@ class WCS(wcs.WCS):
         Parameters
         ----------
         header: FITS header or `dict` with appropriate FITS keywords.
-
         """
         try:
             wcs.WCS(header=header)
@@ -100,8 +100,8 @@ class WCS(wcs.WCS):
     @classmethod
     def _augment(cls, header, naxis):
         """
-        Augments WCS with a dummy axis to take the place of a missing dependent axis.
-
+        Augments WCS with a dummy axis to take the place of a missing dependent
+        axis.
         """
         newheader = deepcopy(header)
         new_wcs_axes_params = {'CRPIX': 0, 'CDELT': 1, 'CRVAL': 0,
@@ -143,7 +143,6 @@ def _wcs_slicer(wcs, missing_axes, item):
     missing_axes: `list` of `bool`
         Altered missing axis list.  Note the ordering has been reversed to reflect the data
         (numpy) axis ordering convention.
-
     """
     # normal slice.
     item_checked = []
@@ -155,14 +154,14 @@ def _wcs_slicer(wcs, missing_axes, item):
         # needs to be appended then it gets appended there.
         for _bool in missing_axes:
             if not _bool:
-                if index is not 1:
+                if index != 1:
                     item_checked.append(item)
                     index += 1
                 else:
                     item_checked.append(slice(None, None, None))
             else:
                 item_checked.append(slice(0, 1))
-        new_wcs = wcs.slice((item_checked))
+        new_wcs = wcs.slice(item_checked)
     # item is int then slicing axis.
     elif isinstance(item, int) or isinstance(item, np.int64):
         # using index to keep track of whether the int(which is converted to
@@ -173,8 +172,8 @@ def _wcs_slicer(wcs, missing_axes, item):
         index = 0
         for i, _bool in enumerate(missing_axes):
             if not _bool:
-                if index is not 1:
-                    item_checked.append(slice(item, item+1))
+                if index != 1:
+                    item_checked.append(slice(item, item + 1))
                     missing_axes[i] = True
                     index += 1
                 else:
@@ -201,7 +200,7 @@ def _wcs_slicer(wcs, missing_axes, item):
                 item_checked.append(slice(0, 1))
         # if all are slice in the item tuple
         if _all_slice(item_checked):
-            new_wcs = wcs.slice((item_checked))
+            new_wcs = wcs.slice(item_checked)
         # if all are not slices some of them are int then
         else:
             # this will make all the item in item_checked as slice.
@@ -211,7 +210,7 @@ def _wcs_slicer(wcs, missing_axes, item):
                 if isinstance(it, int):
                     missing_axes[i] = True
     else:
-        raise NotImplementedError("Slicing FITS-WCS by {0} not supported.".format(type(item)))
+        raise NotImplementedError("Slicing FITS-WCS by {} not supported.".format(type(item)))
     # returning the reverse list of missing axis as in the item here was reverse of
     # what was inputed so we had a reverse missing_axes.
     return new_wcs, missing_axes[::-1]
@@ -219,7 +218,8 @@ def _wcs_slicer(wcs, missing_axes, item):
 
 def _all_slice(obj):
     """
-    Returns True if all the elements in the object are slices else return False
+    Returns True if all the elements in the object are slices else return
+    False.
     """
     result = False
     if not isinstance(obj, (tuple, list)):
@@ -242,7 +242,7 @@ def _slice_list(obj):
         return result
     for i, o in enumerate(obj):
         if isinstance(o, int):
-            result.append(slice(o, o+1))
+            result.append(slice(o, o + 1))
         elif isinstance(o, slice):
             result.append(o)
     return result
@@ -320,7 +320,6 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axes):
     -------
     dependent_data_axes: `tuple` of `int`
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
-
     """
     # In order to correctly account for "missing" axes in this process,
     # we must determine what axes are dependent based on WCS axis indices.
@@ -358,7 +357,6 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     -------
     dependent_data_axes: `tuple` of `int`
         Sorted indices of axes dependent on input data_axis in WCS ordering convention.
-
     """
     # Pre-compute dependent axes. The matrix returned by
     # axis_correlation_matrix is (n_world, n_pixel) but we want to know
@@ -385,7 +383,6 @@ def axis_correlation_matrix(wcs_object):
     matrix: `numpy.ndarray` of `bool`
         Square True/False matrix indicating which axes are dependent.
         For example, whether WCS axis 0 is dependent on WCS axis 1 is given by matrix[0, 1].
-
     """
     n_world = len(wcs_object.wcs.ctype)
     n_pixel = wcs_object.naxis
@@ -417,18 +414,20 @@ def axis_correlation_matrix(wcs_object):
 
 
 def append_sequence_axis_to_wcs(wcs_object):
-    """Appends a 1-to-1 dummy axis to a WCS object."""
-    dummy_number = wcs_object.naxis+1
+    """
+    Appends a 1-to-1 dummy axis to a WCS object.
+    """
+    dummy_number = wcs_object.naxis + 1
     wcs_header = wcs_object.to_header()
-    wcs_header.append(("CTYPE{0}".format(dummy_number), "ITER",
+    wcs_header.append((f"CTYPE{dummy_number}", "ITER",
                        "A unitless iteration-by-one axis."))
-    wcs_header.append(("CRPIX{0}".format(dummy_number), 0.,
+    wcs_header.append((f"CRPIX{dummy_number}", 0.,
                        "Pixel coordinate of reference point"))
-    wcs_header.append(("CDELT{0}".format(dummy_number), 1.,
+    wcs_header.append((f"CDELT{dummy_number}", 1.,
                        "Coordinate increment at reference point"))
-    wcs_header.append(("CRVAL{0}".format(dummy_number), 0.,
+    wcs_header.append((f"CRVAL{dummy_number}", 0.,
                        "Coordinate value at reference point"))
-    wcs_header.append(("CUNIT{0}".format(dummy_number), "pix",
+    wcs_header.append((f"CUNIT{dummy_number}", "pix",
                        "Coordinate value at reference point"))
     wcs_header["WCSAXES"] = dummy_number
     return WCS(wcs_header)

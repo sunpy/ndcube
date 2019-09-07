@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 import unittest
 
@@ -7,7 +6,7 @@ import astropy.units as u
 
 from ndcube import utils
 
-missing_axes_none = [False]*3
+missing_axes_none = [False] * 3
 missing_axes_0_2 = [True, False, True]
 missing_axes_1 = [False, True, False]
 
@@ -89,7 +88,7 @@ def test_select_order():
     ([(0, 0, 0)], [False, False], (1, 2)),
     ([('name', '0', 0)], [False, False], (1, 2)),
     ([('name', 0, [0, 1])], [False, False], (1, 2))
-    ])
+])
 def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
     with pytest.raises(ValueError):
         utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(*test_input)
@@ -98,18 +97,18 @@ def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
 @pytest.mark.parametrize("test_input,expected", [
     ((extra_coords_dict, missing_axes_none), extra_coords_input),
 
-    ((extra_coords_dict_wcs,  missing_axes_none),
+    ((extra_coords_dict_wcs, missing_axes_none),
      [('time', 2, u.Quantity(range(axes_length), unit=u.pix)),
       ('hello', 1, u.Quantity(range(axes_length), unit=u.pix))]),
 
-    ((extra_coords_dict_wcs,  missing_axes_1),
+    ((extra_coords_dict_wcs, missing_axes_1),
      [('time', 1, u.Quantity(range(axes_length), unit=u.pix)),
       ('hello', None, u.Quantity(range(axes_length), unit=u.pix))])
-    ])
+])
 def test_convert_extra_coords_dict_to_input_format(test_input, expected):
     output = utils.cube.convert_extra_coords_dict_to_input_format(*test_input)
     if len(output) != len(expected):
-        raise AssertionError("{0} != {1}".format(output, expected))
+        raise AssertionError(f"{output} != {expected}")
     for output_tuple in output:
         j = 0
         while j < len(expected):
@@ -122,15 +121,15 @@ def test_convert_extra_coords_dict_to_input_format(test_input, expected):
                         assert el == expected[j][k]
                     except ValueError as err:
                         if err.args[0] == "The truth value of an array with more than" + \
-                          " one element is ambiguous. Use a.any() or a.all()":
+                                " one element is ambiguous. Use a.any() or a.all()":
                             assert (el == expected[j][k]).all()
                         else:
                             raise err
-                j = len(expected)+1
+                j = len(expected) + 1
             else:
                 j += 1
         if j == len(expected):
-            raise AssertionError("{0} != {1}".format(output, expected))
+            raise AssertionError(f"{output} != {expected}")
 
 
 def test_convert_extra_coords_dict_to_input_format_error():
@@ -138,16 +137,18 @@ def test_convert_extra_coords_dict_to_input_format_error():
         utils.cube.convert_extra_coords_dict_to_input_format(
             {"time": {"not axis": 0, "value": []}}, missing_axes_none)
 
-@pytest.mark.parametrize("test_input, expected",[
-    ((5, False),np.asarray([0, 1, 2, 3, 4])),
-    ((6, True), np.asarray([-0.5,  0.5,  1.5,  2.5,  3.5,  4.5,  5.5]))
+
+@pytest.mark.parametrize("test_input, expected", [
+    ((5, False), np.asarray([0, 1, 2, 3, 4])),
+    ((6, True), np.asarray([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5]))
 ])
 def test_pixel_centers_or_edges(test_input, expected):
     output = utils.cube._pixel_centers_or_edges(*test_input)
     assert isinstance(output, np.ndarray)
     np.testing.assert_allclose(output, expected)
 
-@pytest.mark.parametrize("test_input, expected",[
+
+@pytest.mark.parametrize("test_input, expected", [
     ((5, False), 5),
     ((6, True), 7)
 ])
