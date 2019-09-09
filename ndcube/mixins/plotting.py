@@ -205,7 +205,7 @@ class NDCubePlotMixin:
         if axes is None:
             try:
                 axes_coord_check = axes_coordinates == [None, None]
-            except BaseException:
+            except Exception:
                 axes_coord_check = False
             if axes_coord_check:
                 # Build slice list for WCS for initializing WCSAxes object.
