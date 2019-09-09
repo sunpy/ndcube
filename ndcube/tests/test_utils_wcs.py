@@ -30,6 +30,7 @@ hm_reindexed_102 = {
     'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
 wm_reindexed_102 = WCS(header=hm_reindexed_102)
 
+
 @pytest.mark.parametrize(
     "test_input,expected",
     [({}, False),
@@ -72,7 +73,7 @@ def test_reindex_wcs_errors(test_input):
     ((wm, 1), (0, 1)),
     ((wm, 2), (2,)),
     ((wm, 1), (0, 1))
-    ])
+])
 def test_get_dependent_data_axes(test_input, expected):
     output = utils.wcs.get_dependent_data_axes(*test_input)
     assert output == expected

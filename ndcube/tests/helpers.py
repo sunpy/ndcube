@@ -73,6 +73,7 @@ def assert_wcs_are_equal(wcs1, wcs2):
     assert wcs1.pixel_bounds == wcs2.pixel_bounds
     assert repr(wcs1) == repr(wcs2)
 
+
 def create_sliced_wcs(wcs, item, dim):
     """
     Creates a sliced `SlicedFITSWCS` object from the given slice item

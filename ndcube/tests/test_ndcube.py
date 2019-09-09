@@ -89,7 +89,7 @@ uncertainty = np.sqrt(data_cube)
 mask_disordered = data_disordered > 0
 uncertainty_disordered = data_disordered
 
-mask_rotated = data_rotated >=0
+mask_rotated = data_rotated >= 0
 uncertainty_rotated = data_rotated
 
 mask_ordered = data_ordered > 0
@@ -152,11 +152,11 @@ cube_rotated = NDCube(
 
 
 @pytest.mark.parametrize(
-    "nd_cube",[
-    cube,
-    cube_rotated,
-    cubem,
-    cubet])
+    "nd_cube", [
+        cube,
+        cube_rotated,
+        cubem,
+        cubet])
 def test_wcs_object(nd_cube):
     assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
     assert isinstance(nd_cube.high_level_wcs, BaseHighLevelWCS)
@@ -165,139 +165,139 @@ def test_wcs_object(nd_cube):
 @pytest.mark.parametrize(
     "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
     [
-     (cubem[:, 1],
-      NDCube,
-      mask_cubem[:, 1],
-      SlicedLowLevelWCS(cubem.wcs, (slice(None), 1, slice(None))),
-      data[:, 1],
-      u.Quantity((2, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lon', 'em.wl'),
-      {'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
-       'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)}}
-      ),
-     (cubem[:, 0:2],
-      NDCube,
-      mask_cubem[:, 0:2],
-      SlicedLowLevelWCS(cubem.wcs, (slice(None), slice(0, 2, None), slice(None))),
-      data[:, 0:2],
-      u.Quantity((2, 2, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
-      {'bye': {'axis': 2, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
-       'hello': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
-       'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)}}
-      ),
-     (cubem[:, :],
-      NDCube,
-      mask_cubem[:, :],
-      SlicedLowLevelWCS(cubem.wcs, (slice(None), slice(None), slice(None))),
-      data[:, :],
-      u.Quantity((2, 3, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
-      {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
-       'hello': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 2, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cubem[1, 1],
-      NDCube,
-      mask_cubem[1, 1],
-      SlicedLowLevelWCS(cubem.wcs, (1, 1, slice(None))),
-      data[1, 1],
-      u.Quantity((4, ), unit=u.pix),
-      tuple(['em.wl']),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cubem[1, 0:2],
-      NDCube,
-      mask_cubem[1, 0:2],
-      SlicedLowLevelWCS(cubem.wcs, (1, slice(0, 2, None), slice(None))),
-      data[1, 0:2],
-      u.Quantity((2, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lat', 'em.wl'),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cubem[1, :],
-      NDCube,
-      mask_cubem[1, :],
-      SlicedLowLevelWCS(cubem.wcs, (1, slice(None), slice(None))),
-      data[1, :],
-      u.Quantity((3, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lat', 'em.wl'),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cube[:, 1],
-      NDCube,
-      mask_cube[:, 1],
-      SlicedLowLevelWCS(cube.wcs, (slice(None), 1, slice(None), slice(None))),
-      uncertainty[:, 1],
-      u.Quantity((5, 3, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lat', 'time'),
-      {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
-       'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cube[:, 0:2],
-      NDCube,
-      mask_cube[:, 0:2],
-      SlicedLowLevelWCS(cube.wcs, (slice(None), slice(0, 2, None), slice(None), slice(None))),
-      uncertainty[:, 0:2],
-      u.Quantity((5, 2, 3, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lat', 'em.wl', 'time'),
-      {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
-       'hello': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
-       'bye': {'axis': 2, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cube[:, :],
-      NDCube,
-      mask_cube[:, :],
-      SlicedLowLevelWCS(cube.wcs, (slice(None), slice(None), slice(None), slice(None))),
-      uncertainty[:, :],
-      u.Quantity((5, 2, 3, 4), unit=u.pix),
-      ('custom:pos.helioprojective.lat', 'em.wl', 'time'),
-      {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
-       'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 2, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cube[1, 1],
-      NDCube,
-      mask_cube[1, 1],
-      SlicedLowLevelWCS(cube.wcs, (1, 1, slice(None), slice(None))),
-      uncertainty[1, 1],
-      u.Quantity((3, 4), unit=u.pix),
-      tuple(['time']),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cube[1, 0:2],
-      NDCube,
-      mask_cube[1, 0:2],
-      SlicedLowLevelWCS(cube.wcs, (1, slice(0, 2, None), slice(None), slice(None))),
-      uncertainty[1, 0:2],
-      u.Quantity((2, 3, 4), unit=u.pix),
-      ('em.wl', 'time'),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
-      ),
-     (cube[1, :],
-      NDCube,
-      mask_cube[1, :],
-      SlicedLowLevelWCS(cube.wcs, (1, slice(None),
-                        slice(None), slice(None))),
-      uncertainty[1, :],
-      u.Quantity((2, 3, 4), unit=u.pix),
-      ('em.wl', 'time'),
-      {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
-       'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
-       'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
-      )])
+        (cubem[:, 1],
+         NDCube,
+         mask_cubem[:, 1],
+         SlicedLowLevelWCS(cubem.wcs, (slice(None), 1, slice(None))),
+         data[:, 1],
+         u.Quantity((2, 4), unit=u.pix),
+         ('custom:pos.helioprojective.lon', 'em.wl'),
+            {'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+             'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)}}
+         ),
+        (cubem[:, 0:2],
+            NDCube,
+            mask_cubem[:, 0:2],
+            SlicedLowLevelWCS(cubem.wcs, (slice(None), slice(0, 2, None), slice(None))),
+            data[:, 0:2],
+            u.Quantity((2, 2, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
+            {'bye': {'axis': 2, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)},
+             'hello': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
+             'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)}}
+         ),
+        (cubem[:, :],
+            NDCube,
+            mask_cubem[:, :],
+            SlicedLowLevelWCS(cubem.wcs, (slice(None), slice(None), slice(None))),
+            data[:, :],
+            u.Quantity((2, 3, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
+            {'time': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[0].value)), unit=u.pix)},
+             'hello': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
+             'bye': {'axis': 2, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cubem[1, 1],
+            NDCube,
+            mask_cubem[1, 1],
+            SlicedLowLevelWCS(cubem.wcs, (1, 1, slice(None))),
+            data[1, 1],
+            u.Quantity((4, ), unit=u.pix),
+            tuple(['em.wl']),
+            {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'bye': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cubem[1, 0:2],
+            NDCube,
+            mask_cubem[1, 0:2],
+            SlicedLowLevelWCS(cubem.wcs, (1, slice(0, 2, None), slice(None))),
+            data[1, 0:2],
+            u.Quantity((2, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lat', 'em.wl'),
+            {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'hello': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
+             'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cubem[1, :],
+            NDCube,
+            mask_cubem[1, :],
+            SlicedLowLevelWCS(cubem.wcs, (1, slice(None), slice(None))),
+            data[1, :],
+            u.Quantity((3, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lat', 'em.wl'),
+            {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'hello': {'axis': 0, 'value': u.Quantity(range(int(cubem.dimensions[1].value)), unit=u.pix)},
+             'bye': {'axis': 1, 'value': u.Quantity(range(int(cubem.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cube[:, 1],
+            NDCube,
+            mask_cube[:, 1],
+            SlicedLowLevelWCS(cube.wcs, (slice(None), 1, slice(None), slice(None))),
+            uncertainty[:, 1],
+            u.Quantity((5, 3, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lat', 'time'),
+            {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
+             'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cube[:, 0:2],
+            NDCube,
+            mask_cube[:, 0:2],
+            SlicedLowLevelWCS(cube.wcs, (slice(None), slice(0, 2, None), slice(None), slice(None))),
+            uncertainty[:, 0:2],
+            u.Quantity((5, 2, 3, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lat', 'em.wl', 'time'),
+            {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
+             'hello': {'axis': 1, 'value': u.Quantity(range(2), unit=u.pix)},
+             'bye': {'axis': 2, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cube[:, :],
+            NDCube,
+            mask_cube[:, :],
+            SlicedLowLevelWCS(cube.wcs, (slice(None), slice(None), slice(None), slice(None))),
+            uncertainty[:, :],
+            u.Quantity((5, 2, 3, 4), unit=u.pix),
+            ('custom:pos.helioprojective.lat', 'em.wl', 'time'),
+            {'time': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[0].value)), unit=u.pix)},
+             'hello': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
+             'bye': {'axis': 2, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cube[1, 1],
+            NDCube,
+            mask_cube[1, 1],
+            SlicedLowLevelWCS(cube.wcs, (1, 1, slice(None), slice(None))),
+            uncertainty[1, 1],
+            u.Quantity((3, 4), unit=u.pix),
+            tuple(['time']),
+            {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'hello': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'bye': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cube[1, 0:2],
+            NDCube,
+            mask_cube[1, 0:2],
+            SlicedLowLevelWCS(cube.wcs, (1, slice(0, 2, None), slice(None), slice(None))),
+            uncertainty[1, 0:2],
+            u.Quantity((2, 3, 4), unit=u.pix),
+            ('em.wl', 'time'),
+            {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'hello': {'axis': 0, 'value': u.Quantity(range(2), unit=u.pix)},
+             'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+         ),
+        (cube[1, :],
+            NDCube,
+            mask_cube[1, :],
+            SlicedLowLevelWCS(cube.wcs, (1, slice(None),
+                                         slice(None), slice(None))),
+            uncertainty[1, :],
+            u.Quantity((2, 3, 4), unit=u.pix),
+            ('em.wl', 'time'),
+            {'time': {'axis': None, 'value': u.Quantity(1, unit=u.pix)},
+             'hello': {'axis': 0, 'value': u.Quantity(range(int(cube.dimensions[1].value)), unit=u.pix)},
+             'bye': {'axis': 1, 'value': u.Quantity(range(int(cube.dimensions[2].value)), unit=u.pix)}}
+         )])
 def test_slicing_second_axis(test_input, expected, mask, wcs, uncertainty,
                              dimensions, world_axis_physical_types, extra_coords):
     assert isinstance(test_input, expected)
@@ -670,70 +670,70 @@ def test_slicing_error(test_input):
     (cubem[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     create_sliced_wcs(cubem.wcs, 1, 3).pixel_to_world(
-         *[u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix)])[1]),
+    ])[0],
+        create_sliced_wcs(cubem.wcs, 1, 3).pixel_to_world(
+        *[u.Quantity(np.arange(4), unit=u.pix),
+          u.Quantity(np.arange(4), unit=u.pix)])[1]),
     (cubem[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     create_sliced_wcs(cubem.wcs, 1, 3).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[0]),
+    ])[1],
+        create_sliced_wcs(cubem.wcs, 1, 3).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[0]),
     (cubem[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     create_sliced_wcs(cubem.wcs, slice(0,2), 3).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[1]),
+    ])[0],
+        create_sliced_wcs(cubem.wcs, slice(0, 2), 3).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[1]),
     (cubem[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     create_sliced_wcs(cubem.wcs,slice(0,2), 3).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[1]),
+    ])[0],
+        create_sliced_wcs(cubem.wcs, slice(0, 2), 3).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[1]),
     (cubem[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-    create_sliced_wcs(cubem.wcs, (slice(0,2,None)), 3).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[0]),
+    ])[1],
+        create_sliced_wcs(cubem.wcs, (slice(0, 2, None)), 3).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[0]),
     (cube[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     create_sliced_wcs(cube.wcs, (1), 4).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix)
-         )[2]),
+    ])[0],
+        create_sliced_wcs(cube.wcs, (1), 4).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix)
+    )[2]),
     (cube[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     create_sliced_wcs(cube.wcs, (1), 4).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix)
-         )[1]),
+    ])[1],
+        create_sliced_wcs(cube.wcs, (1), 4).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix)
+    )[1]),
     (cube[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[2],
-     create_sliced_wcs(cube.wcs, (1), 4).pixel_to_world(
+    ])[2],
+        create_sliced_wcs(cube.wcs, (1), 4).pixel_to_world(
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix))[0]),
@@ -742,35 +742,35 @@ def test_slicing_error(test_input):
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     create_sliced_wcs(cube.wcs, slice(0,2,None), 4).pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[2]),
+    ])[0],
+        create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[2]),
     (cube[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     wt.pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[1]),
+    ])[1],
+        wt.pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[1]),
     (cube[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[2],
-     wt.pixel_to_world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix))[0])
-    ])
+    ])[2],
+        wt.pixel_to_world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix))[0])
+])
 def test_pixel_to_world(test_input, expected):
 
     if not isinstance(test_input, SkyCoord):
@@ -783,52 +783,53 @@ def test_pixel_to_world(test_input, expected):
 
 # Define a SkyCoord object for input argument for NDCube.world_to_pixel
 skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
-        u.Quantity(np.arange(4), unit=u.deg))], frame='helioprojective')
+                    u.Quantity(np.arange(4), unit=u.deg))], frame='helioprojective')
+
 
 @pytest.mark.parametrize("test_input,expected", [
     (cubem[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        ])[0],
-    wm.world_to_pixel(
+    ])[0],
+        wm.world_to_pixel(
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
     (cubem[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        ])[1],
-    wm.world_to_pixel(
+    ])[1],
+        wm.world_to_pixel(
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
     (cubem[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m)
-        ])[0],
-    create_sliced_wcs(cubem.wcs, slice(0,2,None),3).world_to_pixel(
+    ])[0],
+        create_sliced_wcs(cubem.wcs, slice(0, 2, None), 3).world_to_pixel(
         skyobj,
         u.Quantity(np.arange(4), unit=u.m))[2]),
 
     (cubem[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m)
-        ])[1],
-    create_sliced_wcs(cubem.wcs, slice(0,2,None),3).world_to_pixel(
-         skyobj,
-         u.Quantity(np.arange(4), unit=u.m))[1]),
+    ])[1],
+        create_sliced_wcs(cubem.wcs, slice(0, 2, None), 3).world_to_pixel(
+        skyobj,
+        u.Quantity(np.arange(4), unit=u.m))[1]),
 
     (cubem[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m)
-        ])[2],
-    create_sliced_wcs(cubem.wcs, slice(0,2,None),3).world_to_pixel(
-         skyobj,
-         u.Quantity(np.arange(4), unit=u.m))[0]),
+    ])[2],
+        create_sliced_wcs(cubem.wcs, slice(0, 2, None), 3).world_to_pixel(
+        skyobj,
+        u.Quantity(np.arange(4), unit=u.m))[0]),
     (cube[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[2],
-     wt.world_to_pixel(
+    ])[2],
+        wt.world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
@@ -836,8 +837,8 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[1],
-     wt.world_to_pixel(
+    ])[1],
+        wt.world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
@@ -845,8 +846,8 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[0],
-     wt.world_to_pixel(
+    ])[0],
+        wt.world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[2]),
@@ -854,8 +855,8 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[3],
-     create_sliced_wcs(cube.wcs, slice(0,2,None), 4).world_to_pixel(
+    ])[3],
+        create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
@@ -863,8 +864,8 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[2],
-     create_sliced_wcs(cube.wcs, slice(0,2,None), 4).world_to_pixel(
+    ])[2],
+        create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
@@ -872,8 +873,8 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[1],
-     create_sliced_wcs(cube.wcs, slice(0,2,None), 4).world_to_pixel(
+    ])[1],
+        create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[2]),
@@ -881,12 +882,12 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[0],
-     create_sliced_wcs(cube.wcs, slice(0,2,None), 4).world_to_pixel(
+    ])[0],
+        create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
         u.Quantity(np.arange(4), unit=u.min),
         u.Quantity(np.arange(4), unit=u.m),
         skyobj)[3])
-    ])
+])
 def test_world_to_pixel(test_input, expected):
     assert np.allclose(test_input.value, expected)
 
@@ -902,7 +903,7 @@ def test_world_to_pixel(test_input, expected):
      cube_rotated[:, :4, 1:5]),
     ((cube_rotated, [0, 1.5, 0], None, [1, 2.5, 0.5], ['s', 'arcsec', 'arcsec']),
      cube_rotated[:, :4, 1:5])
-    ])
+])
 def test_crop_by_coords(test_input, expected):
     helpers.assert_cubes_equal(
         test_input[0].crop_by_coords(*test_input[1:]), expected)
@@ -958,6 +959,7 @@ def test_all_world_coords_with_input_and_kwargs(test_input, expected):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
 
+
 @pytest.mark.skip
 @pytest.mark.parametrize("test_input,expected", [
     (cubem, ((u.Quantity([[0.60002173, 0.59999127, 0.5999608],
@@ -965,11 +967,11 @@ def test_all_world_coords_with_input_and_kwargs(test_input, expected):
                          unit=u.deg),
               u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
                           [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg)),
-              u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
+             u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
     ((cubem[:, :, 0]), (u.Quantity([1., 1.26918126e-05], unit=u.deg),
                         u.Quantity([1., 5.00000000e-01], unit=u.deg),
                         u.Quantity([1., 9.99987308e-01], unit=u.deg)))
-    ])
+])
 def test_axis_world_coords_without_input(test_input, expected):
     all_coords = test_input.axis_world_coords()
     for i in range(len(all_coords)):
@@ -979,6 +981,7 @@ def test_axis_world_coords_without_input(test_input, expected):
         else:
             assert_quantity_allclose(all_coords[i].spherical.lon.to(u.deg), expected[i][0])
             assert_quantity_allclose(all_coords[i].spherical.lat.to(u.deg), expected[i][1])
+
 
 @pytest.mark.parametrize("test_input,expected", [
     ((cubem, 0, 0), ((2 * u.pix, 3 * u.pix, 4 * u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),

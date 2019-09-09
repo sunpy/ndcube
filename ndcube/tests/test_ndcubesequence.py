@@ -46,7 +46,7 @@ cube2 = NDCube(data, wm, extra_coords=[
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
 cube3 = NDCube(data2, wt, extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0] + 1), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(2, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
@@ -63,7 +63,7 @@ cube2_no_no = NDCube(data, wm, extra_coords=[
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
 cube3_no_time = NDCube(data2, wt, extra_coords=[
-    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0]+1), unit=u.pix) +
+    ('pix', 0, u.Quantity(np.arange(1, data2.shape[0] + 1), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(2, unit=u.cm))])
 

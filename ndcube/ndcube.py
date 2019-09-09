@@ -186,8 +186,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Format extra coords.
         if extra_coords:
             self._extra_coords_wcs_axis = \
-              utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                  extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
+                utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
+                    extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
 
@@ -316,7 +316,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         new_int_axes = np.arange(len(self.dimensions))
         axes_coords = np.array([None] * len(unique_data_axis(self.wcs, new_int_axes)[1]))
-        axes_translated = np.array([False if entry in int_axes else True for entry in range(len(self.dimensions))])
+        axes_translated = np.array(
+            [False if entry in int_axes else True for entry in range(len(self.dimensions))])
 
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
@@ -367,7 +368,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         axes_translated[dependent_axes[i]] = True
 
         # Remove the None values from axes_coords
-        axes_coords = axes_coords[axes_coords!=np.array(None)]
+        axes_coords = axes_coords[axes_coords != np.array(None)]
 
         if len(axes_coords) == 1:
             return axes_coords[0]
@@ -397,7 +398,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],_pixel_keep(self.wcs),
+                        self._extra_coords_wcs_axis[key]["wcs axis"], _pixel_keep(self.wcs),
                         self.wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
@@ -468,7 +469,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Derive slicing item with which to slice NDCube.
         # Be sure to round down min pixel and round up + 1 the max pixel.
         item = tuple([slice(int(np.clip(axis_pixels.min(), 0, None)),
-                            int(np.ceil(axis_pixels.max()))+1)
+                            int(np.ceil(axis_pixels.max())) + 1)
                       for axis_pixels in all_pix_corners])
         return self[item]
 

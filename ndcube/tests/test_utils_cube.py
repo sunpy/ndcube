@@ -34,10 +34,12 @@ extra_coords_dict_wcs = {"time": {"wcs axis": 0,
 def test_data_axis_to_wcs_axis(test_input, expected):
     assert utils.cube.data_axis_to_wcs_axis(*test_input) == expected
 
+
 @pytest.mark.parametrize("test_input", [(-2, missing_axes_0_2), (1, missing_axes_0_2)])
 def test_data_axis_to_wcs_axis_error(test_input):
     with pytest.raises(IndexError):
         utils.cube.data_axis_to_wcs_axis(*test_input)
+
 
 @pytest.mark.parametrize(
     "test_input,expected",
@@ -59,6 +61,7 @@ def test_wcs_axis_to_data_axis(test_input, expected):
 def test_wcs_axis_to_data_axis_error(test_input):
     with pytest.raises(IndexError):
         utils.cube.data_axis_to_wcs_axis(*test_input)
+
 
 def test_select_order():
     lists = [['TIME', 'WAVE', 'HPLT-TAN',
@@ -84,7 +87,7 @@ def test_select_order():
     ([('name', 0)], np.array([0, 1]), 2, (1, 2)),
     ([(0, 0, 0)], np.array([0, 1]), 2, (1, 2)),
     ([('name', '0', 0)], np.array([0, 1]), 2, (1, 2))
-    ])
+])
 def test_format_input_extra_coords_to_extra_coords_wcs_axis_value(test_input):
     with pytest.raises(ValueError):
         utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(*test_input)

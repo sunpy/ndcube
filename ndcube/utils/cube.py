@@ -8,9 +8,16 @@ from astropy.units import Quantity
 
 from ndcube.utils.wcs import _pixel_keep, get_dependent_wcs_axes
 
-__all__ = ['wcs_axis_to_data_axis', 'data_axis_to_wcs_axis', 'select_order','_pixel_centers_or_edges','_get_dimension_for_pixel',
-           'convert_extra_coords_dict_to_input_format', 'get_axis_number_from_axis_name','wcs_axis_to_data_ape14','unique_data_axis']
-
+__all__ = [
+    'wcs_axis_to_data_axis',
+    'data_axis_to_wcs_axis',
+    'select_order',
+    '_pixel_centers_or_edges',
+    '_get_dimension_for_pixel',
+    'convert_extra_coords_dict_to_input_format',
+    'get_axis_number_from_axis_name',
+    'wcs_axis_to_data_ape14',
+    'unique_data_axis']
 
 
 def data_axis_to_wcs_axis(data_axis, missing_axes):
@@ -25,7 +32,8 @@ def data_axis_to_wcs_axis(data_axis, missing_axes):
         if data_axis > np.invert(missing_axes).sum() - 1 or data_axis < 0:
             raise IndexError("Data axis out of range.  Number data axes = {}".format(
                 np.invert(missing_axes).sum()))
-        result = len(missing_axes)-np.where(np.cumsum([b is False for b in missing_axes][::-1]) == data_axis+1)[0][0]-1
+        result = len(missing_axes) - \
+            np.where(np.cumsum([b is False for b in missing_axes][::-1]) == data_axis + 1)[0][0] - 1
     return result
 
 
@@ -52,9 +60,10 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
     else:
         if data_axis < 0:
             data_axis += naxes
-        if data_axis > naxes -1 or data_axis < 0:
-            raise IndexError("Data axis out of range.  Number Data axes = {0} and the value requested is {1}".format(
-                naxes, data_axis))
+        if data_axis > naxes - 1 or data_axis < 0:
+            raise IndexError(
+                "Data axis out of range.  Number Data axes = {0} and the value requested is {1}".format(
+                    naxes, data_axis))
     if not old_order:
         return naxes - 1 - data_axis
     else:
@@ -115,7 +124,7 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
 
     # Make sure that wcs_axis is a scalar item
     if wcs_axis is not None:
-        if not isinstance(wcs_axis,(int, np.int32, np.int64)):
+        if not isinstance(wcs_axis, (int, np.int32, np.int64)):
             raise ValueError(f"The wcs_axis parameter accepts \
                 numpy.int64 or np.int32 datatype, got this {type(wcs_axis)}")
 
@@ -129,9 +138,10 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
     else:
         if wcs_axis < 0:
             wcs_axis += naxes
-        if wcs_axis > naxes -1 or wcs_axis < 0:
-            raise IndexError("WCS axis out of range.  Number WCS axes = {0} and the value requested is {1}".format(
-                naxes, wcs_axis))
+        if wcs_axis > naxes - 1 or wcs_axis < 0:
+            raise IndexError(
+                "WCS axis out of range.  Number WCS axes = {0} and the value requested is {1}".format(
+                    naxes, wcs_axis))
 
     if not old_order:
         return naxes - 1 - wcs_axis
@@ -221,33 +231,33 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
 
 
 def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
-        """
-        Converts NDCube.extra_coords attribute to format required as input for new NDCube.
+    """
+    Converts NDCube.extra_coords attribute to format required as input for new NDCube.
 
-        Parameters
-        ----------
-        extra_coords: dict
-            An NDCube.extra_coords instance.
+    Parameters
+    ----------
+    extra_coords: dict
+        An NDCube.extra_coords instance.
 
-        Returns
-        -------
-        input_format: `list`
-            Infomation on extra coords in format required by `NDCube.__init__`.
+    Returns
+    -------
+    input_format: `list`
+        Infomation on extra coords in format required by `NDCube.__init__`.
 
-        """
-        coord_names = list(extra_coords.keys())
-        result = []
-        for name in coord_names:
+    """
+    coord_names = list(extra_coords.keys())
+    result = []
+    for name in coord_names:
 
-            coord_keys = list(extra_coords[name].keys())
-            if "wcs axis" in coord_keys and "axis" not in coord_keys:
-                axis = wcs_axis_to_data_ape14(extra_coords[name]["wcs axis"], pixel_keep, naxes, old_order=True)
-            elif "axis" in coord_keys and "wcs axis" not in coord_keys:
-                axis = extra_coords[name]["axis"]
-            else:
-                raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
-            result.append((name, axis, extra_coords[name]["value"]))
-        return result
+        coord_keys = list(extra_coords[name].keys())
+        if "wcs axis" in coord_keys and "axis" not in coord_keys:
+            axis = wcs_axis_to_data_ape14(extra_coords[name]["wcs axis"], pixel_keep, naxes, old_order=True)
+        elif "axis" in coord_keys and "wcs axis" not in coord_keys:
+            axis = extra_coords[name]["axis"]
+        else:
+            raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
+        result.append((name, axis, extra_coords[name]["value"]))
+    return result
 
 
 def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
@@ -406,6 +416,7 @@ def unique_data_axis(wcs_object, input_axis):
 
         # Return the corresponding axis/axes after denoting same axis to dependent axis
         return distinct_element_index[input_axis], np.unique(distinct_element_index)
+
 
 def _get_extra_coord_edges(value, axis=-1):
     """Gets the pixel_edges from the pixel_values
