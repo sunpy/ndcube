@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 import datetime
 import copy
@@ -106,7 +105,7 @@ cubem = NDCube(
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
                   ])
 
@@ -124,7 +123,8 @@ cube_none_axis_ranges_axis2_bye = copy.deepcopy(cube_none_axis_ranges_axis2)
 cube_none_axis_ranges_axis2_bye[2] = cube.extra_coords["bye"]["value"].value
 
 cube_none_axis_ranges_axis2_array = copy.deepcopy(cube_none_axis_ranges_axis2)
-cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
+cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10 + cube.data.shape[-1])
+
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0, 0, 0], {},
@@ -166,7 +166,7 @@ cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
 def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
     expected_xdata, expected_ydata, expected_xlabel, expected_ylabel, \
-      expected_xlim, expected_ylim = expected_values
+        expected_xlim, expected_ylim = expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
@@ -234,7 +234,7 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 def test_cube_plot_2D(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
     expected_data, expected_xlabel, expected_ylabel, expected_extent = \
-      expected_values
+        expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
@@ -287,19 +287,19 @@ def test_cube_plot_2D_errors(test_input, test_kwargs, expected_error):
      (([-1, -2], None, ["km", None], None, {}))),
     (([-1, -2], None, None, None, {"unit_y_axis": "km"}),
      (([-1, -2], None, [None, "km"], None, {})))
-    ])
+])
 def test_support_101_plot_API(input_values, expected_values):
     # Define expected values.
     expected_plot_axis_indices, expected_axes_coordinates, expected_axes_units, \
-      expected_data_unit, expected_kwargs = expected_values
+        expected_data_unit, expected_kwargs = expected_values
     # Run function
     output_plot_axis_indices, output_axes_coordinates, output_axes_units, \
-      output_data_unit, output_kwargs = plotting._support_101_plot_API(*input_values)
+        output_data_unit, output_kwargs = plotting._support_101_plot_API(*input_values)
     # Check values are correct
     assert output_plot_axis_indices == expected_plot_axis_indices
     if expected_axes_coordinates is None:
         assert output_axes_coordinates == expected_axes_coordinates
-    elif type(expected_axes_coordinates) is list:
+    elif isinstance(expected_axes_coordinates, list):
         for i, ac in enumerate(output_axes_coordinates):
             np.testing.assert_array_equal(ac, expected_axes_coordinates[i])
     assert output_axes_units == expected_axes_units
@@ -310,12 +310,12 @@ def test_support_101_plot_API(input_values, expected_values):
 @pytest.mark.parametrize("input_values", [
     ([0, 1], None, None, None, {"image_axes": [-1, -2]}),
     (None, [np.arange(1, 4), np.arange(1, 4)], None, None,
-      {"axis_ranges": [np.arange(3), np.arange(3)]}),
+     {"axis_ranges": [np.arange(3), np.arange(3)]}),
     (None, None, [u.s, "km"], None, {"unit_x_axis": u.W}),
     (None, None, [u.s, "km"], None, {"unit_y_axis": u.W}),
     (None, None, None, u.s, {"unit": u.W}),
     ([0, 1, 2], None, None, None, {"unit_x_axis": [u.s, u.km, u.W]}),
-    ])
+])
 def test_support_101_plot_API_errors(input_values):
     with pytest.raises(ValueError):
         output = plotting._support_101_plot_API(*input_values)

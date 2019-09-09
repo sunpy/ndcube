@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "setuptools_scm", "wheel", "numpy==1.14.5"]
+build-backend = 'setuptools.build_meta'
 
 [ tool.sunpy-bot ]
   # disable astropy checks
@@ -19,17 +20,17 @@ requires = ["setuptools", "wheel"]
   [ tool.sunpy-bot.towncrier_changelog ]
     verify_pr_number = true
     changelog_skip_label = "No Changelog Entry Needed"
-    help_url = "https://github.com/Cadair/sunpy/blob/towncrier/changelog/README.rst"
+    help_url = "https://github.com/sunpy/ndcube/blob/towncrier/changelog/README.rst"
 
     missing_file_message = """
 
 
-* I didn't detect a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/sunpy/blob/master/changelog/README.rst).
+* I didn't detect a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/ndcube/blob/master/changelog/README.rst).
 """
     wrong_type_message = """
 
 
-* The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/sunpy/blob/master/changelog/README.rst)
+* The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/master/changelog/README.rst)
 """
 
     wrong_number_message = """

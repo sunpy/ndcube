@@ -52,25 +52,25 @@ class NDCubeSequenceBase:
                 if len(np.unique(common_axis_lengths)) != 1:
                     common_axis_dimensions = [cube.dimensions[self._common_axis]
                                               for cube in self.data]
-                    dimensions[self._common_axis+1] = u.Quantity(
+                    dimensions[self._common_axis + 1] = u.Quantity(
                         common_axis_dimensions, unit=common_axis_dimensions[0].unit)
         return tuple(dimensions)
 
     @property
     def world_axis_physical_types(self):
-        return tuple(["meta.obs.sequence"]+list(self.data[0].world_axis_physical_types))
+        return tuple(["meta.obs.sequence"] + list(self.data[0].world_axis_physical_types))
 
     @property
     def cube_like_dimensions(self):
-        if type(self._common_axis) is not int:
+        if not isinstance(self._common_axis, int):
             raise TypeError("Common axis must be set.")
         dimensions = list(self._dimensions)
         cube_like_dimensions = list(self._dimensions[1:])
-        if dimensions[self._common_axis+1].isscalar:
-            cube_like_dimensions[self._common_axis] = \
-              u.Quantity(dimensions[0].value * dimensions[self._common_axis+1].value, unit=u.pix)
+        if dimensions[self._common_axis + 1].isscalar:
+            cube_like_dimensions[self._common_axis] = u.Quantity(
+                dimensions[0].value * dimensions[self._common_axis + 1].value, unit=u.pix)
         else:
-            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis+1])
+            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis + 1])
         # Combine into single Quantity
         cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
         return cube_like_dimensions
@@ -88,7 +88,7 @@ class NDCubeSequenceBase:
     @property
     def index_as_cube(self):
         """
-        Method to slice the NDCubesequence instance as a single cube
+        Method to slice the NDCubesequence instance as a single cube.
 
         Example
         -------
@@ -121,19 +121,19 @@ class NDCubeSequenceBase:
     @property
     def sequence_axis_extra_coords(self):
         sequence_coord_names, sequence_coord_units = \
-          utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)
+            utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)
         if sequence_coord_names is not None:
             # Define empty dictionary which will hold the extra coord
             # values not assigned a cube data axis.
             sequence_extra_coords = {}
             # Define list of None signifying unit of each coord.  It will
             # be filled in in for loop below.
-            sequence_coord_units = [None]*len(sequence_coord_names)
+            sequence_coord_units = [None] * len(sequence_coord_names)
             # Iterate through cubes and populate values of each extra coord
             # not assigned a cube data axis.
             cube_extra_coords = [cube.extra_coords for cube in self.data]
             for i, coord_key in enumerate(sequence_coord_names):
-                coord_values = np.array([None]*len(self.data), dtype=object)
+                coord_values = np.array([None] * len(self.data), dtype=object)
                 for j, cube in enumerate(self.data):
                     # Construct list of coord values from each cube for given extra coord.
                     try:
@@ -154,12 +154,12 @@ class NDCubeSequenceBase:
                 # convert coord_values from an array of Quantities to a
                 # single Quantity of length equal to number of cubes in
                 # sequence.
-                w_none = np.where(coord_values == None)[0]
+                w_none = np.where(coord_values == None)[0]  # NOQA
                 if sequence_coord_units[i]:
                     # This part of if statement is coded in an apparently
                     # round about way but necessitated because you can't
                     # put a NaN quantity into an array and keep its unit.
-                    w_not_none = np.where(coord_values != None)[0]
+                    w_not_none = np.where(coord_values != None)[0]  # NOQA
                     coord_values = u.Quantity(list(coord_values[w_not_none]),
                                               unit=sequence_coord_units[i])
                     coord_values = list(coord_values.value)
@@ -175,7 +175,8 @@ class NDCubeSequenceBase:
 
     def explode_along_axis(self, axis):
         """
-        Separates slices of NDCubes in sequence along a given cube axis into (N-1)DCubes.
+        Separates slices of NDCubes in sequence along a given cube axis into
+        (N-1)DCubes.
 
         Parameters
         ----------
@@ -213,7 +214,7 @@ Length of NDCubeSequence:  {length}
 Shape of 1st NDCube: {shapeNDCube}
 Axis Types of 1st NDCube: {axis_type}
 """.format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
-           axis_type=self.world_axis_physical_types[1:]))
+                axis_type=self.world_axis_physical_types[1:]))
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
@@ -234,14 +235,13 @@ Cube Sequence Helpers
 
 class _IndexAsCubeSlicer:
     """
-    Helper class to make slicing in index_as_cube sliceable/indexable
-    like a numpy array.
+    Helper class to make slicing in index_as_cube sliceable/indexable like a
+    numpy array.
 
     Parameters
     ----------
     seq : `ndcube.NDCubeSequence`
         Object of NDCubeSequence.
-
     """
 
     def __init__(self, seq):

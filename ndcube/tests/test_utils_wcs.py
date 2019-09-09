@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 import unittest
 
@@ -52,7 +51,7 @@ def test_slice_list(test_input, expected):
 @pytest.mark.parametrize("test_input,expected", [
     ((wm, np.array([1, 0, 2])), wm_reindexed_102),
     ((wm, np.array([1, 0, -1])), wm_reindexed_102)
-    ])
+])
 def test_reindex_wcs(test_input, expected):
     print(utils.wcs.reindex_wcs(*test_input))
     print(expected)
@@ -62,7 +61,7 @@ def test_reindex_wcs(test_input, expected):
 @pytest.mark.parametrize("test_input", [
     (TypeError, wm, 0),
     (TypeError, wm, np.array(['spam', 'eggs', 'ham'])),
-    ])
+])
 def test_reindex_wcs_errors(test_input):
     with pytest.raises(test_input[0]):
         utils.wcs.reindex_wcs(*test_input[1:])
@@ -83,7 +82,7 @@ def test_get_dependent_data_axes(test_input, expected):
     ((wm, 0), (0,)),
     ((wm, 1), (1, 2)),
     ((wm, 2), (1, 2)),
-    ])
+])
 def test_get_dependent_wcs_axes(test_input, expected):
     output = utils.wcs.get_dependent_wcs_axes(*test_input)
     assert output == expected
