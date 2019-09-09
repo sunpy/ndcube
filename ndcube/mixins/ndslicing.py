@@ -24,8 +24,8 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         """
         Override the parent class method to explicitly catch `None` indices.
 
-        This method calls ``_slice`` and then constructs a new object using the
-        kwargs returned by ``_slice``.
+        This method calls ``_slice`` and then constructs a new object
+        using the kwargs returned by ``_slice``.
         """
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
@@ -86,7 +86,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
             The sliced WCS object.
         """
         return SlicedLowLevelWCS(self.wcs, item)
-
 
     def _slice_extra_coords(self, item, pixel_keep, naxes):
 

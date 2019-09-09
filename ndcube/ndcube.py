@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import abc
 import warnings
@@ -24,7 +23,8 @@ __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
 class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
     """
-    A metaclass that combines `abc.ABCMeta` and `~astropy.utils.misc.InheritDocstrings`.
+    A metaclass that combines `abc.ABCMeta` and
+    `~astropy.utils.misc.InheritDocstrings`.
     """
 
 
@@ -126,14 +126,13 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         Returns
         -------
         result: NDCube
-
         """
 
 
 class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
-    Class representing N dimensional cubes.
-    Extra arguments are passed on to `~astropy.nddata.NDData`.
+    Class representing N dimensional cubes. Extra arguments are passed on to
+    `~astropy.nddata.NDData`.
 
     Parameters
     ----------
@@ -183,17 +182,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Enforce that the WCS object is a low_level_wcs object, complying APE14
         if not isinstance(wcs, BaseLowLevelWCS):
             raise TypeError(f'Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}')
-        else:
-            # If the WCS object is low_level_wcs object, convert it into SlicedLowLevelWCS object for sanity
-            # Convert the WCS object into a SlicedLowLevelWCS
-            if not isinstance(wcs, SlicedLowLevelWCS):
-                wcs = SlicedLowLevelWCS(wcs, [])
 
         # Format extra coords.
         if extra_coords:
             self._extra_coords_wcs_axis = \
-              utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                  extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
+                utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
+                    extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
 
@@ -214,23 +208,24 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @property
     def dimensions(self):
         """
-        Returns a named tuple with two attributes: 'shape' gives the shape
-        of the data dimensions; 'axis_types' gives the WCS axis type of each dimension,
-        e.g. WAVE or HPLT-TAN for wavelength of helioprojected latitude.
-
+        Returns a named tuple with two attributes: 'shape' gives the shape of
+        the data dimensions; 'axis_types' gives the WCS axis type of each
+        dimension, e.g. WAVE or HPLT-TAN for wavelength of helioprojected
+        latitude.
         """
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
     def world_axis_physical_types(self):
         """
-        Returns an iterable of strings describing the physical type for each world axis.
+        Returns an iterable of strings describing the physical type for each
+        world axis.
 
-        The strings conform to the International Virtual Observatory Alliance
-        standard, UCD1+ controlled Vocabulary.  For a description of the standard and
-        definitions of the different strings and string components,
-        see http://www.ivoa.net/documents/latest/UCDlist.html.
-
+        The strings conform to the International Virtual Observatory
+        Alliance standard, UCD1+ controlled Vocabulary.  For a
+        description of the standard and definitions of the different
+        strings and string components, see
+        http://www.ivoa.net/documents/latest/UCDlist.html.
         """
 
         # Use the context manager to access the physical types,
@@ -246,7 +241,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         quantity_axis_list = quantity_axis_list[::-1]
         pixel_to_world = self.high_level_wcs.pixel_to_world(*quantity_axis_list)
-        return pixel_to_world[::-1]
+        if isinstance(pixel_to_world, (tuple, list)):
+            return pixel_to_world[::-1]
+
+        return pixel_to_world
 
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
@@ -284,7 +282,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         -------
         >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
-
         """
         # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
@@ -312,14 +309,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         int_axes[i] = utils.cube.get_axis_number_from_axis_name(
                             axis, world_axis_types)
         # Ensure user has not entered the same axis twice.
-        repeats = set([x for x in int_axes if np.where(int_axes == x)[0].size > 1])
+        repeats = {x for x in int_axes if np.where(int_axes == x)[0].size > 1}
         if repeats:
             raise ValueError("The following axes were specified more than once: {}".format(
                 ' '.join(map(str, repeats))))
 
         new_int_axes = np.arange(len(self.dimensions))
         axes_coords = np.array([None] * len(unique_data_axis(self.wcs, new_int_axes)[1]))
-        axes_translated = np.array([False if entry in int_axes else True for entry in range(len(self.dimensions))])
+        axes_translated = np.array(
+            [False if entry in int_axes else True for entry in range(len(self.dimensions))])
 
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
@@ -336,10 +334,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # other dimensions all have 0 pixel value.
                     # Replace array in quantity list corresponding to current axis with
                     # np.arange array.
-                        quantity_list = [
-                        u.Quantity(np.zeros(_get_dimension_for_pixel(cube_dimensions[dependent_axes[i]], edges)),
-                                   unit=u.pix)] * n_dimensions
-                        quantity_list[axis] = u.Quantity(_pixel_centers_or_edges(cube_dimensions[axis], edges), unit=u.pix)
+                    quantity_list = [u.Quantity(np.zeros(_get_dimension_for_pixel(
+                        cube_dimensions[dependent_axes[i]], edges)), unit=u.pix)] * n_dimensions
+                    quantity_list[axis] = u.Quantity(
+                        _pixel_centers_or_edges(
+                            cube_dimensions[axis], edges), unit=u.pix)
                 else:
                     # If the axis is dependent on another, perform
                     # translations on all dependent axes.
@@ -348,7 +347,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # Construct orthogonal pixel index arrays for dependent axes.
                     quantity_list = [u.Quantity(np.zeros(tuple(
                         [_get_dimension_for_pixel(cube_dimensions[k], edges) for k in dependent_axes[i]])),
-                         unit=u.pix)] * n_dimensions
+                        unit=u.pix)] * n_dimensions
 
                     dependent_pixel_quantities = np.meshgrid(
                         *[_pixel_centers_or_edges(cube_dimensions[k], edges) * u.pix
@@ -369,7 +368,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         axes_translated[dependent_axes[i]] = True
 
         # Remove the None values from axes_coords
-        axes_coords = axes_coords[axes_coords!=np.array(None)]
+        axes_coords = axes_coords[axes_coords != np.array(None)]
 
         if len(axes_coords) == 1:
             return axes_coords[0]
@@ -382,14 +381,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Dictionary of extra coords where each key is the name of an extra
         coordinate supplied by user during instantiation of the NDCube.
 
-        The value of each key is itself a dictionary with the following keys:
-          | 'axis': `int`
-          |     The number of the data axis to which the extra coordinate corresponds.
-          | 'value': `astropy.units.Quantity` or array-like
-          |     The value of the extra coordinate at each pixel/array element along the
-          |     corresponding axis (given by the 'axis' key, above).  Note this means
-          |     that the length of 'value' must be equal to the length of the data axis
-          |     to which is corresponds.
+        The value of each key is itself a dictionary with the following
+        keys:   | 'axis': `int`   |     The number of the data axis to
+        which the extra coordinate corresponds.   | 'value':
+        `astropy.units.Quantity` or array-like   |     The value of the
+        extra coordinate at each pixel/array element along the   |
+        corresponding axis (given by the 'axis' key, above).  Note this
+        means   |     that the length of 'value' must be equal to the
+        length of the data axis   |     to which is corresponds.
         """
 
         if not self._extra_coords_wcs_axis:
@@ -399,7 +398,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],_pixel_keep(self.wcs),
+                        self._extra_coords_wcs_axis[key]["wcs axis"], _pixel_keep(self.wcs),
                         self.wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
@@ -412,7 +411,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # This part of the code will be removed in version 2.0
         if interval_widths:
             warnings.warn(
-                "interval_widths will be removed from the API in version 2.0, please use upper_corner argument.")
+                "interval_widths will be removed from the API in version 2.0"
+                ", please use upper_corner argument.")
             if upper_corner:
                 raise ValueError("Only one of interval_widths or upper_corner "
                                  "can be set. Recommend using upper_corner as "
@@ -424,8 +424,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
         # Raising a value error if the arguments have not the same dimensions.
         if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
-            raise ValueError("lower_corner and upper_corner must have same"
+            raise ValueError("lower_corner and upper_corner must have the same "
                              "number of elements as number of data dimensions.")
+
+        lower_corner = list(lower_corner)
+        upper_corner = list(upper_corner)
+
         if units:
             # Raising a value error if units have not the data dimensions.
             if len(units) != n_dim:
@@ -445,7 +449,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         all_world_corners_grid = np.meshgrid(
             *[u.Quantity([lower_corner[i], upper_corner[i]], unit=lower_corner[i].unit).value
               for i in range(self.data.ndim)])
-        all_world_corners = [all_world_corners_grid[i].flatten()*lower_corner[i].unit
+        all_world_corners = [all_world_corners_grid[i].flatten() * lower_corner[i].unit
                              for i in range(n_dim)]
 
         # Convert them back to units of world_axis_units
@@ -460,17 +464,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         all_world_corners = all_world_corners[::-1]
         all_pix_corners = self.wcs.world_to_pixel_values(*all_world_corners)
         all_pix_corners = all_pix_corners[::-1]
+        all_pix_corners = tuple(u.Quantity(a, u.pix).value for a in all_pix_corners)
 
         # Derive slicing item with which to slice NDCube.
         # Be sure to round down min pixel and round up + 1 the max pixel.
         item = tuple([slice(int(np.clip(axis_pixels.min(), 0, None)),
-                            int(np.ceil(axis_pixels.max()))+1)
+                            int(np.ceil(axis_pixels.max())) + 1)
                       for axis_pixels in all_pix_corners])
         return self[item]
 
     def crop_by_extra_coord(self, coord_name, min_coord_value, max_coord_value):
         """
-        Crops an NDCube given a minimum value and interval width along an extra coord.
+        Crops an NDCube given a minimum value and interval width along an extra
+        coord.
 
         Parameters
         ----------
@@ -488,7 +494,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Returns
         -------
         result: `ndcube.NDCube`
-
         """
         if not isinstance(coord_name, str):
             raise TypeError("The API for this function has changed. "
@@ -501,8 +506,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         w = np.logical_and(extra_coord_values >= min_coord_value,
                            extra_coord_values < max_coord_value)
         w = np.arange(len(extra_coord_values))[w]
-        item = [slice(None)]*len(self.dimensions)
-        item[extra_coord_dict["axis"]] = slice(w[0], w[-1]+1)
+        item = [slice(None)] * len(self.dimensions)
+        item[extra_coord_dict["axis"]] = slice(w[0], w[-1] + 1)
         return self[tuple(item)]
 
     def __repr__(self):
@@ -514,12 +519,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 Length of NDCube: {lengthNDCube}
 Axis Types of NDCube: {axis_type}
 """.format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
-           axis_type=self.world_axis_physical_types))
+                axis_type=self.world_axis_physical_types))
 
     def explode_along_axis(self, axis):
         """
-        Separates slices of NDCubes along a given cube axis into a NDCubeSequence
-        of (N-1)DCubes.
+        Separates slices of NDCubes along a given cube axis into a
+        NDCubeSequence of (N-1)DCubes.
 
         Parameters
         ----------
@@ -529,7 +534,6 @@ Axis Types of NDCube: {axis_type}
         Returns
         -------
         result : `ndcube_sequence.NDCubeSequence`
-
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
@@ -551,18 +555,18 @@ Axis Types of NDCube: {axis_type}
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
 
+
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
     pass
 
 
 class NDCubeOrdered(NDCube):
     """
-    Class representing N dimensional cubes with oriented WCS.
-    Extra arguments are passed on to NDData's init.
-    The order is TIME, SPECTRAL, SOLAR-x, SOLAR-Y and any other dimension.
-    For example, in an x, y, t cube the order would be (t,x,y) and in a
-    lambda, t, y cube the order will be (t, lambda, y).
-    Extra arguments are passed on to NDData's init.
+    Class representing N dimensional cubes with oriented WCS. Extra arguments
+    are passed on to NDData's init. The order is TIME, SPECTRAL, SOLAR-x,
+    SOLAR-Y and any other dimension. For example, in an x, y, t cube the order
+    would be (t,x,y) and in a lambda, t, y cube the order will be (t, lambda,
+    y). Extra arguments are passed on to NDData's init.
 
     Parameters
     ----------

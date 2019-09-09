@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 Helpers for testing ndcube.
@@ -35,7 +34,7 @@ def assert_metas_equal(test_input, expected_output):
 
 def assert_cubes_equal(test_input, expected_cube):
     unit_tester = unittest.TestCase()
-    assert type(test_input) == type(expected_cube)
+    assert isinstance(test_input, type(expected_cube))
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
@@ -46,7 +45,7 @@ def assert_cubes_equal(test_input, expected_cube):
 
 
 def assert_cubesequences_equal(test_input, expected_sequence):
-    assert type(test_input) == type(expected_sequence)
+    assert isinstance(test_input, type(expected_sequence))
     assert_metas_equal(test_input.meta, expected_sequence.meta)
     assert test_input._common_axis == expected_sequence._common_axis
     for i, cube in enumerate(test_input.data):
@@ -56,6 +55,7 @@ def assert_cubesequences_equal(test_input, expected_sequence):
 def assert_wcs_are_equal(wcs1, wcs2):
     """
     Assert function for testing two wcs object.
+
     Used in testing NDCube.
     Also checks if both the wcs objects are instance
     of `SlicedLowLevelWCS`
@@ -72,6 +72,7 @@ def assert_wcs_are_equal(wcs1, wcs2):
     assert wcs1.world_axis_object_components == wcs2.world_axis_object_components
     assert wcs1.pixel_bounds == wcs2.pixel_bounds
     assert repr(wcs1) == repr(wcs2)
+
 
 def create_sliced_wcs(wcs, item, dim):
     """
