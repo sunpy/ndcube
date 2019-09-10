@@ -1,0 +1,1 @@
+Fix the ability to pass a custom Axes to `ndcube.NDCube.plot` for a 2D cube.
