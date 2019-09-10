@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
+from astropy.visualization.wcsaxes import WCSAxes
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 try:
     from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
@@ -80,6 +81,7 @@ class NDCubePlotMixin:
                                     axes_units, data_unit, **kwargs)
         else:
             if len(plot_axis_indices) == 1:
+
                 ax = self._animate_cube_1D(
                     plot_axis_index=plot_axis_indices[0], axes_coordinates=axes_coordinates,
                     axes_units=axes_units, data_unit=data_unit, **kwargs)
@@ -206,7 +208,7 @@ class NDCubePlotMixin:
             axes_coord_check = axes_coordinates == [None, None]
         except Exception:
             axes_coord_check = False
-        if axes_coord_check:
+        if axes_coord_check and (isinstance(axes, WCSAxes) or axes is None):
             if axes is None:
                 # Build slice list for WCS for initializing WCSAxes object.
                 if self.wcs.naxis != 2:
