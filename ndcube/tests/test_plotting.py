@@ -223,8 +223,10 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
      (np.ma.masked_array(cube[0].data, cube[0].mask), "time [min]", "em.wl [m]",
       (-0.5, 3.5, -0.5, 2.5))),
 
-    (cube_spatial, {'axes': WCSAxes(plt.figure(), (0,0,1,1), wcs=cube_spatial.wcs)},
-     (cube_spatial.data, "custom:pos.helioprojective.lat [deg]", "custom:pos.helioprojective.lon [deg]",
+    (cube_spatial, {'axes': WCSAxes(plt.figure(), (0, 0, 1, 1), wcs=cube_spatial.wcs)},
+     (cube_spatial.data,
+      "custom:pos.helioprojective.lat [deg]",
+      "custom:pos.helioprojective.lon [deg]",
       (-0.5, 3.5, -0.5, 2.5))),
 
     (cube[0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
