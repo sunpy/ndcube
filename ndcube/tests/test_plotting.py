@@ -221,7 +221,7 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0], {},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "time [min]", "em.wl [m]",
-      (-0.5, 3.5, 2.5, -0.5))),
+      (-0.5, 3.5, -0.5, 2.5))),
 
     (cube_spatial, {'axes': WCSAxes(plt.figure(), (0,0,1,1), wcs=cube_spatial.wcs)},
      (cube_spatial.data, "custom:pos.helioprojective.lat [deg]", "custom:pos.helioprojective.lon [deg]",
@@ -247,6 +247,7 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
       "em.wl [m]", "bye [m]", (2e-11, 6e-11, 0.0, 3.0)))
 ])
 def test_cube_plot_2D(test_input, test_kwargs, expected_values):
+    fig = plt.figure()
     # Unpack expected properties.
     expected_data, expected_xlabel, expected_ylabel, expected_extent = \
         expected_values
