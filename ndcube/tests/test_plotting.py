@@ -4,7 +4,9 @@ import copy
 
 import numpy as np
 import astropy.units as u
+from astropy.visualization.wcsaxes import WCSAxes
 import matplotlib
+import matplotlib.pyplot as plt
 try:
     from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator, ImageAnimator
 except ImportError:
@@ -31,6 +33,14 @@ hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'C
       'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
 wm = WCS(header=hm)
 
+spatial = {
+           'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5,
+           'NAXIS1': 3,
+           'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1,
+           'NAXIS2': 2
+}
+spatial = WCS(header=spatial, naxis=2)
+
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
@@ -56,6 +66,10 @@ cube = NDCube(
                        for i in range(data_cube.shape[2])])),
                   ('array coord', 2, np.arange(100, 100+data_cube.shape[3]))
                   ])
+
+cube_spatial = NDCube(
+    data[0],
+    spatial)
 
 cube_unit = NDCube(
     data_cube,
@@ -210,7 +224,13 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0, 0], {},
      (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "time [min]", "em.wl [m]",
-      (-0.5, 3.5, 2.5, -0.5))),
+      (-0.5, 3.5, -0.5, 2.5))),
+
+    (cube_spatial, {'axes': WCSAxes(plt.figure(), (0, 0, 1, 1), wcs=cube_spatial.wcs)},
+     (cube_spatial.data,
+      "custom:pos.helioprojective.lat [deg]",
+      "custom:pos.helioprojective.lon [deg]",
+      (-0.5, 3.5, -0.5, 2.5))),
 
     (cube[0, 0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
      (np.ma.masked_array(cube[0, 0].data, cube[0, 0].mask), "bye [m]", "em.wl [cm]",
@@ -232,19 +252,24 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
     #   "em.wl [m]", "bye [m]", (2e-11, 6e-11, 0.0, 3.0)))
 ])
 def test_cube_plot_2D(test_input, test_kwargs, expected_values):
+    fig = plt.figure()
     # Unpack expected properties.
     expected_data, expected_xlabel, expected_ylabel, expected_extent = \
         expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert isinstance(output, (ImageAnimator, matplotlib.axes.Axes))
-    assert output.axes.xaxis.get_label_text() == expected_xlabel
-    assert output.axes.yaxis.get_label_text() == expected_ylabel
+    assert isinstance(output, matplotlib.axes.Axes)
 
-    if isinstance(output, matplotlib.axes.Axes):
-        np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
-        assert np.allclose(output.images[0].get_extent(), expected_extent)
+    np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
+    assert np.allclose(output.images[0].get_extent(), expected_extent)
+
+    if isinstance(output, WCSAxes):
+        assert output.coords[0].get_axislabel() == expected_xlabel
+        assert output.coords[1].get_axislabel() == expected_ylabel
+    else:
+        assert output.axes.yaxis.get_label_text() == expected_ylabel
+        assert output.axes.xaxis.get_label_text() == expected_xlabel
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
