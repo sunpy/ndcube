@@ -65,4 +65,5 @@ jobs:
 - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
   - template: publish-pypi.yml@sunpy
     parameters:
+      external_feed: 'PyPI'
       dependsOn: [Linux_37_offline,Windows_36_offline,macOS_37_online]
