@@ -1,1 +1,0 @@
-- Added a feature to get the pixel_edges from `ndcube.NDCube.axis_world_coords`
