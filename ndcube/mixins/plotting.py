@@ -6,6 +6,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.visualization.wcsaxes import WCSAxes
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 try:
     from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
@@ -227,8 +228,8 @@ class NDCubePlotMixin:
                     axes = wcsaxes_compat.gca_wcs(self.wcs, slices=tuple(slice_list))
                 else:
                     axes = wcsaxes_compat.gca_wcs(self.wcs)
-                # Set axis labels
 
+            # Set axis labels
             x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
                 plot_axis_indices[0], utils.wcs._pixel_keep(self.wcs),
                 self.wcs.pixel_n_dim)
