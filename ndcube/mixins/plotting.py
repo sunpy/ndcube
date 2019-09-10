@@ -132,7 +132,8 @@ class NDCubePlotMixin:
         # Define default x axis label.
         default_xlabel = f"{xname} [{unit_x_axis}]"
         # Combine data and uncertainty with mask.
-        xdata = np.ma.masked_array(xdata, self.mask)
+        if self.mask:
+            xdata = np.ma.masked_array(xdata, self.mask)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
         if self.unit is None:
             if data_unit is not None:
@@ -159,9 +160,11 @@ class NDCubePlotMixin:
                 else:
                     yerror = (self.uncertainty.array * self.unit).to(data_unit).value
         # Combine data and uncertainty with mask.
-        ydata = np.ma.masked_array(ydata, self.mask)
+        if self.mask:
+            ydata = np.ma.masked_array(ydata, self.mask)
         if yerror is not None:
-            yerror = np.ma.masked_array(yerror, self.mask)
+            if self.mask:
+                yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
         # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
         fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
@@ -203,7 +206,8 @@ class NDCubePlotMixin:
             else:
                 data = (self.data * self.unit).to(data_unit).value
         # Combine data with mask
-        data = np.ma.masked_array(data, self.mask)
+        if self.mask:
+            data = np.ma.masked_array(data, self.mask)
         if axes is None:
             try:
                 axes_coord_check = axes_coordinates == [None, None]
@@ -320,7 +324,8 @@ class NDCubePlotMixin:
         else:
             data = (self.data * self.unit).to(data_unit).value
         # Combine data values with mask.
-        data = np.ma.masked_array(data, self.mask)
+        if self.mask:
+            data = np.ma.masked_array(data, self.mask)
         # If axes_coordinates not provided generate an ImageAnimatorWCS plot
         # using NDCube's wcs object.
         new_axes_coordinates, new_axes_units, default_labels = \
@@ -406,7 +411,8 @@ class NDCubePlotMixin:
             else:
                 data = (self.data * self.unit).to(data_unit).value
         # Combine data with mask
-        # data = np.ma.masked_array(data, self.mask)
+        if self.mask:
+            data = np.ma.masked_array(data, self.mask)
         # Set default y label
         default_ylabel = f"Data [{unit_x_axis}]"
         # Initiate line animator object.
