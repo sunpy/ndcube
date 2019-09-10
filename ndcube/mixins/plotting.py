@@ -132,7 +132,7 @@ class NDCubePlotMixin:
         # Define default x axis label.
         default_xlabel = f"{xname} [{unit_x_axis}]"
         # Combine data and uncertainty with mask.
-        if self.mask:
+        if self.mask is not None:
             xdata = np.ma.masked_array(xdata, self.mask)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
         if self.unit is None:
@@ -160,10 +160,10 @@ class NDCubePlotMixin:
                 else:
                     yerror = (self.uncertainty.array * self.unit).to(data_unit).value
         # Combine data and uncertainty with mask.
-        if self.mask:
+        if self.mask is not None:
             ydata = np.ma.masked_array(ydata, self.mask)
         if yerror is not None:
-            if self.mask:
+            if self.mask is not None:
                 yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
         # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
@@ -206,7 +206,7 @@ class NDCubePlotMixin:
             else:
                 data = (self.data * self.unit).to(data_unit).value
         # Combine data with mask
-        if self.mask:
+        if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
         if axes is None:
             try:
@@ -324,7 +324,7 @@ class NDCubePlotMixin:
         else:
             data = (self.data * self.unit).to(data_unit).value
         # Combine data values with mask.
-        if self.mask:
+        if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
         # If axes_coordinates not provided generate an ImageAnimatorWCS plot
         # using NDCube's wcs object.
@@ -411,7 +411,7 @@ class NDCubePlotMixin:
             else:
                 data = (self.data * self.unit).to(data_unit).value
         # Combine data with mask
-        if self.mask:
+        if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
         # Set default y label
         default_ylabel = f"Data [{unit_x_axis}]"
