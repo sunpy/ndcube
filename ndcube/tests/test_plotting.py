@@ -301,55 +301,6 @@ def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
     assert output.axes.yaxis.get_label_text() == expected_ylabel
 
 
-@pytest.mark.parametrize("input_values, expected_values", [
-    ((None, None, None, None, {"image_axes": [-1, -2],
-                               "axis_ranges": [np.arange(3), np.arange(3)],
-                               "unit_x_axis": "km",
-                               "unit_y_axis": u.s,
-                               "unit": u.W}),
-     ([-1, -2], [np.arange(3), np.arange(3)], ["km", u.s], u.W, {})),
-    (([-1, -2], [np.arange(3), np.arange(3)], ["km", u.s], u.W, {}),
-     ([-1, -2], [np.arange(3), np.arange(3)], ["km", u.s], u.W, {})),
-    (([-1], None, None, None, {"unit_x_axis": "km"}),
-     ([-1], None, "km", None, {})),
-    (([-1, -2], None, None, None, {"unit_x_axis": "km"}),
-     (([-1, -2], None, ["km", None], None, {}))),
-    (([-1, -2], None, None, None, {"unit_y_axis": "km"}),
-     (([-1, -2], None, [None, "km"], None, {})))
-])
-def test_support_101_plot_API(input_values, expected_values):
-    # Define expected values.
-    expected_plot_axis_indices, expected_axes_coordinates, expected_axes_units, \
-        expected_data_unit, expected_kwargs = expected_values
-    # Run function
-    output_plot_axis_indices, output_axes_coordinates, output_axes_units, \
-        output_data_unit, output_kwargs = plotting._support_101_plot_API(*input_values)
-    # Check values are correct
-    assert output_plot_axis_indices == expected_plot_axis_indices
-    if expected_axes_coordinates is None:
-        assert output_axes_coordinates == expected_axes_coordinates
-    elif isinstance(expected_axes_coordinates, list):
-        for i, ac in enumerate(output_axes_coordinates):
-            np.testing.assert_array_equal(ac, expected_axes_coordinates[i])
-    assert output_axes_units == expected_axes_units
-    assert output_data_unit == expected_data_unit
-    assert output_kwargs == expected_kwargs
-
-
-@pytest.mark.parametrize("input_values", [
-    ([0, 1], None, None, None, {"image_axes": [-1, -2]}),
-    (None, [np.arange(1, 4), np.arange(1, 4)], None, None,
-     {"axis_ranges": [np.arange(3), np.arange(3)]}),
-    (None, None, [u.s, "km"], None, {"unit_x_axis": u.W}),
-    (None, None, [u.s, "km"], None, {"unit_y_axis": u.W}),
-    (None, None, None, u.s, {"unit": u.W}),
-    ([0, 1, 2], None, None, None, {"unit_x_axis": [u.s, u.km, u.W]}),
-])
-def test_support_101_plot_API_errors(input_values):
-    with pytest.raises(ValueError):
-        output = plotting._support_101_plot_API(*input_values)
-
-
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube, {"plot_axis_indices": -1},
      (cube_data_3, cube_none_axis_ranges_axis2, "time [min]", "Data [None]")),

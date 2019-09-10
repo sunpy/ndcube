@@ -69,9 +69,6 @@ class NDCubePlotMixin:
             The str must be a valid name of an extra_coord that corresponds to the same
             axis to which it is applied in the plot.
         """
-        # If old API is used, convert to new API.
-        plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs = _support_101_plot_API(
-            plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs)
         # Check kwargs are in consistent formats and set default values if not done so by user.
         naxis = len(self.dimensions)
         plot_axis_indices, axes_coordinates, axes_units = sequence_plotting._prep_axes_kwargs(
@@ -503,72 +500,7 @@ class NDCubePlotMixin:
         return new_axes_coordinates, new_axes_units, default_labels
 
 
-def _support_101_plot_API(plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs):
-    """
-    Check if user has used old API and convert it to new API.
-    """
-    # Get old API variable values.
-    image_axes = kwargs.pop("image_axes", None)
-    axis_ranges = kwargs.pop("axis_ranges", None)
-    unit_x_axis = kwargs.pop("unit_x_axis", None)
-    unit_y_axis = kwargs.pop("unit_y_axis", None)
-    unit = kwargs.pop("unit", None)
-    # Check if conflicting new and old API values have been set.
-    # If not, set new API using old API and raise deprecation warning.
-    if image_axes is not None:
-        variable_names = ("image_axes", "plot_axis_indices")
-        _raise_101_API_deprecation_warning(*variable_names)
-        if plot_axis_indices is None:
-            plot_axis_indices = image_axes
-        else:
-            _raise_API_error(*variable_names)
-    if axis_ranges is not None:
-        variable_names = ("axis_ranges", "axes_coordinates")
-        _raise_101_API_deprecation_warning(*variable_names)
-        if axes_coordinates is None:
-            axes_coordinates = axis_ranges
-        else:
-            _raise_API_error(*variable_names)
-    if (unit_x_axis is not None or unit_y_axis is not None) and axes_units is not None:
-        _raise_API_error("unit_x_axis and/or unit_y_axis", "axes_units")
-    if axes_units is None:
-        variable_names = ("unit_x_axis and unit_y_axis", "axes_units")
-        if unit_x_axis is not None:
-            _raise_101_API_deprecation_warning(*variable_names)
-            if len(plot_axis_indices) == 1:
-                axes_units = unit_x_axis
-            elif len(plot_axis_indices) == 2:
-                if unit_y_axis is None:
-                    axes_units = [unit_x_axis, None]
-                else:
-                    axes_units = [unit_x_axis, unit_y_axis]
-            else:
-                raise ValueError("Length of image_axes must be less than 3.")
-        else:
-            if unit_y_axis is not None:
-                _raise_101_API_deprecation_warning(*variable_names)
-                axes_units = [None, unit_y_axis]
-    if unit is not None:
-        variable_names = ("unit", "data_unit")
-        _raise_101_API_deprecation_warning(*variable_names)
-        if data_unit is None:
-            data_unit = unit
-        else:
-            _raise_API_error(*variable_names)
-    # Return values of new API
-    return plot_axis_indices, axes_coordinates, axes_units, data_unit, kwargs
-
-
 def _raise_API_error(old_name, new_name):
     raise ValueError(
         "Conflicting inputs: {} (old API) cannot be set if {} (new API) is set".format(
             old_name, new_name))
-
-
-def _raise_101_API_deprecation_warning(old_name, new_name):
-    warn(
-        ("{} is deprecated and will not be supported in version 2.0."
-         " It will be replaced by {}. See docstring.").format(
-            old_name,
-            new_name),
-        DeprecationWarning)
