@@ -40,12 +40,6 @@ jobs:
 
 - template: run-tox-env.yml@sunpy
   parameters:
-    name: Linux_36_offline
-    os: linux
-    tox: py36-offline --
-
-- template: run-tox-env.yml@sunpy
-  parameters:
     name: Windows_36_offline
     os: windows
     tox: py36-offline --
@@ -67,3 +61,8 @@ jobs:
     name: Linux_37_sunpydev
     os: linux
     tox: py37-sunpydev --
+
+- ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
+  - template: publish-pypi.yml@sunpy
+    parameters:
+      dependsOn: [Linux_37_offline,Windows_36_offline,macOS_37_online]
