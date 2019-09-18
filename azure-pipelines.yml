@@ -71,6 +71,7 @@ jobs:
   - template: publish.yml@sunpy
     parameters:
       external_feed: 'PyPI'
+      pypi_remote: 'PyPI'
       targets:
         - sdist
       dependsOn: [Linux_37_offline,Windows_36_offline,macOS_37_online]
