@@ -18,6 +18,9 @@ resources:
     ref: pypi_no_wheels
 
 trigger:
+  branches:
+    include:
+    - '*'
   tags:
     include:
     - 'v*'
