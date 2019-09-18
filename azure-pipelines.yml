@@ -68,7 +68,7 @@ jobs:
     tox: py37-sunpydev --
 
 - ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
-  - template: publish-pypi.yml@sunpy
+  - template: publish.yml@sunpy
     parameters:
       external_feed: 'PyPI'
       targets:
