@@ -11,11 +11,11 @@ variables:
 # as a service connection (if it has not been already).
 resources:
   repositories:
-  - repository: sunpy
+  - repository: OpenAstronomy
     type: github
     endpoint: sunpy
-    name: sunpy/azure-pipelines-template
-    ref: pypi_no_wheels
+    name: OpenAstronomy/azure-pipelines-templates
+    ref: master
 
 trigger:
   branches:
@@ -30,48 +30,40 @@ trigger:
     - '*post*'
 
 jobs:
-
-- template: run-tox-env.yml@sunpy
+- template: run-tox-env.yml@OpenAstronomy
   parameters:
-    name: pycodestyle
-    os: linux
-    tox: pycodestyle --
+    submodules: false
+    coverage: codecov
+    envs:
+      - linux: pycodestyle
 
-- template: run-tox-env.yml@sunpy
-  parameters:
-    name: Linux_37_offline
-    os: linux
-    tox: py37-offline --
+      - macos: py37-offline
+        name: py37_offline
 
-- template: run-tox-env.yml@sunpy
-  parameters:
-    name: Windows_36_offline
-    os: windows
-    tox: py36-offline --
+      - windows: py36-offline
+        name: py36_offline
 
-- template: run-tox-env.yml@sunpy
-  parameters:
-    name: macOS_37_online
-    os: macos
-    tox: py37-online --
+      - linux: py37-online
+        name: py37_online
 
-- template: run-tox-env.yml@sunpy
-  parameters:
-    name: Linux_37_astropydev
-    os: linux
-    tox: py37-astropydev --
+      - linux: py37-astropydev
 
-- template: run-tox-env.yml@sunpy
-  parameters:
-    name: Linux_37_sunpydev
-    os: linux
-    tox: py37-sunpydev --
+      - linux: py37-sunpydev
 
-- ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
-  - template: publish.yml@sunpy
+
+# On branches which aren't master, and not Pull Requests, build the wheels but only upload them on tags
+- ${{ if and(ne(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.SourceBranch'], 'master'))) }}:
+  - template: publish.yml@OpenAstronomy
     parameters:
-      external_feed: 'PyPI'
-      pypi_remote: 'PyPI'
+      # Only Upload to PyPI on tags
+      ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
+        pypi_connection_name : 'PyPI'
+      test_extras: 'dev'
+      test_command: 'pytest -p no:warnings --doctest-rst -m "not figure" --pyargs ndcube'
+      submodules: false
       targets:
         - sdist
-      dependsOn: [Linux_37_offline,Windows_36_offline,macOS_37_online]
+      dependsOn:
+        - py37_offline
+        - py36_offline
+        - py37_online
