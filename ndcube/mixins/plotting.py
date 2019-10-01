@@ -15,13 +15,9 @@ except ImportError:
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
-from ndcube.mixins import sequence_plotting
+import ndcube.mixins.plotting_utils as utils
 
 __all__ = ['NDCubePlotMixin']
-
-INVALID_UNIT_SET_MESSAGE = "Can only set unit for axis if corresponding coordinates in " + \
-    "axes_coordinates are set to None, an astropy Quantity or the name of an extra coord that " + \
-    "is an astropy Quantity."
 
 
 class NDCubePlotMixin:
@@ -29,72 +25,65 @@ class NDCubePlotMixin:
     Add plotting functionality to a NDCube class.
     """
 
-    def plot(self, axes=None, plot_axis_indices=None, axes_coordinates=None,
+    def plot(self, axes=None, plot_axes=None, axes_coordinates=None,
              axes_units=None, data_unit=None, **kwargs):
         """
-        Plots an interactive visualization of this cube with a slider
-        controlling the wavelength axis for data having dimensions greater than
-        2. Plots an x-y graph onto the current axes for 2D or 1D data. Keyword
-        arguments are passed on to matplotlib. Parameters other than data and
-        wcs are passed to ImageAnimatorWCS, which in turn passes them to imshow
-        for data greater than 2D.
+        Visualize the `~ndcube.NDCube`.
 
         Parameters
         ----------
-        plot_axis_indices: `list`
-            The two axes that make the image.
-            Default=[-1,-2].  This implies cube instance -1 dimension
-            will be x-axis and -2 dimension will be y-axis.
-
-        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or None:
+        axes: `~astropy.visualization.wcsaxes.WCSAxes` or None:, optional
             The axes to plot onto. If None the current axes will be used.
 
-        axes_unit: `list` of `astropy.units.Unit`
+        plot_axes: `list`, optional
+            A list of length equal to the number of pixel dimensions. This list
+            selects which cube axes are displayed on which plot axes. For a
+            image plot this list should contain ``'x'`` and ``'y'`` for the
+            plot axes and `None` for all the other elements. For a line plot it
+            should only contain ``'x'`` and `None` for all the other elements.
+
+        axes_unit: `list`, optional
+            A list of length equal to the number of pixel dimensions specifying
+            the units of each axis, or `None` to use the default unit for that
+            axis.
+
+        axes_coordinates: `list`, optional
+            A list of length equal to the number of pixel dimensions. For each
+            axis the value of the list should either be a string giving the
+            world axis type or `None` to use the default axis from the WCS.
 
         data_unit: `astropy.unit.Unit`
-            The data is changed to the unit given or the cube.unit if not given, for 1D plots.
-
-        axes_coordinates: list of physical coordinates for array or None
-            If None array indices will be used for all axes.
-            If a list it should contain one element for each axis of the numpy array.
-            For the image axes a [min, max] pair should be specified which will be
-            passed to :func:`matplotlib.pyplot.imshow` as extent.
-            For the slider axes a [min, max] pair can be specified or an array the
-            same length as the axis which will provide all values for that slider.
-            If None is specified for an axis then the array indices will be used
-            for that axis.
-            The physical coordinates expected by axes_coordinates should be an array of
-            pixel_edges.
-            A str entry in axes_coordinates signifies that an extra_coord will be used
-            for the axis's coordinates.
-            The str must be a valid name of an extra_coord that corresponds to the same
-            axis to which it is applied in the plot.
+            The data is changed to the unit given or the ``NDCube.unit`` if not
+            given, used for 1D plots.
         """
+        naxis = len(cube.dimensions)
+
         # Check kwargs are in consistent formats and set default values if not done so by user.
-        naxis = len(self.dimensions)
-        plot_axis_indices, axes_coordinates, axes_units = sequence_plotting._prep_axes_kwargs(
-            naxis, plot_axis_indices, axes_coordinates, axes_units)
+        plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
+            self, plot_axes, axes_coordinates, axes_units)
+
         if naxis == 1:
             ax = self._plot_1D_cube(axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
-        else:
-            if len(plot_axis_indices) == 1:
+        elif len(plot_axes) == 1:
+            raise NotImplementedError()
+            ax = self._animate_cube_1D(
+                plot_axes=plot_axes, axes_coordinates=axes_coordinates,
+                axes_units=axes_units, data_unit=data_unit, **kwargs)
 
-                ax = self._animate_cube_1D(
-                    plot_axis_index=plot_axis_indices[0], axes_coordinates=axes_coordinates,
-                    axes_units=axes_units, data_unit=data_unit, **kwargs)
-            else:
-                if naxis == 2:
-                    ax = self._plot_2D_cube(axes, plot_axis_indices, axes_coordinates,
-                                            axes_units, data_unit, **kwargs)
-                else:
-                    ax = self._plot_3D_cube(
-                        plot_axis_indices=plot_axis_indices, axes_coordinates=axes_coordinates,
-                        axes_units=axes_units, **kwargs)
+        elif naxis == 2:
+            ax = self._plot_2D_cube(axes, plot_axes, axes_coordinates,
+                                    axes_units, data_unit, **kwargs)
+        else:
+            raise NotImplementedError()
+            ax = self._plot_ND_cube(
+                plot_axes=plot_axes, axes_coordinates=axes_coordinates,
+                axes_units=axes_units, **kwargs)
+
         return ax
 
-    def _plot_1D_cube(self, axes=None, axes_coordinates=None, axes_units=None, data_unit=None,
-                      **kwargs):
+    def _plot_1D_cube(self, axes=None, axes_coordinates=None, axes_units=None,
+                      data_unit=None, **kwargs):
         """
         Plots a graph. Keyword arguments are passed on to matplotlib.
 
@@ -103,74 +92,57 @@ class NDCubePlotMixin:
         data_unit: `astropy.unit.Unit`
             The data is changed to the unit given or the cube.unit if not given.
         """
-        # Derive x-axis coordinates and unit from inputs.
-        x_axis_coordinates, unit_x_axis = sequence_plotting._derive_1D_coordinates_and_units(
-            axes_coordinates, axes_units)
-        if x_axis_coordinates is None:
-            # Default is to derive x coords and defaul xlabel from WCS object.
+
+        if axes is None:
+            axes = plt.subplot(projection=self.wcs)
+
+        if axes_coordinates is None or axes_coordinates[0] == self.world_axis_physical_types[0]:
             xname = self.world_axis_physical_types[0]
-            xdata = self.axis_world_coords()
-        elif isinstance(x_axis_coordinates, str):
-            # User has entered a str as x coords, get that extra coord.
-            xname = x_axis_coordinates
-            xdata = self.extra_coords[x_axis_coordinates]["value"]
+            x_wcs_unit = self.wcs.world_axis_units[0]
+            x_axis_unit = axes_units[0] or x_wcs_unit
         else:
-            # Else user must have set the x-values manually.
-            xname = ""
-            xdata = x_axis_coordinates
-        # If a unit has been set for the x-axis, try to convert x coords to that unit.
-        if isinstance(xdata, u.Quantity):
-            if unit_x_axis is None:
-                unit_x_axis = xdata.unit
-                xdata = xdata.value
-            else:
-                xdata = xdata.to(unit_x_axis).value
-        else:
-            if unit_x_axis is not None:
-                raise TypeError(INVALID_UNIT_SET_MESSAGE)
+            raise NotImplementedError("We need to support extra_coords here")
+
         # Define default x axis label.
         default_xlabel = f"{xname} [{unit_x_axis}]"
-        # Combine data and uncertainty with mask.
-        if self.mask is not None:
-            xdata = np.ma.masked_array(xdata, self.mask)
+        default_ylabel = f"Data"
+
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
+        yerror = self.uncertainty.array if (self.uncertainty is not None) else None
+        ydata = self.data
+
         if self.unit is None:
             if data_unit is not None:
                 raise TypeError("Can only set y-axis unit if self.unit is set to a "
                                 "compatible unit.")
-            else:
-                ydata = self.data
-                if self.uncertainty is None:
-                    yerror = None
-                else:
-                    yerror = self.uncertainty.array
         else:
-            if data_unit is None:
-                data_unit = self.unit
-                ydata = self.data
-                if self.uncertainty is None:
-                    yerror = None
-                else:
-                    yerror = self.uncertainty.array
+            if data_unit is not None:
+                ydata = u.Quantity(ydata, unit=self.unit).to_value(data_unit)
+                if yerror is not None:
+                    yerror = u.Quantity(yerror, self.unit).to_value(data_unit)
             else:
-                ydata = (self.data * self.unit).to(data_unit).value
-                if self.uncertainty is None:
-                    yerror = None
-                else:
-                    yerror = (self.uncertainty.array * self.unit).to(data_unit).value
+                data_unit = self.unit
+
+            default_ylabel += f" [{data_unit}]"
+
         # Combine data and uncertainty with mask.
         if self.mask is not None:
             ydata = np.ma.masked_array(ydata, self.mask)
-        if yerror is not None:
-            if self.mask is not None:
+
+            if yerror is not None:
                 yerror = np.ma.masked_array(yerror, self.mask)
-        # Create plot
-        # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
-        fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
-                                                           data_unit, default_xlabel, kwargs)
+
+        if yerror is not None:
+            axes.errorbar(ydata, yerror, **kwargs)
+        else:
+            axes.plot(ydata, **kwargs)
+
+        axes.set_ylabel(default_ylabel)
+        axes.set_xlabel(default_xlabel)
+
         return ax
 
-    def _plot_2D_cube(self, axes=None, plot_axis_indices=None, axes_coordinates=None,
+    def _plot_2D_cube(self, axes=None, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
         """
         Plots a 2D image onto the current axes. Keyword arguments are passed on
@@ -181,9 +153,9 @@ class NDCubePlotMixin:
         axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
             The axes to plot onto. If None the current axes will be used.
 
-        plot_axis_indices: `list`.
-            The first axis in WCS object will become the first axis of plot_axis_indices and
-            second axis in WCS object will become the second axis of plot_axis_indices.
+        plot_axes: `list`.
+            The first axis in WCS object will become the first axis of plot_axes and
+            second axis in WCS object will become the second axis of plot_axes.
             Default: ['x', 'y']
         """
         # Set default values of kwargs if not set.
@@ -193,7 +165,7 @@ class NDCubePlotMixin:
             axes_units = [None, None]
         # Set which cube dimensions are on the x an y axes.
         axis_data = ['x', 'x']
-        axis_data[plot_axis_indices[1]] = 'y'
+        axis_data[plot_axes[1]] = 'y'
         axis_data = axis_data[::-1]
         # Determine data to be plotted
         if data_unit is None:
@@ -231,17 +203,17 @@ class NDCubePlotMixin:
 
             # Set axis labels
             x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
-                plot_axis_indices[0], utils.wcs._pixel_keep(self.wcs),
+                plot_axes[0], utils.wcs._pixel_keep(self.wcs),
                 self.wcs.pixel_n_dim)
             axes.coords[x_wcs_axis].set_axislabel("{} [{}]".format(
-                self.world_axis_physical_types[plot_axis_indices[0]],
+                self.world_axis_physical_types[plot_axes[0]],
                 self.wcs.world_axis_units[x_wcs_axis]))
 
             y_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
-                plot_axis_indices[1], utils.wcs._pixel_keep(self.wcs),
+                plot_axes[1], utils.wcs._pixel_keep(self.wcs),
                 self.wcs.pixel_n_dim)
             axes.coords[y_wcs_axis].set_axislabel("{} [{}]".format(
-                self.world_axis_physical_types[plot_axis_indices[1]],
+                self.world_axis_physical_types[plot_axes[1]],
                 self.wcs.world_axis_units[y_wcs_axis]))
 
             # Plot data
@@ -255,32 +227,32 @@ class NDCubePlotMixin:
                 axes = plt.gca()
             # Since we can't assume the x-axis will be uniform, create NonUniformImage
             # axes and add it to the axes object.
-            if plot_axis_indices[0] < plot_axis_indices[1]:
+            if plot_axes[0] < plot_axes[1]:
                 data = data.transpose()
             im_ax = mpl.image.NonUniformImage(
-                axes, extent=(new_axes_coordinates[plot_axis_indices[0]][0],
-                              new_axes_coordinates[plot_axis_indices[0]][-1],
-                              new_axes_coordinates[plot_axis_indices[1]][0],
-                              new_axes_coordinates[plot_axis_indices[1]][-1]), **kwargs)
-            im_ax.set_data(new_axes_coordinates[plot_axis_indices[0]],
-                           new_axes_coordinates[plot_axis_indices[1]], data)
+                axes, extent=(new_axes_coordinates[plot_axes[0]][0],
+                              new_axes_coordinates[plot_axes[0]][-1],
+                              new_axes_coordinates[plot_axes[1]][0],
+                              new_axes_coordinates[plot_axes[1]][-1]), **kwargs)
+            im_ax.set_data(new_axes_coordinates[plot_axes[0]],
+                           new_axes_coordinates[plot_axes[1]], data)
             axes.add_image(im_ax)
             # Set the limits, labels, etc. of the axes.
-            xlim = kwargs.pop("xlim", (new_axes_coordinates[plot_axis_indices[0]][0],
-                                       new_axes_coordinates[plot_axis_indices[0]][-1]))
+            xlim = kwargs.pop("xlim", (new_axes_coordinates[plot_axes[0]][0],
+                                       new_axes_coordinates[plot_axes[0]][-1]))
             axes.set_xlim(xlim)
-            ylim = kwargs.pop("xlim", (new_axes_coordinates[plot_axis_indices[1]][0],
-                                       new_axes_coordinates[plot_axis_indices[1]][-1]))
+            ylim = kwargs.pop("xlim", (new_axes_coordinates[plot_axes[1]][0],
+                                       new_axes_coordinates[plot_axes[1]][-1]))
             axes.set_ylim(ylim)
 
-            xlabel = kwargs.pop("xlabel", default_labels[plot_axis_indices[0]])
-            ylabel = kwargs.pop("ylabel", default_labels[plot_axis_indices[1]])
+            xlabel = kwargs.pop("xlabel", default_labels[plot_axes[0]])
+            ylabel = kwargs.pop("ylabel", default_labels[plot_axes[1]])
             axes.set_xlabel(xlabel)
             axes.set_ylabel(ylabel)
 
         return axes
 
-    def _plot_3D_cube(self, plot_axis_indices=None, axes_coordinates=None,
+    def _plot_3D_cube(self, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
         """
         Plots an interactive visualization of this cube using sliders to move
@@ -290,7 +262,7 @@ class NDCubePlotMixin:
 
         Parameters
         ----------
-        plot_axis_indices: `list`
+        plot_axes: `list`
             The two axes that make the image.
             Like [-1,-2] this implies cube instance -1 dimension
             will be x-axis and -2 dimension will be y-axis.
@@ -314,8 +286,8 @@ class NDCubePlotMixin:
             to which it is applied in the plot.
         """
         # For convenience in inserting dummy variables later, ensure
-        # plot_axis_indices are all positive.
-        plot_axis_indices = [i if i >= 0 else self.data.ndim + i for i in plot_axis_indices]
+        # plot_axes are all positive.
+        plot_axes = [i if i >= 0 else self.data.ndim + i for i in plot_axes]
         # If axes kwargs not set by user, set them as list of Nones for
         # each axis for consistent behaviour.
         if axes_coordinates is None:
@@ -335,29 +307,29 @@ class NDCubePlotMixin:
         new_axes_coordinates, new_axes_units, default_labels = \
             self._derive_axes_coordinates(axes_coordinates, axes_units, data.shape, edges=True)
 
-        if (axes_coordinates[plot_axis_indices[0]] is None and
-                axes_coordinates[plot_axis_indices[1]] is None):
+        if (axes_coordinates[plot_axes[0]] is None and
+                axes_coordinates[plot_axes[1]] is None):
             # Generate plot
-            ax = ImageAnimatorWCS(data, wcs=self.wcs, image_axes=plot_axis_indices,
-                                  unit_x_axis=new_axes_units[plot_axis_indices[0]],
-                                  unit_y_axis=new_axes_units[plot_axis_indices[1]],
+            ax = ImageAnimatorWCS(data, wcs=self.wcs, image_axes=plot_axes,
+                                  unit_x_axis=new_axes_units[plot_axes[0]],
+                                  unit_y_axis=new_axes_units[plot_axes[1]],
                                   axis_ranges=new_axes_coordinates, **kwargs)
 
             # Set the labels of the plot
             ax.axes.coords[0].set_axislabel(
-                self.wcs.world_axis_physical_types[plot_axis_indices[0]])
+                self.wcs.world_axis_physical_types[plot_axes[0]])
             ax.axes.coords[1].set_axislabel(
-                self.wcs.world_axis_physical_types[plot_axis_indices[1]])
+                self.wcs.world_axis_physical_types[plot_axes[1]])
 
         # If one of the plot axes is set manually, produce a basic ImageAnimator object.
         else:
             # If axis labels not set by user add to kwargs.
-            ax = ImageAnimator(data, image_axes=plot_axis_indices,
+            ax = ImageAnimator(data, image_axes=plot_axes,
                                axis_ranges=new_axes_coordinates, **kwargs)
 
             # Add the labels of the plot
-            ax.axes.set_xlabel(default_labels[plot_axis_indices[0]])
-            ax.axes.set_ylabel(default_labels[plot_axis_indices[1]])
+            ax.axes.set_xlabel(default_labels[plot_axes[0]])
+            ax.axes.set_ylabel(default_labels[plot_axes[1]])
         return ax
 
     def _animate_cube_1D(self, plot_axis_index=-1, axes_coordinates=None,
