@@ -94,13 +94,14 @@ class NDCubePlotMixin:
         """
 
         if axes is None:
-            axes = plt.subplot(projection=self.wcs)
+            axes = wcsaxes_compat.gca_wcs(self.wcs)
 
         if axes_coordinates is None or axes_coordinates[0] == self.world_axis_physical_types[0]:
             xname = self.world_axis_physical_types[0]
-            x_wcs_unit = self.wcs.world_axis_units[0]
-            x_axis_unit = axes_units[0] if axes_units is not None else None
-            x_axis_unit = x_axis_unit or x_wcs_unit
+            # TODO: Deal with this madness
+            for coord in axes.coords:
+                if 'b' in coord.axislabels.get_visible_axes():
+                    x_axis_unit = coord._formatter_locator._format_unit
         else:
             raise NotImplementedError("We need to support extra_coords here")
 
@@ -160,97 +161,31 @@ class NDCubePlotMixin:
             second axis in WCS object will become the second axis of plot_axes.
             Default: ['x', 'y']
         """
-        # Set default values of kwargs if not set.
-        if axes_coordinates is None:
-            axes_coordinates = [None, None]
-        if axes_units is None:
-            axes_units = [None, None]
-        # Set which cube dimensions are on the x an y axes.
-        axis_data = ['x', 'x']
-        axis_data[plot_axes[1]] = 'y'
-        axis_data = axis_data[::-1]
-        # Determine data to be plotted
-        if data_unit is None:
-            data = self.data
-        else:
+        if axes is None:
+            slices = list(filter(lambda x: x is not None, plot_axes))
+            axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slices)
+
+        # TODO: This doesn't work when n_pixel_dim != n_world_dim
+        for i, coord in enumerate(axes.coords):
+            if axes_units is not None and axes_units[0] is not None:
+                axes.coords[i].set_format_unit(axes_units[0])
+
+            physical_type = self.world_axis_physical_types[i]
+            format_unit = axes.coords[i]._formatter_locator._format_unit
+            axes.coords[i].set_axislabel(f"{physical_type} [{format_unit}]")
+
+        data = self.data
+        if data_unit is not None:
             # If user set data_unit, convert dat to desired unit if self.unit set.
             if self.unit is None:
                 raise TypeError("Can only set data_unit if NDCube.unit is set.")
-            else:
-                data = (self.data * self.unit).to(data_unit).value
-        # Combine data with mask
+            data = u.Quantity(self.data, unit=self.unit).to_value(data_unit)
+
         if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
-        try:
-            axes_coord_check = axes_coordinates == [None, None]
-        except Exception:
-            axes_coord_check = False
-        if axes_coord_check and (isinstance(axes, WCSAxes) or axes is None):
-            if axes is None:
-                # Build slice list for WCS for initializing WCSAxes object.
-                if self.wcs.pixel_n_dim != 2:
-                    slice_list = []
-                    index = 0
-                    for bool_ in self.missing_axes:
-                        if not bool_:
-                            slice_list.append(axis_data[index])
-                            index += 1
-                        else:
-                            slice_list.append(1)
-                    if index != 2:
-                        raise ValueError("Dimensions of WCS and data don't match")
-                    axes = wcsaxes_compat.gca_wcs(self.wcs, slices=tuple(slice_list))
-                else:
-                    axes = wcsaxes_compat.gca_wcs(self.wcs)
 
-            # Set axis labels
-            x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
-                plot_axes[0], utils.wcs._pixel_keep(self.wcs),
-                self.wcs.pixel_n_dim)
-            axes.coords[x_wcs_axis].set_axislabel("{} [{}]".format(
-                self.world_axis_physical_types[plot_axes[0]],
-                self.wcs.world_axis_units[x_wcs_axis]))
-
-            y_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
-                plot_axes[1], utils.wcs._pixel_keep(self.wcs),
-                self.wcs.pixel_n_dim)
-            axes.coords[y_wcs_axis].set_axislabel("{} [{}]".format(
-                self.world_axis_physical_types[plot_axes[1]],
-                self.wcs.world_axis_units[y_wcs_axis]))
-
-            # Plot data
-            axes.imshow(data, **kwargs)
-        else:
-            # Else manually set axes x and y values based on user's input for axes_coordinates.
-            new_axes_coordinates, new_axis_units, default_labels = \
-                self._derive_axes_coordinates(axes_coordinates, axes_units, data.shape)
-            # Initialize axes object and set values along axis.
-            if axes is None:
-                axes = plt.gca()
-            # Since we can't assume the x-axis will be uniform, create NonUniformImage
-            # axes and add it to the axes object.
-            if plot_axes[0] < plot_axes[1]:
-                data = data.transpose()
-            im_ax = mpl.image.NonUniformImage(
-                axes, extent=(new_axes_coordinates[plot_axes[0]][0],
-                              new_axes_coordinates[plot_axes[0]][-1],
-                              new_axes_coordinates[plot_axes[1]][0],
-                              new_axes_coordinates[plot_axes[1]][-1]), **kwargs)
-            im_ax.set_data(new_axes_coordinates[plot_axes[0]],
-                           new_axes_coordinates[plot_axes[1]], data)
-            axes.add_image(im_ax)
-            # Set the limits, labels, etc. of the axes.
-            xlim = kwargs.pop("xlim", (new_axes_coordinates[plot_axes[0]][0],
-                                       new_axes_coordinates[plot_axes[0]][-1]))
-            axes.set_xlim(xlim)
-            ylim = kwargs.pop("xlim", (new_axes_coordinates[plot_axes[1]][0],
-                                       new_axes_coordinates[plot_axes[1]][-1]))
-            axes.set_ylim(ylim)
-
-            xlabel = kwargs.pop("xlabel", default_labels[plot_axes[0]])
-            ylabel = kwargs.pop("ylabel", default_labels[plot_axes[1]])
-            axes.set_xlabel(xlabel)
-            axes.set_ylabel(ylabel)
+        # Plot data
+        axes.imshow(data, **kwargs)
 
         return axes
 

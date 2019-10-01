@@ -70,16 +70,16 @@ def wcs_3d():
 def wcs_2d_spatial():
     spatial = {
         'CTYPE1': 'HPLT-TAN',
-        'CUNIT1': 'deg',
-        'CDELT1': 0.5,
-        'CRPIX1': 2,
-        'CRVAL1': 0.5,
+        'CUNIT1': 'arcsec',
+        'CDELT1': 2,
+        'CRPIX1': 5,
+        'CRVAL1': 0,
 
         'CTYPE2': 'HPLN-TAN',
-        'CUNIT2': 'deg',
-        'CDELT2': 0.4,
-        'CRPIX2': 2,
-        'CRVAL2': 1,
+        'CUNIT2': 'arcsec',
+        'CDELT2': 4,
+        'CRPIX2': 5,
+        'CRVAL2': 0,
     }
     return WCS(header=spatial)
 
