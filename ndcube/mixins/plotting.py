@@ -56,7 +56,7 @@ class NDCubePlotMixin:
             The data is changed to the unit given or the ``NDCube.unit`` if not
             given, used for 1D plots.
         """
-        naxis = len(cube.dimensions)
+        naxis = self.wcs.pixel_n_dim
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
@@ -99,12 +99,13 @@ class NDCubePlotMixin:
         if axes_coordinates is None or axes_coordinates[0] == self.world_axis_physical_types[0]:
             xname = self.world_axis_physical_types[0]
             x_wcs_unit = self.wcs.world_axis_units[0]
-            x_axis_unit = axes_units[0] or x_wcs_unit
+            x_axis_unit = axes_units[0] if axes_units is not None else None
+            x_axis_unit = x_axis_unit or x_wcs_unit
         else:
             raise NotImplementedError("We need to support extra_coords here")
 
         # Define default x axis label.
-        default_xlabel = f"{xname} [{unit_x_axis}]"
+        default_xlabel = f"{xname} [{x_axis_unit}]"
         default_ylabel = f"Data"
 
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
@@ -133,14 +134,15 @@ class NDCubePlotMixin:
                 yerror = np.ma.masked_array(yerror, self.mask)
 
         if yerror is not None:
-            axes.errorbar(ydata, yerror, **kwargs)
+            # We plot against pixel coordinates
+            axes.errorbar(np.arange(len(ydata)), ydata, yerr=yerror, **kwargs)
         else:
             axes.plot(ydata, **kwargs)
 
         axes.set_ylabel(default_ylabel)
         axes.set_xlabel(default_xlabel)
 
-        return ax
+        return axes
 
     def _plot_2D_cube(self, axes=None, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):

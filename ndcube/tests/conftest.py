@@ -83,6 +83,17 @@ def wcs_2d_spatial():
     }
     return WCS(header=spatial)
 
+@pytest.fixture
+def wcs_1d():
+    spatial = {
+        'CTYPE1': 'WAVE',
+        'CUNIT1': 'nm',
+        'CDELT1': 0.5,
+        'CRPIX1': 2,
+        'CRVAL1': 0.5,
+    }
+    return WCS(header=spatial)
+
 
 def data_nd(shape):
     nelem = np.product(shape)
@@ -113,7 +124,17 @@ def ndcube_4d_uncertainty(wcs_4d):
     shape = (5, 8, 10, 12)
     data_cube = data_nd(shape)
     uncertainty = np.sqrt(data_cube)
-    return NDCube(data_cube, wcs=wcs_4d)
+    return NDCube(data_cube, wcs=wcs_4d, uncertainty=uncertainty)
+
+
+@pytest.fixture
+def ndcube_4d_mask(wcs_4d):
+    shape = (5, 8, 10, 12)
+    data_cube = data_nd(shape)
+    uncertainty = np.sqrt(data_cube)
+    mask = data_cube % 2
+    return NDCube(data_cube, wcs=wcs_4d, uncertainty=uncertainty, mask=mask)
+
 
 @pytest.fixture
 def ndcube_4d_extra_coords(wcs_4d):
@@ -122,12 +143,14 @@ def ndcube_4d_extra_coords(wcs_4d):
     extra_coords = extra_coords(data_cube)
     return NDCube(data_cube, wcs=wcs_4d, extra_coords=extra_coords)
 
+
 @pytest.fixture
 def ndcube_4d_unit_uncertainty(wcs_4d):
     shape = (5, 8, 10, 12)
     data_cube = data_nd(shape)
     uncertainty = np.sqrt(data_cube)
-    return NDCube(data_cube, wcs=wcs_4d, unit=u.J)
+    return NDCube(data_cube, wcs=wcs_4d,
+                  unit=u.J, uncertainty=uncertainty)
 
 
 @pytest.fixture
@@ -151,3 +174,11 @@ def ndcube_2d(request):
     This is a meta fixture for parametrizing all the 2D ndcubes.
     """
     return request.getfixturevalue("ndcube_2d_" + request.param)
+
+
+
+@pytest.fixture
+def ndcube_1d_simple(wcs_1d):
+    shape = (10,)
+    data_cube = data_nd(shape)
+    return NDCube(data_cube, wcs=wcs_1d)
