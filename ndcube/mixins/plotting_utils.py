@@ -64,3 +64,24 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
                     f"Specified axis unit '{axis_unit}' is not convertible to world axis unit '{wau}'")
 
     return plot_axes, axes_coordinates, axes_units
+
+
+def set_wcsaxes_labels_units(coord_map, wcs, axes_units=None):
+    """
+    Given an `~astropy.visualization.wcsaxes.coordinates_map.CoordinatesMap`
+    object set the format units and labels.
+    """
+    for i, coord in enumerate(coord_map):
+        if axes_units is not None and axes_units[0] is not None:
+            coord.set_format_unit(axes_units[0])
+
+        # Use wcs here for ordering to match wcsaxes
+        physical_type = wcs.world_axis_physical_types[coord.coord_index]
+        format_unit = coord.get_format_unit()
+
+        if coord.coord_type in ('longitude', 'latitude'):
+            # Don't set unit for lon/lat axes as the ticks are formatted
+            # with the unit
+            coord.set_axislabel(f"{physical_type}")
+        else:
+            coord.set_axislabel(f"{physical_type} [{format_unit:latex}]")

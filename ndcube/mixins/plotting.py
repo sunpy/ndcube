@@ -76,7 +76,7 @@ class NDCubePlotMixin:
                                     axes_units, data_unit, **kwargs)
         else:
             raise NotImplementedError()
-            ax = self._plot_ND_cube(
+            ax = self._animate_cube_2D(
                 plot_axes=plot_axes, axes_coordinates=axes_coordinates,
                 axes_units=axes_units, **kwargs)
 
@@ -96,17 +96,9 @@ class NDCubePlotMixin:
         if axes is None:
             axes = wcsaxes_compat.gca_wcs(self.wcs)
 
-        if axes_coordinates is None or axes_coordinates[0] == self.world_axis_physical_types[0]:
-            xname = self.world_axis_physical_types[0]
-            # TODO: Deal with this madness
-            for coord in axes.coords:
-                if 'b' in coord.axislabels.get_visible_axes():
-                    x_axis_unit = coord._formatter_locator._format_unit
-        else:
+        if axes_coordinates is not None and axes_coordinates[0] != self.world_axis_physical_types[0]:
             raise NotImplementedError("We need to support extra_coords here")
 
-        # Define default x axis label.
-        default_xlabel = f"{xname} [{x_axis_unit}]"
         default_ylabel = f"Data"
 
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
@@ -141,7 +133,8 @@ class NDCubePlotMixin:
             axes.plot(ydata, **kwargs)
 
         axes.set_ylabel(default_ylabel)
-        axes.set_xlabel(default_xlabel)
+
+        utils.set_wcsaxes_labels_units(axes.coords, self.wcs, axes_units)
 
         return axes
 
@@ -165,14 +158,7 @@ class NDCubePlotMixin:
             slices = list(filter(lambda x: x is not None, plot_axes))
             axes = wcsaxes_compat.gca_wcs(self.wcs, slices=slices)
 
-        # TODO: This doesn't work when n_pixel_dim != n_world_dim
-        for i, coord in enumerate(axes.coords):
-            if axes_units is not None and axes_units[0] is not None:
-                axes.coords[i].set_format_unit(axes_units[0])
-
-            physical_type = self.world_axis_physical_types[i]
-            format_unit = axes.coords[i]._formatter_locator._format_unit
-            axes.coords[i].set_axislabel(f"{physical_type} [{format_unit}]")
+        utils.set_wcsaxes_labels_units(axes.coords, self.wcs, axes_units)
 
         data = self.data
         if data_unit is not None:
@@ -189,8 +175,8 @@ class NDCubePlotMixin:
 
         return axes
 
-    def _plot_3D_cube(self, plot_axes=None, axes_coordinates=None,
-                      axes_units=None, data_unit=None, **kwargs):
+    def _animate_cube_2D(self, plot_axes=None, axes_coordinates=None,
+                         axes_units=None, data_unit=None, **kwargs):
         """
         Plots an interactive visualization of this cube using sliders to move
         through axes plot using in the image. Parameters other than data and
@@ -333,84 +319,3 @@ class NDCubePlotMixin:
                           xlabel=default_xlabel,
                           ylabel=f"Data [{data_unit}]", **kwargs)
         return ax
-
-    def _derive_axes_coordinates(self, axes_coordinates, axes_units, data_shape, edges=False):
-        new_axes_coordinates = []
-        new_axes_units = []
-        default_labels = []
-        default_label_text = ""
-        for i, axis_coordinate in enumerate(axes_coordinates):
-            # If axis coordinate is None, derive axis values from WCS.
-            if axis_coordinate is None:
-                # If the new_axis_coordinate is not independent, i.e. dimension is >2D
-                # and not equal to dimension of data, then the new_axis_coordinate must
-                # be reduced to a 1D ndarray by taking the mean along all non-plotting axes.
-                new_axis_coordinate = self.axis_world_coords(i, edges=edges)
-                idx = utils.wcs.get_dependent_data_axes(self.wcs, i)[0]
-
-                # If the new_axis_coordinate is a SkyCoord, get the array from the SkyCoord object
-                if isinstance(new_axis_coordinate, SkyCoord):
-                    new_axis_coordinate = utils.cube.array_from_skycoord(new_axis_coordinate, i - idx)
-
-                axis_label_text = self.world_axis_physical_types[i]
-                # If the shape of the data is not 1, or all the axes are not dependent
-                if new_axis_coordinate.ndim != 1 and new_axis_coordinate.ndim != len(data_shape):
-                    index = utils.wcs.get_dependent_data_axes(self.wcs, i)
-                    reduce_axis = np.where(index == np.array([i]))[0]
-
-                    index = np.delete(index, reduce_axis)
-                    # Reduce the data by taking mean
-                    new_axis_coordinate = np.mean(new_axis_coordinate, axis=tuple(index))
-
-            elif isinstance(axis_coordinate, str):
-                # If axis coordinate is a string, derive axis values from
-                # corresponding extra coord.
-                # Calculate edge value if required
-                new_axis_coordinate = _get_extra_coord_edges(
-                    self.extra_coords[axis_coordinate]["value"]) if edges \
-                    else self.extra_coords[axis_coordinate]["value"]
-                axis_label_text = axis_coordinate
-            else:
-                # Else user must have manually set the axis coordinates.
-                new_axis_coordinate = axis_coordinate
-                axis_label_text = default_label_text
-            # If axis coordinate is a Quantity, convert to unit supplied by user.
-            if isinstance(new_axis_coordinate, u.Quantity):
-                if axes_units[i] is None:
-                    new_axis_unit = new_axis_coordinate.unit
-                    new_axis_coordinate = new_axis_coordinate.value
-                else:
-                    new_axis_unit = axes_units[i]
-                    new_axis_coordinate = new_axis_coordinate.to(new_axis_unit).value
-            elif isinstance(new_axis_coordinate[0], datetime.datetime):
-                axis_label_text = "{}/sec since {}".format(
-                    axis_label_text, new_axis_coordinate[0])
-                new_axis_coordinate = np.array([(t - new_axis_coordinate[0]).total_seconds()
-                                                for t in new_axis_coordinate])
-                new_axis_unit = u.s
-            else:
-                if axes_units[i] is None:
-                    new_axis_unit = None
-                else:
-                    raise TypeError(INVALID_UNIT_SET_MESSAGE)
-
-            # Derive default axis label
-            if isinstance(new_axis_coordinate, datetime.datetime):
-                if axis_label_text == default_label_text:
-                    default_label = "{}".format(new_axis_coordinate.strftime("%Y/%m/%d %H:%M"))
-                else:
-                    default_label = "{} [{}]".format(
-                        axis_label_text, new_axis_coordinate.strftime("%Y/%m/%d %H:%M"))
-            else:
-                default_label = f"{axis_label_text} [{new_axis_unit}]"
-            # Append new coordinates, units and labels to output list.
-            new_axes_coordinates.append(new_axis_coordinate)
-            new_axes_units.append(new_axis_unit)
-            default_labels.append(default_label)
-        return new_axes_coordinates, new_axes_units, default_labels
-
-
-def _raise_API_error(old_name, new_name):
-    raise ValueError(
-        "Conflicting inputs: {} (old API) cannot be set if {} (new API) is set".format(
-            old_name, new_name))

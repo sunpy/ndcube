@@ -17,14 +17,14 @@ from ndcube import NDCube
 def wcs_4d():
     header = {
         'CTYPE4': 'HPLN-TAN',
-        'CUNIT4': 'deg',
-        'CDELT4': 0.4,
-        'CRPIX4': 2,
-        'CRVAL4': 1,
+        'CUNIT4': 'arcsec',
+        'CDELT4': 5,
+        'CRPIX4': 5,
+        'CRVAL4': 0,
 
         'CTYPE3': 'HPLT-TAN',
-        'CUNIT3': 'deg',
-        'CDELT3': 0.5,
+        'CUNIT3': 'arcsec',
+        'CDELT3': 10,
         'CRPIX3': 0,
         'CRVAL3': 0,
 
@@ -52,16 +52,16 @@ def wcs_3d():
         'CRVAL1': 10,
 
         'CTYPE2': 'HPLT-TAN',
-        'CUNIT2': 'deg',
-        'CDELT2': 0.5,
-        'CRPIX2': 2,
-        'CRVAL2': 0.5,
+        'CUNIT2': 'arcsec',
+        'CDELT2': 5,
+        'CRPIX2': 5,
+        'CRVAL2': 0,
 
         'CTYPE3': 'HPLN-TAN',
-        'CUNIT3': 'deg',
-        'CDELT3': 0.4,
-        'CRPIX3': 2,
-        'CRVAL3': 1,
+        'CUNIT3': 'arcsec',
+        'CDELT3': 10,
+        'CRPIX3': 0,
+        'CRVAL3': 0,
         }
 
     return WCS(header=header)

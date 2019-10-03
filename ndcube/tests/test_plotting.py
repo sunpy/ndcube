@@ -41,6 +41,13 @@ def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
     return fig
 
 
+@pytest.mark.mpl_image_compare
+def test_plot_2D_cube(ndcube_1d_simple):
+    fig = plt.figure()
+    ax = ndcube_1d_simple.plot()
+    assert isinstance(ax, WCSAxes)
+    return fig
+
 
 @pytest.mark.mpl_image_compare
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
