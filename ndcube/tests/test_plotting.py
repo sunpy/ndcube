@@ -4,6 +4,8 @@ import numpy as np
 import astropy.units as u
 from astropy.visualization.wcsaxes import WCSAxes
 
+import sunpy.visualization.animator
+
 import matplotlib.pyplot as plt
 
 
@@ -62,8 +64,6 @@ def test_plot_2D_cube(ndcube_1d_simple):
                          ),
                          indirect=["ndcube_4d"])
 def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
-    # TODO: The output for the spatial plots is inconsistent between the lat
-    # slice and the lon slice.
     fig = plt.figure()
 
     sub = ndcube_4d[cslice]
@@ -71,3 +71,27 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
     assert isinstance(ax, WCSAxes)
 
     return fig
+
+
+@pytest.mark.mpl_image_compare
+@pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
+                         (
+                             ("simple", None, {}),
+                             ("simple", np.s_[0,:,:,:], {}),
+                             ("simple", np.s_[:,:,:,:], {}),
+                             # ("simple", np.s_[:,:,0,:], {}),
+
+                             ("unit_uncertainty", np.s_[0,:,:,:], {'data_unit': u.mJ}),
+
+                             ("mask", np.s_[:,:,:,:], {}),
+                         ),
+                         indirect=["ndcube_4d"])
+def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs):
+    if cslice:
+        sub = ndcube_4d[cslice]
+    else:
+        sub = ndcube_4d
+    ax = sub.plot(**kwargs)
+    assert isinstance(ax, sunpy.visualization.animator.ImageAnimatorWCS)
+
+    return ax.fig

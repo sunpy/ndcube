@@ -46,6 +46,8 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
         ax_coord_types = (str,)
         for axis_coordinate in axes_coordinates:
             if isinstance(axis_coordinate, str):
+                # TODO: Needs support for extra coords and also validating that
+                # it is correlated with pixel dimension.
                 if axis_coordinate not in cube.world_axis_physical_types:
                     raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if axis_coordinate is not None and not isinstance(axis_coordinate, ax_coord_types):
