@@ -76,10 +76,11 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
 @pytest.mark.mpl_image_compare
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
+                             ("simple", np.s_[:,:,0,:], {}),
+                             ("simple", np.s_[:,:,0,:], {'plot_axes': [..., 'x']}),
                              ("simple", None, {}),
                              ("simple", np.s_[0,:,:,:], {}),
                              ("simple", np.s_[:,:,:,:], {}),
-                             # ("simple", np.s_[:,:,0,:], {}),
 
                              ("unit_uncertainty", np.s_[0,:,:,:], {'data_unit': u.mJ}),
 
@@ -92,6 +93,6 @@ def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs):
     else:
         sub = ndcube_4d
     ax = sub.plot(**kwargs)
-    assert isinstance(ax, sunpy.visualization.animator.ImageAnimatorWCS)
+    assert isinstance(ax, sunpy.visualization.animator.ArrayAnimatorWCS)
 
     return ax.fig

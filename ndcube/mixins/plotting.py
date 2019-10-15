@@ -1,3 +1,4 @@
+import copy
 import datetime
 from warnings import warn
 
@@ -8,10 +9,8 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.visualization.wcsaxes import WCSAxes
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
-try:
-    from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
-except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
+from sunpy.visualization.animator import ImageAnimator, ArrayAnimatorWCS, LineAnimator
+from astropy.wcs.wcsapi import SlicedLowLevelWCS
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
@@ -65,17 +64,12 @@ class NDCubePlotMixin:
         if naxis == 1:
             ax = self._plot_1D_cube(self.wcs, axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
-        elif len(plot_axes) == 1:
-            raise NotImplementedError()
-            ax = self._animate_cube_1D(
-                plot_axes=plot_axes, axes_coordinates=axes_coordinates,
-                axes_units=axes_units, data_unit=data_unit, **kwargs)
 
         elif naxis == 2:
             ax = self._plot_2D_cube(self.wcs, axes, plot_axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
         else:
-            ax = self._animate_cube_2D(self.wcs,
+            ax = self._animate_cube(self.wcs,
                 plot_axes=plot_axes, axes_coordinates=axes_coordinates,
                 axes_units=axes_units, **kwargs)
 
@@ -174,12 +168,10 @@ class NDCubePlotMixin:
 
         return axes
 
-    def _animate_cube_2D(self, wcs, plot_axes=None, axes_coordinates=None,
+    def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                          axes_units=None, data_unit=None, **kwargs):
         if axes_coordinates is not None and axes_coordinates[0] != wcs.world_axis_physical_types[::-1][0]:
             raise NotImplementedError("We need to support extra_coords here")
-
-        image_axes = [plot_axes[::-1].index("x"), plot_axes[::-1].index("y")]
 
         # If data_unit set, convert data to that unit
         if data_unit is None:
@@ -191,83 +183,37 @@ class NDCubePlotMixin:
         if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
 
-        # TODO: Deal with axis_ranges for slider axes, should take functions
-        # TODO: Add labels to plot, probably needs callback or something
-
-        # Generate plot
-        x_unit = y_unit = None
-        if axes_units is not None:
-            x_unit = axes_units[image_axes[0]]
-            y_unit = axes_units[image_axes[1]]
-
-        ax = ImageAnimatorWCS(data, wcs=wcs, image_axes=image_axes,
-                              unit_x_axis=x_unit,
-                              unit_y_axis=y_unit,
-                              **kwargs)
-
-        return ax
-
-    def _animate_cube_1D(self, plot_axis_index=-1, axes_coordinates=None,
-                         axes_units=None, data_unit=None, **kwargs):
-        """
-        Animates an axis of a cube as a line plot with sliders for other axes.
-        """
-        if axes_coordinates is None:
-            axes_coordinates = [None] * self.data.ndim
-        if axes_units is None:
-            axes_units = [None] * self.data.ndim
-        # Get real world axis values along axis to be plotted and enter into axes_ranges kwarg.
-        if axes_coordinates[plot_axis_index] is None:
-            xname = self.world_axis_physical_types[plot_axis_index]
-            xdata = self.axis_world_coords(plot_axis_index, edges=True)
-        elif isinstance(axes_coordinates[plot_axis_index], str):
-            xname = axes_coordinates[plot_axis_index]
-            xdata = _get_extra_coord_edges(self.extra_coords[xname]["value"])
-        else:
-            xname = ""
-            xdata = axes_coordinates[plot_axis_index]
-        # Change x data to desired units it set by user.
-        if isinstance(xdata, u.Quantity):
-            if axes_units[plot_axis_index] is None:
-                unit_x_axis = xdata.unit
+        axes_units = axes_units or [None] * self.wcs.pixel_n_dim
+        coord_params = {}
+        for coord_name, axis_unit in zip(self.world_axis_physical_types, axes_units):
+            params = {}
+            if axis_unit is not None:
+                params['format_unit'] = axis_unit
+            if 'pos.' in coord_name and ('.lon' in coord_name or '.lat' in coord_name):
+                params['axislabel'] = coord_name
             else:
-                unit_x_axis = axes_units[plot_axis_index]
-                xdata = xdata.to(unit_x_axis).value
-        else:
-            if axes_units[plot_axis_index] is not None:
-                raise TypeError(INVALID_UNIT_SET_MESSAGE)
-            else:
-                unit_x_axis = None
-        # Put xdata back into axes_coordinates as a masked array.
-        if len(xdata.shape) > 1:
-            # Since LineAnimator currently only accepts 1-D arrays for the x-axis, collapse xdata
-            # to single dimension by taking mean along non-plotting axes.
-            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index)
-            reduce_axis = np.where(index == np.array(plot_axis_index))[0]
+                axis_unit = axis_unit or self.wcs.world_axis_units[self.wcs.world_axis_physical_types.index(coord_name)]
+                axis_unit = u.Unit(axis_unit)
+                params['axislabel'] = f"{coord_name} [{axis_unit:latex}]"
 
-            index = np.delete(index, reduce_axis)
-            # Reduce the data by taking mean
-            xdata = np.mean(xdata, axis=tuple(index))
-        axes_coordinates[plot_axis_index] = xdata
-        # Set default x label
-        default_xlabel = f"{xname} [{unit_x_axis}]"
-        # Derive y axis data
-        if data_unit is None:
-            data = self.data
-            data_unit = self.unit
-        else:
-            if self.unit is None:
-                raise TypeError("NDCube.unit is None.  Must be an astropy.units.unit or "
-                                "valid unit string in order to set data_unit.")
-            else:
-                data = (self.data * self.unit).to(data_unit).value
-        # Combine data with mask
-        if self.mask is not None:
-            data = np.ma.masked_array(data, self.mask)
-        # Set default y label
-        default_ylabel = f"Data [{unit_x_axis}]"
-        # Initiate line animator object.
-        ax = LineAnimator(data, plot_axis_index=plot_axis_index, axis_ranges=axes_coordinates,
-                          xlabel=default_xlabel,
-                          ylabel=f"Data [{data_unit}]", **kwargs)
+            coord_params[coord_name] = params
+
+
+        # Subset the WCS so we can filter coord_params by the axes that will
+        # exist on the WCSAxes object once it is created.
+        slices = copy.copy(plot_axes)
+        slices[slices.index('x')] = slice(None)
+        if 'y' in plot_axes:
+            slices[slices.index('y')] = slice(None)
+        slices = [s if s is not None else 0 for s in slices]
+
+        sub_wcs = SlicedLowLevelWCS(self.wcs, slices[::-1])
+        new_coord_params = {}
+        for k, v in coord_params.items():
+            if k in sub_wcs.world_axis_physical_types:
+                new_coord_params[k] = v
+
+        plot_axes = [p if p is not None else 0 for p in plot_axes]
+        ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=new_coord_params, **kwargs)
+
         return ax

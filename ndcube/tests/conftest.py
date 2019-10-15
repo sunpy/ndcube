@@ -176,7 +176,6 @@ def ndcube_2d(request):
     return request.getfixturevalue("ndcube_2d_" + request.param)
 
 
-
 @pytest.fixture
 def ndcube_1d_simple(wcs_1d):
     shape = (10,)
