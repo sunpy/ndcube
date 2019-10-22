@@ -8,7 +8,7 @@ include RELEASE.rst
 include setup.py
 include setup.cfg
 
-# Include whole folders outside of sunpy/
+# Include whole folders outside of ndcube/
 recursive-include docs *
 recursive-include examples *
 recursive-include licenses *
