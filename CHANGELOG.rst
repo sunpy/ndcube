@@ -1,3 +1,12 @@
+Ndcube v1.2.1 (2019-10-22)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed the files included and excluded from the tarball. (`#212 <https://github.com/sunpy/ndcube/pull/212>`__)
+
+
 Ndcube v1.2.0 (2019-09-10)
 ==========================
 
