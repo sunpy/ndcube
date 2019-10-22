@@ -1,4 +1,4 @@
-# All files in sunpy/ should be included in package_data in setup.cfg
+# All files in ndcube/ should be included in package_data in setup.cfg
 include ah_bootstrap.py
 include CHANGELOG.rst
 include LICENSE.rst
