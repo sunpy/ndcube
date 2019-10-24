@@ -127,7 +127,7 @@ class NDCubePlotMixin:
 
         axes.set_ylabel(default_ylabel)
 
-        utils.set_wcsaxes_labels_units(axes.coords, wcs, axes_units)
+        utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
         return axes
 
@@ -151,7 +151,7 @@ class NDCubePlotMixin:
             slices = plot_axes[::-1] if plot_axes is not None else None
             axes = wcsaxes_compat.gca_wcs(wcs, slices=slices)
 
-        utils.set_wcsaxes_labels_units(axes.coords, wcs, axes_units)
+        utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
         data = self.data
         if data_unit is not None:
@@ -183,20 +183,10 @@ class NDCubePlotMixin:
         if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
 
-        axes_units = axes_units or [None] * self.wcs.pixel_n_dim
         coord_params = {}
-        for coord_name, axis_unit in zip(self.world_axis_physical_types, axes_units):
-            params = {}
-            if axis_unit is not None:
-                params['format_unit'] = axis_unit
-            if 'pos.' in coord_name and ('.lon' in coord_name or '.lat' in coord_name):
-                params['axislabel'] = coord_name
-            else:
-                axis_unit = axis_unit or self.wcs.world_axis_units[self.wcs.world_axis_physical_types.index(coord_name)]
-                axis_unit = u.Unit(axis_unit)
-                params['axislabel'] = f"{coord_name} [{axis_unit:latex}]"
-
-            coord_params[coord_name] = params
+        if axes_units is not None:
+            for axis_unit in axes_units:
+                coord_params[coord_name] = {'format_unit': axis_unit}
 
         plot_axes = [p if p is not None else 0 for p in plot_axes]
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
