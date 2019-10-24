@@ -198,22 +198,7 @@ class NDCubePlotMixin:
 
             coord_params[coord_name] = params
 
-
-        # Subset the WCS so we can filter coord_params by the axes that will
-        # exist on the WCSAxes object once it is created.
-        slices = copy.copy(plot_axes)
-        slices[slices.index('x')] = slice(None)
-        if 'y' in plot_axes:
-            slices[slices.index('y')] = slice(None)
-        slices = [s if s is not None else 0 for s in slices]
-
-        sub_wcs = SlicedLowLevelWCS(self.wcs, slices[::-1])
-        new_coord_params = {}
-        for k, v in coord_params.items():
-            if k in sub_wcs.world_axis_physical_types:
-                new_coord_params[k] = v
-
         plot_axes = [p if p is not None else 0 for p in plot_axes]
-        ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=new_coord_params, **kwargs)
+        ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         return ax

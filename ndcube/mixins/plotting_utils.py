@@ -74,8 +74,8 @@ def set_wcsaxes_labels_units(coord_map, wcs, axes_units=None):
     object set the format units and labels.
     """
     for i, coord in enumerate(coord_map):
-        if axes_units is not None and axes_units[0] is not None:
-            coord.set_format_unit(axes_units[0])
+        if axes_units is not None and axes_units[i] is not None:
+            coord.set_format_unit(axes_units[i])
 
         # Use wcs here for ordering to match wcsaxes
         physical_type = wcs.world_axis_physical_types[coord.coord_index]
