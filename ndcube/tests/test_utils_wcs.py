@@ -54,8 +54,6 @@ def test_slice_list(test_input, expected):
     ((wm, np.array([1, 0, -1])), wm_reindexed_102)
 ])
 def test_reindex_wcs(test_input, expected):
-    print(utils.wcs.reindex_wcs(*test_input))
-    print(expected)
     helpers.assert_wcs_are_equal(utils.wcs.reindex_wcs(*test_input), expected)
 
 

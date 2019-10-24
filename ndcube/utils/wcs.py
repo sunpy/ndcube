@@ -112,7 +112,7 @@ class WCS(wcs.WCS):
             attr = new_wcs_axes_params[param]
             newheader[param + axis] = attr
         try:
-            print(wcs.WCS(header=newheader).get_axis_types())
+            wcs.WCS(header=newheader).get_axis_types()
         except InconsistentAxisTypesError as err:
             projection = re.findall(r'expected [^,]+', str(err))[0][9:]
             newheader['CTYPE' + axis] = projection
