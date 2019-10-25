@@ -24,7 +24,7 @@ def wcs_4d():
 
         'CTYPE3': 'HPLT-TAN',
         'CUNIT3': 'arcsec',
-        'CDELT3': 10,
+        'CDELT3': 20,
         'CRPIX3': 0,
         'CRVAL3': 0,
 
