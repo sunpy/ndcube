@@ -13,7 +13,7 @@ from distutils.version import LooseVersion
 
 __minimum_python_version__ = "3.6"
 
-__all__ = ['NDCube', 'NDCubeOrdered', 'NDCubeSequence']
+__all__ = ['NDCube', 'NDCubeSequence']
 
 
 class UnsupportedPythonError(Exception):
