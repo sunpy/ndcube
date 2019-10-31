@@ -42,7 +42,7 @@ class NDCubePlotMixin:
             should only contain ``'x'`` and `None` for all the other elements.
 
         axes_unit: `list`, optional
-            A list of length equal to the number of pixel dimensions specifying
+            A list of length equal to the number of world dimensions specifying
             the units of each axis, or `None` to use the default unit for that
             axis.
 

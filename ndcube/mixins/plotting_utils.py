@@ -63,9 +63,9 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
         # TODO: Should we reverse order of axes_coordinates here?
 
     if axes_units is not None:
-        axes_units = _expand_ellipsis(naxis, axes_units)
-        if len(axes_units) != naxis:
-            raise ValueError(f"length of axes_units must be {naxis}.")
+        axes_units = _expand_ellipsis(cube.wcs.world_n_dim, axes_units)
+        if len(axes_units) != cube.wcs.world_n_dim:
+            raise ValueError(f"The length of the axes_units argument must be {cube.wcs.world_n_dim}.")
         # Convert all non-None elements to astropy units
         axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
         for i, axis_unit in enumerate(axes_units):
