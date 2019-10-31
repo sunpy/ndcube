@@ -18,6 +18,11 @@ def _expand_ellipsis(ndim, plist):
 
 
 def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
+    """
+    Prepare the kwargs for the plotting functions.
+
+    This function returns things in WCS not array order.
+    """
     naxis = len(cube.dimensions)
 
     # If plot_axes, axes_coordinates, axes_units are not None and not lists,
@@ -55,13 +60,14 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
                     raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if axis_coordinate is not None and not isinstance(axis_coordinate, ax_coord_types):
                 raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those.")
+        # TODO: Should we reverse order of axes_coordinates here?
 
     if axes_units is not None:
         axes_units = _expand_ellipsis(naxis, axes_units)
         if len(axes_units) != naxis:
             raise ValueError(f"length of axes_units must be {naxis}.")
         # Convert all non-None elements to astropy units
-        axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))
+        axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
         for i, axis_unit in enumerate(axes_units):
             wau = cube.wcs.world_axis_units[i]
             if axis_unit is not None and not axis_unit.is_equivalent(wau):
