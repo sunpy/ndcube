@@ -64,7 +64,7 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
         axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))
         for i, axis_unit in enumerate(axes_units):
             wau = cube.wcs.world_axis_units[i]
-            if not axis_unit.is_equivalent(wau):
+            if axis_unit is not None and not axis_unit.is_equivalent(wau):
                 raise u.UnitsError(
                     f"Specified axis unit '{axis_unit}' is not convertible to world axis unit '{wau}'")
 
