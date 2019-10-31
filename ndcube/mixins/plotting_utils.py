@@ -30,7 +30,10 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
         axes_units = [axes_units]
     # Set default value of plot_axes if not set by user.
     if plot_axes is None:
-        plot_axes = [..., 'x', 'y']
+        plot_axes = [..., 'y', 'x']
+
+    # We flip the plot axes here so they are in the right order for WCSAxes
+    plot_axes = plot_axes[::-1]
 
     plot_axes = _expand_ellipsis(naxis, plot_axes)
     if 'x' not in plot_axes:

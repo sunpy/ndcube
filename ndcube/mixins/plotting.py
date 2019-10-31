@@ -148,8 +148,7 @@ class NDCubePlotMixin:
             Default: ['x', 'y']
         """
         if axes is None:
-            slices = plot_axes[::-1] if plot_axes is not None else None
-            axes = wcsaxes_compat.gca_wcs(wcs, slices=slices)
+            axes = wcsaxes_compat.gca_wcs(wcs, slices=plot_axes)
 
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
@@ -162,6 +161,9 @@ class NDCubePlotMixin:
 
         if self.mask is not None:
             data = np.ma.masked_array(data, self.mask)
+
+        if plot_axes.index('x') > plot_axes.index('y'):
+            data = data.T
 
         # Plot data
         axes.imshow(data, **kwargs)
