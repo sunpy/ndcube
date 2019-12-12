@@ -185,7 +185,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Enforce that the WCS object is a low_level_wcs object, and not None.
         if not isinstance(self.wcs, BaseLowLevelWCS):
-            raise TypeError(f"Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}")
+            raise TypeError(f"Expected a {BaseLowLevelWCS} object, got {type(self.wcs)}")
 
         # Format extra coords.
         if extra_coords:
