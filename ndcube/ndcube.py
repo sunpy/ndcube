@@ -139,8 +139,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     data: `numpy.ndarray`
         The array holding the actual data in this object.
 
-    wcs: `ndcube.wcs.wcs.WCS`
-        The WCS object containing the axes' information
+    wcs: `ndcube.wcs.wcs.WCS`, optional
+        The WCS object containing the axes' information, optional only if
+        ``data`` is an `astropy.nddata.NDData` object.
 
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
@@ -176,12 +177,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     """
 
-    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
+    def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
                  unit=None, extra_coords=None, copy=False, **kwargs):
 
-        # Enforce that the WCS object is a low_level_wcs object, complying APE14
-        if not isinstance(wcs, BaseLowLevelWCS):
-            raise TypeError(f'Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}')
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
+                         meta=meta, unit=unit, copy=copy, **kwargs)
+
+        # Enforce that the WCS object is a low_level_wcs object, and not None.
+        if not isinstance(self.wcs, BaseLowLevelWCS):
+            raise TypeError(f"Expected a {type(BaseLowLevelWCS)} object, got {type(wcs)}")
 
         # Format extra coords.
         if extra_coords:
@@ -190,10 +194,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
-
-        # Initialize NDCube.
-        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
-                         meta=meta, unit=unit, copy=copy, **kwargs)
 
     @property
     def high_level_wcs(self):
