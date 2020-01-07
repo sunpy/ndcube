@@ -14,7 +14,7 @@ from astropy.wcs.wcsapi import SlicedLowLevelWCS
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
-import ndcube.mixins.plotting_utils as utils
+from . import plotting_utils as utils
 
 __all__ = ['NDCubePlotMixin']
 
