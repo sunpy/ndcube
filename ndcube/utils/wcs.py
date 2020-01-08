@@ -7,6 +7,7 @@ Miscellaneous WCS utilities.
 import re
 from copy import deepcopy
 from collections import UserDict
+import numbers
 
 import numpy as np
 from astropy import wcs
@@ -163,7 +164,7 @@ def _wcs_slicer(wcs, missing_axes, item):
                 item_checked.append(slice(0, 1))
         new_wcs = wcs.slice(item_checked)
     # item is int then slicing axis.
-    elif isinstance(item, int) or isinstance(item, np.int64):
+    elif isinstance(item, numbers.Integral):
         # using index to keep track of whether the int(which is converted to
         # slice(int_value, int_value+1)) is already added or not. It checks
         # the dead axis i.e missing_axes to check if it is dead than slice(0,1)
@@ -211,7 +212,10 @@ def _wcs_slicer(wcs, missing_axes, item):
             item_ = _slice_list(item_checked)
             new_wcs = wcs.slice(item_)
             for i, it in enumerate(item_checked):
-                if isinstance(it, int):
+                # If an axis is sliced out, i.e. it's item is an int,
+                # set missing axis to True.
+                # numbers.Integral captures all int types, int, np.int64, etc.
+                if isinstance(it, numbers.Integral):
                     missing_axes[i] = True
     else:
         raise NotImplementedError("Slicing FITS-WCS by {} not supported.".format(type(item)))
