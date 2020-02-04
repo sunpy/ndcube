@@ -1,11 +1,12 @@
-import collections
+import collections.abc
 
 import numpy as np
 
 from ndcube import NDCube
 from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 
-class NDCollection(collections.Sequence):
+
+class NDCollection(collections.abc.Sequence):
     def __init__(self, data, labels, aligned_axes=None, _sanitize_aligned_axes=True):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
@@ -50,44 +51,94 @@ class NDCollection(collections.Sequence):
 
         n_cubes = len(data)
         self.data = dict(zip(labels, data))
-        self.labels = labels
-        self.wcs = self.data[self.labels[0]].wcs
+        self.labels = tuple(labels)
 
         # If aligned_axes not set, assume all axes are aligned in order.
         if aligned_axes is None:
             # Check all cubes are of same shape
+            cube0_dims = data[0].dimensions
             cubes_same_shape = all(
                 [data[i].dimensions == cube0_dims for i in range(n_cubes)])
             if cubes_same_shape is not True:
                 raise ValueError(
                     "All cubes in data not of same shape. Please set aligned_axes kwarg.")
             self.n_aligned_axes = len(cube0_dims)
-            self.aligned_axes = tuple([tuple(range(len(cube0_shape))) for i in range(n_cubes)])
+            self.aligned_axes = dict([(labels[i], tuple(range(len(cube0_dims))))
+                                      for i in range(n_cubes)])
         else:
             if _sanitize_aligned_axes is False:
                 self.n_aligned_axes = len(aligned_axes[0])
-                self.aligned_axes = aligned_axes
+                self.aligned_axes = dict(zip(labels, aligned_axes))
             else:
-                self.aligned_axes, self.n_aligned_axes = _sanitize_aligned_axes(data, aligned_axes)
+                aligned_axes, self.n_aligned_axes = _sanitize_aligned_axes(data, aligned_axes)
+                self.aligned_axes = dict(zip(labels, aligned_axes))
 
     def __getitem__(self, item):
-        try:
+        if isinstance(item, str):
+            item = [item]
+        if isinstance(item, collections.abc.Sequence):
             item_strings = [isinstance(_item, str) for _item in item]
             item_is_strings = all(item_strings)
             # Ensure strings are not mixed with slices.
             if (not item_is_strings) and (not all(np.invert(item_strings))):
                 raise TypeError("Cannot mix labels and non-labels when indexing instance.")
-        except:
-            item_is_strings = False
-        if isinstance(item, str) or item_is_strings:
-            if isinstance(item, str):
-                item = [item]
             new_data = [self.data[_item] for _item in item]
             new_labels = item
         else:
+            # Define empty lists of slice items to be applied to each cube in collection.
+            collection_items = [[slice(None)] * len(cube.dimensions) for cube in self.data]
+            # Determine whether any axes are dropped by slicing.
+            # If so, remove them from aligned_axes.
+            drop_aligned_axes_indices = []
+            # If item is an int, first aligned axis is dropped.
+            if isinstance(item, int):
+                drop_aligned_axes_indices = [0]
+                # Insert item to each cube's slice item.
+                for i, key in enumerate(self.labels):
+                    collection_items[i][self.aligned_axes[key][0]] = item
+            # If item is a slice such that only one element is in interval,
+            # first aligned axis is dropped.
+            elif isinstance(item, slice):
+                step = 1 if item.step is None else step = item.step
+                if abs((item.stop - item.start) // step) < 2:
+                    drop_aligned_axes_indices = [0]
+                # Insert item to each cube's slice item.
+                for i, key in enumerate(self.labels):
+                    collection_items[i][self.aligned_axes[key][0]] = item
+            # If item is tuple, search sub-items for ints or 1-interval slices.dd
+            elif isinstance(item, tuple):
+                # If item is tuple, search sub-items for ints or 1-interval slices.
+                if len(item) > self.n_aligned_axes:
+                    raise IndexError("Too many indices")
+                for i, axis_item in enumerate(item):
+                    if isinstance(axis_item, int):
+                        drop_aligned_axes_indices.append(i)
+                    elif isinstance(axis_item, slice):
+                        step = 1 if axis_item.step is None else step = axis_item.step
+                        if abs((axis_item.stop - axis_item.start) // step) < 2):
+                            drop_aligned_axes_indices.append(i)
+                    else:
+                        raise TypeError("Unsupported slicing type: {0}".format(axis_item))
+                    # Enter slice item into correct index for slice tuple of each cube.
+                    for j, key in enumerate(self.labels):
+                        collection_items[j][self.aligned_axes[key][i]] = axis_item
+            else:
+                raise TypeError("Unsupported slicing type: {0}".format(axis_item))
+            # Remove dropped axes from aligned_axes.  MUST BE A BETTER WAY TO DO THIS.
+            if len(drop_aligned_axes_index) > 0:
+                new_aligned_axes = []
+                for label in self.labels:
+                    new_aligned_axes.append(list(self.aligned_axes[label]))
+                    for drop_axis in drop_aligned_axes_indices:
+                        new_aligned_axes[-1].pop(drop_axis)
+                    new_aligned_axes[-1] = tuple(new_aligned_axes[-1])
+                new_aligned_axes = tuple(new_aligned_axes)
+            else:
+                new_aligned_axes = self.aligned_axes
             new_labels = self.labels
-            new_data = [self.data[key][item] for key in new_labels]
-        return self.__class__(new_data, labels=new_labels, wcs=self.data[new_labels[0]].wcs)
+            new_data = [self.data[key][tuple(cube_item)]
+                        for key, cube_item in zip(new_labels, collection_items)]
+        return self.__class__(new_data, labels=new_labels, aligned_axes=new_aligned_axes)
 
     def __repr__(self):
         cube_types = type(self.data[self.labels[0]])
@@ -97,16 +148,18 @@ class NDCollection(collections.Sequence):
 Cube labels: {labels}
 Number of Cubes: {n_cubes}
 Cube Types: {cube_types}
-Aligned dimensions: {aligned_dims}""".format(labels=self.labels, n_cubes=n_cubes,
-                                             cube_types=cube_types,
-                                             aligned_dims=self.dimensions))
+Aligned dimensions: {aligned_dims}
+Aligned world physical axis types: {align_axis_types}""".format(
+    labels=self.labels, n_cubes=n_cubes, cube_types=cube_types,
+    aligned_dims=self.aligned_dimensions,
+    aligned_axis_types=self.aligned_world_physical_axis_types))
 
     @property
-    def dimensions(self):
+    def aligned_dimensions(self):
         return self.data[self.labels[0]].dimensions
 
     @property
-    def world_axis_physical_types(self):
+    def aligned_world_axis_physical_types(self):
         return self.data[self.labels[0]].world_axis_physical_types
 
 
