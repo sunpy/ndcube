@@ -79,30 +79,105 @@ class NDCollection:
                 self.aligned_axes = dict(zip(keys, aligned_axes))
 
     def __getitem__(self, item):
-        item_is_strings = False
+        # There are two ways to slice:
+        # by key or sequence of keys, i.e. slice out given cubes in the collection, or
+        # by typical python numeric slicing API,
+        # i.e. slice the each component cube along the aligned axes.
+
+        # If item is single string, slicing is simple.
         if isinstance(item, str):
             return self.data[item]
+
+        # If item is not a single string...
         else:
+            # If item is a sequence, ensure strings and numeric items are not mixed.
+            item_is_strings = False
             if isinstance(item, collections.abc.Sequence):
                 item_strings = [isinstance(_item, str) for _item in item]
                 item_is_strings = all(item_strings)
                 # Ensure strings are not mixed with slices.
                 if (not item_is_strings) and (not all(np.invert(item_strings))):
                     raise TypeError("Cannot mix keys and non-keys when indexing instance.")
+
+            # If sequence is all strings, extract the cubes corresponding to the string keys.
             if item_is_strings:
                 new_data = [self.data[_item] for _item in item]
                 new_keys = item
                 new_aligned_axes=tuple([self.aligned_axes[_item] for _item in item])
+
+            # Else, the item is assumed to be a typical slicing item.
+            # Slice each cube in collection using information in this item.
             else:
-                # Define empty lists of slice items to be applied to each cube in collection.
-                collection_items = [[slice(None)] * len(self.data[key].dimensions) for key in self.keys]
-                new_aligned_axes = collection_utils._generate_collection_getitems(
-                        item, collection_items, self.keys, self.aligned_axes, self.n_aligned_axes)
-                new_keys = self.keys
+                # Derive item to be applied to each cube in collection and
+                # whether any aligned axes are dropped by the slicing.
+                collection_items, new_aligned_axes = self._generate_collection_getitems(item)
+                # Apply those slice items to each cube in collection.
                 new_data = [self.data[key][tuple(cube_item)]
-                            for key, cube_item in zip(new_keys, collection_items)]
+                            for key, cube_item in zip(self.keys, collection_items)]
+                # Since item is not strings, no cube in collection is dropped.
+                # Therefore the collection keys remain unchanged.
+                new_keys = self.keys
+
             return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes)
-            #return new_data, new_keys, new_aligned_axes
+
+    def _generate_collection_getitems(self, item):
+        # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
+        # Compile appropriate slice items for each cube in the collection and
+        # and drop any aligned axes that are sliced out.
+
+        # First, define empty lists of slice items to be applied to each cube in collection.
+        collection_items = [[slice(None)] * len(self.data[key].dimensions) for key in self.keys]
+
+        # Case 1: int
+        # First aligned axis is dropped.
+        if isinstance(item, int):
+            drop_aligned_axes_indices = [0]
+            # Insert item to each cube's slice item.
+            for i, key in enumerate(self.keys):
+                collection_items[i][self.aligned_axes[key][0]] = item
+
+        # Case 2: slice
+        # If only one element in interval of slice, first aligned axis is dropped.
+        elif isinstance(item, slice):
+            if collection_utils.slice_interval_is_1(item, int(self.aligned_dimensions.value[0])):
+                drop_aligned_axes_indices = [0]
+            # Insert item to each cube's slice item.
+            for i, key in enumerate(self.keys):
+                collection_items[i][self.aligned_axes[key][0]] = item
+
+        # Case 3: tuple of ints/slices
+        # Search sub-items within tuple for ints or 1-interval slices.
+        elif isinstance(item, tuple):
+            # Ensure item is not longer than number of aligned axes
+            if len(item) > self.n_aligned_axes:
+                raise IndexError("Too many indices")
+            # If item is tuple, search sub-items for ints or 1-interval slices.
+            drop_aligned_axes_indices = []
+            for i, axis_item in enumerate(item):
+                if isinstance(axis_item, int):
+                    drop_aligned_axes_indices.append(i)
+                elif isinstance(axis_item, slice):
+                    slice_interval_is_1 = collection_utils.slice_interval_is_1(
+                            axis_item, int(self.aligned_dimensions.value[i]))
+                    if slice_interval_is_1:
+                        drop_aligned_axes_indices.append(i)
+                else:
+                    raise TypeError("Unsupported slicing type: {0}".format(axis_item))
+                # Enter slice item into correct index for slice tuple of each cube.
+                for j, key in enumerate(self.keys):
+                    collection_items[j][self.aligned_axes[key][i]] = axis_item
+
+        else:
+            raise TypeError("Unsupported slicing type: {0}".format(axis_item))
+
+        # Use indices of dropped axes determine above to update aligned_axes
+        # by removing any that have been dropped.
+        drop_aligned_axes_indices = np.array(drop_aligned_axes_indices)
+        new_aligned_axes = collection_utils._update_aligned_axes(drop_aligned_axes_indices,
+                                                                 self.aligned_axes)
+
+        return collection_items, new_aligned_axes
+
 
     def __repr__(self):
         cube_types = type(self.data[self.keys[0]])
