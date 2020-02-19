@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def _generate_collection_getitems(item, collection_items, labels, aligned_axes, n_aligned_axes):
+def _generate_collection_getitems(item, collection_items, keys, aligned_axes, n_aligned_axes):
     # Determine whether any axes are dropped by slicing.
     # If so, remove them from aligned_axes.
     drop_aligned_axes_indices = []
@@ -9,7 +9,7 @@ def _generate_collection_getitems(item, collection_items, labels, aligned_axes, 
     if isinstance(item, int):
         drop_aligned_axes_indices = [0]
         # Insert item to each cube's slice item.
-        for i, key in enumerate(labels):
+        for i, key in enumerate(keys):
             collection_items[i][aligned_axes[key][0]] = item
     # If item is a slice such that only one element is in interval,
     # first aligned axis is dropped.
@@ -21,7 +21,7 @@ def _generate_collection_getitems(item, collection_items, labels, aligned_axes, 
         if abs((item.stop - item.start) // step) < 2:
             drop_aligned_axes_indices = [0]
         # Insert item to each cube's slice item.
-        for i, key in enumerate(labels):
+        for i, key in enumerate(keys):
             collection_items[i][aligned_axes[key][0]] = item
     # If item is tuple, search sub-items for ints or 1-interval slices.dd
     elif isinstance(item, tuple):
@@ -41,18 +41,18 @@ def _generate_collection_getitems(item, collection_items, labels, aligned_axes, 
             else:
                 raise TypeError("Unsupported slicing type: {0}".format(axis_item))
             # Enter slice item into correct index for slice tuple of each cube.
-            for j, key in enumerate(labels):
+            for j, key in enumerate(keys):
                 collection_items[j][aligned_axes[key][i]] = axis_item
     else:
         raise TypeError("Unsupported slicing type: {0}".format(axis_item))
 
     return np.array(drop_aligned_axes_indices)
 
-def _update_aligned_axes(drop_aligned_axes_indices, labels, aligned_axes):
+def _update_aligned_axes(drop_aligned_axes_indices, keys, aligned_axes):
     # Remove dropped axes from aligned_axes.  MUST BE A BETTER WAY TO DO THIS.
     if len(drop_aligned_axes_indices) > 0:
         new_aligned_axes = []
-        for label in labels:
+        for label in keys:
             cube_aligned_axes = np.array(aligned_axes[label])
             for drop_axis_index in drop_aligned_axes_indices:
                 drop_axis = cube_aligned_axes[drop_axis_index]

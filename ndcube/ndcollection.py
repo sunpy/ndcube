@@ -9,7 +9,7 @@ __all__ = ["NDCollection"]
 
 #class NDCollection(collections.abc.Sequence):
 class NDCollection:
-    def __init__(self, data, labels=None, aligned_axes=None, dont_sanitize_aligned_axes=False):
+    def __init__(self, data, keys=None, aligned_axes=None, dont_sanitize_aligned_axes=False):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
@@ -20,7 +20,7 @@ class NDCollection:
         data: sequence of `~ndcube.NDCube` or `~ndcube.NDCubeSequence`
             The data cubes/sequences to held in the collection.
 
-        labels: sequence of `str`
+        keys: sequence of `str`
             Name of each cube/sequence. Each label must be unique and
             there must be one per element in the data input.
             Default is ("0", "1",...)
@@ -46,17 +46,17 @@ class NDCollection:
 
         """
         # Check inputs
-        # Ensure there are no duplicate labels
-        if labels is None:
-            labels = np.arange(len(data)).astype("str")
-        elif len(set(labels)) != len(labels):
-            raise ValueError("Duplicate labels detected.")
-        if len(labels) != len(data):
-            raise ValueError("Data and labels inputs of different lengths.")
+        # Ensure there are no duplicate keys
+        if keys is None:
+            keys = np.arange(len(data)).astype("str")
+        elif len(set(keys)) != len(keys):
+            raise ValueError("Duplicate keys detected.")
+        if len(keys) != len(data):
+            raise ValueError("Data and keys inputs of different lengths.")
 
         n_cubes = len(data)
-        self.data = dict(zip(labels, data))
-        self.labels = tuple(labels)
+        self.data = dict(zip(keys, data))
+        self.keys = tuple(keys)
 
         # If aligned_axes not set, assume all axes are aligned in order.
         if aligned_axes is None:
@@ -68,15 +68,15 @@ class NDCollection:
                 raise ValueError(
                     "All cubes in data not of same shape. Please set aligned_axes kwarg.")
             self.n_aligned_axes = len(cube0_dims)
-            self.aligned_axes = dict([(labels[i], tuple(range(len(cube0_dims))))
+            self.aligned_axes = dict([(keys[i], tuple(range(len(cube0_dims))))
                                       for i in range(n_cubes)])
         else:
             if dont_sanitize_aligned_axes is True:
                 self.n_aligned_axes = len(aligned_axes[0])
-                self.aligned_axes = dict(zip(labels, aligned_axes))
+                self.aligned_axes = dict(zip(keys, aligned_axes))
             else:
                 aligned_axes, self.n_aligned_axes = _sanitize_aligned_axes(data, aligned_axes, n_cubes)
-                self.aligned_axes = dict(zip(labels, aligned_axes))
+                self.aligned_axes = dict(zip(keys, aligned_axes))
 
     def __getitem__(self, item):
         item_is_strings = False
@@ -88,50 +88,43 @@ class NDCollection:
                 item_is_strings = all(item_strings)
                 # Ensure strings are not mixed with slices.
                 if (not item_is_strings) and (not all(np.invert(item_strings))):
-                    raise TypeError("Cannot mix labels and non-labels when indexing instance.")
+                    raise TypeError("Cannot mix keys and non-keys when indexing instance.")
             if item_is_strings:
                 new_data = [self.data[_item] for _item in item]
-                new_labels = item
+                new_keys = item
                 new_aligned_axes=tuple([self.aligned_axes[_item] for _item in item])
             else:
                 # Define empty lists of slice items to be applied to each cube in collection.
-                collection_items = [[slice(None)] * len(self.data[key].dimensions) for key in self.labels]
-                # Determine whether any axes are dropped by slicing.
-                # If so, remove them from aligned_axes.
-                drop_aligned_axes_indices = collection_utils._generate_collection_getitems(
-                        item, collection_items, self.labels, self.aligned_axes, self.n_aligned_axes)
-                if len(drop_aligned_axes_indices) > 0:
-                    new_aligned_axes = collection_utils._update_aligned_axes(
-                            drop_aligned_axes_indices, self.labels, self.aligned_axes)
-                else:
-                    new_aligned_axes = self.aligned_axes
-                new_labels = self.labels
+                collection_items = [[slice(None)] * len(self.data[key].dimensions) for key in self.keys]
+                new_aligned_axes = collection_utils._generate_collection_getitems(
+                        item, collection_items, self.keys, self.aligned_axes, self.n_aligned_axes)
+                new_keys = self.keys
                 new_data = [self.data[key][tuple(cube_item)]
-                            for key, cube_item in zip(new_labels, collection_items)]
-            return self.__class__(new_data, labels=new_labels, aligned_axes=new_aligned_axes)
-            #return new_data, new_labels, new_aligned_axes
+                            for key, cube_item in zip(new_keys, collection_items)]
+            return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes)
+            #return new_data, new_keys, new_aligned_axes
 
     def __repr__(self):
-        cube_types = type(self.data[self.labels[0]])
-        n_cubes = len(self.labels)
+        cube_types = type(self.data[self.keys[0]])
+        n_cubes = len(self.keys)
         return ("""NDCollection
 ----------
-Cube labels: {labels}
+Cube keys: {keys}
 Number of Cubes: {n_cubes}
 Cube Types: {cube_types}
 Aligned dimensions: {aligned_dims}
 Aligned world physical axis types: {aligned_axis_types}""".format(
-    labels=self.labels, n_cubes=n_cubes, cube_types=cube_types,
+    keys=self.keys, n_cubes=n_cubes, cube_types=cube_types,
     aligned_dims=self.aligned_dimensions,
     aligned_axis_types=self.aligned_world_axis_physical_types))
 
     @property
     def aligned_dimensions(self):
-        return self.data[self.labels[0]].dimensions
+        return self.data[self.keys[0]].dimensions
 
     @property
     def aligned_world_axis_physical_types(self):
-        return self.data[self.labels[0]].world_axis_physical_types
+        return self.data[self.keys[0]].world_axis_physical_types
 
 
 def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
