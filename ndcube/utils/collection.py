@@ -19,7 +19,7 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     cube0_dims = data[0].dimensions
     # If user entered a single int or string, convert to length 1 tuple of int.
     if isinstance(aligned_axes, int):
-        aligned_axes = tuple(aligned_axes)
+        aligned_axes = (aligned_axes,)
     if not isinstance(aligned_axes, tuple):
         raise ValueError(aligned_axes_error_message)
     # Check type of each element.
@@ -76,6 +76,13 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
             raise ValueError("Aligned cube/sequence axes must be of same length.")
     else:
         raise ValueError(aligned_axes_error_message)
+
+    # Ensure all aligned axes are of same length.
+    check_dimensions = set([len(set(
+        [cube.dimensions[cube_aligned_axes[j]] for cube, cube_aligned_axes in zip(data, aligned_axes)]))
+        for j in range(n_aligned_axes)])
+    if check_dimensions != {1}:
+        raise ValueError("Aligned axes are not all of same length.")
 
     return aligned_axes, n_aligned_axes
 
