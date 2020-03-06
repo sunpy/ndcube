@@ -1,14 +1,17 @@
 import collections.abc
+import copy
 
 import numpy as np
 
+from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 import ndcube.utils.collection as collection_utils
 
+SUPPORTED_COLLECTION_TYPES = (NDCube, NDCubeSequence)
+
 __all__ = ["NDCollection"]
 
-#class NDCollection(collections.abc.Sequence):
-class NDCollection:
+class NDCollection(dict):
     def __init__(self, data, keys=None, aligned_axes=None, meta=None, dont_sanitize_aligned_axes=False):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
@@ -56,13 +59,21 @@ class NDCollection:
             raise ValueError("Duplicate keys detected.")
         if len(keys) != len(data):
             raise ValueError("Data and keys inputs of different lengths.")
+        data_types = [isinstance(cube, SUPPORTED_COLLECTION_TYPES) for cube in data]
+        if not all(data_types):
+            bad_data_index = np.arange(len(data))[np.invert(data_types)][0]
+            raise TypeError(
+                    "All data entries must be of types {0}.\n{1}th data entry is type {2}".format(
+                        SUPPORTED_COLLECTION_TYPES, bad_data_index, type(data[bad_data_index])))
 
+        self._first_key = keys[0]
+        self._cube_types = type(data[0])
+
+        # Enter data into object.
+        super().__init__([(key, cube) for key, cube in zip(keys, data)])
         self.meta = meta
 
         n_cubes = len(data)
-        self.data = dict(zip(keys, data))
-        self.keys = tuple(keys)
-
         # If aligned_axes not set, assume all axes are aligned in order.
         if aligned_axes is None:
             # Check all cubes are of same shape
@@ -76,6 +87,7 @@ class NDCollection:
             self.aligned_axes = dict([(keys[i], tuple(range(len(cube0_dims))))
                                       for i in range(n_cubes)])
         else:
+            # Else, sanitize user-supplied aligned axes.
             if dont_sanitize_aligned_axes is True:
                 self.n_aligned_axes = len(aligned_axes[0])
                 self.aligned_axes = dict(zip(keys, aligned_axes))
@@ -83,6 +95,27 @@ class NDCollection:
                 aligned_axes, self.n_aligned_axes = collection_utils._sanitize_aligned_axes(
                         data, aligned_axes, n_cubes)
                 self.aligned_axes = dict(zip(keys, aligned_axes))
+
+    def __repr__(self):
+        return ("""NDCollection
+------------
+Cube keys: {keys}
+Number of Cubes: {n_cubes}
+Cube Types: {cube_types}
+Aligned dimensions: {aligned_dims}
+Aligned world physical axis types: {aligned_axis_types}""".format(
+    keys=self.keys(), n_cubes=len(self), cube_types=self._cube_types,
+    aligned_dims=self.aligned_dimensions,
+    aligned_axis_types=self.aligned_world_axis_physical_types))
+
+    @property
+    def aligned_dimensions(self):
+        return self[self._first_key].dimensions[np.array(self.aligned_axes[self._first_key])]
+
+    @property
+    def aligned_world_axis_physical_types(self):
+        axis_types = np.array(self[self._first_key].world_axis_physical_types)
+        return tuple(axis_types[np.array(self.aligned_axes[self._first_key])])
 
     def __getitem__(self, item):
         # There are two ways to slice:
@@ -92,7 +125,7 @@ class NDCollection:
 
         # If item is single string, slicing is simple.
         if isinstance(item, str):
-            return self.data[item]
+            return super().__getitem__(item)
 
         # If item is not a single string...
         else:
@@ -107,7 +140,7 @@ class NDCollection:
 
             # If sequence is all strings, extract the cubes corresponding to the string keys.
             if item_is_strings:
-                new_data = [self.data[_item] for _item in item]
+                new_data = [self[_item] for _item in item]
                 new_keys = item
                 new_aligned_axes=tuple([self.aligned_axes[_item] for _item in item])
 
@@ -118,11 +151,11 @@ class NDCollection:
                 # whether any aligned axes are dropped by the slicing.
                 collection_items, new_aligned_axes = self._generate_collection_getitems(item)
                 # Apply those slice items to each cube in collection.
-                new_data = [self.data[key][tuple(cube_item)]
-                            for key, cube_item in zip(self.keys, collection_items)]
+                new_data = [self[key][tuple(cube_item)]
+                            for key, cube_item in zip(self, collection_items)]
                 # Since item is not strings, no cube in collection is dropped.
                 # Therefore the collection keys remain unchanged.
-                new_keys = self.keys
+                new_keys = list(self.keys())
 
             return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes,
                                   meta=self.meta, dont_sanitize_aligned_axes=True)
@@ -133,14 +166,14 @@ class NDCollection:
         # and drop any aligned axes that are sliced out.
 
         # First, define empty lists of slice items to be applied to each cube in collection.
-        collection_items = [[slice(None)] * len(self.data[key].dimensions) for key in self.keys]
+        collection_items = [[slice(None)] * len(self[key].dimensions) for key in self]
 
         # Case 1: int
         # First aligned axis is dropped.
         if isinstance(item, int):
             drop_aligned_axes_indices = [0]
             # Insert item to each cube's slice item.
-            for i, key in enumerate(self.keys):
+            for i, key in enumerate(self):
                 collection_items[i][self.aligned_axes[key][0]] = item
 
         # Case 2: slice
@@ -149,7 +182,7 @@ class NDCollection:
             if collection_utils.slice_interval_is_1(item, int(self.aligned_dimensions.value[0])):
                 drop_aligned_axes_indices = [0]
             # Insert item to each cube's slice item.
-            for i, key in enumerate(self.keys):
+            for i, key in enumerate(self):
                 collection_items[i][self.aligned_axes[key][0]] = item
 
         # Case 3: tuple of ints/slices
@@ -171,7 +204,7 @@ class NDCollection:
                 else:
                     raise TypeError("Unsupported slicing type: {0}".format(axis_item))
                 # Enter slice item into correct index for slice tuple of each cube.
-                for j, key in enumerate(self.keys):
+                for j, key in enumerate(self):
                     collection_items[j][self.aligned_axes[key][i]] = axis_item
 
         else:
@@ -185,26 +218,45 @@ class NDCollection:
 
         return collection_items, new_aligned_axes
 
+    def copy(self):
+        return copy.deepcopy(self)
 
-    def __repr__(self):
-        cube_types = type(self.data[self.keys[0]])
-        n_cubes = len(self.keys)
-        return ("""NDCollection
-----------
-Cube keys: {keys}
-Number of Cubes: {n_cubes}
-Cube Types: {cube_types}
-Aligned dimensions: {aligned_dims}
-Aligned world physical axis types: {aligned_axis_types}""".format(
-    keys=self.keys, n_cubes=n_cubes, cube_types=cube_types,
-    aligned_dims=self.aligned_dimensions,
-    aligned_axis_types=self.aligned_world_axis_physical_types))
+    def setdefault(self):
+        raise NotImplementedError("NDCollection does not support setdefault.")
 
-    @property
-    def aligned_dimensions(self):
-        return self.data[self.keys[0]].dimensions
+    def popitem(self):
+        raise NotImplementedError("NDCollection does not support popitem.")
 
-    @property
-    def aligned_world_axis_physical_types(self):
-        return self.data[self.keys[0]].world_axis_physical_types
+    def pop(self, key):
+        """Removes the cube corresponding to the key from the collection and returns it."""
+        # Extract desired cube from collection.
+        popped_cube = self.pop(key)
+        # Delete corresponding aligned axes
+        popped_aligned_axes = self.aligned_axes.pop(key)
+        # If first key removed, update.
+        if key == self._first_key:
+            self._first_key = list(self.keys())[0]
+
+        return popped_cube
+
+    def update(self, key, data, aligned_axes):
+        """Updates collection with in cube."""
+        # Ensure new cube is of supported type.
+        if not isinstance(data, SUPPORTED_COLLECTION_TYPES):
+            raise TypeError("data must be an instance of {0}. Type is actually {1}".format(
+                SUPPORTED_COLLECTION_TYPES, type(data)))
+        # Sanitize aligned axes.
+        if isinstance(aligned_axes, int):
+            aligned_axes = (aligned_axes,)
+        sanitized_axes, n_sanitized_axes = collection_utils._sanitize_aligned_axes(
+                [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes), 2)
+        # Update collection
+        super().update({key: data})
+        self.aligned_axes.update({key: sanitized_axes[-1]})
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self.aligned_axes.__delitem__(key)
+        if key == self._first_key:
+            self._first_key = list(self.keys())[0]
 
