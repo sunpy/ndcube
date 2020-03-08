@@ -230,7 +230,7 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
     def pop(self, key):
         """Removes the cube corresponding to the key from the collection and returns it."""
         # Extract desired cube from collection.
-        popped_cube = self.pop(key)
+        popped_cube = super().pop(key)
         # Delete corresponding aligned axes
         popped_aligned_axes = self.aligned_axes.pop(key)
         # If first key removed, update.
