@@ -1,4 +1,5 @@
 import numpy as np
+import astropy.units as u
 
 def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     """
@@ -16,7 +17,12 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     """
     aligned_axes_error_message = "aligned_axes must contain ints or " + \
             "a tuple of ints for each element in data."
-    cube0_dims = data[0].dimensions
+    if isinstance(data[0].dimensions, u.Quantity):
+        cube0_dims = data[0].dimensions[np.array(aligned_axes[0])]
+    elif isinstance(data[0].dimensions, tuple):
+        cube0_dims = np.array(data[0].dimensions, dtype=object)[np.array(aligned_axes[0])]
+    else:
+        raise TypeError("0th cube in collection of unsupported type: {0}".format(type(data[0])))
     # If user entered a single int or string, convert to length 1 tuple of int.
     if isinstance(aligned_axes, int):
         aligned_axes = (aligned_axes,)
@@ -66,13 +72,13 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
             cube_lengths_equal = [False] * n_aligned_axes
             for j, axis in enumerate(aligned_axes[i]):
                 subtuple_types[j] = isinstance(axis, (int, np.integer))
-                cube_lengths_equal[j] = data[i].dimensions[axis] == cube0_dims[axis]
+                cube_lengths_equal[j] = data[i].dimensions[axis] == cube0_dims[j]
             subtuples_are_ints[i] = all(subtuple_types)
             aligned_axes_same_lengths[i] = all(cube_lengths_equal)
         if not all(subtuples_are_ints):
-            print([[type(axis) for axis in aligned_axis] for aligned_axis in aligned_axes], subtuple_types)
             raise ValueError(aligned_axes_error_message)
         if not all(aligned_axes_same_lengths):
+            print(aligned_axes_same_lengths)
             raise ValueError("Aligned cube/sequence axes must be of same length.")
     else:
         raise ValueError(aligned_axes_error_message)
@@ -103,39 +109,10 @@ def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes):
             new_aligned_axes.append(tuple(cube_aligned_axes))
         new_aligned_axes = tuple(new_aligned_axes)
     else:
-        new_aligned_axes = aligned_axes
+        new_aligned_axes = tuple(aligned_axes.values())
 
     return new_aligned_axes
 
-
-def slice_interval_is_1(item, axis_length):
-    # Make start index numeric and positive.
-    if item.start is None:
-        start = 0
-    else:
-        start = item.start
-    start = make_index_positive(start, axis_length)
-
-    # Make stop index numeric and positive.
-    if item.stop is None:
-        stop = axis_length
-    else:
-        stop = item.stop
-    stop = make_index_positive(stop, axis_length)
-
-    # Make step numeric.
-    if item.step is None:
-        step = 1
-    else:
-        step = item.step
-
-    # Check if slice interval is 1.
-    if abs((stop - start) // step) == 1:
-        result = True
-    else:
-        result = False
-
-    return result
 
 def make_index_positive(index, axis_length):
     if index < 0:
