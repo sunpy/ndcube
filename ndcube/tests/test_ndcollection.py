@@ -12,11 +12,11 @@ data0 = np.ones((3, 4, 5))
 data1 = np.zeros((5, 3, 4))
 data2 = data0 * 2
 
-# Define WCS object for all cubes. 
-wcs_input_dict = { 
-'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5, 
-'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4, 
-'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3} 
+# Define WCS object for all cubes.
+wcs_input_dict = {
+'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
+'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
+'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
 input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
 wcs_input_dict1 = {
@@ -64,10 +64,10 @@ cube_collection = NDCollection([cube0, cube1, cube2], keys, aligned_axes)
 
     ((0, 0), cube_collection, NDCollection(data=[cube0[:, 0, 0], cube1[0, :, 0], cube2[:, 0, 0]],
                                            keys=keys, aligned_axes=None)),
-    
-    (("cube0", "cube2"), cube_collection, 
+
+    (("cube0", "cube2"), cube_collection,
         NDCollection(data=[cube0, cube2],
-                     keys=("cube0", "cube2"), aligned_axes=(aligned_axes[0], aligned_axes[2])))]) 
+                     keys=("cube0", "cube2"), aligned_axes=(aligned_axes[0], aligned_axes[2])))])
 def test_collection_slicing(item, collection, expected):
     helpers.assert_collections_equal(collection[item], expected)
 
@@ -95,7 +95,7 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
 
 
 @pytest.mark.parametrize("collection,key,data,aligned_axes,expected", [
-    (cube_collection, "cube1", cube2, aligned_axes[2], 
+    (cube_collection, "cube1", cube2, aligned_axes[2],
         NDCollection(data=[cube0, cube2, cube2], keys=keys, aligned_axes=((1, 2), (1, 2), (1, 2)))),
 
     (cube_collection, "cube3", cube2, aligned_axes[2],

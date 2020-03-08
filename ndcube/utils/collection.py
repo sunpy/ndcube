@@ -1,6 +1,7 @@
 import numpy as np
 import astropy.units as u
 
+
 def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     """
     Converts input aligned_axes to standard format.
@@ -16,7 +17,7 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
 
     """
     aligned_axes_error_message = "aligned_axes must contain ints or " + \
-            "a tuple of ints for each element in data."
+        "a tuple of ints for each element in data."
     if isinstance(data[0].dimensions, u.Quantity):
         cube0_dims = data[0].dimensions[np.array(aligned_axes[0])]
     elif isinstance(data[0].dimensions, tuple):
@@ -62,11 +63,11 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
             max_aligned_axis = max(aligned_axes[i])
             if n_cube_dims < max([max_aligned_axis, n_aligned_axes]):
                 raise ValueError(
-                    "Each cube in data must have at least as many axes as aligned axes " + \
-                    "and aligned axis numbers must be less than number of cube axes.\n" + \
-                    "Cube number: {0};\n".format(i) + \
-                    "Number of cube dimensions: {0};\n".format(n_cube_dims) + \
-                    "No. aligned axes: {0};\n".format(n_aligned_axes)  + \
+                    "Each cube in data must have at least as many axes as aligned axes "
+                    "and aligned axis numbers must be less than number of cube axes.\n"
+                    "Cube number: {0};\n".format(i)
+                    "Number of cube dimensions: {0};\n".format(n_cube_dims)
+                    "No. aligned axes: {0};\n".format(n_aligned_axes)
                     "Highest aligned axis: {0}".format(max_aligned_axis))
             subtuple_types = [False] * n_aligned_axes
             cube_lengths_equal = [False] * n_aligned_axes
@@ -84,9 +85,9 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
         raise ValueError(aligned_axes_error_message)
 
     # Ensure all aligned axes are of same length.
-    check_dimensions = set([len(set(
-        [cube.dimensions[cube_aligned_axes[j]] for cube, cube_aligned_axes in zip(data, aligned_axes)]))
-        for j in range(n_aligned_axes)])
+    check_dimensions = set([len(set([cube.dimensions[cube_aligned_axes[j]]
+                                     for cube, cube_aligned_axes in zip(data, aligned_axes)]))
+                            for j in range(n_aligned_axes)])
     if check_dimensions != {1}:
         raise ValueError("Aligned axes are not all of same length.")
 
@@ -122,4 +123,3 @@ def make_index_positive(index, axis_length):
     else:
         pos_index = index
     return pos_index
-

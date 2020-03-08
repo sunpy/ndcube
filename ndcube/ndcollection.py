@@ -145,7 +145,7 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
             if item_is_strings:
                 new_data = [self[_item] for _item in item]
                 new_keys = item
-                new_aligned_axes=tuple([self.aligned_axes[_item] for _item in item])
+                new_aligned_axes = tuple([self.aligned_axes[_item] for _item in item])
 
             # Else, the item is assumed to be a typical slicing item.
             # Slice each cube in collection using information in this item.
@@ -240,7 +240,7 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
         return popped_cube
 
     def update(self, key, data, aligned_axes):
-        """Updates collection with in cube."""
+        """Updates existing cube within collection or adds new cube."""
         # Ensure new cube is of supported type.
         if not isinstance(data, SUPPORTED_COLLECTION_TYPES):
             raise TypeError("data must be an instance of {0}. Type is actually {1}".format(
@@ -249,7 +249,8 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
         if isinstance(aligned_axes, int):
             aligned_axes = (aligned_axes,)
         sanitized_axes, n_sanitized_axes = collection_utils._sanitize_aligned_axes(
-                [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes), 2)
+                [self[self._first_key], data],
+                (self.aligned_axes[self._first_key], aligned_axes), 2)
         # Update collection
         super().update({key: data})
         self.aligned_axes.update({key: sanitized_axes[-1]})
@@ -259,4 +260,3 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
         self.aligned_axes.__delitem__(key)
         if key == self._first_key:
             self._first_key = list(self.keys())[0]
-
