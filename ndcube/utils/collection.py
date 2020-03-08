@@ -93,9 +93,13 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     return aligned_axes, n_aligned_axes
 
 
-def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes):
+def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes, first_key):
     # Remove dropped axes from aligned_axes.  MUST BE A BETTER WAY TO DO THIS.
-    if len(drop_aligned_axes_indices) > 0:
+    if len(drop_aligned_axes_indices) <= 0:
+        new_aligned_axes = tuple(aligned_axes.values())
+    elif len(drop_aligned_axes_indices) == len(aligned_axes[first_key]):
+        new_aligned_axes = None
+    else:
         new_aligned_axes = []
         for key in aligned_axes.keys():
             cube_aligned_axes = np.array(aligned_axes[key])
@@ -108,8 +112,6 @@ def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes):
                 drop_aligned_axes_indices[w] -= 1
             new_aligned_axes.append(tuple(cube_aligned_axes))
         new_aligned_axes = tuple(new_aligned_axes)
-    else:
-        new_aligned_axes = tuple(aligned_axes.values())
 
     return new_aligned_axes
 

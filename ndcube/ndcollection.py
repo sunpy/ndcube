@@ -12,7 +12,7 @@ SUPPORTED_COLLECTION_TYPES = (NDCube, NDCubeSequence)
 __all__ = ["NDCollection"]
 
 class NDCollection(dict):
-    def __init__(self, data, keys=None, aligned_axes=None, meta=None, dont_sanitize_aligned_axes=False):
+    def __init__(self, data, keys, aligned_axes="All", meta=None, dont_sanitize_aligned_axes=False):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
@@ -28,12 +28,12 @@ class NDCollection(dict):
             there must be one per element in the data input.
             Default is ("0", "1",...)
 
-        aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`
+        aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, or None (Optional)
             Axes of each cube/sequence that are aligned in numpy order.
             If elements are int, then the same axis numbers in all cubes/sequences are aligned.
             If elements are tuples of ints, then must be one tuple for every cube/sequence.
             Each element of each tuple gives the axes of each cube/sequence that are aligned.
-            Default is all axes are aligned.
+            Default="All", i.e. all axes are aligned.
 
         meta: `dict` (Optional)
             General metadata for the overall collection.
@@ -75,7 +75,7 @@ class NDCollection(dict):
 
         n_cubes = len(data)
         # If aligned_axes not set, assume all axes are aligned in order.
-        if aligned_axes is None:
+        if aligned_axes == "All":
             # Check all cubes are of same shape
             cube0_dims = data[0].dimensions
             cubes_same_shape = all(
@@ -86,6 +86,9 @@ class NDCollection(dict):
             self.n_aligned_axes = len(cube0_dims)
             self.aligned_axes = dict([(keys[i], tuple(range(len(cube0_dims))))
                                       for i in range(n_cubes)])
+        elif aligned_axes is None:
+            self.n_aligned_axes = 0
+            self.aligned_axes = None
         else:
             # Else, sanitize user-supplied aligned axes.
             if dont_sanitize_aligned_axes is True:
@@ -146,16 +149,20 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
 
             # Else, the item is assumed to be a typical slicing item.
             # Slice each cube in collection using information in this item.
+            # However, this can only be done if there are aligned axes.
             else:
-                # Derive item to be applied to each cube in collection and
-                # whether any aligned axes are dropped by the slicing.
-                collection_items, new_aligned_axes = self._generate_collection_getitems(item)
-                # Apply those slice items to each cube in collection.
-                new_data = [self[key][tuple(cube_item)]
-                            for key, cube_item in zip(self, collection_items)]
-                # Since item is not strings, no cube in collection is dropped.
-                # Therefore the collection keys remain unchanged.
-                new_keys = list(self.keys())
+                if self.aligned_axes is None:
+                    raise IndexError("Cannot slice unless collection has aligned axes.")
+                else:
+                    # Derive item to be applied to each cube in collection and
+                    # whether any aligned axes are dropped by the slicing.
+                    collection_items, new_aligned_axes = self._generate_collection_getitems(item)
+                    # Apply those slice items to each cube in collection.
+                    new_data = [self[key][tuple(cube_item)]
+                                for key, cube_item in zip(self, collection_items)]
+                    # Since item is not strings, no cube in collection is dropped.
+                    # Therefore the collection keys remain unchanged.
+                    new_keys = list(self.keys())
 
             return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes,
                                   meta=self.meta, dont_sanitize_aligned_axes=True)
@@ -167,6 +174,8 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
 
         # First, define empty lists of slice items to be applied to each cube in collection.
         collection_items = [[slice(None)] * len(self[key].dimensions) for key in self]
+        # Define empty list to hold aligned axes dropped by the slicing.
+        drop_aligned_axes_indices = []
 
         # Case 1: int
         # First aligned axis is dropped.
@@ -179,11 +188,11 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
         # Case 2: slice
         # If only one element in interval of slice, first aligned axis is dropped.
         elif isinstance(item, slice):
-            if collection_utils.slice_interval_is_1(item, int(self.aligned_dimensions.value[0])):
-                drop_aligned_axes_indices = [0]
             # Insert item to each cube's slice item.
             for i, key in enumerate(self):
                 collection_items[i][self.aligned_axes[key][0]] = item
+            # Note that slice interval's of 1 result in an axis of length 1.
+            # The axis is not dropped.
 
         # Case 3: tuple of ints/slices
         # Search sub-items within tuple for ints or 1-interval slices.
@@ -192,18 +201,9 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
             if len(item) > self.n_aligned_axes:
                 raise IndexError("Too many indices")
             # If item is tuple, search sub-items for ints or 1-interval slices.
-            drop_aligned_axes_indices = []
             for i, axis_item in enumerate(item):
                 if isinstance(axis_item, int):
                     drop_aligned_axes_indices.append(i)
-                elif isinstance(axis_item, slice):
-                    slice_interval_is_1 = collection_utils.slice_interval_is_1(
-                            axis_item, int(self.aligned_dimensions.value[i]))
-                    if slice_interval_is_1:
-                        drop_aligned_axes_indices.append(i)
-                else:
-                    raise TypeError("Unsupported slicing type: {0}".format(axis_item))
-                # Enter slice item into correct index for slice tuple of each cube.
                 for j, key in enumerate(self):
                     collection_items[j][self.aligned_axes[key][i]] = axis_item
 
@@ -213,8 +213,8 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
         # Use indices of dropped axes determine above to update aligned_axes
         # by removing any that have been dropped.
         drop_aligned_axes_indices = np.array(drop_aligned_axes_indices)
-        new_aligned_axes = collection_utils._update_aligned_axes(drop_aligned_axes_indices,
-                                                                 self.aligned_axes)
+        new_aligned_axes = collection_utils._update_aligned_axes(
+                drop_aligned_axes_indices, self.aligned_axes, self._first_key)
 
         return collection_items, new_aligned_axes
 
