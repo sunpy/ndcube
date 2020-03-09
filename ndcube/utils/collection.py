@@ -65,10 +65,8 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
                 raise ValueError(
                     "Each cube in data must have at least as many axes as aligned axes "
                     "and aligned axis numbers must be less than number of cube axes.\n"
-                    "Cube number: {0};\n".format(i)
-                    "Number of cube dimensions: {0};\n".format(n_cube_dims)
-                    "No. aligned axes: {0};\n".format(n_aligned_axes)
-                    "Highest aligned axis: {0}".format(max_aligned_axis))
+                    "Cube number: {0};\nNumber of cube dimensions: {0};\nNo. aligned axes: {0};\nHighest aligned axis: {0}".format(
+                        i, n_cube_dims, n_aligned_axes, max_aligned_axis))
             subtuple_types = [False] * n_aligned_axes
             cube_lengths_equal = [False] * n_aligned_axes
             for j, axis in enumerate(aligned_axes[i]):
