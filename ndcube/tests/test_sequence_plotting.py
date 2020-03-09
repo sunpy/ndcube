@@ -725,8 +725,7 @@ def test_sequence_plot_LineAnimator(test_input, test_kwargs, expected_values):
         np.testing.assert_array_equal(output.data.mask, expected_data.mask)
     # Check values of axes and sliders is correct.
     for i in range(len(output.axis_ranges)):
-        print(i)
-        assert np.allclose(output.axis_ranges[i], expected_axis_ranges[i])
+        _test_axis_ranges(output.axis_ranges[i], expected_axis_ranges[i])
     # Check plot axis labels and limits are correct
     assert output.xlabel == expected_xlabel
     assert output.ylabel == expected_ylabel
@@ -774,9 +773,17 @@ def test_sequence_plot_as_cube_LineAnimator(test_input, test_kwargs, expected_va
         np.testing.assert_array_equal(output.data.mask, expected_data.mask)
     # Check values of axes and sliders is correct.
     for i in range(len(output.axis_ranges)):
-        assert np.allclose(output.axis_ranges[i], expected_axis_ranges[i])
+        _test_axis_ranges(output.axis_ranges[i], expected_axis_ranges[i])
     # Check plot axis labels and limits are correct
     assert output.xlabel == expected_xlabel
     assert output.ylabel == expected_ylabel
     assert output.xlim == expected_xlim
     assert output.ylim == expected_ylim
+
+
+def _test_axis_ranges(axis_ranges, expected_ranges):
+    if callable(axis_ranges):
+        assert np.allclose(axis_ranges(np.arange(len(expected_ranges))),
+                           expected_ranges)
+    else:
+        assert np.allclose(axis_ranges, expected_ranges)
