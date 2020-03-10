@@ -12,18 +12,18 @@ class for representing sequences of `~ndcube.NDCube` objects where the
 coordinate information may or may not align, and accessing these sequences in a
 way consistent with a singular cube.
 
-This release of ndcube contains 205 commits in 35 merged pull requests
-closing 51 issues from 6 people, 3 of whom are first time
-contributors to ndcube.
+This release of ndcube contains 126 commits in 28 merged pull requests closing
+52 issues from 5 people, 2 of which are first time contributors to ndcube.
 
 The people who have contributed to the code for this release are:
 
-*  Daniel Ryan
-*  Baptiste Pellorce  *
-*  Stuart Mumford
-*  Aoife Maria Ryan  *
-*  Roy Smart  *
-*  Nabil Freij
+    Daniel Ryan
+    Gabe Shafiq  *
+    Nabil Freij
+    Stuart Mumford
+    Yash Sharma  *
+
+Where a * indicates their first contribution to ndcube.
 
 For more information about ndcube see the `documentation <http://docs.sunpy.org/projects/ndcube/>`_.
 

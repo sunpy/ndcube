@@ -1,1 +1,0 @@
-Include more helpful error when invalid item type is used to slice an `~ndcube.NDCube`.

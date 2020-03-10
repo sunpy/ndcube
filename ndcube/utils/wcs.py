@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
 # Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
 
-"""Miscellaneous WCS utilities"""
+"""
+Miscellaneous WCS utilities.
+"""
 
 import re
 from copy import deepcopy
 from collections import UserDict
+import numbers
 
 import numpy as np
 from astropy import wcs
@@ -44,7 +46,7 @@ wcs_to_ivoa = {
     "XPIXEL": "custom:instr.pixel.x",
     "YPIXEL": "custom:instr.pixel.y",
     "ZPIXEL": "custom:instr.pixel.z"
-    }
+}
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
@@ -68,7 +70,6 @@ class WCS(wcs.WCS):
 
         naxis: `int`
             Number of axis described by the header.
-
         """
         self.oriented = False
         self.was_augmented = WCS._needs_augmenting(header)
@@ -76,12 +77,13 @@ class WCS(wcs.WCS):
             header = WCS._augment(header, naxis)
             if naxis is not None:
                 naxis = naxis + 1
-        super(WCS, self).__init__(header=header, naxis=naxis, **kwargs)
+        super().__init__(header=header, naxis=naxis, **kwargs)
 
     @classmethod
     def _needs_augmenting(cls, header):
         """
-        Determines whether a missing dependent axis is missing from the WCS object.
+        Determines whether a missing dependent axis is missing from the WCS
+        object.
 
         WCS cannot be created with only one spacial dimension. If
         WCS detects that returns that it needs to be augmented.
@@ -89,7 +91,6 @@ class WCS(wcs.WCS):
         Parameters
         ----------
         header: FITS header or `dict` with appropriate FITS keywords.
-
         """
         try:
             wcs.WCS(header=header)
@@ -101,8 +102,8 @@ class WCS(wcs.WCS):
     @classmethod
     def _augment(cls, header, naxis):
         """
-        Augments WCS with a dummy axis to take the place of a missing dependent axis.
-
+        Augments WCS with a dummy axis to take the place of a missing dependent
+        axis.
         """
         newheader = deepcopy(header)
         new_wcs_axes_params = {'CRPIX': 0, 'CDELT': 1, 'CRVAL': 0,
@@ -125,7 +126,7 @@ def _wcs_slicer(wcs, missing_axes, item):
     Returns the new sliced wcs, changed missing axes, and coordinates of dropped axes.
 
     Parameters
-    ---------
+    ----------
     wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
         WCS object to be sliced.
 
@@ -242,7 +243,7 @@ def _wcs_slicer(wcs, missing_axes, item):
                         "Must be int, slice, or tuple of ints and/or slices.")
 
     # Now item_checked has an entry for all axes, missing and non-missing,
-    # it can be safely reverse to WCS order
+    # it can be safely reversed to WCS order
     # which makes extracting real world coordinates of newly missing/dropped axes easier.
     item_wcs_order = tuple(item_checked[::-1])
 
@@ -318,7 +319,8 @@ def _get_ivoa_from_ctype(ctype):
 
 def _all_slice(obj):
     """
-    Returns True if all the elements in the object are slices else return False
+    Returns True if all the elements in the object are slices else return
+    False.
     """
     result = False
     if not isinstance(obj, (tuple, list)):
@@ -341,7 +343,7 @@ def _slice_list(obj):
         return result
     for i, o in enumerate(obj):
         if isinstance(o, int):
-            result.append(slice(o, o+1))
+            result.append(slice(o, o + 1))
         elif isinstance(o, slice):
             result.append(o)
     return result
@@ -419,7 +421,6 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axes):
     -------
     dependent_data_axes: `tuple` of `int`
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
-
     """
     # In order to correctly account for "missing" axes in this process,
     # we must determine what axes are dependent based on WCS axis indices.
@@ -457,7 +458,6 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     -------
     dependent_data_axes: `tuple` of `int`
         Sorted indices of axes dependent on input data_axis in WCS ordering convention.
-
     """
     # Pre-compute dependent axes. The matrix returned by
     # axis_correlation_matrix is (n_world, n_pixel) but we want to know
@@ -484,7 +484,6 @@ def axis_correlation_matrix(wcs_object):
     matrix: `numpy.ndarray` of `bool`
         Square True/False matrix indicating which axes are dependent.
         For example, whether WCS axis 0 is dependent on WCS axis 1 is given by matrix[0, 1].
-
     """
     n_world = len(wcs_object.wcs.ctype)
     n_pixel = wcs_object.naxis
@@ -516,18 +515,20 @@ def axis_correlation_matrix(wcs_object):
 
 
 def append_sequence_axis_to_wcs(wcs_object):
-    """Appends a 1-to-1 dummy axis to a WCS object."""
-    dummy_number = wcs_object.naxis+1
+    """
+    Appends a 1-to-1 dummy axis to a WCS object.
+    """
+    dummy_number = wcs_object.naxis + 1
     wcs_header = wcs_object.to_header()
-    wcs_header.append(("CTYPE{0}".format(dummy_number), "ITER",
+    wcs_header.append((f"CTYPE{dummy_number}", "ITER",
                        "A unitless iteration-by-one axis."))
-    wcs_header.append(("CRPIX{0}".format(dummy_number), 0.,
+    wcs_header.append((f"CRPIX{dummy_number}", 0.,
                        "Pixel coordinate of reference point"))
-    wcs_header.append(("CDELT{0}".format(dummy_number), 1.,
+    wcs_header.append((f"CDELT{dummy_number}", 1.,
                        "Coordinate increment at reference point"))
-    wcs_header.append(("CRVAL{0}".format(dummy_number), 0.,
+    wcs_header.append((f"CRVAL{dummy_number}", 0.,
                        "Coordinate value at reference point"))
-    wcs_header.append(("CUNIT{0}".format(dummy_number), "pix",
+    wcs_header.append((f"CUNIT{dummy_number}", "pix",
                        "Coordinate value at reference point"))
     wcs_header["WCSAXES"] = dummy_number
     return WCS(wcs_header)

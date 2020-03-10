@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-'''
-Tests for NDCube
-'''
+"""
+Tests for NDCube.
+"""
 from collections import OrderedDict
 import datetime
 
@@ -126,7 +125,7 @@ cubet = NDCube(
     wm,
     mask=mask_cubem,
     uncertainty=uncertaintym,
-    extra_coords=[('time', 0, np.array([datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+    extra_coords=[('time', 0, np.array([datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                                         for i in range(data.shape[0])])),
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))])
@@ -141,7 +140,9 @@ cube_rotated = NDCube(
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
 
-@pytest.mark.parametrize("test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
+
+@pytest.mark.parametrize(
+    "test_input,expected,mask,wcs,uncertainty,dimensions,world_axis_physical_types,extra_coords",
     [(cubem[:, 1],
       NDCube,
       mask_cubem[:, 1],
@@ -689,87 +690,87 @@ def test_slicing_error(test_input):
     (cubem[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     wm.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wm.wcs.crpix[2] - 1, 0)[-2]),
+    ])[0],
+        wm.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wm.wcs.crpix[2] - 1, 0)[-2]),
     (cubem[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     wm.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wm.wcs.crpix[2] - 1, 0)[0]),
+    ])[1],
+        wm.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wm.wcs.crpix[2] - 1, 0)[0]),
     (cubem[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     wm.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), 0)[-1]),
+    ])[0],
+        wm.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), 0)[-1]),
     (cubem[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     wm.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), 0)[1]),
+    ])[1],
+        wm.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), 0)[1]),
     (cubem[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[2],
-     wm.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), 0)[0]),
+    ])[2],
+        wm.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), 0)[0]),
     (cube[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     wt.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[2] - 1,
-         wt.wcs.crpix[3] - 1, 0)[1]),
+    ])[0],
+        wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[2] - 1,
+        wt.wcs.crpix[3] - 1, 0)[1]),
     (cube[1].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     wt.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[2] - 1,
-         wt.wcs.crpix[3] - 1, 0)[0]),
+    ])[1],
+        wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[2] - 1,
+        wt.wcs.crpix[3] - 1, 0)[0]),
     (cube[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[0],
-     wt.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3] - 1, 0)[2]),
+    ])[0],
+        wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3] - 1, 0)[2]),
     (cube[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[1],
-     wt.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3] - 1, 0)[1]),
+    ])[1],
+        wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3] - 1, 0)[1]),
     (cube[0:2].pixel_to_world(*[
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix),
         u.Quantity(np.arange(4), unit=u.pix)
-        ])[2],
-     wt.all_pix2world(
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix),
-         u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3] - 1, 0)[0])])
+    ])[2],
+        wt.all_pix2world(
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix),
+        u.Quantity(np.arange(4), unit=u.pix), wt.wcs.crpix[3] - 1, 0)[0])])
 def test_pixel_to_world(test_input, expected):
     assert np.all(test_input.value == expected)
 
@@ -778,92 +779,92 @@ def test_pixel_to_world(test_input, expected):
     (cubem[1].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m)
-        ])[1],
-     wm.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m), wm.wcs.crpix[2] - 1, 0)[0]),
+    ])[1],
+        wm.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m), wm.wcs.crpix[2] - 1, 0)[0]),
     (cubem[0:2].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m)
-        ])[0],
-     wm.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m), 0)[-1]),
+    ])[0],
+        wm.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m), 0)[-1]),
     (cubem[0:2].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m)
-        ])[1],
-     wm.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m), 0)[1]),
+    ])[1],
+        wm.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m), 0)[1]),
     (cubem[0:2].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m)
-        ])[2],
-     wm.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m), 0)[0]),
+    ])[2],
+        wm.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m), 0)[0]),
     (cube[1].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[0],
-     wt.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.m),
-         u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[2] - 1,
-         wt.wcs.crpix[3] - 1, 0)[1]),
+    ])[0],
+        wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.m),
+        u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[2] - 1,
+        wt.wcs.crpix[3] - 1, 0)[1]),
     (cube[1].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[1],
-     wt.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.m),
-         u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[2] - 1,
-         wt.wcs.crpix[3] - 1, 0)[0]),
+    ])[1],
+        wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.m),
+        u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[2] - 1,
+        wt.wcs.crpix[3] - 1, 0)[0]),
     (cube[0:2].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[0],
-     wt.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m),
-         u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3] - 1, 0)[2]),
+    ])[0],
+        wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m),
+        u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3] - 1, 0)[2]),
     (cube[0:2].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[1],
-     wt.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m),
-         u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3] - 1, 0)[1]),
+    ])[1],
+        wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m),
+        u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3] - 1, 0)[1]),
     (cube[0:2].world_to_pixel(*[
         u.Quantity(np.arange(4), unit=u.deg),
         u.Quantity(np.arange(4), unit=u.m),
         u.Quantity(np.arange(4), unit=u.min)
-        ])[2],
-     wt.all_world2pix(
-         u.Quantity(np.arange(4), unit=u.deg),
-         u.Quantity(np.arange(4), unit=u.m),
-         u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3] - 1, 0)[0])])
+    ])[2],
+        wt.all_world2pix(
+        u.Quantity(np.arange(4), unit=u.deg),
+        u.Quantity(np.arange(4), unit=u.m),
+        u.Quantity(np.arange(4), unit=u.min), wt.wcs.crpix[3] - 1, 0)[0])])
 def test_world_to_pixel(test_input, expected):
     assert np.allclose(test_input.value, expected)
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], [1*u.deg, 1*u.deg, 4.e-11*u.m], None),
+    ((cubem, [0.7 * u.deg, 1.3e-5 * u.deg, 1.02e-9 * u.m], [1 * u.deg, 1 * u.deg, 4.e-11 * u.m], None),
      cubem[:, :, :3]),
-    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], [1*u.s, 1*u.arcsec, 0.5*u.arcsec], None),
+    ((cube_rotated, [0 * u.s, 1.5 * u.arcsec, 0 * u.arcsec], [1 * u.s, 1 * u.arcsec, 0.5 * u.arcsec], None),
      cube_rotated[:, :4, 1:5]),
-    ((cubem, [0.7*u.deg, 1.3e-5*u.deg, 1.02e-9*u.m], None, [1.7*u.deg, 1*u.deg, 1.06e-9*u.m]),
+    ((cubem, [0.7 * u.deg, 1.3e-5 * u.deg, 1.02e-9 * u.m], None, [1.7 * u.deg, 1 * u.deg, 1.06e-9 * u.m]),
      cubem[:, :, :3]),
-    ((cube_rotated, [0*u.s, 1.5*u.arcsec, 0*u.arcsec], None, [1*u.s, 2.5*u.arcsec, 0.5*u.arcsec]),
+    ((cube_rotated, [0 * u.s, 1.5 * u.arcsec, 0 * u.arcsec], None, [1 * u.s, 2.5 * u.arcsec, 0.5 * u.arcsec]),
      cube_rotated[:, :4, 1:5]),
     ((cube_rotated, [0, 1.5, 0], None, [1, 2.5, 0.5], ['s', 'arcsec', 'arcsec']),
      cube_rotated[:, :4, 1:5])])
@@ -874,7 +875,7 @@ def test_crop_by_coords(test_input, expected):
 
 @pytest.mark.parametrize("test_input", [
     (ValueError, cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg), None),
-    (ValueError, cubem, [1*u.s], [1*u.s], [1*u.s]),
+    (ValueError, cubem, [1 * u.s], [1 * u.s], [1 * u.s]),
     (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg)),
     (ValueError, cubem, [1], None, [1], ['s', 'deg']),
     (TypeError, cubem, [1, 2, 3], None, [2, 3, 4])])
@@ -885,8 +886,8 @@ def test_crop_by_coords_error(test_input):
 
 @pytest.mark.parametrize(
     "test_input,expected",
-    [((cube, "bye", 0*u.pix, 1.5*u.pix), cube[:, :, 0:2]),
-     ((cubet, "bye", 0.5*u.pix, 3.5*u.pix), cubet[:, :, 1:4])])
+    [((cube, "bye", 0 * u.pix, 1.5 * u.pix), cube[:, :, 0:2]),
+     ((cubet, "bye", 0.5 * u.pix, 3.5 * u.pix), cubet[:, :, 1:4])])
 def test_crop_by_extra_coord(test_input, expected):
     helpers.assert_cubes_equal(
         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
@@ -904,35 +905,37 @@ def test_ndcubeordered(test_input, expected):
 @pytest.mark.parametrize("test_input,expected", [
     ((cubem, [2]), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m)),
     ((cubem, ['em']), u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))
-    ])
+])
 def test_all_world_coords_with_input(test_input, expected):
     all_coords = test_input[0].axis_world_coords(*test_input[1])
     for i in range(len(all_coords)):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
 
+
 @pytest.mark.parametrize("test_input,expected", [
     ((cubem, [2]), u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m)),
     ((cubem, ['em']), u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m))
-    ])
+])
 def test_all_world_coords_with_input_and_kwargs(test_input, expected):
-    all_coords = test_input[0].axis_world_coords(*test_input[1], **{"edges":True})
+    all_coords = test_input[0].axis_world_coords(*test_input[1], **{"edges": True})
     for i in range(len(all_coords)):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
 
+
 @pytest.mark.parametrize("test_input,expected", [
     (cubem, (u.Quantity([[0.60002173, 0.59999127, 0.5999608],
-                                 [1., 1., 1.]], unit=u.deg),
-                     u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
-                                 [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg),
-                     u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
+                         [1., 1., 1.]], unit=u.deg),
+             u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
+                         [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]], unit=u.deg),
+             u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m))),
     ((cubem[:, :, 0]), (u.Quantity([[0.60002173, 0.59999127, 0.5999608],
                                     [1., 1., 1.]], unit=u.deg),
                         u.Quantity([[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
                                     [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]],
                                    unit=u.deg)))
-    ])
+])
 def test_axis_world_coords_without_input(test_input, expected):
     all_coords = test_input.axis_world_coords()
     for i in range(len(all_coords)):
@@ -941,17 +944,17 @@ def test_axis_world_coords_without_input(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((cubem, 0, 0), ((2*u.pix, 3*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
-    ((cubem, 1, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
-    ((cubem, -2, 0), ((3*u.pix, 2*u.pix, 4*u.pix), NDCubeSequence, dict, NDCube, OrderedDict))
+    ((cubem, 0, 0), ((2 * u.pix, 3 * u.pix, 4 * u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
+    ((cubem, 1, 0), ((3 * u.pix, 2 * u.pix, 4 * u.pix), NDCubeSequence, dict, NDCube, OrderedDict)),
+    ((cubem, -2, 0), ((3 * u.pix, 2 * u.pix, 4 * u.pix), NDCubeSequence, dict, NDCube, OrderedDict))
 ])
 def test_explode_along_axis(test_input, expected):
     inp_cube, inp_axis, inp_slice = test_input
     exp_dimensions, exp_type_seq, exp_meta_seq, exp_type_cube, exp_meta_cube = expected
     output = inp_cube.explode_along_axis(inp_axis)
     assert tuple(output.dimensions) == tuple(exp_dimensions)
-    assert any(output[inp_slice].dimensions == \
-        u.Quantity((exp_dimensions[1], exp_dimensions[2]), unit='pix'))
+    assert any(output[inp_slice].dimensions ==
+               u.Quantity((exp_dimensions[1], exp_dimensions[2]), unit='pix'))
     assert isinstance(output, exp_type_seq)
     assert isinstance(output[inp_slice], exp_type_cube)
     assert isinstance(output.meta, exp_meta_seq)

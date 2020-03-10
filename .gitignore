@@ -199,18 +199,21 @@ $RECYCLE.BIN/
 ### VScode: https://raw.githubusercontent.com/github/gitignore/master/Global/VisualStudioCode.gitignore
 .vscode/*
 
-### Extra Python Items and nccube Specific
+### Extra Python Items and ndcube specific
 .hypothesis
 .pytest_cache
 sunpydata.sqlite
 sunpydata.sqlite-journal
 ndcube/_compiler.c
 ndcube/cython_version.py
-ndcube/version.py
 docs/_build
 docs/generated
 docs/api/
 docs/whatsnew/latest_changelog.txt
+examples/**/*.asdf
+# This is incase you run the figure tests
+figure_test_images*
+tags
 
 ### Pycharm(?)
 .idea

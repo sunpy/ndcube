@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 import pytest
 import datetime
 import copy
 
 import numpy as np
 import astropy.units as u
+from astropy.visualization.wcsaxes import WCSAxes
 import matplotlib
+import matplotlib.pyplot as plt
 try:
     from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
 except ImportError:
@@ -31,6 +32,14 @@ hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'C
       'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
 wm = WCS(header=hm, naxis=3)
 
+spatial = {
+           'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5,
+           'NAXIS1': 3,
+           'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1,
+           'NAXIS2': 2
+}
+spatial = WCS(header=spatial, naxis=2)
+
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
                  [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
 
@@ -47,10 +56,14 @@ cube = NDCube(
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])])),
-                  ('array coord', 2, np.arange(100, 100+data.shape[2]))
+                  ('array coord', 2, np.arange(100, 100 + data.shape[2]))
                   ])
+
+cube_spatial = NDCube(
+    data[0],
+    spatial)
 
 cube_unit = NDCube(
     data,
@@ -63,7 +76,7 @@ cube_unit = NDCube(
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
                   ])
 
@@ -76,7 +89,7 @@ cube_no_uncertainty = NDCube(
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
                   ])
 
@@ -90,7 +103,7 @@ cube_unit_no_uncertainty = NDCube(
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
                   ])
 
@@ -103,7 +116,7 @@ cubem = NDCube(
                   ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.W)),
                   ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.m)),
                   ('another time', 2, np.array(
-                      [datetime.datetime(2000, 1, 1)+datetime.timedelta(minutes=i)
+                      [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                        for i in range(data.shape[2])]))
                   ])
 
@@ -121,7 +134,8 @@ cube_none_axis_ranges_axis2_bye = copy.deepcopy(cube_none_axis_ranges_axis2)
 cube_none_axis_ranges_axis2_bye[2] = cube.extra_coords["bye"]["value"].value
 
 cube_none_axis_ranges_axis2_array = copy.deepcopy(cube_none_axis_ranges_axis2)
-cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
+cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10 + cube.data.shape[-1])
+
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0, 0], {},
@@ -137,10 +151,10 @@ cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
                          cube_unit[0, 0].mask),
       "bye [km]", "Data [erg]", (0, 0.003), (10000000, 40000000))),
 
-    (cube_unit[0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0].data.shape[0])},
-     (np.ma.masked_array(np.arange(10, 10+cube_unit[0, 0].data.shape[0]), cube_unit[0, 0].mask),
+    (cube_unit[0, 0], {"axes_coordinates": np.arange(10, 10 + cube_unit[0, 0].data.shape[0])},
+     (np.ma.masked_array(np.arange(10, 10 + cube_unit[0, 0].data.shape[0]), cube_unit[0, 0].mask),
       np.ma.masked_array(cube_unit[0, 0].data, cube_unit[0, 0].mask),
-      " [None]", "Data [J]", (10, 10+cube_unit[0, 0].data.shape[0]-1), (1, 4))),
+      " [None]", "Data [J]", (10, 10 + cube_unit[0, 0].data.shape[0] - 1), (1, 4))),
 
     (cube_no_uncertainty[0, 0], {},
      (np.ma.masked_array([0.4, 0.8, 1.2, 1.6], cube_no_uncertainty[0, 0].mask),
@@ -158,11 +172,11 @@ cube_none_axis_ranges_axis2_array[2] = np.arange(10, 10+cube.data.shape[-1])
                                     unit=cube_unit[0, 0].unit).to(u.erg).value,
                          cube_unit[0, 0].mask),
       "time [min]", "Data [erg]", (0.4, 1.6), (10000000, 40000000)))
-    ])
+])
 def test_cube_plot_1D(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
     expected_xdata, expected_ydata, expected_xlabel, expected_ylabel, \
-      expected_xlim, expected_ylim = expected_values
+        expected_xlim, expected_ylim = expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
@@ -195,10 +209,10 @@ def test_cube_plot_1D(test_input, test_kwargs, expected_values):
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
-    (cube[0, 0], {"axes_coordinates": np.arange(10, 10+cube_unit[0, 0].data.shape[0]),
+    (cube[0, 0], {"axes_coordinates": np.arange(10, 10 + cube_unit[0, 0].data.shape[0]),
                   "axes_units": u.C}, TypeError),
     (cube[0, 0], {"data_unit": u.C}, TypeError)
-    ])
+])
 def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
     with pytest.raises(expected_error):
         output = test_input.plot(**test_kwargs)
@@ -207,19 +221,25 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cube[0], {},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "time [min]", "em.wl [m]",
-      (-0.5, 3.5, 2.5, -0.5))),
+      (-0.5, 3.5, -0.5, 2.5))),
+
+    (cube_spatial, {'axes': WCSAxes(plt.figure(), (0, 0, 1, 1), wcs=cube_spatial.wcs)},
+     (cube_spatial.data,
+      "custom:pos.helioprojective.lat [deg]",
+      "custom:pos.helioprojective.lon [deg]",
+      (-0.5, 3.5, -0.5, 2.5))),
 
     (cube[0], {"axes_coordinates": ["bye", None], "axes_units": [None, u.cm]},
      (np.ma.masked_array(cube[0].data, cube[0].mask), "bye [m]", "em.wl [cm]",
       (0.0, 3.0, 2e-9, 6e-9))),
 
-    (cube[0], {"axes_coordinates": [np.arange(10, 10+cube[0].data.shape[1]),
-                                    u.Quantity(np.arange(10, 10+cube[0].data.shape[0]), unit=u.m)],
+    (cube[0], {"axes_coordinates": [np.arange(10, 10 + cube[0].data.shape[1]),
+                                    u.Quantity(np.arange(10, 10 + cube[0].data.shape[0]), unit=u.m)],
                "axes_units": [None, u.cm]},
      (np.ma.masked_array(cube[0].data, cube[0].mask), " [None]", " [cm]", (10, 13, 1000, 1200))),
 
-    (cube[0], {"axes_coordinates": [np.arange(10, 10+cube[0].data.shape[1]),
-                                    u.Quantity(np.arange(10, 10+cube[0].data.shape[0]), unit=u.m)]},
+    (cube[0], {"axes_coordinates": [np.arange(10, 10 + cube[0].data.shape[1]),
+                                    u.Quantity(np.arange(10, 10 + cube[0].data.shape[0]), unit=u.m)]},
      (np.ma.masked_array(cube[0].data, cube[0].mask), " [None]", " [m]", (10, 13, 10, 12))),
 
     (cube_unit[0], {"plot_axis_indices": [0, 1], "axes_coordinates": [None, "bye"],
@@ -227,27 +247,32 @@ def test_cube_plot_1D_errors(test_input, test_kwargs, expected_error):
      (np.ma.masked_array((cube_unit[0].data * cube_unit[0].unit).to(u.erg).value,
                          cube_unit[0].mask).transpose(),
       "em.wl [m]", "bye [m]", (2e-11, 6e-11, 0.0, 3.0)))
-    ])
+])
 def test_cube_plot_2D(test_input, test_kwargs, expected_values):
+    fig = plt.figure()
     # Unpack expected properties.
     expected_data, expected_xlabel, expected_ylabel, expected_extent = \
-      expected_values
+        expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
     assert isinstance(output, matplotlib.axes.Axes)
     np.testing.assert_array_equal(output.images[0].get_array(), expected_data)
-    assert output.axes.xaxis.get_label_text() == expected_xlabel
-    assert output.axes.yaxis.get_label_text() == expected_ylabel
+    if isinstance(output, WCSAxes):
+        assert output.coords[0].get_axislabel() == expected_xlabel
+        assert output.coords[1].get_axislabel() == expected_ylabel
+    else:
+        assert output.axes.yaxis.get_label_text() == expected_ylabel
+        assert output.axes.xaxis.get_label_text() == expected_xlabel
     assert np.allclose(output.images[0].get_extent(), expected_extent)
 
 
 @pytest.mark.parametrize("test_input, test_kwargs, expected_error", [
     (cube[0], {"axes_coordinates": ["array coord", None], "axes_units": [u.cm, None]}, TypeError),
-    (cube[0], {"axes_coordinates": [np.arange(10, 10+cube[0].data.shape[1]), None],
+    (cube[0], {"axes_coordinates": [np.arange(10, 10 + cube[0].data.shape[1]), None],
                "axes_units": [u.cm, None]}, TypeError),
     (cube[0], {"data_unit": u.cm}, TypeError)
-    ])
+])
 def test_cube_plot_2D_errors(test_input, test_kwargs, expected_error):
     with pytest.raises(expected_error):
         output = test_input.plot(**test_kwargs)
@@ -256,14 +281,14 @@ def test_cube_plot_2D_errors(test_input, test_kwargs, expected_error):
 @pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
     (cubem, {},
      (cubem.data, [np.array([0., 2.]), [0, 3], [0, 4]], "", ""))
-    ])
+])
 def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
     expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel = expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert type(output) is ImageAnimatorWCS
+    assert isinstance(output, ImageAnimatorWCS)
     np.testing.assert_array_equal(output.data, expected_data)
     assert output.axes.xaxis.get_label_text() == expected_xlabel
     assert output.axes.yaxis.get_label_text() == expected_ylabel
@@ -284,19 +309,19 @@ def test_cube_plot_ND_as_2DAnimation(test_input, test_kwargs, expected_values):
      (([-1, -2], None, ["km", None], None, {}))),
     (([-1, -2], None, None, None, {"unit_y_axis": "km"}),
      (([-1, -2], None, [None, "km"], None, {})))
-    ])
+])
 def test_support_101_plot_API(input_values, expected_values):
     # Define expected values.
     expected_plot_axis_indices, expected_axes_coordinates, expected_axes_units, \
-      expected_data_unit, expected_kwargs = expected_values
+        expected_data_unit, expected_kwargs = expected_values
     # Run function
     output_plot_axis_indices, output_axes_coordinates, output_axes_units, \
-      output_data_unit, output_kwargs = plotting._support_101_plot_API(*input_values)
+        output_data_unit, output_kwargs = plotting._support_101_plot_API(*input_values)
     # Check values are correct
     assert output_plot_axis_indices == expected_plot_axis_indices
     if expected_axes_coordinates is None:
         assert output_axes_coordinates == expected_axes_coordinates
-    elif type(expected_axes_coordinates) is list:
+    elif isinstance(expected_axes_coordinates, list):
         for i, ac in enumerate(output_axes_coordinates):
             np.testing.assert_array_equal(ac, expected_axes_coordinates[i])
     assert output_axes_units == expected_axes_units
@@ -307,12 +332,12 @@ def test_support_101_plot_API(input_values, expected_values):
 @pytest.mark.parametrize("input_values", [
     ([0, 1], None, None, None, {"image_axes": [-1, -2]}),
     (None, [np.arange(1, 4), np.arange(1, 4)], None, None,
-      {"axis_ranges": [np.arange(3), np.arange(3)]}),
+     {"axis_ranges": [np.arange(3), np.arange(3)]}),
     (None, None, [u.s, "km"], None, {"unit_x_axis": u.W}),
     (None, None, [u.s, "km"], None, {"unit_y_axis": u.W}),
     (None, None, None, u.s, {"unit": u.W}),
     ([0, 1, 2], None, None, None, {"unit_x_axis": [u.s, u.km, u.W]}),
-    ])
+])
 def test_support_101_plot_API_errors(input_values):
     with pytest.raises(ValueError):
         output = plotting._support_101_plot_API(*input_values)
@@ -323,21 +348,21 @@ def test_support_101_plot_API_errors(input_values):
      (cube_data, cube_none_axis_ranges_axis2, "time [min]", "Data [None]")),
 
     (cube_unit, {"plot_axis_indices": -1, "axes_units": u.s, "data_unit": u.erg},
-     (cube_data*1e7, cube_none_axis_ranges_axis2_s, "time [s]", "Data [erg]")),
+     (cube_data * 1e7, cube_none_axis_ranges_axis2_s, "time [s]", "Data [erg]")),
 
     (cube_unit, {"plot_axis_indices": -1, "axes_coordinates": "bye"},
      (cube_data, cube_none_axis_ranges_axis2_bye, "bye [m]", "Data [J]")),
 
-    (cube, {"plot_axis_indices": -1, "axes_coordinates": np.arange(10 - 0.5, 0.5+10 + cube.data.shape[-1])},
+    (cube, {"plot_axis_indices": -1, "axes_coordinates": np.arange(10 - 0.5, 0.5 + 10 + cube.data.shape[-1])},
      (cube_data, cube_none_axis_ranges_axis2_array, " [None]", "Data [None]"))
-    ])
+])
 def test_cube_plot_ND_as_1DAnimation(test_input, test_kwargs, expected_values):
     # Unpack expected properties.
     expected_data, expected_axis_ranges, expected_xlabel, expected_ylabel = expected_values
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot properties are correct.
-    assert type(output) is LineAnimator
+    assert isinstance(output, LineAnimator)
     np.testing.assert_array_equal(output.data, expected_data)
     for i, output_axis_range in enumerate(output.axis_ranges):
         if expected_axis_ranges[i] is not False:

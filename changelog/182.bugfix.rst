@@ -1,1 +1,0 @@
-Fix 2D plotting from crashing when both data and WCS are 2D.
