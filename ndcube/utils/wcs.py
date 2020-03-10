@@ -185,62 +185,34 @@ def _wcs_slicer(wcs, missing_axes, item):
     # elements corresponding to missing axes are set to slice(0,1),
     # non-missing axes with a corresponding slice in item are assigned that slice,
     # and subsequent non-missing axes without an entry in item are set to slice(None).
-    # If item or tuple element is an int, convert to the appropriate slice
-    # so we easily search for new missing/dropped axes later.
     item_checked = []
-    # Case where item is a slice or int.
-    if isinstance(item, (slice, int, np.int64)):
-        # Create index to track whether we have reached the axis relevant to the item.
-        index = 0
-        for i, _bool in enumerate(missing_axes_numpy_order):
-            if _bool:
-                # Enter slice(0, 1) for any missing axis.
-                item_checked.append(slice(0, 1))
-            else:
-                if index == 0:
-                    # Enter item into tuple for first non-missing axis.
-                    if isinstance(item, slice):
-                        item_checked.append(item)
-                    else:
-                        item_checked.append(slice(item, item + 1))
-                else:
-                    # As item is a slice or int, subsequent non-missing axes are not to be sliced.
-                    item_checked.append(slice(None, None))
-                index += 1
-            item_ = tuple(item_checked)
-    # Case where item is a tuple of slices or ints.
+    # Create index to track whether the item tuple elements we are dealing with.
+    index = 0
+    if isinstance(item, (slice, numbers.Integral)):
+        len_item = 1
     elif isinstance(item, tuple):
-        # Create index to track whether the item tuple elements we are dealing with.
-        index = 0
         len_item = len(item)
-        for i, _bool in enumerate(missing_axes_numpy_order):
-            if _bool:
-                # Enter slice(0, 1) for any missing axis.
-                item_checked.append(slice(0, 1))
-            else:
-                if index < len_item:
-                    # For non-missing axes with a corresponding sub-item,
-                    # append that item here. If the sub-item is an int,
-                    # convert to appropriate slice for easy identification
-                    # of newly missing/dropped axes later.
-                    if isinstance(item[index], (int, np.int64)):
-                        item_checked.append(slice(item[index], item[index]+1))
-                    elif isinstance(item[index], slice):
-                        item_checked.append(item[index])
-                    else:
-                        raise TypeError("item type at data axis {0} is {1}. ".format(
-                            index, type(item[index]) + "Must be int or slice."))
-                else:
-                    # Subsequent non-missing axes did not have a corresponding slice item
-                    # and are therefore not be sliced.
-                    item_checked.append(slice(None, None))
-                index += 1
-        item_ = tuple(item_checked)
-
-    # Case where item is an an invalid format.
     else:
         raise TypeError("item type is {0}.  ".format(type(item)) +
                         "Must be int, slice, or tuple of ints and/or slices.")
+    for i, _bool in enumerate(missing_axes_numpy_order):
+        if _bool:
+            # Enter slice(0, 1) for any missing axis.
+            item_checked.append(slice(0, 1))
+        else:
+            if index < len_item:
+                # For non-missing axes with a corresponding sub-item,
+                # append that item here.
+                if isinstance(item, tuple):
+                    item_checked.append(item[index])
+                else:
+                    item_checked.append(item)
+            else:
+                # Subsequent non-missing axes did not have a corresponding slice item
+                # and are therefore not be sliced.
+                item_checked.append(slice(None, None))
+            index += 1
+    item_ = tuple(item_checked)
 
     # Now item_checked has an entry for all axes, missing and non-missing,
     # it can be safely reversed to WCS order
@@ -252,40 +224,15 @@ def _wcs_slicer(wcs, missing_axes, item):
     # For this, use WCS-order variables, i.e. missing_axes and item_wcs_order.
     dropped_coords = {}
     for i, slice_element in enumerate(item_wcs_order):
-        # If axis is not missing and the difference between its start and stop params is 1,
-        # then the slicing will cause the axis to be dropped, i.e. become missing.
         if new_missing_axes[i] is False:
-            if isinstance(slice_element, slice):
-                # Determine the start index.
-                if slice_element.start is None:
-                    slice_start = 0
-                else:
-                    slice_start = slice_element.start
-                # Determine the stop index.
-                if slice_element.stop is None:
-                    # wcs._pixel_shape is a list of the length of each axis.
-                    slice_stop = wcs.pixel_shape[i]
-                else:
-                    slice_stop = slice_element.stop
-            elif isinstance(slice_element, int):
-                slice_start = slice_element
-                slice_stop = slice_element + 1
-            # Determine the slice's step.
-            # (We will use this is a later version of this code to be more thorough.
-            # For now we'll calculate it and not use it.)
-            # if slice_element.step is None:
-                # slice_step = 1
-            # else:
-                # slice_step = slice_element.step
-            slice_step = 1
-            real_world_coords = []
-            # If slice results in the axis being of length 1, is will be dropped.
-            # Calculate its real world coordinate.c
-            if slice_stop - slice_start <= slice_step:
+            # If axis is not missing and the slice_element is an int,
+            # then the slicing will cause the axis to be dropped, i.e. become missing.
+            # Calculate its real world coordinate.
+            if isinstance(slice_element, numbers.Integral):
                 # Set up a list of pixel coords as input to all_pix2world.
                 pix_coords = [0] * len(item_wcs_order)
                 # Enter pixel coordinate for this axis.
-                pix_coords[i] = slice_start
+                pix_coords[i] = slice_element
                 # Get real world coordinates of i-th axis.
                 real_world_coords = wcs.all_pix2world(*pix_coords, 0)[i]
                 # Get IVOA axis name from CTYPE.

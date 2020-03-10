@@ -25,9 +25,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         This method calls ``_slice`` and then constructs a new object
         using the kwargs returned by ``_slice``.
         """
-        if item is None or (isinstance(item, tuple) and None in item):
-            raise IndexError("None indices not supported")
-
         # Abort slicing if the data is a single scalar.
         if self.data.shape == ():
             raise TypeError('scalars cannot be sliced.')
@@ -38,10 +35,9 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
         # Add any WCS coords whose axes are missing after slicing to extra_coords.
         if new_cube._extra_coords_wcs_axis is not None:
-            if dropped_coords != {}:
-                new_cube._extra_coords_wcs_axis.update(dropped_coords)
-            else:
-                new_cube._extra_coords_wcs_axis = dropped_coords
+            new_cube._extra_coords_wcs_axis.update(dropped_coords)
+        elif dropped_coords != {}:
+            new_cube._extra_coords_wcs_axis = dropped_coords
 
         return new_cube
 
@@ -50,7 +46,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         Construct a set of keyword arguments to initialise a new (sliced)
         instance of the class. This method is called in
         `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
-
         This method extends the `~astropy.nddata.mixins.NDSlicingMixin`
         method to add support for ``missing_axes`` and ``extra_coords``
         and overwrites the astropy handling of wcs slicing.
@@ -67,8 +62,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
     def _slice_wcs_missing_axes(self, item):
         # here missing axis is reversed as the item comes already in the reverse order
         # of the input
-        return utils.wcs._wcs_slicer(
-            self.wcs, copy.deepcopy(self.missing_axes), item)
+        return utils.wcs._wcs_slicer(self.wcs, copy.deepcopy(self.missing_axes), item)
 
     def _slice_extra_coords(self, item, missing_axes):
         if self.extra_coords is None:
