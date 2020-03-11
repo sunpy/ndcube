@@ -113,11 +113,3 @@ def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes, first_key):
         new_aligned_axes = tuple(new_aligned_axes)
 
     return new_aligned_axes
-
-
-def make_index_positive(index, axis_length):
-    if index < 0:
-        pos_index = axis_length + index
-    else:
-        pos_index = index
-    return pos_index
