@@ -7,8 +7,6 @@ from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 import ndcube.utils.collection as collection_utils
 
-SUPPORTED_COLLECTION_TYPES = (NDCube, NDCubeSequence)
-
 __all__ = ["NDCollection"]
 
 class NDCollection(dict):
@@ -59,12 +57,6 @@ class NDCollection(dict):
             raise ValueError("Duplicate keys detected.")
         if len(keys) != len(data):
             raise ValueError("Data and keys inputs of different lengths.")
-        data_types = [isinstance(cube, SUPPORTED_COLLECTION_TYPES) for cube in data]
-        if not all(data_types):
-            bad_data_index = np.arange(len(data))[np.invert(data_types)][0]
-            raise TypeError(
-                    "All data entries must be of types {0}.\n{1}th data entry is type {2}".format(
-                        SUPPORTED_COLLECTION_TYPES, bad_data_index, type(data[bad_data_index])))
 
         self._first_key = keys[0]
         self._cube_types = type(data[0])
@@ -237,10 +229,6 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
 
     def update(self, key, data, aligned_axes):
         """Updates existing cube within collection or adds new cube."""
-        # Ensure new cube is of supported type.
-        if not isinstance(data, SUPPORTED_COLLECTION_TYPES):
-            raise TypeError("data must be an instance of {0}. Type is actually {1}".format(
-                SUPPORTED_COLLECTION_TYPES, type(data)))
         # Sanitize aligned axes.
         if isinstance(aligned_axes, int):
             aligned_axes = (aligned_axes,)
