@@ -59,36 +59,22 @@ class NDCollection(dict):
         if len(keys) != len(data):
             raise ValueError("Data and keys inputs of different lengths.")
 
-        self._first_key = keys[0]
-        self._cube_types = type(data[0])
-
-        # Enter data into object.
-        super().__init__(zip(keys, data))
-        self.meta = meta
-
-        n_cubes = len(data)
-        # If aligned_axes not set, assume all axes are aligned in order.
-        if aligned_axes.lower() == "all":
+        # If aligned_axes set to "all", assume all axes are aligned in order.
+        if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
             # Check all cubes are of same shape
             cube0_dims = data[0].dimensions
             cubes_same_shape = all([all(d.dimensions == cube0_dims) for d in data])
             if cubes_same_shape is not True:
                 raise ValueError(
                     "All cubes in data not of same shape. Please set aligned_axes kwarg.")
-            self.n_aligned_axes = len(cube0_dims)
-            self.aligned_axes = dict([(k, tuple(range(len(cube0_dims)))) for k in keys])
+            sanitized_axes = dict([(k, tuple(range(len(cube0_dims)))) for k in keys])
         elif aligned_axes is None:
-            self.n_aligned_axes = 0
-            self.aligned_axes = None
+            sanitized_axes = None
         else:
             # Else, sanitize user-supplied aligned axes.
-            if dont_sanitize_aligned_axes is True:
-                self.n_aligned_axes = len(aligned_axes[0])
-                self.aligned_axes = dict(zip(keys, aligned_axes))
-            else:
-                aligned_axes, self.n_aligned_axes = collection_utils._sanitize_aligned_axes(
-                        data, aligned_axes, n_cubes)
-                self.aligned_axes = dict(zip(keys, aligned_axes))
+            sanitized_axes = collection_utils._sanitize_aligned_axes(data, aligned_axes)
+
+        NDCollection._init_without_sanitization_(data, keys, sanitized_axes, meta=meta)
 
     def __repr__(self):
         return (textwrap.dedent("""
@@ -156,8 +142,8 @@ class NDCollection(dict):
                     # Therefore the collection keys remain unchanged.
                     new_keys = list(self.keys())
 
-            return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes,
-                                  meta=self.meta, dont_sanitize_aligned_axes=True)
+            return NDCollection._init_without_sanitization_(new_data, new_keys, new_aligned_axes,
+                                                            meta=self.meta)
 
     def _generate_collection_getitems(self, item):
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
@@ -247,3 +233,27 @@ class NDCollection(dict):
         if key == self._first_key:
             self._first_key = list(self.keys())[0]
 
+    @classmethod
+    def _init_without_sanitization_(self, data, keys, aligned_axes, meta=None):
+        """
+        Initialize an NDCollection without sanitizing axes.
+
+        See __init__ docstring for parameters.
+        Note that aligned_axes is an arg here, not a kwarg and that it must be None
+        or a tuple of tuple of ints. A single int or tuple of ints is not supported here.
+
+        """
+        # Enter data into object.
+        super().__init__(dict(zip(keys, data)))
+        self.meta = meta
+
+        self._first_key = keys[0]
+        self._cube_types = type(data[0])
+
+        # Attach aligned axes to object
+        if aligned_axes is None:
+            self.n_aligned_axes = 0
+            self.aligned_axes = aligned_axes
+        else:
+            self.n_aligned_axes = len(aligned_axes[0])
+            self.aligned_axes = dict(zip(keys, aligned_axes))

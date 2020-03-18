@@ -2,7 +2,7 @@ import numpy as np
 import astropy.units as u
 
 
-def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
+def _sanitize_aligned_axes(data, aligned_axes):
     """
     Converts input aligned_axes to standard format.
 
@@ -33,6 +33,7 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     axes_all_ints = all([isinstance(axis, int) for axis in aligned_axes])
     axes_all_tuples = all([isinstance(axis, tuple) for axis in aligned_axes])
     # If all elements are int, duplicate tuple so there is one for each cube.
+    n_cubes = len(data)
     if axes_all_ints is True:
 
         n_aligned_axes = len(aligned_axes)
@@ -42,8 +43,7 @@ def _sanitize_aligned_axes(data, aligned_axes, n_cubes):
     # all elements of each sub-tuple are ints.
     elif axes_all_tuples is True:
         if len(aligned_axes) != n_cubes:
-            raise ValueError(
-                "aligned_axes must have a tuple for each element in data.")
+            raise ValueError("aligned_axes must have a tuple for each element in data.")
 
         n_aligned_axes = len(aligned_axes[0])
 
