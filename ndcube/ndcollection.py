@@ -12,7 +12,7 @@ SUPPORTED_COLLECTION_TYPES = (NDCube, NDCubeSequence)
 __all__ = ["NDCollection"]
 
 class NDCollection(dict):
-    def __init__(self, data, keys, aligned_axes="All", meta=None, dont_sanitize_aligned_axes=False):
+    def __init__(self, data, keys, aligned_axes="all", meta=None, dont_sanitize_aligned_axes=False):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
@@ -75,7 +75,7 @@ class NDCollection(dict):
 
         n_cubes = len(data)
         # If aligned_axes not set, assume all axes are aligned in order.
-        if aligned_axes == "All":
+        if aligned_axes.lower() == "all":
             # Check all cubes are of same shape
             cube0_dims = data[0].dimensions
             cubes_same_shape = all(
