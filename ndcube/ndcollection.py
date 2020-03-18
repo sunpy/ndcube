@@ -78,14 +78,12 @@ class NDCollection(dict):
         if aligned_axes.lower() == "all":
             # Check all cubes are of same shape
             cube0_dims = data[0].dimensions
-            cubes_same_shape = all(
-                [all(data[i].dimensions == cube0_dims) for i in range(n_cubes)])
+            cubes_same_shape = all([all(d.dimensions == cube0_dims) for d in data])
             if cubes_same_shape is not True:
                 raise ValueError(
                     "All cubes in data not of same shape. Please set aligned_axes kwarg.")
             self.n_aligned_axes = len(cube0_dims)
-            self.aligned_axes = dict([(keys[i], tuple(range(len(cube0_dims))))
-                                      for i in range(n_cubes)])
+            self.aligned_axes = dict([(k, tuple(range(len(cube0_dims)))) for k in keys])
         elif aligned_axes is None:
             self.n_aligned_axes = 0
             self.aligned_axes = None
@@ -145,7 +143,7 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
             if item_is_strings:
                 new_data = [self[_item] for _item in item]
                 new_keys = item
-                new_aligned_axes = tuple([self.aligned_axes[_item] for _item in item])
+                new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
 
             # Else, the item is assumed to be a typical slicing item.
             # Slice each cube in collection using information in this item.
@@ -186,7 +184,6 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
                 collection_items[i][self.aligned_axes[key][0]] = item
 
         # Case 2: slice
-        # If only one element in interval of slice, first aligned axis is dropped.
         elif isinstance(item, slice):
             # Insert item to each cube's slice item.
             for i, key in enumerate(self):
@@ -200,7 +197,6 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
             # Ensure item is not longer than number of aligned axes
             if len(item) > self.n_aligned_axes:
                 raise IndexError("Too many indices")
-            # If item is tuple, search sub-items for ints or 1-interval slices.
             for i, axis_item in enumerate(item):
                 if isinstance(axis_item, int):
                     drop_aligned_axes_indices.append(i)
