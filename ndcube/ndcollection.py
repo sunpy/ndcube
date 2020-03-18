@@ -1,5 +1,6 @@
 import collections.abc
 import copy
+import textwrap
 
 import numpy as np
 
@@ -10,7 +11,7 @@ import ndcube.utils.collection as collection_utils
 __all__ = ["NDCollection"]
 
 class NDCollection(dict):
-    def __init__(self, data, keys, aligned_axes="all", meta=None, dont_sanitize_aligned_axes=False):
+    def __init__(self, data, keys, aligned_axes="all", meta=None):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
@@ -90,16 +91,17 @@ class NDCollection(dict):
                 self.aligned_axes = dict(zip(keys, aligned_axes))
 
     def __repr__(self):
-        return ("""NDCollection
-------------
-Cube keys: {keys}
-Number of Cubes: {n_cubes}
-Cube Types: {cube_types}
-Aligned dimensions: {aligned_dims}
-Aligned world physical axis types: {aligned_axis_types}""".format(
-    keys=self.keys(), n_cubes=len(self), cube_types=self._cube_types,
-    aligned_dims=self.aligned_dimensions,
-    aligned_axis_types=self.aligned_world_axis_physical_types))
+        return (textwrap.dedent("""
+            NDCollection
+            ------------
+            Cube keys: {keys}
+            Number of Cubes: {n_cubes}
+            Cube Types: {cube_types}
+            Aligned dimensions: {aligned_dims}
+            Aligned world physical axis types: {aligned_axis_types}""".format(
+                keys=self.keys(), n_cubes=len(self), cube_types=self._cube_types,
+                aligned_dims=self.aligned_dimensions,
+                aligned_axis_types=self.aligned_world_axis_physical_types)))
 
     @property
     def aligned_dimensions(self):
@@ -244,3 +246,4 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
         self.aligned_axes.__delitem__(key)
         if key == self._first_key:
             self._first_key = list(self.keys())[0]
+
