@@ -28,14 +28,14 @@ class NDCollection(dict):
             there must be one per element in the data input.
             Default is ("0", "1",...)
 
-        aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, or None (Optional)
+        aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, or None, optional
             Axes of each cube/sequence that are aligned in numpy order.
             If elements are int, then the same axis numbers in all cubes/sequences are aligned.
             If elements are tuples of ints, then must be one tuple for every cube/sequence.
             Each element of each tuple gives the axes of each cube/sequence that are aligned.
             Default="All", i.e. all axes are aligned.
 
-        meta: `dict` (Optional)
+        meta: `dict`, optional
             General metadata for the overall collection.
 
         Example
@@ -70,7 +70,7 @@ class NDCollection(dict):
         self._cube_types = type(data[0])
 
         # Enter data into object.
-        super().__init__([(key, cube) for key, cube in zip(keys, data)])
+        super().__init__(zip(keys, data))
         self.meta = meta
 
         n_cubes = len(data)
@@ -135,7 +135,7 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
             # If item is a sequence, ensure strings and numeric items are not mixed.
             item_is_strings = False
             if isinstance(item, collections.abc.Sequence):
-                item_strings = [isinstance(_item, str) for _item in item]
+                item_strings = [isinstance(item_, str) for item_ in item]
                 item_is_strings = all(item_strings)
                 # Ensure strings are not mixed with slices.
                 if (not item_is_strings) and (not all(np.invert(item_strings))):
@@ -208,7 +208,7 @@ Aligned world physical axis types: {aligned_axis_types}""".format(
                     collection_items[j][self.aligned_axes[key][i]] = axis_item
 
         else:
-            raise TypeError("Unsupported slicing type: {0}".format(axis_item))
+            raise TypeError(f"Unsupported slicing type: {axis_item}")
 
         # Use indices of dropped axes determine above to update aligned_axes
         # by removing any that have been dropped.
