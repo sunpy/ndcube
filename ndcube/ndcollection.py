@@ -68,7 +68,7 @@ class NDCollection(dict):
 
         n_cubes = len(data)
         # If aligned_axes not set, assume all axes are aligned in order.
-        if aligned_axes.lower() == "all":
+        if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
             # Check all cubes are of same shape
             cube0_dims = data[0].dimensions
             cubes_same_shape = all([all(d.dimensions == cube0_dims) for d in data])
