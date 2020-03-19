@@ -38,7 +38,7 @@ sequence20 = NDCubeSequence([cube2, cube0])
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
 cube_collection = NDCollection([cube0, cube1, cube2], keys, aligned_axes)
-#seq_collection = NDCollection([sequence01, sequence12], ("seq0", "seq1"))
+seq_collection = NDCollection([sequence02, sequence20], ("seq0", "seq1"))
 
 
 @pytest.mark.parametrize("item,collection,expected", [
@@ -67,7 +67,15 @@ cube_collection = NDCollection([cube0, cube1, cube2], keys, aligned_axes)
 
     (("cube0", "cube2"), cube_collection,
         NDCollection(data=[cube0, cube2],
-                     keys=("cube0", "cube2"), aligned_axes=(aligned_axes[0], aligned_axes[2])))])
+                     keys=("cube0", "cube2"), aligned_axes=(aligned_axes[0], aligned_axes[2]))),
+    (0, seq_collection,
+        NDCollection(data=[sequence02[0], sequence20[0]], keys=("seq0", "seq1"),
+                     aligned_axes=((0,1,2), (0,1,2)))),
+
+    ((slice(None), 1, slice(1, 3)), seq_collection,
+        NDCollection(data=[sequence02[:, 1, 1:3], sequence20[:, 1, 1:3]], keys=("seq0", "seq1"),
+                     aligned_axes=((0,1,2), (0,1,2))))
+])
 def test_collection_slicing(item, collection, expected):
     helpers.assert_collections_equal(collection[item], expected)
 

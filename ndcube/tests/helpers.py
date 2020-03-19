@@ -23,9 +23,10 @@ def assert_extra_coords_equal(test_input, extra_coords):
 
 
 def assert_metas_equal(test_input, expected_output):
-    assert test_input.keys() == expected_output.keys()
-    for key in list(test_input.keys()):
-        assert test_input[key] == expected_output[key]
+    if not (test_input is None and expected_output is None):
+        assert test_input.keys() == expected_output.keys()
+        for key in list(test_input.keys()):
+            assert test_input[key] == expected_output[key]
 
 
 def assert_cubes_equal(test_input, expected_cube):

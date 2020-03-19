@@ -249,7 +249,8 @@ def _sanitize_inputs(data, keys, aligned_axes):
     if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
         # Check all cubes are of same shape
         cube0_dims = data[0].dimensions
-        cubes_same_shape = all([all(d.dimensions == cube0_dims) for d in data])
+        cubes_same_shape = all([all([d.dimensions[i] == dim for i, dim in enumerate(cube0_dims)])
+                                for d in data])
         if cubes_same_shape is not True:
             raise ValueError(
                 "All cubes in data not of same shape. Please set aligned_axes kwarg.")
