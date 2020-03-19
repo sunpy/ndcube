@@ -59,9 +59,6 @@ class NDCollection(dict):
         super().__init__(zip(keys, data))
         self.meta = meta
 
-        self._first_key = keys[0]
-        self._cube_types = type(data[0])
-        
         # Attach aligned axes to object
         if aligned_axes is None:
             self.n_aligned_axes = 0
@@ -69,6 +66,10 @@ class NDCollection(dict):
         else:
             self.n_aligned_axes = len(aligned_axes[0])
             self.aligned_axes = dict(zip(keys, aligned_axes))
+
+    @property
+    def _first_key(self):
+        return list(self.keys())[0]
 
     def __repr__(self):
         return (textwrap.dedent("""
@@ -79,7 +80,7 @@ class NDCollection(dict):
             Cube Types: {cube_types}
             Aligned dimensions: {aligned_dims}
             Aligned world physical axis types: {aligned_axis_types}""".format(
-                keys=self.keys(), n_cubes=len(self), cube_types=self._cube_types,
+                keys=self.keys(), n_cubes=len(self), cube_types=type(self[self._first_key]),
                 aligned_dims=self.aligned_dimensions,
                 aligned_axis_types=self.aligned_world_axis_physical_types)))
 
@@ -203,10 +204,6 @@ class NDCollection(dict):
         popped_cube = super().pop(key)
         # Delete corresponding aligned axes
         popped_aligned_axes = self.aligned_axes.pop(key)
-        # If first key removed, update.
-        if key == self._first_key:
-            self._first_key = list(self.keys())[0]
-
         return popped_cube
 
     def add_to_collection(self, key, data, aligned_axes):
@@ -238,8 +235,6 @@ class NDCollection(dict):
     def __delitem__(self, key):
         super().__delitem__(key)
         self.aligned_axes.__delitem__(key)
-        if key == self._first_key:
-            self._first_key = list(self.keys())[0]
 
 def _sanitize_inputs(data, keys, aligned_axes):
     # Ensure there are no duplicate keys
