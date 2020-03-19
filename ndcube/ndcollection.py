@@ -137,7 +137,7 @@ class NDCollection(dict):
                     new_keys = list(self.keys())
 
             return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes,
-                                  meta=self.meta, dont_sanitize_aligned_axes=True)
+                                  meta=self.meta, sanitize_inputs=False)
 
     def _generate_collection_getitems(self, item):
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
@@ -214,9 +214,8 @@ class NDCollection(dict):
         # Sanitize aligned axes.
         if isinstance(aligned_axes, int):
             aligned_axes = (aligned_axes,)
-        sanitized_axes, n_sanitized_axes = collection_utils._sanitize_aligned_axes(
-                [self[self._first_key], data],
-                (self.aligned_axes[self._first_key], aligned_axes), 2)
+        sanitized_axes = collection_utils._sanitize_aligned_axes(
+                [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes))
         # Update collection
         super().update({key: data})
         self.aligned_axes.update({key: sanitized_axes[-1]})

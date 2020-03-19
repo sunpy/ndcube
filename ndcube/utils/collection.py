@@ -77,7 +77,6 @@ def _sanitize_aligned_axes(data, aligned_axes):
         if not all(subtuples_are_ints):
             raise ValueError(aligned_axes_error_message)
         if not all(aligned_axes_same_lengths):
-            print(aligned_axes_same_lengths)
             raise ValueError("Aligned cube/sequence axes must be of same length.")
     else:
         raise ValueError(aligned_axes_error_message)
@@ -89,7 +88,7 @@ def _sanitize_aligned_axes(data, aligned_axes):
     if check_dimensions != {1}:
         raise ValueError("Aligned axes are not all of same length.")
 
-    return aligned_axes, n_aligned_axes
+    return aligned_axes
 
 
 def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes, first_key):
