@@ -220,6 +220,21 @@ class NDCollection(dict):
         super().update({key: data})
         self.aligned_axes.update({key: sanitized_axes[-1]})
 
+    def update(self, collection):
+        """Merges a new collection replacing cubes with common keys."""
+        if not isinstance(collection, NDCollection):
+            raise TypeError(f"collection must be an NDCollection. Type is {type(collection)}")
+        for key in collection.keys():
+            # Check aligned axes are compatible.
+            collection_utils.assert_aligned_axes_compatible(
+                    self[self._first_key].dimensions, collection[key].dimensions,
+                    self.aligned_axes[self._first_key], collection.aligned_axes[key])
+            # If key is common between collections delete original version.
+            if key in self.keys():
+                del self[key]
+            # Add new data cube to collection.
+            self.add_to_collection(key, collection[key], collection.aligned_axes[key])
+
     def __delitem__(self, key):
         super().__delitem__(key)
         self.aligned_axes.__delitem__(key)

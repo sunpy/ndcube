@@ -112,3 +112,31 @@ def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes, first_key):
         new_aligned_axes = tuple(new_aligned_axes)
 
     return new_aligned_axes
+
+
+def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes1, data_axes2):
+    """
+    Checks whether two sets of aligned axes are compatible.
+
+    Parameters
+    ----------
+    data_dimensions1: sequence of ints
+        The dimension lengths of data cube 1.
+
+    data_dimensions2: sequence of ints
+        The dimension lengths of data cube 2.
+
+    data_axes1: `tuple` of `int`
+        The aligned axes of data cube 1.
+
+    data_axes2: `tuple` of `int`
+        The aligned axes of data cube 2.
+
+    """
+    # Confirm same number of aligned axes.
+    if len(data_axes1) != len(data_axes2):
+        raise ValueError("Number of aligned axes must be equal: "
+                         f"{len(data_axes1)} != {len(data_axes2)}")
+    # Confirm dimension lengths of each aligned axis is the same.
+    if not all(data_dimensions1[np.array(data_axes1)] == data_dimensions2[np.array(data_axes2)]):
+       raise ValueError("All corresponding aligned axes between cubes must be of same length.")
