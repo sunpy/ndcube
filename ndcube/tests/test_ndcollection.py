@@ -101,7 +101,7 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
     (cube_collection, "cube3", cube2, aligned_axes[2],
         NDCollection(data=[cube0, cube1, cube2, cube2], keys=("cube0", "cube1", "cube2", "cube3"),
                      aligned_axes=((1, 2), (2, 0), (1, 2), (1, 2))))])
-def test_collection_update(collection, key, data, aligned_axes, expected):
+def test_add_to_collection(collection, key, data, aligned_axes, expected):
     updated_collection = collection.copy()
     updated_collection.update(key, data, aligned_axes)
     helpers.assert_collections_equal(updated_collection, expected)

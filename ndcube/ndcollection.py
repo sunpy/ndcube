@@ -209,7 +209,7 @@ class NDCollection(dict):
 
         return popped_cube
 
-    def update(self, key, data, aligned_axes):
+    def add_to_collection(self, key, data, aligned_axes):
         """Updates existing cube within collection or adds new cube."""
         # Sanitize aligned axes.
         if isinstance(aligned_axes, int):
