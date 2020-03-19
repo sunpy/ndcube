@@ -11,7 +11,7 @@ import ndcube.utils.collection as collection_utils
 __all__ = ["NDCollection"]
 
 class NDCollection(dict):
-    def __init__(self, data, keys, aligned_axes="all", meta=None, dont_sanitize_aligned_axes=False):
+    def __init__(self, data, keys, aligned_axes="all", meta=None, **kwargs):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
@@ -50,45 +50,25 @@ class NDCollection(dict):
         axis 1 of cube0 is aligned with axis 1 of cube1.
 
         """
-        # Check inputs
-        # Ensure there are no duplicate keys
-        if keys is None:
-            keys = np.arange(len(data)).astype("str")
-        elif len(set(keys)) != len(keys):
-            raise ValueError("Duplicate keys detected.")
-        if len(keys) != len(data):
-            raise ValueError("Data and keys inputs of different lengths.")
-
-        self._first_key = keys[0]
-        self._cube_types = type(data[0])
+        # Sanitize inputs unless hidden kwarg indicates not to.
+        sanitize_inputs = kwargs.get("sanitize_inputs", True)
+        if sanitize_inputs is True:
+            keys, aligned_axes = _sanitize_inputs(data, keys, aligned_axes)
 
         # Enter data into object.
         super().__init__(zip(keys, data))
         self.meta = meta
 
-        n_cubes = len(data)
-        # If aligned_axes not set, assume all axes are aligned in order.
-        if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
-            # Check all cubes are of same shape
-            cube0_dims = data[0].dimensions
-            cubes_same_shape = all([all(d.dimensions == cube0_dims) for d in data])
-            if cubes_same_shape is not True:
-                raise ValueError(
-                    "All cubes in data not of same shape. Please set aligned_axes kwarg.")
-            self.n_aligned_axes = len(cube0_dims)
-            self.aligned_axes = dict([(k, tuple(range(len(cube0_dims)))) for k in keys])
-        elif aligned_axes is None:
+        self._first_key = keys[0]
+        self._cube_types = type(data[0])
+        
+        # Attach aligned axes to object
+        if aligned_axes is None:
             self.n_aligned_axes = 0
-            self.aligned_axes = None
+            self.aligned_axes = aligned_axes
         else:
-            # Else, sanitize user-supplied aligned axes.
-            if dont_sanitize_aligned_axes is True:
-                self.n_aligned_axes = len(aligned_axes[0])
-                self.aligned_axes = dict(zip(keys, aligned_axes))
-            else:
-                aligned_axes, self.n_aligned_axes = collection_utils._sanitize_aligned_axes(
-                        data, aligned_axes, n_cubes)
-                self.aligned_axes = dict(zip(keys, aligned_axes))
+            self.n_aligned_axes = len(aligned_axes[0])
+            self.aligned_axes = dict(zip(keys, aligned_axes))
 
     def __repr__(self):
         return (textwrap.dedent("""
@@ -246,4 +226,30 @@ class NDCollection(dict):
         self.aligned_axes.__delitem__(key)
         if key == self._first_key:
             self._first_key = list(self.keys())[0]
+
+def _sanitize_inputs(data, keys, aligned_axes):
+    # Ensure there are no duplicate keys
+    if keys is None:
+        keys = np.arange(len(data)).astype("str")
+    elif len(set(keys)) != len(keys):
+        raise ValueError("Duplicate keys detected.")
+    if len(keys) != len(data):
+        raise ValueError("Data and keys inputs of different lengths.")
+
+    # If aligned_axes set to "all", assume all axes are aligned in order.
+    if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+        # Check all cubes are of same shape
+        cube0_dims = data[0].dimensions
+        cubes_same_shape = all([all(d.dimensions == cube0_dims) for d in data])
+        if cubes_same_shape is not True:
+            raise ValueError(
+                "All cubes in data not of same shape. Please set aligned_axes kwarg.")
+        sanitized_axes = tuple([tuple(range(len(cube0_dims)))] * len(data))
+    elif aligned_axes is None:
+        sanitized_axes = None
+    else:
+        # Else, sanitize user-supplied aligned axes.
+        sanitized_axes = collection_utils._sanitize_aligned_axes(data, aligned_axes)
+
+    return keys, sanitized_axes
 
