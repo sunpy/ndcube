@@ -216,7 +216,6 @@ class NDCollection(dict):
         raise NotImplementedError("NDCollection does not support popitem.")
 
     def pop(self, key):
-        """Removes the cube corresponding to the key from the collection and returns it."""
         # Extract desired cube from collection.
         popped_cube = super().pop(key)
         # Delete corresponding aligned axes
