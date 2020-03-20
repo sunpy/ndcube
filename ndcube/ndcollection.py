@@ -219,7 +219,7 @@ class NDCollection(dict):
         elif isinstance(aligned_axes, int):
             aligned_axes = (aligned_axes,)
         if self.aligned_axes is None and aligned_axes is None:
-            sanitize_axes = aligned_axes
+            sanitized_axes = aligned_axes
         else:
             sanitized_axes = collection_utils._sanitize_user_aligned_axes(
                 [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes))
