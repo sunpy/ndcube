@@ -46,24 +46,24 @@ class NDCollection(dict):
         axis 1 of cube0 is aligned with axis 1 of cube1.
 
         """
-        keys, data = zip(*(key_data_pairs))
-
-        # Sanitize inputs unless hidden kwarg indicates not to.
-        sanitize_inputs = kwargs.get("sanitize_inputs", True)
-        if sanitize_inputs:
-            aligned_axes = _sanitize_aligned_axes(data, aligned_axes)
-
-        # Enter data into object.
+        # Enter data and metadata into object.
         super().__init__(key_data_pairs)
         self.meta = meta
 
-        # Attach aligned axes to object
-        if aligned_axes is None:
+        # Convert aligned axes to required format.
+        if aligned_axes is not None:
+            keys, data = zip(*(key_data_pairs))
+            # Sanitize aligned axes unless hidden kwarg indicates not to.
+            if kwargs.get("sanitize_inputs", True):
+                aligned_axes = _sanitize_aligned_axes(keys, data, aligned_axes)
+            else:
+                aligned_axes = dict(zip(keys, aligned_axes))
+        # Attach aligned axes to object.
+        self.aligned_axes = aligned_axes
+        if self.aligned_axes is None:
             self.n_aligned_axes = 0
-            self.aligned_axes = aligned_axes
         else:
-            self.n_aligned_axes = len(aligned_axes[0])
-            self.aligned_axes = dict(zip(keys, aligned_axes))
+            self.n_aligned_axes = len(self.aligned_axes[keys[0]])
 
     @property
     def _first_key(self):
@@ -222,46 +222,44 @@ class NDCollection(dict):
         popped_aligned_axes = self.aligned_axes.pop(key)
         return popped_cube
 
-    def add_to_collection(self, key_data_pair, aligned_axes):
-        """Updates existing cube within collection or adds new cube."""
-        key, data = key_data_pair
-        # Sanitize aligned axes.
-        if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
-            aligned_axes = tuple(range(len(data.dimensions)))
-        elif isinstance(aligned_axes, int):
-            aligned_axes = (aligned_axes,)
-        if self.aligned_axes is None and aligned_axes is None:
-            sanitized_axes = aligned_axes
-        else:
-            sanitized_axes = collection_utils._sanitize_user_aligned_axes(
-                [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes))
-        # Update collection
-        super().update({key: data})
-        self.aligned_axes.update({key: sanitized_axes[-1]})
+    def update(self, *args):
+        """
+        Merges a new collection with current one replacing objects with common keys.
 
-    def update(self, collection):
-        """Merges a new collection replacing cubes with common keys."""
-        if not isinstance(collection, NDCollection):
-            raise TypeError(f"collection must be an NDCollection. Type is {type(collection)}")
-        for key in collection.keys():
-            # Check aligned axes are compatible.
-            collection_utils.assert_aligned_axes_compatible(
-                    self[self._first_key].dimensions, collection[key].dimensions,
-                    self.aligned_axes[self._first_key], collection.aligned_axes[key])
-            # If key is common between collections delete original version.
-            if key in self.keys():
-                del self[key]
-            # Add new data cube to collection.
-            self.add_to_collection((key, collection[key]), collection.aligned_axes[key])
+        Takes either a single input (`NDCollection`) or two inputs
+        (sequence of key/value pair and aligned axes associated with each key/value pair.
+
+        """
+        # If two inputs, inputs must be key_data_pairs and aligned_axes.
+        if len(args) == 2:
+            key_data_pairs = args[0]
+            new_keys, new_data = zip(*key_data_pairs)
+            new_aligned_axes = _sanitize_aligned_axes(new_keys, new_data, args[1])
+        else: # If one arg given, input must be NDCollection.
+            collection = args[0]
+            new_keys = list(collection.keys())
+            new_data = list(collection.values())
+            key_data_pairs = zip(new_keys, new_data)
+            new_aligned_axes = collection.aligned_axes
+        # Check aligned axes of new inputs are compatible with those in self.
+        # As they've already been sanitized, only one set of aligned axes need be checked.
+        collection_utils.assert_aligned_axes_compatible(
+                self[self._first_key].dimensions, new_data[0].dimensions,
+                self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]])
+        # Update collection
+        super().update(key_data_pairs)
+        self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):
         super().__delitem__(key)
         self.aligned_axes.__delitem__(key)
 
 
-def _sanitize_aligned_axes(data, aligned_axes):
+def _sanitize_aligned_axes(keys, data, aligned_axes):
+    if aligned_axes is None:
+        return None
     # If aligned_axes set to "all", assume all axes are aligned in order.
-    if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+    elif isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
         # Check all cubes are of same shape
         cube0_dims = data[0].dimensions
         cubes_same_shape = all([all([d.dimensions[i] == dim for i, dim in enumerate(cube0_dims)])
@@ -270,10 +268,8 @@ def _sanitize_aligned_axes(data, aligned_axes):
             raise ValueError(
                 "All cubes in data not of same shape. Please set aligned_axes kwarg.")
         sanitized_axes = tuple([tuple(range(len(cube0_dims)))] * len(data))
-    elif aligned_axes is None:
-        sanitized_axes = None
     else:
         # Else, sanitize user-supplied aligned axes.
         sanitized_axes = collection_utils._sanitize_user_aligned_axes(data, aligned_axes)
 
-    return sanitized_axes
+    return dict(zip(keys, sanitized_axes))

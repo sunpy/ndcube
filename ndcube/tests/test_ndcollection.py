@@ -102,20 +102,6 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
     helpers.assert_collections_equal(popped_collection, expected_collection)
 
 
-@pytest.mark.parametrize("collection,key,data,aligned_axes,expected", [
-    (cube_collection, "cube1", cube2, aligned_axes[2], NDCollection(
-        [("cube0", cube0), ("cube1", cube2), ("cube2", cube2)],
-        aligned_axes=((1, 2), (1, 2), (1, 2)))),
-
-    (cube_collection, "cube3", cube2, aligned_axes[2], NDCollection(
-        [("cube0", cube0), ("cube1", cube1), ("cube2", cube2), ("cube3", cube2)],
-        aligned_axes=((1, 2), (2, 0), (1, 2), (1, 2))))])
-def test_add_to_collection(collection, key, data, aligned_axes, expected):
-    updated_collection = collection.copy()
-    updated_collection.add_to_collection((key, data), aligned_axes)
-    helpers.assert_collections_equal(updated_collection, expected)
-
-
 @pytest.mark.parametrize("collection,key,expected", [
     (cube_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)],
                                             aligned_axes=aligned_axes[1:]))])
@@ -125,7 +111,21 @@ def test_del_collection(collection, key, expected):
     helpers.assert_collections_equal(del_collection, expected)
 
 
-def test_collection_update():
+@pytest.mark.parametrize("collection,key,data,aligned_axes,expected", [
+    (cube_collection, "cube1", cube2, aligned_axes[2], NDCollection(
+        [("cube0", cube0), ("cube1", cube2), ("cube2", cube2)],
+        aligned_axes=((1, 2), (1, 2), (1, 2)))),
+
+    (cube_collection, "cube3", cube2, aligned_axes[2], NDCollection(
+        [("cube0", cube0), ("cube1", cube1), ("cube2", cube2), ("cube3", cube2)],
+        aligned_axes=((1, 2), (2, 0), (1, 2), (1, 2))))])
+def test_collection_update_key_data_pair_input(collection, key, data, aligned_axes, expected):
+    updated_collection = collection.copy()
+    updated_collection.update([(key, data)], aligned_axes)
+    helpers.assert_collections_equal(updated_collection, expected)
+
+
+def test_collection_update_collecton_input():
     orig_collection = NDCollection([("cube0", cube0), ("cube1", cube1)], aligned_axes[:2])
     cube1_alt = NDCube(data1*2, input_wcs1)
     new_collection = NDCollection([("cube1", cube1_alt), ("cube2", cube2)], aligned_axes[1:])
