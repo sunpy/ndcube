@@ -37,43 +37,43 @@ sequence20 = NDCubeSequence([cube2, cube0])
 # Define collections
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
-cube_collection = NDCollection([cube0, cube1, cube2], keys, aligned_axes)
-seq_collection = NDCollection([sequence02, sequence20], ("seq0", "seq1"), aligned_axes="all")
+cube_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes)
+seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
 
 
 @pytest.mark.parametrize("item,collection,expected", [
     (0, cube_collection,
-        NDCollection(data=[cube0[:, 0], cube1[:, :, 0], cube2[:, 0]],
-                     keys=keys, aligned_axes=((1,), (0,), (1,)))),
+        NDCollection([("cube0", cube0[:, 0]), ("cube1", cube1[:, :, 0]), ("cube2", cube2[:, 0])],
+                     aligned_axes=((1,), (0,), (1,)))),
 
-    (slice(1, 3), cube_collection,
-        NDCollection(data=[cube0[:, 1:3], cube1[:, :, 1:3], cube2[:, 1:3]],
-                     keys=keys, aligned_axes=aligned_axes)),
+    (slice(1, 3), cube_collection, NDCollection(
+        [("cube0", cube0[:, 1:3]), ("cube1", cube1[:, :, 1:3]), ("cube2", cube2[:, 1:3])],
+        aligned_axes=aligned_axes)),
 
-    (slice(-3, -1), cube_collection,
-        NDCollection(data=[cube0[:, -3:-1], cube1[:, :, -3:-1], cube2[:, -3:-1]],
-                     keys=keys, aligned_axes=aligned_axes)),
+    (slice(-3, -1), cube_collection, NDCollection(
+        [("cube0", cube0[:, -3:-1]), ("cube1", cube1[:, :, -3:-1]), ("cube2", cube2[:, -3:-1])],
+        aligned_axes=aligned_axes)),
 
-    ((slice(None), slice(1, 2)), cube_collection,
-        NDCollection(data=[cube0[:, :, 1:2], cube1[1:2], cube2[:, :, 1:2]],
-                     keys=keys, aligned_axes=aligned_axes)),
+    ((slice(None), slice(1, 2)), cube_collection, NDCollection(
+        [("cube0", cube0[:, :, 1:2]), ("cube1", cube1[1:2]), ("cube2", cube2[:, :, 1:2])],
+        aligned_axes=aligned_axes)),
 
-    ((slice(2, 4), slice(-3, -1)), cube_collection,
-        NDCollection(data=[cube0[:, 2:4, -3:-1], cube1[-3:-1, :, 2:4], cube2[:, 2:4, -3:-1]],
-                     keys=keys, aligned_axes=aligned_axes)),
+    ((slice(2, 4), slice(-3, -1)), cube_collection, NDCollection(
+        [("cube0", cube0[:, 2:4, -3:-1]), ("cube1", cube1[-3:-1, :, 2:4]),
+         ("cube2", cube2[:, 2:4, -3:-1])], aligned_axes=aligned_axes)),
 
-    ((0, 0), cube_collection, NDCollection(data=[cube0[:, 0, 0], cube1[0, :, 0], cube2[:, 0, 0]],
-                                           keys=keys, aligned_axes=None)),
+    ((0, 0), cube_collection, NDCollection(
+        [("cube0", cube0[:, 0, 0]), ("cube1", cube1[0, :, 0]), ("cube2", cube2[:, 0, 0])],
+        aligned_axes=None)),
 
-    (("cube0", "cube2"), cube_collection,
-        NDCollection(data=[cube0, cube2],
-                     keys=("cube0", "cube2"), aligned_axes=(aligned_axes[0], aligned_axes[2]))),
-    (0, seq_collection,
-        NDCollection(data=[sequence02[0], sequence20[0]], keys=("seq0", "seq1"),
-                     aligned_axes=((0, 1, 2), (0, 1, 2)))),
+    (("cube0", "cube2"), cube_collection, NDCollection(
+        [("cube0", cube0), ("cube2", cube2)], aligned_axes=(aligned_axes[0], aligned_axes[2]))),
+
+    (0, seq_collection, NDCollection([("seq0", sequence02[0]), ("seq1", sequence20[0])],
+                                     aligned_axes=((0, 1, 2), (0, 1, 2)))),
 
     ((slice(None), 1, slice(1, 3)), seq_collection,
-        NDCollection(data=[sequence02[:, 1, 1:3], sequence20[:, 1, 1:3]], keys=("seq0", "seq1"),
+        NDCollection([("seq0", sequence02[:, 1, 1:3]), ("seq1", sequence20[:, 1, 1:3])],
                      aligned_axes=((0, 1, 2), (0, 1, 2))))
 ])
 def test_collection_slicing(item, collection, expected):
@@ -93,7 +93,7 @@ def test_collection_copy(collection):
 
 
 @pytest.mark.parametrize("collection,popped_key,expected_popped,expected_collection", [
-    (cube_collection, "cube0", cube0, NDCollection(data=[cube1, cube2], keys=("cube1", "cube2"),
+    (cube_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)],
                                                    aligned_axes=aligned_axes[1:]))])
 def test_collection_pop(collection, popped_key, expected_popped, expected_collection):
     popped_collection = collection.copy()
@@ -103,12 +103,13 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
 
 
 @pytest.mark.parametrize("collection,key,data,aligned_axes,expected", [
-    (cube_collection, "cube1", cube2, aligned_axes[2],
-        NDCollection(data=[cube0, cube2, cube2], keys=keys, aligned_axes=((1, 2), (1, 2), (1, 2)))),
+    (cube_collection, "cube1", cube2, aligned_axes[2], NDCollection(
+        [("cube0", cube0), ("cube1", cube2), ("cube2", cube2)],
+        aligned_axes=((1, 2), (1, 2), (1, 2)))),
 
-    (cube_collection, "cube3", cube2, aligned_axes[2],
-        NDCollection(data=[cube0, cube1, cube2, cube2], keys=("cube0", "cube1", "cube2", "cube3"),
-                     aligned_axes=((1, 2), (2, 0), (1, 2), (1, 2))))])
+    (cube_collection, "cube3", cube2, aligned_axes[2], NDCollection(
+        [("cube0", cube0), ("cube1", cube1), ("cube2", cube2), ("cube3", cube2)],
+        aligned_axes=((1, 2), (2, 0), (1, 2), (1, 2))))])
 def test_add_to_collection(collection, key, data, aligned_axes, expected):
     updated_collection = collection.copy()
     updated_collection.add_to_collection(key, data, aligned_axes)
@@ -116,7 +117,7 @@ def test_add_to_collection(collection, key, data, aligned_axes, expected):
 
 
 @pytest.mark.parametrize("collection,key,expected", [
-    (cube_collection, "cube0", NDCollection(data=[cube1, cube2], keys=("cube1", "cube2"),
+    (cube_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)],
                                             aligned_axes=aligned_axes[1:]))])
 def test_del_collection(collection, key, expected):
     del_collection = collection.copy()
@@ -125,9 +126,10 @@ def test_del_collection(collection, key, expected):
 
 
 def test_collection_update():
-    orig_collection = NDCollection([cube0, cube1], ("cube0", "cube1"), aligned_axes[:2])
+    orig_collection = NDCollection([("cube0", cube0), ("cube1", cube1)], aligned_axes[:2])
     cube1_alt = NDCube(data1*2, input_wcs1)
-    new_collection = NDCollection([cube1_alt, cube2], ("cube1", "cube2"), aligned_axes[1:])
+    new_collection = NDCollection([("cube1", cube1_alt), ("cube2", cube2)], aligned_axes[1:])
     orig_collection.update(new_collection)
-    expected = NDCollection([cube0, cube1_alt, cube2], ("cube0", "cube1", "cube2"), aligned_axes)
+    expected = NDCollection([("cube0", cube0), ("cube1", cube1_alt), ("cube2", cube2)],
+                            aligned_axes)
     helpers.assert_collections_equal(orig_collection, expected)

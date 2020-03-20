@@ -12,21 +12,14 @@ __all__ = ["NDCollection"]
 
 
 class NDCollection(dict):
-    def __init__(self, data, keys, aligned_axes=None, meta=None, **kwargs):
+    def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
-        Data cubes/sequences must be aligned, i.e. have the same WCS and be the same shape.
-
         Parameters
         ----------
-        data: sequence of `~ndcube.NDCube` or `~ndcube.NDCubeSequence`
-            The data cubes/sequences to held in the collection.
-
-        keys: sequence of `str`
-            Name of each cube/sequence. Each label must be unique and
-            there must be one per element in the data input.
-            Default is ("0", "1",...)
+        data: sequence of `tuple`s of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+            The names and data cubes/sequences to held in the collection.
 
         aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, 'all', or None, optional
             Axes of each cube/sequence that are aligned in numpy order.
@@ -53,13 +46,16 @@ class NDCollection(dict):
         axis 1 of cube0 is aligned with axis 1 of cube1.
 
         """
+        # Unzip key_data_pairs
+        keys, data = zip(*(key_data_pairs))
+
         # Sanitize inputs unless hidden kwarg indicates not to.
         sanitize_inputs = kwargs.get("sanitize_inputs", True)
         if sanitize_inputs is True:
-            keys, aligned_axes = _sanitize_inputs(data, keys, aligned_axes)
+            aligned_axes = _sanitize_aligned_axes(data, aligned_axes)
 
         # Enter data into object.
-        super().__init__(zip(keys, data))
+        super().__init__(key_data_pairs)
         self.meta = meta
 
         # Attach aligned axes to object
@@ -145,7 +141,7 @@ class NDCollection(dict):
                     # Therefore the collection keys remain unchanged.
                     new_keys = list(self.keys())
 
-            return self.__class__(new_data, keys=new_keys, aligned_axes=new_aligned_axes,
+            return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
                                   meta=self.meta, sanitize_inputs=False)
 
     def _generate_collection_getitems(self, item):
@@ -219,7 +215,7 @@ class NDCollection(dict):
         # Sanitize aligned axes.
         if isinstance(aligned_axes, int):
             aligned_axes = (aligned_axes,)
-        sanitized_axes = collection_utils._sanitize_aligned_axes(
+        sanitized_axes = collection_utils._sanitize_user_aligned_axes(
                 [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes))
         # Update collection
         super().update({key: data})
@@ -245,15 +241,7 @@ class NDCollection(dict):
         self.aligned_axes.__delitem__(key)
 
 
-def _sanitize_inputs(data, keys, aligned_axes):
-    # Ensure there are no duplicate keys
-    if keys is None:
-        keys = np.arange(len(data)).astype("str")
-    elif len(set(keys)) != len(keys):
-        raise ValueError("Duplicate keys detected.")
-    if len(keys) != len(data):
-        raise ValueError("Data and keys inputs of different lengths.")
-
+def _sanitize_aligned_axes(data, aligned_axes):
     # If aligned_axes set to "all", assume all axes are aligned in order.
     if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
         # Check all cubes are of same shape
@@ -268,6 +256,6 @@ def _sanitize_inputs(data, keys, aligned_axes):
         sanitized_axes = None
     else:
         # Else, sanitize user-supplied aligned axes.
-        sanitized_axes = collection_utils._sanitize_aligned_axes(data, aligned_axes)
+        sanitized_axes = collection_utils._sanitize_user_aligned_axes(data, aligned_axes)
 
-    return keys, sanitized_axes
+    return sanitized_axes

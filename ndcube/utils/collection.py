@@ -2,10 +2,9 @@ import numpy as np
 import astropy.units as u
 
 
-def _sanitize_aligned_axes(data, aligned_axes):
+def _sanitize_user_aligned_axes(data, aligned_axes):
     """
     Converts input aligned_axes to standard format.
-
     aligned_axes can be supplied by the user in a few ways:
     *. A tuple of tuples of ints, where each tuple corresponds to a cube
     in the collection, and each int designates the an aligned axis in numpy order.
@@ -14,7 +13,6 @@ def _sanitize_aligned_axes(data, aligned_axes):
     *. A single tuple of ints if all aligned axes are in the same order.
     *. A single int if only one axis is aligned and if the aligned axis in each cube
     is in the same order.
-
     """
     aligned_axes_error_message = "aligned_axes must contain ints or " + \
         "a tuple of ints for each element in data."
