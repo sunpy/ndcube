@@ -52,7 +52,7 @@ class NDCollection(dict):
 
         # Convert aligned axes to required format.
         if aligned_axes is not None:
-            keys, data = zip(*(key_data_pairs))
+            keys, data = zip(*key_data_pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
             if kwargs.get("sanitize_inputs", True):
                 aligned_axes = _sanitize_aligned_axes(keys, data, aligned_axes)
@@ -206,7 +206,8 @@ class NDCollection(dict):
         return collection_items, new_aligned_axes
 
     def copy(self):
-        return copy.deepcopy(self)
+        return self.__class__(self.items(), tuple(self.aligned_axes.values()),
+                              meta=self.meta, sanitize_inputs=False)
 
     def setdefault(self):
         raise NotImplementedError("NDCollection does not support setdefault.")
@@ -253,6 +254,10 @@ class NDCollection(dict):
     def __delitem__(self, key):
         super().__delitem__(key)
         self.aligned_axes.__delitem__(key)
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError("NDCollection does not support __setitem__. "
+                                  "Use NDCollection.update instead")
 
 
 def _sanitize_aligned_axes(keys, data, aligned_axes):

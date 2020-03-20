@@ -85,11 +85,8 @@ def test_slice_cube_from_collection(item, collection, expected):
     helpers.assert_cubes_equal(collection[item], expected)
 
 
-@pytest.mark.parametrize("collection", [(cube_collection)])
-def test_collection_copy(collection):
-    expected = copy.deepcopy(collection)
-    output = collection.copy()
-    helpers.assert_collections_equal(output, expected)
+def test_collection_copy():
+    helpers.assert_collections_equal(cube_collection.copy(), cube_collection)
 
 
 @pytest.mark.parametrize("collection,popped_key,expected_popped,expected_collection", [
