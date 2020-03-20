@@ -78,21 +78,26 @@ class NDCollection(dict):
             ------------
             Cube keys: {keys}
             Number of Cubes: {n_cubes}
-            Cube Types: {cube_types}
             Aligned dimensions: {aligned_dims}
             Aligned world physical axis types: {aligned_axis_types}""".format(
-                keys=self.keys(), n_cubes=len(self), cube_types=type(self[self._first_key]),
+                keys=self.keys(), n_cubes=len(self),
                 aligned_dims=self.aligned_dimensions,
                 aligned_axis_types=self.aligned_world_axis_physical_types)))
 
     @property
     def aligned_dimensions(self):
-        return self[self._first_key].dimensions[np.array(self.aligned_axes[self._first_key])]
+        if self.aligned_axes is None:
+            return None
+        else:
+            return self[self._first_key].dimensions[np.array(self.aligned_axes[self._first_key])]
 
     @property
     def aligned_world_axis_physical_types(self):
-        axis_types = np.array(self[self._first_key].world_axis_physical_types)
-        return tuple(axis_types[np.array(self.aligned_axes[self._first_key])])
+        if self.aligned_axes is None:
+            return None
+        else:
+            axis_types = np.array(self[self._first_key].world_axis_physical_types)
+            return tuple(axis_types[np.array(self.aligned_axes[self._first_key])])
 
     def __getitem__(self, item):
         # There are two ways to slice:
