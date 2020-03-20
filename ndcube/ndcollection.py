@@ -210,12 +210,18 @@ class NDCollection(dict):
         popped_aligned_axes = self.aligned_axes.pop(key)
         return popped_cube
 
-    def add_to_collection(self, key, data, aligned_axes):
+    def add_to_collection(self, key_data_pair, aligned_axes):
         """Updates existing cube within collection or adds new cube."""
+        key, data = key_data_pair
         # Sanitize aligned axes.
-        if isinstance(aligned_axes, int):
+        if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+            aligned_axes = tuple(range(len(data.dimensions)))
+        elif isinstance(aligned_axes, int):
             aligned_axes = (aligned_axes,)
-        sanitized_axes = collection_utils._sanitize_user_aligned_axes(
+        if self.aligned_axes is None and aligned_axes is None:
+            sanitize_axes = aligned_axes
+        else:
+            sanitized_axes = collection_utils._sanitize_user_aligned_axes(
                 [self[self._first_key], data], (self.aligned_axes[self._first_key], aligned_axes))
         # Update collection
         super().update({key: data})
@@ -234,7 +240,7 @@ class NDCollection(dict):
             if key in self.keys():
                 del self[key]
             # Add new data cube to collection.
-            self.add_to_collection(key, collection[key], collection.aligned_axes[key])
+            self.add_to_collection((key, collection[key]), collection.aligned_axes[key])
 
     def __delitem__(self, key):
         super().__delitem__(key)

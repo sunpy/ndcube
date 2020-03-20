@@ -112,7 +112,7 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
         aligned_axes=((1, 2), (2, 0), (1, 2), (1, 2))))])
 def test_add_to_collection(collection, key, data, aligned_axes, expected):
     updated_collection = collection.copy()
-    updated_collection.add_to_collection(key, data, aligned_axes)
+    updated_collection.add_to_collection((key, data), aligned_axes)
     helpers.assert_collections_equal(updated_collection, expected)
 
 
