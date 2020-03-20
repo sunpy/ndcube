@@ -55,7 +55,7 @@ class NDCollection(dict):
             keys, data = zip(*key_data_pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
             if kwargs.get("sanitize_inputs", True):
-                aligned_axes = _sanitize_aligned_axes(keys, data, aligned_axes)
+                aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)
             else:
                 aligned_axes = dict(zip(keys, aligned_axes))
         # Attach aligned axes to object.
@@ -86,7 +86,7 @@ class NDCollection(dict):
     def aligned_dimensions(self):
         """
         Returns the lengths of all aligned axes.
-        
+
         If there are no aligned axes, returns None.
 
         """
@@ -99,9 +99,9 @@ class NDCollection(dict):
     def aligned_world_axis_physical_types(self):
         """
         Returns the physical types of the aligned axes of an ND object in the collection.
-        
+
         If there are no aligned axes, returns None.
-        
+
         """
         if self.aligned_axes is None:
             return None
@@ -235,8 +235,8 @@ class NDCollection(dict):
         if len(args) == 2:
             key_data_pairs = args[0]
             new_keys, new_data = zip(*key_data_pairs)
-            new_aligned_axes = _sanitize_aligned_axes(new_keys, new_data, args[1])
-        else: # If one arg given, input must be NDCollection.
+            new_aligned_axes = collection_utils._sanitize_aligned_axes(new_keys, new_data, args[1])
+        else:  # If one arg given, input must be NDCollection.
             collection = args[0]
             new_keys = list(collection.keys())
             new_data = list(collection.values())
@@ -258,23 +258,3 @@ class NDCollection(dict):
     def __setitem__(self, key, value):
         raise NotImplementedError("NDCollection does not support __setitem__. "
                                   "Use NDCollection.update instead")
-
-
-def _sanitize_aligned_axes(keys, data, aligned_axes):
-    if aligned_axes is None:
-        return None
-    # If aligned_axes set to "all", assume all axes are aligned in order.
-    elif isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
-        # Check all cubes are of same shape
-        cube0_dims = data[0].dimensions
-        cubes_same_shape = all([all([d.dimensions[i] == dim for i, dim in enumerate(cube0_dims)])
-                                for d in data])
-        if cubes_same_shape is not True:
-            raise ValueError(
-                "All cubes in data not of same shape. Please set aligned_axes kwarg.")
-        sanitized_axes = tuple([tuple(range(len(cube0_dims)))] * len(data))
-    else:
-        # Else, sanitize user-supplied aligned axes.
-        sanitized_axes = collection_utils._sanitize_user_aligned_axes(data, aligned_axes)
-
-    return dict(zip(keys, sanitized_axes))

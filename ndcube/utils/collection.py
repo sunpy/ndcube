@@ -4,6 +4,26 @@ import numpy as np
 import astropy.units as u
 
 
+def _sanitize_aligned_axes(keys, data, aligned_axes):
+    if aligned_axes is None:
+        return None
+    # If aligned_axes set to "all", assume all axes are aligned in order.
+    elif isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+        # Check all cubes are of same shape
+        cube0_dims = data[0].dimensions
+        cubes_same_shape = all([all([d.dimensions[i] == dim for i, dim in enumerate(cube0_dims)])
+                                for d in data])
+        if cubes_same_shape is not True:
+            raise ValueError(
+                "All cubes in data not of same shape. Please set aligned_axes kwarg.")
+        sanitized_axes = tuple([tuple(range(len(cube0_dims)))] * len(data))
+    else:
+        # Else, sanitize user-supplied aligned axes.
+        sanitized_axes = _sanitize_user_aligned_axes(data, aligned_axes)
+
+    return dict(zip(keys, sanitized_axes))
+
+
 def _sanitize_user_aligned_axes(data, aligned_axes):
     """
     Converts input aligned_axes to standard format.
