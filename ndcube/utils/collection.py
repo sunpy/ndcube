@@ -14,8 +14,8 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     *. A single int if only one axis is aligned and if the aligned axis in each cube
     is in the same order.
     """
-    aligned_axes_error_message = "aligned_axes must contain ints or " + \
-        "a tuple of ints for each element in data."
+    aligned_axes_error_message = ("aligned_axes must contain ints or "
+                                  "a tuple of ints for each element in data.")
     if isinstance(data[0].dimensions, u.Quantity):
         cube0_dims = data[0].dimensions[np.array(aligned_axes[0])]
     elif isinstance(data[0].dimensions, tuple):
@@ -32,14 +32,13 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     axes_all_tuples = all([isinstance(axis, tuple) for axis in aligned_axes])
     # If all elements are int, duplicate tuple so there is one for each cube.
     n_cubes = len(data)
-    if axes_all_ints is True:
-
+    if axes_all_ints:
         n_aligned_axes = len(aligned_axes)
         aligned_axes = tuple([aligned_axes for i in range(n_cubes)])
 
     # If all elements are tuple, ensure there is a tuple for each cube and
     # all elements of each sub-tuple are ints.
-    elif axes_all_tuples is True:
+    elif axes_all_tuples:
         if len(aligned_axes) != n_cubes:
             raise ValueError("aligned_axes must have a tuple for each element in data.")
 
@@ -70,7 +69,7 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
             subtuple_types = [False] * n_aligned_axes
             cube_lengths_equal = [False] * n_aligned_axes
             for j, axis in enumerate(aligned_axes[i]):
-                subtuple_types[j] = isinstance(axis, (int, np.integer))
+                subtuple_types[j] = isinstance(axis, numbers.Integral)
                 cube_lengths_equal[j] = data[i].dimensions[axis] == cube0_dims[j]
             subtuples_are_ints[i] = all(subtuple_types)
             aligned_axes_same_lengths[i] = all(cube_lengths_equal)

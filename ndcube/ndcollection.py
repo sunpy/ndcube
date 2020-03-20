@@ -36,22 +36,21 @@ class NDCollection(dict):
         Example
         -------
         Say the collection holds two NDCubes, each of 3 dimensions.
-        aligned_axes = (1, 2)
+        ``aligned_axes = (1, 2)``
         means that axis 1 (0-based counting) of cube0 is aligned with axis 1 of cube1,
         and axis 2 of cube0 is aligned with axis 2 of cube1.
         However, if
-        aligned_axes = ((0, 1), (2, 1))
+        ``aligned_axes = ((0, 1), (2, 1))``
         then the first tuple corresponds to cube0 and the second with cube1.
         This is interpretted as axis 0 of cube0 is aligned with axis 2 of cube1 while
         axis 1 of cube0 is aligned with axis 1 of cube1.
 
         """
-        # Unzip key_data_pairs
         keys, data = zip(*(key_data_pairs))
 
         # Sanitize inputs unless hidden kwarg indicates not to.
         sanitize_inputs = kwargs.get("sanitize_inputs", True)
-        if sanitize_inputs is True:
+        if sanitize_inputs:
             aligned_axes = _sanitize_aligned_axes(data, aligned_axes)
 
         # Enter data into object.
@@ -71,7 +70,8 @@ class NDCollection(dict):
         return list(self.keys())[0]
 
     def __repr__(self):
-        return (textwrap.dedent("""
+        return (textwrap.dedent("""\
+            {object.__repr__(self)}
             NDCollection
             ------------
             Cube keys: {keys}
