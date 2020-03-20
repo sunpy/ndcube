@@ -64,9 +64,11 @@ def _sanitize_aligned_axes(data, aligned_axes):
             if n_cube_dims < max([max_aligned_axis, n_aligned_axes]):
                 raise ValueError(
                     "Each cube in data must have at least as many axes as aligned axes "
-                    "and aligned axis numbers must be less than number of cube axes.\n"
-                    "Cube number: {0};\nNumber of cube dimensions: {0};\nNo. aligned axes: {0};\nHighest aligned axis: {0}".format(
-                        i, n_cube_dims, n_aligned_axes, max_aligned_axis))
+                    "and aligned axis indices must be less than number of cube axes.\n"
+                    f"Cube number: {i};\n"
+                    f"Number of cube dimensions: {n_cube_dims};\n"
+                    f"No. aligned axes: {n_aligned_axes};\n"
+                    f"Highest aligned axis: {max_aligned_axis}")
             subtuple_types = [False] * n_aligned_axes
             cube_lengths_equal = [False] * n_aligned_axes
             for j, axis in enumerate(aligned_axes[i]):
@@ -139,4 +141,4 @@ def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes
                          f"{len(data_axes1)} != {len(data_axes2)}")
     # Confirm dimension lengths of each aligned axis is the same.
     if not all(data_dimensions1[np.array(data_axes1)] == data_dimensions2[np.array(data_axes2)]):
-       raise ValueError("All corresponding aligned axes between cubes must be of same length.")
+        raise ValueError("All corresponding aligned axes between cubes must be of same length.")

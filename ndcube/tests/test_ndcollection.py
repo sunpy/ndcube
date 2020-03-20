@@ -14,15 +14,15 @@ data2 = data0 * 2
 
 # Define WCS object for all cubes.
 wcs_input_dict = {
-'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
+    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
+    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
+    'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
 input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
 wcs_input_dict1 = {
-'CTYPE3': 'WAVE    ', 'CUNIT3': 'Angstrom', 'CDELT3': 0.2, 'CRPIX3': 0, 'CRVAL3': 10, 'NAXIS3': 5,
-'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 4,
-'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 3}
+    'CTYPE3': 'WAVE    ', 'CUNIT3': 'Angstrom', 'CDELT3': 0.2, 'CRPIX3': 0, 'CRVAL3': 10, 'NAXIS3': 5,
+    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 4,
+    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 3}
 input_wcs1 = astropy.wcs.WCS(wcs_input_dict1)
 
 # Define cubes.
@@ -70,11 +70,11 @@ seq_collection = NDCollection([sequence02, sequence20], ("seq0", "seq1"))
                      keys=("cube0", "cube2"), aligned_axes=(aligned_axes[0], aligned_axes[2]))),
     (0, seq_collection,
         NDCollection(data=[sequence02[0], sequence20[0]], keys=("seq0", "seq1"),
-                     aligned_axes=((0,1,2), (0,1,2)))),
+                     aligned_axes=((0, 1, 2), (0, 1, 2)))),
 
     ((slice(None), 1, slice(1, 3)), seq_collection,
         NDCollection(data=[sequence02[:, 1, 1:3], sequence20[:, 1, 1:3]], keys=("seq0", "seq1"),
-                     aligned_axes=((0,1,2), (0,1,2))))
+                     aligned_axes=((0, 1, 2), (0, 1, 2))))
 ])
 def test_collection_slicing(item, collection, expected):
     helpers.assert_collections_equal(collection[item], expected)

@@ -10,6 +10,7 @@ import ndcube.utils.collection as collection_utils
 
 __all__ = ["NDCollection"]
 
+
 class NDCollection(dict):
     def __init__(self, data, keys, aligned_axes="all", meta=None, **kwargs):
         """
@@ -236,6 +237,7 @@ class NDCollection(dict):
         super().__delitem__(key)
         self.aligned_axes.__delitem__(key)
 
+
 def _sanitize_inputs(data, keys, aligned_axes):
     # Ensure there are no duplicate keys
     if keys is None:
@@ -262,4 +264,3 @@ def _sanitize_inputs(data, keys, aligned_axes):
         sanitized_axes = collection_utils._sanitize_aligned_axes(data, aligned_axes)
 
     return keys, sanitized_axes
-

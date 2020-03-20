@@ -21,4 +21,3 @@ def test_assert_aligned_axes_compatible_error(data_dimensions1, data_dimensions2
     with pytest.raises(ValueError):
         collection_utils.assert_aligned_axes_compatible(data_dimensions1, data_dimensions2,
                                                         data_axes1, data_axes2)
-
