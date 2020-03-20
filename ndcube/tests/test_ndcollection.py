@@ -38,7 +38,7 @@ sequence20 = NDCubeSequence([cube2, cube0])
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
 cube_collection = NDCollection([cube0, cube1, cube2], keys, aligned_axes)
-seq_collection = NDCollection([sequence02, sequence20], ("seq0", "seq1"))
+seq_collection = NDCollection([sequence02, sequence20], ("seq0", "seq1"), aligned_axes="all")
 
 
 @pytest.mark.parametrize("item,collection,expected", [

@@ -12,7 +12,7 @@ __all__ = ["NDCollection"]
 
 
 class NDCollection(dict):
-    def __init__(self, data, keys, aligned_axes="all", meta=None, **kwargs):
+    def __init__(self, data, keys, aligned_axes=None, meta=None, **kwargs):
         """
         A class for holding and manipulating a collection of aligned NDCube or NDCubeSequences.
 
@@ -28,12 +28,14 @@ class NDCollection(dict):
             there must be one per element in the data input.
             Default is ("0", "1",...)
 
-        aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, or None, optional
+        aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, 'all', or None, optional
             Axes of each cube/sequence that are aligned in numpy order.
             If elements are int, then the same axis numbers in all cubes/sequences are aligned.
             If elements are tuples of ints, then must be one tuple for every cube/sequence.
             Each element of each tuple gives the axes of each cube/sequence that are aligned.
-            Default="All", i.e. all axes are aligned.
+            If 'all', all axes are aligned in natural order, i.e. the 0th axes of all cubes
+            are aligned, as are the 1st, and so on.
+            Default=None
 
         meta: `dict`, optional
             General metadata for the overall collection.
