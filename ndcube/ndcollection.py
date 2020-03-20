@@ -84,6 +84,12 @@ class NDCollection(dict):
 
     @property
     def aligned_dimensions(self):
+        """
+        Returns the lengths of all aligned axes.
+        
+        If there are no aligned axes, returns None.
+
+        """
         if self.aligned_axes is None:
             return None
         else:
@@ -91,6 +97,12 @@ class NDCollection(dict):
 
     @property
     def aligned_world_axis_physical_types(self):
+        """
+        Returns the physical types of the aligned axes of an ND object in the collection.
+        
+        If there are no aligned axes, returns None.
+        
+        """
         if self.aligned_axes is None:
             return None
         else:
