@@ -18,12 +18,10 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     """
     aligned_axes_error_message = ("aligned_axes must contain ints or "
                                   "a tuple of ints for each element in data.")
-    if isinstance(data[0].dimensions, u.Quantity):
-        cube0_dims = data[0].dimensions[np.array(aligned_axes[0])]
-    elif isinstance(data[0].dimensions, tuple):
+    if isinstance(data[0].dimensions, tuple):
         cube0_dims = np.array(data[0].dimensions, dtype=object)[np.array(aligned_axes[0])]
     else:
-        raise TypeError("0th cube in collection of unsupported type: {0}".format(type(data[0])))
+        cube0_dims = data[0].dimensions[np.array(aligned_axes[0])]
     # If user entered a single int or string, convert to length 1 tuple of int.
     if isinstance(aligned_axes, int):
         aligned_axes = (aligned_axes,)
@@ -52,7 +50,6 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
         # and the dimensions of the aligned axes in each cube are the same.
         subtuples_are_ints = [False] * n_cubes
         aligned_axes_same_lengths = [False] * n_cubes
-        subtuple_types = [False] * n_aligned_axes
         if not all([len(axes) == n_aligned_axes for axes in aligned_axes]):
             raise ValueError("Each element in aligned_axes must have same length.")
         for i in range(n_cubes):
