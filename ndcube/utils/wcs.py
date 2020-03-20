@@ -184,6 +184,10 @@ def _wcs_slicer(wcs, missing_axes, item):
         new_wcs = wcs.slice(item_checked)
     # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
     elif isinstance(item, tuple):
+        # Ellipsis slicing is currently not supported.
+        # Raise an error if user tries to slice by ellipsis.
+        if Ellipsis in item:
+            raise NotImplementedError("Slicing FITS-WCS by ellipsis not supported.")
         # this is used to not exceed the range of the item tuple
         # if the check of the missing_axes which is False if not dead
         # is a success than the the item of the tuple is added one by
