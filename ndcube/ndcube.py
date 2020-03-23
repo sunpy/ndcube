@@ -669,9 +669,11 @@ Axis Types of NDCube: {axis_type}
             correspond to the physical types returned by NDCube.world_axis_physical_types.
 
         """
+        wcs_names = self.world_axis_physical_types
+        extra_coords = self.extra_coords
         # Parse user input.
         if axes_names == ():
-            axes_names = self.world_axis_physical_types
+            axes_names = wcs_names
         elif isinstance(axes_names, str):
             axes_names = (axes_names,)
         n_names = len(axes_names)
@@ -681,14 +683,28 @@ Axis Types of NDCube: {axis_type}
             if not isinstance(name, str):
                 raise TypeError("axis names must be strings. Offending axis name: "
                                 "{0}; type = {1}".format(name, type(name)))
-            # Get axis number of physical type.
-            axis = utils.cube.get_axis_number_from_axis_name(name, self.world_axis_physical_types)
-            # Add axis and any dependent axes to list.
-            dependent_axes = utils.wcs.get_dependent_data_axes(self.wcs, axis, self.missing_axes)
-            if len(dependent_axes) == 1:
-                axes[i] = dependent_axes[0]
-            else:
+            try:
+                # Check WCS an extra coords for physical type.
+                axis = utils.cube.get_axis_number_from_axis_name(name, wcs_names)
+                name_in_wcs = True
+                # Add axis and any dependent axes to list.
+                dependent_axes = utils.wcs.get_dependent_data_axes(self.wcs, axis,
+                                                                   self.missing_axes)
+            except ValueError:
+                name_in_wcs = False
+            # Check extra_coords for axis name.
+            w_axis_from_extra_coords = [name in key for key in extra_coords.keys()]
+            n_instances_in_extra_coords = sum(w_axis_from_extra_coords)
+            if (name_in_wcs and n_instances_in_extra_coords > 0) or \
+                    (n_instances_in_extra_coords > 1):
+                        raise ValueError("axis name provided not unique.")
+            elif n_instances_in_extra_coords == 1:
+                dependent_axes = extra_coords[name]["axis"]
+            # Enter axes into list.
+            if isinstance(dependent_axes, numbers.Integral) or len(dependent_axes) != 1:
                 axes[i] = dependent_axes
+            else:
+                axes[i] = dependent_axes[0]
         return tuple(axes)
 
 
