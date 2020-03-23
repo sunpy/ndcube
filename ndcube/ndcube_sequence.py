@@ -206,7 +206,7 @@ class NDCubeSequenceBase:
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, meta=self.meta)
 
-    def __repr__(self):
+    def __str__(self):
         return (
             """NDCubeSequence
 ---------------------

@@ -550,7 +550,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         item[extra_coord_dict["axis"]] = slice(w[0], w[-1] + 1)
         return self[tuple(item)]
 
-    def __repr__(self):
+    def __str__(self):
         return (
             """NDCube
 ---------------------
