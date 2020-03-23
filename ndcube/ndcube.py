@@ -631,14 +631,14 @@ Axis Types of NDCube: {axis_type}
 
         # Invert extra_coords so that keys are axis numbers and values are axis names.
         extra_coords = self.extra_coords
-        extra_coords_axes = dict([(str(i), []) for i in range(n_dimensions)])
+        extra_coords_axes = dict([('None', [])] + [(str(i), []) for i in range(n_dimensions)])
         for key in extra_coords.keys():
             coord_axes = extra_coords[key]["axis"]
-            if isinstance(coord_axes, numbers.Integral):
+            if isinstance(coord_axes, numbers.Integral) or coord_axes is None:
                 extra_coords_axes[str(coord_axes)].append(key)
             else:
                 for coord_axis in coord_axes:
-                    extra_coord_axes[str(coord_axis)].append(key)
+                    extra_coords_axes[str(coord_axis)].append(key)
 
         # For each pixel axis, find the corresponding axis names.
         n_axes = len(axes)
