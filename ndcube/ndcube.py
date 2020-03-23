@@ -1,6 +1,7 @@
 
 import abc
 import warnings
+import numbers
 
 import numpy as np
 import astropy.nddata
@@ -594,6 +595,59 @@ Axis Types of NDCube: {axis_type}
             result_cubes.append(sliced_cube)
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
+
+    def pixel_axes_to_world_types(self, *axes):
+        """
+        Retrieve the world axis physical types for each pixel axis.
+
+        This differs from world_axis_physical_types in that it provides an explicit
+        mapping between pixel axes and physical types, including dependent physical
+        types.
+
+        Parameters
+        ----------
+        axes: `int` or multiple `int`
+            Axis number in numpy ordering of axes for which real world physical types
+            are desired.
+            axes=None implies all axes will be returned.
+
+        Returns
+        -------
+        axes_names: `tuple` of `str`
+            The world axis physical types corresponding to each axis.
+            If more than one physical type found for an axis, that axis's entry will
+            be a tuple of `str`.
+
+        """
+        # Define the dimensions of the cube and the total number of axes.
+        n_dimensions = len(self.dimensions)
+        world_axis_types = np.array(self.world_axis_physical_types)
+
+        # Parse user input.
+        if axes == ():
+            axes = tuple(range(n_dimensions))
+        if isinstance(axes, int):
+            axes = (axes,)
+        n_axes = len(axes)
+        axes_names = [None] * n_axes
+        for i, axis in enumerate(axes):
+            # Ensure axis number is an int or int equivalent.
+            if not isinstance(axis, numbers.Integral):
+                raise TypeError("axis numbers must be integers. Offending axis number: "
+                                "{0}; type = {1}".format(axis, type(axis)))
+            # If axis number is negative, convert to corresponding positive version.
+            if axis < 0:
+                axis = n_dimensions + axis
+            # Determine which axes are dependent on others.
+            # Ensure the axes are in numerical order.
+            dependent_axes = np.array(utils.wcs.get_dependent_data_axes(self.wcs, axis,
+                                                                        self.missing_axes))
+            axis_names = world_axis_types[dependent_axes]
+            if len(axis_names) == 1:
+                axes_names[i] = axis_names[0]
+            else:
+                axes_names[i] = tuple(axis_names)
+        return tuple(axes_names)
 
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
