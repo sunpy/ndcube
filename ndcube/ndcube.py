@@ -622,11 +622,25 @@ Axis Types of NDCube: {axis_type}
         # Define the dimensions of the cube and the total number of axes.
         n_dimensions = len(self.dimensions)
         world_axis_types = np.array(self.world_axis_physical_types)
+
         # Parse user input.
         if axes == ():
             axes = tuple(range(n_dimensions))
         elif isinstance(axes, int):
             axes = (axes,)
+
+        # Invert extra_coords so that keys are axis numbers and values are axis names.
+        extra_coords = self.extra_coords
+        extra_coords_axes = dict([(str(i), []) for i in range(n_dimensions)])
+        for key in extra_coords.keys():
+            coord_axes = extra_coords[key]["axis"]
+            if isinstance(coord_axes, numbers.Integral):
+                extra_coords_axes[str(coord_axes)].append(key)
+            else:
+                for coord_axis in coord_axes:
+                    extra_coord_axes[str(coord_axis)].append(key)
+
+        # For each pixel axis, find the corresponding axis names.
         n_axes = len(axes)
         axes_names = [None] * n_axes
         for i, axis in enumerate(axes):
@@ -637,11 +651,18 @@ Axis Types of NDCube: {axis_type}
             # If axis number is negative, convert to corresponding positive version.
             if axis < 0:
                 axis = n_dimensions + axis
-            # Determine which axes are dependent on others.
+            # Determine which axes are dependent on others from WCS.
             # Ensure the axes are in numerical order.
             dependent_axes = np.array(utils.wcs.get_dependent_data_axes(self.wcs, axis,
                                                                         self.missing_axes))
             axis_names = world_axis_types[dependent_axes]
+
+            # Check extra coords for more axis names.
+            str_axis = str(axis)
+            if str_axis in extra_coords_axes.keys():
+                axis_names = list(set(list(axis_names) + extra_coords_axes[str_axis]))
+
+            # Enter axes into output.
             if len(axis_names) == 1:
                 axes_names[i] = axis_names[0]
             else:
