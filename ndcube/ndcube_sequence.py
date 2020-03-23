@@ -1,3 +1,6 @@
+import copy
+import numbers
+
 import numpy as np
 
 import astropy.units as u
@@ -80,8 +83,12 @@ class NDCubeSequenceBase:
         return self.data[0].world_axis_physical_types
 
     def __getitem__(self, item):
-        if len(self.dimensions) == 1:
+        if isinstance(item, numbers.Integral):
             return self.data[item]
+        elif isinstance(item, slice):
+            result = copy.deepcopy(self)
+            result.data = self.data[item]
+            return result
         else:
             return utils.sequence.slice_sequence(self, item)
 

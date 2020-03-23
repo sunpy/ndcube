@@ -142,8 +142,13 @@ def _get_sequence_items_from_slice_item(slice_item, n_cubes, cube_item=slice(Non
         stop = -1
     else:
         stop = no_none_slice.stop
-    sequence_items = [SequenceItem(i, cube_item)
-                      for i in range(no_none_slice.start, stop, no_none_slice.step)]
+    # If slice has interval length 1, make sequence index length 1 slice to
+    # ensure dimension is not dropped in accordance with slicing convention.
+    if abs(stop - no_none_slice.start) == 1:
+        sequence_items = [SequenceItem(slice_item, cube_item)]
+    else:
+        sequence_items = [SequenceItem(i, cube_item)
+                          for i in range(no_none_slice.start, stop, no_none_slice.step)]
     return sequence_items
 
 
@@ -201,12 +206,19 @@ def slice_sequence_by_sequence_items(cubesequence, sequence_items):
     """
     result = deepcopy(cubesequence)
     if len(sequence_items) == 1:
-        return result.data[sequence_items[0].sequence_index][sequence_items[0].cube_item]
+        # If sequence item is interval length 1 slice, ensure an NDCubeSequence
+        # is returned in accordance with slicing convention.
+        # Due to code up to this point, if sequence item is a slice, it can only
+        # be an interval length 1 slice.
+        if isinstance(sequence_items[0].sequence_index, slice):
+            result.data = [result.data[sequence_items[0].sequence_index.start][sequence_items[0].cube_item]]
+        else:
+            result = result.data[sequence_items[0].sequence_index][sequence_items[0].cube_item]
     else:
         data = [result.data[sequence_item.sequence_index][sequence_item.cube_item]
                 for sequence_item in sequence_items]
         result.data = data
-        return result
+    return result
 
 
 def _index_sequence_as_cube(cubesequence, item):
