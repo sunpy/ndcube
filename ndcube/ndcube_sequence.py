@@ -86,18 +86,19 @@ class NDCubeSequenceBase:
         """
         # Parse user input.
         if axes == ():
-            axes = tuple(range(n_dimensions))
+            axes = np.arange(len(self.dimensions))
         elif isinstance(axes, int):
-            axes = (axes,)
+            axes = np.array([axes])
+        else:
+            axes = np.array(axes)
 
-        axes = np.array(axes)
         n_axes = len(axes)
-        axes_names = np.array([None] * n_axes, dtype=object)
+        axes_names = [None] * n_axes
 
         # If sequence axis in axes, get names for it separately.
         if 0 in axes:
+            sequence_names_indices = np.array([axis == 0 for axis in axes])
             sequence_axes_names = utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)[0]
-            sequence_index = np.array([axis == 0 for axis in axes])
             if sequence_axes_names:
                 if isinstance(sequence_axes_names, str):
                     sequence_axes_names = [sequence_axes_names]
@@ -105,22 +106,78 @@ class NDCubeSequenceBase:
                     sequence_axes_names = list(sequence_axes_names)
             else:
                 sequence_axes_names = []
-            axes_names[sequence_index] = tuple([self._sequence_axis_name] + sequence_axes_names)
-            cube_indices = np.invert(sequence_index)
-            cube_axes = axes[cube_indices]
+            # Enter sequence axis names into output.
+            # Must use for loop as can't assign tuples to multiple array location
+            # with indexing and setitem.
+            for i in np.arange(n_axes)[sequence_names_indices]:
+                axes_names[i] = tuple([self._sequence_axis_name] + sequence_axes_names)
+
+            # Get indices of axes numbers associated with cube axes.
+            cube_indices = np.invert(sequence_names_indices)
+            cube_axes = axes[cube_indices] - 1
         else:
             cube_indices = np.ones(n_axes, dtype=bool)
             cube_axes = axes
 
         # Get world types from cube axes.
         if len(cube_axes) > 0:
-            cube_axes_names = np.array(self.data[0].pixel_axes_to_world_types(*cube_axes))
-            axes_names[cube_indices] = cube_axes_names
+            cube_axes_names = self.data[0].pixel_axes_to_world_types(*cube_axes)
+            for i, name in zip(np.arange(n_axes)[cube_indices], cube_axes_names):
+                axes_names[i] = name
 
         return tuple(axes_names)
 
     def world_types_to_pixel_axes(self, *axes_names):
-        raise NotImplementedError()
+        """
+        Retrieve the pixel axes (numpy ordering) corresponding to each world axis physical type.
+
+        Parameters
+        ----------
+        axes_names: `str` or multiple `str`
+            world axis physical types for which the pixel axis numbers are desired.
+            axes_names=None implies all axes will be returned.
+
+        Returns
+        -------
+        axes: `tuple` of `int`
+            The pixel axis numbers (numpy ordering) that correspond to the supplied
+            axis names.
+            If more than one axis corresponds to the physical type, that physical type's
+            entry in the output will be a tuple of `int`.
+            If no axes names supplied, the ordering of the axis numbers returned will
+            correspond to the physical types returned by NDCube.world_axis_physical_types.
+
+        """
+        # Parse user input.
+        if axes_names == ():
+            axes_names = np.array(self.world_axis_physical_types)
+        elif isinstance(axes_names, str):
+            axes_names = np.array([axes_names])
+        else:
+            axes_names = np.array(axes_names)
+        n_names = len(axes_names)
+        axes = np.array([None] * n_names, dtype=object)
+        
+        # Get world types associated with sequence axis.
+        sequence_axes_names = utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)[0]
+        if sequence_axes_names is None:
+            sequence_axes_names = np.array([self._sequence_axis_name])
+        else:
+            sequence_axes_names = np.concatenate(
+                    (np.array([self._sequence_axis_name]), sequence_axes_names))
+        # Find indices of axes_names that correspond to sequence axis and
+        # and enter axis number to output
+        sequence_names_indices = np.isin(axes_names, sequence_axes_names)
+        axes[sequence_names_indices] = 0
+
+        # Get indices of cube axis names and use NDCube version of this method to get axis numbers.
+        cube_names_indices = np.invert(sequence_names_indices)
+        if cube_names_indices.any():
+            axes[cube_names_indices] = self.data[0].world_types_to_pixel_axes(
+                    *axes_names[cube_names_indices])
+
+        return tuple(axes)
+        
 
     @property
     def cube_like_dimensions(self):
