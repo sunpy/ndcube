@@ -609,7 +609,7 @@ Axis Types of NDCube: {axis_type}
         axes: `int` or multiple `int`
             Axis number in numpy ordering of axes for which real world physical types
             are desired.
-            axes=None implies all axes will be returned.
+            axes=None implies axis names for all axes will be returned.
 
         Returns
         -------
@@ -622,11 +622,10 @@ Axis Types of NDCube: {axis_type}
         # Define the dimensions of the cube and the total number of axes.
         n_dimensions = len(self.dimensions)
         world_axis_types = np.array(self.world_axis_physical_types)
-
         # Parse user input.
         if axes == ():
             axes = tuple(range(n_dimensions))
-        if isinstance(axes, int):
+        elif isinstance(axes, int):
             axes = (axes,)
         n_axes = len(axes)
         axes_names = [None] * n_axes
@@ -648,6 +647,49 @@ Axis Types of NDCube: {axis_type}
             else:
                 axes_names[i] = tuple(axis_names)
         return tuple(axes_names)
+
+    def world_types_to_pixel_axes(self, *axes_names):
+        """
+        Retrieve the pixel axes (numpy ordering) corresponding to each world axis physical type.
+
+        Parameters
+        ----------
+        axes_names: `str` or multiple `str`
+            world axis physical types for which the pixel axis numbers are desired.
+            axes_names=None implies all axes will be returned.
+
+        Returns
+        -------
+        axes: `tuple` of `int`
+            The pixel axis numbers (numpy ordering) that correspond to the supplied
+            axis names.
+            If more than one axis corresponds to the physical type, that physical type's
+            entry in the output will be a tuple of `int`.
+            If no axes names supplied, the ordering of the axis numbers returned will
+            correspond to the physical types returned by NDCube.world_axis_physical_types.
+
+        """
+        # Parse user input.
+        if axes_names == ():
+            axes_names = self.world_axis_physical_types
+        elif isinstance(axes_names, str):
+            axes_names = (axes_names,)
+        n_names = len(axes_names)
+        axes = [None] * n_names
+        for i, name in enumerate(axes_names):
+            # Ensure axis number is an int or int equivalent.
+            if not isinstance(name, str):
+                raise TypeError("axis names must be strings. Offending axis name: "
+                                "{0}; type = {1}".format(name, type(name)))
+            # Get axis number of physical type.
+            axis = utils.cube.get_axis_number_from_axis_name(name, self.world_axis_physical_types)
+            # Add axis and any dependent axes to list.
+            dependent_axes = utils.wcs.get_dependent_data_axes(self.wcs, axis, self.missing_axes)
+            if len(dependent_axes) == 1:
+                axes[i] = dependent_axes[0]
+            else:
+                axes[i] = dependent_axes
+        return tuple(axes)
 
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
