@@ -6,7 +6,6 @@ import numbers
 import numpy as np
 import astropy.nddata
 import astropy.units as u
-from astropy.utils.misc import InheritDocstrings
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -18,10 +17,9 @@ from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
 
-class NDCubeMetaClass(abc.ABCMeta, InheritDocstrings):
+class NDCubeMetaClass(abc.ABCMeta):
     """
-    A metaclass that combines `abc.ABCMeta` and
-    `~astropy.utils.misc.InheritDocstrings`.
+    A metaclass that combines `abc.ABCMeta`.
     """
 
 
@@ -79,7 +77,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             reverse of the wcs axis order.
         """
 
-    # InheritDocstrings doesn't work on property methods.
     @abc.abstractproperty
     def dimensions(self):
         pass
