@@ -333,10 +333,18 @@ assigned to the sequence axis.  Hence the property's name.::
 Plotting
 --------
 
-The `ndcube.NDCubeSequence.plot` method allows the sequence to be animated as
-though it were one contiguous `~ndcube.NDCube`. It has the same API and same
-kwargs as `ndcube.NDCube.plot`.  See documentation for `ndcube.NDCube.plot` for more
-details.
+Just like `~ndcube.NDCube`, `~ndcube.NDCubeSequence` provide simple but powerful
+plotting APIs to help users visualize their data.
+Two plotting methods, `~ndcube.NDCubeSequence.plot` and
+`~ndcube.NDCubeSequence.plot_as_cube`, are provided which correspond to the
+sequence and cube-like representations of the data, respectively.
+These methods allows the sequence to be animated as though it were one
+contiguous `~ndcube.NDCube`.
+Both methods have the same API and same kwargs as `ndcube.NDCube.plot`.
+See documentation for `ndcube.NDCube.plot` for more details.
+The main substantive difference between them is how the axis inputs relate to
+dimensionality of the data, i.e. the same way that the inputs to NDCubeSequence
+slicing and `~ndcube.NDCubeSequence.index_as_cube` differ.
 
 
 Explode Along Axis
