@@ -713,9 +713,8 @@ Axis Types of NDCube: {axis_type}
             # Check extra_coords for axis name.
             w_axis_from_extra_coords = [name in key for key in extra_coords.keys()]
             n_instances_in_extra_coords = sum(w_axis_from_extra_coords)
-            if (name_in_wcs and n_instances_in_extra_coords > 0) or \
-                    (n_instances_in_extra_coords > 1):
-                        raise ValueError("axis name provided not unique.")
+            if (name_in_wcs and n_instances_in_extra_coords > 0) or n_instances_in_extra_coords > 1:
+                raise ValueError("axis name provided not unique.")
             elif n_instances_in_extra_coords == 1:
                 dependent_axes = extra_coords[name]["axis"]
             # Enter axes into list.

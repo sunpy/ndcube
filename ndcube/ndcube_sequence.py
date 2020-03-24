@@ -157,7 +157,7 @@ class NDCubeSequenceBase:
             axes_names = np.array(axes_names)
         n_names = len(axes_names)
         axes = np.array([None] * n_names, dtype=object)
-        
+
         # Get world types associated with sequence axis.
         sequence_axes_names = utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)[0]
         if sequence_axes_names is None:
@@ -177,7 +177,6 @@ class NDCubeSequenceBase:
                     *axes_names[cube_names_indices])
 
         return tuple(axes)
-        
 
     @property
     def cube_like_dimensions(self):
