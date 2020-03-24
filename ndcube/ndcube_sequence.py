@@ -198,10 +198,10 @@ class NDCubeSequenceBase:
         return self.data[0].world_axis_physical_types
 
     def cube_like_pixel_axes_to_world_types(self, *axes):
-        raise NotImplementedError()
+        return self.data[0].pixel_axes_to_world_types(*axes)
 
     def cube_like_world_types_to_pixel_axes(self, *axes_names):
-        raise NotImplementedError()
+        return self.data[0].world_types_to_world_types(*axes_names)
 
     def __getitem__(self, item):
         if len(self.dimensions) == 1:
