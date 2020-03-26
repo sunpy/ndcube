@@ -69,9 +69,8 @@ class NDCollection(dict):
     def _first_key(self):
         return list(self.keys())[0]
 
-    def __repr__(self):
+    def __str__(self):
         return (textwrap.dedent("""\
-            {object.__repr__(self)}
             NDCollection
             ------------
             Cube keys: {keys}
@@ -81,6 +80,9 @@ class NDCollection(dict):
                 keys=self.keys(), n_cubes=len(self),
                 aligned_dims=self.aligned_dimensions,
                 aligned_axis_types=self.aligned_world_axis_physical_types)))
+
+    def __repr__(self):
+        return f"{object.__repr__(self)}\n{str(self)}"
 
     @property
     def aligned_dimensions(self):
