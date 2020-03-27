@@ -58,7 +58,7 @@ class NDCollection(dict):
                 aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)
             else:
                 aligned_axes = dict(zip(keys, aligned_axes))
-        if kwargs != {}:
+        if kwargs:
             raise TypeError(
                     f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'")
         # Attach aligned axes to object.
