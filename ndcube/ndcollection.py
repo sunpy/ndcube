@@ -92,9 +92,7 @@ class NDCollection(dict):
         If there are no aligned axes, returns None.
 
         """
-        if self.aligned_axes is None:
-            return None
-        else:
+        if self.aligned_axes is not None:
             return self[self._first_key].dimensions[np.array(self.aligned_axes[self._first_key])]
 
     @property
@@ -105,9 +103,7 @@ class NDCollection(dict):
         If there are no aligned axes, returns None.
 
         """
-        if self.aligned_axes is None:
-            return None
-        else:
+        if self.aligned_axes is not None:
             axis_types = np.array(self[self._first_key].world_axis_physical_types)
             return tuple(axis_types[np.array(self.aligned_axes[self._first_key])])
 
@@ -144,16 +140,15 @@ class NDCollection(dict):
             else:
                 if self.aligned_axes is None:
                     raise IndexError("Cannot slice unless collection has aligned axes.")
-                else:
-                    # Derive item to be applied to each cube in collection and
-                    # whether any aligned axes are dropped by the slicing.
-                    collection_items, new_aligned_axes = self._generate_collection_getitems(item)
-                    # Apply those slice items to each cube in collection.
-                    new_data = [self[key][tuple(cube_item)]
-                                for key, cube_item in zip(self, collection_items)]
-                    # Since item is not strings, no cube in collection is dropped.
-                    # Therefore the collection keys remain unchanged.
-                    new_keys = list(self.keys())
+                # Derive item to be applied to each cube in collection and
+                # whether any aligned axes are dropped by the slicing.
+                collection_items, new_aligned_axes = self._generate_collection_getitems(item)
+                # Apply those slice items to each cube in collection.
+                new_data = [self[key][tuple(cube_item)]
+                            for key, cube_item in zip(self, collection_items)]
+                # Since item is not strings, no cube in collection is dropped.
+                # Therefore the collection keys remain unchanged.
+                new_keys = list(self.keys())
 
             return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
                                   meta=self.meta, sanitize_inputs=False)
