@@ -1,6 +1,7 @@
 
 import abc
 import warnings
+import textwrap
 
 import numpy as np
 import astropy.nddata
@@ -547,16 +548,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         item[extra_coord_dict["axis"]] = slice(w[0], w[-1] + 1)
         return self[tuple(item)]
 
+    def __str__(self):
+        return textwrap.dedent(f"""\
+                NDCube
+                ---------------------
+                {{wcs}}
+                ---------------------
+                Length of NDCube: {self.dimensions}
+                Axis Types of NDCube: {self.world_axis_physical_types}""").format(wcs=str(self.wcs))
+
     def __repr__(self):
-        return (
-            """NDCube
----------------------
-{wcs}
----------------------
-Length of NDCube: {lengthNDCube}
-Axis Types of NDCube: {axis_type}
-""".format(wcs=self.wcs.__repr__(), lengthNDCube=self.dimensions,
-                axis_type=self.world_axis_physical_types))
+        return f"{object.__repr__(self)}\n{str(self)}"
 
     def explode_along_axis(self, axis):
         """
