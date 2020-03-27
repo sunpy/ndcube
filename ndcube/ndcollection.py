@@ -51,10 +51,11 @@ class NDCollection(dict):
         self.meta = meta
 
         # Convert aligned axes to required format.
+        sanitize_inputs = kwargs.pop("sanitize_inputs", True)
         if aligned_axes is not None:
             keys, data = zip(*key_data_pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
-            if kwargs.pop("sanitize_inputs", True):
+            if sanitize_inputs:
                 aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)
             else:
                 aligned_axes = dict(zip(keys, aligned_axes))

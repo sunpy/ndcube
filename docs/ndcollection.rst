@@ -187,8 +187,8 @@ are not in order.
   >>> sliced_collection_reversed = my_collection_reversed[1:3, 3:8]
   >>> sliced_collection_reversed.keys()
   dict_keys(['observations', 'linewidths'])
-  >>> sliced_collection_reversed.aligned_dimesions
-  <Quantity [10., 20.] pix>
+  >>> sliced_collection_reversed.aligned_dimensions
+  <Quantity [2., 5.] pix>
 
 Editing NDCollection
 --------------------
