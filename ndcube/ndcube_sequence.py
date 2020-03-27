@@ -1,8 +1,8 @@
+import textwrap
 import copy
 import numbers
 
 import numpy as np
-
 import astropy.units as u
 
 from ndcube import utils
@@ -213,15 +213,16 @@ class NDCubeSequenceBase:
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, meta=self.meta)
 
+    def __str__(self):
+        return (textwrap.dedent(f"""\
+                NDCubeSequence
+                ---------------------
+                Length of NDCubeSequence:  {self.dimensions[0]}
+                Shape of 1st NDCube: {self.dimensions[1::]}
+                Axis Types of 1st NDCube: {self.world_axis_physical_types[1:]}"""))
+
     def __repr__(self):
-        return (
-            """NDCubeSequence
----------------------
-Length of NDCubeSequence:  {length}
-Shape of 1st NDCube: {shapeNDCube}
-Axis Types of 1st NDCube: {axis_type}
-""".format(length=self.dimensions[0], shapeNDCube=self.dimensions[1::],
-                axis_type=self.world_axis_physical_types[1:]))
+        return f"{object.__repr__(self)}\n{str(self)}"
 
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
