@@ -54,10 +54,13 @@ class NDCollection(dict):
         if aligned_axes is not None:
             keys, data = zip(*key_data_pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
-            if kwargs.get("sanitize_inputs", True):
+            if kwargs.pop("sanitize_inputs", True):
                 aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)
             else:
                 aligned_axes = dict(zip(keys, aligned_axes))
+        if kwargs != {}:
+            raise TypeError(
+                    f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'")
         # Attach aligned axes to object.
         self.aligned_axes = aligned_axes
         if self.aligned_axes is None:
