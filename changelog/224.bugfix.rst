@@ -1,1 +1,0 @@
-Raises error if NDCube is sliced with an Ellipsis.

@@ -1,1 +1,0 @@
-Add new NDCollection class for linking and manipulating partially or non-aligned NDCubes or NDCubeSequences.
