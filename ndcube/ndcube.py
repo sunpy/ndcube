@@ -552,13 +552,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return self[tuple(item)]
 
     def __str__(self):
-        return (textwrap.dedent(f"""\
+        return textwrap.dedent(f"""\
                 NDCube
                 ---------------------
-                {str(self.wcs)}
+                {{wcs}}
                 ---------------------
                 Length of NDCube: {self.dimensions}
-                Axis Types of NDCube: {self.world_axis_physical_types}"""))
+                Axis Types of NDCube: {self.world_axis_physical_types}""").format(wcs=str(self.wcs))
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
