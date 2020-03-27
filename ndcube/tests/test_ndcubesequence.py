@@ -116,12 +116,14 @@ nan_time_extra_coord[2] = np.nan
     (seq[2], NDCube),
     (seq[3], NDCube),
     (seq[0:1], NDCubeSequence),
+    (seq[0:1, 0:2], NDCubeSequence),
+    (seq[0:1, 0], NDCubeSequence),
     (seq[1:3], NDCubeSequence),
     (seq[0:2], NDCubeSequence),
     (seq[slice(0, 2)], NDCubeSequence),
     (seq[slice(0, 3)], NDCubeSequence),
 ])
-def test_slice_first_index_sequence(test_input, expected):
+def test_slice_first_index_sequence_type(test_input, expected):
     assert isinstance(test_input, expected)
 
 
@@ -132,7 +134,7 @@ def test_slice_first_index_sequence(test_input, expected):
     (seq[slice(0, 2)], 2 * u.pix),
     (seq[slice(0, 3)], 3 * u.pix),
 ])
-def test_slice_first_index_sequence(test_input, expected):
+def test_slice_first_index_sequence_dimensions(test_input, expected):
     assert test_input.dimensions[0] == expected
 
 
