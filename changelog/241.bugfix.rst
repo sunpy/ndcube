@@ -1,4 +1,0 @@
-Changes behavior of NDCubeSequence slicing. Previously, a slice item of interval
-length 1 would cause an NDCube object to be returned. Now an NDCubeSequence made
-up of 1 NDCube is returned. This is consistent with how interval length 1 slice
-items slice arrays.
