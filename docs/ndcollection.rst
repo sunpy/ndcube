@@ -75,7 +75,7 @@ just like a `dict`:
 
 .. code-block:: python
 
-  >>> my_collection["observations"]
+  >>> my_collection["observations"]  # doctest: +SKIP
 
 And just like a `dict` we can see the different names available using the ``keys`` method:
 
