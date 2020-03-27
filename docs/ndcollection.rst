@@ -198,4 +198,4 @@ collection using many of the same methods.
 These have the same or analagous APIs to the ``dict`` versions and 
 include ``del``, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
 Some `dict` methods may not be implemented on `~ndcube.NDCollection`
-if they are note consistent with its design.
+if they are not consistent with its design.
