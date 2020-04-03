@@ -11,6 +11,7 @@ from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, BaseHighLevelWCS
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.time import Time
 
 from ndcube import NDCube, NDCubeOrdered
 from astropy.wcs import WCS
@@ -25,7 +26,7 @@ ht = {'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 0.4, 'CRPIX4': 2, 'CRVAL4
       'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
       'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
       'NAXIS2': 3,
-      'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
+      'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4, 'DATEREF':"2020-01-01T00:00:00"}
 wt = WCS(header=ht)
 
 data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
@@ -41,7 +42,7 @@ hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'C
 wm = WCS(header=hm)
 
 h_disordered = {
-    'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2,
+    'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 2, 'DATEREF':"2020-01-01T00:00:00",
     'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 10,
     'NAXIS2': 4,
     'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 2, 'CRVAL3': 0.5,
@@ -60,7 +61,7 @@ h_ordered = {
     'NAXIS2': 3,
     'CTYPE3': 'WAVE    ', 'CUNIT3': 'Angstrom', 'CDELT3': 0.2, 'CRPIX3': 0, 'CRVAL3': 10,
     'NAXIS3': 4,
-    'CTYPE4': 'TIME    ', 'CUNIT4': 'min', 'CDELT4': 0.4, 'CRPIX4': 0, 'CRVAL4': 0, 'NAXIS4': 2}
+    'CTYPE4': 'TIME    ', 'CUNIT4': 'min', 'CDELT4': 0.4, 'CRPIX4': 0, 'CRVAL4': 0, 'NAXIS4': 2, 'DATEREF':"2020-01-01T00:00:00"}
 w_ordered = WCS(header=h_ordered)
 
 data_ordered = np.zeros((2, 4, 3, 2))
@@ -72,7 +73,7 @@ h_rotated = {'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'arcsec', 'CDELT1': 0.4, 'CRPIX1': 
              'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'arcsec', 'CDELT2': 0.5, 'CRPIX2': 0,
              'CRVAL2': 0, 'NAXIS2': 5,
              'CTYPE3': 'TIME    ', 'CUNIT3': 'seconds', 'CDELT3': 0.3, 'CRPIX3': 0,
-             'CRVAL3': 0, 'NAXIS3': 2,
+             'CRVAL3': 0, 'NAXIS3': 2, 'DATEREF':"2020-01-01T00:00:00",
              'PC1_1': 0.714963912964, 'PC1_2': -0.699137151241, 'PC1_3': 0.0,
              'PC2_1': 0.699137151241, 'PC2_2': 0.714963912964, 'PC2_3': 0.0,
              'PC3_1': 0.0, 'PC3_2': 0.0, 'PC3_3': 1.0}
@@ -773,12 +774,13 @@ def test_slicing_error(test_input):
 ])
 def test_pixel_to_world(test_input, expected):
 
-    if not isinstance(test_input, SkyCoord):
-        np.testing.assert_allclose(test_input.value, expected.value)
-        assert test_input.unit == expected.unit
-    else:
+    if isinstance(test_input, u.Quantity):
+        assert u.allclose(test_input, expected)
+    elif isinstance(test_input, SkyCoord):
         np.testing.assert_allclose(test_input.Tx.degree, expected.Tx.degree)
         np.testing.assert_allclose(test_input.Ty.degree, expected.Ty.degree)
+    else:
+        assert all(test_input == expected)
 
 
 # Define a SkyCoord object for input argument for NDCube.world_to_pixel
@@ -827,65 +829,65 @@ skyobj = SkyCoord([(u.Quantity(np.arange(4), unit=u.deg),
     (cube[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[2],
         wt.world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
     (cube[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[1],
         wt.world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
     (cube[1].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[0],
         wt.world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[2]),
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[3],
         create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[0]),
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[2],
         create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[1]),
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[1],
         create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[2]),
     (cube[0:2].world_to_pixel(*[
         skyobj,
         u.Quantity(np.arange(4), unit=u.m),
-        u.Quantity(np.arange(4), unit=u.min)
+        Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min)
     ])[0],
         create_sliced_wcs(cube.wcs, slice(0, 2, None), 4).world_to_pixel(
-        u.Quantity(np.arange(4), unit=u.min),
-        u.Quantity(np.arange(4), unit=u.m),
+            Time("2020-01-01T00:00") + u.Quantity(np.arange(4), unit=u.min),
+            u.Quantity(np.arange(4), unit=u.m),
         skyobj)[3])
 ])
 def test_world_to_pixel(test_input, expected):

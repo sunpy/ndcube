@@ -69,7 +69,6 @@ def assert_wcs_are_equal(wcs1, wcs2):
     assert wcs1.world_axis_physical_types == wcs2.world_axis_physical_types
     assert wcs1.world_axis_units == wcs2.world_axis_units
     assert_equal(wcs1.axis_correlation_matrix, wcs2.axis_correlation_matrix)
-    assert wcs1.world_axis_object_components == wcs2.world_axis_object_components
     assert wcs1.pixel_bounds == wcs2.pixel_bounds
     assert repr(wcs1) == repr(wcs2)
 
