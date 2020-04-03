@@ -8,7 +8,7 @@ import numpy as np
 
 from numpy.testing import assert_equal
 
-from ndcube import utils
+from ndcube import utils, NDCube, NDCubeSequence
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
@@ -38,7 +38,8 @@ def assert_cubes_equal(test_input, expected_cube):
     assert isinstance(test_input, type(expected_cube))
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
-    assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
+    if test_input.uncertainty:
+        assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)
     assert test_input.dimensions.unit == expected_cube.dimensions.unit
@@ -75,7 +76,6 @@ def assert_wcs_are_equal(wcs1, wcs2):
     assert wcs1.world_axis_units == wcs2.world_axis_units
     assert_equal(wcs1.axis_correlation_matrix, wcs2.axis_correlation_matrix)
     assert wcs1.pixel_bounds == wcs2.pixel_bounds
-    assert repr(wcs1) == repr(wcs2)
 
 
 def create_sliced_wcs(wcs, item, dim):
@@ -86,3 +86,17 @@ def create_sliced_wcs(wcs, item, dim):
     # Sanitize the slices
     item = sanitize_slices(item, dim)
     return SlicedFITSWCS(wcs, item)
+
+
+def assert_collections_equal(collection1, collection2):
+    assert collection1.keys() == collection2.keys()
+    assert collection1.aligned_axes == collection2.aligned_axes
+    for cube1, cube2 in zip(collection1.values(), collection2.values()):
+        # Check cubes are same type.
+        assert type(cube1) is type(cube2)
+        if isinstance(cube1, NDCube):
+            assert_cubes_equal(cube1, cube2)
+        elif isinstance(cube1, NDCubeSequence):
+            assert_cubesequences_equal(cube1, cube2)
+        else:
+            raise TypeError("Unsupported Type in NDCollection: {0}".format(type(cube1)))

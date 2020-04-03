@@ -16,6 +16,8 @@ from ndcube import NDCube
 from astropy.wcs import WCS
 from ndcube.mixins import plotting
 
+pytestmark = pytest.mark.skip
+
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
