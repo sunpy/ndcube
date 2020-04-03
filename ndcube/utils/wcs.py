@@ -119,110 +119,6 @@ class WCS(wcs.WCS):
         return newheader
 
 
-def _wcs_slicer(wcs, missing_axes, item):
-    """
-    Returns the new sliced wcs and changed missing axis.
-
-    Paramters
-    ---------
-    wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        WCS object to be sliced.
-
-    missing_axes: `list` of `bool`
-        Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
-
-    item: `int`, `slice` or `tuple` of `int` and/or `slice`.
-        Slicing item.  Note that unlike in other places in this package, the item has the
-        same axis ordering as the WCS object, i.e. the reverse of the data order.
-
-    Returns
-    -------
-    new_wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        Sliced WCS object.
-
-    missing_axes: `list` of `bool`
-        Altered missing axis list.  Note the ordering has been reversed to reflect the data
-        (numpy) axis ordering convention.
-    """
-    # normal slice.
-    item_checked = []
-    if isinstance(item, slice):
-        index = 0
-        # creating a new tuple of slice where if the axis is dead i.e missing
-        # then slice(0,1) added else slice(None, None, None) is appended and
-        # if the check of missing_axes gives that this is the index where it
-        # needs to be appended then it gets appended there.
-        for _bool in missing_axes:
-            if not _bool:
-                if index != 1:
-                    item_checked.append(item)
-                    index += 1
-                else:
-                    item_checked.append(slice(None, None, None))
-            else:
-                item_checked.append(slice(0, 1))
-        new_wcs = wcs.slice(item_checked)
-    # item is int then slicing axis.
-    elif isinstance(item, numbers.Integral):
-        # using index to keep track of whether the int(which is converted to
-        # slice(int_value, int_value+1)) is already added or not. It checks
-        # the dead axis i.e missing_axes to check if it is dead than slice(0,1)
-        # is appended in it. if the index value has reached 1 then the
-        # slice(None, None, None) is added.
-        index = 0
-        for i, _bool in enumerate(missing_axes):
-            if not _bool:
-                if index != 1:
-                    item_checked.append(slice(item, item + 1))
-                    missing_axes[i] = True
-                    index += 1
-                else:
-                    item_checked.append(slice(None, None, None))
-            else:
-                item_checked.append(slice(0, 1))
-        new_wcs = wcs.slice(item_checked)
-    # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
-    elif isinstance(item, tuple):
-        # Ellipsis slicing is currently not supported.
-        # Raise an error if user tries to slice by ellipsis.
-        if Ellipsis in item:
-            raise NotImplementedError("Slicing FITS-WCS by ellipsis not supported.")
-        # this is used to not exceed the range of the item tuple
-        # if the check of the missing_axes which is False if not dead
-        # is a success than the the item of the tuple is added one by
-        # one and if the end of tuple is reached than slice(None, None, None)
-        # is appended.
-        index = 0
-        for _bool in missing_axes:
-            if not _bool:
-                if index is not len(item):
-                    item_checked.append(item[index])
-                    index += 1
-                else:
-                    item_checked.append(slice(None, None, None))
-            else:
-                item_checked.append(slice(0, 1))
-        # if all are slice in the item tuple
-        if _all_slice(item_checked):
-            new_wcs = wcs.slice(item_checked)
-        # if all are not slices some of them are int then
-        else:
-            # this will make all the item in item_checked as slice.
-            item_ = _slice_list(item_checked)
-            new_wcs = wcs.slice(item_)
-            for i, it in enumerate(item_checked):
-                # If an axis is sliced out, i.e. it's item is an int,
-                # set missing axis to True.
-                # numbers.Integral captures all int types, int, np.int64, etc.
-                if isinstance(it, numbers.Integral):
-                    missing_axes[i] = True
-    else:
-        raise NotImplementedError("Slicing FITS-WCS by {} not supported.".format(type(item)))
-    # returning the reverse list of missing axis as in the item here was reverse of
-    # what was inputed so we had a reverse missing_axes.
-    return new_wcs, missing_axes[::-1]
-
-
 def _all_slice(obj):
     """
     Returns True if all the elements in the object are slices else return
@@ -303,7 +199,7 @@ def reindex_wcs(wcs, inds):
     return outwcs
 
 
-def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
+def get_dependent_data_axes(wcs_object, data_axis):
     """
     Given a data axis index, return indices of dependent data axes.
 
@@ -320,17 +216,11 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axis=None):
     data_axis: `int`
         Index of axis (in numpy ordering convention) for which dependent axes are desired.
 
-    missing_axes: iterable of `bool`
-        Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
-
     Returns
     -------
     dependent_data_axes: `tuple` of `int`
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
     """
-    # TODO: Drop the support for missing_axes, as we are not using it.
-    # This can be done by dropping missing_axes parameter of functions calling it
-
     # Convert input data axis index to WCS axis index.
     wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis, _pixel_keep(wcs_object), wcs_object.pixel_n_dim)
     # Determine dependent axes, using WCS ordering.

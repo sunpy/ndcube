@@ -662,10 +662,6 @@ def test_slicing_error(test_input):
     with pytest.raises(IndexError):
         test_input[0, None]
 
-    # This works,i.e does not raise any error, do we want retain this?
-    # with pytest.raises(NotImplementedError):
-    #     test_input[[0, 1]]
-
 
 @pytest.mark.parametrize("test_input,expected", [
     (cubem[1].pixel_to_world(*[
