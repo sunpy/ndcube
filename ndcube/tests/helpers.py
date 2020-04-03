@@ -10,6 +10,7 @@ from numpy.testing import assert_equal
 
 from ndcube import utils, NDCube, NDCubeSequence
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, SlicedLowLevelWCS
+from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 __all__ = ['assert_extra_coords_equal',
@@ -67,6 +68,10 @@ def assert_wcs_are_equal(wcs1, wcs2):
     of `SlicedLowLevelWCS`
     """
 
+    if not isinstance(wcs1, BaseLowLevelWCS):
+        wcs1 = wcs1.low_level_wcs
+    if not isinstance(wcs2, BaseLowLevelWCS):
+        wcs2 = wcs2.low_level_wcs
     # Check the APE14 attributes of both the WCS
     assert wcs1.pixel_n_dim == wcs2.pixel_n_dim
     assert wcs1.world_n_dim == wcs2.world_n_dim

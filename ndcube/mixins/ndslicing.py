@@ -13,13 +13,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
     # Inherit docstring from parent class
     __doc__ = NDSlicingMixin.__doc__
 
-    def _slice_wcs(self, item):
-        """
-        Override parent class method so we disable the wcs slicing on
-        `astropy.nddata.mixins.NDSlicingMixin`.
-        """
-        return None
-
     def __getitem__(self, item):
         """
         Override the parent class method to explicitly catch `None` indices.
@@ -61,31 +54,10 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         # Store the original dimension of NDCube object before slicing
         prev_dim = len(self.dimensions)
 
-        # Sanitize the input arguments
-        wcs = self._slice_wcs(item)
-
         # Set the kwargs values
-        kwargs['wcs'] = wcs
-        kwargs['extra_coords'] = self._slice_extra_coords(item, wcs._pixel_keep, prev_dim)
+        kwargs['extra_coords'] = self._slice_extra_coords(item, kwargs['wcs'].low_level_wcs._pixel_keep,
+                                                          prev_dim)
         return kwargs
-
-    def _slice_wcs(self, item):
-        """Helper function which returns the sliced WCS object
-
-        Parameters
-        ----------
-        item : slice
-            The slice parameter for slicing WCS object. Note that it accepts the
-            slice parameter in numpy order, and passes the slice parameter into
-            `SlicedLowLevelWCS` into numpy order, as `SlicedLowLevelWCS` currently
-            takes the slice parameter in numpy ordering.
-
-        Returns
-        -------
-        SlicedLowLevelWCS object
-            The sliced WCS object.
-        """
-        return SlicedLowLevelWCS(self.wcs, item)
 
     def _slice_extra_coords(self, item, pixel_keep, naxes):
 
