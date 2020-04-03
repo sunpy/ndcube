@@ -159,8 +159,8 @@ cube_rotated = NDCube(
         cubem,
         cubet])
 def test_wcs_object(nd_cube):
-    assert isinstance(nd_cube.wcs, BaseLowLevelWCS)
-    assert isinstance(nd_cube.high_level_wcs, BaseHighLevelWCS)
+    assert isinstance(nd_cube.wcs.low_level_wcs, BaseLowLevelWCS)
+    assert isinstance(nd_cube.wcs, BaseHighLevelWCS)
 
 
 @pytest.mark.parametrize(

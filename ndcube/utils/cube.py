@@ -236,8 +236,14 @@ def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
 
     Parameters
     ----------
-    extra_coords: dict
+    extra_coords: `dict`
         An NDCube.extra_coords instance.
+
+    pixel_keep: `list`
+        The pixel dimensions of the original WCS to keep.
+
+    naxes: `int`
+        The number of axes in the original WCS.
 
     Returns
     -------
