@@ -83,6 +83,7 @@ class NDCubeSequenceBase:
         return self.data[0].world_axis_physical_types
 
     def __getitem__(self, item):
+        print(item)
         if isinstance(item, numbers.Integral):
             return self.data[item]
         else:
