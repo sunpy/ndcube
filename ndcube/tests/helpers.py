@@ -27,9 +27,10 @@ def assert_extra_coords_equal(test_input, extra_coords):
 
 
 def assert_metas_equal(test_input, expected_output):
-    assert test_input.keys() == expected_output.keys()
-    for key in list(test_input.keys()):
-        assert test_input[key] == expected_output[key]
+    if not (test_input is None and expected_output is None):
+        assert test_input.keys() == expected_output.keys()
+        for key in list(test_input.keys()):
+            assert test_input[key] == expected_output[key]
 
 
 def assert_cubes_equal(test_input, expected_cube):
@@ -41,7 +42,11 @@ def assert_cubes_equal(test_input, expected_cube):
     assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)
     assert test_input.dimensions.unit == expected_cube.dimensions.unit
-    assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
+    if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
+        raise AssertionError("NDCube extra_coords not of same type: {0} != {1}".format(
+            type(test_input.extra_coords), type(expected_cube.extra_coords)))
+    if test_input.extra_coords is not None:
+        assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
 
 
 def assert_cubesequences_equal(test_input, expected_sequence):

@@ -13,7 +13,7 @@ from distutils.version import LooseVersion
 
 __minimum_python_version__ = "3.6"
 
-__all__ = []
+__all__ = ['NDCube', 'NDCubeSequence', "NDCollection"]
 
 
 class UnsupportedPythonError(Exception):
@@ -28,3 +28,4 @@ if not _SUNPY_SETUP_:   # noqa
     # For egg_info test builds to pass, put package imports here.
     from .ndcube import NDCube, NDCubeOrdered
     from .ndcube_sequence import NDCubeSequence
+    from .ndcollection import NDCollection
