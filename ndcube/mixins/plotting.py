@@ -87,7 +87,7 @@ class NDCubePlotMixin:
         """
 
         if axes is None:
-            axes = wcsaxes_compat.gca_wcs(wcs)
+            axes = wcsaxes_compat.gca_wcs(wcs.low_level_wcs)
 
         if axes_coordinates is not None and axes_coordinates[0] != wcs.world_axis_physical_types[::-1][0]:
             raise NotImplementedError("We need to support extra_coords here")
@@ -148,7 +148,7 @@ class NDCubePlotMixin:
             Default: ['x', 'y']
         """
         if axes is None:
-            axes = wcsaxes_compat.gca_wcs(wcs, slices=plot_axes)
+            axes = wcsaxes_compat.gca_wcs(wcs.low_level_wcs, slices=plot_axes)
 
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
@@ -171,7 +171,7 @@ class NDCubePlotMixin:
         return axes
 
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
-                         axes_units=None, data_unit=None, **kwargs):
+                      axes_units=None, data_unit=None, **kwargs):
         if axes_coordinates is not None and axes_coordinates[0] != wcs.world_axis_physical_types[::-1][0]:
             raise NotImplementedError("We need to support extra_coords here")
 
@@ -191,6 +191,6 @@ class NDCubePlotMixin:
                 coord_params[coord_name] = {'format_unit': axis_unit}
 
         plot_axes = [p if p is not None else 0 for p in plot_axes]
-        ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
+        ax = ArrayAnimatorWCS(data, wcs.low_level_wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         return ax
