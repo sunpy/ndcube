@@ -17,14 +17,12 @@ def _expand_ellipsis(ndim, plist):
     return plist
 
 
-def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
+def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
     """
     Prepare the kwargs for the plotting functions.
 
     This function returns things in WCS not array order.
     """
-    naxis = len(cube.dimensions)
-
     # If plot_axes, axes_coordinates, axes_units are not None and not lists,
     # convert to lists for consistent indexing behaviour.
     if (not isinstance(plot_axes, (tuple, list))) and (plot_axes is not None):
@@ -56,20 +54,20 @@ def prep_plot_kwargs(cube, plot_axes, axes_coordinates, axes_units):
             if isinstance(axis_coordinate, str):
                 # TODO: Needs support for extra coords and also validating that
                 # it is correlated with pixel dimension.
-                if axis_coordinate not in cube.world_axis_physical_types:
+                if axis_coordinate not in wcs.world_axis_physical_types:
                     raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if axis_coordinate is not None and not isinstance(axis_coordinate, ax_coord_types):
                 raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those.")
         # TODO: Should we reverse order of axes_coordinates here?
 
     if axes_units is not None:
-        axes_units = _expand_ellipsis(cube.wcs.world_n_dim, axes_units)
-        if len(axes_units) != cube.wcs.world_n_dim:
-            raise ValueError(f"The length of the axes_units argument must be {cube.wcs.world_n_dim}.")
+        axes_units = _expand_ellipsis(wcs.world_n_dim, axes_units)
+        if len(axes_units) != wcs.world_n_dim:
+            raise ValueError(f"The length of the axes_units argument must be {wcs.world_n_dim}.")
         # Convert all non-None elements to astropy units
         axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
         for i, axis_unit in enumerate(axes_units):
-            wau = cube.wcs.world_axis_units[i]
+            wau = wcs.world_axis_units[i]
             if axis_unit is not None and not axis_unit.is_equivalent(wau):
                 raise u.UnitsError(
                     f"Specified axis unit '{axis_unit}' is not convertible to world axis unit '{wau}'")

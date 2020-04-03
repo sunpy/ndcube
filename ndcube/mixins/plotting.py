@@ -1,19 +1,8 @@
-import copy
-import datetime
-from warnings import warn
-
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-from astropy.visualization.wcsaxes import WCSAxes
-import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
-from sunpy.visualization.animator import ImageAnimator, ArrayAnimatorWCS, LineAnimator
-from astropy.wcs.wcsapi import SlicedLowLevelWCS
+import matplotlib.pyplot as plt
+from sunpy.visualization.animator import ArrayAnimatorWCS
 
-from ndcube import utils
-from ndcube.utils.cube import _get_extra_coord_edges
 from . import plotting_utils as utils
 
 __all__ = ['NDCubePlotMixin']
@@ -59,7 +48,7 @@ class NDCubePlotMixin:
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
-            self, plot_axes, axes_coordinates, axes_units)
+            len(self.dimensions), self.wcs, plot_axes, axes_coordinates, axes_units)
 
         if naxis == 1:
             ax = self._plot_1D_cube(self.wcs, axes, axes_coordinates,
@@ -70,8 +59,8 @@ class NDCubePlotMixin:
                                     axes_units, data_unit, **kwargs)
         else:
             ax = self._animate_cube(self.wcs,
-                plot_axes=plot_axes, axes_coordinates=axes_coordinates,
-                axes_units=axes_units, **kwargs)
+                                    plot_axes=plot_axes, axes_coordinates=axes_coordinates,
+                                    axes_units=axes_units, **kwargs)
 
         return ax
 
@@ -87,12 +76,12 @@ class NDCubePlotMixin:
         """
 
         if axes is None:
-            axes = wcsaxes_compat.gca_wcs(wcs.low_level_wcs)
+            axes = plt.subplot(projection=wcs)
 
         if axes_coordinates is not None and axes_coordinates[0] != wcs.world_axis_physical_types[::-1][0]:
             raise NotImplementedError("We need to support extra_coords here")
 
-        default_ylabel = f"Data"
+        default_ylabel = "Data"
 
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
         yerror = self.uncertainty.array if (self.uncertainty is not None) else None
@@ -148,7 +137,7 @@ class NDCubePlotMixin:
             Default: ['x', 'y']
         """
         if axes is None:
-            axes = wcsaxes_compat.gca_wcs(wcs.low_level_wcs, slices=plot_axes)
+            axes = plt.subplot(projection=wcs, slices=plot_axes)
 
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
