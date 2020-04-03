@@ -21,8 +21,8 @@ permission-run: &permission-run
 apt-run: &apt-install
   name: Install apt packages
   command: |
-    apt update
-    apt install -y graphviz build-essential
+    sudo apt update
+    sudo apt install -y graphviz build-essential
 
 sudo-apt-run: &sudo-apt-install
   name: Install apt packages
@@ -33,7 +33,7 @@ sudo-apt-run: &sudo-apt-install
 tox-install: &tox-install
   name: Install Tox
   command: |
-    pip install tox
+    sudo pip install tox
 
 tox-conda-install: &tox-conda-install
   name: Install Tox-Conda

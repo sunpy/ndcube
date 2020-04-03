@@ -124,8 +124,7 @@ version of slicing/indexing by real world coordinates via the
 coordinates of the region of interest in each dimension.  The
 order of the coordinates must be the same as the order of the data
 axes.  A second iterable of `~astropy.units.Quantity` must also be
-provided which gives the widths of the region of interest in each data
-axis::
+provided which gives the widths of the region of interest in each data axis::
 
   >>> import astropy.units as u
   >>> my_cube_roi = my_cube.crop_by_coords([0.7*u.deg, 1.3e-5*u.deg, 1.04e-9*u.m],
@@ -330,11 +329,11 @@ different pixel coordinate of the same number of pixels, the lengths
 of each `~astropy.units.Quantity` must be the same.
 
 `~ndcube.NDCube.pixel_to_world` returns a similar list of Quantities
-to those that were input, except that they are now in real world
-coordinates::
+to those that were input, except that they are now in real world coordinates::
 
-  >>> real_world_coords
-  [<Quantity [1.40006967, 2.6002542 ] deg>, <Quantity [1.49986193, 2.99724799] deg>, <Quantity [1.10e-09, 1.16e-09] m>]
+  >>> real_world_coords # doctest: +SKIP
+  [<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
+        [(5040.25079745,  5399.5029549), (9360.9151148 , 10790.092746 )]>, <Quantity [1.10e-09, 1.16e-09] m>]
 
 The exact units used are defined within the `~ndcube.NDCube`
 instance's `~ndcube.utils.wcs.WCS` object.  Once again, the coordinates
@@ -348,10 +347,11 @@ world coordinates compatible with those defined in the
 `~ndcube.NDCube` instance's `~ndcube.utils.wcs.WCS` object.  The output
 is a list of `~astropy.units.Quantity` objects in pixel unit.::
 
+  >>> from astropy.coordinates import SkyCoord
   >>> pixel_coords = my_cube.world_to_pixel(
-  ... 1.400069678 * u.deg, 1.49986193 * u.deg, 1.10000000e-09 * u.m)
+  ... SkyCoord([(u.Quantity(1.40006967, unit="deg"), u.Quantity(1.49986193, unit="deg"))], frame="helioprojective"), u.Quantity(1.10000000e-09,  unit="m"))
   >>> pixel_coords
-  [<Quantity 2.00000003 pix>, <Quantity 3. pix>, <Quantity 4. pix>]
+  [<Quantity [2.00000001] pix>, <Quantity [3.] pix>, <Quantity [4.] pix>]
 
 Note that both `~ndcube.NDCube.pixel_to_pixel` and
 `~ndcube.NDCube.world_to_pixel` can handle non-integer pixels.
@@ -400,20 +400,29 @@ latitude axes lengths.  For example::
   <Quantity [3., 4., 5.] pix>
   >>> longitude.shape
   (3, 4)
-  >>> longitude
-  <Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
-             [1.        , 1.        , 1.        , 1.        ],
-             [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>
+  >>> longitude # doctest: +SKIP
+  <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
+        [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
+          (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
+         [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
+          (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
+         [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
+          (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)]]>
 
 It is also possible to request more than one axis's world coordinates
 by setting ``axes`` to an iterable of data axis number and/or axis
 type strings.::
 
-  >>> my_cube.axis_world_coords(2, 'lon')
-  (<Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,
-   <Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
-              [1.        , 1.        , 1.        , 1.        ],
-              [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>)
+  >>> my_cube.axis_world_coords(2, 'lon') # doctest: +SKIP
+  (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
+        [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
+          (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
+         [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
+          (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
+         [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
+          (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)]]>,
+    <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>)
+
 
 Notice that the axes' coordinates have been returned in the same order
 in which they were requested.
@@ -422,37 +431,38 @@ Finally, if the user wants the world
 coordinates for all the axes, ``axes`` can be set to ``None``, which
 is in fact the default.::
 
-  >>> my_cube.axis_world_coords()
-  (<Quantity [[0.60002173, 0.59999127, 0.5999608 , 0.59993033],
-            [1.        , 1.        , 1.        , 1.        ],
-            [1.39997827, 1.40000873, 1.4000392 , 1.40006967]] deg>,
-   <Quantity [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01,
-               1.49986193e+00],
-            [1.26918126e-05, 5.00000000e-01, 9.99987308e-01,
-             1.49989848e+00],
-            [1.26915033e-05, 4.99987815e-01, 9.99962939e-01,
-             1.49986193e+00]] deg>,
-   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>)
+  >>> my_cube.axis_world_coords() # doctest: +SKIP
+  (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
+        [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
+          (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
+         [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
+          (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
+         [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
+          (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)]]>,
+    <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>)
+
 
 By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the
 center of each pixel. However, the pixel edges can be obtained by setting
 the ``edges`` kwarg to True.
 
 For example,
-  >>> my_cube.axis_world_coords(edges=True)
-  (<Quantity [[0.40006761, 0.40002193, 0.39997624, 0.39993054, 0.39988484],
-            [0.80001604, 0.80000081, 0.79998558, 0.79997035, 0.79995511],
-            [1.19998396, 1.19999919, 1.20001442, 1.20002965, 1.20004489],
-            [1.59993239, 1.59997807, 1.60002376, 1.60006946, 1.60011516]] deg>,
-   <Quantity [[-0.24994347,  0.24998788,  0.74995729,  1.24988864,
-              1.74970582],
-            [-0.24995565,  0.25000006,  0.74999384,  1.24994955,
-              1.74979108],
-            [-0.24995565,  0.25000006,  0.74999384,  1.24994955,
-              1.74979108],
-            [-0.24994347,  0.24998788,  0.74995729,  1.24988864,
-              1.74970582]] deg>,
-   <Quantity [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>)
+  >>> my_cube.axis_world_coords(edges=True) # doctest: +SKIP
+  (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
+        [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),
+          (1439.91446531, 2699.84625127), (1439.74995445, 4499.59909505),
+          (1439.58541853, 6298.94094507)],
+         [(2880.05774973, -899.84032206), (2880.00292413,  900.00022848),
+          (2879.94809018, 2699.97783871), (2879.89324788, 4499.81838925),
+          (2879.83839723, 6299.24788597)],
+         [(4319.94225027, -899.84032206), (4319.99707587,  900.00022848),
+          (4320.05190982, 2699.97783871), (4320.10675212, 4499.81838925),
+          (4320.16160277, 6299.24788597)],
+         [(5759.75658812, -899.79647591), (5759.92104888,  899.95636786),
+          (5760.08553469, 2699.84625127), (5760.25004555, 4499.59909505),
+          (5760.41458147, 6298.94094507)]]>,
+    <Quantity [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>)
+
 
 As stated previously, `~ndcube.NDCube` is only written
 to handle single arrays described by single WCS instances.  For cases

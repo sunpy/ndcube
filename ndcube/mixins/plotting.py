@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
-from astropy.visualization.wcsaxes import WCSAxes
+from astropy.coordinates import SkyCoord
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 try:
     from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
@@ -133,7 +133,8 @@ class NDCubePlotMixin:
         # Define default x axis label.
         default_xlabel = f"{xname} [{unit_x_axis}]"
         # Combine data and uncertainty with mask.
-        xdata = np.ma.masked_array(xdata, self.mask)
+        if self.mask is not None:
+            xdata = np.ma.masked_array(xdata, self.mask)
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
         if self.unit is None:
             if data_unit is not None:
@@ -160,10 +161,13 @@ class NDCubePlotMixin:
                 else:
                     yerror = (self.uncertainty.array * self.unit).to(data_unit).value
         # Combine data and uncertainty with mask.
-        ydata = np.ma.masked_array(ydata, self.mask)
+        if self.mask is not None:
+            ydata = np.ma.masked_array(ydata, self.mask)
         if yerror is not None:
-            yerror = np.ma.masked_array(yerror, self.mask)
+            if self.mask is not None:
+                yerror = np.ma.masked_array(yerror, self.mask)
         # Create plot
+        # print(f'{xdata, ydata, yerror,data_unit, default_xlabel, kwargs}')
         fig, ax = sequence_plotting._make_1D_sequence_plot(xdata, ydata, yerror,
                                                            data_unit, default_xlabel, kwargs)
         return ax
@@ -203,7 +207,8 @@ class NDCubePlotMixin:
             else:
                 data = (self.data * self.unit).to(data_unit).value
         # Combine data with mask
-        data = np.ma.masked_array(data, self.mask)
+        if self.mask is not None:
+            data = np.ma.masked_array(data, self.mask)
         try:
             axes_coord_check = axes_coordinates == [None, None]
         except Exception:
@@ -211,7 +216,7 @@ class NDCubePlotMixin:
         if axes_coord_check and (isinstance(axes, WCSAxes) or axes is None):
             if axes is None:
                 # Build slice list for WCS for initializing WCSAxes object.
-                if self.wcs.naxis != 2:
+                if self.wcs.pixel_n_dim != 2:
                     slice_list = []
                     index = 0
                     for bool_ in self.missing_axes:
@@ -225,25 +230,24 @@ class NDCubePlotMixin:
                     axes = wcsaxes_compat.gca_wcs(self.wcs, slices=tuple(slice_list))
                 else:
                     axes = wcsaxes_compat.gca_wcs(self.wcs)
+                # Set axis labels
+
+            x_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
+                plot_axis_indices[0], utils.wcs._pixel_keep(self.wcs),
+                self.wcs.pixel_n_dim)
+            axes.coords[x_wcs_axis].set_axislabel("{} [{}]".format(
+                self.world_axis_physical_types[plot_axis_indices[0]],
+                self.wcs.world_axis_units[x_wcs_axis]))
+
+            y_wcs_axis = utils.cube.data_axis_to_wcs_ape14(
+                plot_axis_indices[1], utils.wcs._pixel_keep(self.wcs),
+                self.wcs.pixel_n_dim)
+            axes.coords[y_wcs_axis].set_axislabel("{} [{}]".format(
+                self.world_axis_physical_types[plot_axis_indices[1]],
+                self.wcs.world_axis_units[y_wcs_axis]))
 
             # Plot data
             axes.imshow(data, **kwargs)
-
-            # Set axis labels
-            x_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[0],
-                                                          self.missing_axes)
-
-            axes.coords[x_wcs_axis].set_axislabel("{} [{}]".format(
-                self.world_axis_physical_types[plot_axis_indices[0]],
-                self.wcs.wcs.cunit[x_wcs_axis]))
-
-            y_wcs_axis = utils.cube.data_axis_to_wcs_axis(plot_axis_indices[1],
-                                                          self.missing_axes)
-
-            axes.coords[y_wcs_axis].set_axislabel("{} [{}]".format(
-                self.world_axis_physical_types[plot_axis_indices[1]],
-                self.wcs.wcs.cunit[y_wcs_axis]))
-
         else:
             # Else manually set axes x and y values based on user's input for axes_coordinates.
             new_axes_coordinates, new_axis_units, default_labels = \
@@ -326,7 +330,8 @@ class NDCubePlotMixin:
         else:
             data = (self.data * self.unit).to(data_unit).value
         # Combine data values with mask.
-        data = np.ma.masked_array(data, self.mask)
+        if self.mask is not None:
+            data = np.ma.masked_array(data, self.mask)
         # If axes_coordinates not provided generate an ImageAnimatorWCS plot
         # using NDCube's wcs object.
         new_axes_coordinates, new_axes_units, default_labels = \
@@ -334,21 +339,6 @@ class NDCubePlotMixin:
 
         if (axes_coordinates[plot_axis_indices[0]] is None and
                 axes_coordinates[plot_axis_indices[1]] is None):
-
-            # If there are missing axes in WCS object, add corresponding dummy axes to data.
-            if data.ndim < self.wcs.naxis:
-                new_shape = list(data.shape)
-                for i in np.arange(self.wcs.naxis)[self.missing_axes[::-1]]:
-                    new_shape.insert(i, 1)
-                    # Also insert dummy coordinates and units.
-                    new_axes_coordinates.insert(i, None)
-                    new_axes_units.insert(i, None)
-                    # Iterate plot_axis_indices if neccessary
-                    for j, pai in enumerate(plot_axis_indices):
-                        if pai >= i:
-                            plot_axis_indices[j] = plot_axis_indices[j] + 1
-                # Reshape data
-                data = data.reshape(new_shape)
             # Generate plot
             ax = ImageAnimatorWCS(data, wcs=self.wcs, image_axes=plot_axis_indices,
                                   unit_x_axis=new_axes_units[plot_axis_indices[0]],
@@ -407,7 +397,7 @@ class NDCubePlotMixin:
         if len(xdata.shape) > 1:
             # Since LineAnimator currently only accepts 1-D arrays for the x-axis, collapse xdata
             # to single dimension by taking mean along non-plotting axes.
-            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index, self.missing_axes)
+            index = utils.wcs.get_dependent_data_axes(self.wcs, plot_axis_index)
             reduce_axis = np.where(index == np.array(plot_axis_index))[0]
 
             index = np.delete(index, reduce_axis)
@@ -427,7 +417,8 @@ class NDCubePlotMixin:
             else:
                 data = (self.data * self.unit).to(data_unit).value
         # Combine data with mask
-        # data = np.ma.masked_array(data, self.mask)
+        if self.mask is not None:
+            data = np.ma.masked_array(data, self.mask)
         # Set default y label
         default_ylabel = f"Data [{unit_x_axis}]"
         # Initiate line animator object.
@@ -444,15 +435,20 @@ class NDCubePlotMixin:
         for i, axis_coordinate in enumerate(axes_coordinates):
             # If axis coordinate is None, derive axis values from WCS.
             if axis_coordinate is None:
-
                 # If the new_axis_coordinate is not independent, i.e. dimension is >2D
                 # and not equal to dimension of data, then the new_axis_coordinate must
                 # be reduced to a 1D ndarray by taking the mean along all non-plotting axes.
                 new_axis_coordinate = self.axis_world_coords(i, edges=edges)
+                idx = utils.wcs.get_dependent_data_axes(self.wcs, i)[0]
+
+                # If the new_axis_coordinate is a SkyCoord, get the array from the SkyCoord object
+                if isinstance(new_axis_coordinate, SkyCoord):
+                    new_axis_coordinate = utils.cube.array_from_skycoord(new_axis_coordinate, i - idx)
+
                 axis_label_text = self.world_axis_physical_types[i]
                 # If the shape of the data is not 1, or all the axes are not dependent
                 if new_axis_coordinate.ndim != 1 and new_axis_coordinate.ndim != len(data_shape):
-                    index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
+                    index = utils.wcs.get_dependent_data_axes(self.wcs, i)
                     reduce_axis = np.where(index == np.array([i]))[0]
 
                     index = np.delete(index, reduce_axis)

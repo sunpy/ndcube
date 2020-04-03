@@ -1,6 +1,8 @@
 import copy
 
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
+from astropy.wcs.wcsapi import SlicedLowLevelWCS
+from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 from ndcube import utils
 
@@ -10,13 +12,6 @@ __all__ = ['NDCubeSlicingMixin']
 class NDCubeSlicingMixin(NDSlicingMixin):
     # Inherit docstring from parent class
     __doc__ = NDSlicingMixin.__doc__
-
-    def _slice_wcs(self, item):
-        """
-        Override parent class method so we disable the wcs slicing on
-        `astropy.nddata.mixins.NDSlicingMixin`.
-        """
-        return None
 
     def __getitem__(self, item):
         """
@@ -31,31 +26,41 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         return super().__getitem__(item)
 
     def _slice(self, item):
-        """
-        Construct a set of keyword arguments to initialise a new (sliced)
+        """Construct a set of keyword arguments to initialise a new (sliced)
         instance of the class. This method is called in
         `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
 
-        This method extends the `~astropy.nddata.mixins.NDSlicingMixin`
-        method to add support for ``missing_axes`` and ``extra_coords``
-        and overwrites the astropy handling of wcs slicing.
+        This method extends the `~astropy.nddata.mixins.NDSlicingMixin` method
+        to add support for  ``extra_coords`` and overwrites the astropy
+        handling of wcs slicing.
+
+        Parameters
+        ----------
+        item : slice
+            The slice passed to ``__getitem__``. Note that the item parameter corresponds
+            to numpy ordering, keeping with the convention for NDCube.
+
+        Returns
+        -------
+        dict :
+            Containing all the attributes after slicing - ready to
+            use them to create ``self.__class__.__init__(**kwargs)`` in
+            ``__getitem__``.
         """
+
+        item = tuple(sanitize_slices(item, len(self.dimensions)))
         kwargs = super()._slice(item)
 
-        wcs, missing_axes = self._slice_wcs_missing_axes(item)
-        kwargs['wcs'] = wcs
-        kwargs['missing_axes'] = missing_axes
-        kwargs['extra_coords'] = self._slice_extra_coords(item, missing_axes)
+        # Store the original dimension of NDCube object before slicing
+        prev_dim = len(self.dimensions)
 
+        # Set the kwargs values
+        kwargs['extra_coords'] = self._slice_extra_coords(item, kwargs['wcs'].low_level_wcs._pixel_keep,
+                                                          prev_dim)
         return kwargs
 
-    def _slice_wcs_missing_axes(self, item):
-        # here missing axis is reversed as the item comes already in the reverse order
-        # of the input
-        return utils.wcs._wcs_slicer(
-            self.wcs, copy.deepcopy(self.missing_axes[::-1]), item)
+    def _slice_extra_coords(self, item, pixel_keep, naxes):
 
-    def _slice_extra_coords(self, item, missing_axes):
         if self.extra_coords is None:
             new_extra_coords_dict = None
         else:
@@ -76,6 +81,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
                         pass
                     except TypeError:
                         pass
-                new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
-                    new_extra_coords, missing_axes)
+            new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
+                new_extra_coords, pixel_keep, naxes)
         return new_extra_coords_dict

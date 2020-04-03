@@ -20,8 +20,7 @@ Initialization
 To initialize the most basic `~ndcube.NDCubeSequence` object, all you
 need is a list of `~ndcube.NDCube` instances.  So let us first define
 three 3-D NDCubes for slit-spectrograph data as we did in the NDCube
-section of this tutorial.  First we define the data arrays and WCS
-objects::
+section of this tutorial.  First we define the data arrays and WCS objects::
   
   >>> # Define data for cubes
   >>> import numpy as np
@@ -161,8 +160,8 @@ axis.
 
 Equivalent to `ndcube.NDCube.world_axis_physical_types`,
 `ndcube.NDCubeSequence.world_axis_physical_types` returns a tuple of
-the physical axis types.  The same `IVOA UCD1+ controlled words
-<http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>` are
+the physical axis types.  The same `IVOA UCD1+` controlled words
+<http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html> are
 used for the cube axes as is used in
 `ndcube.NDCube.world_axis_physical_types`.  The sequence axis is given
 the label ``'meta.obs.sequence'`` as it is the IVOA UCD1+ controlled
@@ -194,7 +193,7 @@ simple as indexing a single array::
   >>> regions_of_interest_in_sequence.dimensions
   (<Quantity 2. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
   >>> regions_of_interest_in_sequence.world_axis_physical_types
-  ('meta.obs.sequence', 'custom:pos.helioprojective.lat', 'em.wl')
+  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis
@@ -364,8 +363,7 @@ Rather than manually dividing the datacubes up and deriving the
 corresponding WCS object for each exposure, `~ndcube.NDCubeSequence`
 provides a useful method,
 `~ndcube.NDCubeSequence.explode_along_axis`. To call it, simply provide
-the number of the data cube axis along which you wish to break up the
-sub-cubes::
+the number of the data cube axis along which you wish to break up the sub-cubes::
 
   >>> exploded_sequence = my_sequence.explode_along_axis(0)
 

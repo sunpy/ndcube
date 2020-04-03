@@ -6,11 +6,16 @@ import textwrap
 import numpy as np
 import astropy.nddata
 import astropy.units as u
+from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
+from astropy.utils.misc import InheritDocstrings
+from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper, BaseHighLevelWCS
+import sunpy.coordinates
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping
-from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
+from ndcube.utils.wcs import wcs_ivoa_mapping, _pixel_keep
+from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, unique_data_axis
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
@@ -133,8 +138,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     data: `numpy.ndarray`
         The array holding the actual data in this object.
 
-    wcs: `ndcube.wcs.wcs.WCS`
-        The WCS object containing the axes' information
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+        The WCS object containing the axes' information, optional only if
+        ``data`` is an `astropy.nddata.NDData` object.
 
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
@@ -168,46 +174,25 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Note however that it is not always possible to save the input as reference.
         Default is False.
 
-    missing_axes : `list` of `bool`
-        Designates which axes in wcs object do not have a corresponding axis is the data.
-        True means axis is "missing", False means axis corresponds to a data axis.
-        Ordering corresponds to the axis ordering in the WCS object, i.e. reverse of data.
-        For example, say the data's y-axis corresponds to latitude and x-axis corresponds
-        to wavelength.  In order the convert the y-axis to latitude the WCS must contain
-        a "missing" longitude axis as longitude and latitude are not separable.
     """
 
-    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
-        if missing_axes is None:
-            # Ensure old missing_axis name not being used. If so, raise deprecation warning.
-            missing_axes = kwargs.get("missing_axis", None)
-            if missing_axes is None:
-                missing_axes = [False] * wcs.naxis
-            else:
-                warnings.warn(
-                    "missing_axis has been deprecated by missing_axes and "
-                    "will no longer be supported after ndcube 2.0.",
-                    DeprecationWarning)
-        self.missing_axes = missing_axes
-        if data.ndim is not wcs.naxis:
-            count = 0
-            for bool_ in self.missing_axes:
-                if not bool_:
-                    count += 1
-            if count is not data.ndim:
-                raise ValueError("The number of data dimensions and number of "
-                                 "wcs non-missing axes do not match.")
+    def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
+                 unit=None, extra_coords=None, copy=False, **kwargs):
+
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
+                         meta=meta, unit=unit, copy=copy, **kwargs)
+
+        # Enforce that the WCS object is a low_level_wcs object, and not None.
+        if self.wcs is None:
+            raise TypeError("The WCS argument can not be None.")
+
         # Format extra coords.
         if extra_coords:
             self._extra_coords_wcs_axis = \
                 utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                    extra_coords, self.missing_axes, data.shape)
+                    extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
-        # Initialize NDCube.
-        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
-                         meta=meta, unit=unit, copy=copy, **kwargs)
 
     @property
     def dimensions(self):
@@ -231,92 +216,33 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         strings and string components, see
         http://www.ivoa.net/documents/latest/UCDlist.html.
         """
-        ctype = list(self.wcs.wcs.ctype)
-        axes_ctype = []
-        for i, axis in enumerate(self.missing_axes):
-            if not axis:
-                # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
-                # Ensure CTYPE is capitalized.
-                keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
-                # Assuming CTYPE is supported by wcs_ivoa_mapping, use its corresponding axis name.
-                if len(keys) == 1:
-                    axis_name = wcs_ivoa_mapping.get(keys[0])
-                # If CTYPE not supported, raise a warning and set the axis name to CTYPE.
-                elif len(keys) == 0:
-                    warnings.warn("CTYPE not recognized by ndcube. "
-                                  "Please raise an issue at "
-                                  "https://github.com/sunpy/ndcube/issues citing the "
-                                  "unsupported CTYPE as we'll include it: "
-                                  "CTYPE = {}".format(ctype[i]))
-                    axis_name = "custom:{}".format(ctype[i])
-                # If there are multiple valid keys, raise an error.
-                else:
-                    raise ValueError("Non-unique CTYPE key.  Please raise an issue at "
-                                     "https://github.com/sunpy/ndcube/issues citing the "
-                                     "following  CTYPE and non-unique keys: "
-                                     "CTYPE = {}; keys = {}".format(ctype[i], keys))
-                axes_ctype.append(axis_name)
-        return tuple(axes_ctype[::-1])
 
-    @property
-    def missing_axis(self):
-        warnings.warn(
-            ("The missing_axis list has been deprecated by missing_axes"
-             " and will no longer be supported after ndcube 2.0."),
-            DeprecationWarning)
-        return self.missing_axes
+        # Use the context manager to access the physical types,
+        # which are not present in the APE14.
+        # APE14 physical types are covered by default.
+        with custom_ctype_to_ucd_mapping(wcs_ivoa_mapping):
+            ctype = self.wcs.low_level_wcs.world_axis_physical_types
+
+        return tuple(ctype[::-1])
 
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        origin = 0
-        list_arg = []
-        indexed_not_as_one = []
-        result = []
-        quantity_index = 0
-        for i in range(len(self.missing_axes)):
-            wcs_index = self.wcs.naxis - 1 - i
-            # the cases where the wcs dimension was made 1 and the missing_axes is True
-            if self.missing_axes[wcs_index]:
-                list_arg.append(self.wcs.wcs.crpix[wcs_index] - 1 + origin)
-            else:
-                # else it is not the case where the dimension of wcs is 1.
-                list_arg.append(quantity_axis_list[quantity_index].to(u.pix).value)
-                quantity_index += 1
-                # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(wcs_index)
-        list_arguments = list_arg[::-1]
-        pixel_to_world = self.wcs.all_pix2world(*list_arguments, origin)
-        # collecting all the needed answer in this list.
-        for index in indexed_not_as_one[::-1]:
-            result.append(u.Quantity(pixel_to_world[index], unit=self.wcs.wcs.cunit[index]))
-        return result[::-1]
+        quantity_axis_list = quantity_axis_list[::-1]
+        pixel_to_world = self.wcs.pixel_to_world(*quantity_axis_list)
+        if isinstance(pixel_to_world, (tuple, list)):
+            return pixel_to_world[::-1]
+
+        return pixel_to_world
 
     def world_to_pixel(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
-        origin = 0
-        list_arg = []
-        indexed_not_as_one = []
-        result = []
-        quantity_index = 0
-        for i in range(len(self.missing_axes)):
-            wcs_index = self.wcs.naxis - 1 - i
-            # the cases where the wcs dimension was made 1 and the missing_axes is True
-            if self.missing_axes[wcs_index]:
-                list_arg.append(self.wcs.wcs.crval[wcs_index] + 1 - origin)
-            else:
-                # else it is not the case where the dimension of wcs is 1.
-                list_arg.append(
-                    quantity_axis_list[quantity_index].to(self.wcs.wcs.cunit[wcs_index]).value)
-                quantity_index += 1
-                # appending all the indexes to be returned in the answer
-                indexed_not_as_one.append(wcs_index)
-        list_arguments = list_arg[::-1]
-        world_to_pixel = self.wcs.all_world2pix(*list_arguments, origin)
-        # collecting all the needed answer in this list.
-        for index in indexed_not_as_one[::-1]:
-            result.append(u.Quantity(world_to_pixel[index], unit=u.pix))
+        quantity_axis_list = quantity_axis_list[::-1]
+        world_to_pixel = self.wcs.world_to_pixel(*quantity_axis_list)
+
+        # Adding the units of the output
+        result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.wcs.low_level_wcs.pixel_n_dim)]
         return result[::-1]
 
     def axis_world_coords(self, *axes, edges=False):
@@ -376,16 +302,20 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if repeats:
             raise ValueError("The following axes were specified more than once: {}".format(
                 ' '.join(map(str, repeats))))
-        n_axes = len(int_axes)
-        axes_coords = [None] * n_axes
-        axes_translated = np.zeros_like(int_axes, dtype=bool)
+
+        new_int_axes = np.arange(len(self.dimensions))
+        axes_coords = np.array([None] * len(unique_data_axis(self.wcs, new_int_axes)[1]))
+        axes_translated = np.array(
+            [False if entry in int_axes else True for entry in range(len(self.dimensions))])
+
         # Determine which axes are dependent on others.
         # Ensure the axes are in numerical order.
-        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis, self.missing_axes))
-                          for axis in int_axes]
+        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis))
+                          for axis in new_int_axes]
         n_dependent_axes = [len(da) for da in dependent_axes]
+
         # Iterate through each axis and perform WCS translation.
-        for i, axis in enumerate(int_axes):
+        for i, axis in enumerate(new_int_axes):
             # If axis has already been translated, do not do so again.
             if not axes_translated[i]:
                 if n_dependent_axes[i] == 1:
@@ -420,10 +350,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     if dependent_axis in int_axes:
                         # Due to error check above we know dependent
                         # axis can appear in int_axes at most once.
-                        j = np.where(int_axes == dependent_axis)[0][0]
-                        axes_coords[j] = dependent_axes_coords[dependent_axis]
+                        j = unique_data_axis(self.wcs, dependent_axis)[0]
+                        # Since the dependent_axes_coords contains reduced number of results, adjust the index
+                        axes_coords[j] = dependent_axes_coords[j]
                         # Remove axis from list that have now been translated.
-                        axes_translated[j] = True
+                        axes_translated[dependent_axes[i]] = True
+
+        # Remove the None values from axes_coords
+        axes_coords = axes_coords[axes_coords != np.array(None)]
+
         if len(axes_coords) == 1:
             return axes_coords[0]
         else:
@@ -451,15 +386,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             result = {}
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
-                    "axis": utils.cube.wcs_axis_to_data_axis(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],
-                        self.missing_axes),
+                    "axis": utils.cube.wcs_axis_to_data_ape14(
+                        self._extra_coords_wcs_axis[key]["wcs axis"], _pixel_keep(self.wcs),
+                        self.wcs.low_level_wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         # The docstring is defined in NDDataBase
-
         n_dim = self.data.ndim
         # Raising a value error if the arguments have not the same dimensions.
         # Calculation of upper_corner with the inputing interval_widths
@@ -479,8 +413,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
         # Raising a value error if the arguments have not the same dimensions.
         if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
-            raise ValueError("lower_corner and upper_corner must have same"
+            raise ValueError("lower_corner and upper_corner must have the same "
                              "number of elements as number of data dimensions.")
+
+        lower_corner = list(lower_corner)
+        upper_corner = list(upper_corner)
+
         if units:
             # Raising a value error if units have not the data dimensions.
             if len(units) != n_dim:
@@ -502,12 +440,25 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
               for i in range(self.data.ndim)])
         all_world_corners = [all_world_corners_grid[i].flatten() * lower_corner[i].unit
                              for i in range(n_dim)]
+
+        # Convert them back to units of world_axis_units
+        world_axis_units = self.wcs.low_level_wcs.world_axis_units[::-1]
+        all_world_corners = [entries.to(world_axis_units[i]) for i, entries in enumerate(all_world_corners)]
+
+        # Here we are using `wcs.world_to_pixel_values` instead of NDCube's world_to_pixel as the latter
+        # requires high_level astropy objects to operate
+        # Since it is a low_level API, so input parameters need to be adjusted in wcs ordering.
+
         # Convert to pixel coordinates
-        all_pix_corners = self.world_to_pixel(*all_world_corners)
+        all_world_corners = all_world_corners[::-1]
+        all_pix_corners = self.wcs.low_level_wcs.world_to_pixel_values(*all_world_corners)
+        all_pix_corners = all_pix_corners[::-1]
+        all_pix_corners = tuple(u.Quantity(a, u.pix).value for a in all_pix_corners)
+
         # Derive slicing item with which to slice NDCube.
         # Be sure to round down min pixel and round up + 1 the max pixel.
-        item = tuple([slice(int(np.clip(axis_pixels.value.min(), 0, None)),
-                            int(np.ceil(axis_pixels.value.max())) + 1)
+        item = tuple([slice(int(np.clip(axis_pixels.min(), 0, None)),
+                            int(np.ceil(axis_pixels.max())) + 1)
                       for axis_pixels in all_pix_corners])
         return self[item]
 
@@ -646,7 +597,7 @@ class NDCubeOrdered(NDCube):
     """
 
     def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, missing_axes=None, **kwargs):
+                 unit=None, extra_coords=None, copy=False, **kwargs):
         axtypes = list(wcs.wcs.ctype)[::-1]
         array_order = utils.cube.select_order(axtypes)
         result_data = data.transpose(array_order)
@@ -670,4 +621,4 @@ class NDCubeOrdered(NDCube):
         super().__init__(result_data, result_wcs, uncertainty=result_uncertainty,
                          mask=result_mask, meta=meta, unit=unit,
                          extra_coords=reordered_extra_coords,
-                         copy=copy, missing_axes=missing_axes, **kwargs)
+                         copy=copy, **kwargs)

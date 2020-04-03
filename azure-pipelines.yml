@@ -35,7 +35,7 @@ jobs:
     submodules: false
     coverage: codecov
     envs:
-      - linux: pycodestyle
+      #- linux: pycodestyle
 
       - macos: py37-offline
         name: py37_offline

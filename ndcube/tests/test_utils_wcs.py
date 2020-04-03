@@ -2,17 +2,11 @@ import pytest
 import unittest
 
 import numpy as np
-import astropy.wcs
+from astropy.wcs import WCS
 
 from ndcube import utils
 from ndcube.tests import helpers
 
-
-ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
-      'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
-      'NAXIS2': 3,
-      'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
-wt = utils.wcs.WCS(header=ht, naxis=3)
 
 ht_with_celestial = {
     'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 1, 'CRPIX4': 0, 'CRVAL4': 0, 'NAXIS4': 1,
@@ -27,25 +21,14 @@ hm = {'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'C
       'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5,
       'NAXIS2': 3,
       'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
-wm = utils.wcs.WCS(header=hm, naxis=3)
+wm = WCS(header=hm)
 
 hm_reindexed_102 = {
     'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 10,
     'NAXIS2': 4,
     'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 3,
     'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 2}
-wm_reindexed_102 = utils.wcs.WCS(header=hm_reindexed_102, naxis=3)
-
-
-@pytest.mark.parametrize("test_input,expected", [(ht, True), (hm, False)])
-def test_wcs_needs_augmenting(test_input, expected):
-    assert utils.wcs.WCS._needs_augmenting(test_input) is expected
-
-
-@pytest.mark.parametrize("test_input,expected", [((ht, 3), ht_with_celestial)])
-def test_wcs_augment(test_input, expected):
-    unit_tester = unittest.TestCase()
-    unit_tester.assertEqual(utils.wcs.WCS._augment(*test_input), expected)
+wm_reindexed_102 = WCS(header=hm_reindexed_102)
 
 
 @pytest.mark.parametrize(
@@ -86,10 +69,10 @@ def test_reindex_wcs_errors(test_input):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((wm, 0, [False, False, False]), (0, 1)),
-    ((wm, 1, [False, False, False]), (0, 1)),
-    ((wm, 2, [False, False, False]), (2,)),
-    ((wm, 1, [False, False, True]), (1,))
+    ((wm, 0), (0, 1)),
+    ((wm, 1), (0, 1)),
+    ((wm, 2), (2,)),
+    ((wm, 1), (0, 1))
 ])
 def test_get_dependent_data_axes(test_input, expected):
     output = utils.wcs.get_dependent_data_axes(*test_input)
@@ -104,14 +87,3 @@ def test_get_dependent_data_axes(test_input, expected):
 def test_get_dependent_wcs_axes(test_input, expected):
     output = utils.wcs.get_dependent_wcs_axes(*test_input)
     assert output == expected
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    (wm, np.array([[True, False, False], [False, True, True], [False, True, True]])),
-    (wt, np.array([[True, False, False, False], [False, True, False, False],
-                   [False, False, True, True], [False, False, True, True]])),
-    (wm_reindexed_102, np.array([[True, False, True], [False, True, False],
-                                 [True, False, True]]))
-])
-def test_axis_correlation_matrix(test_input, expected):
-    assert (utils.wcs.axis_correlation_matrix(test_input) == expected).all()

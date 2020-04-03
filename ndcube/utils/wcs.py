@@ -16,8 +16,7 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 from ndcube.utils import cube as utils_cube
 
 __all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_data_axes',
-           'get_dependent_data_axes', 'axis_correlation_matrix',
-           'append_sequence_axis_to_wcs']
+           'get_dependent_wcs_axes', 'append_sequence_axis_to_wcs']
 
 
 class TwoWayDict(UserDict):
@@ -120,110 +119,6 @@ class WCS(wcs.WCS):
         return newheader
 
 
-def _wcs_slicer(wcs, missing_axes, item):
-    """
-    Returns the new sliced wcs and changed missing axis.
-
-    Paramters
-    ---------
-    wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        WCS object to be sliced.
-
-    missing_axes: `list` of `bool`
-        Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
-
-    item: `int`, `slice` or `tuple` of `int` and/or `slice`.
-        Slicing item.  Note that unlike in other places in this package, the item has the
-        same axis ordering as the WCS object, i.e. the reverse of the data order.
-
-    Returns
-    -------
-    new_wcs: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        Sliced WCS object.
-
-    missing_axes: `list` of `bool`
-        Altered missing axis list.  Note the ordering has been reversed to reflect the data
-        (numpy) axis ordering convention.
-    """
-    # normal slice.
-    item_checked = []
-    if isinstance(item, slice):
-        index = 0
-        # creating a new tuple of slice where if the axis is dead i.e missing
-        # then slice(0,1) added else slice(None, None, None) is appended and
-        # if the check of missing_axes gives that this is the index where it
-        # needs to be appended then it gets appended there.
-        for _bool in missing_axes:
-            if not _bool:
-                if index != 1:
-                    item_checked.append(item)
-                    index += 1
-                else:
-                    item_checked.append(slice(None, None, None))
-            else:
-                item_checked.append(slice(0, 1))
-        new_wcs = wcs.slice(item_checked)
-    # item is int then slicing axis.
-    elif isinstance(item, numbers.Integral):
-        # using index to keep track of whether the int(which is converted to
-        # slice(int_value, int_value+1)) is already added or not. It checks
-        # the dead axis i.e missing_axes to check if it is dead than slice(0,1)
-        # is appended in it. if the index value has reached 1 then the
-        # slice(None, None, None) is added.
-        index = 0
-        for i, _bool in enumerate(missing_axes):
-            if not _bool:
-                if index != 1:
-                    item_checked.append(slice(item, item + 1))
-                    missing_axes[i] = True
-                    index += 1
-                else:
-                    item_checked.append(slice(None, None, None))
-            else:
-                item_checked.append(slice(0, 1))
-        new_wcs = wcs.slice(item_checked)
-    # if it a tuple like [0:2, 0:3, 2] or [0:2, 1:3]
-    elif isinstance(item, tuple):
-        # Ellipsis slicing is currently not supported.
-        # Raise an error if user tries to slice by ellipsis.
-        if Ellipsis in item:
-            raise NotImplementedError("Slicing FITS-WCS by ellipsis not supported.")
-        # this is used to not exceed the range of the item tuple
-        # if the check of the missing_axes which is False if not dead
-        # is a success than the the item of the tuple is added one by
-        # one and if the end of tuple is reached than slice(None, None, None)
-        # is appended.
-        index = 0
-        for _bool in missing_axes:
-            if not _bool:
-                if index is not len(item):
-                    item_checked.append(item[index])
-                    index += 1
-                else:
-                    item_checked.append(slice(None, None, None))
-            else:
-                item_checked.append(slice(0, 1))
-        # if all are slice in the item tuple
-        if _all_slice(item_checked):
-            new_wcs = wcs.slice(item_checked)
-        # if all are not slices some of them are int then
-        else:
-            # this will make all the item in item_checked as slice.
-            item_ = _slice_list(item_checked)
-            new_wcs = wcs.slice(item_)
-            for i, it in enumerate(item_checked):
-                # If an axis is sliced out, i.e. it's item is an int,
-                # set missing axis to True.
-                # numbers.Integral captures all int types, int, np.int64, etc.
-                if isinstance(it, numbers.Integral):
-                    missing_axes[i] = True
-    else:
-        raise NotImplementedError("Slicing FITS-WCS by {} not supported.".format(type(item)))
-    # returning the reverse list of missing axis as in the item here was reverse of
-    # what was inputed so we had a reverse missing_axes.
-    return new_wcs, missing_axes[::-1]
-
-
 def _all_slice(obj):
     """
     Returns True if all the elements in the object are slices else return
@@ -304,7 +199,7 @@ def reindex_wcs(wcs, inds):
     return outwcs
 
 
-def get_dependent_data_axes(wcs_object, data_axis, missing_axes):
+def get_dependent_data_axes(wcs_object, data_axis):
     """
     Given a data axis index, return indices of dependent data axes.
 
@@ -321,26 +216,19 @@ def get_dependent_data_axes(wcs_object, data_axis, missing_axes):
     data_axis: `int`
         Index of axis (in numpy ordering convention) for which dependent axes are desired.
 
-    missing_axes: iterable of `bool`
-        Indicates which axes of the WCS are "missing", i.e. do not correspond to a data axis.
-
     Returns
     -------
     dependent_data_axes: `tuple` of `int`
         Sorted indices of axes dependent on input data_axis in numpy ordering convention.
     """
-    # In order to correctly account for "missing" axes in this process,
-    # we must determine what axes are dependent based on WCS axis indices.
     # Convert input data axis index to WCS axis index.
-    wcs_axis = utils_cube.data_axis_to_wcs_axis(data_axis, missing_axes)
-    # Determine dependent axes, including "missing" axes, using WCS ordering.
+    wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis, _pixel_keep(wcs_object), wcs_object.pixel_n_dim)
+    # Determine dependent axes, using WCS ordering.
     wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
-    # Remove "missing" axes from output.
-    non_missing_wcs_dependent_axes = wcs_dependent_axes[
-        np.invert(missing_axes)[wcs_dependent_axes]]
+
     # Convert dependent axes back to numpy/data ordering.
-    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_axis(i, missing_axes)
-                                         for i in non_missing_wcs_dependent_axes]))
+    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_ape14(
+        i, _pixel_keep(wcs_object), wcs_object.pixel_n_dim) for i in wcs_dependent_axes]))
     return dependent_data_axes
 
 
@@ -350,8 +238,6 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
 
     Both input and output axis indices are in the WCS ordering convention
     (reverse of numpy ordering convention). The returned axis indices include the input axis.
-    Returned axis indices DO include WCS axes that do not have a
-    corresponding data axis, i.e. "missing" axes.
 
     Parameters
     ----------
@@ -371,54 +257,12 @@ def get_dependent_wcs_axes(wcs_object, wcs_axis):
     # which pixel coordinates are linked to which other pixel coordinates.
     # So to do this we take a column from the matrix and find if there are
     # any entries in common with all other columns in the matrix.
-    matrix = axis_correlation_matrix(wcs_object)
+
+    # Using APE14 for generating the correlation matrix
+    matrix = wcs_object.axis_correlation_matrix
     world_dep = matrix[:, wcs_axis:wcs_axis + 1]
     dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
     return dependent_wcs_axes
-
-
-def axis_correlation_matrix(wcs_object):
-    """
-    Return True/False matrix indicating which WCS axes are dependent on others.
-
-    Parameters
-    ----------
-    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        The WCS object describing the axes.
-
-    Returns
-    -------
-    matrix: `numpy.ndarray` of `bool`
-        Square True/False matrix indicating which axes are dependent.
-        For example, whether WCS axis 0 is dependent on WCS axis 1 is given by matrix[0, 1].
-    """
-    n_world = len(wcs_object.wcs.ctype)
-    n_pixel = wcs_object.naxis
-
-    # If there are any distortions present, we assume that there may be
-    # correlations between all axes. Maybe if some distortions only apply
-    # to the image plane we can improve this
-    for distortion_attribute in ('sip', 'det2im1', 'det2im2'):
-        if getattr(wcs_object, distortion_attribute):
-            return np.ones((n_world, n_pixel), dtype=bool)
-
-    # Assuming linear world coordinates along each axis, the correlation
-    # matrix would be given by whether or not the PC matrix is zero
-    matrix = wcs_object.wcs.get_pc() != 0
-
-    # We now need to check specifically for celestial coordinates since
-    # these can assume correlations because of spherical distortions. For
-    # each celestial coordinate we copy over the pixel dependencies from
-    # the other celestial coordinates.
-    celestial = (wcs_object.wcs.axis_types // 1000) % 10 == 2
-    celestial_indices = np.nonzero(celestial)[0]
-    for world1 in celestial_indices:
-        for world2 in celestial_indices:
-            if world1 != world2:
-                matrix[world1] |= matrix[world2]
-                matrix[world2] |= matrix[world1]
-
-    return matrix
 
 
 def append_sequence_axis_to_wcs(wcs_object):
@@ -439,3 +283,20 @@ def append_sequence_axis_to_wcs(wcs_object):
                        "Coordinate value at reference point"))
     wcs_header["WCSAXES"] = dummy_number
     return WCS(wcs_header)
+
+
+def _pixel_keep(wcs_object):
+    """Returns the value of the _pixel_keep attribute if available
+    else returns the array of all pixel dimension present.
+
+    Parameters
+    ----------
+    wcs_object : `astropy.wcs.WCS` or alike object
+
+    Returns
+    -------
+    list or `np.ndarray` object
+    """
+    if hasattr(wcs_object, "_pixel_keep"):
+        return wcs_object._pixel_keep
+    return np.arange(wcs_object.pixel_n_dim)
