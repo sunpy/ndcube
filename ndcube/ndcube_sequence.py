@@ -256,28 +256,32 @@ class _IndexAsCubeSlicer:
         self.seq = seq
 
     def __getitem__(self, item):
+        self.item = item
         # return utils.sequence._index_sequence_as_cube(self.seq, item)
 
-        n_cube_dimensions = np.array([c.data.shape[self.seq._common_axis]
-                                      for c in self.seq.data])
-
-        n_non_common_cube_dims = n_cube_dimensions - 1
+        self.common_axis_cube_lengths = np.array([c.data.shape[self._common_axis]
+                                                  for c in self.seq.data])
+        self.n_cube_dimensions = np.array([c.data.shape for c in self.seq.data])
+        self.n_non_common_cube_dims = self.n_cube_dimensions - 1
 
         if isinstance(item, slice):
-            # If item is slice, turn into a tuple, filling in items for un-included axes with slice(None).
+            # If item is slice, turn into a tuple, filling in items for
+            # un-included axes with slice(None).
             # This ensures it is treated the same as tuple items.
-            item = tuple([item] + [slice(None)] * n_non_common_cube_dims)
-        if isinstance(item, number.Integral) or isinstance(item[0], numbers.Integral):
+            item = tuple([item] + [slice(None)] * self.n_non_common_cube_dims)
+
+        if isinstance(item, numbers.Integral) or isinstance(item[0], numbers.Integral):
             if isinstance(item[0], numbers.Integral):
                 item0 = item[0]
-                cube_item = list(item[1:]) + [slice(None)] * n_non_common_cube_dims
+                cube_item = list(item[1:]) + [slice(None)] * self.n_non_common_cube_dims
             else:
                 item0 = item
-                cube_item = [slice(None)] * n_non_common_cube_dims
+                cube_item = [slice(None)] * self.n_non_common_cube_dims
             # Convert cube-like index to sequence_index and common_axis_index
-            sequence_index, cube_index = self.convert_cube_like_index_to_sequence_and_cube_indices(item,
-                                                                                                   n_cube_dimensions)
-            cube_item.insert(common_axis, cube_index)
+            sequence_index, cube_index = \
+                self.convert_cube_like_index_to_sequence_and_cube_indices(item,
+                                                                          self.n_cube_dimensions)
+            cube_item.insert(self._common_axis, cube_index)
             cube_item = tuple(cube_item)
             return self.data[sequence_index][cube_item]
         else:
@@ -291,26 +295,38 @@ class _IndexAsCubeSlicer:
             # not an NDCubeSequence.
             sequence_items = self.convert_cube_like_tuple_item_to_sequence_items(item)
             result = copy.deepcopy(self)
-            result.data = [result.data[sequence_item.sequence_index][sequence_item.cube_item] for sequence_item in
-                           sequence_items]
+            result.data = [result.data[sequence_item.sequence_index][sequence_item.cube_item]
+                           for sequence_item in sequence_items]
 
-    def convert_cube_like_tuple_item_to_sequence_items(self, item, n_cube_dimensions):
+    def convert_cube_like_tuple_item_to_sequence_items(self, item):
+        """
+        Converts an input tuple item to NDCubeSequence.index_as_cube to a list of
+        SequenceSlice objects.
+
+        Parameters
+        ----------
+        item: `int`, `slice` or `tuple` of `int` and/or `slice`.
+        The item to get from the cube.  If tuple length must be <= number
+        of dimensions in single cube.
+
+        """
         # Fill in slice(None) items for any axes not explicitly accounted for in tuple item.
         item = list(item)
         len_input_item = len(item)
-        item = item + [slice(None)] * (n_cube_dimensions - len_input_item)
+        item = item + [slice(None)] * (self.n_cube_dimensions - len_input_item)
 
         # Define default item for slicing the cubes
         default_cube_item = item[1:]
-        default_cube_item.insert(common_axis, slice(None))
+        default_cube_item.insert(self._common_axis, slice(None))
 
         # Convert start and stop cube-like indices to sequence and cube indices.
         start_sequence_index, start_common_axis_index = \
             self.convert_cube_like_index_to_sequence_and_cube_indices(item[0].start)
-        stop_sequence_index, stop_common_axis_index = \
-            self.convert_cube_like_index_to_sequence_and_cube_indices(item[0].stop - 1)
+
         # Must get last included item here to avoid ticking over to new NDCube if not needed.
         # Therefore, subtract 1 here and add back on to common axis cube item after.
+        stop_sequence_index, stop_common_axis_index = \
+            self.convert_cube_like_index_to_sequence_and_cube_indices(item[0].stop - 1)
 
         # Must iterate the stop index by one because Python slices up to but not including stop index.
         stop_common_axis_index += 1
@@ -319,28 +335,38 @@ class _IndexAsCubeSlicer:
         n_cubes_after_first = stop_sequence_index - start_sequence_index
         # If only one cube included in slicing item, return iterable of single SequenceItem
         if n_cubes_after_first == 0:
-            sequence_items = SequenceItem(start_sequence_index,
-                                          slice(start_common_axis_index, stop_common_axis_index))
+            sequence_items = utils.sequence.SequenceItem(start_sequence_index,
+                                                         slice(start_common_axis_index, stop_common_axis_index))
         else:
             if n_cubes_after_first > 1:  # Condition > 1 to exclude final cube. We will add it separately.
-                sequence_items = SequenceItem(i, [tuple(blank_cube_item * n_cube_dimensions) for i in
-                                                  range(start_sequence_index + 1, stop_sequence_index)])
+                sequence_items = \
+                    utils.sequence.SequenceItem(i, [tuple(blank_cube_item * self.n_cube_dimensions)
+                                                    for i in range(start_sequence_index + 1, stop_sequence_index)])
             else:
                 sequence_items = []
             # Insert final cube if there is one after the first.
             if n_cubes_after_first > 0:
                 final_cube_item = copy.deepcopy(default_cube_item)
-                final_cube_item[common_axis] = slice(0, stop_common_axis_index)
-                sequence_items.append(SequenceItem(stop_sequence_index, final_cube_item))
+                final_cube_item[self._common_axis] = slice(0, stop_common_axis_index)
+                sequence_items.append(utils.sequence.SequenceItem(stop_sequence_index, final_cube_item))
             # Finally, add Sequence index for first cube.
             first_cube_item = copy.deepcopy(default_cube_item)
-            first_cube_item[common_axis] = slice(start_common_axis_index, None)
-            sequence_items.insert(SequenceItem(start_sequence_index, first_cube_item))
+            first_cube_item[self._common_axis] = slice(start_common_axis_index, None)
+            sequence_items.insert(utils.sequence.SequenceItem(start_sequence_index, first_cube_item))
 
         return sequence_items
 
-    def convert_cube_like_index_to_sequence_and_cube_indices(self, item, n_cube_dimensions):
+    def convert_cube_like_index_to_sequence_and_cube_indices(self, cube_like_index):
         """
-        TODO: Add content here
+        TODO: Add content here to state function
+
+        Parameters
+        ----------
+        cube_like_index: `int`
+            Cube-like index of NDCubeSequence
+
         """
-        return True
+        sequence = True  # Temporary placeholder
+        cube_indices = True  # Temporary placeholder
+
+        return sequence, cube_indices

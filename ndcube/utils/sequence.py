@@ -265,7 +265,7 @@ def _index_sequence_as_cube(cubesequence, item):
 
 def convert_cube_like_item_to_sequence_items(cube_like_item, common_axis, common_axis_cube_lengths):
     """
-    Converts an input item to NDCubeSequence.index_as_cube to a list od
+    Converts an input item to NDCubeSequence.index_as_cube to a list of
     SequenceSlice objects.
 
     Parameters
