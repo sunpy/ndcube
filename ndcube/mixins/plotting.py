@@ -42,39 +42,31 @@ class NDCubePlotMixin:
 
         data_unit: `astropy.unit.Unit`
             The data is changed to the unit given or the ``NDCube.unit`` if not
-            given, used for 1D plots.
+            given.
         """
+        low_level_wcs = self.wcs.low_level_wcs
         naxis = self.wcs.pixel_n_dim
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
-            len(self.dimensions), self.wcs, plot_axes, axes_coordinates, axes_units)
+            len(self.dimensions), low_level_wcs, plot_axes, axes_coordinates, axes_units)
 
         if naxis == 1:
-            ax = self._plot_1D_cube(self.wcs, axes, axes_coordinates,
+            ax = self._plot_1D_cube(low_level_wcs, axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
 
         elif naxis == 2:
-            ax = self._plot_2D_cube(self.wcs, axes, plot_axes, axes_coordinates,
+            ax = self._plot_2D_cube(low_level_wcs, axes, plot_axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
         else:
-            ax = self._animate_cube(self.wcs,
-                                    plot_axes=plot_axes, axes_coordinates=axes_coordinates,
+            ax = self._animate_cube(low_level_wcs, plot_axes=plot_axes,
+                                    axes_coordinates=axes_coordinates,
                                     axes_units=axes_units, **kwargs)
 
         return ax
 
     def _plot_1D_cube(self, wcs, axes=None, axes_coordinates=None, axes_units=None,
                       data_unit=None, **kwargs):
-        """
-        Plots a graph. Keyword arguments are passed on to matplotlib.
-
-        Parameters
-        ----------
-        data_unit: `astropy.unit.Unit`
-            The data is changed to the unit given or the cube.unit if not given.
-        """
-
         if axes is None:
             axes = plt.subplot(projection=wcs)
 
@@ -122,20 +114,6 @@ class NDCubePlotMixin:
 
     def _plot_2D_cube(self, wcs, axes=None, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
-        """
-        Plots a 2D image onto the current axes. Keyword arguments are passed on
-        to matplotlib.
-
-        Parameters
-        ----------
-        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`:
-            The axes to plot onto. If None the current axes will be used.
-
-        plot_axes: `list`.
-            The first axis in WCS object will become the first axis of plot_axes and
-            second axis in WCS object will become the second axis of plot_axes.
-            Default: ['x', 'y']
-        """
         if axes is None:
             axes = plt.subplot(projection=wcs, slices=plot_axes)
 
@@ -180,6 +158,6 @@ class NDCubePlotMixin:
                 coord_params[coord_name] = {'format_unit': axis_unit}
 
         plot_axes = [p if p is not None else 0 for p in plot_axes]
-        ax = ArrayAnimatorWCS(data, wcs.low_level_wcs, plot_axes, coord_params=coord_params, **kwargs)
+        ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         return ax

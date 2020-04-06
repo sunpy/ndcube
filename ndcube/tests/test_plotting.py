@@ -74,20 +74,24 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @pytest.mark.mpl_image_compare
-@pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
+@pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs", "bugged"),
                          (
-                             ("simple", np.s_[:,:,0,:], {}),
-                             ("simple", np.s_[:,:,0,:], {'plot_axes': [..., 'x']}),
-                             ("simple", None, {}),
-                             ("simple", np.s_[0,:,:,:], {}),
-                             ("simple", np.s_[:,:,:,:], {}),
-
-                             ("unit_uncertainty", np.s_[0,:,:,:], {'data_unit': u.mJ}),
-
-                             ("mask", np.s_[:,:,:,:], {}),
+                             ("simple", np.s_[:,:,0,:], {}, False),
+                             ("simple", np.s_[:,:,0,:], {'plot_axes': [..., 'x']}, False),
+                             ("simple", None, {}, False),
+                             ("simple", None, {"plot_axes": [0,0,'x','y']}, False),
+                             ("simple", None, {"plot_axes": [0,'x',0,'y']}, False),
+                             ("simple", np.s_[0,:,:,:], {}, True),
+                             ("simple", np.s_[:,:,:,:], {}, False),
+                             ("unit_uncertainty", np.s_[0,:,:,:], {'data_unit': u.mJ}, True),
+                             ("mask", np.s_[:,:,:,:], {}, False),
                          ),
                          indirect=["ndcube_4d"])
-def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs):
+def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs, bugged):
+    if bugged:
+        # Some of these require https://github.com/sunpy/sunpy/pull/3990
+        pytest.importorskip("sunpy", minversion="1.1.3")
+
     if cslice:
         sub = ndcube_4d[cslice]
     else:
