@@ -21,7 +21,7 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
     """
     Prepare the kwargs for the plotting functions.
 
-    This function returns things in WCS not array order.
+    This function accepts things in array order and returns things in WCS order.
     """
     # If plot_axes, axes_coordinates, axes_units are not None and not lists,
     # convert to lists for consistent indexing behaviour.

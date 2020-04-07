@@ -65,10 +65,9 @@ def test_prep_plot_kwargs_errors(ndcube_4d_simple):
      (None, [..., 'custom:pos.helioprojective.lat'], None),
      (['x', 'y'], [None, 'custom:pos.helioprojective.lat'], None)),
     ("simple",
-     (None, None, ['arcsec', u.deg]),
+     (None, None, [u.deg, 'arcsec']),
      (['x', 'y'], None, [u.arcsec, u.deg])),
-    ),
-                         indirect=['ndcube_2d'])
+    ), indirect=['ndcube_2d'])
 def test_prep_plot_kwargs(ndcube_2d, args, output):
     result = utils.prep_plot_kwargs(2, ndcube_2d.wcs, *args)
     assert result == output
