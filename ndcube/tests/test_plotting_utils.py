@@ -31,30 +31,31 @@ def test_prep_plot_kwargs_errors(ndcube_4d_simple):
     """
     # plot_axes has incorrect length
     with pytest.raises(ValueError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, ['wibble'], None, None)
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, ['wibble'], None, None)
 
     # axes_cooordinates has incorrect length
     with pytest.raises(ValueError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, None, [1], None)
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, None, [1], None)
 
     # axes_coordinates is not in world_axis_physical_types
     with pytest.raises(ValueError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, None, [..., "wibble"], None)
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, None, [..., "wibble"], None)
 
     # axes_coordinates has incorrect type
     with pytest.raises(TypeError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, None, [..., 10], None)
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, None, [..., 10], None)
 
     # axes_units has incorrect length
     with pytest.raises(ValueError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, None, None, ['m'])
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, None, None, ['m'])
 
     # axes_units has incorrect type
     with pytest.raises(TypeError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, None, None, [[], ...])
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, None, None, [[], ...])
 
     with pytest.raises(u.UnitsError):
-        utils.prep_plot_kwargs(ndcube_4d_simple, None, None, [u.eV, u.m, u.m, u.m])
+        utils.prep_plot_kwargs(4, ndcube_4d_simple.wcs, None, None, [u.eV, u.m, u.m, u.m])
+
 
 @pytest.mark.parametrize("ndcube_2d, args, output", (
     ("simple",
@@ -69,5 +70,5 @@ def test_prep_plot_kwargs_errors(ndcube_4d_simple):
     ),
                          indirect=['ndcube_2d'])
 def test_prep_plot_kwargs(ndcube_2d, args, output):
-    result = utils.prep_plot_kwargs(ndcube_2d, *args)
+    result = utils.prep_plot_kwargs(2, ndcube_2d.wcs, *args)
     assert result == output
