@@ -15,6 +15,7 @@ author = 'The SunPy Community'
 
 # The full version, including alpha/beta/rc tags
 from ndcube import __version__
+
 release = __version__
 is_development = '.dev' in __version__
 

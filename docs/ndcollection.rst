@@ -4,7 +4,7 @@
 NDCollection
 ============
 
-`~ndcube.NDCollection` is a container class for grouping `~ndcube.NDCube` or 
+`~ndcube.NDCollection` is a container class for grouping `~ndcube.NDCube` or
 `~ndcube.NDCubeSequence` instances together.
 It does not imply an ordered relationship between its constituent ND objects
 like `~ndcube.NDCubeSequence`.
@@ -35,7 +35,7 @@ space-space-spectral cube and a 2D space-space cube that share spatial axes.
 Let there be 10x20 spatial pixels and 30 pixels along the spectral axis.
 
 .. code-block:: python
-  
+
   >>> import numpy as np
   >>> from astropy.wcs import WCS
   >>> from ndcube import NDCube
@@ -48,7 +48,7 @@ Let there be 10x20 spatial pixels and 30 pixels along the spectral axis.
   ...    'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 10}
   >>> obs_wcs = WCS(obs_wcs_dict)
   >>> obs_cube = NDCube(data, obs_wcs)
-  
+
   >>> # Define derived linewidth NDCube
   >>> linewidth_data = np.ones((10, 20)) / 2 # dummy data
   >>> linewidth_wcs_dict = {
@@ -193,9 +193,9 @@ are not in order.
 Editing NDCollection
 --------------------
 
-Because `~ndcube.NDCollection` inherits from `dict`, we can edit the 
+Because `~ndcube.NDCollection` inherits from `dict`, we can edit the
 collection using many of the same methods.
-These have the same or analagous APIs to the ``dict`` versions and 
+These have the same or analagous APIs to the ``dict`` versions and
 include ``del``, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
 Some `dict` methods may not be implemented on `~ndcube.NDCollection`
 if they are not consistent with its design.

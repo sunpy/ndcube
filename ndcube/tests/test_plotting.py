@@ -1,12 +1,10 @@
-import pytest
+import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 import astropy.units as u
-from astropy.visualization.wcsaxes import WCSAxes
-
 import sunpy.visualization.animator
-
-import matplotlib.pyplot as plt
+from astropy.visualization.wcsaxes import WCSAxes
 
 
 @pytest.mark.mpl_image_compare

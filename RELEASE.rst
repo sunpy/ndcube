@@ -31,4 +31,3 @@ ndcube can be installed from pip or conda using the following commands::
   $ conda install -c conda-forge ndcube
 
   $ pip install ndcube
-

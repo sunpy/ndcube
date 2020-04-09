@@ -1,24 +1,24 @@
 """
 Tests for NDCube.
 """
-from collections import OrderedDict
 import datetime
+from collections import OrderedDict
 
-import pytest
 import numpy as np
+import pytest
+
 import astropy.units as u
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
-from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, BaseHighLevelWCS
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
+from astropy.wcs import WCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, SlicedLowLevelWCS
+from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 
 from ndcube import NDCube, NDCubeOrdered
-from astropy.wcs import WCS
-
+from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.tests import helpers
 from ndcube.tests.helpers import create_sliced_wcs
-from ndcube.ndcube_sequence import NDCubeSequence
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.

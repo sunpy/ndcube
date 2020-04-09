@@ -1,7 +1,8 @@
-import pytest
 import unittest
 
 import numpy as np
+import pytest
+
 import astropy.units as u
 
 from ndcube import utils

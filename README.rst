@@ -91,7 +91,7 @@ To push any changes you make to your github account by doing::
    $ git push origin branch-name
 
 where ``branch-name`` is the name of the branch you're working on.  Then
-from your github account you can request your changes to be merged to
+
 the main repo.  For more information on on git version control,
 github, and issuing pull requests, see `SunPy's version control guide`_.
 
