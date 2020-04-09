@@ -113,8 +113,6 @@ def test_convert_extra_coords_dict_to_input_format(test_input, expected):
         while j < len(expected):
             if output_tuple[0] == expected[j][0]:
                 assert len(output_tuple) == len(expected[j])
-                print(output_tuple)
-                print(expected[j])
                 for k, el in enumerate(output_tuple):
                     try:
                         assert el == expected[j][k]
