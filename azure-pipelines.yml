@@ -2,13 +2,10 @@ name: $(BuildDefinitionName)_$(Date:yyyyMMdd)$(Rev:.rr)
 variables:
   CI_NAME: Azure Pipelines
   CI_BUILD_ID: $(Build.BuildId)
-  # These will need to be changed  for your project.
   CI_BUILD_URL: "https://dev.azure.com/sunpy/ndcube/_build/results?buildId=$(Build.BuildId)"
-  CIBW_BUILD: cp36-* cp37-*
+  CIBW_BUILD: cp36-* cp37-* cp38-*
   CIBW_SKIP: "*-win32 *-manylinux1_i686"
 
-# These resources need to be setup on the Azure Pipeline website
-# as a service connection (if it has not been already).
 resources:
   repositories:
   - repository: OpenAstronomy
@@ -21,6 +18,8 @@ trigger:
   branches:
     include:
     - '*'
+    exclude:
+    - '*backport*'
   tags:
     include:
     - 'v*'
@@ -34,21 +33,22 @@ jobs:
   parameters:
     submodules: false
     coverage: codecov
+    posargs: -n=4
     envs:
-      #- linux: pycodestyle
+      - macos: py37
+        name: py37_test_macos
 
-      - macos: py37-offline
-        name: py37_offline
+      - windows: py38
+        name: py38_test_windows
 
-      - windows: py36-offline
-        name: py36_offline
+      - linux: py38
+        name: py38_test_linux
 
-      - linux: py37-online
-        name: py37_online
+      - linux: py38-devdeps
+        name: py38_test_devdeps
 
-      - linux: py37-astropydev
-
-      - linux: py37-sunpydev
+      - linux: codestyle
+        name: codestyle
 
 
 # On branches which aren't master, and not Pull Requests, build the wheels but only upload them on tags
@@ -58,12 +58,14 @@ jobs:
       # Only Upload to PyPI on tags
       ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
         pypi_connection_name : 'PyPI'
-      test_extras: 'dev'
+
+      test_extras: 'test'
       test_command: 'pytest -p no:warnings --doctest-rst -m "not figure" --pyargs ndcube'
       submodules: false
       targets:
+        - wheels_universal
         - sdist
       dependsOn:
-        - py37_offline
-        - py36_offline
-        - py37_online
+        - py37_test_macos
+        - py38_test_windows
+        - py38_test_linux

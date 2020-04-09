@@ -1,36 +1,17 @@
-# All files in ndcube/ should be included in package_data in setup.cfg
-include ah_bootstrap.py
-include CHANGELOG.rst
+include README.rst
+include CHANGES.rst
+include setup.cfg
 include LICENSE.rst
 include pyproject.toml
-include README.rst
-include RELEASE.rst
-include setup.py
-include setup.cfg
 
-# Include whole folders outside of ndcube/
+recursive-include ndcube *.pyx *.c *.pxd
 recursive-include docs *
-recursive-include examples *
 recursive-include licenses *
+recursive-include cextern *
+recursive-include scripts *
 
-# Remove built folders
 prune build
 prune docs/_build
 prune docs/api
 
-# Astropy Helpers
-include astropy_helpers/README.rst
-include astropy_helpers/CHANGES.rst
-include astropy_helpers/LICENSE.rst
-recursive-include astropy_helpers/licenses *
-
-include astropy_helpers/ah_bootstrap.py
-
-recursive-include astropy_helpers/astropy_helpers *.py *.pyx *.c *.h *.rst
-recursive-include astropy_helpers/astropy_helpers.egg-info *
-
-prune astropy_helpers/build
-prune astropy_helpers/astropy_helpers/tests
-
-# Globally exclude compiled files
 global-exclude *.pyc *.o
