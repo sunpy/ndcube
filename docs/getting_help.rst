@@ -26,7 +26,7 @@ SunPy has two mailing lists: a `general mailing list`_; and a
 `developer mailing list`_. If you have a general question about how
 ndcube works, use the general mailing list. The general mailing list is
 another way to get help with doing solar physics in Python. If, on the
-other hand, you have a question about the inner workings of ndcube, 
+other hand, you have a question about the inner workings of ndcube,
 how ndcube is organized, or have a question about developing some new
 feature, please use the developer mailing list.
 

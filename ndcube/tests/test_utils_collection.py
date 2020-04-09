@@ -1,5 +1,6 @@
 
 import pytest
+
 import astropy.units as u
 
 from ndcube.utils import collection as collection_utils

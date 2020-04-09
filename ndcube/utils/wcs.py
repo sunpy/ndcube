@@ -5,11 +5,12 @@ Miscellaneous WCS utilities.
 """
 
 import re
+import numbers
 from copy import deepcopy
 from collections import UserDict
-import numbers
 
 import numpy as np
+
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 

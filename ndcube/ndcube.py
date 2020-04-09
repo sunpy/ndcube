@@ -1,23 +1,22 @@
 
 import abc
-import warnings
 import textwrap
+import warnings
 
 import numpy as np
+
 import astropy.nddata
 import astropy.units as u
-from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
-from astropy.utils.misc import InheritDocstrings
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
-from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS, HighLevelWCSWrapper, BaseHighLevelWCS
 import sunpy.coordinates
+from astropy.utils.misc import InheritDocstrings
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
+from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, custom_ctype_to_ucd_mapping
 
 from ndcube import utils
+from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping, _pixel_keep
-from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel, unique_data_axis
-from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
-
+from ndcube.utils.cube import _get_dimension_for_pixel, _pixel_centers_or_edges, unique_data_axis
+from ndcube.utils.wcs import _pixel_keep, wcs_ivoa_mapping
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 

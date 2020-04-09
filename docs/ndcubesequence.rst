@@ -21,13 +21,13 @@ To initialize the most basic `~ndcube.NDCubeSequence` object, all you
 need is a list of `~ndcube.NDCube` instances.  So let us first define
 three 3-D NDCubes for slit-spectrograph data as we did in the NDCube
 section of this tutorial.  First we define the data arrays and WCS objects::
-  
+
   >>> # Define data for cubes
   >>> import numpy as np
   >>> data0 = np.ones((3, 4, 5))
   >>> data1 = data0 * 2
   >>> data2 = data1 * 2
-  
+
   >>> # Define WCS object for all cubes.
   >>> import astropy.wcs
   >>> wcs_input_dict = {
@@ -41,7 +41,7 @@ data axis and another label coordinate assigned to the cubes as
 wholes.  (See NDCube section of this guide of more detail.) Let the
 slices along the 0th axis be separated by one minute and the slices in
 preceding cube are followed directly in time by the slices in the next::
-  
+
   >>> from datetime import datetime, timedelta
   >>> timestamps0 = [datetime(2000, 1, 1)+timedelta(minutes=i) for i in range(data0.shape[0])]
   >>> timestamps1 = [timestamps0[-1]+timedelta(minutes=i+1) for i in range(data1.shape[0])]
@@ -49,7 +49,7 @@ preceding cube are followed directly in time by the slices in the next::
   >>> extra_coords_input0 = [("time", 0, timestamps0), ("label", None, "hello")]
   >>> extra_coords_input1 = [("time", 0, timestamps1), ("label", None, "world")]
   >>> extra_coords_input2 = [("time", 0, timestamps2), ("label", None, "!")]
-  
+
 Now we can define our cubes.
 
   >>> from ndcube import NDCube
@@ -83,7 +83,7 @@ pronounced. Nonetheless, this case can still be used to adequately
 demonstrate the capabilities of `~ndcube.NDCubeSequence`.
 
 Finally, creating an `~ndcube.NDCubeSequence` becomes is simple::
-  
+
   >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2])
 
 While, each `~ndcube.NDCube` in the `~ndcube.NDCubeSequence` can have
@@ -98,7 +98,7 @@ sub-cubes. This metadata is input as a dictionary::
 
 and stored in the ``my_sequence.meta`` attribute.  Meanwhile, the
 `~ndcube.NDCube` instances are stored in ``my_sequence.data``.
-However, analgously to `~ndcube.NDCube`, it is strongly advised that 
+However, analgously to `~ndcube.NDCube`, it is strongly advised that
 the data is manipulated by slicing the `~ndcube.NDCubeSequence` rather
 than more manually delving into the ``.data`` attribute.  For more
 explanation, see the section on :ref:`sequence_slicing`.
@@ -120,7 +120,7 @@ sequence.  Then moving along the 0th axis of one sub-cube and moving
 along the sequence axis from one cube to the next both represent
 movement in time.  The difference is simply the size of the steps.
 Therefore it can be said that the 0th axis of the sub-cubes is common
-to the sequence. 
+to the sequence.
 
 To define a common axis, set the kwarg during intialization of
 the `~ndcube.NDCubeSequence` to the desired data axis number::
@@ -131,7 +131,7 @@ the `~ndcube.NDCubeSequence` to the desired data axis number::
 Defining a common axis enables the full range of the
 `~ndcube.NDCubeSequence` features to be utilized including
 `ndcube.NDCubeSequence.plot`,
-`ndcube.NDCubeSequence.common_axis_extra_coords`, and 
+`ndcube.NDCubeSequence.common_axis_extra_coords`, and
 `ndcube.NDCubeSequence.index_as_cube`. See following sections for
 more details on these features.
 
@@ -166,7 +166,7 @@ used for the cube axes as is used in
 `ndcube.NDCube.world_axis_physical_types`.  The sequence axis is given
 the label ``'meta.obs.sequence'`` as it is the IVOA UCD1+ controlled
 word that best describes it.  To call, simply do::
-  
+
   >>> my_sequence.world_axis_physical_types
   ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
 
@@ -328,7 +328,7 @@ assigned to the sequence axis.  Hence the property's name.::
   >>> my_sequence.sequence_axis_extra_coords
   {'label': array(['hello', 'world', '!'], dtype=object)}
 
-  
+
 Plotting
 --------
 
@@ -369,7 +369,7 @@ the number of the data cube axis along which you wish to break up the sub-cubes:
 
 Assuming we are using the same ``my_sequence`` as above, with
 dimensions.shape ``(<Quantity 3.0 pix>, <Quantity 3.0 pix>, <Quantity
-4.0 pix>, <Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an 
+4.0 pix>, <Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an
 `~ndcube.NDCubeSequence` of nine 2-D NDCubes each with shape
 ``(<Quantity 4.0 pix>, <Quantity 5.0 pix>)``.::
 

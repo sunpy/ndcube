@@ -1,6 +1,6 @@
+from .ndcollection import NDCollection
 from .ndcube import NDCube, NDCubeOrdered
 from .ndcube_sequence import NDCubeSequence
-from .ndcollection import NDCollection
 
 try:
     from .version import __version__

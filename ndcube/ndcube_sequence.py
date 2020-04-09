@@ -1,8 +1,9 @@
-import textwrap
 import copy
 import numbers
+import textwrap
 
 import numpy as np
+
 import astropy.units as u
 
 from ndcube import utils

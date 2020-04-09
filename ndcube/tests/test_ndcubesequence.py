@@ -1,15 +1,15 @@
-from collections import namedtuple
-import pytest
 import datetime
 import unittest
+from collections import namedtuple
 
-import sunpy.map
 import numpy as np
+import pytest
+
 import astropy.units as u
+import sunpy.map
 
 from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.wcs import WCS
-
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
