@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-import pytest
 import unittest
 
 import numpy as np
+import pytest
 
 from ndcube import utils
 
@@ -37,7 +36,7 @@ n_cubes = 4
      [utils.sequence.SequenceItem(sequence_index=4, cube_item=tuple_item1[1:]),
       utils.sequence.SequenceItem(sequence_index=2, cube_item=tuple_item1[1:]),
       utils.sequence.SequenceItem(sequence_index=0, cube_item=tuple_item1[1:])])
-    ])
+])
 def test_convert_item_to_sequence_items(test_input, expected):
     unit_tester = unittest.TestCase()
     unit_tester.assertEqual(
@@ -54,7 +53,7 @@ def test_convert_item_to_sequence_items_error():
     ((0, 0, np.array([3])), [utils.sequence.SequenceItem(sequence_index=0, cube_item=0)]),
     ((5, 0, np.array([3, 3])), [utils.sequence.SequenceItem(sequence_index=1, cube_item=2)]),
     # Below test reveals function doesn't work with negative int indexing.
-    #((-1, 0, np.array([3, 3])), [utils.sequence.SequenceItem(sequence_index=1, cube_item=2)]),
+    # ((-1, 0, np.array([3, 3])), [utils.sequence.SequenceItem(sequence_index=1, cube_item=2)]),
 
     # Test slice cube_like_items.
     ((slice(0, 2), 0, np.array([3])),
@@ -69,7 +68,7 @@ def test_convert_item_to_sequence_items_error():
      [utils.sequence.SequenceItem(sequence_index=0, cube_item=slice(1, 2, 3)),
       utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(1, 4, 3))]),
     # Below test reveals function doesn't work with negative stepping.
-    #((slice(6, 1, -1), 0, np.array([3, 5])),
+    # ((slice(6, 1, -1), 0, np.array([3, 5])),
     # [utils.sequence.SequenceItem(sequence_index=1, cube_item=slice(3, 0, -1)),
     #  utils.sequence.SequenceItem(sequence_index=0, cube_item=slice(2, 1, -1))]),
 
@@ -95,7 +94,7 @@ def test_convert_item_to_sequence_items_error():
                                   cube_item=(0, slice(0, 5, 1), slice(1, 10, None))),
       utils.sequence.SequenceItem(sequence_index=2,
                                   cube_item=(0, slice(0, 2, 1), slice(1, 10, None)))]),
-     ])
+])
 def test_convert_cube_like_item_to_sequence_items(test_input, expected):
     unit_tester = unittest.TestCase()
     unit_tester.assertEqual(
@@ -105,7 +104,7 @@ def test_convert_cube_like_item_to_sequence_items(test_input, expected):
 @pytest.mark.parametrize("test_input", [
     (0, 1, np.array(3)), (slice(None), 1, np.array(3)),
     ((0, 1), 2, np.array([3, 3, 3])), (('item', 2), 0, np.array([3, 3, 3]))
-    ])
+])
 def test_convert_cube_like_item_to_sequence_items_value_error(test_input):
     with pytest.raises(ValueError):
         utils.sequence.convert_cube_like_item_to_sequence_items(*test_input)
@@ -161,7 +160,7 @@ def test_convert_slice_nones_to_ints(test_input, expected):
 
 @pytest.mark.parametrize("test_input,expected", [
     ((utils.sequence.SequenceSlice(0, 0), 1), utils.sequence.SequenceItem(0, (slice(None), 0)))
-    ])
+])
 def test_convert_sequence_slice_to_sequence_item(test_input, expected):
     unit_tester = unittest.TestCase()
     unit_tester.assertEqual(

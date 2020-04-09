@@ -1,0 +1,13 @@
+default_context:
+  package_name: ndcube
+  module_name: ndcube
+  short_description: A package for multi-dimensional contiguious and non-contiguious coordinate aware arrays.
+  author_name: The SunPy Community
+  author_email: sunpy@googlegroups.com
+  license: BSD 2-Clause
+  project_url: http://docs.sunpy.org/projects/ndcube/
+  github_repo: sunpy/ndcube
+  minimum_python_version: 3.7
+  use_compiled_extensions: n
+  include_example_code: n
+  _provide_setuppy_fallback: y

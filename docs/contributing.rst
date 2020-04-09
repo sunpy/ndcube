@@ -16,7 +16,7 @@ ndcube and its development from both users and developers. There are a
 number of ways to make your voice heard.  Whether it be constructive
 criticism, inquiries about current or future capabilities, or
 flattering praise, we would love to hear from you.  You can contact us
-on the SunPy matrix channel or SunPy mailing lists.  See 
+on the SunPy matrix channel or SunPy mailing lists.  See
 :ref:`getting_help`.
 
 Reporting Bugs
@@ -37,7 +37,7 @@ Contributing Code
 
 If you would like to contribute code, it is strongly
 recommended that you first discuss your aims with the ndcube
-community.  We strive to be an open and welcoming community for 
+community.  We strive to be an open and welcoming community for
 developers of all experience levels. Discussing your ideas
 before you start can give you new insights that will make your
 development easier, lead to a better end product, and reduce the

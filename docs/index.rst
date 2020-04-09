@@ -13,6 +13,7 @@ by a WCS (World Coordinate System) translation.
    installation
    ndcube
    ndcubesequence
+   ndcollection
    contributing
    getting_help
    api
