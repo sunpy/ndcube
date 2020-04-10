@@ -90,7 +90,7 @@ class NDCubeSequenceBase:
         else:
             result = copy.deepcopy(self)
             if isinstance(item, slice):
-                    result.data = self.data[item]
+                result.data = self.data[item]
             else:
                 if isinstance(item[0], numbers.Integral):
                     result = result.data[item[0]][item[1:]]

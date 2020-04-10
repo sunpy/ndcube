@@ -1,1 +1,1 @@
-use the `utils.sequence.slice_sequence` for __getitem__
+Simplify and speed up implementation of NDCubeSequence slicing.
