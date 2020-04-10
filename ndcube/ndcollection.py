@@ -1,12 +1,13 @@
-import collections.abc
 import copy
 import textwrap
+import collections.abc
 
 import numpy as np
 
-from ndcube import NDCube, NDCubeSequence
-from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 import ndcube.utils.collection as collection_utils
+from ndcube.ndcube import NDCube
+from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 
 __all__ = ["NDCollection"]
 

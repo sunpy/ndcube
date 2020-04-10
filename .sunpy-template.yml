@@ -1,20 +1,13 @@
 default_context:
-  package_name: "ndcube"
-  module_name: "ndcube"
-  short_description: "A package for multi-dimensional contiguious and non-contiguious coordinate aware arrays."
-  long_description: "file: README.rst"
-  author_name: "The SunPy Community"
-  author_email: "sunpy@googlegroups.com"
-  license: "BSD 2-Clause"
-  project_url: "http://docs.sunpy.org/projects/ndcube/"
-  project_version: "1.1.dev"
-  include_example_code: "n"
-  include_example_cython_code: "n"
-  include_cextern_folder: "n"
-  edit_on_github_extension: "True"
-  github_project: "sunpy/ndcube"
-  use_azure_ci: "y"
-  use_read_the_docs: "y"
-  sphinx_theme: "sunpy-sphinx-theme"
-  initialize_git_repo: "n"
-  minimum_python_version: "3.6"
+  package_name: ndcube
+  module_name: ndcube
+  short_description: A package for multi-dimensional contiguious and non-contiguious coordinate aware arrays.
+  author_name: The SunPy Community
+  author_email: sunpy@googlegroups.com
+  license: BSD 2-Clause
+  project_url: http://docs.sunpy.org/projects/ndcube/
+  github_repo: sunpy/ndcube
+  minimum_python_version: 3.7
+  use_compiled_extensions: n
+  include_example_code: n
+  _provide_setuppy_fallback: y

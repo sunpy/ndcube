@@ -1,10 +1,11 @@
 import copy
 
-import pytest
 import numpy as np
+import pytest
+
 import astropy.wcs
 
-from ndcube import NDCube, NDCubeSequence, NDCollection
+from ndcube import NDCollection, NDCube, NDCubeSequence
 from ndcube.tests import helpers
 
 # Define some mock data

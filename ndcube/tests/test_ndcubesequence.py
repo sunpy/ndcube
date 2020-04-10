@@ -1,15 +1,15 @@
-from collections import namedtuple
-import pytest
 import datetime
 import unittest
+from collections import namedtuple
 
-import sunpy.map
 import numpy as np
+import pytest
+
 import astropy.units as u
+import sunpy.map
 
 from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.wcs import WCS
-
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
@@ -19,7 +19,7 @@ data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
 data2 = np.array([[[11, 22, 33, 44], [22, 44, 55, 33], [0, -1, 22, 33]],
                   [[22, 44, 55, 11], [10, 55, 22, 22], [10, 33, 33, 0]]])
 
-ht = {'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
+ht = {'CTYPE3': 'UNKNOWN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0, 'NAXIS3': 2,
       'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
       'NAXIS2': 3,
       'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0, 'NAXIS1': 4}
@@ -34,7 +34,7 @@ hm = {
 wt = WCS(header=ht, naxis=3)
 wm = WCS(header=hm, naxis=3)
 
-cube1 = NDCube(data, wt, missing_axes=[False, False, False, True], extra_coords=[
+cube1 = NDCube(data, wt, extra_coords=[
     ('pix', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
     ('distance', None, u.Quantity(0, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 0))])
@@ -45,7 +45,7 @@ cube2 = NDCube(data, wm, extra_coords=[
     ('distance', None, u.Quantity(1, unit=u.cm)),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
-cube3 = NDCube(data2, wt, missing_axes=[False, False, False, True], extra_coords=[
+cube3 = NDCube(data2, wt, extra_coords=[
     ('pix', 0, u.Quantity(np.arange(1, data2.shape[0] + 1), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(2, unit=u.cm)),
@@ -62,27 +62,27 @@ cube2_no_no = NDCube(data, wm, extra_coords=[
      cube1.extra_coords['pix']['value'][-1]),
     ('time', None, datetime.datetime(2000, 1, 1, 0, 1))])
 
-cube3_no_time = NDCube(data2, wt, missing_axes=[False, False, False, True], extra_coords=[
+cube3_no_time = NDCube(data2, wt, extra_coords=[
     ('pix', 0, u.Quantity(np.arange(1, data2.shape[0] + 1), unit=u.pix) +
      cube2.extra_coords['pix']['value'][-1]),
     ('distance', None, u.Quantity(2, unit=u.cm))])
 
 cube3_diff_compatible_unit = NDCube(
-    data2, wt, missing_axes=[False, False, False, True], extra_coords=[
+    data2, wt, extra_coords=[
         ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
          cube2.extra_coords['pix']['value'][-1]),
         ('distance', None, u.Quantity(2, unit=u.cm).to('m')),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube3_diff_incompatible_unit = NDCube(
-    data2, wt, missing_axes=[False, False, False, True], extra_coords=[
+    data2, wt, extra_coords=[
         ('pix', 0, u.Quantity(np.arange(data2.shape[0]), unit=u.pix) +
          cube2.extra_coords['pix']['value'][-1]),
         ('distance', None, u.Quantity(2, unit=u.s)),
         ('time', None, datetime.datetime(2000, 1, 1, 0, 2))])
 
 cube1_time_common = NDCube(
-    data, wt, missing_axes=[False, False, False, True],
+    data, wt,
     extra_coords=[('time', 1, [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
                                for i in range(data.shape[1])])])
 
@@ -91,8 +91,8 @@ cube2_time_common = NDCube(data, wm, extra_coords=[
      [cube1_time_common.extra_coords["time"]["value"][-1] + datetime.timedelta(minutes=i)
       for i in range(1, data.shape[1] + 1)])])
 
-cube1_no_extra_coords = NDCube(data, wt, missing_axes=[False, False, False, True])
-cube3_no_extra_coords = NDCube(data2, wt, missing_axes=[False, False, False, True])
+cube1_no_extra_coords = NDCube(data, wt)
+cube3_no_extra_coords = NDCube(data2, wt)
 
 seq = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=0)
 seq_bad_common_axis = NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=None)

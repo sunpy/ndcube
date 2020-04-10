@@ -1,16 +1,19 @@
 import copy
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+
 import astropy.units as u
+
+from ndcube import utils
+from ndcube.utils.cube import _get_extra_coord_edges
+
 try:
     from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
 except ImportError:
     from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
 
-from ndcube import utils
-from ndcube.utils.cube import _get_extra_coord_edges
 
 __all__ = ['NDCubeSequencePlotMixin']
 
