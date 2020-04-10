@@ -83,7 +83,7 @@ class NDCubeSequenceBase:
         return self.data[0].world_axis_physical_types
 
     def __getitem__(self, item):
-        print(item)
+
         if isinstance(item, numbers.Integral):
             return self.data[item]
         else:
@@ -91,9 +91,14 @@ class NDCubeSequenceBase:
             if isinstance(item, slice):
                     result.data = self.data[item]
             else:
-                result.data = np.array([cube[item[1:]] for cube in self.data[item[0]]])
-                
+                if isinstance(item[0], numbers.Integral):
+                    result = result.data[item[0]][item[1:]]
+                elif isinstance(item[0], slice) and item[0].stop - item[0].start == 1:
+                    result.data = [result.data[item[0].start][item[1:]]]
+                else:
+                    result.data = [cube[item[1:]] for cube in result.data[item[0]]]
             return result
+
     @property
     def index_as_cube(self):
         """
