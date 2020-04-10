@@ -5,11 +5,10 @@ Helpers for testing ndcube.
 import unittest
 
 import numpy as np
-from numpy.testing import assert_equal
-
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
+from numpy.testing import assert_equal
 
 from ndcube import NDCube, NDCubeSequence, utils
 
