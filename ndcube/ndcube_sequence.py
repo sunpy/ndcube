@@ -2,9 +2,8 @@ import copy
 import numbers
 import textwrap
 
-import numpy as np
-
 import astropy.units as u
+import numpy as np
 
 from ndcube import utils
 from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin

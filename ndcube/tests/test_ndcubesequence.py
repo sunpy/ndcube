@@ -2,11 +2,9 @@ import datetime
 import unittest
 from collections import namedtuple
 
+import astropy.units as u
 import numpy as np
 import pytest
-
-import astropy.units as u
-import sunpy.map
 
 from ndcube import NDCube, NDCubeSequence
 from ndcube.utils.wcs import WCS

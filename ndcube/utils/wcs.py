@@ -10,7 +10,6 @@ from copy import deepcopy
 from collections import UserDict
 
 import numpy as np
-
 from astropy import wcs
 from astropy.wcs._wcs import InconsistentAxisTypesError
 

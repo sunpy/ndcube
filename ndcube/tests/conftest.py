@@ -4,10 +4,9 @@ predicable NDCube objects.
 """
 import datetime
 
+import astropy.units as u
 import numpy as np
 import pytest
-
-import astropy.units as u
 from astropy.wcs import WCS
 
 from ndcube import NDCube

@@ -7,9 +7,8 @@ from copy import deepcopy
 from functools import singledispatch
 from collections import namedtuple
 
-import numpy as np
-
 import astropy.units as u
+import numpy as np
 
 __all__ = ['SequenceSlice', 'SequenceItem', 'slice_sequence', 'convert_item_to_sequence_items',
            'convert_cube_like_item_to_sequence_items', 'convert_slice_nones_to_ints']
