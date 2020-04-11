@@ -3,10 +3,9 @@ import abc
 import textwrap
 import warnings
 
-import numpy as np
-
 import astropy.nddata
 import astropy.units as u
+import numpy as np
 import sunpy.coordinates
 from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS

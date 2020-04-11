@@ -1,8 +1,7 @@
 import numbers
 
-import numpy as np
-
 import astropy.units as u
+import numpy as np
 
 
 def _sanitize_aligned_axes(keys, data, aligned_axes):

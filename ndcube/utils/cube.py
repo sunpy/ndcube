@@ -4,7 +4,6 @@ Utilities for ndcube.
 """
 
 import numpy as np
-
 from astropy.units import Quantity
 
 from ndcube.utils.wcs import _pixel_keep, get_dependent_wcs_axes

@@ -1,10 +1,9 @@
 import copy
 
+import astropy.units as u
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-
-import astropy.units as u
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
@@ -145,7 +144,7 @@ class NDCubeSequencePlotMixin:
         Based on the cube-like dimensionality of the sequence and value of plot_axis_indices
         kwarg, a Line/Image Plot/Animation is produced.
 
-         Parameters
+        Parameters
         ----------
         axes: `astropy.visualization.wcsaxes.core.WCSAxes` or ??? or None.
             The axes to plot onto. If None the current axes will be used.
@@ -212,9 +211,10 @@ class NDCubeSequencePlotMixin:
 
         Returns
         -------
-        ax: ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or
+        ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or
                 `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
             Axes or animation object depending on dimensionality of NDCubeSequence
+
         """
         # Verify common axis is set.
         if self._common_axis is None:

@@ -1,6 +1,5 @@
-import pytest
-
 import astropy.units as u
+import pytest
 
 import ndcube.mixins.plotting_utils as utils
 
