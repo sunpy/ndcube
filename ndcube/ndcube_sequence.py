@@ -96,7 +96,7 @@ class NDCubeSequenceBase:
                     start = 0 if item[0].start is None else item[0].start
                     stop = len(self.data) if item[0].stop is None else item[0].stop
                     if stop - start == 1:
-                        result.data = [result.data[item[0].start][item[1:]]]
+                        result.data = [result.data[start][item[1:]]]
                 else:
                     result.data = [cube[item[1:]] for cube in result.data[item[0]]]
             return result
