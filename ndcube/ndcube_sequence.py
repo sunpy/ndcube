@@ -85,12 +85,25 @@ class NDCubeSequenceBase:
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
             return self.data[item]
-        elif isinstance(item, slice):
-            result = copy.deepcopy(self)
-            result.data = self.data[item]
-            return result
         else:
-            return utils.sequence.slice_sequence(self, item)
+            result = copy.deepcopy(self)
+            if isinstance(item, slice):
+                result.data = self.data[item]
+            else:
+                if isinstance(item[0], numbers.Integral):
+                    result = result.data[item[0]][item[1:]]
+                else:
+                    item0_is_length1_slice = False
+                    if isinstance(item[0], slice):
+                        start = 0 if item[0].start is None else item[0].start
+                        stop = len(self.data) if item[0].stop is None else item[0].stop
+                        if stop - start == 1:
+                            item0_is_length1_slice = True
+                    if item0_is_length1_slice:
+                        result.data = [result.data[start][item[1:]]]
+                    else:
+                        result.data = [cube[item[1:]] for cube in result.data[item[0]]]
+            return result
 
     @property
     def index_as_cube(self):
