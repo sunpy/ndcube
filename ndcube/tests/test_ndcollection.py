@@ -3,6 +3,7 @@ import copy
 import pytest
 import numpy as np
 import astropy.wcs
+import astropy.units as u
 
 from ndcube import NDCube, NDCubeSequence, NDCollection
 from ndcube.tests import helpers
@@ -130,3 +131,10 @@ def test_collection_update_collecton_input():
     expected = NDCollection([("cube0", cube0), ("cube1", cube1_alt), ("cube2", cube2)],
                             aligned_axes)
     helpers.assert_collections_equal(orig_collection, expected)
+
+
+@pytest.mark.parametrize("collection, expected_aligned_dimensions", [
+    (cube_collection, [4, 5]*u.pix),
+    (seq_collection, np.array([2*u.pix, 3*u.pix, 4*u.pix, 5*u.pix], dtype=object))])
+def test_aligned_dimensions(collection, expected_aligned_dimensions):
+    assert all(collection.aligned_dimensions == expected_aligned_dimensions)
