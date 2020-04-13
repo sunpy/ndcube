@@ -1,0 +1,1 @@
+Add support for more FITS CTYPES in IVOA mapping.

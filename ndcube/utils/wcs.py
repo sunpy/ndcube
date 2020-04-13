@@ -32,8 +32,20 @@ class TwoWayDict(UserDict):
 # types and International Virtual Observatory Alliance vocabulary.
 # See http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html
 wcs_to_ivoa = {
+    "DSUN": "custom:pos.distance.sunToObserver",
+    "HGLT": "custom:pos.heliographic.stonyhurst.lon",
+    "CRLT": "custom:pos.heliographic.carrington.lat",
+    "HGLN": "custom:pos.heliographic.stonyhurst.lat",
+    "CRLN": "custom:pos.heliographic.carrington.lon",
+    "HECR": "custom:pos.distance.fromSunCenter",
+    "HECR": "custom:pos.distance.fromSunSurface",
+    "SOLX": "custom.pos.distance.heliocentric.west",
+    "SOLY": "custom.pos.distance.heliocentric.north",
+    "SOLZ": "custom.pos.distance.heliocentric.sunToObserver",
     "HPLT": "custom:pos.helioprojective.lat",
     "HPLN": "custom:pos.helioprojective.lon",
+    "HPRZ": "custom:pos.distance.helioprojective.sunToObserver",
+    "DIST": "pos.distance",
     "TIME": "time",
     "WAVE": "em.wl",
     "RA--": "pos.eq.ra",
