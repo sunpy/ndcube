@@ -1,3 +1,18 @@
+Ndcube v1.3.1 (2020-04-17)
+==========================
+
+Bug Fixes
+---------
+
+- Fix NDCollection.aligned_dimensions so it doesnt crash when components of collection are NDCubeSequences. (`#264 <https://github.com/sunpy/ndcube/pull/264>`__)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Simplify and speed up implementation of NDCubeSequence slicing. (`#251 <https://github.com/sunpy/ndcube/pull/251>`__)
+
+
 Ndcube v1.3.0 (2020-03-27)
 ==========================
 
