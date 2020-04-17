@@ -1,0 +1,1 @@
+Fix NDCollection.aligned_dimensions so it doesnt crash when components of collection are NDCubeSequences.

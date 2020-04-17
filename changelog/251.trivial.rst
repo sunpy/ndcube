@@ -1,0 +1,1 @@
+Simplify and speed up implementation of NDCubeSequence slicing.

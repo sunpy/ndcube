@@ -94,7 +94,8 @@ class NDCollection(dict):
 
         """
         if self.aligned_axes is not None:
-            return self[self._first_key].dimensions[np.array(self.aligned_axes[self._first_key])]
+            return np.asanyarray(self[self._first_key].dimensions, dtype=object)[
+                    np.array(self.aligned_axes[self._first_key])]
 
     @property
     def aligned_world_axis_physical_types(self):
