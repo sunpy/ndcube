@@ -1,4 +1,5 @@
 import copy
+import numbers
 
 import astropy.units as u
 import matplotlib as mpl
@@ -1036,7 +1037,7 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                         raise TypeError("Extra coord {} must be of same type for all NDCubes to "
                                         "use it to define a plot axis.".format(axis_extra_coord))
                     if extra_coord_axes.all() == extra_coord_axes[0]:
-                        if isinstance(extra_coord_axes[0], (int, np.int64)):
+                        if isinstance(extra_coord_axes[0], numbers.Integral):
                             extra_coord_axes = [int(extra_coord_axes[0])]
                         else:
                             extra_coord_axes = list(extra_coord_axes[0]).sort()
