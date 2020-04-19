@@ -2,6 +2,7 @@
 """
 Utilities for ndcube.
 """
+import numbers
 
 import numpy as np
 from astropy.units import Quantity
@@ -88,8 +89,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, missing_ax
             raise ValueError(coord_format_error.format(coord))
         if not isinstance(coord[0], str):
             raise ValueError(coord_0_format_error.format(coord))
-        if coord[1] is not None and not isinstance(coord[1], int) and \
-                not isinstance(coord[1], np.int64):
+        if coord[1] is not None and not isinstance(coord[1], numbers.Integral):
             raise ValueError(coord_1_format_error)
         # Unless extra coord corresponds to a missing axis, check length
         # of coord is same is data axis to which is corresponds.
