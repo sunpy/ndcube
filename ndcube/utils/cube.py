@@ -2,6 +2,7 @@
 """
 Utilities for ndcube.
 """
+import numbers
 
 import numpy as np
 from astropy.units import Quantity
@@ -46,7 +47,7 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
 
     # Make sure that data_axis is a scalar item
     if data_axis is not None:
-        if not isinstance(data_axis, (int, np.int32, np.int64)):
+        if not isinstance(data_axis, numbers.Integral):
             raise ValueError(f"The data_axis parameter accepts \
                 numpy.int64 or numpy.np.int32 datatype, got this {type(data_axis)}")
 
@@ -124,7 +125,7 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
 
     # Make sure that wcs_axis is a scalar item
     if wcs_axis is not None:
-        if not isinstance(wcs_axis, (int, np.int32, np.int64)):
+        if not isinstance(wcs_axis, numbers.Integral):
             raise ValueError(f"The wcs_axis parameter accepts \
                 numpy.int64 or np.int32 datatype, got this {type(wcs_axis)}")
 
@@ -218,8 +219,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
             raise ValueError(coord_format_error.format(coord))
         if not isinstance(coord[0], str):
             raise ValueError(coord_0_format_error.format(coord))
-        if coord[1] is not None and not isinstance(coord[1], int) and \
-                not isinstance(coord[1], np.int64):
+        if coord[1] is not None and not isinstance(coord[1], numbers.Integral):
             raise ValueError(coord_1_format_error)
 
         # Determine wcs axis corresponding to data axis of coord
