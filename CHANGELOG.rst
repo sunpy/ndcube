@@ -1,3 +1,12 @@
+Ndcube v1.3.2 (2020-04-20)
+==========================
+
+Bug Fixes
+---------
+
+- Generalize int type checking so it is independent of the bit-type of the OS. (`#269 <https://github.com/sunpy/ndcube/pull/269>`__)
+
+
 Ndcube v1.3.1 (2020-04-17)
 ==========================
 
