@@ -1,0 +1,1 @@
+Generalize int type checking so it is independent of the bit-type of the OS.
