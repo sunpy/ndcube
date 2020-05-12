@@ -1,8 +1,9 @@
-from typing import Union
-
 import astropy.units as u
+import gwcs
 import gwcs.coordinate_frames as cf
+import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.modeling.models import tabular_model
 from astropy.time import Time
 
 try:
@@ -40,10 +41,10 @@ class ExtraCoords:
 
         # TODO: verify these mapping checks are correct
         if mapping is not None:
-            if max(mapping) >= self.array_ndim:
+            if len(mapping) == self.array_ndim:
                 raise ValueError("The provided mapping tried to map to more pixel dimensions than `ndim`.")
         if wcs is not None:
-            if not len(mapping) == wcs.pixel_n_dim:
+            if not max(mapping) <= wcs.pixel_n_dim:
                 raise ValueError("The number of pixel dimensions in the WCS does not match the length of the mapping.")
 
         self._wcs = wcs
@@ -177,34 +178,130 @@ class LookupTableCoord:
     different array-like types) and holds the building blocks (transform and
     frame) to generate a `gwcs.WCS` object.
 
+    This can be used as a way to generate gWCS objects based on lookup tables,
+    however, it lacks some of the flexibility of doing this manually.
+
     Parameters
     ----------
     lookup_table : `object`
         The lookup table.
     """
-    def __init__(self, lookup_table):
-        self._model, self._frame = self.parse_lookup_table(lookup_table)
+    def __init__(self, lookup_table, mesh=False, names=None, physical_types=None, frame_type="auto"):
+        self.model, self.frame = self._parse_lookup_table(lookup_table,
+                                                          mesh=mesh,
+                                                          names=names,
+                                                          physical_types=physical_types,
+                                                          frame_type=frame_type)
+
+    @property
+    def wcs(self):
+        return gwcs.WCS(forward_transform=self.model,
+                        input_frame=self._generate_generic_frame(self.model.n_inputs, u.pix),
+                        output_frame=self.frame)
+
+    @staticmethod
+    def generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
+        if not isinstance(lookup_table, u.Quantity):
+            raise TypeError("lookup_table must be a Quantity.")
+
+        ndim = lookup_table.ndim
+        TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
+
+        # The integer location is at the centre of the pixel.
+        points = [(np.arange(size) - 0) * points_unit for size in lookup_table.shape]
+
+        kwargs = {
+            'bounds_error': False,
+            'fill_value': np.nan,
+            'method': interpolation,
+            **kwargs
+            }
+
+        return TabularND(points, lookup_table, **kwargs)
+
+    @classmethod
+    def _generate_compound_model(cls, *lookup_tables, mesh=True):
+        """
+        Takes a set of quantities and returns a ND compound model.
+        """
+        model = cls.generate_tabular(lookup_tables[0])
+        for lt in lookup_tables[1:]:
+            model = model & cls.generate_tabular(lt)
+
+        return model
+
+    @staticmethod
+    def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
+        """
+        Generate a simple frame, where all axes have the same type and unit.
+        """
+        axes_order = tuple(range(naxes))
+
+        name = None
+        axes_type = "CUSTOM"
+
+        if isinstance(unit, (u.Unit, u.IrreducibleUnit)):
+            unit = tuple([unit] * naxes)
+
+        if all([u.m.is_equivalent(un) for un in unit]):
+            axes_type = "SPATIAL"
+
+        if all([u.pix.is_equivalent(un) for un in unit]):
+            name = "DetectorFrame"
+            axes_type = "PIXEL"
+
+        axes_type = tuple([axes_type] * naxes)
+
+        return cf.CoordinateFrame(naxes, axes_type, axes_order, unit=unit,
+                                  axes_names=names, name=name, axis_physical_types=physical_types)
 
     @singledispatchmethod
-    def _parse_lookup_table(self, lookup_table):
-        """
-        Generate an astropy model and gWCS frame from a lookup table.
-        """
-        raise NotImplementedError(f"Can not generate a lookup table from input of type {type(lookup_table)}")
+    @classmethod
+    def _parse_lookup_table(cls, lookup_table, **kwargs):
+        raise NotImplementedError(f"Can not generate a lookup table from input of type {type(lookup_table)}.")
 
     @_parse_lookup_table.register(Time)
-    def _time_table(self, lookup_table):
-        pass
+    @classmethod
+    def from_time(cls, lookup_table, mesh=False, names=None, physical_types=None, **kwargs):
+        if mesh:
+            raise ValueError("Can not use mesh=True with Time objects.")
 
     @_parse_lookup_table.register(SkyCoord)
-    def _skycoord_table(self, lookup_table):
-        pass
-
-    @_parse_lookup_table.register(u.Quantity)
-    def _quantity_table(self, lookup_table):
+    @classmethod
+    def from_skycoord(cls, lookup_table, mesh=False, names=None, physical_types=None, **kwargs):
         pass
 
     @_parse_lookup_table.register(list)
     @_parse_lookup_table.register(tuple)
-    def _list_table(self, lookup_table):
-        pass
+    @_parse_lookup_table.register(u.Quantity)
+    @classmethod
+    def _from_quantity(cls, lookup_table, mesh=False, names=None, physical_types=None, frame_type="auto"):
+        naxes = 1
+        if isinstance(lookup_table, (list, tuple)):
+            if not all((isinstance(x, u.Quantity) for x in lookup_table)):
+                raise TypeError("Can only parse a list or tuple of u.Quantity objects.")
+
+            naxes = len(lookup_table)
+            try:
+                combined = u.Quantity(lookup_table)
+                unit = combined.unit
+            except u.UnitsError:
+                unit = tuple(lt.unit for lt in lookup_table)
+
+            model = cls._generate_compound_model(*lookup_table, mesh=mesh)
+
+        else:
+            unit = lookup_table.unit
+
+            model = cls.generate_tabular(lookup_table)
+
+        frame = cls._generate_generic_frame(naxes, unit, names, physical_types)
+
+        if frame_type == "spectral":
+            if not isinstance(lookup_table, u.Quantity):
+                raise TypeError("Can not generate a spectral frame with more than one lookup table")
+            if not unit.is_equivalent(u.Hz, equivalencies=u.spectral()):
+                raise u.UnitsError("The provided quantity is not compatible with a spectral type.")
+            frame = cf.SpectralFrame(unit=(unit,), axes_names=names, axis_physical_types=physical_types)
+
+        return model, frame
