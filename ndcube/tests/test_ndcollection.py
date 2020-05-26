@@ -1,9 +1,9 @@
 import copy
 
-import pytest
-import numpy as np
-import astropy.wcs
 import astropy.units as u
+import astropy.wcs
+import numpy as np
+import pytest
 
 from ndcube import NDCollection, NDCube, NDCubeSequence
 from ndcube.tests import helpers
