@@ -186,12 +186,27 @@ class LookupTableCoord:
     lookup_table : `object`
         The lookup table.
     """
-    def __init__(self, lookup_table, mesh=False, names=None, physical_types=None, frame_type="auto"):
-        self.model, self.frame = self._parse_lookup_table(lookup_table,
-                                                          mesh=mesh,
-                                                          names=names,
-                                                          physical_types=physical_types,
-                                                          frame_type=frame_type)
+    def __init__(self, lookup_table, mesh=False, names=None, physical_types=None):
+        model, frame = self._parse_lookup_table(lookup_table,
+                                                mesh=mesh,
+                                                names=names,
+                                                physical_types=physical_types)
+        self.models = [model]
+        self.frames = [frame]
+
+    @property
+    def model(self):
+        model = self.models[0]
+        for m2 in self.models[1:]:
+            model = model & m2
+        return model
+
+    @propery
+    def frame(self):
+        if len(self.frames) == 1:
+            return frames[0]
+        else:
+            return cf.CompoundFrame(self.frames)
 
     @property
     def wcs(self):
@@ -247,7 +262,7 @@ class LookupTableCoord:
             axes_type = "SPATIAL"
 
         if all([u.pix.is_equivalent(un) for un in unit]):
-            name = "DetectorFrame"
+            name = "PixelFrame"
             axes_type = "PIXEL"
 
         axes_type = tuple([axes_type] * naxes)
@@ -275,7 +290,7 @@ class LookupTableCoord:
     @_parse_lookup_table.register(tuple)
     @_parse_lookup_table.register(u.Quantity)
     @classmethod
-    def _from_quantity(cls, lookup_table, mesh=False, names=None, physical_types=None, frame_type="auto"):
+    def _from_quantity(cls, lookup_table, mesh=False, names=None, physical_types=None):
         naxes = 1
         if isinstance(lookup_table, (list, tuple)):
             if not all((isinstance(x, u.Quantity) for x in lookup_table)):
@@ -296,12 +311,5 @@ class LookupTableCoord:
             model = cls.generate_tabular(lookup_table)
 
         frame = cls._generate_generic_frame(naxes, unit, names, physical_types)
-
-        if frame_type == "spectral":
-            if not isinstance(lookup_table, u.Quantity):
-                raise TypeError("Can not generate a spectral frame with more than one lookup table")
-            if not unit.is_equivalent(u.Hz, equivalencies=u.spectral()):
-                raise u.UnitsError("The provided quantity is not compatible with a spectral type.")
-            frame = cf.SpectralFrame(unit=(unit,), axes_names=names, axis_physical_types=physical_types)
 
         return model, frame
