@@ -3,6 +3,7 @@ import gwcs
 import gwcs.coordinate_frames as cf
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.time import Time
 
@@ -224,6 +225,8 @@ class LookupTableCoord:
 
         # The integer location is at the centre of the pixel.
         points = [(np.arange(size) - 0) * points_unit for size in lookup_table.shape]
+        if len(points) == 1:
+            points = points[0]
 
         kwargs = {
             'bounds_error': False,
@@ -233,8 +236,6 @@ class LookupTableCoord:
             }
 
         tt = TabularND(points, lookup_table, **kwargs)
-        tt.bounding_box = [u.Quantity((a.min(), a.max())) for a in points]
-        breakpoint()
         return tt
 
     @classmethod
@@ -246,7 +247,12 @@ class LookupTableCoord:
         for lt in lookup_tables[1:]:
             model = model & cls.generate_tabular(lt)
 
-        return model
+        if mesh:
+            return model
+
+        # If we are not meshing the inputs duplicate the inputs across all models
+        mapping = list(range(lookup_tables[0].ndim)) * len(lookup_tables)
+        return models.Mapping(mapping) | model
 
     @staticmethod
     def _generate_generic_frame(naxes, unit, names=None, physical_types=None):

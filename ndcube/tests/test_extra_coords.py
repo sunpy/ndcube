@@ -33,18 +33,14 @@ def test_3d_distance():
     print(ltc.frame)
     print(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix, 0*u.pix))
     print(wcs_info_str(ltc.wcs))
+    assert ltc.wcs.world_n_dim == 3
+    assert ltc.wcs.pixel_n_dim == 3
 
 
-def test_3d_nout_1_no_mesh():
-    lookup_table = np.arange(9).reshape(3,3) * u.km
+def test_2d_nout_1_no_mesh():
+    lookup_table = np.arange(9).reshape(3,3) * u.km, np.arange(9, 18).reshape(3,3) * u.km
 
     ltc = LookupTableCoord(lookup_table, mesh=False)
     print(wcs_info_str(ltc.wcs))
-
-
-def test_3d_nout_1_no_mesh():
-    lookup_table = np.arange(9).reshape(3,3) * u.km, np.arange(9, 18).reshape(3,3) * u.km
-
-    ltc = LookupTableCoord(lookup_table)
-    print(wcs_info_str(ltc.wcs))
-    breakpoint()
+    assert ltc.wcs.world_n_dim == 2
+    assert ltc.wcs.pixel_n_dim == 2
