@@ -201,10 +201,10 @@ class LookupTableCoord:
             model = model & m2
         return model
 
-    @propery
+    @property
     def frame(self):
         if len(self.frames) == 1:
-            return frames[0]
+            return self.frames[0]
         else:
             return cf.CompoundFrame(self.frames)
 
@@ -232,7 +232,10 @@ class LookupTableCoord:
             **kwargs
             }
 
-        return TabularND(points, lookup_table, **kwargs)
+        tt = TabularND(points, lookup_table, **kwargs)
+        tt.bounding_box = [u.Quantity((a.min(), a.max())) for a in points]
+        breakpoint()
+        return tt
 
     @classmethod
     def _generate_compound_model(cls, *lookup_tables, mesh=True):

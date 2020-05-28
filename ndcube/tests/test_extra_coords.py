@@ -18,7 +18,7 @@ def test_1d_distance():
 def test_1d_spectral():
     lookup_table = u.Quantity(np.arange(10) * u.nm)
 
-    ltc = LookupTableCoord(lookup_table, frame_type="spectral")
+    ltc = LookupTableCoord(lookup_table)
     print(ltc.model)
     print(ltc.frame)
     print(ltc.wcs.pixel_to_world(0*u.pix))
