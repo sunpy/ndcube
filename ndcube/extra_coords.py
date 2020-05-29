@@ -296,9 +296,29 @@ class LookupTableCoord:
         if len(lookup_tables) > 1:
             raise ValueError("Can only parse one time lookup table.")
 
+        time = lookup_tables[0]
+        deltas = (time[1:] - time[0]).to(u.s)
+        deltas = deltas.insert(0, 0)
+        model, _ = self._from_quantity((deltas,))
+        frame = cf.TemporalFrame(time[0], unit=u.s, axes_names=names, name="TemporalFrame")
+        return model, frame
+
     def _from_skycoord(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
-        # TODO: Strip out the components of the skycoord (2 or 3) and pass out to quantity
-        pass
+        if len(lookup_tables) > 1:
+            raise ValueError("Can only parse one SkyCoord lookup table.")
+
+        sc = lookup_tables[0]
+        components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
+        model, _ = self._from_quantity(components, mesh=mesh)
+        ref_frame = sc.frame.replicate_without_data()
+        units = list(c.unit for c in components)
+        frame = cf.CelestialFrame(reference_frame=ref_frame,
+                                  unit=units,
+                                  axes_names=names,
+                                  axis_physical_types=physical_types,
+                                  name="CelestialFrame")
+        return model, frame
+
 
     def _from_spectral(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
         pass
