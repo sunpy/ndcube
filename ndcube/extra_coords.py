@@ -184,14 +184,28 @@ class LookupTableCoord:
 
     Parameters
     ----------
-    lookup_table : `object`
-        The lookup table.
+    lookup_tables : `object`
+        The lookup tables. If more than one lookup table is specified, it
+        should represent one physical coordinate type, i.e "spatial". They must
+        all be the same type, shape and unit.
     """
-    def __init__(self, lookup_table, mesh=False, names=None, physical_types=None):
-        model, frame = self._parse_lookup_table(lookup_table,
-                                                mesh=mesh,
-                                                names=names,
-                                                physical_types=physical_types)
+    def __init__(self, *lookup_tables, mesh=True, names=None, physical_types=None):
+        lt0 = lookup_tables[0]
+        if not all(isinstance(lt, type(lt0)) for lt in lookup_tables):
+            raise TypeError("All lookup tables must be the same type")
+
+        if not all(lt0.shape == lt.shape for lt in lookup_tables):
+            raise ValueError("All lookup tables must have the same shape")
+
+        type_map = {
+            u.Quantity: self._from_quantity,
+            Time: self._from_time,
+            SkyCoord: self._from_skycoord
+        }
+        model, frame = type_map[type(lt0)](lookup_tables,
+                                           mesh=mesh,
+                                           names=names,
+                                           physical_types=physical_types)
         self.models = [model]
         self.frames = [frame]
 
@@ -235,8 +249,7 @@ class LookupTableCoord:
             **kwargs
             }
 
-        tt = TabularND(points, lookup_table, **kwargs)
-        return tt
+        return TabularND(points, lookup_table, **kwargs)
 
     @classmethod
     def _generate_compound_model(cls, *lookup_tables, mesh=True):
@@ -279,46 +292,35 @@ class LookupTableCoord:
         return cf.CoordinateFrame(naxes, axes_type, axes_order, unit=unit,
                                   axes_names=names, name=name, axis_physical_types=physical_types)
 
-    @singledispatchmethod
-    @classmethod
-    def _parse_lookup_table(cls, lookup_table, **kwargs):
-        raise NotImplementedError(f"Can not generate a lookup table from input of type {type(lookup_table)}.")
+    def _from_time(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
+        if len(lookup_tables) > 1:
+            raise ValueError("Can only parse one time lookup table.")
 
-    @_parse_lookup_table.register(Time)
-    @classmethod
-    def from_time(cls, lookup_table, mesh=False, names=None, physical_types=None, **kwargs):
-        if mesh:
-            raise ValueError("Can not use mesh=True with Time objects.")
-
-    @_parse_lookup_table.register(SkyCoord)
-    @classmethod
-    def from_skycoord(cls, lookup_table, mesh=False, names=None, physical_types=None, **kwargs):
+    def _from_skycoord(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
+        # TODO: Strip out the components of the skycoord (2 or 3) and pass out to quantity
         pass
 
-    @_parse_lookup_table.register(list)
-    @_parse_lookup_table.register(tuple)
-    @_parse_lookup_table.register(u.Quantity)
-    @classmethod
-    def _from_quantity(cls, lookup_table, mesh=False, names=None, physical_types=None):
-        naxes = 1
-        if isinstance(lookup_table, (list, tuple)):
-            if not all((isinstance(x, u.Quantity) for x in lookup_table)):
+    def _from_spectral(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
+        pass
+
+    def _from_quantity(self, lookup_tables, mesh=False, names=None, physical_types=None):
+        if len(lookup_tables) > 1:
+            unit = lookup_tables[0].unit
+            if not all((isinstance(x, u.Quantity) for x in lookup_tables)):
                 raise TypeError("Can only parse a list or tuple of u.Quantity objects.")
+            if not all(lt.unit.is_equivalent(unit) for lt in lookup_tables):
+                raise u.UnitsError("All lookup tables must have equivalent units.")
 
-            naxes = len(lookup_table)
-            try:
-                combined = u.Quantity(lookup_table)
-                unit = combined.unit
-            except u.UnitsError:
-                unit = tuple(lt.unit for lt in lookup_table)
+            combined = u.Quantity(lookup_tables)
+            unit = combined.unit
 
-            model = cls._generate_compound_model(*lookup_table, mesh=mesh)
+            model = self._generate_compound_model(*lookup_tables, mesh=mesh)
 
         else:
-            unit = lookup_table.unit
+            unit = lookup_tables[0].unit
 
-            model = cls.generate_tabular(lookup_table)
+            model = self.generate_tabular(lookup_tables[0])
 
-        frame = cls._generate_generic_frame(naxes, unit, names, physical_types)
+        frame = self._generate_generic_frame(len(lookup_tables), unit, names, physical_types)
 
         return model, frame
