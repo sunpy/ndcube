@@ -53,12 +53,25 @@ def test_2d_nout_1_no_mesh():
 def test_2d_skycoord_mesh():
     sc = SkyCoord(range(10), range(10), unit=u.deg)
     ltc = LookupTableCoord(sc, mesh=True)
+    assert ltc.model.n_inputs == 2
+    assert ltc.model.n_outputs == 2
+
+
+@pytest.mark.xfail
+def test_3d_skycoord_mesh():
+    """Known failure due to bug in gwcs."""
+    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
+    ltc = LookupTableCoord(sc, mesh=True)
+    assert ltc.model.n_inputs == 3
+    assert ltc.model.n_outputs == 3
 
 
 def test_2d_skycoord_no_mesh():
     data = np.arange(9).reshape(3,3), np.arange(9, 18).reshape(3,3)
     sc = SkyCoord(*data, unit=u.deg)
     ltc = LookupTableCoord(sc, mesh=False)
+    assert ltc.model.n_inputs == 2
+    assert ltc.model.n_outputs == 2
 
 
 def test_1d_time():

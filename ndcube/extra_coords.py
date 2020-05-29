@@ -299,7 +299,7 @@ class LookupTableCoord:
         time = lookup_tables[0]
         deltas = (time[1:] - time[0]).to(u.s)
         deltas = deltas.insert(0, 0)
-        model, _ = self._from_quantity((deltas,))
+        model = self._model_from_quantity((deltas,))
         frame = cf.TemporalFrame(time[0], unit=u.s, axes_names=names, name="TemporalFrame")
         return model, frame
 
@@ -309,9 +309,10 @@ class LookupTableCoord:
 
         sc = lookup_tables[0]
         components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
-        model, _ = self._from_quantity(components, mesh=mesh)
+        model = self._model_from_quantity(components, mesh=mesh)
         ref_frame = sc.frame.replicate_without_data()
         units = list(c.unit for c in components)
+        # TODO: Currently this limits you to 2D due to gwcs#120
         frame = cf.CelestialFrame(reference_frame=ref_frame,
                                   unit=units,
                                   axes_names=names,
@@ -319,28 +320,22 @@ class LookupTableCoord:
                                   name="CelestialFrame")
         return model, frame
 
-
-    def _from_spectral(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
-        pass
-
-    def _from_quantity(self, lookup_tables, mesh=False, names=None, physical_types=None):
+    def _model_from_quantity(self, lookup_tables, mesh=False):
         if len(lookup_tables) > 1:
-            unit = lookup_tables[0].unit
             if not all((isinstance(x, u.Quantity) for x in lookup_tables)):
                 raise TypeError("Can only parse a list or tuple of u.Quantity objects.")
-            if not all(lt.unit.is_equivalent(unit) for lt in lookup_tables):
-                raise u.UnitsError("All lookup tables must have equivalent units.")
 
-            combined = u.Quantity(lookup_tables)
-            unit = combined.unit
+            return self._generate_compound_model(*lookup_tables, mesh=mesh)
 
-            model = self._generate_compound_model(*lookup_tables, mesh=mesh)
+        return self.generate_tabular(lookup_tables[0])
 
-        else:
-            unit = lookup_tables[0].unit
+    def _from_quantity(self, lookup_tables, mesh=False, names=None, physical_types=None):
+        if not all(lt.unit.is_equivalent(unit) for lt in lookup_tables):
+            raise u.UnitsError("All lookup tables must have equivalent units.")
 
-            model = self.generate_tabular(lookup_tables[0])
+        unit = u.Quantity(lookup_tables).unit
 
+        model = self._model_from_quantity(lookup_tables, mesh=mesh)
         frame = self._generate_generic_frame(len(lookup_tables), unit, names, physical_types)
 
         return model, frame
