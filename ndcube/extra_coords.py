@@ -1,3 +1,6 @@
+import copy
+from collections.abc import Sequence
+
 import astropy.units as u
 import gwcs
 import gwcs.coordinate_frames as cf
@@ -31,6 +34,7 @@ class ExtraCoords:
         The WCS specifying the extra coordinates.
     mapping : `tuple` of `int`
        The mapping between the array dimensions and pixel dimensions in the wcs.
+
     """
     def __init__(self, *, array_shape=None, wcs=None, mapping=None):
         if array_shape is not None or (wcs is not None and wcs.array_shape is not None):
@@ -74,6 +78,11 @@ class ExtraCoords:
         `ndcube.extra_coords.ExtraCoords`
 
         """
+        if len(pixel_dimensions) != len(lookup_tables):
+            raise ValueError(
+                "The length of pixel_dimensions and lookup_tables must match."
+            )
+
         extra_coords = cls(array_shape=array_shape)
 
         for pixel_dim, lookup_table in zip(pixel_dimensions, lookup_tables):
@@ -81,7 +90,7 @@ class ExtraCoords:
 
         return extra_coords
 
-    def add_coordinate(self, pixel_dimension, lookup_table):
+    def add_coordinate(self, pixel_dimension, lookup_table, **kwargs):
         """
         Add a coordinate to this ``ExtraCoords`` based on a lookup table.
 
@@ -97,7 +106,15 @@ class ExtraCoords:
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
             )
 
-        self._lookup_tables.append((pixel_dimension, LookupTableCoord(lookup_table)))
+        lutc = LookupTableCoord(lookup_table, **kwargs)
+        if not isinstance(pixel_dimension, Sequence):
+            pixel_dimension = [pixel_dimension]
+
+        for pix_dim in pixel_dimension:
+            self._lookup_tables.append((pix_dim, lutc))
+
+        # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
+        self._lookup_tables = list(sorted(self._lookup_tables, key=lambda x: x[0]))
 
     @property
     def mapping(self):
@@ -111,10 +128,10 @@ class ExtraCoords:
         if not self._lookup_tables:
             return None
 
-        return tuple(enumerate([lt[0] for lt in self._lookup_tables]))
+        return tuple([lt[0] for lt in self._lookup_tables])
 
     @mapping.setter
-    def _mapping(self, mapping):
+    def _set_mapping(self, mapping):
         if self._mapping is not None:
             raise AttributeError("Can't set mapping if a mapping has already been specified.")
 
@@ -146,12 +163,17 @@ class ExtraCoords:
         if self._wcs is not None:
             return self._wcs
 
-        # This bit is complex need to build a compound model and a
-        # CompoundFrame and gwcs here.
-        raise NotImplementedError()
+        lutcs = set(lt[1] for lt in self._lookup_tables)
+        # created a sorted list of unique items
+        _tmp = set()  # a temporary set
+        lutcs = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
+        out = copy.deepcopy(lutcs[0])
+        for lut in lutcs[1:]:
+            out = out & lut
+        return out.wcs
 
     @wcs.setter
-    def _wcs(self, value):
+    def _set_wcs(self, value):
         if self._wcs is not None:
             raise AttributeError(
                 "Can't set wcs if a WCS has already been specified."
@@ -209,6 +231,24 @@ class LookupTableCoord:
         self.models = [model]
         self.frames = [frame]
 
+    def __and__(self, other):
+        if not isinstance(other, LookupTableCoord):
+            raise TypeError(
+                "Can only concatenate LookupTableCoord objects with other LookupTableCoord objects.")
+
+        new_lutc = copy.copy(self)
+        new_lutc.models += other.models
+        new_lutc.frames += other.frames
+
+        # We must now re-index the frames so that they align with the composite frame
+        ind = 0
+        for f in new_lutc.frames:
+            new_ind = ind + f.naxes
+            f._axes_order = tuple(range(ind, new_ind))
+            ind = new_ind
+
+        return new_lutc
+
     @property
     def model(self):
         model = self.models[0]
@@ -221,7 +261,7 @@ class LookupTableCoord:
         if len(self.frames) == 1:
             return self.frames[0]
         else:
-            return cf.CompoundFrame(self.frames)
+            return cf.CompositeFrame(self.frames)
 
     @property
     def wcs(self):
@@ -330,7 +370,7 @@ class LookupTableCoord:
         return self.generate_tabular(lookup_tables[0])
 
     def _from_quantity(self, lookup_tables, mesh=False, names=None, physical_types=None):
-        if not all(lt.unit.is_equivalent(unit) for lt in lookup_tables):
+        if not all(lt.unit.is_equivalent(lt[0].unit) for lt in lookup_tables):
             raise u.UnitsError("All lookup tables must have equivalent units.")
 
         unit = u.Quantity(lookup_tables).unit

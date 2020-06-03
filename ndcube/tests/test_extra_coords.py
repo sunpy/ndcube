@@ -1,87 +1,92 @@
-import astropy.units as u
-import numpy as np
 import pytest
-from astropy.wcs.wcsapi.utils import wcs_info_str
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+import astropy.units as u
+import gwcs
 
-from ndcube.extra_coords import LookupTableCoord
-
-
-def test_1d_distance():
-    lookup_table = u.Quantity(np.arange(10) * u.km)
-
-    ltc = LookupTableCoord(lookup_table)
-    assert ltc.model.n_inputs == 1
-    assert ltc.model.n_outputs == 1
-    assert ltc.model.lookup_table is lookup_table
-    assert u.allclose(u.Quantity(range(10), u.pix), ltc.model.points)
-
-    assert u.allclose(ltc.wcs.pixel_to_world(0), 0*u.km)
-    assert u.allclose(ltc.wcs.pixel_to_world(9), 9*u.km)
+from ndcube.extra_coords import ExtraCoords
 
 
-def test_3d_distance():
-    lookup_table = (u.Quantity(np.arange(10) * u.km),
-                    u.Quantity(np.arange(10, 20) * u.km),
-                    u.Quantity(np.arange(20, 30) * u.km))
-
-    ltc = LookupTableCoord(*lookup_table, mesh=True)
-    assert ltc.model.n_inputs == 3
-    assert ltc.model.n_outputs == 3
-
-    assert ltc.wcs.world_n_dim == 3
-    assert ltc.wcs.pixel_n_dim == 3
-
-    assert u.allclose(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix, 0*u.pix),
-                      (0, 10, 20)*u.km)
-
-def test_2d_nout_1_no_mesh():
-    lookup_table = np.arange(9).reshape(3,3) * u.km, np.arange(9, 18).reshape(3,3) * u.km
-
-    ltc = LookupTableCoord(*lookup_table, mesh=False)
-    assert ltc.wcs.world_n_dim == 2
-    assert ltc.wcs.pixel_n_dim == 2
-
-    assert ltc.model.n_inputs == 2
-    assert ltc.model.n_outputs == 2
-
-    assert u.allclose(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix),
-                      (0, 9)*u.km)
-
-
-def test_2d_skycoord_mesh():
-    sc = SkyCoord(range(10), range(10), unit=u.deg)
-    ltc = LookupTableCoord(sc, mesh=True)
-    assert ltc.model.n_inputs == 2
-    assert ltc.model.n_outputs == 2
-
-
-@pytest.mark.xfail
-def test_3d_skycoord_mesh():
-    """Known failure due to bug in gwcs."""
-    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
-    ltc = LookupTableCoord(sc, mesh=True)
-    assert ltc.model.n_inputs == 3
-    assert ltc.model.n_outputs == 3
-
-
-def test_2d_skycoord_no_mesh():
-    data = np.arange(9).reshape(3,3), np.arange(9, 18).reshape(3,3)
-    sc = SkyCoord(*data, unit=u.deg)
-    ltc = LookupTableCoord(sc, mesh=False)
-    assert ltc.model.n_inputs == 2
-    assert ltc.model.n_outputs == 2
-
-
-def test_1d_time():
-    data = Time(["2011-01-01T00:00:00",
+@pytest.fixture
+def time_lut():
+    return Time(["2011-01-01T00:00:00",
                  "2011-01-01T00:00:10",
                  "2011-01-01T00:00:20",
                  "2011-01-01T00:00:30"], format="isot")
-    ltc = LookupTableCoord(data)
-    assert ltc.model.n_inputs == 1
-    assert ltc.model.n_outputs == 1
-    assert u.allclose(ltc.model.lookup_table, u.Quantity((0, 10, 20, 30), u.s))
 
-    assert ltc.wcs.pixel_to_world(0) == Time("2011-01-01T00:00:00")
+
+@pytest.fixture
+def wave_lut():
+    return range(10, 20) * u.nm
+
+
+@pytest.fixture
+def skycoord_1d_lut():
+    return SkyCoord(range(10), range(10), unit=u.deg)
+
+
+@pytest.fixture
+def skycoord_2d_lut():
+    data = np.arange(9).reshape(3,3), np.arange(9, 18).reshape(3,3)
+    return SkyCoord(*data, unit=u.deg)
+
+
+# Extra Coords from lookup tables
+
+# A single lookup along a dimension, i.e. Time along the second dim.
+def test_single_from_lut(wave_lut):
+    ec = ExtraCoords.from_lookup_tables((10,), (0,), (wave_lut,))
+    assert len(ec._lookup_tables) == 1
+    assert ec.mapping == (0,)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 1
+    assert ec.wcs.world_n_dim == 1
+
+
+def test_two_1d_from_lut(time_lut):
+    exposure_lut = range(10) * u.s
+    ec = ExtraCoords.from_lookup_tables((10,), (0, 0), (time_lut, exposure_lut))
+    assert len(ec._lookup_tables) == 2
+    assert ec.mapping == (0, 0)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 1
+    assert ec.wcs.world_n_dim == 2
+
+
+def test_skycoord(skycoord_1d_lut):
+    ec = ExtraCoords.from_lookup_tables((10, 10), ((0, 1),), (skycoord_1d_lut,))
+    assert len(ec._lookup_tables) == 2
+    assert ec.mapping == (0, 1)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 2
+    assert ec.wcs.world_n_dim == 2
+
+
+def test_skycoord_mesh_false(skycoord_2d_lut):
+    ec = ExtraCoords(array_shape=(10, 10))
+    ec.add_coordinate((0, 1), skycoord_2d_lut, mesh=False)
+    assert len(ec._lookup_tables) == 2
+    assert ec.mapping == (0, 1)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 2
+    assert ec.wcs.world_n_dim == 2
+
+
+def test_skycoord_mesh_false(skycoord_2d_lut, time_lut):
+    ec = ExtraCoords(array_shape=(10, 10))
+    ec.add_coordinate((0, 1), skycoord_2d_lut, mesh=False)
+    ec.add_coordinate((0,), time_lut)
+    assert len(ec._lookup_tables) == 3
+    assert ec.mapping == (0, 0, 1)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 3
+    assert ec.wcs.world_n_dim == 3
+
+# Extra coords from a WCS.
+
+# Inspecting an extra coords
+# Should be able to see what tables exists, what axes they account to, and what
+# axes have missing dimensions.
+
+# An additional spatial set (i.e. ICRS on top of HPC)
