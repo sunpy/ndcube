@@ -11,8 +11,12 @@ from astropy.wcs.wcsapi import BaseLowLevelWCS
 
 import ndcube.utils.wcs as wcs_utils
 from ndcube import utils
+from ndcube.extra_coords import ExtraCoords
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.utils.cube import _get_dimension_for_pixel, _pixel_centers_or_edges, unique_data_axis
+from ndcube.utils.wcs import _pixel_keep, wcs_ivoa_mapping
+from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
@@ -173,17 +177,33 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
-        # Enforce that the WCS object is a low_level_wcs object, and not None.
+        # Enforce that the WCS object is not None
         if self.wcs is None:
             raise TypeError("The WCS argument can not be None.")
 
         # Format extra coords.
-        if extra_coords:
-            self._extra_coords_wcs_axis = \
-                utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                    extra_coords, wcs_utils._pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
-        else:
-            self._extra_coords_wcs_axis = None
+        if not extra_coords:
+            extra_coords = ExtraCoords(array_shape=self.data.shape)
+
+        if not isinstance(extra_coords, ExtraCoords):
+            raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")
+
+        self._extra_coords = extra_coords
+
+    @property
+    def extra_coords(self):
+        return self._extra_coords
+
+    @property
+    def combined_wcs(self):
+        """
+        A `~astropy.wcs.wcsapi.BaseHighLevelWCS` object which combines ``.wcs`` with ``.extra_coords``.
+        """
+        mapping = list(range(self.wcs.pixel_ndim) + list(self.extra_coords.mapping))
+        return HighLevelWCSWrapper(
+            CompoundLowLevelWCS(self.wcs, self._extra_coords.wcs, mapping=mapping)
+        )
+
 
     @property
     def dimensions(self):

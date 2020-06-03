@@ -1,5 +1,7 @@
 import copy
 from collections.abc import Sequence
+from functools import reduce
+from numbers import Integral
 
 import astropy.units as u
 import gwcs
@@ -59,7 +61,7 @@ class ExtraCoords:
         self._lookup_tables = []
 
     @classmethod
-    def from_lookup_tables(cls, array_shape, pixel_dimensions, lookup_tables):
+    def from_lookup_tables(cls, array_shape, names, pixel_dimensions, lookup_tables):
         """
         Construct an ExtraCoords instance from lookup tables.
 
@@ -67,6 +69,8 @@ class ExtraCoords:
         ----------
         array_shape : `tuple` of `int`, optional
             The shape of the array.
+        names : `tuple` of `str`
+            The names of the world coordinates.
         pixel_dimensions : `tuple` of `int`
             The pixel dimensions (in the array) to which the ``lookup_tables``
             apply. Must be the same length as ``lookup_tables``.
@@ -85,17 +89,19 @@ class ExtraCoords:
 
         extra_coords = cls(array_shape=array_shape)
 
-        for pixel_dim, lookup_table in zip(pixel_dimensions, lookup_tables):
-            extra_coords.add_coordinate(pixel_dim, lookup_table)
+        for name, pixel_dim, lookup_table in zip(names, pixel_dimensions, lookup_tables):
+            extra_coords.add_coordinate(name, pixel_dim, lookup_table)
 
         return extra_coords
 
-    def add_coordinate(self, pixel_dimension, lookup_table, **kwargs):
+    def add_coordinate(self, name, pixel_dimension, lookup_table, **kwargs):
         """
         Add a coordinate to this ``ExtraCoords`` based on a lookup table.
 
         Parameters
         ----------
+        name : `str`
+            The name for this coordinate(s).
         pixel_dimension : `int`
             The pixel dimension (in the array) to which this lookup table corresponds.
         lookup_table : `object`
@@ -106,15 +112,32 @@ class ExtraCoords:
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
             )
 
-        lutc = LookupTableCoord(lookup_table, **kwargs)
-        if not isinstance(pixel_dimension, Sequence):
-            pixel_dimension = [pixel_dimension]
-
-        for pix_dim in pixel_dimension:
-            self._lookup_tables.append((pix_dim, lutc))
+        lutc = LookupTableCoord(lookup_table, names=name, **kwargs)
+        self._lookup_tables.append((pixel_dimension, lutc))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
-        self._lookup_tables = list(sorted(self._lookup_tables, key=lambda x: x[0]))
+        self._lookup_tables = list(sorted(self._lookup_tables,
+                                          key=lambda x: x[0] if isinstance(x[0], int) else x[0][0]))
+
+    @property
+    def _name_lut_map(self):
+        return {lut[1].wcs.world_axis_names: lut for lut in self._lookup_tables}
+
+    @property
+    def keys(self):
+        return self._name_lut_map.keys()
+
+    def __getitem__(self, item):
+        if not isinstance(item, str):
+            raise TypeError("ExtraCoords objects can only be indexed by world coordinate name.")
+
+        for names, lut in self._name_lut_map.items():
+            if item in names:
+                new_ec = ExtraCoords(array_shape=self.array_shape)
+                new_ec._lookup_tables = [lut]
+                return new_ec
+
+        raise KeyError(f"Can't find the world axis named {item} in this ExtraCoords object.")
 
     @property
     def mapping(self):
@@ -128,7 +151,8 @@ class ExtraCoords:
         if not self._lookup_tables:
             return None
 
-        return tuple([lt[0] for lt in self._lookup_tables])
+        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
+        return tuple(reduce(list.__add__, lts))
 
     @mapping.setter
     def _set_mapping(self, mapping):
