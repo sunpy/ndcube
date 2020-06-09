@@ -1,10 +1,12 @@
-import pytest
-import numpy as np
-from astropy.coordinates import SkyCoord
-from astropy.time import Time
 import astropy.units as u
 import gwcs
+import numpy as np
+import pytest
+from astropy.coordinates import SkyCoord
+from astropy.time import Time
+from astropy.wcs import WCS
 
+from ndcube import NDCube
 from ndcube.extra_coords import ExtraCoords
 
 
@@ -112,3 +114,26 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
 # axes have missing dimensions.
 
 # An additional spatial set (i.e. ICRS on top of HPC)
+
+
+# Extra Coords with NDCube
+def test_add_coord_after_create(time_lut):
+    ndc = NDCube(np.random.random((10,10)), wcs=WCS(naxis=2))
+    assert isinstance(ndc.extra_coords, ExtraCoords)
+    ndc.extra_coords.add_coordinate("time", 0, time_lut)
+
+    assert len(ndc.extra_coords._lookup_tables) == 1
+
+    assert ndc.extra_coords["time"]._lookup_tables == ndc.extra_coords._lookup_tables
+
+def test_combined_wcs(time_lut):
+    ndc = NDCube(np.random.random((10,10)), wcs=WCS(naxis=2))
+    assert isinstance(ndc.extra_coords, ExtraCoords)
+    ndc.extra_coords.add_coordinate("time", 0, time_lut)
+
+    cwcs = ndc.combined_wcs
+    assert cwcs.world_n_dim == 3
+    assert cwcs.pixel_n_dim == 2
+    world = cwcs.pixel_to_world(0, 0)
+    assert u.allclose(world[:2], (1,1) * u.one)
+    assert world[2] == Time("2011-01-01T00:00:00")

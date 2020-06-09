@@ -199,11 +199,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         A `~astropy.wcs.wcsapi.BaseHighLevelWCS` object which combines ``.wcs`` with ``.extra_coords``.
         """
-        mapping = list(range(self.wcs.pixel_ndim) + list(self.extra_coords.mapping))
+        mapping = list(range(self.wcs.pixel_n_dim)) + list(self.extra_coords.mapping)
         return HighLevelWCSWrapper(
             CompoundLowLevelWCS(self.wcs, self._extra_coords.wcs, mapping=mapping)
         )
-
 
     @property
     def dimensions(self):

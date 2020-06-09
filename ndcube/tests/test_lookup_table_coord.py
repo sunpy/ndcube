@@ -1,10 +1,10 @@
 import astropy.units as u
+import gwcs.coordinate_frames as cf
 import numpy as np
 import pytest
-from astropy.wcs.wcsapi.utils import wcs_info_str
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-import gwcs.coordinate_frames as cf
+from astropy.wcs.wcsapi.utils import wcs_info_str
 
 from ndcube.extra_coords import LookupTableCoord
 
@@ -20,6 +20,7 @@ def test_1d_distance():
 
     assert u.allclose(ltc.wcs.pixel_to_world(0), 0*u.km)
     assert u.allclose(ltc.wcs.pixel_to_world(9), 9*u.km)
+    assert ltc.wcs.world_to_pixel(0*u.km) == 0
 
 
 def test_3d_distance():
@@ -36,6 +37,7 @@ def test_3d_distance():
 
     assert u.allclose(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix, 0*u.pix),
                       (0, 10, 20)*u.km)
+    assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 10*u.km, 20*u.km), (0, 0, 0))
 
 def test_2d_nout_1_no_mesh():
     lookup_table = np.arange(9).reshape(3,3) * u.km, np.arange(9, 18).reshape(3,3) * u.km
@@ -49,6 +51,9 @@ def test_2d_nout_1_no_mesh():
 
     assert u.allclose(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix),
                       (0, 9)*u.km)
+
+    # TODO: this model is not invertable
+    # assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 9*u.km), (0, 0))
 
 
 def test_2d_skycoord_mesh():
@@ -86,6 +91,7 @@ def test_1d_time():
     assert u.allclose(ltc.model.lookup_table, u.Quantity((0, 10, 20, 30), u.s))
 
     assert ltc.wcs.pixel_to_world(0) == Time("2011-01-01T00:00:00")
+    assert ltc.wcs.world_to_pixel(Time("2011-01-01T00:00:00")) == 0
 
 def test_join():
     time_ltc = LookupTableCoord(Time(["2011-01-01T00:00:00",
@@ -105,6 +111,8 @@ def test_join():
     assert world[0] == Time("2011-01-01T00:00:00")
     assert u.allclose(world[1], 0*u.nm)
 
+    assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0))
+
 
 def test_join_3d():
     sc = SkyCoord(range(10), range(10), unit=u.deg)
@@ -120,3 +128,5 @@ def test_join_3d():
     world = ltc.wcs.pixel_to_world(0, 0, 0)
     assert isinstance(world[0], SkyCoord)
     assert u.allclose(world[1], 0*u.nm)
+
+    assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
