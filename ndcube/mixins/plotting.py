@@ -49,30 +49,54 @@ class NDCubePlotMixin:
         naxis = self.wcs.pixel_n_dim
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
-        plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
+        plot_axes, _, axes_units = utils.prep_plot_kwargs(
             len(self.dimensions), low_level_wcs, plot_axes, axes_coordinates, axes_units)
 
+        if not axes_coordinates:
+            axes_coordinates = [...]
+            plot_wcs = self.wcs.low_level_wcs
+        else:
+            plot_wcs = self.combined_wcs.low_level_wcs
+
+        if Ellipsis in axes_coordinates:
+            axes_coordinates += list(self.wcs.world_axis_physical_types)
+            axes_coordinates.remove(Ellipsis)
+
         if naxis == 1:
-            ax = self._plot_1D_cube(low_level_wcs, axes, axes_coordinates,
+            ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
 
         elif naxis == 2:
-            ax = self._plot_2D_cube(low_level_wcs, axes, plot_axes, axes_coordinates,
+            ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
                                     axes_units, data_unit, **kwargs)
         else:
-            ax = self._animate_cube(low_level_wcs, plot_axes=plot_axes,
+            ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
                                     axes_coordinates=axes_coordinates,
                                     axes_units=axes_units, **kwargs)
 
         return ax
+
+    def _not_visible_coords(self, axes, axes_coordinates):
+        """
+        Based on an axes object and axes_coords, work out which coords should not be visible.
+        """
+        visible_coords = set(item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates)
+        return set(axes.coords._aliases.values()).difference(visible_coords)
+
+    def _apply_axes_coordinates(self, axes, axes_coordinates):
+        """
+        Hide ticks and labels for non-visible axes based on axes_coordinates.
+        """
+        for coord_index in self._not_visible_coords(axes, axes_coordinates):
+            axes.coords[coord_index].set_ticks_visible(False)
+            axes.coords[coord_index].set_ticklabel_visible(False)
 
     def _plot_1D_cube(self, wcs, axes=None, axes_coordinates=None, axes_units=None,
                       data_unit=None, **kwargs):
         if axes is None:
             axes = plt.subplot(projection=wcs)
 
-        if axes_coordinates is not None and axes_coordinates[0] != wcs.world_axis_physical_types[::-1][0]:
-            raise NotImplementedError("We need to support extra_coords here")
+        self._apply_axes_coordinates(axes, axes_coordinates)
 
         default_ylabel = "Data"
 
@@ -120,6 +144,8 @@ class NDCubePlotMixin:
 
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
+        self._apply_axes_coordinates(axes, axes_coordinates)
+
         data = self.data
         if data_unit is not None:
             # If user set data_unit, convert dat to desired unit if self.unit set.
@@ -146,8 +172,6 @@ class NDCubePlotMixin:
 
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
-        if axes_coordinates is not None and axes_coordinates[0] != wcs.world_axis_physical_types[::-1][0]:
-            raise NotImplementedError("We need to support extra_coords here")
 
         # If data_unit set, convert data to that unit
         if data_unit is None:
@@ -166,6 +190,20 @@ class NDCubePlotMixin:
 
         plot_axes = [p if p is not None else 0 for p in plot_axes]
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
+
+        # We need to modify the visible axes after the axes object has been created.
+        # This call affects only the initial draw
+        self._apply_axes_coordinates(ax.axes, axes_coordinates)
+
+        # This changes the parameters for future iterations
+        for hidden in self._not_visible_coords(ax.axes, axes_coordinates):
+            if hidden in ax.coord_params:
+                param = ax.coord_params[hidden]
+            else:
+                param = {}
+
+            param['ticks'] = False
+            ax.coord_params[hidden] = param
 
         return ax
 

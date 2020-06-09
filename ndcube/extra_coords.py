@@ -1,7 +1,7 @@
 import copy
-from collections.abc import Sequence
-from functools import reduce
 from numbers import Integral
+from functools import reduce
+from collections.abc import Sequence
 
 import astropy.units as u
 import gwcs
@@ -112,6 +112,7 @@ class ExtraCoords:
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
             )
 
+        # TODO: Convert pixel_dimension into WCS dimension here
         lutc = LookupTableCoord(lookup_table, names=name, **kwargs)
         self._lookup_tables.append((pixel_dimension, lutc))
 
@@ -149,7 +150,7 @@ class ExtraCoords:
             return self._mapping
 
         if not self._lookup_tables:
-            return None
+            return tuple()
 
         lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
         return tuple(reduce(list.__add__, lts))
@@ -186,6 +187,9 @@ class ExtraCoords:
         """
         if self._wcs is not None:
             return self._wcs
+
+        if not self._lookup_tables:
+            return None
 
         lutcs = set(lt[1] for lt in self._lookup_tables)
         # created a sorted list of unique items

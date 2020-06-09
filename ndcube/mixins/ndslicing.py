@@ -60,6 +60,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         return kwargs
 
     def _slice_extra_coords(self, item, pixel_keep, naxes):
+        return self.extra_coords
 
         if self.extra_coords is None:
             new_extra_coords_dict = None
