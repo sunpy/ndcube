@@ -1,3 +1,5 @@
+import warnings
+
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,17 +64,19 @@ class NDCubePlotMixin:
             axes_coordinates += list(self.wcs.world_axis_physical_types)
             axes_coordinates.remove(Ellipsis)
 
-        if naxis == 1:
-            ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
-                                    axes_units, data_unit, **kwargs)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', AstropyUserWarning)
+            if naxis == 1:
+                ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
+                                        axes_units, data_unit, **kwargs)
 
-        elif naxis == 2:
-            ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
-                                    axes_units, data_unit, **kwargs)
-        else:
-            ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
-                                    axes_coordinates=axes_coordinates,
-                                    axes_units=axes_units, **kwargs)
+            elif naxis == 2:
+                ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
+                                        axes_units, data_unit, **kwargs)
+            else:
+                ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
+                                        axes_coordinates=axes_coordinates,
+                                        axes_units=axes_units, **kwargs)
 
         return ax
 
@@ -188,6 +192,8 @@ class NDCubePlotMixin:
             for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types):
                 coord_params[coord_name] = {'format_unit': axis_unit}
 
+        # TODO: `_plot_2D_cube` transposes the array if 'y' is before 'x'.
+        # Investigate if this should be the case here, or if it shouldn't be done at all.
         plot_axes = [p if p is not None else 0 for p in plot_axes]
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
