@@ -1,5 +1,5 @@
 import copy
-from numbers import Integral
+from numbers import Number, Integral
 from functools import reduce
 from collections.abc import Sequence
 
@@ -94,7 +94,7 @@ class ExtraCoords:
 
         return extra_coords
 
-    def add_coordinate(self, name, pixel_dimension, lookup_table, **kwargs):
+    def add_coordinate(self, name, array_dimension, lookup_table, **kwargs):
         """
         Add a coordinate to this ``ExtraCoords`` based on a lookup table.
 
@@ -102,8 +102,8 @@ class ExtraCoords:
         ----------
         name : `str`
             The name for this coordinate(s).
-        pixel_dimension : `int`
-            The pixel dimension (in the array) to which this lookup table corresponds.
+        array_dimension : `int`
+            The pixel dimension, in the array, to which this lookup table corresponds.
         lookup_table : `object`
             The lookup table.
         """
@@ -112,9 +112,8 @@ class ExtraCoords:
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
             )
 
-        # TODO: Convert pixel_dimension into WCS dimension here
         lutc = LookupTableCoord(lookup_table, names=name, **kwargs)
-        self._lookup_tables.append((pixel_dimension, lutc))
+        self._lookup_tables.append((array_dimension, lutc))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
         self._lookup_tables = list(sorted(self._lookup_tables,
@@ -153,7 +152,11 @@ class ExtraCoords:
             return tuple()
 
         lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
-        return tuple(reduce(list.__add__, lts))
+        mapping = tuple(reduce(list.__add__, lts))
+
+        # The input here is array dimensions (i.e. reversed in order to the WCS) so we flip it.
+        index_map = list(range(self.array_ndim - 1, -1, -1))
+        return tuple(index_map[ind] for ind in mapping)
 
     @mapping.setter
     def _set_mapping(self, mapping):

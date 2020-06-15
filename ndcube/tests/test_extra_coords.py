@@ -62,7 +62,7 @@ def test_two_1d_from_lut(time_lut):
 def test_skycoord(skycoord_1d_lut):
     ec = ExtraCoords.from_lookup_tables((10, 10), (("lat", "lon"),), ((0, 1),), (skycoord_1d_lut,))
     assert len(ec._lookup_tables) == 1
-    assert ec.mapping == (0, 1)
+    assert ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert ec.wcs.pixel_n_dim == 2
     assert ec.wcs.world_n_dim == 2
@@ -72,8 +72,8 @@ def test_skycoord(skycoord_1d_lut):
 def test_skycoord_mesh_false(skycoord_2d_lut):
     ec = ExtraCoords(array_shape=(10, 10))
     ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
-    assert len(ec._lookup_tables) == 2
-    assert ec.mapping == (0, 1)
+    assert len(ec._lookup_tables) == 1
+    assert ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert ec.wcs.pixel_n_dim == 2
     assert ec.wcs.world_n_dim == 2
@@ -85,7 +85,7 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
     ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     ec.add_coordinate("exposure_time", (0,), time_lut)
     assert len(ec._lookup_tables) == 2
-    assert ec.mapping == (0, 1, 0)
+    assert ec.mapping == (1, 0, 1)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert ec.wcs.pixel_n_dim == 3
     assert ec.wcs.world_n_dim == 3
@@ -93,7 +93,7 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
 
     sub_ec = ec["lon"]
     assert len(sub_ec._lookup_tables) == 1
-    assert sub_ec.mapping == (0, 1)
+    assert sub_ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert sub_ec.wcs.pixel_n_dim == 2
     assert sub_ec.wcs.world_n_dim == 2
@@ -101,7 +101,7 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
 
     sub_ec = ec["exposure_time"]
     assert len(sub_ec._lookup_tables) == 1
-    assert sub_ec.mapping == (0,)
+    assert sub_ec.mapping == (1,)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert sub_ec.wcs.pixel_n_dim == 1
     assert sub_ec.wcs.world_n_dim == 1
@@ -127,7 +127,7 @@ def test_add_coord_after_create(time_lut):
     assert ndc.extra_coords["time"]._lookup_tables == ndc.extra_coords._lookup_tables
 
 def test_combined_wcs(time_lut):
-    ndc = NDCube(np.random.random((10,10)), wcs=WCS(naxis=2))
+    ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
     ndc.extra_coords.add_coordinate("time", 0, time_lut)
 
