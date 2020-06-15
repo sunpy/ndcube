@@ -224,6 +224,41 @@ class ExtraCoords:
         self._wcs = wcs
 
 
+    def __getitem__(self, item):
+        print(item)
+        new_lookup_tables = []
+        if self._lookup_tables:
+            for lut_axis, lut in self._lookup_tables:
+                for item_axis, sub_item in enumerate(item):
+                    print(lut_axis, item_axis)
+
+                    # This slice does not apply to this lookup table
+                    if item_axis != lut_axis:
+                        continue
+
+                    if isinstance(sub_item, slice):
+                        if sub_item == slice(None):
+                            new_lookup_tables.append((lut_axis, lut))
+                            continue
+
+                        new_table = lut.wcs.pixel_to_world(list(range(sub_item.start or 0,
+                                                                      sub_item.stop or self.data.shape[lut_axis],
+                                                                      sub_item.step or 1)))
+                        print(new_table)
+
+                    elif isinstance(sub_item, int):
+                        # Drop the lut
+                        continue
+
+                    else:
+                        raise ValueError("WTF IS THIS")
+
+        new_extra_coords = type(self)()
+        new_extra_coords._lookup_tables = new_lookup_tables
+
+        return new_extra_coords
+
+
 class LookupTableCoord:
     """
     A class representing world coordinates described by a lookup table.

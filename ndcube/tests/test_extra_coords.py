@@ -137,3 +137,11 @@ def test_combined_wcs(time_lut):
     world = cwcs.pixel_to_world(0, 0)
     assert u.allclose(world[:2], (1,1) * u.one)
     assert world[2] == Time("2011-01-01T00:00:00")
+
+def test_slice_extra(time_lut):
+    ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
+    assert isinstance(ndc.extra_coords, ExtraCoords)
+    ndc.extra_coords.add_coordinate("time", 0, time_lut)
+
+    print(ndc[:, 3].extra_coords._lookup_tables)
+    # breakpoint()
