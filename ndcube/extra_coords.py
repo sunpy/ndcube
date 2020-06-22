@@ -1,6 +1,7 @@
 import copy
 from numbers import Number, Integral
 from functools import reduce
+from collections import defaultdict
 from collections.abc import Sequence
 
 import astropy.units as u
@@ -11,6 +12,7 @@ from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.time import Time
+from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 try:
     from functools import singledispatchmethod
@@ -30,22 +32,13 @@ class ExtraCoords:
 
     Parameters
     ----------
-    array_shape : `tuple` of `int`, optional
-        The shape of the array, if not specified ``wcs.array_shape`` must be not `None`.
     wcs : `astropy.wcs.wcsapi.LowLevelWCS`
         The WCS specifying the extra coordinates.
     mapping : `tuple` of `int`
        The mapping between the array dimensions and pixel dimensions in the wcs.
 
     """
-    def __init__(self, *, array_shape=None, wcs=None, mapping=None):
-        if array_shape is not None or (wcs is not None and wcs.array_shape is not None):
-            self.array_shape = array_shape or wcs.array_shape
-        else:
-            raise ValueError("Either array_shape or wcs.array_shape must be specified")
-
-        self.array_ndim =  len(self.array_shape)
-
+    def __init__(self, *, wcs=None, mapping=None):
         # TODO: verify these mapping checks are correct
         if mapping is not None:
             if len(mapping) == self.array_ndim:
@@ -61,7 +54,7 @@ class ExtraCoords:
         self._lookup_tables = []
 
     @classmethod
-    def from_lookup_tables(cls, array_shape, names, pixel_dimensions, lookup_tables):
+    def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables):
         """
         Construct an ExtraCoords instance from lookup tables.
 
@@ -87,7 +80,7 @@ class ExtraCoords:
                 "The length of pixel_dimensions and lookup_tables must match."
             )
 
-        extra_coords = cls(array_shape=array_shape)
+        extra_coords = cls()
 
         for name, pixel_dim, lookup_table in zip(names, pixel_dimensions, lookup_tables):
             extra_coords.add_coordinate(name, pixel_dim, lookup_table)
@@ -127,18 +120,6 @@ class ExtraCoords:
     def keys(self):
         return self._name_lut_map.keys()
 
-    def __getitem__(self, item):
-        if not isinstance(item, str):
-            raise TypeError("ExtraCoords objects can only be indexed by world coordinate name.")
-
-        for names, lut in self._name_lut_map.items():
-            if item in names:
-                new_ec = ExtraCoords(array_shape=self.array_shape)
-                new_ec._lookup_tables = [lut]
-                return new_ec
-
-        raise KeyError(f"Can't find the world axis named {item} in this ExtraCoords object.")
-
     @property
     def mapping(self):
         """
@@ -152,11 +133,7 @@ class ExtraCoords:
             return tuple()
 
         lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
-        mapping = tuple(reduce(list.__add__, lts))
-
-        # The input here is array dimensions (i.e. reversed in order to the WCS) so we flip it.
-        index_map = list(range(self.array_ndim - 1, -1, -1))
-        return tuple(index_map[ind] for ind in mapping)
+        return tuple(reduce(list.__add__, lts))
 
     @mapping.setter
     def _set_mapping(self, mapping):
@@ -223,40 +200,86 @@ class ExtraCoords:
 
         self._wcs = wcs
 
+    def _getitem_string(self, item):
+        """
+        Slice the Extracoords based on axis names.
+        """
 
-    def __getitem__(self, item):
-        print(item)
+        for names, lut in self._name_lut_map.items():
+            if item in names:
+                new_ec = ExtraCoords()
+                new_ec._lookup_tables = [lut]
+                return new_ec
+
+        raise KeyError(f"Can't find the world axis named {item} in this ExtraCoords object.")
+
+    def _getitem_lookup_tables(self, item):
+        """
+        Apply an array slice to the lookup tables.
+
+        Returns a new ExtraCoords object with modified lookup tables.
+        """
+        new_lookup_tables = set()
+        axis_shifts = defaultdict(lambda: models.Identity(1))
+        for lut_axis, lut in self._lookup_tables:
+            lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
+            for item_axis, sub_item in enumerate(item):
+                # This slice does not apply to this lookup table
+                if item_axis not in lut_axes:
+                    continue
+
+                if isinstance(sub_item, slice):
+                    if sub_item == slice(None):
+                        new_lookup_tables.add((lut_axis, lut))
+                        continue
+
+                    axis_shifts[item_axis] = models.Shift(sub_item.start * u.pix)
+                    new_lookup_tables.add((lut_axis, lut))
+
+                elif isinstance(sub_item, int):
+                    # Drop the lut
+                    continue
+
+                else:
+                    raise ValueError(f"A slice of type {type(sub_item)} for axis {item_axis} is not supported.")
+
+        # Apply any offsets to the models in the lookup tables
+        lookup_tables = list(new_lookup_tables)
         new_lookup_tables = []
-        if self._lookup_tables:
-            for lut_axis, lut in self._lookup_tables:
-                for item_axis, sub_item in enumerate(item):
-                    print(lut_axis, item_axis)
+        for i, (lut_axes, lut) in enumerate(lookup_tables):
+            # Append shift model to front of chain.
+            if len(lut.models) != 1:
+                raise NotImplementedError("PANIC")
 
-                    # This slice does not apply to this lookup table
-                    if item_axis != lut_axis:
-                        continue
+            if isinstance(lut_axes, int):
+                if lut_axes in axis_shifts:
+                    lut = copy.deepcopy(lut)
+                    lut.models = [axis_shifts[lut_axes] | lut.models[0]]
 
-                    if isinstance(sub_item, slice):
-                        if sub_item == slice(None):
-                            new_lookup_tables.append((lut_axis, lut))
-                            continue
+            if isinstance(lut_axes, tuple):
+                if any((l in axis_shifts for l in lut_axes)):
+                    shift = axis_shifts[lut_axes[0]]
+                    for axis in lut_axes[1:]:
+                        shift = shift & axis_shifts[axis]
+                    lut = copy.deepcopy(lut)
+                    lut.models = [shift | lut.models[0]]
 
-                        new_table = lut.wcs.pixel_to_world(list(range(sub_item.start or 0,
-                                                                      sub_item.stop or self.data.shape[lut_axis],
-                                                                      sub_item.step or 1)))
-                        print(new_table)
-
-                    elif isinstance(sub_item, int):
-                        # Drop the lut
-                        continue
-
-                    else:
-                        raise ValueError("WTF IS THIS")
+            new_lookup_tables.append((lut_axes, lut))
 
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = new_lookup_tables
-
         return new_extra_coords
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            return self._getitem_string(item)
+
+        # item = sanitize_slices(item)
+        if self._lookup_tables:
+            return self._getitem_lookup_tables(item)
+
+        elif self._wcs:
+            raise NotImplementedError("PICNIC")
 
 
 class LookupTableCoord:
@@ -296,6 +319,12 @@ class LookupTableCoord:
                                            physical_types=physical_types)
         self.models = [model]
         self.frames = [frame]
+
+    def __str__(self):
+        return f"{self.frames=} {self.models=}"
+
+    def __repr__(self):
+        return f"{object.__repr__(self)}\n{self}"
 
     def __and__(self, other):
         if not isinstance(other, LookupTableCoord):

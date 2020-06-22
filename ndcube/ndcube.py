@@ -183,7 +183,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Format extra coords.
         if not extra_coords:
-            extra_coords = ExtraCoords(array_shape=self.data.shape)
+            extra_coords = ExtraCoords()
 
         if not isinstance(extra_coords, ExtraCoords):
             raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")

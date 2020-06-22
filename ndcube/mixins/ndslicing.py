@@ -57,24 +57,3 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         kwargs['extra_coords'] = self.extra_coords[item]
 
         return kwargs
-
-        #     old_extra_coords = self.extra_coords
-        #     extra_coords_keys = list(old_extra_coords.keys())
-        #     new_extra_coords = copy.deepcopy(self._extra_coords_wcs_axis)
-        #     for ck in extra_coords_keys:
-        #         axis_ck = old_extra_coords[ck]["axis"]
-        #         if isinstance(item, (slice, int)):
-        #             if axis_ck == 0:
-        #                 new_extra_coords[ck]["value"] = new_extra_coords[ck]["value"][item]
-        #         if isinstance(item, tuple):
-        #             try:
-        #                 slice_item_extra_coords = item[axis_ck]
-        #                 new_extra_coords[ck]["value"] = \
-        #                     new_extra_coords[ck]["value"][slice_item_extra_coords]
-        #             except IndexError:
-        #                 pass
-        #             except TypeError:
-        #                 pass
-        #     new_extra_coords_dict = utils.cube.convert_extra_coords_dict_to_input_format(
-        #         new_extra_coords, pixel_keep, naxes)
-        # return new_extra_coords_dict
