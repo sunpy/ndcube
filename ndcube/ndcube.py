@@ -14,8 +14,6 @@ from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.cube import _get_dimension_for_pixel, _pixel_centers_or_edges, unique_data_axis
-from ndcube.utils.wcs import _pixel_keep, wcs_ivoa_mapping
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']

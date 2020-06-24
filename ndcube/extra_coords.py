@@ -116,9 +116,12 @@ class ExtraCoords:
     def _name_lut_map(self):
         return {lut[1].wcs.world_axis_names: lut for lut in self._lookup_tables}
 
-    @property
     def keys(self):
-        return self._name_lut_map.keys()
+        keys = []
+        for key in self._name_lut_map.keys():
+            for k in key:
+                keys.append(k)
+        return tuple(keys)
 
     @property
     def mapping(self):

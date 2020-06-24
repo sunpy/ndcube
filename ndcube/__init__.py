@@ -1,7 +1,7 @@
+from .extra_coords import ExtraCoords
 from .ndcollection import NDCollection
 from .ndcube import NDCube
 from .ndcube_sequence import NDCubeSequence
-from .extra_coords import ExtraCoords
 
 try:
     from .version import __version__
