@@ -232,7 +232,7 @@ class ExtraCoords:
                     continue
 
                 if isinstance(sub_item, slice):
-                    if sub_item == slice(None):
+                    if sub_item.start is None:
                         new_lookup_tables.add((lut_axis, lut))
                         continue
 
