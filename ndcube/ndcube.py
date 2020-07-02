@@ -396,7 +396,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
-
         # Create meshgrid of all pixel coordinates.
         # If user, wants edges, set pixel values to pixel edges.
         # Else make pixel centers.
@@ -410,7 +409,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Get world coords for all axes and all pixels.
         axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
 
-        # Reduce duplication across independent dimensions for each coord.
+        # Reduce duplication across independent dimensions for each coord
+        # and transpose to make dimensions mimic numpy array order rather than WCS order.
         for i, axis_coord in enumerate(axes_coords):
             slices = np.array([slice(None)] * self.wcs.world_n_dim)
             slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
@@ -419,7 +419,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         world_axis_physical_types = self.wcs.world_axis_physical_types
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
-        if axes != ():
+        if axes:
             # Convert input axes to WCS world axis indices.
             if not isinstance(axes, tuple):
                 axes = (axes,)
@@ -709,24 +709,6 @@ class NDCubeOrdered(NDCube):
                          copy=copy, **kwargs)
 
 
-def _get_wcs_world_axes_from_axis_world_coords_input(wcs, axes):
-    if isinstance(axes, (numbers.Integral, str)):
-        axes = (axes,)
-    axes_numbers = []
-    for axis in axes:
-        if isinstance(axis, numbers.Integral):
-            # Convert array axis to WCS pixel axis.
-            axis = array_axis_to_wcs_pixel_axis(axis, wcs.pixel_n_dim)
-            # Get world axes that correspond to the WCS pixel axis.
-            axes_numbers += list(get_world_axes_from_wcs_pixel_axis(wcs, axis))
-        elif isinstance(axis, str):
-            axes_numbers += get_wcs_world_axes_from_axis_name(wcs, axis)
-        else:
-            raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
-                            "Must be of type (numbers.Integral, str)")
-    return np.array(list(set(axes_numbers)), dtype=int)
-
-
 def array_axis_to_wcs_pixel_axis(array_axis, n_axes):
     if array_axis < 0:
         pixel_axis = abs(array_axis) - 1
@@ -740,18 +722,12 @@ def get_world_axes_from_wcs_pixel_axis(wcs, pixel_axis):
 
 
 def get_wcs_world_axes_from_axis_name(wcs, axis_name):
-    # Define required attributes from wcs.
-    world_axis_physical_types = wcs.world_axis_physical_types
-    axis_correlation_matrix = wcs.axis_correlation_matrix
-    world_n_dim = wcs.world_n_dim
-
     # Find world axis described by axis_name.
-    widx = np.where(world_axis_physical_types == axis_name)[0]
+    widx = np.where(wcs.world_axis_physical_types == axis_name)[0]
     # If axis name as given does not correspond to a physical axis,
     # check if it is a substring of any physical types.
     if len(widx) == 0:
-        widx = [axis_name in physical_type for physical_type in world_axis_physical_types]
-        widx = np.arange(world_n_dim)[widx]
-
+        widx = [axis_name in physical_type for physical_type in wcs.world_axis_physical_types]
+        widx = np.arange(wcs.world_n_dim)[widx]
     # Return axes with duplicates removed.
     return list(set(list(widx)))
