@@ -452,10 +452,10 @@ class NDCubePlotMixin:
                 axis_label_text = self.world_axis_physical_types[i]
                 # If the shape of the data is not 1, or all the axes are not dependent
                 if new_axis_coordinate.ndim != 1 and new_axis_coordinate.ndim != len(data_shape):
-                    dependent_axes = utils.wcs.get_dependent_data_axes(self.wcs, i,
-                                                                       self.missing_axes)
-                    reduce_axis = np.where(dependent_axes == np.array([i]))[0]
-                    index = np.delete(np.arange(len(dependent_axes)), reduce_axis)
+                    index = utils.wcs.get_dependent_data_axes(self.wcs, i, self.missing_axes)
+                    reduce_axis = np.where(index == np.array([i]))[0]
+
+                    index = np.delete(index, reduce_axis)
                     # Reduce the data by taking mean
                     new_axis_coordinate = np.mean(new_axis_coordinate, axis=tuple(index))
 
