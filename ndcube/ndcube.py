@@ -421,9 +421,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # world coords that correspond to those axes.
         if axes:
             # Convert input axes to WCS world axis indices.
-            if not isinstance(axes, tuple):
-                axes = (axes,)
-            world_indices = []
+            world_indices = set()
             for axis in axes:
                 if isinstance(axis, numbers.Integral):
                     # If axis is int, it is a numpy order array axis.
@@ -431,17 +429,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     axis = array_axis_to_wcs_pixel_axis(axis, wcs.pixel_n_dim)
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
-                    world_indices += list(get_world_axes_from_wcs_pixel_axis(wcs, axis))
+                    world_indices.update(get_world_axes_from_wcs_pixel_axis(wcs, axis))
                 elif isinstance(axis, str):
                     # If axis is str, it is a physical type or substring of a physical type.
                     # Use world_axis_physical_types to infer the its WCS world index.
-                    world_indices += get_wcs_world_axes_from_axis_name(wcs, axis)
+                    world_indices.update(get_wcs_world_axes_from_axis_name(wcs, axis))
                 else:
                     raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
                                     "Must be of type (numbers.Integral, str)")
             # Remove duplicate world indices then use to extract the desired coord values
             # and corresponding physical types.
-            world_indices = np.array(list(set(world_indices)), dtype=int)
+            world_indices = np.array(list(world_indices), dtype=int)
             axes_coords = np.array(axes_coords)[world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
