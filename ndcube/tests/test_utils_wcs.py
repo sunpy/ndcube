@@ -49,23 +49,6 @@ def test_slice_list(test_input, expected):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((wm, np.array([1, 0, 2])), wm_reindexed_102),
-    ((wm, np.array([1, 0, -1])), wm_reindexed_102)
-])
-def test_reindex_wcs(test_input, expected):
-    helpers.assert_wcs_are_equal(utils.wcs.reindex_wcs(*test_input), expected)
-
-
-@pytest.mark.parametrize("test_input", [
-    (TypeError, wm, 0),
-    (TypeError, wm, np.array(['spam', 'eggs', 'ham'])),
-])
-def test_reindex_wcs_errors(test_input):
-    with pytest.raises(test_input[0]):
-        utils.wcs.reindex_wcs(*test_input[1:])
-
-
-@pytest.mark.parametrize("test_input,expected", [
     ((wm, 0), (0, 1)),
     ((wm, 1), (0, 1)),
     ((wm, 2), (2,)),
