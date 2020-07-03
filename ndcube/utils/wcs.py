@@ -154,7 +154,7 @@ def _pixel_keep(wcs_object):
     return np.arange(wcs_object.pixel_n_dim)
 
 
-def reflect_axis_index(input_axis, naxes):
+def reflect_axis_index(axis, naxes):
     """Reflects axis index about center of number of axes.
 
     This is used to convert between array axes in numpy order and pixel axes in WCS order.
@@ -162,7 +162,7 @@ def reflect_axis_index(input_axis, naxes):
 
     Parameters
     ----------
-    axis: `int` of `numpy.ndarray` of `int`
+    axis: `numpy.ndarray` of `int`
         The axis number(s) before reflection.
 
     naxes: `int`
@@ -170,34 +170,21 @@ def reflect_axis_index(input_axis, naxes):
 
     Returns
     -------
-    reflected_axis: `int` of `numpy.ndarray` of `int
+    reflected_axis: `numpy.ndarray` of `int
         The axis number(s) after reflection.
     """
-    if axis is None:
-        return None
     # Check type of input.
-    if isinstance(axis, (numbers.Integral, np.ndarray)):
-        raise TypeError(f"axis must be int or array of ints. Got: {type(axis)}.")
-    # Convert scalar input to array so algorithm can be vectorized.
-    if np.isscalar(axis):
-        input_is_scalar = True
-        axis = np.array([axis])
-    else:
-        input_is_scalar = False
-        # Check input array is of int type.
-        if not isinstance(axis.dtype, numbers.Integral):
-            raise TypeError(f"if axis is array, dtype must be int.  Got: {axis.dtype}")
+    if not isinstance(axis, np.ndarray):
+        raise TypeError("input must be of array type. Got type: {type(axis)}")
+    if axis.dtype.char not in np.typecodes['AllInteger']:
+        raise TypeError("input dtype must be of int type.  Got dtype: {axis.dtype})")
     # Convert negative indices to positive equivalents.
-    idx_neg = axis < 0
-    axis[idx_neg] = np.abs(axis[idx_neg]) - 1
+    axis[axis < 0] += naxes
     if any(axis > naxes - 1):
         raise IndexError("Axis out of range.  "
-                         f"Number of axes = {naxes}; Axis numbers requested = {axes}"))
+                         f"Number of axes = {naxes}; Axis numbers requested = {axes}")
     # Reflect axis about center of number of axes.
     reflected_axis = naxes - 1 - axis
-    # Ensure output is returned as scalar if input was scalar.
-    if input_is_scalar:
-        reflected_axis = reflected_axis[0]
 
     return reflected_axis
 
@@ -306,11 +293,12 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
         The world axis index of the physical type.
     """
     # Find world axis index described by physical type.
-    widx = np.where(world_axis_physical_types == axis_name)[0]
+    widx = np.where(world_axis_physical_types == physical_type)[0]
     # If physical type does not correspond to entry in world_axis_physical_types,
     # check if it is a substring of any physical types.
     if len(widx) == 0:
-        widx = [axis_name in physical_type for physical_type in world_axis_physical_types]
+        widx = [physical_type in world_axis_physical_type
+                for world_axis_physical_type in world_axis_physical_types]
         widx = np.arange(len(world_axis_physical_types))[widx]
     if len(widx) != 1:
         raise ValueError(
@@ -373,9 +361,10 @@ def get_dependent_array_axes(array_axis, axis_correlation_matrix):
         Sorted indices of array axes dependent on input axis in numpy ordering convention.
     """
     naxes = axis_correlation_matrix.shape[1]
-    pixel_axis = reflect_axis_index(array_axis, naxes)
+    pixel_axis = reflect_axis_index(np.array([array_axis], dtype=int), naxes)[0]
     dependent_pixel_axes = get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix)
     dependent_array_axes = reflect_axis_index(dependent_pixel_axes, naxes)
+    return np.sort(dependent_array_axes)
 
 
 def get_dependent_world_axes(world_axis, axis_correlation_matrix):
@@ -403,6 +392,30 @@ def get_dependent_world_axes(world_axis, axis_correlation_matrix):
     # which world coordinates are linked to which other world coordinates.
     # To do this we take a row from the matrix and find if there are
     # any entries in common with all other rows in the matrix.
-    pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1]
+    pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1].T
     dependent_world_axes = np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
     return dependent_world_axes
+
+
+def get_dependent_physical_types(physical_type, wcs):
+    """
+    Given a world axis physical type, return the dependent physical types including the input type.
+
+    Parameters
+    ----------
+    physical_type: `str`
+        The world axis physical types whose dependent physical types are desired.
+
+    wcs: `astropy.wcs.BaseLowLevelWCS`
+        The WCS object defining the relationship between pixel and world axes.
+
+    Returns
+    -------
+    dependent_physical_types: `np.ndarray` of `str`
+        Physical types dependent on the input physical type.
+    """
+    world_axis_physical_types = wcs.world_axis_physical_types
+    world_axis = physical_type_to_world_axis(physical_type, world_axis_physical_types)
+    dependent_world_axes = get_dependent_world_axes(world_axis, wcs.axis_correlation_matrix)
+    dependent_physical_types = np.array(world_axis_physical_types)[dependent_world_axes]
+    return dependent_physical_types
