@@ -20,24 +20,7 @@ __all__ = [
     'wcs_axis_to_data_ape14',
     'unique_data_axis']
 
-
-def data_axis_to_wcs_axis(data_axis, missing_axes):
-    """
-    Converts a data axis number to the corresponding wcs axis number.
-    """
-    if data_axis is None:
-        result = None
-    else:
-        if data_axis < 0:
-            data_axis = np.invert(missing_axes).sum() + data_axis
-        if data_axis > np.invert(missing_axes).sum() - 1 or data_axis < 0:
-            raise IndexError("Data axis out of range.  Number data axes = {}".format(
-                np.invert(missing_axes).sum()))
-        result = len(missing_axes) - \
-            np.where(np.cumsum([b is False for b in missing_axes][::-1]) == data_axis + 1)[0][0] - 1
-    return result
-
-
+# Deprecated in favor of utils.wcs.reflect_axis_index
 def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
     """Converts a data axis number to wcs axis number taking care of the missing axes"""
 
@@ -95,27 +78,7 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
         # Return the corresponding wcs_axis for the data axis
         return new_wcs_order[index]
 
-
-def wcs_axis_to_data_axis(wcs_axis, missing_axes):
-    """
-    Converts a wcs axis number to the corresponding data axis number.
-    """
-    if wcs_axis is None:
-        result = None
-    else:
-        if wcs_axis < 0:
-            wcs_axis = len(missing_axes) + wcs_axis
-        if wcs_axis > len(missing_axes) - 1 or wcs_axis < 0:
-            raise IndexError("WCS axis out of range.  Number WCS axes = {}".format(
-                len(missing_axes)))
-        if missing_axes[wcs_axis]:
-            result = None
-        else:
-            data_ordered_wcs_axis = len(missing_axes) - wcs_axis - 1
-            result = data_ordered_wcs_axis - sum(missing_axes[::-1][:data_ordered_wcs_axis])
-    return result
-
-
+# Deprecated in favor of utils.wcs.reflect_axis_index
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
     """Converts a wcs axis number to data axis number taking care of the missing axes"""
 
@@ -176,28 +139,6 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
 
         # Return the corresponding data_axis for the wcs_axis
         return new_data_order[index]
-
-
-def select_order(axtypes):
-    """
-    Returns indices of the correct data order axis priority given a list of WCS
-    CTYPEs.
-
-    For example, given ['HPLN-TAN', 'TIME', 'WAVE'] it will return
-    [1, 2, 0] because index 1 (time) has the lowest priority, followed by
-    wavelength and finally solar-x.
-
-    Parameters
-    ----------
-    axtypes: str list
-        The list of CTYPEs to be modified.
-    """
-    order = sorted([(0, t) if t in ['TIME', 'UTC'] else
-                    (1, t) if t == 'WAVE' else
-                    (2, t) if t == 'HPLT-TAN' else
-                    (axtypes.index(t) + 3, t) for t in axtypes])
-    result = [axtypes.index(s) for (_, s) in order]
-    return result
 
 
 def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep, naxes,
@@ -265,7 +206,7 @@ def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
         result.append((name, axis, extra_coords[name]["value"]))
     return result
 
-
+# Deprecated in favor of utils.wcs.physical_type_to_pixel_axes + util.wcs.reflect_axis_index
 def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
     """
     Returns axis number (numpy ordering) given a substring unique to a world
@@ -332,35 +273,6 @@ def _get_dimension_for_pixel(axis_length, edges):
         False stands for pixel_value, while True stands for pixel_edge
     """
     return axis_length + 1 if edges else axis_length
-
-
-def ape14_axes(wcs_object, input_axis):
-    """Returns the corresponding wcs axes after a wcs object
-    is sliced. The `_pixel_keep` attribute of wcs tells us
-    which axis is present, so returns the corresponding wcs
-    axes after slicing.
-
-    Parameters
-    ----------
-    wcs_object : `astropy.wcs.WCS` or similar object
-        The WCS object
-    input_axis : `int` or `list`
-        The list of wcs axes
-
-    Returns
-    -------
-    `int` or `list`
-        The corresponding wcs axes of the sliced wcs object.
-    """
-    wcomp = wcs_object.world_axis_object_components
-    axis_type = np.array([item[0] for item in wcomp])
-    axis_type = axis_type[::-1]
-
-    ape14_axes = np.unique(axis_type, return_inverse=True)[1]
-
-    n_rep_ape14_axes = np.unique(ape14_axes[input_axis])
-
-    return n_rep_ape14_axes[::-1]
 
 
 def unique_data_axis(wcs_object, input_axis):
