@@ -159,7 +159,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
             raise ValueError(coord_0_format_error.format(coord))
         # Check coord axis number is valid and convert to a WCS-order axis number.
         if coord[1] is None:
-            new_coord_axis = None
+            wcs_coord_axis = None
         else:
             if isinstance(coord[1], numbers.Integral):
                  wcs_coord_axis = wcs_utils.reflect_axis_index(np.array([coord[1]]), naxes)[0]
