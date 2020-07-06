@@ -15,8 +15,7 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 
 from ndcube.utils import cube as utils_cube
 
-__all__ = ['wcs_ivoa_mapping',
-           'get_dependent_wcs_axes', 'append_sequence_axis_to_wcs',
+__all__ = ['wcs_ivoa_mapping', 'append_sequence_axis_to_wcs',
            'reflect_axis_index',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
@@ -54,40 +53,6 @@ wcs_to_ivoa = {
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
-
-
-# Deprecated in favor of get_dependent_pixel_axes
-def get_dependent_wcs_axes(wcs_object, wcs_axis):
-    """
-    Given a WCS axis index, return indices of dependent WCS axes.
-
-    Both input and output axis indices are in the WCS ordering convention
-    (reverse of numpy ordering convention). The returned axis indices include the input axis.
-
-    Parameters
-    ----------
-    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        The WCS object describing the axes.
-
-    wcs_axis: `int`
-        Index of axis (in WCS ordering convention) for which dependent axes are desired.
-
-    Returns
-    -------
-    dependent_data_axes: `tuple` of `int`
-        Sorted indices of axes dependent on input data_axis in WCS ordering convention.
-    """
-    # Pre-compute dependent axes. The matrix returned by
-    # axis_correlation_matrix is (n_world, n_pixel) but we want to know
-    # which pixel coordinates are linked to which other pixel coordinates.
-    # So to do this we take a column from the matrix and find if there are
-    # any entries in common with all other columns in the matrix.
-
-    # Using APE14 for generating the correlation matrix
-    matrix = wcs_object.axis_correlation_matrix
-    world_dep = matrix[:, wcs_axis:wcs_axis + 1]
-    dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
-    return dependent_wcs_axes
 
 
 def append_sequence_axis_to_wcs(wcs_object):

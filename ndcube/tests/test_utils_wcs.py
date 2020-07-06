@@ -56,16 +56,6 @@ class TestWCS():
 TEST_WCS = TestWCS()
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ((wm, 0), (0,)),
-    ((wm, 1), (1, 2)),
-    ((wm, 2), (1, 2)),
-])
-def test_get_dependent_wcs_axes(test_input, expected):
-    output = utils.wcs.get_dependent_wcs_axes(*test_input)
-    assert output == expected
-
-
 def test_reflect_axis_index():
     test_input = np.array([1, 4, -2])
     naxes = 5
