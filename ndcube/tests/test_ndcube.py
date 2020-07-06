@@ -113,15 +113,6 @@ cube_disordered = NDCube(cube_disordered_inputs[0], cube_disordered_inputs[1],
                          mask=cube_disordered_inputs[2], uncertainty=cube_disordered_inputs[3],
                          extra_coords=cube_disordered_inputs[4])
 
-cube_ordered = NDCubeOrdered(
-    data_ordered,
-    w_ordered,
-    mask=mask_ordered,
-    uncertainty=uncertainty_ordered,
-    extra_coords=[('spam', 3, u.Quantity(range(data_disordered.shape[0]), unit=u.pix)),
-                  ('hello', 2, u.Quantity(range(data_disordered.shape[1]), unit=u.pix)),
-                  ('bye', 1, u.Quantity(range(data_disordered.shape[2]), unit=u.pix))])
-
 cube = NDCube(
     data_cube,
     wt,
@@ -924,15 +915,6 @@ def test_crop_by_coords_error(test_input):
 def test_crop_by_extra_coord(test_input, expected):
     helpers.assert_cubes_equal(
         test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    (cube_disordered_inputs, cube_ordered)])
-def test_ndcubeordered(test_input, expected):
-    helpers.assert_cubes_equal(
-        NDCubeOrdered(test_input[0], test_input[1], mask=test_input[2],
-                      uncertainty=test_input[3], extra_coords=test_input[4]),
-        expected)
 
 
 @pytest.mark.parametrize("test_input,expected", [
