@@ -71,4 +71,3 @@ def test_convert_extra_coords_dict_to_input_format_error():
     with pytest.raises(KeyError):
         utils.cube.convert_extra_coords_dict_to_input_format(
             {"time": {"not axis": 0, "value": []}}, [0, 1, 2], 3)
-

@@ -1,8 +1,8 @@
 
 import abc
+import numbers
 import textwrap
 import warnings
-import numbers
 
 import astropy.nddata
 import astropy.units as u
@@ -12,10 +12,10 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, custom_ctype_to_ucd_mapping
 
+import ndcube.utils.wcs as wcs_utils
 from ndcube import utils
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-import ndcube.utils.wcs as wcs_utils
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
@@ -360,7 +360,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Return in array order.
         return world_axis_physical_types[::-1], tuple(axes_coords[::-1])
-
 
     @property
     def extra_coords(self):
