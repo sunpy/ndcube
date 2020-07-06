@@ -2,6 +2,7 @@
 import abc
 import textwrap
 import warnings
+import numbers
 
 import astropy.nddata
 import astropy.units as u
@@ -414,7 +415,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         for i, axis_coord in enumerate(axes_coords):
             slices = np.array([slice(None)] * self.wcs.world_n_dim)
             slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
-            axis_coords[i] = axis_coord[tuple(slices)].T
+            axes_coords[i] = axis_coord[tuple(slices)].T
 
         world_axis_physical_types = self.wcs.world_axis_physical_types
         # If user has supplied axes, extract only the
@@ -426,15 +427,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 if isinstance(axis, numbers.Integral):
                     # If axis is int, it is a numpy order array axis.
                     # Convert to pixel axis in WCS order.
-                    axis = wcs_utils.reflect_axis_index(np.array([axis]), wcs.pixel_n_dim)[0]
+                    axis = wcs_utils.reflect_axis_index(np.array([axis]), self.wcs.pixel_n_dim)[0]
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
                     world_indices.update(wcs_utils.pixel_axis_to_world_axes(
                         axis, self.wcs.axis_correlation_matrix))
                 elif isinstance(axis, str):
                     # If axis is str, it is a physical type or substring of a physical type.
-                    world_indices.update(wcs_utils.physical_type_to_world_axis(
-                        axis, world_axis_physical_types))
+                    world_indices.update({wcs_utils.physical_type_to_world_axis(
+                        axis, world_axis_physical_types)})
                 else:
                     raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
                                     "Must be of type (numbers.Integral, str)")
