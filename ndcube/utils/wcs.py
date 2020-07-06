@@ -138,7 +138,7 @@ def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
@@ -159,7 +159,7 @@ def world_axis_to_pixel_axes(world_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
@@ -261,7 +261,7 @@ def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
@@ -291,7 +291,7 @@ def get_dependent_array_axes(array_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
@@ -319,7 +319,7 @@ def get_dependent_world_axes(world_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
