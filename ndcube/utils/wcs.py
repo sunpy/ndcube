@@ -15,7 +15,7 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 
 from ndcube.utils import cube as utils_cube
 
-__all__ = ['wcs_ivoa_mapping', 'get_dependent_data_axes',
+__all__ = ['wcs_ivoa_mapping',
            'get_dependent_wcs_axes', 'append_sequence_axis_to_wcs',
            'reflect_axis_index',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
@@ -54,39 +54,6 @@ wcs_to_ivoa = {
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
-
-# Deprecated in favor of get_dependent_array_axes
-def get_dependent_data_axes(wcs_object, data_axis):
-    """
-    Given a data axis index, return indices of dependent data axes.
-
-    Both input and output axis indices are in the numpy ordering convention
-    (reverse of WCS ordering convention). The returned axis indices include the input axis.
-    Returned axis indices do NOT include any WCS axes that do not have a
-    corresponding data axis, i.e. "missing" axes.
-
-    Parameters
-    ----------
-    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        The WCS object describing the axes.
-
-    data_axis: `int`
-        Index of axis (in numpy ordering convention) for which dependent axes are desired.
-
-    Returns
-    -------
-    dependent_data_axes: `tuple` of `int`
-        Sorted indices of axes dependent on input data_axis in numpy ordering convention.
-    """
-    # Convert input data axis index to WCS axis index.
-    wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis, _pixel_keep(wcs_object), wcs_object.pixel_n_dim)
-    # Determine dependent axes, using WCS ordering.
-    wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
-
-    # Convert dependent axes back to numpy/data ordering.
-    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_ape14(
-        i, _pixel_keep(wcs_object), wcs_object.pixel_n_dim) for i in wcs_dependent_axes]))
-    return dependent_data_axes
 
 
 # Deprecated in favor of get_dependent_pixel_axes
