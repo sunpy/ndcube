@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from ndcube import NDCube, NDCubeSequence
-from ndcube.utils.wcs import WCS
+from astropy.wcs import WCS
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
