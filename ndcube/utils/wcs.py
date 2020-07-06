@@ -176,7 +176,7 @@ def reflect_axis_index(axis, naxes):
 
     Returns
     -------
-    reflected_axis: `numpy.ndarray` of `int
+    reflected_axis: `numpy.ndarray` of `int`
         The axis number(s) after reflection.
     """
     # Check type of input.
@@ -249,10 +249,10 @@ def pixel_axis_to_physical_types(pixel_axis, wcs):
     wcs: `astropy.wcs.BaseLowLevelWCS`
         The WCS object defining the relationship between pixel and world axes.
 
-   Returns
-   -------
-   physical_types: `numpy.ndarray` of `str`
-       The physical types corresponding to the pixel axis.
+    Returns
+    -------
+    physical_types: `numpy.ndarray` of `str`
+        The physical types corresponding to the pixel axis.
     """
     return np.array(wcs.world_axis_physical_types)[wcs.axis_correlation_matrix[:, pixel_axis]]
 
@@ -269,10 +269,10 @@ def physical_type_to_pixel_axes(physical_type, wcs):
     wcs: `astropy.wcs.BaseLowLevelWCS`
         The WCS object defining the relationship between pixel and world axes.
 
-   Returns
-   -------
-   pixel_axes: `numpy.ndarray`
-       The pixel axis indices corresponding to the physical type.
+    Returns
+    -------
+    pixel_axes: `numpy.ndarray`
+        The pixel axis indices corresponding to the physical type.
     """
     world_axis = physical_type_to_world_axis(physical_type, wcs.world_axis_physical_types)
     return world_axis_to_pixel_axes(world_axis, wcs.axis_correlation_matrix)
