@@ -18,64 +18,6 @@ __all__ = [
     'unique_data_axis']
 
 # Deprecated in favor of utils.wcs.reflect_axis_index
-def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
-    """Converts a data axis number to wcs axis number taking care of the missing axes"""
-
-    # old_order tells us whether data_axis is an axis of before
-    # slicing or after slicing
-    # old_order=True tells us that data_axis is an axis before slicing
-
-    # Make sure that data_axis is a scalar item
-    if data_axis is not None:
-        if not isinstance(data_axis, numbers.Integral):
-            raise ValueError(f"The data_axis parameter accepts \
-                numpy.int64 or numpy.np.int32 datatype, got this {type(data_axis)}")
-
-    # Make sure _pixel_keep is numpy array
-    if not isinstance(pixel_keep, np.ndarray):
-        raise TypeError(f"The pixel_keep parameter should be np.ndarray, got this {type(pixel_keep)}.")
-
-    # Sanitize the data_axis
-    if data_axis is None:
-        return None
-    else:
-        if data_axis < 0:
-            data_axis += naxes
-        if data_axis > naxes - 1 or data_axis < 0:
-            raise IndexError(
-                "Data axis out of range.  Number Data axes = {0} and the value requested is {1}".format(
-                    naxes, data_axis))
-    if not old_order:
-        return naxes - 1 - data_axis
-    else:
-        # pixel_keep is the old order of all wcs
-        # Get the old order of all data axes
-        old_data_order = naxes - 1 - pixel_keep
-
-        # Get a mapping of the old order and new order of all data axes
-        new_wcs_order = np.unique(pixel_keep, return_inverse=True)[1]
-
-        # Mapping of the order of new wcs axes
-        new_data_order = new_wcs_order[::-1]
-
-        # First we check if the data_axis whose wcs_axis we want to calculate
-        # is present in the old_data_order
-        index = np.where(data_axis == old_data_order)[0]
-        if index.size != 0:
-            index = index.item()
-        else:
-            index = None
-
-        if index is None:
-            # As we have performed the check for bound,
-            # so the data_axis must have been missing if
-            # index is None
-            return None
-
-        # Return the corresponding wcs_axis for the data axis
-        return new_wcs_order[index]
-
-# Deprecated in favor of utils.wcs.reflect_axis_index
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
     """Converts a wcs axis number to data axis number taking care of the missing axes"""
 
