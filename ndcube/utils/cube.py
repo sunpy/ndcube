@@ -10,10 +10,8 @@ from astropy.units import Quantity
 import ndcube.utils.wcs as wcs_utils
 
 __all__ = [
-    '_get_dimension_for_pixel',
     'convert_extra_coords_dict_to_input_format',
-    'wcs_axis_to_data_ape14',
-    'unique_data_axis']
+    'wcs_axis_to_data_ape14']
 
 # Deprecated in favor of utils.wcs.reflect_axis_index. Can only remove after extra_coords refactor.
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
