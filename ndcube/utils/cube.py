@@ -13,7 +13,6 @@ __all__ = [
     '_pixel_centers_or_edges',
     '_get_dimension_for_pixel',
     'convert_extra_coords_dict_to_input_format',
-    'get_axis_number_from_axis_name',
     'wcs_axis_to_data_ape14',
     'unique_data_axis']
 
@@ -148,34 +147,6 @@ def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
             raise KeyError("extra coords dict can have keys 'wcs axis' or 'axis'.  Not both.")
         result.append((name, axis, extra_coords[name]["value"]))
     return result
-
-# Deprecated in favor of utils.wcs.physical_type_to_pixel_axes + util.wcs.reflect_axis_index
-def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
-    """
-    Returns axis number (numpy ordering) given a substring unique to a world
-    axis type string.
-
-    Parameters
-    ----------
-    axis_name: `str`
-        Name or substring of name of axis as defined by NDCube.world_axis_physical_types
-
-    world_axis_physical_types: iterable of `str`
-        Output from NDCube.world_axis_physical_types for relevant cube,
-        i.e. iterable of string axis names.
-
-    Returns
-    -------
-    axis_index[0]: `int`
-        Axis number (numpy ordering) corresponding to axis name
-    """
-    axis_index = [axis_name in world_axis_type for world_axis_type in world_axis_physical_types]
-    axis_index = np.arange(len(world_axis_physical_types))[axis_index]
-    if len(axis_index) != 1:
-        raise ValueError("User defined axis with a string that is not unique to "
-                         "a physical axis type. {} not in any of {}".format(
-                             axis_name, world_axis_physical_types))
-    return axis_index[0]
 
 
 def _pixel_centers_or_edges(axis_length, edges):
