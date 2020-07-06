@@ -369,7 +369,7 @@ coordinates of the `~ndcube.NDCube` field of view.  To make this easy,
 coordinates for each pixel along a given data axis.  So in the case of
 ``my_cube``, if we wanted the wavelength axis we could call::
 
-  >>> my_cube.axis_world_coords(2)
+  >>> my_cube.axis_world_coords(2) # doctest: +SKIP
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
@@ -380,7 +380,7 @@ from the axis names defined in
   >>> my_cube.world_axis_physical_types
   ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
   >>> # Since 'wl' is unique to the wavelength axis name, let's use that.
-  >>> my_cube.axis_world_coords('wl')
+  >>> my_cube.axis_world_coords('wl') # doctest: +SKIP
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Notice how this returns the same result as when we set ``axes`` to
@@ -395,10 +395,10 @@ are dependent.  Therefore if we ask for longitude, we will get back a
 2D `~astropy.units.Quantity` with the same shape as the longitude x
 latitude axes lengths.  For example::
 
-  >>> longitude = my_cube.axis_world_coords('lon')
+  >>> longitude = my_cube.axis_world_coords('lon') # doctest: +SKIP
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
-  >>> longitude.shape
+  >>> longitude.shape # doctest: +SKIP
   (3, 4)
   >>> longitude # doctest: +SKIP
   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
@@ -446,7 +446,8 @@ By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the
 center of each pixel. However, the pixel edges can be obtained by setting
 the ``edges`` kwarg to True.
 
-For example,
+For example::
+
   >>> my_cube.axis_world_coords(edges=True) # doctest: +SKIP
   (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),
