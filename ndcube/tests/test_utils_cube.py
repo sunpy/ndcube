@@ -72,11 +72,3 @@ def test_convert_extra_coords_dict_to_input_format_error():
         utils.cube.convert_extra_coords_dict_to_input_format(
             {"time": {"not axis": 0, "value": []}}, [0, 1, 2], 3)
 
-
-@pytest.mark.parametrize("test_input, expected", [
-    ((5, False), 5),
-    ((6, True), 7)
-])
-def test_get_dimension_for_pixel(test_input, expected):
-    output = utils.cube._get_dimension_for_pixel(*test_input)
-    assert output == expected

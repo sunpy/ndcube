@@ -15,7 +15,6 @@ from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, custom_ctype_to_ucd_mappin
 from ndcube import utils
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.cube import _get_dimension_for_pixel, unique_data_axis
 import ndcube.utils.wcs as wcs_utils
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
