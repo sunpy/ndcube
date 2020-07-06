@@ -314,9 +314,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         wcs_shape = self.data.shape[::-1]
         if edges:
             wcs_shape = tuple(np.array(wcs_shape) + 1)
-            pixel_inputs = np.meshgrid(*[np.arange(i) - 0.5 for i in wcs_shape], indexing='ij')
+            pixel_inputs = np.meshgrid(*[np.arange(i) - 0.5 for i in wcs_shape],
+                                       indexing='ij', sparse=True)
         else:
-            pixel_inputs = np.meshgrid(*[np.arange(i) for i in wcs_shape], indexing='ij')
+            pixel_inputs = np.meshgrid(*[np.arange(i) for i in wcs_shape],
+                                       indexing='ij', sparse=True)
 
         # Get world coords for all axes and all pixels.
         axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
