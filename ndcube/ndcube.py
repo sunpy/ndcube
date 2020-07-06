@@ -15,7 +15,7 @@ from ndcube import utils
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.cube import _get_dimension_for_pixel, _pixel_centers_or_edges, unique_data_axis
-from ndcube.utils.wcs import _pixel_keep, wcs_ivoa_mapping
+import ndcube.utils.wcs as wcs_utils
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
@@ -188,7 +188,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if extra_coords:
             self._extra_coords_wcs_axis = \
                 utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                    extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
+                    extra_coords, wcs_utils._pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
 
@@ -218,7 +218,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Use the context manager to access the physical types,
         # which are not present in the APE14.
         # APE14 physical types are covered by default.
-        with custom_ctype_to_ucd_mapping(wcs_ivoa_mapping):
+        with custom_ctype_to_ucd_mapping(wcs_utils.wcs_ivoa_mapping):
             ctype = self.wcs.low_level_wcs.world_axis_physical_types
 
         return tuple(ctype[::-1])
@@ -362,7 +362,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             return tuple(axes_coords)
 
-    def axis_world_coords_values(self, *axes, edges=False):
+    def axis_world_coord_values(self, *axes, edges=False):
         """
         Returns WCS coordinate values of all pixels for desired axes.
 
@@ -426,18 +426,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 if isinstance(axis, numbers.Integral):
                     # If axis is int, it is a numpy order array axis.
                     # Convert to pixel axis in WCS order.
-                    axis = array_axis_to_wcs_pixel_axis(axis, wcs.pixel_n_dim)
+                    axis = wcs_utils.reflect_axis_index(np.array([axis]), wcs.pixel_n_dim)[0]
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
-                    world_indices.update(get_world_axes_from_wcs_pixel_axis(wcs, axis))
+                    world_indices.update(wcs_utils.pixel_axis_to_world_axes(
+                        axis, self.wcs.axis_correlation_matrix))
                 elif isinstance(axis, str):
                     # If axis is str, it is a physical type or substring of a physical type.
-                    # Use world_axis_physical_types to infer the its WCS world index.
-                    world_indices.update(get_wcs_world_axes_from_axis_name(wcs, axis))
+                    world_indices.update(wcs_utils.physical_type_to_world_axis(
+                        axis, world_axis_physical_types))
                 else:
                     raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
                                     "Must be of type (numbers.Integral, str)")
-            # Remove duplicate world indices then use to extract the desired coord values
+            # Use inferred world axes to extract the desired coord value
             # and corresponding physical types.
             world_indices = np.array(list(world_indices), dtype=int)
             axes_coords = np.array(axes_coords)[world_indices]
@@ -470,7 +471,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"], _pixel_keep(self.wcs),
+                        self._extra_coords_wcs_axis[key]["wcs axis"], wcs_utils._pixel_keep(self.wcs),
                         self.wcs.low_level_wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
@@ -705,27 +706,3 @@ class NDCubeOrdered(NDCube):
                          mask=result_mask, meta=meta, unit=unit,
                          extra_coords=reordered_extra_coords,
                          copy=copy, **kwargs)
-
-
-def array_axis_to_wcs_pixel_axis(array_axis, n_axes):
-    if array_axis < 0:
-        pixel_axis = abs(array_axis) - 1
-    else:
-        pixel_axis = n_axes - 1 - array_axis
-    return pixel_axis
-
-
-def get_world_axes_from_wcs_pixel_axis(wcs, pixel_axis):
-    return np.arange(wcs.world_n_dim)[wcs.axis_correlation_matrix[:, pixel_axis]]
-
-
-def get_wcs_world_axes_from_axis_name(wcs, axis_name):
-    # Find world axis described by axis_name.
-    widx = np.where(wcs.world_axis_physical_types == axis_name)[0]
-    # If axis name as given does not correspond to a physical axis,
-    # check if it is a substring of any physical types.
-    if len(widx) == 0:
-        widx = [axis_name in physical_type for physical_type in wcs.world_axis_physical_types]
-        widx = np.arange(wcs.world_n_dim)[widx]
-    # Return axes with duplicates removed.
-    return list(set(list(widx)))
