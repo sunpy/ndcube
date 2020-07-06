@@ -7,7 +7,7 @@ import numbers
 import numpy as np
 from astropy.units import Quantity
 
-from ndcube.utils.wcs import _pixel_keep, get_dependent_wcs_axes
+import ndcube.utils.wcs as wcs_utils
 
 __all__ = [
     '_pixel_centers_or_edges',
@@ -147,7 +147,7 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
     coord_0_format_error = ("1st element of extra coordinate tuple must be a "
                             "string giving the coordinate's name.")
     coord_1_format_error = ("2nd element of extra coordinate tuple must be None "
-                            "or an int giving the data axis "
+                            "or an int or tuple of int giving the data axis "
                             "to which the coordinate corresponds.")
     coord_len_error = ("extra coord ({0}) must have same length as data axis "
                        "to which it is assigned: coord length, {1} != data axis length, {2}")
@@ -157,14 +157,18 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
             raise ValueError(coord_format_error.format(coord))
         if not isinstance(coord[0], str):
             raise ValueError(coord_0_format_error.format(coord))
-        if coord[1] is not None and not isinstance(coord[1], numbers.Integral):
-            raise ValueError(coord_1_format_error)
+        # Check coord axis number is valid and convert to a WCS-order axis number.
+        if coord[1] is None:
+            new_coord_axis = None
+        else:
+            if isinstance(coord[1], numbers.Integral):
+                 wcs_coord_axis = wcs_utils.reflect_axis_index(np.array([coord[1]]), naxes)[0]
+            elif hasattr(coord[1], "__len__") and all([isinstance(c, numbers.Integral) for c in coord[1]]):
+                wcs_coord_axis = tuple(wcs_utils.reflect_axis_index(np.array(coord[1]), naxes))
+            else:
+                raise ValueError(coord_1_format_error)
 
-        # Determine wcs axis corresponding to data axis of coord
-
-        extra_coords_wcs_axis[coord[0]] = {
-            "wcs axis": data_axis_to_wcs_ape14(coord[1], pixel_keep, naxes),
-            "value": coord[2]}
+        extra_coords_wcs_axis[coord[0]] = {"wcs axis": wcs_coord_axis, "value": coord[2]}
     return extra_coords_wcs_axis
 
 
