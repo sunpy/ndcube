@@ -46,6 +46,11 @@ def _axis_correlation_matrix():
     return acm
 
 
+@pytest.fixture
+def test_wcs():
+    return TestWCS()
+
+
 class TestWCS():
     def __init__(self):
         self.world_axis_physical_types = [
@@ -53,14 +58,11 @@ class TestWCS():
         self.axis_correlation_matrix = _axis_correlation_matrix()
 
 
-TEST_WCS = TestWCS()
-
-
-def test_reflect_axis_index():
+def test_convert_between_array_and_pixel_axes():
     test_input = np.array([1, 4, -2])
     naxes = 5
     expected = np.array([3, 0, 1])
-    output = utils.wcs.reflect_axis_index(test_input, naxes)
+    output = utils.wcs.convert_between_array_and_pixel_axes(test_input, naxes)
     assert all(output == expected)
 
 
@@ -76,16 +78,16 @@ def test_world_axis_to_pixel_axes(axis_correlation_matrix):
     assert all(output == expected)
 
 
-def test_pixel_axis_to_physical_types():
-    output = utils.wcs.pixel_axis_to_physical_types(0, TEST_WCS)
+def test_pixel_axis_to_physical_types(test_wcs):
+    output = utils.wcs.pixel_axis_to_physical_types(0, test_wcs)
     expected = np.array(['custom:pos.helioprojective.lon',
                          'custom:pos.helioprojective.lat', 'time'])
     print(output, expected)
     assert all(output == expected)
 
 
-def test_physical_type_to_pixel_axes():
-    output = utils.wcs.physical_type_to_pixel_axes('lon', TEST_WCS)
+def test_physical_type_to_pixel_axes(test_wcs):
+    output = utils.wcs.physical_type_to_pixel_axes('lon', test_wcs)
     expected = np.array([0, 1])
     assert all(output == expected)
 
@@ -117,7 +119,7 @@ def test_get_dependent_world_axes(axis_correlation_matrix):
     assert all(output == expected)
 
 
-def test_get_dependent_physical_types():
-    output = utils.wcs.get_dependent_physical_types("time", TEST_WCS)
+def test_get_dependent_physical_types(test_wcs):
+    output = utils.wcs.get_dependent_physical_types("time", test_wcs)
     expected = np.array(['custom:pos.helioprojective.lon', 'time'])
     assert all(output == expected)

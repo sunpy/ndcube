@@ -1,1 +1,1 @@
-Refactor utils.
+Remove unused util functions and the ndcube WCS class.  Refactor util functions for converting between between data and WCS indices to reflect the APE14 nomenclature that distinguishes between array, pixel and world axes.

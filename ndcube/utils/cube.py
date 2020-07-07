@@ -100,9 +100,9 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
             wcs_coord_axis = None
         else:
             if isinstance(coord[1], numbers.Integral):
-                wcs_coord_axis = wcs_utils.reflect_axis_index(np.array([coord[1]]), naxes)[0]
+                wcs_coord_axis = wcs_utils.convert_between_array_and_pixel_axes(np.array([coord[1]]), naxes)[0]
             elif hasattr(coord[1], "__len__") and all([isinstance(c, numbers.Integral) for c in coord[1]]):
-                wcs_coord_axis = tuple(wcs_utils.reflect_axis_index(np.array(coord[1]), naxes))
+                wcs_coord_axis = tuple(wcs_utils.convert_between_array_and_pixel_axes(np.array(coord[1]), naxes))
             else:
                 raise ValueError(coord_1_format_error)
 
