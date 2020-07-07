@@ -16,7 +16,6 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 from ndcube.utils import cube as utils_cube
 
 __all__ = ['wcs_ivoa_mapping', 'append_sequence_axis_to_wcs',
-           'reflect_axis_index',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
            'physical_type_to_world_axis',

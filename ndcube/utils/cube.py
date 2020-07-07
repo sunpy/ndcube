@@ -13,7 +13,8 @@ __all__ = [
     'convert_extra_coords_dict_to_input_format',
     'wcs_axis_to_data_ape14']
 
-# Deprecated in favor of utils.wcs.reflect_axis_index. Can only remove after extra_coords refactor.
+# Deprecated in favor of utils.wcs.convert_between_array_and_pixel_axes.
+# Can only remove after extra_coords refactor.
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
     """Converts a wcs axis number to data axis number taking care of the missing axes"""
 

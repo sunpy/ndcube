@@ -340,7 +340,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 if isinstance(axis, numbers.Integral):
                     # If axis is int, it is a numpy order array axis.
                     # Convert to pixel axis in WCS order.
-                    axis = wcs_utils.reflect_axis_index(np.array([axis]), self.wcs.pixel_n_dim)[0]
+                    axis = wcs_utils.convert_between_array_and_pixel_axes(
+                            np.array([axis]), self.wcs.pixel_n_dim)[0]
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
                     world_indices.update(wcs_utils.pixel_axis_to_world_axes(
