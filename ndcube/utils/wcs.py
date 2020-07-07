@@ -17,7 +17,7 @@ from ndcube.utils import cube as utils_cube
 
 __all__ = ['wcs_ivoa_mapping', 'get_dependent_data_axes',
            'get_dependent_wcs_axes', 'append_sequence_axis_to_wcs',
-           'reflect_axis_index',
+           'convert_between_array_and_pixel_axes',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
            'physical_type_to_world_axis',
@@ -160,7 +160,7 @@ def _pixel_keep(wcs_object):
     return np.arange(wcs_object.pixel_n_dim)
 
 
-def reflect_axis_index(axis, naxes):
+def convert_between_array_and_pixel_axes(axis, naxes):
     """Reflects axis index about center of number of axes.
 
     This is used to convert between array axes in numpy order and pixel axes in WCS order.
@@ -317,10 +317,17 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
 
 def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
     """
-    Given a WCS pixel axis index, return indices of dependent WCS pixel axes.
+    Find indices of all pixel axes associated with the world axes linked to the input pixel axis.
 
-    Both input and output axis indices are in the WCS ordering convention
-    (reverse of numpy ordering convention). The returned axis indices include the input axis.
+    For example, say the input pixel axis is 0 and it is associated with two world axes
+    corresponding to longitude and latitude. Let's also say that pixel axis 1 is also
+    associated with longitude and latitude. Thus, this function would return pixel axes 0 and 1.
+    On the other hand let's say pixel axis 2 is associated with only one world axis,
+    e.g. wavelength, which does not depend on any other pixel axis (i.e. it is independent).
+    In that case this function would only return pixel axis 2.
+    Both input and output pixel axis indices are in the WCS ordering convention
+    (reverse of numpy ordering convention).
+    The returned axis indices include the input axis.
 
     Parameters
     ----------
@@ -347,9 +354,17 @@ def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
 
 def get_dependent_array_axes(array_axis, axis_correlation_matrix):
     """
-    Given an array axis, return the indices of dependent array axes.
+    Find indices of all array axes associated with the world axes linked to the input array axis.
 
-    Both input and output axis indices are in the numpy ordering convention.
+    For example, say the input array axis is 0 and it is associated with two world axes
+    corresponding to longitude and latitude. Let's also say that array axis 1 is also
+    associated with longitude and latitude. Thus, this function would return array axes 0 and 1.
+    Note the the output axes include the input axis. On the other hand let's say
+    array axis 2 is associated with only one world axis, e.g. wavelength,
+    which does not depend on any other array axis (i.e. it is independent).
+    In that case this function would only return array axis 2.
+    Both input and output array axis indices are in the numpy array ordering convention
+    (reverse of WCS ordering convention).
     The returned axis indices include the input axis.
 
     Parameters
@@ -367,9 +382,9 @@ def get_dependent_array_axes(array_axis, axis_correlation_matrix):
         Sorted indices of array axes dependent on input axis in numpy ordering convention.
     """
     naxes = axis_correlation_matrix.shape[1]
-    pixel_axis = reflect_axis_index(np.array([array_axis], dtype=int), naxes)[0]
+    pixel_axis = convert_between_array_and_pixel_axes(np.array([array_axis], dtype=int), naxes)[0]
     dependent_pixel_axes = get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix)
-    dependent_array_axes = reflect_axis_index(dependent_pixel_axes, naxes)
+    dependent_array_axes = convert_between_array_and_pixel_axes(dependent_pixel_axes, naxes)
     return np.sort(dependent_array_axes)
 
 

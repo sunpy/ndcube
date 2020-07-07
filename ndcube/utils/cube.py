@@ -17,7 +17,7 @@ __all__ = [
     'wcs_axis_to_data_ape14',
     'unique_data_axis']
 
-# Deprecated in favor of utils.wcs.reflect_axis_index
+# Deprecated in favor of utils.wcs.convert_between_array_and_pixel_axes
 def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
     """Converts a data axis number to wcs axis number taking care of the missing axes"""
 
@@ -75,7 +75,7 @@ def data_axis_to_wcs_ape14(data_axis, pixel_keep, naxes, old_order=False):
         # Return the corresponding wcs_axis for the data axis
         return new_wcs_order[index]
 
-# Deprecated in favor of utils.wcs.reflect_axis_index
+# Deprecated in favor of utils.wcs.convert_between_array_and_pixel_axes
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
     """Converts a wcs axis number to data axis number taking care of the missing axes"""
 
@@ -162,9 +162,9 @@ def _format_input_extra_coords_to_extra_coords_wcs_axis(extra_coords, pixel_keep
             wcs_coord_axis = None
         else:
             if isinstance(coord[1], numbers.Integral):
-                wcs_coord_axis = wcs_utils.reflect_axis_index(np.array([coord[1]]), naxes)[0]
+                wcs_coord_axis = wcs_utils.convert_between_array_and_pixel_axes(np.array([coord[1]]), naxes)[0]
             elif hasattr(coord[1], "__len__") and all([isinstance(c, numbers.Integral) for c in coord[1]]):
-                wcs_coord_axis = tuple(wcs_utils.reflect_axis_index(np.array(coord[1]), naxes))
+                wcs_coord_axis = tuple(wcs_utils.convert_between_array_and_pixel_axes(np.array(coord[1]), naxes))
             else:
                 raise ValueError(coord_1_format_error)
 
@@ -207,7 +207,7 @@ def convert_extra_coords_dict_to_input_format(extra_coords, pixel_keep, naxes):
         result.append((name, axis, extra_coords[name]["value"]))
     return result
 
-# Deprecated in favor of utils.wcs.physical_type_to_pixel_axes + util.wcs.reflect_axis_index
+# Deprecated in favor of utils.wcs.physical_type_to_pixel_axes + util.wcs.convert_between_array_and_pixel_axes
 def get_axis_number_from_axis_name(axis_name, world_axis_physical_types):
     """
     Returns axis number (numpy ordering) given a substring unique to a world
