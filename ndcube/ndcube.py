@@ -3,6 +3,7 @@ import abc
 import numbers
 import textwrap
 import warnings
+from collections import namedtuple
 
 import astropy.nddata
 import astropy.units as u
@@ -295,11 +296,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Returns
         -------
-        axis_names: `tuple` of `str`
-            The physical types of the coords returned.
-
-        axes_coords: `tuple` of `astropy.units.Quantity`
-            Real world coords for axes requested by user.
+        coord_values: `collections.namedtuple`
+            Real world coords labeled with their real world physical types
+            for the axes requested by the user.
             Returned in same order as axis_names.
 
         Example
@@ -360,7 +359,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
         # Return in array order.
-        return world_axis_physical_types[::-1], tuple(axes_coords[::-1])
+        # First replace characters in physical types forbidden for namedtuple identifiers.
+        identifiers = []
+        for physical_type in world_axis_physical_types[::-1]:
+            identifier = physical_type.replace(":", "_")
+            identifier = identifier.replace(".", "_")
+            identifier = identifier.replace("-", "__")
+            identifiers.append(identifier)
+        CoordValues = namedtuple("CoordValues", identifiers)
+        return CoordValues(*axes_coords[::-1])
 
     @property
     def extra_coords(self):

@@ -922,7 +922,7 @@ def test_crop_by_extra_coord(test_input, expected):
     ((cubem, ['em']), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),))
 ])
 def test_all_world_coords_with_input(test_input, expected):
-    all_coords = test_input[0].axis_world_coord_values(*test_input[1])[1]
+    all_coords = test_input[0].axis_world_coord_values(*test_input[1])
     for i in range(len(all_coords)):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
@@ -933,7 +933,7 @@ def test_all_world_coords_with_input(test_input, expected):
     ((cubem, ['em']), (u.Quantity([1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09], unit=u.m),))
 ])
 def test_all_world_coord_values_with_input_and_kwargs(test_input, expected):
-    all_coords = test_input[0].axis_world_coord_values(*test_input[1], **{"edges": True})[1]
+    all_coords = test_input[0].axis_world_coord_values(*test_input[1], **{"edges": True})
     for i in range(len(all_coords)):
         np.testing.assert_allclose(all_coords[i].value, expected[i].value)
         assert all_coords[i].unit == expected[i].unit
