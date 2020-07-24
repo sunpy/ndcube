@@ -223,6 +223,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return tuple(ctype[::-1])
 
+    @property
+    def array_axis_physical_types(self):
+        world_axis_physical_types = np.array(self.wcs.world_axis_physical_types)
+        axis_correlation_matrix = self.wcs.axis_correlation_matrix
+        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
+                for i in range(axis_correlation_matrix.shape[1])][::-1]
+
     def pixel_to_world(self, *quantity_axis_list):
         # The docstring is defined in NDDataBase
 
