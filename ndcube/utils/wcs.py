@@ -439,3 +439,96 @@ def append_sequence_axis_to_wcs(wcs_object):
                        "Coordinate value at reference point"))
     wcs_header["WCSAXES"] = dummy_number
     return WCS(wcs_header)
+
+
+def convert_between_array_and_pixel_axes(axis, naxes):
+    """Reflects axis index about center of number of axes.
+
+    This is used to convert between array axes in numpy order and pixel axes in WCS order.
+    Works in both directions.
+
+    Parameters
+    ----------
+    axis: `numpy.ndarray` of `int`
+        The axis number(s) before reflection.
+
+    naxes: `int`
+        The number of array axes.
+
+    Returns
+    -------
+    reflected_axis: `numpy.ndarray` of `int`
+        The axis number(s) after reflection.
+    """
+    # Check type of input.
+    if not isinstance(axis, np.ndarray):
+        raise TypeError("input must be of array type. Got type: {type(axis)}")
+    if axis.dtype.char not in np.typecodes['AllInteger']:
+        raise TypeError("input dtype must be of int type.  Got dtype: {axis.dtype})")
+    # Convert negative indices to positive equivalents.
+    axis[axis < 0] += naxes
+    if any(axis > naxes - 1):
+        raise IndexError("Axis out of range.  "
+                         f"Number of axes = {naxes}; Axis numbers requested = {axes}")
+    # Reflect axis about center of number of axes.
+    reflected_axis = naxes - 1 - axis
+
+    return reflected_axis
+
+
+def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
+    """
+    Retrieves the indices of the world axis physical types corresponding to a pixel axis.
+
+    Parameters
+    ----------
+    pixel_axis: `int`
+        The pixel axis index/indices for which the world axes are desired.
+
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    Returns
+    -------
+    world_axes: `numpy.ndarray`
+        The world axis indices corresponding to the pixel axis.
+    """
+    return np.arange(axis_correlation_matrix.shape[0])[axis_correlation_matrix[:, pixel_axis]]
+
+
+def physical_type_to_world_axis(physical_type, world_axis_physical_types):
+    """
+    Returns world axis index of a physical type based on WCS world_axis_physical_types.
+
+    Input can be a substring of a physical type, so long as it is unique.
+
+    Parameters
+    ----------
+    physical_type: `str`
+        The physical type or a substring unique to a physical type.
+
+    world_axis_physical_types: sequence of `str`
+        All available physical types.  Ordering must be same as
+        `astropy.wcs.BaseLowLevelWCS.world_axis_physical_types`
+
+    Returns
+    -------
+    world_axis: `numbers.Integral`
+        The world axis index of the physical type.
+    """
+    # Find world axis index described by physical type.
+    widx = np.where(world_axis_physical_types == physical_type)[0]
+    # If physical type does not correspond to entry in world_axis_physical_types,
+    # check if it is a substring of any physical types.
+    if len(widx) == 0:
+        widx = [physical_type in world_axis_physical_type
+                for world_axis_physical_type in world_axis_physical_types]
+        widx = np.arange(len(world_axis_physical_types))[widx]
+    if len(widx) != 1:
+        raise ValueError(
+                "Input does not uniquely correspond to a physical type."
+                f" Expected unique substring of one of {world_axis_physical_types}."
+                f"  Got: {physical_type}")
+    # Return axes with duplicates removed.
+    return widx[0]
