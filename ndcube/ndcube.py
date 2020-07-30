@@ -1,7 +1,9 @@
 
 import abc
+import numbers
 import textwrap
 import warnings
+from collections import namedtuple
 
 import astropy.nddata
 import astropy.units as u
@@ -11,11 +13,10 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, custom_ctype_to_ucd_mapping
 
+import ndcube.utils.wcs as wcs_utils
 from ndcube import utils
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.cube import _get_dimension_for_pixel, _pixel_centers_or_edges, unique_data_axis
-from ndcube.utils.wcs import _pixel_keep, wcs_ivoa_mapping
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
@@ -188,7 +189,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if extra_coords:
             self._extra_coords_wcs_axis = \
                 utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                    extra_coords, _pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
+                    extra_coords, wcs_utils._pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
         else:
             self._extra_coords_wcs_axis = None
 
@@ -218,7 +219,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Use the context manager to access the physical types,
         # which are not present in the APE14.
         # APE14 physical types are covered by default.
-        with custom_ctype_to_ucd_mapping(wcs_ivoa_mapping):
+        with custom_ctype_to_ucd_mapping(wcs_utils.wcs_ivoa_mapping):
             ctype = self.wcs.low_level_wcs.world_axis_physical_types
 
         return tuple(ctype[::-1])
@@ -278,105 +279,111 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Returns
         -------
-        axes_coords: `list` of `astropy.units.Quantity`
-            Real world coords for axes in order requested by user.
+        axes_coords: `list`
+            High level object giving the real world coords for the axes requested by user.
+            For example, SkyCoords.
 
         Example
         -------
         >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
+
         """
-        # Define the dimensions of the cube and the total number of axes.
-        cube_dimensions = np.array(self.dimensions.value, dtype=int)
-        n_dimensions = cube_dimensions.size
-        world_axis_types = self.world_axis_physical_types
+        raise NotImplementedError()
 
-        # Determine axis numbers of user supplied axes.
-        if axes == ():
-            int_axes = np.arange(n_dimensions)
+    def axis_world_coord_values(self, *axes, edges=False):
+        """
+        Returns WCS coordinate values of all pixels for desired axes.
+
+        Parameters
+        ----------
+        axes: `int` or `str`, or multiple `int` or `str`
+            Axis number in numpy ordering or unique substring of
+            `~ndcube.NDCube.wcs.world_axis_physical_types`
+            of axes for which real world coordinates are desired.
+            axes=None implies all axes will be returned.
+
+        edges: `bool`
+            If True, the coords at the edges of the pixels are returned
+            rather than the coords at the center of the pixels.
+            Note that there are n+1 edges for n pixels which is reflected
+            in the returned coords.
+            Default=False, i.e. pixel centers are returned.
+
+        Returns
+        -------
+        coord_values: `collections.namedtuple`
+            Real world coords labeled with their real world physical types
+            for the axes requested by the user.
+            Returned in same order as axis_names.
+
+        Example
+        -------
+        >>> NDCube.all_world_coords_values(('lat', 'lon')) # doctest: +SKIP
+        >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
+
+        """
+        # Create meshgrid of all pixel coordinates.
+        # If user, wants edges, set pixel values to pixel edges.
+        # Else make pixel centers.
+        wcs_shape = self.data.shape[::-1]
+        if edges:
+            wcs_shape = tuple(np.array(wcs_shape) + 1)
+            pixel_inputs = np.meshgrid(*[np.arange(i) - 0.5 for i in wcs_shape],
+                                       indexing='ij', sparse=True)
         else:
-            if isinstance(axes, int):
-                int_axes = np.array([axes])
-            elif isinstance(axes, str):
-                int_axes = np.array([
-                    utils.cube.get_axis_number_from_axis_name(axes, world_axis_types)])
-            else:
-                int_axes = np.empty(len(axes), dtype=int)
-                for i, axis in enumerate(axes):
-                    if isinstance(axis, int):
-                        if axis < 0:
-                            int_axes[i] = n_dimensions + axis
-                        else:
-                            int_axes[i] = axis
-                    elif isinstance(axis, str):
-                        int_axes[i] = utils.cube.get_axis_number_from_axis_name(
-                            axis, world_axis_types)
-        # Ensure user has not entered the same axis twice.
-        repeats = {x for x in int_axes if np.where(int_axes == x)[0].size > 1}
-        if repeats:
-            raise ValueError("The following axes were specified more than once: {}".format(
-                ' '.join(map(str, repeats))))
+            pixel_inputs = np.meshgrid(*[np.arange(i) for i in wcs_shape],
+                                       indexing='ij', sparse=True)
 
-        new_int_axes = np.arange(len(self.dimensions))
-        axes_coords = np.array([None] * len(unique_data_axis(self.wcs, new_int_axes)[1]))
-        axes_translated = np.array(
-            [False if entry in int_axes else True for entry in range(len(self.dimensions))])
+        # Get world coords for all axes and all pixels.
+        axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
 
-        # Determine which axes are dependent on others.
-        # Ensure the axes are in numerical order.
-        dependent_axes = [list(utils.wcs.get_dependent_data_axes(self.wcs, axis))
-                          for axis in new_int_axes]
-        n_dependent_axes = [len(da) for da in dependent_axes]
+        # Reduce duplication across independent dimensions for each coord
+        # and transpose to make dimensions mimic numpy array order rather than WCS order.
+        for i, axis_coord in enumerate(axes_coords):
+            slices = np.array([slice(None)] * self.wcs.world_n_dim)
+            slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
+            axes_coords[i] = axis_coord[tuple(slices)].T
 
-        # Iterate through each axis and perform WCS translation.
-        for i, axis in enumerate(new_int_axes):
-            # If axis has already been translated, do not do so again.
-            if not axes_translated[i]:
-                if n_dependent_axes[i] == 1:
-                    # Construct pixel quantities in each dimension letting
-                    # other dimensions all have 0 pixel value.
-                    # Replace array in quantity list corresponding to current axis with
-                    # np.arange array.
-                    quantity_list = [u.Quantity(np.zeros(_get_dimension_for_pixel(
-                        cube_dimensions[dependent_axes[i]], edges)), unit=u.pix)] * n_dimensions
-                    quantity_list[axis] = u.Quantity(
-                        _pixel_centers_or_edges(
-                            cube_dimensions[axis], edges), unit=u.pix)
+        world_axis_physical_types = self.wcs.world_axis_physical_types
+        # If user has supplied axes, extract only the
+        # world coords that correspond to those axes.
+        if axes:
+            # Convert input axes to WCS world axis indices.
+            world_indices = set()
+            for axis in axes:
+                if isinstance(axis, numbers.Integral):
+                    # If axis is int, it is a numpy order array axis.
+                    # Convert to pixel axis in WCS order.
+                    axis = wcs_utils.convert_between_array_and_pixel_axes(
+                            np.array([axis]), self.wcs.pixel_n_dim)[0]
+                    # Get WCS world axis indices that correspond to the WCS pixel axis
+                    # and add to list of indices of WCS world axes whose coords will be returned.
+                    world_indices.update(wcs_utils.pixel_axis_to_world_axes(
+                        axis, self.wcs.axis_correlation_matrix))
+                elif isinstance(axis, str):
+                    # If axis is str, it is a physical type or substring of a physical type.
+                    world_indices.update({wcs_utils.physical_type_to_world_axis(
+                        axis, world_axis_physical_types)})
                 else:
-                    # If the axis is dependent on another, perform
-                    # translations on all dependent axes.
-                    # Construct pixel quantities in each dimension letting
-                    # other dimensions all have 0 pixel value.
-                    # Construct orthogonal pixel index arrays for dependent axes.
-                    quantity_list = [u.Quantity(np.zeros(tuple(
-                        [_get_dimension_for_pixel(cube_dimensions[k], edges) for k in dependent_axes[i]])),
-                        unit=u.pix)] * n_dimensions
+                    raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
+                                    "Must be of type (numbers.Integral, str)")
+            # Use inferred world axes to extract the desired coord value
+            # and corresponding physical types.
+            world_indices = np.array(list(world_indices), dtype=int)
+            axes_coords = np.array(axes_coords)[world_indices]
+            world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
-                    dependent_pixel_quantities = np.meshgrid(
-                        *[_pixel_centers_or_edges(cube_dimensions[k], edges) * u.pix
-                          for k in dependent_axes[i]], indexing="ij")
-                    for k, axis in enumerate(dependent_axes[i]):
-                        quantity_list[axis] = dependent_pixel_quantities[k]
-                # Perform wcs translation
-                dependent_axes_coords = self.pixel_to_world(*quantity_list)
-                # Place world coords into output list
-                for dependent_axis in dependent_axes[i]:
-                    if dependent_axis in int_axes:
-                        # Due to error check above we know dependent
-                        # axis can appear in int_axes at most once.
-                        j = unique_data_axis(self.wcs, dependent_axis)[0]
-                        # Since the dependent_axes_coords contains reduced number of results, adjust the index
-                        axes_coords[j] = dependent_axes_coords[j]
-                        # Remove axis from list that have now been translated.
-                        axes_translated[dependent_axes[i]] = True
-
-        # Remove the None values from axes_coords
-        axes_coords = axes_coords[axes_coords != np.array(None)]
-
-        if len(axes_coords) == 1:
-            return axes_coords[0]
-        else:
-            return tuple(axes_coords)
+        # Return in array order.
+        # First replace characters in physical types forbidden for namedtuple identifiers.
+        identifiers = []
+        for physical_type in world_axis_physical_types[::-1]:
+            identifier = physical_type.replace(":", "_")
+            identifier = identifier.replace(".", "_")
+            identifier = identifier.replace("-", "__")
+            identifiers.append(identifier)
+        CoordValues = namedtuple("CoordValues", identifiers)
+        return CoordValues(*axes_coords[::-1])
 
     @property
     def extra_coords(self):
@@ -401,7 +408,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for key in list(self._extra_coords_wcs_axis.keys()):
                 result[key] = {
                     "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"], _pixel_keep(self.wcs),
+                        self._extra_coords_wcs_axis[key]["wcs axis"],
+                        wcs_utils._pixel_keep(self.wcs),
                         self.wcs.low_level_wcs.pixel_n_dim),
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result

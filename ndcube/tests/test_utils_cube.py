@@ -71,22 +71,3 @@ def test_convert_extra_coords_dict_to_input_format_error():
     with pytest.raises(KeyError):
         utils.cube.convert_extra_coords_dict_to_input_format(
             {"time": {"not axis": 0, "value": []}}, [0, 1, 2], 3)
-
-
-@pytest.mark.parametrize("test_input, expected", [
-    ((5, False), np.asarray([0, 1, 2, 3, 4])),
-    ((6, True), np.asarray([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5]))
-])
-def test_pixel_centers_or_edges(test_input, expected):
-    output = utils.cube._pixel_centers_or_edges(*test_input)
-    assert isinstance(output, np.ndarray)
-    np.testing.assert_allclose(output, expected)
-
-
-@pytest.mark.parametrize("test_input, expected", [
-    ((5, False), 5),
-    ((6, True), 7)
-])
-def test_get_dimension_for_pixel(test_input, expected):
-    output = utils.cube._get_dimension_for_pixel(*test_input)
-    assert output == expected

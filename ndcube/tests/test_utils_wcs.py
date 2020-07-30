@@ -58,27 +58,6 @@ class TestWCS():
         self.axis_correlation_matrix = _axis_correlation_matrix()
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ((wm, 0), (0, 1)),
-    ((wm, 1), (0, 1)),
-    ((wm, 2), (2,)),
-    ((wm, 1), (0, 1))
-])
-def test_get_dependent_data_axes(test_input, expected):
-    output = utils.wcs.get_dependent_data_axes(*test_input)
-    assert output == expected
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    ((wm, 0), (0,)),
-    ((wm, 1), (1, 2)),
-    ((wm, 2), (1, 2)),
-])
-def test_get_dependent_wcs_axes(test_input, expected):
-    output = utils.wcs.get_dependent_wcs_axes(*test_input)
-    assert output == expected
-
-
 def test_convert_between_array_and_pixel_axes():
     test_input = np.array([1, 4, -2])
     naxes = 5
