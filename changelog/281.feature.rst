@@ -1,1 +1,1 @@
-New method on NDCube (array_axis_physical_types) to show which physical types are associated with each array axis.
+Added a new method `ndcube.NDCube.array_axis_physical_types` to show which physical types are associated with each array axis.
