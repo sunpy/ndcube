@@ -9,7 +9,7 @@ import astropy.units as u
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping
+from ndcube.utils.wcs import wcs_ivoa_mapping, reduced_correlation_matrix_and_world_physical_types
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -269,8 +269,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         be of different lengths. Likewise, as a single physical type can correspond to
         multiple array axes, the same physical type string can appear in multiple tuples.
         """
-        world_axis_physical_types = np.array(self.wcs.world_axis_physical_types)
-        axis_correlation_matrix = self.wcs.axis_correlation_matrix
+        axis_correlation_matrix, world_axis_physical_types = \
+                reduced_correlation_matrix_and_world_physical_types(
+                        self.wcs.axis_correlation_matrix, self.wcs.world_axis_physical_types,
+                        self.missing_axes)
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
