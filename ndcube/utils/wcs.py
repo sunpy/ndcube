@@ -532,3 +532,75 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
                 f"  Got: {physical_type}")
     # Return axes with duplicates removed.
     return widx[0]
+
+
+def reduced_axis_correlation_matrix(axis_correlation_matrix, missing_axes,
+                                    return_world_indices=False):
+    """
+    Return axis correlation matrix with missing axes removed.
+
+    This is needed because ndcube 1.3.x does not use astropy.nddata to slice WCSs.
+    Will be removed in ndcube 2.0.
+
+    Parameters
+    ----------
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    missing_axes: `list` of `bool`
+        Denotes axes in WCS for which the corresponding data axis is missing.
+
+    return_world_indices: `bool`
+        If True, the indices of the world_axis_physical_types corresponding to the
+        reduced matrix are returned.
+        Default=False
+
+    Returns
+    -------
+    reduced_matrix: `numpy.ndarray` of `bool`
+        axis_correlation_matrix with missing axes removed.
+    """
+    # Remove missing pixel axes
+    pixel_axes = np.invert(missing_axes)
+    reduced_matrix = axis_correlation_matrix[:, pixel_axes]
+    # Remove world axes which now no longer correspond to a pixel axis.
+    world_axes = [reduced_matrix[i].any() for i in range(axis_correlation_matrix.shape[0])]
+    reduced_matrix = reduced_matrix[world_axes]
+    if return_world_indices:
+        return reduced_matrix, world_axes
+    else:
+        return reduced_matrix
+
+
+def reduced_correlation_matrix_and_world_physical_types(
+        axis_correlation_matrix, world_axis_physical_types, missing_axes):
+    """
+    Return axis correlation matrix with missing axes removed.
+
+    This is needed because ndcube 1.3.x does not use astropy.nddata to slice WCSs.
+    Will be removed in ndcube 2.0.
+
+    Parameters
+    ----------
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    world_axis_physical_types: iterable of `str`
+        The physical types corresponding to the world axes of the axis correlation matrix.
+
+    missing_axes: `list` of `bool`
+        Denotes axes in WCS for which the corresponding data axis is missing.
+
+    Returns
+    -------
+    reduced_matrix: `numpy.ndarray` of `bool`
+        axis_correlation_matrix with missing axes removed.
+
+    reduced_physical_types: `numpy.ndarray` of `str`
+        The physical types corresponding to the reduced matrix.
+    """
+    reduced_matrix, world_axes = reduced_axis_correlation_matrix(axis_correlation_matrix, missing_axes, return_world_indices=True)
+    reduced_physical_types = np.array(world_axis_physical_types)[world_axes]
+    return reduced_matrix, reduced_physical_types
