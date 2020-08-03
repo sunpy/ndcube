@@ -2,6 +2,8 @@
 import abc
 import warnings
 import textwrap
+import numbers
+from collections import namedtuple
 
 import numpy as np
 import astropy.nddata
@@ -9,7 +11,7 @@ import astropy.units as u
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping, reduced_correlation_matrix_and_world_physical_types
+from ndcube.utils import wcs as wcs_utils
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -237,10 +239,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             if not axis:
                 # Find keys in wcs_ivoa_mapping dict that represent start of CTYPE.
                 # Ensure CTYPE is capitalized.
-                keys = list(filter(lambda key: ctype[i].upper().startswith(key), wcs_ivoa_mapping))
+                keys = list(filter(lambda key: ctype[i].upper().startswith(key),
+                                   wcs_utils.wcs_ivoa_mapping))
                 # Assuming CTYPE is supported by wcs_ivoa_mapping, use its corresponding axis name.
                 if len(keys) == 1:
-                    axis_name = wcs_ivoa_mapping.get(keys[0])
+                    axis_name = wcs_utils.wcs_ivoa_mapping.get(keys[0])
                 # If CTYPE not supported, raise a warning and set the axis name to CTYPE.
                 elif len(keys) == 0:
                     warnings.warn("CTYPE not recognized by ndcube. "
@@ -270,7 +273,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         multiple array axes, the same physical type string can appear in multiple tuples.
         """
         axis_correlation_matrix, world_axis_physical_types = \
-                reduced_correlation_matrix_and_world_physical_types(
+                wcs_utils.reduced_correlation_matrix_and_world_physical_types(
                         self.wcs.axis_correlation_matrix, self.wcs.world_axis_physical_types,
                         self.missing_axes)
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
@@ -482,6 +485,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # If user, wants edges, set pixel values to pixel edges.
         # Else make pixel centers.
         wcs_shape = self.data.shape[::-1]
+        # Insert length-1 axes for missing axes.
+        for i in np.arange(len(self.missing_axes))[self.missing_axes]:
+            wcs_shape = np.insert(wcs_shape, i, 1)
         if edges:
             wcs_shape = tuple(np.array(wcs_shape) + 1)
             pixel_inputs = np.meshgrid(*[np.arange(i) - 0.5 for i in wcs_shape],
@@ -491,14 +497,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                        indexing='ij', sparse=True)
 
         # Get world coords for all axes and all pixels.
-        axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
+        axes_coords = list(self.wcs.pixel_to_world_values(*pixel_inputs))
 
         # Reduce duplication across independent dimensions for each coord
         # and transpose to make dimensions mimic numpy array order rather than WCS order.
+        # Add units to coords
         for i, axis_coord in enumerate(axes_coords):
             slices = np.array([slice(None)] * self.wcs.world_n_dim)
             slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
             axes_coords[i] = axis_coord[tuple(slices)].T
+            axes_coords[i] *= u.Unit(self.wcs.world_axis_units[i])
 
         world_axis_physical_types = self.wcs.world_axis_physical_types
         # If user has supplied axes, extract only the
