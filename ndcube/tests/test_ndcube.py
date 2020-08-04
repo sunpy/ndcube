@@ -947,6 +947,6 @@ def test_array_axis_physical_types():
             ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
             ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
             ('em.wl',), ('time',)]
-    output = cube.array_axis_physical_types
-    for i in range(len(expected)):
-        assert all([physical_type in expected[i] for physical_type in output[i]])
+    output = cube_disordered.array_axis_physical_types
+    for i, expected_i in enumerate(expected):
+        assert all([physical_type in expected_i for physical_type in output[i]])
