@@ -48,10 +48,10 @@ def _axis_correlation_matrix():
 
 @pytest.fixture
 def test_wcs():
-    return TestWCS()
+    return WCSTest()
 
 
-class TestWCS():
+class WCSTest():
     def __init__(self):
         self.world_axis_physical_types = [
             'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl', 'time']
