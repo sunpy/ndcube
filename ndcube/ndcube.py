@@ -337,6 +337,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Get world coords for all axes and all pixels.
         axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
+        if self.wcs.low_level_wcs.world_n_dim == 1:
+            axes_coords = [axes_coords]
 
         # Reduce duplication across independent dimensions for each coord
         # and transpose to make dimensions mimic numpy array order rather than WCS order.
