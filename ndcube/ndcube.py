@@ -6,11 +6,11 @@ from collections import namedtuple
 import astropy.nddata
 import astropy.units as u
 import numpy as np
-import sunpy.coordinates
-from astropy.wcs.wcsapi import BaseLowLevelWCS
+import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+from astropy.wcs.wcsapi import HighLevelWCSWrapper
+from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
 
 import ndcube.utils.wcs as wcs_utils
-from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence

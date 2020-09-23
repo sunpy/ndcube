@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from astropy.wcs.wcsapi.utils import wcs_info_str
 
 from ndcube.extra_coords import LookupTableCoord
 
@@ -18,9 +17,9 @@ def test_1d_distance():
     assert ltc.model.lookup_table is lookup_table
     assert u.allclose(u.Quantity(range(10), u.pix), ltc.model.points)
 
-    assert u.allclose(ltc.wcs.pixel_to_world(0), 0*u.km)
-    assert u.allclose(ltc.wcs.pixel_to_world(9), 9*u.km)
-    assert ltc.wcs.world_to_pixel(0*u.km) == 0
+    assert u.allclose(ltc.wcs.pixel_to_world(0), 0 * u.km)
+    assert u.allclose(ltc.wcs.pixel_to_world(9), 9 * u.km)
+    assert ltc.wcs.world_to_pixel(0 * u.km) == 0
 
 
 def test_3d_distance():
@@ -38,6 +37,7 @@ def test_3d_distance():
     assert u.allclose(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix, 0*u.pix),
                       (0, 10, 20)*u.km)
     assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 10*u.km, 20*u.km), (0, 0, 0))
+
 
 def test_2d_nout_1_no_mesh():
     lookup_table = np.arange(9).reshape(3,3) * u.km, np.arange(9, 18).reshape(3,3) * u.km
