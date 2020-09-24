@@ -1,5 +1,7 @@
 .. _ndcube:
 
+.. doctest-skip-all::
+
 ======
 NDCube
 ======
@@ -180,6 +182,7 @@ majority of cases a user will not need to worry about this feature.
 But it is useful to be aware of as many of the coordinate
 transformation functionalities of `~ndcube.NDCube` are only made
 possible by the missing axis feature.
+
 
 Extra Coordinates
 -----------------
