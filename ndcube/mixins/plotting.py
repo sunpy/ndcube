@@ -47,12 +47,7 @@ class NDCubePlotMixin:
             The data is changed to the unit given or the ``NDCube.unit`` if not
             given.
         """
-        low_level_wcs = self.wcs.low_level_wcs
         naxis = self.wcs.pixel_n_dim
-
-        # Check kwargs are in consistent formats and set default values if not done so by user.
-        plot_axes, _, axes_units = utils.prep_plot_kwargs(
-            len(self.dimensions), low_level_wcs, plot_axes, axes_coordinates, axes_units)
 
         if not axes_coordinates:
             axes_coordinates = [...]
@@ -60,9 +55,9 @@ class NDCubePlotMixin:
         else:
             plot_wcs = self.combined_wcs.low_level_wcs
 
-        if Ellipsis in axes_coordinates:
-            axes_coordinates += list(self.wcs.world_axis_physical_types)
-            axes_coordinates.remove(Ellipsis)
+        # Check kwargs are in consistent formats and set default values if not done so by user.
+        plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
+            len(self.dimensions), plot_wcs, plot_axes, axes_coordinates, axes_units)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', AstropyUserWarning)

@@ -90,11 +90,7 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
                              ("unit_uncertainty", np.s_[0, :, :, :], {'data_unit': u.mJ}, True),
                              ("mask", np.s_[:, :, :, :], {}, False),),
                          indirect=["ndcube_4d"])
-def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs, bugged):
-    if bugged:
-        # Some of these require https://github.com/sunpy/sunpy/pull/3990
-        pytest.importorskip("sunpy", minversion="1.1.3")
-
+def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs):
     if cslice:
         sub = ndcube_4d[cslice]
     else:

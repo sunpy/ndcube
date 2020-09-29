@@ -7,9 +7,10 @@ import datetime
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.time import Time
 from astropy.wcs import WCS
 
-from ndcube import NDCube
+from ndcube import ExtraCoords, NDCube
 
 
 @pytest.fixture
@@ -150,16 +151,10 @@ def data_nd(shape):
     return np.arange(nelem).reshape(shape)
 
 
-def extra_coords(data_cube):
-    return [
-        ('time', 0, u.Quantity(range(data_cube.shape[1]), unit=u.s)),
-        ('hello', 1, u.Quantity(range(data_cube.shape[2]), unit=u.W)),
-        ('bye', 2, u.Quantity(range(data_cube.shape[3]), unit=u.m)),
-        ('another time', 2, np.array(
-            [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
-             for i in range(data_cube.shape[2])])),
-        ('array coord', 2, np.arange(100, 100 + data_cube.shape[3]))
-    ]
+def generate_time_extra_coord(data_cube):
+    shape = data_cube.shape[-1]
+    lut = Time("2020-02-02T00:00:00", format="isot") + np.linspace(0, shape * 10, num=shape, endpoint=False) * u.s
+    return ExtraCoords.from_lookup_tables(["extra_time"], [0], [lut])
 
 
 @pytest.fixture
