@@ -33,7 +33,7 @@ class NDCubeSequencePlotMixin:
 
         Parameters
         ----------
-        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or ??? or None.
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or `None`.
             The axes to plot onto. If None the current axes will be used.
 
         plot_axis_indices: `int` or iterable of one or two `int`.
@@ -71,7 +71,7 @@ class NDCubeSequencePlotMixin:
             The str must be a valid name of an extra_coord that corresponds to the same axis to
             which it is applied in the plot.
 
-        axes_units: `None or `list` of `None`, `astropy.units.Unit` and/or `str`
+        axes_units: `None` or `list` of `None`, `astropy.units.Unit` and/or `str`
             If None units derived from the WCS objects will be used for all axes.
             If a list, its length should equal either the number sequence dimensions or
             the length of plot_axis_indices.
@@ -98,7 +98,7 @@ class NDCubeSequencePlotMixin:
         Returns
         -------
         ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence`
-             or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
+            or `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
             Axes or animation object depending on dimensionality of NDCubeSequence
         """
         # Check kwargs are in consistent formats and set default values if not done so by user.
@@ -137,15 +137,14 @@ class NDCubeSequencePlotMixin:
     def plot_as_cube(self, axes=None, plot_axis_indices=None,
                      axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
         """
-        Visualizes data in the NDCubeSequence with the sequence axis folded
-        into the common axis.
+        Visualizes data in the NDCubeSequence with the sequence axis folded into the common axis.
 
         Based on the cube-like dimensionality of the sequence and value of plot_axis_indices
         kwarg, a Line/Image Plot/Animation is produced.
 
-         Parameters
+        Parameters
         ----------
-        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or ??? or None.
+        axes: `astropy.visualization.wcsaxes.core.WCSAxes` or None.
             The axes to plot onto. If None the current axes will be used.
 
         plot_axis_indices: `int` or iterable of one or two `int`.
@@ -160,7 +159,7 @@ class NDCubeSequencePlotMixin:
             Default=[-1, -2].  If sequence only has one cube-like dimension,
             plot_axis_indices is ignored and a static 1D line plot is produced.
 
-        axes_coordinates: `None` or `list` of `None` `astropy.units.Quantity` `numpy.ndarray` `str`
+        axes_coordinates: None or `list` of None, `astropy.units.Quantity`, `numpy.ndarray`, `str`
             Denotes physical coordinates for plot and slider axes.
             If None coordinates derived from the WCS objects will be used for all axes.
             If a list, its length should equal either the number cube-like dimensions or
@@ -174,7 +173,7 @@ class NDCubeSequencePlotMixin:
             If the number of cube-like dimensions equals the length of plot_axis_indices,
             the latter convention takes precedence.
             The value of each entry should be either
-            `None` (implies derive the coordinates from the WCS objects),
+            None (implies derive the coordinates from the WCS objects),
             an `astropy.units.Quantity` or a `numpy.ndarray` of coordinates for each pixel,
             or a `str` denoting a valid extra coordinate.
             The physical coordinates expected by axes_coordinates should be an array of
@@ -184,7 +183,7 @@ class NDCubeSequencePlotMixin:
             The str must be a valid name of an extra_coord that corresponds to the same axis to
             which it is applied in the plot.
 
-        axes_units: `None or `list` of `None`, `astropy.units.Unit` and/or `str`
+        axes_units: None or `list` of None, `astropy.units.Unit` and/or `str`
             If None units derived from the WCS objects will be used for all axes.
             If a list, its length should equal either the number cube-like dimensions or
             the length of plot_axis_indices.
@@ -198,7 +197,7 @@ class NDCubeSequencePlotMixin:
             If the number of cube-like dimensions equals the length of plot_axis_indices,
             the latter convention takes precedence.
             The value of each entry should be either
-            `None` (implies derive the unit from the WCS object of the 0th sub-cube),
+            None (implies derive the unit from the WCS object of the 0th sub-cube),
             `astropy.units.Unit` or a valid unit `str`.
 
         data_unit: `astropy.unit.Unit` or valid unit `str` or None
@@ -210,9 +209,10 @@ class NDCubeSequencePlotMixin:
 
         Returns
         -------
-        ax: ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or
-                `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
+        ax: `matplotlib.axes.Axes`, `ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence` or
+            `ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence`
             Axes or animation object depending on dimensionality of NDCubeSequence
+
         """
         # Verify common axis is set.
         if self._common_axis is None:
@@ -351,11 +351,7 @@ class NDCubeSequencePlotMixin:
         Visualizes an NDCubeSequence of 1D NDCubes with a common axis as a line
         plot.
 
-        Called if plot_as_cube=True.
-
-        Parameters
-        ----------
-        Same as _plot_1D_sequence
+        Called if plot_as_cube=True.  Parameters same as _plot_1D_sequence
         """
         # Derive x-axis coordinates and unit from inputs.
         x_axis_coordinates, unit_x_axis = _derive_1D_coordinates_and_units(axes_coordinates,
@@ -438,10 +434,7 @@ class NDCubeSequencePlotMixin:
         Visualizes an NDCubeSequence of 1D NDCubes as a 2D image.
 
         **kwargs are fed into matplotlib.image.NonUniformImage.
-
-        Parameters
-        ----------
-        Same as self.plot()
+        Parameters same as self.plot()
         """
         # Set default values of kwargs if not set.
         if axes_coordinates is None:
