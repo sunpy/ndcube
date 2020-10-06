@@ -601,6 +601,7 @@ def reduced_correlation_matrix_and_world_physical_types(
     reduced_physical_types: `numpy.ndarray` of `str`
         The physical types corresponding to the reduced matrix.
     """
-    reduced_matrix, world_axes = reduced_axis_correlation_matrix(axis_correlation_matrix, missing_axes, return_world_indices=True)
+    reduced_matrix, world_axes = reduced_axis_correlation_matrix(
+            axis_correlation_matrix, missing_axes, return_world_indices=True)
     reduced_physical_types = np.array(world_axis_physical_types)[world_axes]
     return reduced_matrix, reduced_physical_types
