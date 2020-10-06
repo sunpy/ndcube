@@ -336,14 +336,18 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                        indexing='ij', sparse=True)
 
         # Get world coords for all axes and all pixels.
-        axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
+        axes_coords = self.wcs.low_level_wcs.pixel_to_world_values(*pixel_inputs)
+        if self.wcs.low_level_wcs.world_n_dim == 1:
+            axes_coords = [axes_coords]
+        # Ensure it's a list not a tuple
+        axes_coords = list(axes_coords)
 
         # Reduce duplication across independent dimensions for each coord
         # and transpose to make dimensions mimic numpy array order rather than WCS order.
         for i, axis_coord in enumerate(axes_coords):
             slices = np.array([slice(None)] * self.wcs.world_n_dim)
             slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
-            axes_coords[i] = axis_coord[tuple(slices)].T
+            axes_coords[i] = axis_coord[tuple(slices)].T * u.Unit(self.wcs.low_level_wcs.world_axis_units[i])
 
         world_axis_physical_types = self.wcs.world_axis_physical_types
         # If user has supplied axes, extract only the
