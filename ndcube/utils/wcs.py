@@ -438,7 +438,7 @@ def append_sequence_axis_to_wcs(wcs_object):
     wcs_header.append((f"CUNIT{dummy_number}", "pix",
                        "Coordinate value at reference point"))
     wcs_header["WCSAXES"] = dummy_number
-    return WCS(wcs_header)
+    return wcs.WCS(wcs_header)
 
 
 def convert_between_array_and_pixel_axes(axis, naxes):
