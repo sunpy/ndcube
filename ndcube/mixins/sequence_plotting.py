@@ -5,15 +5,10 @@ import astropy.units as u
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from sunpy.visualization.animator import ArrayAnimatorWCS, LineAnimator
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
-
-try:
-    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
-except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
-
 
 __all__ = ['NDCubeSequencePlotMixin']
 
@@ -131,9 +126,8 @@ class NDCubeSequencePlotMixin:
                     # Since sequence has more than 2 dimensions and number of plot axes is 2,
                     # produce a 2D animation.
                     ax = ImageAnimatorNDCubeSequence(
-                        self, plot_axis_indices=plot_axis_indices,
-                        axes_coordinates=axes_coordinates, axes_units=axes_units, **kwargs)
-
+                            self, plot_axis_indices=plot_axis_indices, axes_units=axes_units,
+                            data_unit=data_unit, **kwargs)
         return ax
 
     def plot_as_cube(self, axes=None, plot_axis_indices=None,
@@ -251,8 +245,8 @@ class NDCubeSequencePlotMixin:
                     # Since sequence has more than 2 cube-like dimensions and
                     # number of plot axes is 2, produce a 2D animation.
                     ax = ImageAnimatorCubeLikeNDCubeSequence(
-                        self, plot_axis_indices=plot_axis_indices,
-                        axes_coordinates=axes_coordinates, axes_units=axes_units, **kwargs)
+                        self, plot_axis_indices=plot_axis_indices, axes_units=axes_units,
+                        data_unit=data_unit, **kwargs)
         return ax
 
     def _plot_1D_sequence(self, axes_coordinates=None,
@@ -403,16 +397,12 @@ class NDCubeSequencePlotMixin:
             yerror = np.concatenate(yerror)
         # Define x-axis data.
         if x_axis_coordinates is None:
-            print('a', unit_x_axis)
             if unit_x_axis is None:
-                print('b', unit_x_axis)
                 unit_x_axis = np.asarray(self[0].wcs.wcs.cunit)[
                     np.invert(self[0].missing_axes)][0]
-                print('c', unit_x_axis)
             xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
                                                for cube in self.data]), unit=unit_x_axis)
             xname = self.cube_like_world_axis_physical_types[0]
-            print('d', unit_x_axis)
         elif isinstance(x_axis_coordinates, str):
             xdata = self.common_axis_extra_coords[x_axis_coordinates]
             xname = x_axis_coordinates
@@ -670,7 +660,7 @@ class NDCubeSequencePlotMixin:
         return ax
 
 
-class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
+class ImageAnimatorNDCubeSequence(ArrayAnimatorWCS):
     """
     Animates N-dimensional data with the associated astropy WCS object.
 
@@ -690,55 +680,44 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
     seq: `ndcube.NDCubeSequence`
         The list of cubes.
 
-    image_axes: `list`
-        The two axes that make the image
+    plot_axis_indices: `list` of `int`.
+        Indices of the two axes that make the image in numpy/array order.
+        The 0th index represents the x-axis and the 1st index represents the y-axis.
+        Must be length of 2.
 
-    fig: `matplotlib.figure.Figure`
-        Figure to use
+    data_unit: `astropy.units.Unit` or valid `str` (optional)
+        The unit the data should be shown in. Must be compatible with the units of the
+        cubes in the sequence.
 
-    axis_ranges: list of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-        The physical coordinates expected by axis_ranges should be an array of
-        pixel_edges.
+    coord_params: `dict`, optional
+        This dict allows you to override
+        `~astropy.visualization.wcsaxes.WCSAxes` parameters for each world
+        coordinate. The keys of this dictionary should be a value which can be
+        looked up in ``WCSAxes.coords`` (i.e. ``em.wl`` or ``hpln``) and the
+        values should be a dict which supports the following keys, and passes
+        their values to the associated `~astropy.visualization.wcsaxes.WCSAxes`
+        methods.
 
-    interval: `int`
-        Animation interval in ms
+        * ``format_unit``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_format_unit`
+        * ``major_formatter``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_major_formatter`
+        * ``axislabel``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_axislabel`
+        * ``grid``: `~astropy.visualization.wcsaxes.CoordinateHelper.grid` (The value should be a dict of keyword arguments to ``grid()`` or `True`).
+        * ``ticks``: `dict` the keyword arguments to the `~astropy.visualization.wcsaxes.CoordinateHelper.set_ticks` method.
 
-    colorbar: `bool`
-        Plot colorbar
+    ylim: `tuple` or `str`, optional
+       The yaxis limits to use when drawing a line plot, if 'fixed' then use
+       the global data limits, if 'dynamic' then set the y limit for each frame
+       individually (meaning the y limits change as you animate).
 
-    button_labels: `list`
-        List of strings to label buttons
+    ylabel: `string`, optional
+       The yaxis label to use when drawing a line plot. Setting the label on
+       the y-axis on an image plot should be done via ``coord_params``.
 
-    button_func: `list`
-        List of functions to map to the buttons
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    Extra keywords are passed to imshow.
+    Extra keywords are passed to parent class.
     """
-
-    def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
-                 axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
-        self.sequence = seq.data  # Required by parent class.
-        # Set default values of kwargs if not set.
-        if wcs is None:
-            wcs = seq[0].wcs
-        if axes_coordinates is None:
-            axes_coordinates = [None] * len(seq.dimensions)
-        if axes_units is None:
-            axes_units = [None] * len(seq.dimensions)
+    def __init__(self, seq, wcs=None, plot_axis_indices=None, axes_units=None, data_unit=None,
+                 **kwargs):
+        wcs = seq[0].wcs
         # Determine units of each cube in sequence.
         sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
         # If all cubes have unit set, create a data quantity from cube's data.
@@ -748,26 +727,29 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
             data_stack = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
                                    for i, cube in enumerate(seq.data)])
         self.cumul_cube_lengths = np.cumsum(np.ones(len(seq.data)))
-        # Add dimensions of length 1 of concatenated data array
-        # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq.dimensions) - 1:
-            new_shape = list(data_stack.shape)
-            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
-                new_shape.insert(i + 1, 1)
-                # Also insert dummy coordinates and units.
-                axes_coordinates.insert(i + 1, None)
-                axes_units.insert(i + 1, None)
-            data_stack = data_stack.reshape(new_shape)
         # Add dummy axis to WCS object to represent sequence axis.
         new_wcs = utils.wcs.append_sequence_axis_to_wcs(wcs)
+        # Construct slices input.
+        if plot_axis_indices is None:
+            plot_axis_indices = [-1, -2]
+        # Currently, ArrayAnimator interprets slices in WCS order.
+        # So invert plot_axis_indices.
+        n_seq_dims = len(seq.dimensions)
+        slices_indices = utils.wcs.convert_between_array_and_pixel_axes(
+                np.array(plot_axis_indices), n_seq_dims)
+        slices = [0] * n_seq_dims
+        slices[slices_indices[-1]] = 'y'
+        slices[plot_axis_indices[0]] = 'x'
+        # Construct coord params input
+        if axes_units is not None:
+            coord_params = None  # In future construct axis unit helpers.
+        else:
+            coord_params = None
 
-        super().__init__(
-            data_stack, wcs=new_wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
-            unit_x_axis=axes_units[plot_axis_indices[0]],
-            unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
+        super().__init__(data_stack, new_wcs, slices, coord_params=coord_params, **kwargs)
 
 
-class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
+class ImageAnimatorCubeLikeNDCubeSequence(ArrayAnimatorWCS):
     """
     Animates N-dimensional data with the associated astropy WCS object.
 
@@ -784,61 +766,51 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
 
     Parameters
     ----------
-    seq: `ndcube.datacube.CubeSequence`
+    seq: `ndcube.NDCubeSequence`
         The list of cubes.
 
-    image_axes: `list`
-        The two axes that make the image
+    plot_axis_indices: `list` of `int`.
+        Indices of the two axes that make the image in numpy/array order.
+        The 0th index represents the x-axis and the 1st index represents the y-axis.
+        Must be length of 2.
 
-    fig: `matplotlib.figure.Figure`
-        Figure to use
+    data_unit: `astropy.units.Unit` or valid `str` (optional)
+        The unit the data should be shown in. Must be compatible with the units of the
+        cubes in the sequence.
 
-    axis_ranges: list of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-        The physical coordinates expected by axis_ranges should be an array of
-        pixel_edges.
+    coord_params: `dict`, optional
+        This dict allows you to override
+        `~astropy.visualization.wcsaxes.WCSAxes` parameters for each world
+        coordinate. The keys of this dictionary should be a value which can be
+        looked up in ``WCSAxes.coords`` (i.e. ``em.wl`` or ``hpln``) and the
+        values should be a dict which supports the following keys, and passes
+        their values to the associated `~astropy.visualization.wcsaxes.WCSAxes`
+        methods.
 
-    interval: `int`
-        Animation interval in ms
+        * ``format_unit``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_format_unit`
+        * ``major_formatter``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_major_formatter`
+        * ``axislabel``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_axislabel`
+        * ``grid``: `~astropy.visualization.wcsaxes.CoordinateHelper.grid` (The value should be a dict of keyword arguments to ``grid()`` or `True`).
+        * ``ticks``: `dict` the keyword arguments to the `~astropy.visualization.wcsaxes.CoordinateHelper.set_ticks` method.
 
-    colorbar: `bool`
-        Plot colorbar
+    ylim: `tuple` or `str`, optional
+       The yaxis limits to use when drawing a line plot, if 'fixed' then use
+       the global data limits, if 'dynamic' then set the y limit for each frame
+       individually (meaning the y limits change as you animate).
 
-    button_labels: `list`
-        List of strings to label buttons
+    ylabel: `string`, optional
+       The yaxis label to use when drawing a line plot. Setting the label on
+       the y-axis on an image plot should be done via ``coord_params``.
 
-    button_func: `list`
-        List of functions to map to the buttons
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    Extra keywords are passed to imshow.
+    Extra keywords are passed to parent class.
     """
 
-    def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
-                 axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
+    def __init__(self, seq, wcs=None, plot_axis_indices=None, axes_units=None, data_unit=None,
+                 **kwargs):
         if seq._common_axis is None:
             raise TypeError("Common axis must be set to use this class. "
                             "Use ImageAnimatorNDCubeSequence.")
-        self.sequence = seq.data  # Required by parent class.
-        # Set default values of kwargs if not set.
-        if wcs is None:
-            wcs = seq[0].wcs
-        if axes_coordinates is None:
-            axes_coordinates = [None] * len(seq.cube_like_dimensions)
-        if axes_units is None:
-            axes_units = [None] * len(seq.cube_like_dimensions)
+        wcs = seq[0].wcs
         # Determine units of each cube in sequence.
         sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
         # If all cubes have unit set, create a data quantity from cube's data.
@@ -850,40 +822,24 @@ class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
                  for i, cube in enumerate(seq.data)], axis=seq._common_axis)
         self.cumul_cube_lengths = np.cumsum(np.array(
             [c.dimensions[0].value for c in seq.data], dtype=int))
-        # Add dimensions of length 1 of concatenated data array
-        # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq._dimensions) - 1:
-            new_shape = list(data_concat.shape)
-            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
-                new_shape.insert(i, 1)
-                # Also insert dummy coordinates and units.
-                axes_coordinates.insert(i, None)
-                axes_units.insert(i, None)
-            data_concat = data_concat.reshape(new_shape)
+        # Construct slices input.
+        if plot_axis_indices is None:
+            plot_axis_indices = [-1, -2]
+        # Currently, ArrayAnimator interprets slices in WCS order.
+        # So invert plot_axis_indices.
+        n_seq_dims = len(seq.data[0].dimensions)
+        slices_indices = utils.wcs.convert_between_array_and_pixel_axes(
+                np.array(plot_axis_indices), n_seq_dims)
+        slices = [0] * n_seq_dims
+        slices[slices_indices[-1]] = 'y'
+        slices[slices_indices[0]] = 'x'
+        # Construct coord params input
+        if axes_units is not None:
+            coord_params = None  # In future construct axis unit helpers.
+        else:
+            coord_params = None
 
-        super().__init__(
-            data_concat, wcs=wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
-            unit_x_axis=axes_units[plot_axis_indices[0]],
-            unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
-
-    def update_plot(self, val, im, slider):
-        val = int(val)
-        ax_ind = self.slider_axes[slider.slider_ind]
-        ind = np.argmin(np.abs(self.axis_ranges[ax_ind] - val))
-        self.frame_slice[ax_ind] = ind
-        list_slices_wcsaxes = list(self.slices_wcsaxes)
-        sequence_slice = utils.sequence._convert_cube_like_index_to_sequence_slice(
-            val, self.cumul_cube_lengths)
-        sequence_index = sequence_slice.sequence_index
-        cube_index = sequence_slice.common_axis_item
-        list_slices_wcsaxes[self.wcs.naxis - ax_ind - 1] = cube_index
-        self.slices_wcsaxes = list_slices_wcsaxes
-        if val != slider.cval:
-            self.axes.reset_wcs(
-                wcs=self.sequence[sequence_index].wcs, slices=self.slices_wcsaxes)
-            self._set_unit_in_axis(self.axes)
-            im.set_array(self.data[self.frame_slice])
-            slider.cval = val
+        super().__init__(data_concat, wcs, slices, coord_params=coord_params, **kwargs)
 
 
 class LineAnimatorNDCubeSequence(LineAnimator):
