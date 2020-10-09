@@ -291,7 +291,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         raise NotImplementedError()
 
-    def axis_world_coord_values(self, *axes, edges=False):
+    def axis_world_coords_values(self, *axes, edges=False):
         """
         Returns WCS coordinate values of all pixels for desired axes.
 
