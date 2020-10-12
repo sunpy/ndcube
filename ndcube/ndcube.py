@@ -29,58 +29,6 @@ class NDCubeMetaClass(abc.ABCMeta):
 
 class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
-    @abc.abstractmethod
-    def pixel_to_world(self, *quantity_axis_list):
-        """
-        Convert a pixel coordinate to a data (world) coordinate by using
-        `~astropy.wcs.WCS.all_pix2world`.
-
-        Parameters
-        ----------
-        quantity_axis_list : iterable
-            An iterable of `~astropy.units.Quantity` with unit as pixel `pix`.
-            Note that these quantities must be entered as separate arguments, not as one list.
-
-        origin : `int`.
-            Origin of the top-left corner. i.e. count from 0 or 1.
-            Normally, origin should be 0 when passing numpy indices, or 1 if
-            passing values from FITS header or map attributes.
-            See `~astropy.wcs.WCS.wcs_pix2world` for more information.
-            Default is 0.
-
-        Returns
-        -------
-        coord : `list`
-            A list of arrays containing the output coordinates
-            reverse of the wcs axis order.
-        """
-
-    @abc.abstractmethod
-    def world_to_pixel(self, *quantity_axis_list):
-        """
-        Convert a world coordinate to a data (pixel) coordinate by using
-        `~astropy.wcs.WCS.all_world2pix`.
-
-        Parameters
-        ----------
-        quantity_axis_list : iterable
-            A iterable of `~astropy.units.Quantity`.
-            Note that these quantities must be entered as separate arguments, not as one list.
-
-        origin : `int`
-            Origin of the top-left corner. i.e. count from 0 or 1.
-            Normally, origin should be 0 when passing numpy indices, or 1 if
-            passing values from FITS header or map attributes.
-            See `~astropy.wcs.WCS.wcs_world2pix` for more information.
-            Default is 0.
-
-        Returns
-        -------
-        coord : `list`
-            A list of arrays containing the output coordinates
-            reverse of the wcs axis order.
-        """
-
     @abc.abstractproperty
     def dimensions(self):
         pass
@@ -239,26 +187,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         axis_correlation_matrix = self.wcs.axis_correlation_matrix
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
-
-    def pixel_to_world(self, *quantity_axis_list):
-        # The docstring is defined in NDDataBase
-
-        quantity_axis_list = quantity_axis_list[::-1]
-        pixel_to_world = self.wcs.pixel_to_world(*quantity_axis_list)
-        if isinstance(pixel_to_world, (tuple, list)):
-            return pixel_to_world[::-1]
-
-        return pixel_to_world
-
-    def world_to_pixel(self, *quantity_axis_list):
-        # The docstring is defined in NDDataBase
-
-        quantity_axis_list = quantity_axis_list[::-1]
-        world_to_pixel = self.wcs.world_to_pixel(*quantity_axis_list)
-
-        # Adding the units of the output
-        result = [u.Quantity(world_to_pixel[index], unit=u.pix) for index in range(self.wcs.low_level_wcs.pixel_n_dim)]
-        return result[::-1]
 
     def axis_world_coords(self, *axes, edges=False):
         """
