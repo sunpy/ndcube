@@ -64,6 +64,10 @@ class NDCubeSequenceBase:
         return tuple(["meta.obs.sequence"] + list(self.data[0].world_axis_physical_types))
 
     @property
+    def array_axis_physical_types(self):
+        return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
+
+    @property
     def cube_like_dimensions(self):
         if not isinstance(self._common_axis, int):
             raise TypeError("Common axis must be set.")
@@ -81,6 +85,12 @@ class NDCubeSequenceBase:
     @property
     def cube_like_world_axis_physical_types(self):
         return self.data[0].world_axis_physical_types
+
+    @property
+    def cube_like_array_axis_physical_types(self):
+        if self._common_axis is None:
+            raise ValueError("Common axis must be set.")
+        return self.data[0].array_axis_physical_types
 
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
