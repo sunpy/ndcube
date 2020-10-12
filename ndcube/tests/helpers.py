@@ -40,7 +40,6 @@ def assert_cubes_equal(test_input, expected_cube):
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     if test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
-    assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)
     assert test_input.dimensions.unit == expected_cube.dimensions.unit
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):

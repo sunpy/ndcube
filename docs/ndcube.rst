@@ -81,19 +81,24 @@ Dimensions
 
 `~ndcube.NDCube` has useful properties for inspecting its data shape and
 axis types, `~ndcube.NDCube.dimensions` and
-`~ndcube.NDCube.world_axis_physical_types`::
+`~ndcube.NDCube.array_axis_physical_types`::
 
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
-  >>> my_cube.world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> my_cube.array_axis_physical_types
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('em.wl',)]
 
 `~ndcube.NDCube.dimensions` returns an `~astropy.units.Quantity` of
 pixel units giving the length of each dimension in the
-`~ndcube.NDCube` while `~ndcube.NDCube.world_axis_physical_types`
-returns an iterable of strings denoting the type of physical property
-represented by each axis.  The axis names are in accordance with the
-International Virtual Observatory Alliance (IVOA)
+`~ndcube.NDCube` while `~ndcube.NDCube.array_axis_physical_types`
+returns tuples of strings denoting the types of physical properties
+represented by each axis.  As more than one physical type can be associated
+with an axis, the length of each tuple can be greater than 1.
+This is the case of the 0th and 1st array axes which are associated with
+the coupled physical axes of latitude and longitude. The axis names are
+in accordance with the International Virtual Observatory Alliance (IVOA)
 `UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
 Here the shape and axis types are given in data order, not WCS order.
 
@@ -307,10 +312,10 @@ world coordinates of each pixel/array element of the data cube,
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
 order.  We can also define the axis using any unique substring
 from the axis names defined in
-`ndcube.NDCube.world_axis_physical_types`::
+`ndcube.NDCube.wcs.world_axis_physical_types`::
 
-  >>> my_cube.world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> my_cube.wcs.world_axis_physical_types
+  ['em.wl', 'custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon']
   >>> # Since 'wl' is unique to the wavelength axis name, let's use that.
   >>> my_cube.axis_world_coords('wl') # doctest: +SKIP
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
