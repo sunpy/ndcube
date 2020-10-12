@@ -138,3 +138,12 @@ def test_collection_update_collecton_input():
     (seq_collection, np.array([2*u.pix, 3*u.pix, 4*u.pix, 5*u.pix], dtype=object))])
 def test_aligned_dimensions(collection, expected_aligned_dimensions):
     assert all(collection.aligned_dimensions == expected_aligned_dimensions)
+
+
+@pytest.mark.parametrize("collection, expected_aligned_types", [
+    (cube_collection, ['em.wl', 'custom:pos.helioprojective.lon',
+                       'custom:pos.helioprojective.lat']),
+    (seq_collection, ['meta.obs.sequence', 'custom:pos.helioprojective.lon',
+                      'custom:pos.helioprojective.lat', 'em.wl'])])
+def test_aligned_world_axis_physical_types(collection, expected_aligned_types):
+    assert set(collection.aligned_world_axis_physical_types) == set(expected_aligned_types)
