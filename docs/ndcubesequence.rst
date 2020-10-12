@@ -158,17 +158,17 @@ corresponding quantity in the dimensions tuple will have a length
 greater than 1 and list the length of each sub-cube along the common
 axis.
 
-Equivalent to `ndcube.NDCube.world_axis_physical_types`,
-`ndcube.NDCubeSequence.world_axis_physical_types` returns a tuple of
-the physical axis types.  The same `IVOA UCD1+` controlled words
+Equivalent to `ndcube.NDCube.array_axis_physical_types`,
+`ndcube.NDCubeSequence.array_axis_physical_types` returns a list of
+tuples of physical axis types.  The same `IVOA UCD1+` controlled words
 <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html> are
 used for the cube axes as is used in
-`ndcube.NDCube.world_axis_physical_types`.  The sequence axis is given
+`ndcube.NDCube.array_axis_physical_types`.  The sequence axis is given
 the label ``'meta.obs.sequence'`` as it is the IVOA UCD1+ controlled
 word that best describes it.  To call, simply do::
 
-  >>> my_sequence.world_axis_physical_types
-  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> my_sequence.array_axis_physical_types
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 .. _sequence_slicing:
 
@@ -192,8 +192,8 @@ simple as indexing a single array::
   >>> regions_of_interest_in_sequence = my_sequence[1:3, 0, 1:3, 1:4]
   >>> regions_of_interest_in_sequence.dimensions
   (<Quantity 2. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
-  >>> regions_of_interest_in_sequence.world_axis_physical_types
-  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> regions_of_interest_in_sequence.array_axis_physical_types
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
 one for each region of interest from the 3rd slice along the 0th axis
@@ -204,8 +204,8 @@ the 1st sub-cube - an NDCube is returned::
   >>> roi_from_single_subcube = my_sequence[1, 0:2, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
   <Quantity [2., 2., 3.] pix>
-  >>> roi_from_single_subcube.world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> roi_from_single_subcube.array_axis_physical_types
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 If a common axis has been defined for the `~ndcube.NDCubeSequence` one
 can think of it as a contiguous data set with different sections along
@@ -226,8 +226,8 @@ this can be acheived by entering::
   >>> roi_from_single_subcube = my_sequence.index_as_cube[3:5, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
   <Quantity [2., 2., 3.] pix>
-  >>> roi_from_single_subcube.world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> roi_from_single_subcube.array_axis_physical_types
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 In this case the entire region came from a single sub-cube.  However,
 `~ndcube.NDCubeSequence.index_as_cube` also works when the region of
@@ -240,8 +240,8 @@ this corresponds to slices 2 to 7 along to the 0th cube axis::
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
   (<Quantity 3. pix>, <Quantity [1., 3., 1.] pix>, <Quantity 2. pix>, <Quantity 3. pix>)
-  >>> roi_across_subcubes.world_axis_physical_types
-  ('meta.obs.sequence', 'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> roi_across_subcubes.array_axis_physical_types
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 Notice that since the sub-cubes are now of different lengths along the
 common axis, the corresponding `~astropy.units.Quantity` gives the
@@ -254,9 +254,9 @@ Cube-like Dimensions
 To help with handling an `~ndcube.NDCubeSequence` with a common axis
 as if it were a single cube, there exist cube-like equivalents of the
 `~ndcube.NDCubeSequence.dimensions`  and
-`~ndcube.NDCubeSequence.world_axis_physical_types` methods.  They are
+`~ndcube.NDCubeSequence.array_axis_physical_types` methods.  They are
 intuitively named `~ndcube.NDCubeSequence.cube_like_dimensions`  and
-`~ndcube.NDCubeSequence.cube_like_world_axis_physical_types`.  These
+`~ndcube.NDCubeSequence.cube_like_array_axis_physical_types`.  These
 give the lengths and physical types of the axes as if the data were
 stored in a single `~ndcube.NDCube`.  So in the case of
 ``my_sequence``, with three sub-cubes, each with a length of 3 along
@@ -264,8 +264,8 @@ the common axis, we get::
 
   >>> my_sequence.cube_like_dimensions
   <Quantity [9., 4., 5.] pix>
-  >>> my_sequence.cube_like_world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> my_sequence.cube_like_array_axis_physical_types
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 Note that `~ndcube.NDCubeSequence.cube_like_dimensions` returns a
 single `~astropy.units.Quantity` in pixel units, as if it were
