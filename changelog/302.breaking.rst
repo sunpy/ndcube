@@ -1,0 +1,1 @@
+Change type of output of NDCollection.aligned_world_axis_physical_types from tuple to list. This is to be consistent with output of astropy.wcs.WCS.world_axis_physical_types.
