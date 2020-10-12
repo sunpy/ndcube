@@ -29,6 +29,15 @@ trigger:
     - '*pre*'
     - '*post*'
 
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Daily midnight build
+    branches:
+      include:
+      - master
+      - 1.3
+    always: false
+
 jobs:
 - template: run-tox-env.yml@OpenAstronomy
   parameters:
