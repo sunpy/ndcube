@@ -1,1 +1,0 @@
-Pin the maximum version of sunpy to be 2.0 for the 1.3 release series. Support for sunpy 2.1 will be added in the 1.4 releases
