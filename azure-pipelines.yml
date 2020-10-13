@@ -46,8 +46,8 @@ jobs:
     envs:
       - linux: pycodestyle
 
-      - macos: py37-offline
-        name: py37_offline
+      - macos: py38-offline
+        name: py38_offline
 
       - windows: py36-offline
         name: py36_offline
@@ -72,7 +72,8 @@ jobs:
       submodules: false
       targets:
         - sdist
+        - wheels_universal
       dependsOn:
-        - py37_offline
+        - py38_offline
         - py36_offline
         - py37_online
