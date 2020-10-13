@@ -33,10 +33,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     def dimensions(self):
         pass
 
-    @abc.abstractproperty
-    def world_axis_physical_types(self):
-        pass
-
     @abc.abstractmethod
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         """
@@ -150,27 +146,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         latitude.
         """
         return u.Quantity(self.data.shape, unit=u.pix)
-
-    @property
-    def world_axis_physical_types(self):
-        """
-        Returns an iterable of strings describing the physical type for each
-        world axis.
-
-        The strings conform to the International Virtual Observatory
-        Alliance standard, UCD1+ controlled Vocabulary.  For a
-        description of the standard and definitions of the different
-        strings and string components, see
-        http://www.ivoa.net/documents/latest/UCDlist.html.
-        """
-
-        # Use the context manager to access the physical types,
-        # which are not present in the APE14.
-        # APE14 physical types are covered by default.
-        with custom_ctype_to_ucd_mapping(wcs_utils.wcs_ivoa_mapping):
-            ctype = self.wcs.low_level_wcs.world_axis_physical_types
-
-        return tuple(ctype[::-1])
 
     @property
     def array_axis_physical_types(self):

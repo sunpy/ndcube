@@ -103,12 +103,17 @@ class NDCollection(dict):
         """
         Returns the physical types of the aligned axes of an ND object in the collection.
 
-        If there are no aligned axes, returns None.
+        If there are no aligned axes, returns None. The types are not ordered with any
+        reference to array or wcs axes.
 
         """
         if self.aligned_axes is not None:
-            axis_types = np.array(self[self._first_key].world_axis_physical_types)
-            return tuple(axis_types[np.array(self.aligned_axes[self._first_key])])
+            # Get physical types for each aligned axis in one member of collection.
+            # As by definition axes are aligned, we should only need info from one cube/sequence.
+            axis_types = np.array(self[self._first_key].array_axis_physical_types)
+            aligned_axis_types = axis_types[np.array(self.aligned_axes[self._first_key])]
+            # Remove duplicates and return
+            return list(set([axis_type for axis in aligned_axis_types for axis_type in axis]))
 
     def __getitem__(self, item):
         # There are two ways to slice:

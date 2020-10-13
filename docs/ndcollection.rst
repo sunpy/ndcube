@@ -154,8 +154,8 @@ by using the ``aligned_world_axis_physical_types`` property.
 
 .. code-block:: python
 
-  >>> my_collection.aligned_world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat')
+  >>> my_collection.aligned_world_axis_physical_types  # doctest: +SKIP
+  ['custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon']
 
 Note that this method simply returns the world physical axis types of one of
 the ND objects.  However, there is no requirement that all aligned axes must
