@@ -81,19 +81,24 @@ Dimensions
 
 `~ndcube.NDCube` has useful properties for inspecting its data shape and
 axis types, `~ndcube.NDCube.dimensions` and
-`~ndcube.NDCube.world_axis_physical_types`::
+`~ndcube.NDCube.array_axis_physical_types`::
 
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
-  >>> my_cube.world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> my_cube.array_axis_physical_types
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('em.wl',)]
 
 `~ndcube.NDCube.dimensions` returns an `~astropy.units.Quantity` of
 pixel units giving the length of each dimension in the
-`~ndcube.NDCube` while `~ndcube.NDCube.world_axis_physical_types`
-returns an iterable of strings denoting the type of physical property
-represented by each axis.  The axis names are in accordance with the
-International Virtual Observatory Alliance (IVOA)
+`~ndcube.NDCube` while `~ndcube.NDCube.array_axis_physical_types`
+returns tuples of strings denoting the types of physical properties
+represented by each axis.  As more than one physical type can be associated
+with an axis, the length of each tuple can be greater than 1.
+This is the case of the 0th and 1st array axes which are associated with
+the coupled physical axes of latitude and longitude. The axis names are
+in accordance with the International Virtual Observatory Alliance (IVOA)
 `UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
 Here the shape and axis types are given in data order, not WCS order.
 
@@ -296,91 +301,23 @@ Coordinate Transformations
 
 The fundamental point the WCS system is the ability to easily
 translate between pixel and real world coordinates.  For this purpose,
-`~ndcube.NDCube` provides convenience wrappers for the better known
-astropy functions, `astropy.wcs.WCS.all_pix2world` and
-`astropy.wcs.WCS.all_world2pix`. These are
-`~ndcube.NDCube.pixel_to_world`, `~ndcube.NDCube.world_to_pixel`, and
-`~ndcube.NDCube.axis_world_coords`. It is highly recommended that when
-using `~ndcube.NDCube` these convenience wrappers are used rather than
-the original astropy functions for a few reasons. For example, they
-can track house-keeping data, are aware of "missing" WCS axis, are
-unit-aware, etc.
-
-To use `~ndcube.NDCube.pixel_to_world`, simply input
-`~astropy.units.Quantity` objects with pixel units. Each
-`~astropy.units.Quantity` corresponds to an axis so the number of
-`~astropy.units.Quantity` objects should equal the number of data
-axes.  Also, the order of the quantities should correspond to the
-data axes' order, not the WCS order.  The nth element of each
-`~astropy.units.Quantity` describes the pixel coordinate in that
-axis. For example, if we wanted to transform the pixel coordinates of
-the pixel (2, 3, 4) in ``my_cube`` we would do::
-
-  >>> import astropy.units as u
-  >>> real_world_coords = my_cube.pixel_to_world(2*u.pix, 3*u.pix, 4*u.pix)
-
-To convert two pixels with pixel coordinates (2, 3, 4) and (5, 6, 7),
-we would call pixel_to_world like so::
-
-  >>> real_world_coords = my_cube.pixel_to_world([2, 5]*u.pix, [3, 6]*u.pix, [4, 7]*u.pix)
-
-As can be seen, since each `~astropy.units.Quantity` describes a
-different pixel coordinate of the same number of pixels, the lengths
-of each `~astropy.units.Quantity` must be the same.
-
-`~ndcube.NDCube.pixel_to_world` returns a similar list of Quantities
-to those that were input, except that they are now in real world coordinates::
-
-  >>> real_world_coords # doctest: +SKIP
-  [<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
-        [(5040.25079745,  5399.5029549), (9360.9151148 , 10790.092746 )]>, <Quantity [1.10e-09, 1.16e-09] m>]
-
-The exact units used are defined within the `~ndcube.NDCube`
-instance's `~ndcube.utils.wcs.WCS` object.  Once again, the coordinates
-of the nth pixel is given by the nth element of each of the
-`~astropy.units.Quantity` objects returned.
-
-Using `~ndcube.NDCube.world_to_pixel` to convert real world
-coordinates to pixel coordinates is exactly the same, but in reverse.
-This time the input `~astropy.units.Quantity` objects must be in real
-world coordinates compatible with those defined in the
-`~ndcube.NDCube` instance's `~ndcube.utils.wcs.WCS` object.  The output
-is a list of `~astropy.units.Quantity` objects in pixel unit.::
-
-  >>> from astropy.coordinates import SkyCoord
-  >>> pixel_coords = my_cube.world_to_pixel(
-  ... SkyCoord([(u.Quantity(1.40006967, unit="deg"), u.Quantity(1.49986193, unit="deg"))], frame="helioprojective"), u.Quantity(1.10000000e-09,  unit="m"))
-  >>> pixel_coords
-  [<Quantity [2.00000001] pix>, <Quantity [3.] pix>, <Quantity [4.] pix>]
-
-Note that both `~ndcube.NDCube.pixel_to_pixel` and
-`~ndcube.NDCube.world_to_pixel` can handle non-integer pixels.
-Moreover, they can also handle pixel beyond the bounds of the
-`~ndcube.NDCube` and even negative pixels.  This is because the WCS
-translations should be valid anywhere in space, and not just within
-the field of view of the `~ndcube.NDCube`.  This capability has many
-useful applications, for example, in comparing observations from
-different instruments with overlapping fields of view.
-
-There are times however, when you only want to know the real world
-coordinates of the `~ndcube.NDCube` field of view.  To make this easy,
-`~ndcube.NDCube` has a another coordinate transformation method
-`~ndcube.NDCube.axis_world_coords`.  This method returns the real world
-coordinates for each pixel along a given data axis.  So in the case of
+`~ndcube.NDCube` provides a convenience function for returning the real
+world coordinates of each pixel/array element of the data cube,
+`~ndcube.NDCube.axis_world_coords`.  So in the case of
 ``my_cube``, if we wanted the wavelength axis we could call::
 
-  >>> my_cube.axis_world_coords(2)
+  >>> my_cube.axis_world_coords(2) # doctest: +SKIP
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
 order.  We can also define the axis using any unique substring
 from the axis names defined in
-`ndcube.NDCube.world_axis_physical_types`::
+`ndcube.NDCube.wcs.world_axis_physical_types`::
 
-  >>> my_cube.world_axis_physical_types
-  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl')
+  >>> my_cube.wcs.world_axis_physical_types
+  ['em.wl', 'custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon']
   >>> # Since 'wl' is unique to the wavelength axis name, let's use that.
-  >>> my_cube.axis_world_coords('wl')
+  >>> my_cube.axis_world_coords('wl') # doctest: +SKIP
   <Quantity [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>
 
 Notice how this returns the same result as when we set ``axes`` to
@@ -395,10 +332,10 @@ are dependent.  Therefore if we ask for longitude, we will get back a
 2D `~astropy.units.Quantity` with the same shape as the longitude x
 latitude axes lengths.  For example::
 
-  >>> longitude = my_cube.axis_world_coords('lon')
+  >>> longitude = my_cube.axis_world_coords('lon') # doctest: +SKIP
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
-  >>> longitude.shape
+  >>> longitude.shape # doctest: +SKIP
   (3, 4)
   >>> longitude # doctest: +SKIP
   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
@@ -446,7 +383,8 @@ By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the
 center of each pixel. However, the pixel edges can be obtained by setting
 the ``edges`` kwarg to True.
 
-For example,
+For example::
+
   >>> my_cube.axis_world_coords(edges=True) # doctest: +SKIP
   (<SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=earth): (Tx, Ty) in arcsec
         [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),

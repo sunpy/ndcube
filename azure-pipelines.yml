@@ -28,12 +28,20 @@ trigger:
     - '*pre*'
     - '*post*'
 
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Daily midnight build
+    branches:
+      include:
+      - master
+      - 1.3
+    always: false
+
 jobs:
 - template: run-tox-env.yml@OpenAstronomy
   parameters:
     submodules: false
     coverage: codecov
-    posargs: -n=4
     envs:
       - macos: py37
         name: py37_test_macos
@@ -52,12 +60,17 @@ jobs:
 
 
 # On branches which aren't master, and not Pull Requests, build the wheels but only upload them on tags
-- ${{ if and(ne(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.SourceBranch'], 'master'))) }}:
+- ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
   - template: publish.yml@OpenAstronomy
     parameters:
       # Only Upload to PyPI on tags
       ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
         pypi_connection_name : 'PyPI'
+      # Upload to artifacts on master only
+      ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+        artifact_project : 'ndcube'
+        artifact_feed : 'ndcube'
+        remove_local_scheme: true
 
       test_extras: 'test'
       test_command: 'pytest -p no:warnings --doctest-rst -m "not figure" --pyargs ndcube'

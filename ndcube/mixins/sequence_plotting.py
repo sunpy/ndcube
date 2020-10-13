@@ -1,4 +1,5 @@
 import copy
+import numbers
 
 import astropy.units as u
 import matplotlib as mpl
@@ -1036,7 +1037,7 @@ class LineAnimatorNDCubeSequence(LineAnimator):
                         raise TypeError("Extra coord {} must be of same type for all NDCubes to "
                                         "use it to define a plot axis.".format(axis_extra_coord))
                     if extra_coord_axes.all() == extra_coord_axes[0]:
-                        if isinstance(extra_coord_axes[0], (int, np.int64)):
+                        if isinstance(extra_coord_axes[0], numbers.Integral):
                             extra_coord_axes = [int(extra_coord_axes[0])]
                         else:
                             extra_coord_axes = list(extra_coord_axes[0]).sort()
@@ -1235,7 +1236,7 @@ class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
                 x_axis_cube_coords = np.concatenate(
                     [cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
                      for cube in seq.data], axis=plot_axis_index)
-                dependent_axes = utils.wcs.get_dependent_data_axes(
+                dependent_axes = utils.wcs.get_dependent_array_axes(
                     seq[0].wcs, plot_axis_index, seq[0].missing_axes)
                 if len(dependent_axes) > 1:
                     independent_axes = list(range(data_concat.ndim))
@@ -1289,7 +1290,7 @@ def _get_non_common_axis_x_axis_coords(seq_data, plot_axis_index, unit_x_axis):
         # repeat the x-values through the higher dimensions.
         if x_axis_cube_coords.shape != cube.data.shape:
             # Get sequence axes dependent and independent of plot_axis_index.
-            dependent_axes = utils.wcs.get_dependent_data_axes(
+            dependent_axes = utils.wcs.get_dependent_array_axes(
                 cube.wcs, plot_axis_index, cube.missing_axes)
             independent_axes = list(range(len(cube.dimensions)))
             for i in list(dependent_axes)[::-1]:

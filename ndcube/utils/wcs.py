@@ -15,8 +15,12 @@ from astropy.wcs._wcs import InconsistentAxisTypesError
 
 from ndcube.utils import cube as utils_cube
 
-__all__ = ['WCS', 'reindex_wcs', 'wcs_ivoa_mapping', 'get_dependent_data_axes',
-           'get_dependent_wcs_axes', 'append_sequence_axis_to_wcs']
+__all__ = ['wcs_ivoa_mapping', 'append_sequence_axis_to_wcs',
+           'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
+           'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
+           'physical_type_to_world_axis',
+           'get_dependent_pixel_axes', 'get_dependent_array_axes',
+           'get_dependent_world_axes', 'get_dependent_physical_types']
 
 
 class TwoWayDict(UserDict):
@@ -62,221 +66,6 @@ for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
 
 
-class WCS(wcs.WCS):
-
-    def __init__(self, header=None, naxis=None, **kwargs):
-        """
-        Initiates a WCS object with additional functionality to add dummy axes.
-
-        Not all WCS axes are independent.  Some, e.g. latitude and longitude,
-        are dependent and one cannot be used without the other.  Therefore this
-        WCS class has the ability to determine whether a dependent axis is missing
-        and can augment the WCS axes with a dummy axis to enable the translations
-        to work.
-
-        Parameters
-        ----------
-        header: FITS header or `dict` with appropriate FITS keywords.
-
-        naxis: `int`
-            Number of axis described by the header.
-        """
-        self.oriented = False
-        self.was_augmented = WCS._needs_augmenting(header)
-        if self.was_augmented:
-            header = WCS._augment(header, naxis)
-            if naxis is not None:
-                naxis = naxis + 1
-        super().__init__(header=header, naxis=naxis, **kwargs)
-
-    @classmethod
-    def _needs_augmenting(cls, header):
-        """
-        Determines whether a missing dependent axis is missing from the WCS
-        object.
-
-        WCS cannot be created with only one spacial dimension. If
-        WCS detects that returns that it needs to be augmented.
-
-        Parameters
-        ----------
-        header: FITS header or `dict` with appropriate FITS keywords.
-        """
-        try:
-            wcs.WCS(header=header)
-        except InconsistentAxisTypesError as err:
-            if re.search(r'Unmatched celestial axes', str(err)):
-                return True
-        return False
-
-    @classmethod
-    def _augment(cls, header, naxis):
-        """
-        Augments WCS with a dummy axis to take the place of a missing dependent
-        axis.
-        """
-        newheader = deepcopy(header)
-        new_wcs_axes_params = {'CRPIX': 0, 'CDELT': 1, 'CRVAL': 0,
-                               'CNAME': 'redundant axis', 'CTYPE': 'HPLN-TAN',
-                               'CROTA': 0, 'CUNIT': 'deg', 'NAXIS': 1}
-        axis = str(max(newheader.get('NAXIS', 0), naxis) + 1)
-        for param in new_wcs_axes_params:
-            attr = new_wcs_axes_params[param]
-            newheader[param + axis] = attr
-        try:
-            wcs.WCS(header=newheader).get_axis_types()
-        except InconsistentAxisTypesError as err:
-            projection = re.findall(r'expected [^,]+', str(err))[0][9:]
-            newheader['CTYPE' + axis] = projection
-        return newheader
-
-
-def _all_slice(obj):
-    """
-    Returns True if all the elements in the object are slices else return
-    False.
-    """
-    result = False
-    if not isinstance(obj, (tuple, list)):
-        return result
-    result |= all(isinstance(o, slice) for o in obj)
-    return result
-
-
-def _slice_list(obj):
-    """
-    Return list of all the slices.
-
-    Example
-    -------
-    >>> _slice_list((slice(1,2), slice(1,3), 2, slice(2,4), 8))
-    [slice(1, 2, None), slice(1, 3, None), slice(2, 3, None), slice(2, 4, None), slice(8, 9, None)]
-    """
-    result = []
-    if not isinstance(obj, (tuple, list)):
-        return result
-    for i, o in enumerate(obj):
-        if isinstance(o, int):
-            result.append(slice(o, o + 1))
-        elif isinstance(o, slice):
-            result.append(o)
-    return result
-
-
-def reindex_wcs(wcs, inds):
-    # From astropy.spectral_cube.wcs_utils
-    """
-    Re-index a WCS given indices.  The number of axes may be reduced.
-
-    Parameters
-    ----------
-    wcs: sunpy.wcs.wcs.WCS
-        The WCS to be manipulated
-    inds: np.array(dtype='int')
-        The indices of the array to keep in the output.
-        e.g. swapaxes: [0,2,1,3]
-        dropaxes: [0,1,3]
-    """
-
-    if not isinstance(inds, np.ndarray):
-        raise TypeError("Indices must be an ndarray")
-
-    if inds.dtype.kind != 'i':
-        raise TypeError('Indices must be integers')
-
-    outwcs = WCS(naxis=len(inds))
-    wcs_params_to_preserve = ['cel_offset', 'dateavg', 'dateobs', 'equinox',
-                              'latpole', 'lonpole', 'mjdavg', 'mjdobs', 'name',
-                              'obsgeo', 'phi0', 'radesys', 'restfrq',
-                              'restwav', 'specsys', 'ssysobs', 'ssyssrc',
-                              'theta0', 'velangl', 'velosys', 'zsource']
-    for par in wcs_params_to_preserve:
-        setattr(outwcs.wcs, par, getattr(wcs.wcs, par))
-
-    cdelt = wcs.wcs.cdelt
-
-    try:
-        outwcs.wcs.pc = wcs.wcs.pc[inds[:, None], inds[None, :]]
-    except AttributeError:
-        outwcs.wcs.pc = np.eye(wcs.naxis)
-
-    outwcs.wcs.crpix = wcs.wcs.crpix[inds]
-    outwcs.wcs.cdelt = cdelt[inds]
-    outwcs.wcs.crval = wcs.wcs.crval[inds]
-    outwcs.wcs.cunit = [wcs.wcs.cunit[i] for i in inds]
-    outwcs.wcs.ctype = [wcs.wcs.ctype[i] for i in inds]
-    outwcs.wcs.cname = [wcs.wcs.cname[i] for i in inds]
-    outwcs._naxis = [wcs._naxis[i] for i in inds]
-
-    return outwcs
-
-
-def get_dependent_data_axes(wcs_object, data_axis):
-    """
-    Given a data axis index, return indices of dependent data axes.
-
-    Both input and output axis indices are in the numpy ordering convention
-    (reverse of WCS ordering convention). The returned axis indices include the input axis.
-    Returned axis indices do NOT include any WCS axes that do not have a
-    corresponding data axis, i.e. "missing" axes.
-
-    Parameters
-    ----------
-    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        The WCS object describing the axes.
-
-    data_axis: `int`
-        Index of axis (in numpy ordering convention) for which dependent axes are desired.
-
-    Returns
-    -------
-    dependent_data_axes: `tuple` of `int`
-        Sorted indices of axes dependent on input data_axis in numpy ordering convention.
-    """
-    # Convert input data axis index to WCS axis index.
-    wcs_axis = utils_cube.data_axis_to_wcs_ape14(data_axis, _pixel_keep(wcs_object), wcs_object.pixel_n_dim)
-    # Determine dependent axes, using WCS ordering.
-    wcs_dependent_axes = np.asarray(get_dependent_wcs_axes(wcs_object, wcs_axis))
-
-    # Convert dependent axes back to numpy/data ordering.
-    dependent_data_axes = tuple(np.sort([utils_cube.wcs_axis_to_data_ape14(
-        i, _pixel_keep(wcs_object), wcs_object.pixel_n_dim) for i in wcs_dependent_axes]))
-    return dependent_data_axes
-
-
-def get_dependent_wcs_axes(wcs_object, wcs_axis):
-    """
-    Given a WCS axis index, return indices of dependent WCS axes.
-
-    Both input and output axis indices are in the WCS ordering convention
-    (reverse of numpy ordering convention). The returned axis indices include the input axis.
-
-    Parameters
-    ----------
-    wcs_object: `astropy.wcs.WCS` or `ndcube.utils.wcs.WCS`
-        The WCS object describing the axes.
-
-    wcs_axis: `int`
-        Index of axis (in WCS ordering convention) for which dependent axes are desired.
-
-    Returns
-    -------
-    dependent_data_axes: `tuple` of `int`
-        Sorted indices of axes dependent on input data_axis in WCS ordering convention.
-    """
-    # Pre-compute dependent axes. The matrix returned by
-    # axis_correlation_matrix is (n_world, n_pixel) but we want to know
-    # which pixel coordinates are linked to which other pixel coordinates.
-    # So to do this we take a column from the matrix and find if there are
-    # any entries in common with all other columns in the matrix.
-
-    # Using APE14 for generating the correlation matrix
-    matrix = wcs_object.axis_correlation_matrix
-    world_dep = matrix[:, wcs_axis:wcs_axis + 1]
-    dependent_wcs_axes = tuple(np.sort(np.nonzero((world_dep & matrix).any(axis=0))[0]))
-    return dependent_wcs_axes
-
-
 def append_sequence_axis_to_wcs(wcs_object):
     """
     Appends a 1-to-1 dummy axis to a WCS object.
@@ -312,3 +101,285 @@ def _pixel_keep(wcs_object):
     if hasattr(wcs_object, "_pixel_keep"):
         return wcs_object._pixel_keep
     return np.arange(wcs_object.pixel_n_dim)
+
+
+def convert_between_array_and_pixel_axes(axis, naxes):
+    """Reflects axis index about center of number of axes.
+
+    This is used to convert between array axes in numpy order and pixel axes in WCS order.
+    Works in both directions.
+
+    Parameters
+    ----------
+    axis: `numpy.ndarray` of `int`
+        The axis number(s) before reflection.
+
+    naxes: `int`
+        The number of array axes.
+
+    Returns
+    -------
+    reflected_axis: `numpy.ndarray` of `int`
+        The axis number(s) after reflection.
+    """
+    # Check type of input.
+    if not isinstance(axis, np.ndarray):
+        raise TypeError("input must be of array type. Got type: {type(axis)}")
+    if axis.dtype.char not in np.typecodes['AllInteger']:
+        raise TypeError("input dtype must be of int type.  Got dtype: {axis.dtype})")
+    # Convert negative indices to positive equivalents.
+    axis[axis < 0] += naxes
+    if any(axis > naxes - 1):
+        raise IndexError("Axis out of range.  "
+                         f"Number of axes = {naxes}; Axis numbers requested = {axes}")
+    # Reflect axis about center of number of axes.
+    reflected_axis = naxes - 1 - axis
+
+    return reflected_axis
+
+
+def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
+    """
+    Retrieves the indices of the world axis physical types corresponding to a pixel axis.
+
+    Parameters
+    ----------
+    pixel_axis: `int`
+        The pixel axis index/indices for which the world axes are desired.
+
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    Returns
+    -------
+    world_axes: `numpy.ndarray`
+        The world axis indices corresponding to the pixel axis.
+    """
+    return np.arange(axis_correlation_matrix.shape[0])[axis_correlation_matrix[:, pixel_axis]]
+
+
+def world_axis_to_pixel_axes(world_axis, axis_correlation_matrix):
+    """
+    Gets the pixel axis indices corresponding to the index of a world axis physical type.
+
+    Parameters
+    ----------
+    world_axis: `int`
+        The index of the physical type for which the pixes axes are desired.
+
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    Returns
+    -------
+    pixel_axes: `numpy.ndarray`
+        The pixel axis indices corresponding to the world axis.
+    """
+    return np.arange(axis_correlation_matrix.shape[1])[axis_correlation_matrix[world_axis]]
+
+
+def pixel_axis_to_physical_types(pixel_axis, wcs):
+    """
+    Gets the world axis physical types corresponding to a pixel axis.
+
+    Parameters
+    ----------
+    pixel_axis: `int`
+        The pixel axis number(s) for which the world axis numbers are desired.
+
+    wcs: `astropy.wcs.BaseLowLevelWCS`
+        The WCS object defining the relationship between pixel and world axes.
+
+    Returns
+    -------
+    physical_types: `numpy.ndarray` of `str`
+        The physical types corresponding to the pixel axis.
+    """
+    return np.array(wcs.world_axis_physical_types)[wcs.axis_correlation_matrix[:, pixel_axis]]
+
+
+def physical_type_to_pixel_axes(physical_type, wcs):
+    """
+    Gets the pixel axis indices corresponding to a world axis physical type.
+
+    Parameters
+    ----------
+    physical_type: `int`
+        The pixel axis number(s) for which the world axis numbers are desired.
+
+    wcs: `astropy.wcs.BaseLowLevelWCS`
+        The WCS object defining the relationship between pixel and world axes.
+
+    Returns
+    -------
+    pixel_axes: `numpy.ndarray`
+        The pixel axis indices corresponding to the physical type.
+    """
+    world_axis = physical_type_to_world_axis(physical_type, wcs.world_axis_physical_types)
+    return world_axis_to_pixel_axes(world_axis, wcs.axis_correlation_matrix)
+
+
+def physical_type_to_world_axis(physical_type, world_axis_physical_types):
+    """
+    Returns world axis index of a physical type based on WCS world_axis_physical_types.
+
+    Input can be a substring of a physical type, so long as it is unique.
+
+    Parameters
+    ----------
+    physical_type: `str`
+        The physical type or a substring unique to a physical type.
+
+    world_axis_physical_types: sequence of `str`
+        All available physical types.  Ordering must be same as
+        `astropy.wcs.BaseLowLevelWCS.world_axis_physical_types`
+
+    Returns
+    -------
+    world_axis: `numbers.Integral`
+        The world axis index of the physical type.
+    """
+    # Find world axis index described by physical type.
+    widx = np.where(world_axis_physical_types == physical_type)[0]
+    # If physical type does not correspond to entry in world_axis_physical_types,
+    # check if it is a substring of any physical types.
+    if len(widx) == 0:
+        widx = [physical_type in world_axis_physical_type
+                for world_axis_physical_type in world_axis_physical_types]
+        widx = np.arange(len(world_axis_physical_types))[widx]
+    if len(widx) != 1:
+        raise ValueError(
+                "Input does not uniquely correspond to a physical type."
+                f" Expected unique substring of one of {world_axis_physical_types}."
+                f"  Got: {physical_type}")
+    # Return axes with duplicates removed.
+    return widx[0]
+
+
+def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
+    """
+    Find indices of all pixel axes associated with the world axes linked to the input pixel axis.
+
+    For example, say the input pixel axis is 0 and it is associated with two world axes
+    corresponding to longitude and latitude. Let's also say that pixel axis 1 is also
+    associated with longitude and latitude. Thus, this function would return pixel axes 0 and 1.
+    On the other hand let's say pixel axis 2 is associated with only one world axis,
+    e.g. wavelength, which does not depend on any other pixel axis (i.e. it is independent).
+    In that case this function would only return pixel axis 2.
+    Both input and output pixel axis indices are in the WCS ordering convention
+    (reverse of numpy ordering convention).
+    The returned axis indices include the input axis.
+
+    Parameters
+    ----------
+    wcs_axis: `int`
+        Index of axis (in WCS ordering convention) for which dependent axes are desired.
+
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    Returns
+    -------
+    dependent_pixel_axes: `np.ndarray` of `int`
+        Sorted indices of pixel axes dependent on input axis in WCS ordering convention.
+    """
+    # The axis_correlation_matrix is (n_world, n_pixel) but we want to know
+    # which pixel coordinates are linked to which other pixel coordinates.
+    # To do this we take a column from the matrix and find if there are
+    # any entries in common with all other columns in the matrix.
+    world_dep = axis_correlation_matrix[:, pixel_axis:pixel_axis + 1]
+    dependent_pixel_axes = np.sort(np.nonzero((world_dep & axis_correlation_matrix).any(axis=0))[0])
+    return dependent_pixel_axes
+
+
+def get_dependent_array_axes(array_axis, axis_correlation_matrix):
+    """
+    Find indices of all array axes associated with the world axes linked to the input array axis.
+
+    For example, say the input array axis is 0 and it is associated with two world axes
+    corresponding to longitude and latitude. Let's also say that array axis 1 is also
+    associated with longitude and latitude. Thus, this function would return array axes 0 and 1.
+    Note the the output axes include the input axis. On the other hand let's say
+    array axis 2 is associated with only one world axis, e.g. wavelength,
+    which does not depend on any other array axis (i.e. it is independent).
+    In that case this function would only return array axis 2.
+    Both input and output array axis indices are in the numpy array ordering convention
+    (reverse of WCS ordering convention).
+    The returned axis indices include the input axis.
+
+    Parameters
+    ----------
+    array_axis: `int`
+        Index of array axis (in numpy ordering convention) for which dependent axes are desired.
+
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    Returns
+    -------
+    dependent_array_axes: `np.ndarray` of `int`
+        Sorted indices of array axes dependent on input axis in numpy ordering convention.
+    """
+    naxes = axis_correlation_matrix.shape[1]
+    pixel_axis = convert_between_array_and_pixel_axes(np.array([array_axis], dtype=int), naxes)[0]
+    dependent_pixel_axes = get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix)
+    dependent_array_axes = convert_between_array_and_pixel_axes(dependent_pixel_axes, naxes)
+    return np.sort(dependent_array_axes)
+
+
+def get_dependent_world_axes(world_axis, axis_correlation_matrix):
+    """
+    Given a WCS world axis index, return indices of dependent WCS world axes.
+
+    Both input and output axis indices are in the WCS ordering convention
+    (reverse of numpy ordering convention). The returned axis indices include the input axis.
+
+    Parameters
+    ----------
+    world_axis: `int`
+        Index of axis (in WCS ordering convention) for which dependent axes are desired.
+
+    axis_correlation_matrix: `numpy.ndarray` of `bool`
+        2D boolean correlation matrix defining the dependence between the pixel and world axes.
+        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+
+    Returns
+    -------
+    dependent_world_axes: `np.ndarray` of `int`
+        Sorted indices of pixel axes dependent on input axis in WCS ordering convention.
+    """
+    # The axis_correlation_matrix is (n_world, n_pixel) but we want to know
+    # which world coordinates are linked to which other world coordinates.
+    # To do this we take a row from the matrix and find if there are
+    # any entries in common with all other rows in the matrix.
+    pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1].T
+    dependent_world_axes = np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
+    return dependent_world_axes
+
+
+def get_dependent_physical_types(physical_type, wcs):
+    """
+    Given a world axis physical type, return the dependent physical types including the input type.
+
+    Parameters
+    ----------
+    physical_type: `str`
+        The world axis physical types whose dependent physical types are desired.
+
+    wcs: `astropy.wcs.BaseLowLevelWCS`
+        The WCS object defining the relationship between pixel and world axes.
+
+    Returns
+    -------
+    dependent_physical_types: `np.ndarray` of `str`
+        Physical types dependent on the input physical type.
+    """
+    world_axis_physical_types = wcs.world_axis_physical_types
+    world_axis = physical_type_to_world_axis(physical_type, world_axis_physical_types)
+    dependent_world_axes = get_dependent_world_axes(world_axis, wcs.axis_correlation_matrix)
+    dependent_physical_types = np.array(world_axis_physical_types)[dependent_world_axes]
+    return dependent_physical_types

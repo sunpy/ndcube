@@ -30,57 +30,96 @@ hm_reindexed_102 = {
 wm_reindexed_102 = WCS(header=hm_reindexed_102)
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [({}, False),
-     ([slice(1, 5), slice(-1, -5, -2)], True)])
-def test_all_slice(test_input, expected):
-    assert utils.wcs._all_slice(test_input) == expected
+@pytest.fixture
+def axis_correlation_matrix():
+    return _axis_correlation_matrix()
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [({}, []),
-     ((slice(1, 2), slice(1, 3), 2, slice(2, 4), 8),
-      [slice(1, 2, None), slice(1, 3, None), slice(2, 3, None),
-       slice(2, 4, None), slice(8, 9, None)])])
-def test_slice_list(test_input, expected):
-    assert utils.wcs._slice_list(test_input) == expected
+def _axis_correlation_matrix():
+    shape = (4, 4)
+    acm = np.zeros(shape, dtype=bool)
+    for i in range(min(shape)):
+        acm[i, i] = True
+    acm[0, 1] = True
+    acm[1, 0] = True
+    acm[-1, 0] = True
+    return acm
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ((wm, np.array([1, 0, 2])), wm_reindexed_102),
-    ((wm, np.array([1, 0, -1])), wm_reindexed_102)
-])
-def test_reindex_wcs(test_input, expected):
-    helpers.assert_wcs_are_equal(utils.wcs.reindex_wcs(*test_input), expected)
+@pytest.fixture
+def test_wcs():
+    return WCSTest()
 
 
-@pytest.mark.parametrize("test_input", [
-    (TypeError, wm, 0),
-    (TypeError, wm, np.array(['spam', 'eggs', 'ham'])),
-])
-def test_reindex_wcs_errors(test_input):
-    with pytest.raises(test_input[0]):
-        utils.wcs.reindex_wcs(*test_input[1:])
+class WCSTest():
+    def __init__(self):
+        self.world_axis_physical_types = [
+            'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl', 'time']
+        self.axis_correlation_matrix = _axis_correlation_matrix()
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ((wm, 0), (0, 1)),
-    ((wm, 1), (0, 1)),
-    ((wm, 2), (2,)),
-    ((wm, 1), (0, 1))
-])
-def test_get_dependent_data_axes(test_input, expected):
-    output = utils.wcs.get_dependent_data_axes(*test_input)
+def test_convert_between_array_and_pixel_axes():
+    test_input = np.array([1, 4, -2])
+    naxes = 5
+    expected = np.array([3, 0, 1])
+    output = utils.wcs.convert_between_array_and_pixel_axes(test_input, naxes)
+    assert all(output == expected)
+
+
+def test_pixel_axis_to_world_axes(axis_correlation_matrix):
+    output = utils.wcs.pixel_axis_to_world_axes(0, axis_correlation_matrix)
+    expected = np.array([0, 1, 3])
+    assert all(output == expected)
+
+
+def test_world_axis_to_pixel_axes(axis_correlation_matrix):
+    output = utils.wcs.world_axis_to_pixel_axes(1, axis_correlation_matrix)
+    expected = np.array([0, 1])
+    assert all(output == expected)
+
+
+def test_pixel_axis_to_physical_types(test_wcs):
+    output = utils.wcs.pixel_axis_to_physical_types(0, test_wcs)
+    expected = np.array(['custom:pos.helioprojective.lon',
+                         'custom:pos.helioprojective.lat', 'time'])
+    print(output, expected)
+    assert all(output == expected)
+
+
+def test_physical_type_to_pixel_axes(test_wcs):
+    output = utils.wcs.physical_type_to_pixel_axes('lon', test_wcs)
+    expected = np.array([0, 1])
+    assert all(output == expected)
+
+
+@pytest.mark.parametrize("test_input,expected", [('wl', 2), ('em.wl', 2)])
+def test_physical_type_to_world_axis(test_input, expected):
+    world_axis_physical_types = ['custom:pos.helioprojective.lon',
+                                 'custom:pos.helioprojective.lat', 'em.wl', 'time']
+    output = utils.wcs.physical_type_to_world_axis(test_input, world_axis_physical_types)
     assert output == expected
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ((wm, 0), (0,)),
-    ((wm, 1), (1, 2)),
-    ((wm, 2), (1, 2)),
-])
-def test_get_dependent_wcs_axes(test_input, expected):
-    output = utils.wcs.get_dependent_wcs_axes(*test_input)
-    assert output == expected
+def test_get_dependent_pixel_axes(axis_correlation_matrix):
+    output = utils.wcs.get_dependent_pixel_axes(0, axis_correlation_matrix)
+    expected = np.array([0, 1, 3])
+    assert all(output == expected)
+
+
+def test_get_dependent_array_axes(axis_correlation_matrix):
+    output = utils.wcs.get_dependent_array_axes(3, axis_correlation_matrix)
+    expected = np.array([0, 2, 3])
+    assert all(output == expected)
+
+
+def test_get_dependent_world_axes(axis_correlation_matrix):
+    output = utils.wcs.get_dependent_world_axes(3, axis_correlation_matrix)
+    expected = np.array([0, 3])
+    print(output, expected)
+    assert all(output == expected)
+
+
+def test_get_dependent_physical_types(test_wcs):
+    output = utils.wcs.get_dependent_physical_types("time", test_wcs)
+    expected = np.array(['custom:pos.helioprojective.lon', 'time'])
+    assert all(output == expected)

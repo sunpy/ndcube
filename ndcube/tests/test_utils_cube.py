@@ -21,68 +21,6 @@ extra_coords_dict_wcs = {"time": {"wcs axis": 0,
                                    "value": u.Quantity(range(axes_length), unit=u.pix)}}
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [((None, missing_axes_none), None),
-     ((0, missing_axes_none), 2),
-     ((1, missing_axes_none), 1),
-     ((0, missing_axes_0_2), 1),
-     ((1, missing_axes_1), 0),
-     ((-1, missing_axes_0_2), 1),
-     ((-2, missing_axes_1), 2),
-     ((-1, missing_axes_none), 0)])
-def test_data_axis_to_wcs_axis(test_input, expected):
-    assert utils.cube.data_axis_to_wcs_axis(*test_input) == expected
-
-
-@pytest.mark.parametrize("test_input", [(-2, missing_axes_0_2), (1, missing_axes_0_2)])
-def test_data_axis_to_wcs_axis_error(test_input):
-    with pytest.raises(IndexError):
-        utils.cube.data_axis_to_wcs_axis(*test_input)
-
-
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [((None, missing_axes_none), None),
-     ((0, missing_axes_none), 2),
-     ((1, missing_axes_none), 1),
-     ((1, missing_axes_0_2), 0),
-     ((0, missing_axes_1), 1),
-     ((-1, missing_axes_0_2), None),
-     ((-2, missing_axes_0_2), 0),
-     ((-2, missing_axes_1), None),
-     ((-3, missing_axes_1), 1),
-     ((-1, missing_axes_none), 0)])
-def test_wcs_axis_to_data_axis(test_input, expected):
-    assert utils.cube.wcs_axis_to_data_axis(*test_input) == expected
-
-
-@pytest.mark.parametrize("test_input", [(-10, missing_axes_0_2), (10, missing_axes_0_2)])
-def test_wcs_axis_to_data_axis_error(test_input):
-    with pytest.raises(IndexError):
-        utils.cube.data_axis_to_wcs_axis(*test_input)
-
-
-def test_select_order():
-    lists = [['TIME', 'WAVE', 'HPLT-TAN',
-              'HPLN-TAN'], ['WAVE', 'HPLT-TAN', 'UTC',
-                            'HPLN-TAN'], ['HPLT-TAN', 'TIME', 'HPLN-TAN'],
-             ['HPLT-TAN', 'DEC--TAN',
-              'WAVE'], [], ['UTC', 'TIME', 'WAVE', 'HPLT-TAN']]
-
-    results = [
-        [0, 1, 2, 3],
-        [2, 0, 1, 3],
-        [1, 0, 2],  # Second order is initial order
-        [2, 0, 1],
-        [],
-        [1, 0, 2, 3]
-    ]
-
-    for (l, r) in zip(lists, results):
-        assert utils.cube.select_order(l) == r
-
-
 @pytest.mark.parametrize("test_input", [
     ([('name', 0)], np.array([0, 1]), 2, (1, 2)),
     ([(0, 0, 0)], np.array([0, 1]), 2, (1, 2)),
@@ -133,22 +71,3 @@ def test_convert_extra_coords_dict_to_input_format_error():
     with pytest.raises(KeyError):
         utils.cube.convert_extra_coords_dict_to_input_format(
             {"time": {"not axis": 0, "value": []}}, [0, 1, 2], 3)
-
-
-@pytest.mark.parametrize("test_input, expected", [
-    ((5, False), np.asarray([0, 1, 2, 3, 4])),
-    ((6, True), np.asarray([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5]))
-])
-def test_pixel_centers_or_edges(test_input, expected):
-    output = utils.cube._pixel_centers_or_edges(*test_input)
-    assert isinstance(output, np.ndarray)
-    np.testing.assert_allclose(output, expected)
-
-
-@pytest.mark.parametrize("test_input, expected", [
-    ((5, False), 5),
-    ((6, True), 7)
-])
-def test_get_dimension_for_pixel(test_input, expected):
-    output = utils.cube._get_dimension_for_pixel(*test_input)
-    assert output == expected

@@ -1,0 +1,1 @@
+Remove `NDCube.pixel_to_world` and `NDCube.world_to_pixel`.

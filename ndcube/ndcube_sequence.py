@@ -60,8 +60,8 @@ class NDCubeSequenceBase:
         return tuple(dimensions)
 
     @property
-    def world_axis_physical_types(self):
-        return tuple(["meta.obs.sequence"] + list(self.data[0].world_axis_physical_types))
+    def array_axis_physical_types(self):
+        return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
 
     @property
     def cube_like_dimensions(self):
@@ -79,8 +79,10 @@ class NDCubeSequenceBase:
         return cube_like_dimensions
 
     @property
-    def cube_like_world_axis_physical_types(self):
-        return self.data[0].world_axis_physical_types
+    def cube_like_array_axis_physical_types(self):
+        if self._common_axis is None:
+            raise ValueError("Common axis must be set.")
+        return self.data[0].array_axis_physical_types
 
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
@@ -232,7 +234,7 @@ class NDCubeSequenceBase:
                 ---------------------
                 Length of NDCubeSequence:  {self.dimensions[0]}
                 Shape of 1st NDCube: {self.dimensions[1::]}
-                Axis Types of 1st NDCube: {self.world_axis_physical_types[1:]}"""))
+                Axis Types of 1st NDCube: {self.array_axis_physical_types[1:]}"""))
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"

@@ -5,9 +5,9 @@ from collections import namedtuple
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.wcs import WCS
 
 from ndcube import NDCube, NDCubeSequence
-from ndcube.utils.wcs import WCS
 
 # sample data for tests
 # TODO: use a fixture reading from a test file. file TBD.
