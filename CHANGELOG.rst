@@ -1,3 +1,13 @@
+Ndcube v1.3.3 (2020-10-13)
+==========================
+
+Bug Fixes
+---------
+
+- Fix NDCube plotting bug when dependent axes are not first axes. (`#278 <https://github.com/sunpy/ndcube/pull/278>`__)
+- Pin the maximum version of sunpy to be 2.0 for the 1.3 release series. Support for sunpy 2.1 will be added in the 1.4 releases (`#303 <https://github.com/sunpy/ndcube/pull/303>`__)
+
+
 Ndcube v1.3.2 (2020-04-20)
 ==========================
 

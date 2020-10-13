@@ -35,7 +35,7 @@ def assert_cubes_equal(test_input, expected_cube):
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     assert test_input.missing_axes == expected_cube.missing_axes
-    if type(test_input.uncertainty) is not type(expected_cube.uncertainty):
+    if type(test_input.uncertainty) is not type(expected_cube.uncertainty):  # noqa
         raise AssertionError("NDCube uncertainties not of same type: {0} != {1}".format(
             type(test_input.uncertainty), type(expected_cube.uncertainty)))
     if test_input.uncertainty is not None:
@@ -43,7 +43,7 @@ def assert_cubes_equal(test_input, expected_cube):
     assert test_input.world_axis_physical_types == expected_cube.world_axis_physical_types
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)
     assert test_input.dimensions.unit == expected_cube.dimensions.unit
-    if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
+    if type(test_input.extra_coords) is not type(expected_cube.extra_coords):  # noqa
         raise AssertionError("NDCube extra_coords not of same type: {0} != {1}".format(
             type(test_input.extra_coords), type(expected_cube.extra_coords)))
     if test_input.extra_coords is not None:

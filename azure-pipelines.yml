@@ -57,8 +57,6 @@ jobs:
 
       - linux: py37-astropydev
 
-      - linux: py37-sunpydev
-
 
 # On branches which aren't master, and not Pull Requests, build the wheels but only upload them on tags
 - ${{ if and(ne(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.SourceBranch'], 'master'))) }}:
