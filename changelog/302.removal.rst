@@ -1,1 +1,1 @@
-Remove world_axis_physical_types methods from NDCube and NDCubeSequence.
+Remove ``world_axis_physical_types`` methods from `.NDCube` and  `.NDCubeSequence`.
