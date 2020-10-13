@@ -9,7 +9,7 @@ import astropy.units as u
 
 from ndcube import utils
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs import wcs_ivoa_mapping, reduced_correlation_matrix_and_world_physical_types
+from ndcube.utils.wcs import wcs_ivoa_mapping
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
 from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
@@ -257,24 +257,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                      "CTYPE = {}; keys = {}".format(ctype[i], keys))
                 axes_ctype.append(axis_name)
         return tuple(axes_ctype[::-1])
-
-    @property
-    def array_axis_physical_types(self):
-        """
-        Returns the WCS physical types associated with each array axis.
-
-        Returns an iterable of tuples where each tuple corresponds to an array axis and
-        holds strings denoting the WCS physical types associated with that array axis.
-        Since multiple physical types can be associated with one array axis, tuples can
-        be of different lengths. Likewise, as a single physical type can correspond to
-        multiple array axes, the same physical type string can appear in multiple tuples.
-        """
-        axis_correlation_matrix, world_axis_physical_types = \
-                reduced_correlation_matrix_and_world_physical_types(
-                        self.wcs.axis_correlation_matrix, self.wcs.world_axis_physical_types,
-                        self.missing_axes)
-        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
-                for i in range(axis_correlation_matrix.shape[1])][::-1]
 
     @property
     def missing_axis(self):

@@ -940,13 +940,3 @@ def test_explode_along_axis(test_input, expected):
     assert isinstance(output[inp_slice], exp_type_cube)
     assert isinstance(output.meta, exp_meta_seq)
     assert isinstance(output[inp_slice].meta, exp_meta_cube)
-
-
-def test_array_axis_physical_types():
-    expected = [
-            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-            ('em.wl',), ('time',)]
-    output = cube.array_axis_physical_types
-    for i in range(len(expected)):
-        assert all([physical_type in expected[i] for physical_type in output[i]])
