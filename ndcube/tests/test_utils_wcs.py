@@ -37,34 +37,6 @@ hm_reindexed_102 = {
 wm_reindexed_102 = utils.wcs.WCS(header=hm_reindexed_102, naxis=3)
 
 
-@pytest.fixture
-def axis_correlation_matrix():
-    return _axis_correlation_matrix()
-
-
-def _axis_correlation_matrix():
-    shape = (4, 4)
-    acm = np.zeros(shape, dtype=bool)
-    for i in range(min(shape)):
-        acm[i, i] = True
-    acm[0, 1] = True
-    acm[1, 0] = True
-    acm[-1, 0] = True
-    return acm
-
-
-@pytest.fixture
-def test_wcs():
-    return TestWCS()
-
-
-class TestWCS():
-    def __init__(self):
-        self.world_axis_physical_types = [
-            'custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl', 'time']
-        self.axis_correlation_matrix = _axis_correlation_matrix()
-
-
 @pytest.mark.parametrize("test_input,expected", [(ht, True), (hm, False)])
 def test_wcs_needs_augmenting(test_input, expected):
     assert utils.wcs.WCS._needs_augmenting(test_input) is expected
@@ -143,25 +115,3 @@ def test_get_dependent_wcs_axes(test_input, expected):
 ])
 def test_axis_correlation_matrix(test_input, expected):
     assert (utils.wcs.axis_correlation_matrix(test_input) == expected).all()
-
-
-def test_convert_between_array_and_pixel_axes():
-    test_input = np.array([1, 4, -2])
-    naxes = 5
-    expected = np.array([3, 0, 1])
-    output = utils.wcs.convert_between_array_and_pixel_axes(test_input, naxes)
-    assert all(output == expected)
-
-
-def test_pixel_axis_to_world_axes(axis_correlation_matrix):
-    output = utils.wcs.pixel_axis_to_world_axes(0, axis_correlation_matrix)
-    expected = np.array([0, 1, 3])
-    assert all(output == expected)
-
-
-@pytest.mark.parametrize("test_input,expected", [('wl', 2), ('em.wl', 2)])
-def test_physical_type_to_world_axis(test_input, expected):
-    world_axis_physical_types = ['custom:pos.helioprojective.lon',
-                                 'custom:pos.helioprojective.lat', 'em.wl', 'time']
-    output = utils.wcs.physical_type_to_world_axis(test_input, world_axis_physical_types)
-    assert output == expected
