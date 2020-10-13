@@ -21,20 +21,97 @@ from ndcube.ndcube_sequence import NDCubeSequence
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
 
 
-class NDCubeMetaClass(abc.ABCMeta):
-    """
-    A metaclass that combines `abc.ABCMeta`.
-    """
+class NDCubeABC(astropy.nddata.NDDataBase):
 
-
-class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
-
-    @abc.abstractproperty
-    def dimensions(self):
+    def __init__(self, data, uncertainty=None, mask=None, wcs=None,
+                 meta=None, unit=None, copy=False, extra_coords=None):
         pass
 
+    @property
+    def extra_coords(self) -> ExtraCoordsABC:
+        """
+        The extra coordinates associated with this cube.
+        """
+
     @abc.abstractmethod
-    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
+    @property
+    def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
+        """
+        Returns the WCS physical types associated with each array axis.
+
+        Returns an iterable of tuples where each tuple corresponds to an array axis and
+        holds strings denoting the WCS physical types associated with that array axis.
+        Since multiple physical types can be associated with one array axis, tuples can
+        be of different lengths. Likewise, as a single physical type can correspond to
+        multiple array axes, the same physical type string can appear in multiple tuples.
+        """
+
+    @abc.abstractmethod
+    def axis_world_coords(self, *axes: Union[Union[int, str], Iterable[Union[int, str]]], edges: bool=False) -> Iterable[object]:
+        """
+        Returns world coordinate values of all pixels for all axes.
+
+        Parameters
+        ----------
+        axes
+            Axis number in numpy ordering or unique substring of
+            `.NDCube.wcs.world_axis_physical_types` or
+            `.NDCube.wcs.world_axis_names` of axes for which real world
+            coordinates are desired. ``axes=None`` implies all axes will be
+            returned.
+
+        edges
+            The edges argument helps in returning ``pixel_edges``
+            instead of ``pixel_values``. Default value is False,
+            which returns ``pixel_values``. True return ``pixel_edges``
+
+        Returns
+        -------
+        axes_coords
+            High level object, or iterable thereof, giving the real world coords for the axes requested by user.
+            For example, SkyCoords. The types returned are determined by the WCS object.
+
+        Example
+        -------
+        >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
+        >>> NDCube.all_world_coords(2) # doctest: +SKIP
+
+        """
+
+    @abc.abstractmethod
+    def axis_world_coords_values(self, *axes: Union[Union[int, str], Iterable[Union[int, str]]], edges: bool=False) -> Iterable[u.Quantity]:
+        """
+        Returns world coordinate values of all pixels for all axes.
+
+        Parameters
+        ----------
+        axes
+            Axis number in numpy ordering or unique substring of
+            `.NDCube.wcs.world_axis_physical_types` or
+            `.NDCube.wcs.world_axis_names` of axes for which real world
+            coordinates are desired. ``axes=None`` implies all axes will be
+            returned.
+
+        edges
+            The edges argument helps in returning ``pixel_edges``
+            instead of ``pixel_values``. Default value is False,
+            which returns ``pixel_values``. True return ``pixel_edges``
+
+        Returns
+        -------
+        axes_coords
+            `~astropy.units.Quantity` or iterable thereof for all requested
+            world axes, units determined by the wcs.  # TODO: Should we mandate namedtuple?
+
+        Example
+        -------
+        >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
+        >>> NDCube.all_world_coords(2) # doctest: +SKIP
+
+        """
+
+    @abc.abstractmethod
+    def crop(self, lower_corner, upper_corner=None, units=None, wcs=None):
         """
         Crops an NDCube given minimum values and interval widths along axes.
 
@@ -46,24 +123,20 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
 
-        interval_widths: iterable of `astropy.units.Quantity` or `float`
-            The width of the region of interest in each dimension in physical
-            units consistent with the NDCube's wcs object. The length of the
-            iterable must equal the number of data dimensions and must have
-            the same order as the data. This argument will be removed in versions
-            2.0, please use upper_corner argument.
-
         upper_corner: iterable of `astropy.units.Quantity` or `float`
             The maximum desired values along each relevant axis after cropping
             described in physical units consistent with the NDCube's wcs object.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
 
-        units: iterable of `astropy.units.quantity.Quantity`, optionnal
+        units: iterable of `astropy.units.quantity.Quantity`, optional
             If the inputs are set without units, the user must set the units
             inside this argument as `str`.
             The length of the iterable must equal the number of data dimensions
             and must have the same order as the data.
+
+        wcs: `~astropy.wcs.BaseHighLevelWCS`, optional
+            The WCS to use to calculate the pixel coordinates based on the input.
 
         Returns
         -------
