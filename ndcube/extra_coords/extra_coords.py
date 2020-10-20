@@ -1,17 +1,20 @@
+import abc
 import copy
 from numbers import Integral
 from functools import reduce
 from collections import defaultdict
+from typing import Iterable, Tuple, Union, Any
 
 import astropy.units as u
 from astropy.modeling import models
+from astropy.wcs.wcsapi import BaseLowLevelWCS, BaseHighLevelWCS
 
 from .lookup_table_coord import LookupTableCoord
 
 __all__ = ['ExtraCoords']
 
 
-class ExtraCoords:
+class ExtraCoordsABC(abc.ABC):
     """
     A representation of additional world coordinates associated with pixel axes.
 
@@ -21,14 +24,89 @@ class ExtraCoords:
 
     Parameters
     ----------
-    wcs : `astropy.wcs.wcsapi.LowLevelWCS`
+    wcs
         The WCS specifying the extra coordinates.
-    mapping : `tuple` of `int`
-       The mapping between the array dimensions and pixel dimensions in the wcs.
+    mapping
+       The mapping between the array dimensions and pixel dimensions in the
+       extra coords object. This is an iterable of ``(array_dimension, pixel_dimension)`` pairs
+       of length equal to the number of pixel dimensions in the extra coords.
 
     """
 
+    @abc.abstractmethod
+    def __init__(self,
+                 *,
+                 wcs: BaseLowLevelWCS = None,
+                 mapping: Iterable[Tuple[int, int]] = None):
+        pass
+
+    @abc.abstractmethod
+    def add_coordinate(self,
+                       name: str,
+                       array_dimension: Union[int, Iterable[int]],
+                       lookup_table: Any,
+                       **kwargs):
+        """
+        Add a coordinate to this ``ExtraCoords`` based on a lookup table.
+
+        Parameters
+        ----------
+        name
+            The name for this coordinate(s).
+        array_dimension
+            The pixel dimension(s), in the array, to which this lookup table corresponds.
+        lookup_table
+            The lookup table.
+        """
+
+    @abc.abstractmethod
+    def keys(self) -> Iterable[str]:
+        """
+        The world axis names for all the coordinates in the extra coords.
+        """
+
+    @property
+    @abc.abstractmethod
+    def mapping(self) -> Iterable[Tuple[int, int]]:
+        """
+        The mapping between the array dimensions and pixel dimensions.
+
+        This is an iterable of ``(array_dimension, pixel_dimension)`` pairs
+        of length equal to the number of pixel dimensions in the extra coords.
+        """
+
+    @property
+    @abc.abstractmethod
+    def wcs(self) -> BaseHighLevelWCS:
+        """
+        A WCS object representing the world coordinates described by this ``ExtraCoords``.
+
+        .. note::
+            This WCS object does not map to the pixel dimensions of the array
+            associated with the `.NDCube` object. It has the number of
+            pixel dimensions equal to the number of inputs to the transforms to
+            get the world coordinates (normally equal to the number of world
+            coordinates). Therefore using this WCS directly might lead to some
+            confusing results.
+
+        """
+
+    @abc.abstractmethod
+    def __getitem__(self, item: Union[str, int, slice, Iterable[Union[str, int, slice]]]) -> "ExtraCoordsABC":
+        """
+        ExtraCoords can be sliced with either a string, or a numpy like slice.
+
+        When sliced with a string it should return a new ExtraCoords object
+        with only those coordinates with the given names. When sliced with a
+        numpy array like slice it should return a new ExtraCoords with the
+        slice applied. Supporting step is not required and "fancy indexing" is
+        not supported.
+        """
+
+
+class ExtraCoords(ExtraCoordsABC):
     def __init__(self, *, wcs=None, mapping=None):
+        super().__init__(wcs=wcs, mapping=mapping)
         # TODO: verify these mapping checks are correct
         if mapping is not None:
             if len(mapping) == self.array_ndim:
@@ -80,18 +158,6 @@ class ExtraCoords:
         return extra_coords
 
     def add_coordinate(self, name, array_dimension, lookup_table, **kwargs):
-        """
-        Add a coordinate to this ``ExtraCoords`` based on a lookup table.
-
-        Parameters
-        ----------
-        name : `str`
-            The name for this coordinate(s).
-        array_dimension : `int`
-            The pixel dimension, in the array, to which this lookup table corresponds.
-        lookup_table : `object`
-            The lookup table.
-        """
         if self._wcs is not None:
             raise ValueError(
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
@@ -117,10 +183,6 @@ class ExtraCoords:
 
     @property
     def mapping(self):
-        """
-        The mapping of the world dimensions in this ``ExtraCoords`` to pixel
-        dimensions in the array.
-        """
         if self._mapping:
             return self._mapping
 
@@ -148,18 +210,6 @@ class ExtraCoords:
 
     @property
     def wcs(self):
-        """
-        A WCS object representing the world coordinates described by this ``ExtraCoords``.
-
-        .. note::
-            This WCS object does not map to the pixel dimensions of the array
-            associated with the `~ndcube.NDCube` object. It has the number of
-            pixel dimensions equal to the number of inputs to the transforms to
-            get the world coordinates (normally equal to the number of world
-            coordinates). Therefore using this WCS directly might lead to some
-            confusing results.
-
-        """
         if self._wcs is not None:
             return self._wcs
 
