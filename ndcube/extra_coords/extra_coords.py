@@ -128,6 +128,9 @@ class ExtraCoords(ExtraCoordsABC):
         """
         Construct an ExtraCoords instance from lookup tables.
 
+        This is a convience wrapper around `.add_coordinate` which does not
+        expose all the options available in that method.
+
         Parameters
         ----------
         array_shape : `tuple` of `int`, optional
@@ -265,56 +268,16 @@ class ExtraCoords(ExtraCoordsABC):
         Returns a new ExtraCoords object with modified lookup tables.
         """
         new_lookup_tables = set()
-        axis_shifts = defaultdict(lambda: models.Identity(1))
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            for item_axis, sub_item in enumerate(item):
-                # This slice does not apply to this lookup table
-                if item_axis not in lut_axes:
-                    continue
+            lut_slice = tuple(item[i] for i in lut_axes)
 
-                if isinstance(sub_item, slice):
-                    if sub_item.start is None:
-                        new_lookup_tables.add((lut_axis, lut))
-                        continue
-
-                    axis_shifts[item_axis] = models.Shift(sub_item.start * u.pix)
-                    new_lookup_tables.add((lut_axis, lut))
-
-                elif isinstance(sub_item, int):
-                    # Drop the lut
-                    continue
-
-                else:
-                    raise ValueError(
-                        f"A slice of type {type(sub_item)} for axis {item_axis} is not supported."
-                    )
-
-        # Apply any offsets to the models in the lookup tables
-        lookup_tables = list(new_lookup_tables)
-        new_lookup_tables = []
-        for lut_axes, lut in lookup_tables:
-            # Append shift model to front of chain.
-            if len(lut.models) != 1:
-                raise NotImplementedError("PANIC")
-
-            if isinstance(lut_axes, int):
-                if lut_axes in axis_shifts:
-                    lut = copy.deepcopy(lut)
-                    lut.models = [axis_shifts[lut_axes] | lut.models[0]]
-
-            if isinstance(lut_axes, tuple):
-                if any((l in axis_shifts for l in lut_axes)):
-                    shift = axis_shifts[lut_axes[0]]
-                    for axis in lut_axes[1:]:
-                        shift = shift & axis_shifts[axis]
-                    lut = copy.deepcopy(lut)
-                    lut.models = [shift | lut.models[0]]
-
-            new_lookup_tables.append((lut_axes, lut))
+            sliced_lut = lut[lut_slice]
+            if sliced_lut:
+                new_lookup_tables.add((lut_axis, sliced_lut))
 
         new_extra_coords = type(self)()
-        new_extra_coords._lookup_tables = new_lookup_tables
+        new_extra_coords._lookup_tables = tuple(new_lookup_tables)
         return new_extra_coords
 
     def __getitem__(self, item):

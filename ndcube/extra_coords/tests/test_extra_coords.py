@@ -178,18 +178,18 @@ def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
     sec = ec[0, :]
     assert len(sec._lookup_tables) == 1
 
-    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['lat'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
-    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['lon'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
+    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2))),
+                      ec['lat'].wcs.pixel_to_world_values([0, 0], list(range(2))))
+    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2))),
+                      ec['lon'].wcs.pixel_to_world_values([0, 0], list(range(2))))
 
     sec = ec[:, 0]
     assert len(sec._lookup_tables) == 2
 
-    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['lat'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
-    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['lon'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
+    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2))),
+                      ec['lat'].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
+    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2))),
+                      ec['lon'].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
 
     assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
                       ec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
