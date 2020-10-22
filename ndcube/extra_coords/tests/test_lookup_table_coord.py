@@ -8,20 +8,50 @@ from astropy.time import Time
 from ndcube.extra_coords import LookupTableCoord
 
 
-def test_1d_distance():
+@pytest.fixture
+def lut_1d_distance():
     lookup_table = u.Quantity(np.arange(10) * u.km)
+    return LookupTableCoord(lookup_table)
 
-    ltc = LookupTableCoord(lookup_table)
-    assert ltc.model.n_inputs == 1
-    assert ltc.model.n_outputs == 1
-    assert ltc.model.lookup_table is lookup_table
-    assert u.allclose(u.Quantity(range(10), u.pix), ltc.model.points)
 
-    assert u.allclose(ltc.wcs.pixel_to_world(0), 0 * u.km)
-    assert u.allclose(ltc.wcs.pixel_to_world(9), 9 * u.km)
-    assert ltc.wcs.world_to_pixel(0 * u.km) == 0
+def test_repr_str(lut_1d_distance):
+    assert str(lut_1d_distance.delayed_models) in str(lut_1d_distance)
+    assert str(lut_1d_distance.frames) in str(lut_1d_distance)
+    assert str(lut_1d_distance) in repr(lut_1d_distance)
 
-    sub_ltc = ltc[0:5]
+    assert str(lut_1d_distance.delayed_models[0]) in repr(lut_1d_distance.delayed_models[0])
+
+def test_exceptions(lut_1d_distance):
+    with pytest.raises(TypeError):
+        LookupTableCoord(u.Quantity([1, 2, 3], u.nm), [1, 2, 3])
+
+    with pytest.raises(TypeError):
+        lut_1d_distance & list()
+
+    # Test two Time
+    with pytest.raises(ValueError):
+        LookupTableCoord(Time("2011-01-01"), Time("2011-01-01"))
+
+    # Test two SkyCoord
+    with pytest.raises(ValueError):
+        LookupTableCoord(SkyCoord(10, 10, unit=u.deg), SkyCoord(10, 10, unit=u.deg))
+
+    # Test not matching units
+    with pytest.raises(u.UnitsError):
+        LookupTableCoord(u.Quantity([1, 2, 3], u.nm), u.Quantity([1, 2, 3], u.s))
+
+
+def test_1d_distance(lut_1d_distance):
+    assert lut_1d_distance.model.n_inputs == 1
+    assert lut_1d_distance.model.n_outputs == 1
+    assert lut_1d_distance.model.lookup_table.shape == (10,)
+    assert u.allclose(u.Quantity(range(10), u.pix), lut_1d_distance.model.points)
+
+    assert u.allclose(lut_1d_distance.wcs.pixel_to_world(0), 0 * u.km)
+    assert u.allclose(lut_1d_distance.wcs.pixel_to_world(9), 9 * u.km)
+    assert lut_1d_distance.wcs.world_to_pixel(0 * u.km) == 0
+
+    sub_ltc = lut_1d_distance[0:5]
     assert len(sub_ltc.delayed_models[0].lookup_table[0]) == 5
 
 

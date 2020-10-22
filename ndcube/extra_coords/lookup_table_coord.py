@@ -43,9 +43,6 @@ class LookupTableCoord:
             if not all(isinstance(lt, type(lt0)) for lt in lookup_tables):
                 raise TypeError("All lookup tables must be the same type")
 
-            if not all(lt0.shape == lt.shape for lt in lookup_tables):
-                raise ValueError("All lookup tables must have the same shape")
-
             type_map = {
                 u.Quantity: self._from_quantity,
                 Time: self._from_time,
@@ -84,8 +81,6 @@ class LookupTableCoord:
 
     def __getitem__(self, item):
         item = sanitize_slices(item, self.ndim)
-        if not isinstance(item, (list, tuple)):
-            item = (item,)
 
         ind = 0
         new_dmodels = []
@@ -139,7 +134,7 @@ class LookupTableCoord:
     @staticmethod
     def generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
         if not isinstance(lookup_table, u.Quantity):
-            raise TypeError("lookup_table must be a Quantity.")
+            raise TypeError("lookup_table must be a Quantity.")  # pragma: no cover
 
         ndim = lookup_table.ndim
         TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
@@ -236,15 +231,12 @@ class LookupTableCoord:
 
     def _model_from_quantity(self, lookup_tables, mesh=False):
         if len(lookup_tables) > 1:
-            if not all((isinstance(x, u.Quantity) for x in lookup_tables)):
-                raise TypeError("Can only parse a list or tuple of u.Quantity objects.")
-
             return self._generate_compound_model(*lookup_tables, mesh=mesh)
 
         return self.generate_tabular(lookup_tables[0])
 
     def _from_quantity(self, lookup_tables, mesh=False, names=None, physical_types=None):
-        if not all(lt.unit.is_equivalent(lt[0].unit) for lt in lookup_tables):
+        if not all(lt.unit.is_equivalent(lookup_tables[0].unit) for lt in lookup_tables):
             raise u.UnitsError("All lookup tables must have equivalent units.")
 
         unit = u.Quantity(lookup_tables).unit
