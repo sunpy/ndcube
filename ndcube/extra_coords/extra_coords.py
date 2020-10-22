@@ -2,7 +2,6 @@ import abc
 import copy
 from numbers import Integral
 from functools import reduce
-from collections import defaultdict
 from typing import Iterable, Tuple, Union, Any
 
 import astropy.units as u
@@ -12,6 +11,7 @@ from astropy.wcs.wcsapi import BaseLowLevelWCS, BaseHighLevelWCS
 from .lookup_table_coord import LookupTableCoord
 
 __all__ = ['ExtraCoords']
+from collections import defaultdict
 
 
 class ExtraCoordsABC(abc.ABC):
@@ -52,7 +52,7 @@ class ExtraCoordsABC(abc.ABC):
         Parameters
         ----------
         name
-            The name for this coordinate(s).
+            The name for these world coordinate(s).
         array_dimension
             The pixel dimension(s), in the array, to which this lookup table corresponds.
         lookup_table
@@ -270,7 +270,7 @@ class ExtraCoords(ExtraCoordsABC):
         new_lookup_tables = set()
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            lut_slice = tuple(item[i] for i in lut_axes)
+            lut_slice = tuple(item[i] for i in lut_axes) if isinstance(item, tuple) else item
 
             sliced_lut = lut[lut_slice]
             if sliced_lut:

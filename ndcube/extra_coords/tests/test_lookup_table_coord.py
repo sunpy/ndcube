@@ -98,6 +98,17 @@ def test_2d_nout_1_no_mesh():
     assert sub_ltc.delayed_models[0].lookup_table[1].shape == (2, 2)
 
 
+def test_1d_skycoord_no_mesh():
+    sc = SkyCoord(range(10), range(10), unit=u.deg)
+    ltc = LookupTableCoord(sc, mesh=False)
+    assert ltc.model.n_inputs == 1
+    assert ltc.model.n_outputs == 2
+
+    sub_ltc = ltc[0:4]
+    assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
+    assert sub_ltc.delayed_models[0].lookup_table[1].shape == (4, )
+
+
 def test_2d_skycoord_mesh():
     sc = SkyCoord(range(10), range(10), unit=u.deg)
     ltc = LookupTableCoord(sc, mesh=True)

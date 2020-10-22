@@ -69,6 +69,22 @@ def test_skycoord(skycoord_1d_lut):
     assert ec.wcs.world_axis_names == ("lat", "lon")
 
 
+def test_skycoord_1_pixel(skycoord_1d_lut):
+    ec = ExtraCoords()
+    ec.add_coordinate(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
+    assert len(ec._lookup_tables) == 1
+    assert ec.mapping == (0,)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 1
+    assert ec.wcs.world_n_dim == 2
+    assert ec.wcs.world_axis_names == ("lon", "lat")
+
+    sec = ec[1:4]
+    assert sec.wcs.pixel_n_dim == 1
+    assert sec.wcs.world_n_dim == 2
+    assert sec.wcs.world_axis_names == ("lon", "lat")
+
+
 def test_skycoord_mesh_false(skycoord_2d_lut):
     ec = ExtraCoords()
     ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
