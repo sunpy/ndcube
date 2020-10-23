@@ -7,6 +7,7 @@ from typing import Iterable, Tuple, Union, Any
 import astropy.units as u
 from astropy.modeling import models
 from astropy.wcs.wcsapi import BaseLowLevelWCS, BaseHighLevelWCS
+from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 from .lookup_table_coord import LookupTableCoord
 
@@ -106,22 +107,21 @@ class ExtraCoordsABC(abc.ABC):
 
 class ExtraCoords(ExtraCoordsABC):
     def __init__(self, *, wcs=None, mapping=None):
-        super().__init__(wcs=wcs, mapping=mapping)
-        # TODO: verify these mapping checks are correct
-        if mapping is not None:
-            if len(mapping) == self.array_ndim:
-                raise ValueError("The provided mapping tried to map to more pixel dimensions than `ndim`.")
-        if wcs is not None:
-            if not max(mapping) <= wcs.pixel_n_dim:
-                raise ValueError(
-                    "The number of pixel dimensions in the WCS does not match the length of the mapping."
-                )
+        if (wcs is None and mapping is not None) or (wcs is not None and mapping is None):
+            raise ValueError("Either both WCS and mapping have to be specified together or neither.")
 
-        self._wcs = wcs
-        self._mapping = mapping
+        super().__init__(wcs=wcs, mapping=mapping)
+
+        # Setup private attributes
+        self._wcs = None
+        self._mapping = None
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
         self._lookup_tables = []
+
+        # Set values using the setters for validation
+        self.wcs = wcs
+        self.mapping = mapping
 
     @classmethod
     def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables):
@@ -161,6 +161,8 @@ class ExtraCoords(ExtraCoordsABC):
         return extra_coords
 
     def add_coordinate(self, name, array_dimension, lookup_table, **kwargs):
+        # docstring in ABC
+
         if self._wcs is not None:
             raise ValueError(
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
@@ -175,20 +177,26 @@ class ExtraCoords(ExtraCoordsABC):
 
     @property
     def _name_lut_map(self):
+        """
+        Map of world names to the corresponding `.LookupTableCoord`
+        """
         return {lut[1].wcs.world_axis_names: lut for lut in self._lookup_tables}
 
     def keys(self):
-        keys = []
-        for key in self._name_lut_map.keys():
-            for k in key:
-                keys.append(k)
-        return tuple(keys)
+        # docstring in ABC
+        if not self.wcs:
+            return tuple()
+
+        return tuple(self.wcs.world_axis_names) if self.wcs.world_axis_names else None
 
     @property
     def mapping(self):
+        # docstring in ABC
         if self._mapping:
             return self._mapping
 
+        # If mapping is not set but lookup_tables is empty then the extra
+        # coords is empty, so there is no mapping.
         if not self._lookup_tables:
             return tuple()
 
@@ -196,7 +204,7 @@ class ExtraCoords(ExtraCoordsABC):
         return tuple(reduce(list.__add__, lts))
 
     @mapping.setter
-    def _set_mapping(self, mapping):
+    def mapping(self, mapping):
         if self._mapping is not None:
             raise AttributeError("Can't set mapping if a mapping has already been specified.")
 
@@ -206,13 +214,16 @@ class ExtraCoords(ExtraCoordsABC):
             )
 
         if self._wcs is not None:
-            if len(mapping) != self.wcs.pixel_n_dim:
-                raise ValueError("Mapping does not specify the same number of dimensions as the WCS.")
+            if not max(mapping) <= self._wcs.pixel_n_dim - 1:
+                raise ValueError(
+                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS."
+                )
 
         self._mapping = mapping
 
     @property
     def wcs(self):
+        # docstring in ABC
         if self._wcs is not None:
             return self._wcs
 
@@ -229,7 +240,7 @@ class ExtraCoords(ExtraCoordsABC):
         return out.wcs
 
     @wcs.setter
-    def _set_wcs(self, wcs):
+    def wcs(self, wcs):
         if self._wcs is not None:
             raise AttributeError(
                 "Can't set wcs if a WCS has already been specified."
@@ -241,9 +252,9 @@ class ExtraCoords(ExtraCoordsABC):
             )
 
         if self._mapping is not None:
-            if len(self._mapping) != wcs.pixel_n_dim:
+            if not max(self._mapping) <= wcs.pixel_n_dim - 1:
                 raise ValueError(
-                    "The WCS does not specify the same number of dimensions as described by the mapping."
+                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS."
                 )
 
         self._wcs = wcs
@@ -280,13 +291,34 @@ class ExtraCoords(ExtraCoordsABC):
         new_extra_coords._lookup_tables = tuple(new_lookup_tables)
         return new_extra_coords
 
+    def _getitem_wcs(self, item):
+        item = sanitize_slices(item, self.wcs.pixel_n_dim)
+
+        # It's valid to slice down the EC such that there is nothing left,
+        # which is not a valid way to slice the WCS
+        if len(item) == self.wcs.pixel_n_dim and all(isinstance(i, Integral) for i in item):
+            return type(self)()
+
+        subwcs = self.wcs[item]
+
+        new_mapping = []
+        for i, subitem in enumerate(item):
+            if not isinstance(subitem, Integral):
+                new_mapping.append(self.mapping[i])
+
+        return type(self)(wcs=subwcs, mapping=new_mapping)
+
     def __getitem__(self, item):
+        # docstring in ABC
         if isinstance(item, str):
             return self._getitem_string(item)
 
-        # item = sanitize_slices(item)
-        if self._lookup_tables:
+        if self._wcs:
+            return self._getitem_wcs(item)
+
+        elif self._lookup_tables:
             return self._getitem_lookup_tables(item)
 
-        elif self._wcs:
-            raise NotImplementedError("PICNIC")
+        # If we get here this object is empty, so just return an empty extra coords
+        # This is done to simplify the slicing in NDCube
+        return self

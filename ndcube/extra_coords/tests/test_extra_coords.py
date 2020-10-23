@@ -9,6 +9,8 @@ from astropy.wcs import WCS
 from ndcube import NDCube
 from ndcube.extra_coords import ExtraCoords
 
+# Fixtures
+
 
 @pytest.fixture
 def time_lut():
@@ -30,8 +32,93 @@ def skycoord_1d_lut():
 
 @pytest.fixture
 def skycoord_2d_lut():
-    data = np.arange(9).reshape(3,3), np.arange(9, 18).reshape(3,3)
+    data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
     return SkyCoord(*data, unit=u.deg)
+# ExtraCoords from WCS
+
+
+def test_empty_ec(wcs_1d):
+    ec = ExtraCoords()
+    # Test slice of an empty EC
+    assert ec[0].wcs is None
+
+    assert ec.mapping == tuple()
+    assert ec.wcs is None
+    assert ec.keys() == tuple()
+
+    ec.wcs = wcs_1d
+    assert ec.wcs is wcs_1d
+    ec.mapping = (0,)
+    assert ec.mapping == (0,)
+
+
+def test_exceptions(wcs_1d):
+    # Test fail when one of wcs or mapping specified
+    with pytest.raises(ValueError):
+        ExtraCoords(wcs=wcs_1d)
+
+    with pytest.raises(ValueError):
+        ExtraCoords(mapping=0)
+
+    # Test unable to specify inconsistent dimensions and tables
+    with pytest.raises(ValueError):
+        ExtraCoords.from_lookup_tables(None, (0,), (0, 0))
+
+    # Test unable to add to WCS EC
+    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+    with pytest.raises(ValueError):
+        ec.add_coordinate(None, 0, None)
+
+    with pytest.raises(KeyError):
+        ExtraCoords()['empty']
+
+
+def test_mapping_setter(wcs_1d, wave_lut):
+    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+    with pytest.raises(AttributeError):
+        ec.mapping = None
+
+    ec = ExtraCoords()
+    ec.wcs = wcs_1d
+    with pytest.raises(ValueError):
+        ec.mapping = (1,)
+
+    ec = ExtraCoords()
+    ec.add_coordinate("wave", (0,), wave_lut)
+    with pytest.raises(AttributeError):
+        ec.mapping = None
+
+
+def test_wcs_setter(wcs_1d, wave_lut):
+    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+    with pytest.raises(AttributeError):
+        ec.wcs = None
+
+    ec = ExtraCoords()
+    ec.mapping = (1,)
+    with pytest.raises(ValueError):
+        ec.wcs = wcs_1d
+
+    ec = ExtraCoords()
+    ec.add_coordinate("wave", (0,), wave_lut)
+    with pytest.raises(AttributeError):
+        ec.wcs = None
+
+
+def test_wcs_1d(wcs_1d):
+    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+
+    assert ec.keys() == ('spectral',)
+    assert ec.mapping == (0,)
+    assert ec.wcs is wcs_1d
+
+    subec = ec[1:]
+    assert ec.keys() == ('spectral',)
+    assert ec.mapping == (0,)
+    assert np.allclose(ec.wcs.pixel_to_world_values(1), subec.wcs.pixel_to_world_values(1))
+
+    subec = ec[0]
+    assert subec.wcs is None
 
 
 # Extra Coords from lookup tables
