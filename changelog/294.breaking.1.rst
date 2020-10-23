@@ -1,0 +1,1 @@
+NDCubeSequence animation axes can no longer be set by extra coords.
