@@ -1,18 +1,18 @@
 import abc
 import copy
+from typing import Any, Tuple, Union, Iterable
 from numbers import Integral
 from functools import reduce
-from typing import Iterable, Tuple, Union, Any
+from collections import defaultdict
 
 import astropy.units as u
 from astropy.modeling import models
-from astropy.wcs.wcsapi import BaseLowLevelWCS, BaseHighLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
 from .lookup_table_coord import LookupTableCoord
 
 __all__ = ['ExtraCoords']
-from collections import defaultdict
 
 
 class ExtraCoordsABC(abc.ABC):

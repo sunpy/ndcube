@@ -1,5 +1,5 @@
-from functools import partial
 from numbers import Integral
+from functools import partial
 
 import astropy.units as u
 import gwcs
