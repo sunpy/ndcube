@@ -1,6 +1,7 @@
 import copy
 import numbers
 
+import astropy.units as u
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -707,6 +708,17 @@ class NDCubeSequenceAnimator(ArrayAnimatorWCS):
             n_seq_dims = len(seq.dimensions)
             # Add dummy axis to WCS object to represent sequence axis.
             wcs = utils.wcs.append_sequence_axis_to_wcs(wcs)
+        # Add dimensions of length 1 to concatenated data array shape
+        # for any missing axes.
+        if seq[0].wcs.naxis != len(seq.dimensions) - 1:
+            new_shape = list(data_stack.shape)
+            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
+                new_shape.insert(i + 1, 1)
+                # Also insert dummy units.
+                if axes_units is not None:
+                    axes_units = axes_units.insert(i + 1, None)
+            data_stack  = data_stack.reshape(new_shape)
+            n_seq_dims = len(new_shape)
         # Construct slices input.
         if plot_axis_indices is None:
             plot_axis_indices = [-1, -2]
