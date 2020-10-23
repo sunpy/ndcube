@@ -5,15 +5,10 @@ import astropy.units as u
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from sunpy.visualization.animator import ArrayAnimatorWCS
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
-
-try:
-    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
-except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
-
 
 __all__ = ['NDCubeSequencePlotMixin']
 
@@ -112,28 +107,15 @@ class NDCubeSequencePlotMixin:
             ax = self._plot_1D_sequence(axes_coordinates,
                                         axes_units, data_unit, **kwargs)
         else:
-            if len(plot_axis_indices) == 1:
-                # Since sequence has more than 1 dimension and number of plot axes is 1,
-                # produce a 1D line animation.
-                if axes_units is not None:
-                    unit_x_axis = axes_units[plot_axis_indices[0]]
-                else:
-                    unit_x_axis = None
-                ax = LineAnimatorNDCubeSequence(self, plot_axis_indices[0], axes_coordinates,
-                                                unit_x_axis, data_unit, **kwargs)
-            elif len(plot_axis_indices) == 2:
-                if naxis == 2:
-                    # Since sequence has 2 dimensions and number of plot axes is 2,
-                    # produce a 2D image.
-                    ax = self._plot_2D_sequence(plot_axis_indices, axes_coordinates,
-                                                axes_units, data_unit, **kwargs)
-                else:
-                    # Since sequence has more than 2 dimensions and number of plot axes is 2,
-                    # produce a 2D animation.
-                    ax = ImageAnimatorNDCubeSequence(
-                        self, plot_axis_indices=plot_axis_indices,
-                        axes_coordinates=axes_coordinates, axes_units=axes_units, **kwargs)
-
+            if len(plot_axis_indices) == 2 and naxis == 2:
+                # If there are 2 plot axes and only 2 dimensions produce a 2D image.
+                ax = self._plot_2D_sequence(plot_axis_indices, axes_coordinates,
+                                            axes_units, data_unit, **kwargs)
+            else:
+                # Else produce an image or line animation depending number of plot axes.
+                ax = NDCubeSequenceAnimator(
+                        self, plot_axis_indices=plot_axis_indices, axes_units=axes_units,
+                        data_unit=data_unit, **kwargs)
         return ax
 
     def plot_as_cube(self, axes=None, plot_axis_indices=None,
@@ -230,29 +212,15 @@ class NDCubeSequencePlotMixin:
             ax = self._plot_2D_sequence_as_1Dline(axes_coordinates, axes_units, data_unit,
                                                   **kwargs)
         else:
-            if len(plot_axis_indices) == 1:
-                # Since sequence has more than 1 cube-like dimension and
-                # number of plot axes is 1, produce a 1D line animation.
-                if axes_units is not None:
-                    unit_x_axis = axes_units[plot_axis_indices[0]]
-                else:
-                    unit_x_axis = None
-                ax = LineAnimatorCubeLikeNDCubeSequence(self, plot_axis_indices[0],
-                                                        axes_coordinates, unit_x_axis,
-                                                        data_unit=data_unit, **kwargs)
-            elif len(plot_axis_indices) == 2:
-                if naxis == 2:
-                    # Since sequence has 2 cube-like dimensions and
-                    # number of plot axes is 2, produce a 2D image.
-                    ax = self._plot_3D_sequence_as_2Dimage(axes, plot_axis_indices,
-                                                           axes_coordinates, axes_units,
-                                                           data_unit, **kwargs)
-                else:
-                    # Since sequence has more than 2 cube-like dimensions and
-                    # number of plot axes is 2, produce a 2D animation.
-                    ax = ImageAnimatorCubeLikeNDCubeSequence(
-                        self, plot_axis_indices=plot_axis_indices,
-                        axes_coordinates=axes_coordinates, axes_units=axes_units, **kwargs)
+            if len(plot_axis_indices) == 2 and naxis == 2:
+                # If there are 2 plot axes and only 2 cube-like dimensions produce a 2D image.
+                ax = self._plot_3D_sequence_as_2Dimage(axes, plot_axis_indices, axes_coordinates,
+                                                       axes_units, data_unit, **kwargs)
+            else:
+                # Else produce an image or line animation depending number of plot axes.
+                ax = NDCubeSequenceAnimator(
+                    self, plot_axis_indices=plot_axis_indices, axes_units=axes_units,
+                    data_unit=data_unit, animate_as_cube=True, **kwargs)
         return ax
 
     def _plot_1D_sequence(self, axes_coordinates=None,
@@ -403,16 +371,12 @@ class NDCubeSequencePlotMixin:
             yerror = np.concatenate(yerror)
         # Define x-axis data.
         if x_axis_coordinates is None:
-            print('a', unit_x_axis)
             if unit_x_axis is None:
-                print('b', unit_x_axis)
                 unit_x_axis = np.asarray(self[0].wcs.wcs.cunit)[
                     np.invert(self[0].missing_axes)][0]
-                print('c', unit_x_axis)
             xdata = u.Quantity(np.concatenate([cube.axis_world_coords().to(unit_x_axis).value
                                                for cube in self.data]), unit=unit_x_axis)
             xname = self.cube_like_world_axis_physical_types[0]
-            print('d', unit_x_axis)
         elif isinstance(x_axis_coordinates, str):
             xdata = self.common_axis_extra_coords[x_axis_coordinates]
             xname = x_axis_coordinates
@@ -670,9 +634,12 @@ class NDCubeSequencePlotMixin:
         return ax
 
 
-class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
+class NDCubeSequenceAnimator(ArrayAnimatorWCS):
     """
     Animates N-dimensional data with the associated astropy WCS object.
+
+    This class acts as an API translator between `ndcube.NDCubeSequence.plot`
+    and `sunpy.visualization.animator.ArrayAnimatorWCS`
 
     The following keyboard shortcuts are defined in the viewer:
 
@@ -690,620 +657,87 @@ class ImageAnimatorNDCubeSequence(ImageAnimatorWCS):
     seq: `ndcube.NDCubeSequence`
         The list of cubes.
 
-    image_axes: `list`
-        The two axes that make the image
+    plot_axis_indices: `list` of `int`.
+        Indices of the two axes that make the image in numpy/array order.
+        The 0th index represents the x-axis and the 1st index represents the y-axis.
+        Must be length of 2.
 
-    fig: `matplotlib.figure.Figure`
-        Figure to use
+    data_unit: `astropy.units.Unit` or valid `str` (optional)
+        The unit the data should be shown in. Must be compatible with the units of the
+        cubes in the sequence.
 
-    axis_ranges: list of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-        The physical coordinates expected by axis_ranges should be an array of
-        pixel_edges.
+    coord_params: `dict`, optional
+        This dict allows you to override
+        `~astropy.visualization.wcsaxes.WCSAxes` parameters for each world
+        coordinate. The keys of this dictionary should be a value which can be
+        looked up in ``WCSAxes.coords`` (i.e. ``em.wl`` or ``hpln``) and the
+        values should be a dict which supports the following keys, and passes
+        their values to the associated `~astropy.visualization.wcsaxes.WCSAxes`
+        methods.
 
-    interval: `int`
-        Animation interval in ms
+        * ``format_unit``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_format_unit`
+        * ``major_formatter``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_major_formatter`
+        * ``axislabel``: `~astropy.visualization.wcsaxes.CoordinateHelper.set_axislabel`
+        * ``grid``: `~astropy.visualization.wcsaxes.CoordinateHelper.grid` (The value should be a dict of keyword arguments to ``grid()`` or `True`).
+        * ``ticks``: `dict` the keyword arguments to the `~astropy.visualization.wcsaxes.CoordinateHelper.set_ticks` method.
 
-    colorbar: `bool`
-        Plot colorbar
+    ylim: `tuple` or `str`, optional
+       The yaxis limits to use when drawing a line plot, if 'fixed' then use
+       the global data limits, if 'dynamic' then set the y limit for each frame
+       individually (meaning the y limits change as you animate).
 
-    button_labels: `list`
-        List of strings to label buttons
+    ylabel: `string`, optional
+       The yaxis label to use when drawing a line plot. Setting the label on
+       the y-axis on an image plot should be done via ``coord_params``.
 
-    button_func: `list`
-        List of functions to map to the buttons
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    Extra keywords are passed to imshow.
+    Extra keywords are passed to parent class.
     """
-
-    def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
-                 axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
-        self.sequence = seq.data  # Required by parent class.
-        # Set default values of kwargs if not set.
-        if wcs is None:
-            wcs = seq[0].wcs
-        if axes_coordinates is None:
-            axes_coordinates = [None] * len(seq.dimensions)
-        if axes_units is None:
-            axes_units = [None] * len(seq.dimensions)
+    def __init__(self, seq, plot_axis_indices=None, axes_units=None, data_unit=None,
+                 animate_as_cube=False, **kwargs):
+        wcs = seq[0].wcs
         # Determine units of each cube in sequence.
         sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
         # If all cubes have unit set, create a data quantity from cube's data.
         if sequence_units is None:
-            data_stack = np.stack([cube.data for i, cube in enumerate(seq.data)])
+            data_list = [cube.data for i, cube in enumerate(seq.data)]
         else:
-            data_stack = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
-                                   for i, cube in enumerate(seq.data)])
-        self.cumul_cube_lengths = np.cumsum(np.ones(len(seq.data)))
-        # Add dimensions of length 1 of concatenated data array
-        # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq.dimensions) - 1:
-            new_shape = list(data_stack.shape)
-            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
-                new_shape.insert(i + 1, 1)
-                # Also insert dummy coordinates and units.
-                axes_coordinates.insert(i + 1, None)
-                axes_units.insert(i + 1, None)
-            data_stack = data_stack.reshape(new_shape)
-        # Add dummy axis to WCS object to represent sequence axis.
-        new_wcs = utils.wcs.append_sequence_axis_to_wcs(wcs)
-
-        super().__init__(
-            data_stack, wcs=new_wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
-            unit_x_axis=axes_units[plot_axis_indices[0]],
-            unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
-
-
-class ImageAnimatorCubeLikeNDCubeSequence(ImageAnimatorWCS):
-    """
-    Animates N-dimensional data with the associated astropy WCS object.
-
-    The following keyboard shortcuts are defined in the viewer:
-
-    left': previous step on active slider
-    right': next step on active slider
-    top': change the active slider up one
-    bottom': change the active slider down one
-    'p': play/pause active slider
-
-    This viewer can have user defined buttons added by specifying the labels
-    and functions called when those buttons are clicked as keyword arguments.
-
-    Parameters
-    ----------
-    seq: `ndcube.datacube.CubeSequence`
-        The list of cubes.
-
-    image_axes: `list`
-        The two axes that make the image
-
-    fig: `matplotlib.figure.Figure`
-        Figure to use
-
-    axis_ranges: list of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-        The physical coordinates expected by axis_ranges should be an array of
-        pixel_edges.
-
-    interval: `int`
-        Animation interval in ms
-
-    colorbar: `bool`
-        Plot colorbar
-
-    button_labels: `list`
-        List of strings to label buttons
-
-    button_func: `list`
-        List of functions to map to the buttons
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    Extra keywords are passed to imshow.
-    """
-
-    def __init__(self, seq, wcs=None, axes=None, plot_axis_indices=None,
-                 axes_coordinates=None, axes_units=None, data_unit=None, **kwargs):
-        if seq._common_axis is None:
-            raise TypeError("Common axis must be set to use this class. "
-                            "Use ImageAnimatorNDCubeSequence.")
-        self.sequence = seq.data  # Required by parent class.
-        # Set default values of kwargs if not set.
-        if wcs is None:
-            wcs = seq[0].wcs
-        if axes_coordinates is None:
-            axes_coordinates = [None] * len(seq.cube_like_dimensions)
-        if axes_units is None:
-            axes_units = [None] * len(seq.cube_like_dimensions)
-        # Determine units of each cube in sequence.
-        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
-        # If all cubes have unit set, create a data quantity from cube's data.
-        if sequence_units is None:
-            data_concat = np.concatenate([cube.data for cube in seq.data], axis=seq._common_axis)
+            data_list = [(cube.data * sequence_units[i]).to(data_unit).value
+                         for i, cube in enumerate(seq.data)]
+        # If animating as a single cube, concatenate data cube's along common axis.
+        # Else stack them.
+        if animate_as_cube:
+            data_stack = np.concatenate(data_list, axis=seq._common_axis)
+            self.cumul_cube_lengths = np.cumsum(np.array([c.dimensions[0].value
+                                                          for c in seq.data], dtype=int))
+            n_seq_dims = len(seq.cube_like_dimensions)
         else:
-            data_concat = np.concatenate(
-                [(cube.data * sequence_units[i]).to(data_unit).value
-                 for i, cube in enumerate(seq.data)], axis=seq._common_axis)
-        self.cumul_cube_lengths = np.cumsum(np.array(
-            [c.dimensions[0].value for c in seq.data], dtype=int))
-        # Add dimensions of length 1 of concatenated data array
-        # shape for an missing axes.
-        if seq[0].wcs.naxis != len(seq._dimensions) - 1:
-            new_shape = list(data_concat.shape)
-            for i in np.arange(seq[0].wcs.naxis)[seq[0].missing_axes[::-1]]:
-                new_shape.insert(i, 1)
-                # Also insert dummy coordinates and units.
-                axes_coordinates.insert(i, None)
-                axes_units.insert(i, None)
-            data_concat = data_concat.reshape(new_shape)
-
-        super().__init__(
-            data_concat, wcs=wcs, image_axes=plot_axis_indices, axis_ranges=axes_coordinates,
-            unit_x_axis=axes_units[plot_axis_indices[0]],
-            unit_y_axis=axes_units[plot_axis_indices[1]], **kwargs)
-
-    def update_plot(self, val, im, slider):
-        val = int(val)
-        ax_ind = self.slider_axes[slider.slider_ind]
-        ind = np.argmin(np.abs(self.axis_ranges[ax_ind] - val))
-        self.frame_slice[ax_ind] = ind
-        list_slices_wcsaxes = list(self.slices_wcsaxes)
-        sequence_slice = utils.sequence._convert_cube_like_index_to_sequence_slice(
-            val, self.cumul_cube_lengths)
-        sequence_index = sequence_slice.sequence_index
-        cube_index = sequence_slice.common_axis_item
-        list_slices_wcsaxes[self.wcs.naxis - ax_ind - 1] = cube_index
-        self.slices_wcsaxes = list_slices_wcsaxes
-        if val != slider.cval:
-            self.axes.reset_wcs(
-                wcs=self.sequence[sequence_index].wcs, slices=self.slices_wcsaxes)
-            self._set_unit_in_axis(self.axes)
-            im.set_array(self.data[self.frame_slice])
-            slider.cval = val
-
-
-class LineAnimatorNDCubeSequence(LineAnimator):
-    """
-    Animates N-dimensional data with the associated astropy WCS object.
-
-    The following keyboard shortcuts are defined in the viewer:
-
-    left': previous step on active slider
-    right': next step on active slider
-    top': change the active slider up one
-    bottom': change the active slider down one
-    'p': play/pause active slider
-
-    This viewer can have user defined buttons added by specifying the labels
-    and functions called when those buttons are clicked as keyword arguments.
-
-    Parameters
-    ----------
-    seq: `ndcube.datacube.CubeSequence`
-        The list of cubes.
-
-    image_axes: `list`
-        The two axes that make the image
-
-    fig: `matplotlib.figure.Figure`
-        Figure to use
-
-    axis_ranges: list of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-        The physical coordinates expected by axis_ranges should be an array of
-        pixel_edges.
-
-    interval: `int`
-        Animation interval in ms
-
-    colorbar: `bool`
-        Plot colorbar
-
-    button_labels: `list`
-        List of strings to label buttons
-
-    button_func: `list`
-        List of functions to map to the buttons
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    Extra keywords are passed to imshow.
-    """
-
-    def __init__(self, seq, plot_axis_index=None, axis_ranges=None, unit_x_axis=None,
-                 data_unit=None, xlabel=None, ylabel=None, xlim=None, ylim=None, **kwargs):
-        if plot_axis_index is None:
-            plot_axis_index = -1
-        # Combine data from cubes in sequence. If all cubes have a unit,
-        # put data into data_unit.
-        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
-        if sequence_units is None:
-            if data_unit is None:
-                data_concat = np.stack([cube.data for i, cube in enumerate(seq.data)])
-            else:
-                raise TypeError(NON_COMPATIBLE_UNIT_MESSAGE)
+            data_stack = np.stack(data_list)
+            self.cumul_cube_lengths = np.cumsum(np.ones(len(seq.data)))
+            n_seq_dims = len(seq.dimensions)
+            # Add dummy axis to WCS object to represent sequence axis.
+            wcs = utils.wcs.append_sequence_axis_to_wcs(wcs)
+        # Construct slices input.
+        if plot_axis_indices is None:
+            plot_axis_indices = [-1, -2]
+        # Currently, ArrayAnimator interprets slices in WCS order.
+        # So invert plot_axis_indices.
+        # If this behaviour changes, remove this index inversion.
+        slices_indices = utils.wcs.convert_between_array_and_pixel_axes(
+                np.array(plot_axis_indices), n_seq_dims)
+        slices = [0] * n_seq_dims
+        # Set plot axes in format reauired by parent class.
+        # By assigning y first with index -1, the below operations are valid
+        # whether there are one or two plot axes. y is overwritten by x
+        # if there only one plot axis of both plot axes are the same.
+        slices[slices_indices[-1]] = 'y'
+        slices[slices_indices[0]] = 'x'
+        # Construct coord params input
+        if axes_units is not None:
+            coord_params = None  # In future construct axis unit helpers.
         else:
-            data_concat = np.stack([(cube.data * sequence_units[i]).to(data_unit).value
-                                    for i, cube in enumerate(seq.data)])
+            coord_params = None
 
-        # If some cubes have a mask set, convert data to masked array.
-        # If other cubes do not have a mask set, set all mask to False.
-        # If no cubes have a mask, keep data as a simple array.
-        cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
-        if cubes_with_mask.any():
-            if cubes_with_mask.all():
-                mask_concat = np.stack([cube.mask for cube in seq.data])
-            else:
-                masks = []
-                for i, cube in enumerate(seq.data):
-                    if cubes_with_mask[i]:
-                        masks.append(cube.mask)
-                    else:
-                        masks.append(np.zeros_like(cube.data, dtype=bool))
-                mask_concat = np.stack(masks)
-            data_concat = np.ma.masked_array(data_concat, mask_concat)
-
-        # Ensure plot_axis_index is represented in the positive convention.
-        if plot_axis_index < 0:
-            plot_axis_index = len(seq.dimensions) + plot_axis_index
-        # Calculate the x-axis values if axis_ranges not supplied.
-        if axis_ranges is None:
-            axis_ranges = [None] * len(seq.dimensions)
-            if plot_axis_index == 0:
-                axis_ranges[plot_axis_index] = _get_extra_coord_edges(
-                    np.arange(len(seq.data)), axis=plot_axis_index)
-            else:
-                cube_plot_axis_index = plot_axis_index - 1
-                # Define unit of x-axis if not supplied by user.
-                if unit_x_axis is None:
-                    wcs_plot_axis_index = utils.cube.data_axis_to_wcs_axis(
-                        cube_plot_axis_index, seq[0].missing_axes)
-                    unit_x_axis = np.asarray(seq[0].wcs.wcs.cunit)[wcs_plot_axis_index]
-                # Get x-axis values from each cube and combine into a single
-                # array for axis_ranges kwargs.
-                x_axis_coords = _get_extra_coord_edges(_get_non_common_axis_x_axis_coords(
-                    seq.data, cube_plot_axis_index, unit_x_axis), axis=plot_axis_index)
-                axis_ranges[plot_axis_index] = np.stack(x_axis_coords)
-            # Set x-axis label.
-            if xlabel is None:
-                xlabel = "{} [{}]".format(seq.world_axis_physical_types[plot_axis_index],
-                                          unit_x_axis)
-        else:
-            # If the axis range is being defined by an extra coordinate...
-            if isinstance(axis_ranges[plot_axis_index], str):
-                axis_extra_coord = axis_ranges[plot_axis_index]
-                if plot_axis_index == 0:
-                    # If the sequence axis is the plot axis, use
-                    # sequence_axis_extra_coords to get the extra coord values
-                    # for whole sequence.
-                    x_axis_coords = seq.sequence_axis_extra_coords[axis_extra_coord]
-                    if isinstance(x_axis_coords, u.Quantity):
-                        if unit_x_axis is None:
-                            unit_x_axis = x_axis_coords.unit
-                        else:
-                            x_axis_coords = x_axis_coords.to(unit_x_axis)
-                        x_axis_coords = x_axis_coords.value
-                else:
-                    # Else get extra coord values from each cube and
-                    # combine into a single array for axis_ranges kwargs.
-                    # First, confirm extra coord is of same type and corresponds
-                    # to same axes in each cube.
-                    extra_coord_type = np.empty(len(seq.data), dtype=object)
-                    extra_coord_axes = np.empty(len(seq.data), dtype=object)
-                    x_axis_coords = []
-                    for i, cube in enumerate(seq.data):
-                        cube_axis_extra_coord = cube.extra_coords[axis_extra_coord]
-                        extra_coord_type[i] = type(cube_axis_extra_coord["value"])
-                        extra_coord_axes[i] = cube_axis_extra_coord["axis"]
-                        x_axis_coords.append(cube_axis_extra_coord["value"])
-                    if extra_coord_type.all() == extra_coord_type[0]:
-                        extra_coord_type = extra_coord_type[0]
-                    else:
-                        raise TypeError("Extra coord {} must be of same type for all NDCubes to "
-                                        "use it to define a plot axis.".format(axis_extra_coord))
-                    if extra_coord_axes.all() == extra_coord_axes[0]:
-                        if isinstance(extra_coord_axes[0], numbers.Integral):
-                            extra_coord_axes = [int(extra_coord_axes[0])]
-                        else:
-                            extra_coord_axes = list(extra_coord_axes[0]).sort()
-                    else:
-                        raise ValueError("Extra coord {} must correspond to same axes in each "
-                                         "NDCube to use it to define a plot axis.".format(
-                                             axis_extra_coord))
-                    # If the extra coord is a quantity, convert to the correct unit.
-                    if extra_coord_type is u.Quantity:
-                        if unit_x_axis is None:
-                            unit_x_axis = seq[0].extra_coords[axis_extra_coord]["value"].unit
-                        x_axis_coords = [x_axis_value.to(unit_x_axis).value
-                                         for x_axis_value in x_axis_coords]
-                    # If extra coord is same for each cube, storing
-                    # values as single 1D axis range will suffice.
-                    if ((np.array(x_axis_coords) == x_axis_coords[0]).all() and
-                            (len(extra_coord_axes) == 1)):
-                        x_axis_coords = x_axis_coords[0]
-                    else:
-                        # Else if all axes are not dependent, create an array of x-axis
-                        # coords for each cube that are the same shape as the data in the
-                        # respective cubes where the x coords are replicated in the extra
-                        # dimensions.  Then stack them together along the sequence axis so
-                        # the final x-axis coord array is the same shape as the data array.
-                        # This will be used in determining the correct x-axis coords for
-                        # each frame of the animation.
-
-                        if len(extra_coord_axes) != data_concat.ndim:
-                            x_axis_coords_copy = copy.deepcopy(x_axis_coords)
-                            x_axis_coords = []
-                            for i, x_axis_cube_coords in enumerate(x_axis_coords_copy):
-                                # For each cube in the sequence, use np.tile to replicate
-                                # the x-axis coords through the higher dimensions.
-                                # But first give extra dummy (length 1) dimensions to the
-                                # x-axis coords array so its number of dimensions is the
-                                # same as the cube's data array.
-                                # First, create shape of pre-np.tiled x-coord array for the cube.
-                                coords_reshape = np.array([1] * seq[i].data.ndim)
-                                # Convert x_axis_cube_coords to a numpy array
-                                x_axis_cube_coords = np.array(x_axis_cube_coords)
-                                coords_reshape[extra_coord_axes] = x_axis_cube_coords.shape
-                                # Then reshape x-axis array to give it the dummy dimensions.
-                                x_axis_cube_coords = x_axis_cube_coords.reshape(
-                                    tuple(coords_reshape))
-                                # Now the correct dummy dimensions are in place so the
-                                # number of dimensions in the x-axis coord array equals
-                                # the number of dimensions of the cube's data array,
-                                # replicating the coords through the higher dimensions
-                                # is simple using np.tile.
-                                tile_shape = np.array(seq[i].data.shape)
-                                tile_shape[extra_coord_axes] = 1
-                                x_axis_cube_coords = np.tile(x_axis_cube_coords, tile_shape)
-                                # Append new dimension-ed x-axis coords array for this cube
-                                # sequence x-axis coords list.
-                                x_axis_coords.append(x_axis_cube_coords)
-                        # Stack the x-axis coords along a new axis for the sequence axis so
-                        # its the same shape as the data array.
-                        x_axis_coords = np.stack(x_axis_coords)
-                # Set x-axis label.
-                if xlabel is None:
-                    xlabel = f"{axis_extra_coord} [{unit_x_axis}]"
-                # Re-enter x-axis values into axis_ranges
-                axis_ranges[plot_axis_index] = _get_extra_coord_edges(
-                    x_axis_coords, axis=plot_axis_index)
-            # Else coordinate must have been defined manually.
-            else:
-                if isinstance(axis_ranges[plot_axis_index], u.Quantity):
-                    if unit_x_axis is None:
-                        unit_x_axis = axis_ranges[plot_axis_index].unit
-                        axis_ranges[plot_axis_index] = axis_ranges[plot_axis_index].value
-                    else:
-                        axis_ranges[plot_axis_index] = \
-                            axis_ranges[plot_axis_index].to(unit_x_axis).value
-                else:
-                    if unit_x_axis is not None:
-                        raise TypeError(AXES_UNIT_ERRONESLY_SET_MESSAGE)
-                if xlabel is None:
-                    xlabel = f" [{unit_x_axis}]"
-        # Make label for y-axis.
-        if ylabel is None:
-            ylabel = f"Data [{data_unit}]"
-        super().__init__(
-            data_concat, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
-            xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, **kwargs)
-
-
-class LineAnimatorCubeLikeNDCubeSequence(LineAnimator):
-    """
-    Animates N-dimensional data with the associated astropy WCS object.
-
-    The following keyboard shortcuts are defined in the viewer:
-
-    left': previous step on active slider
-    right': next step on active slider
-    top': change the active slider up one
-    bottom': change the active slider down one
-    'p': play/pause active slider
-
-    This viewer can have user defined buttons added by specifying the labels
-    and functions called when those buttons are clicked as keyword arguments.
-
-    Parameters
-    ----------
-    seq: `ndcube.datacube.CubeSequence`
-        The list of cubes.
-
-    image_axes: `list`
-        The two axes that make the image
-
-    fig: `matplotlib.figure.Figure`
-        Figure to use
-
-    axis_ranges: list of physical coordinates for array or None
-        If None array indices will be used for all axes.
-        If a list it should contain one element for each axis of the numpy array.
-        For the image axes a [min, max] pair should be specified which will be
-        passed to :func:`matplotlib.pyplot.imshow` as extent.
-        For the slider axes a [min, max] pair can be specified or an array the
-        same length as the axis which will provide all values for that slider.
-        If None is specified for an axis then the array indices will be used
-        for that axis.
-        The physical coordinates expected by axis_ranges should be an array of
-        pixel_edges.
-
-    interval: `int`
-        Animation interval in ms
-
-    colorbar: `bool`
-        Plot colorbar
-
-    button_labels: `list`
-        List of strings to label buttons
-
-    button_func: `list`
-        List of functions to map to the buttons
-
-    unit_x_axis: `astropy.units.Unit`
-        The unit of x axis.
-
-    unit_y_axis: `astropy.units.Unit`
-        The unit of y axis.
-
-    Extra keywords are passed to imshow.
-    """
-
-    def __init__(self, seq, plot_axis_index=None, axis_ranges=None, unit_x_axis=None,
-                 data_unit=None, xlabel=None, ylabel=None, xlim=None, ylim=None, **kwargs):
-        if plot_axis_index is None:
-            plot_axis_index = -1
-        # Combine data from cubes in sequence. If all cubes have a unit,
-        # put data into data_unit.
-        sequence_units, data_unit = _determine_sequence_units(seq.data, data_unit)
-        if sequence_units is None:
-            if data_unit is None:
-                data_concat = np.concatenate([cube.data for i, cube in enumerate(seq.data)],
-                                             axis=seq._common_axis)
-            else:
-                raise TypeError(NON_COMPATIBLE_UNIT_MESSAGE)
-        else:
-            data_concat = np.concatenate([(cube.data * sequence_units[i]).to(data_unit).value
-                                          for i, cube in enumerate(seq.data)],
-                                         axis=seq._common_axis)
-
-        # If some cubes have a mask set, convert data to masked array.
-        # If other cubes do not have a mask set, set all mask to False.
-        # If no cubes have a mask, keep data as a simple array.
-        cubes_with_mask = np.array([False if cube.mask is None else True for cube in seq.data])
-        if cubes_with_mask.any():
-            if cubes_with_mask.all():
-                mask_concat = np.concatenate(
-                    [cube.mask for cube in seq.data], axis=seq._common_axis)
-            else:
-                masks = []
-                for i, cube in enumerate(seq.data):
-                    if cubes_with_mask[i]:
-                        masks.append(cube.mask)
-                    else:
-                        masks.append(np.zeros_like(cube.data, dtype=bool))
-                mask_concat = np.concatenate(masks, axis=seq._common_axis)
-            data_concat = np.ma.masked_array(data_concat, mask_concat)
-
-        # Ensure plot_axis_index is represented in the positive convention.
-        if plot_axis_index < 0:
-            plot_axis_index = len(seq.cube_like_dimensions) + plot_axis_index
-        # Calculate the x-axis values if axis_ranges not supplied.
-        if axis_ranges is None:
-            axis_ranges = [None] * len(seq.cube_like_dimensions)
-            # Define unit of x-axis if not supplied by user.
-            if unit_x_axis is None:
-                wcs_plot_axis_index = utils.cube.data_axis_to_wcs_axis(
-                    plot_axis_index, seq[0].missing_axes)
-                unit_x_axis = np.asarray(
-                    seq[0].wcs.wcs.cunit)[np.invert(seq[0].missing_axes)][wcs_plot_axis_index]
-            if plot_axis_index == seq._common_axis:
-                # Determine whether common axis is dependent.
-                x_axis_cube_coords = np.concatenate(
-                    [cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
-                     for cube in seq.data], axis=plot_axis_index)
-                dependent_axes = utils.wcs.get_dependent_array_axes(
-                    seq[0].wcs, plot_axis_index, seq[0].missing_axes)
-                if len(dependent_axes) > 1:
-                    independent_axes = list(range(data_concat.ndim))
-                    for i in list(dependent_axes)[::-1]:
-                        independent_axes.pop(i)
-                    # Expand dimensionality of x_axis_cube_coords using np.tile
-                    # Create dummy axes for non-dependent axes
-                    cube_like_shape = np.array([int(s.value) for s in seq.cube_like_dimensions])
-                    dummy_reshape = copy.deepcopy(cube_like_shape)
-                    dummy_reshape[independent_axes] = 1
-                    x_axis_cube_coords = x_axis_cube_coords.reshape(dummy_reshape)
-                    # Now get inverse of number of repeats to create full shaped array.
-                    # The repeats is the inverse of dummy_reshape.
-                    tile_shape = copy.deepcopy(cube_like_shape)
-                    tile_shape[np.array(dependent_axes)] = 1
-                    x_axis_coords = _get_extra_coord_edges(
-                        np.tile(x_axis_cube_coords, tile_shape), axis=plot_axis_index)
-            else:
-                # Get x-axis values from each cube and combine into a single
-                # array for axis_ranges kwargs.
-                x_axis_coords = _get_non_common_axis_x_axis_coords(seq.data, plot_axis_index,
-                                                                   unit_x_axis)
-                axis_ranges[plot_axis_index] = _get_extra_coord_edges(
-                    np.concatenate(x_axis_coords, axis=seq._common_axis), axis=plot_axis_index)
-            # Set axis labels and limits, etc.
-            if xlabel is None:
-                xlabel = "{} [{}]".format(
-                    seq.cube_like_world_axis_physical_types[plot_axis_index], unit_x_axis)
-            if ylabel is None:
-                ylabel = f"Data [{data_unit}]"
-            if axis_ranges is None:
-                axis_ranges = [None] * data_concat.ndim
-
-        super().__init__(
-            data_concat, plot_axis_index=plot_axis_index, axis_ranges=axis_ranges,
-            xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, **kwargs)
-
-
-def _get_non_common_axis_x_axis_coords(seq_data, plot_axis_index, unit_x_axis):
-    """
-    Get coords of an axis from NDCubes and combine into single array.
-    """
-    x_axis_coords = []
-    for i, cube in enumerate(seq_data):
-        # Get the x-axis coordinates for each cube.
-        if unit_x_axis is None:
-            x_axis_cube_coords = cube.axis_world_coords(plot_axis_index).value
-        else:
-            x_axis_cube_coords = cube.axis_world_coords(plot_axis_index).to(unit_x_axis).value
-        # If the returned x-values have fewer dimensions than the cube,
-        # repeat the x-values through the higher dimensions.
-        if x_axis_cube_coords.shape != cube.data.shape:
-            # Get sequence axes dependent and independent of plot_axis_index.
-            dependent_axes = utils.wcs.get_dependent_array_axes(
-                cube.wcs, plot_axis_index, cube.missing_axes)
-            independent_axes = list(range(len(cube.dimensions)))
-            for i in list(dependent_axes)[::-1]:
-                independent_axes.pop(i)
-            # Expand dimensionality of x_axis_cube_coords using np.tile
-            tile_shape = tuple(list(np.array(
-                cube.data.shape)[independent_axes]) + [1] * len(dependent_axes))
-            x_axis_cube_coords = np.tile(x_axis_cube_coords, tile_shape)
-            # Since np.tile puts original array's dimensions as last,
-            # reshape x_axis_cube_coords to cube's shape.
-            x_axis_cube_coords = x_axis_cube_coords.reshape(cube.data.shape)
-        x_axis_coords.append(x_axis_cube_coords)
-    return x_axis_coords
+        super().__init__(data_stack, wcs, slices, coord_params=coord_params, **kwargs)
 
 
 def _determine_sequence_units(cubesequence_data, unit=None):
