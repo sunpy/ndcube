@@ -592,28 +592,51 @@ def test_sequence_plot_as_cube_2D_image_errors(test_input, test_kwargs, expected
         output = test_input.plot_as_cube(**test_kwargs)
 
 
-@pytest.mark.parametrize("test_input, test_kwargs, expected_data", [
-    (seq, {}, seq_stack.reshape(4, 1, 2, 3, 4)),
-    (seq_with_units, {}, seq_stack_km.reshape(4, 1, 2, 3, 4))
-])
-def test_sequence_plot_ImageAnimator(test_input, test_kwargs, expected_data):
-    # Run plot method
+@pytest.mark.parametrize("test_input, test_kwargs, expected_data, expected_image_axes", [
+    (seq, {}, np.stack([d.data for d in seq.data])[:, np.newaxis], [4, 3]),
+    (seq, {"plot_axis_indices": [1, 2]},
+        np.stack([d.data for d in seq.data])[:, np.newaxis], [2, 3]),
+    (seq_with_units, {"data_unit": u.m},
+        np.stack([(d.data * d.unit).to_value(u.m) for d in seq_with_units.data])[:, np.newaxis],
+        [4, 3])
+    ])
+def test_sequence_plot_2DAnimation(test_input, test_kwargs, expected_data, expected_image_axes):
+    # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot object properties are correct.
-    assert isinstance(output, ndcube.mixins.sequence_plotting.ImageAnimatorNDCubeSequence)
-    np.testing.assert_array_equal(output.data, expected_data)
+    assert isinstance(output, ndcube.mixins.sequence_plotting.NDCubeSequenceAnimator)
+    assert output.data.shape == expected_data.shape
+    assert output.image_axes == expected_image_axes
+    assert (output.data == expected_data).all()
 
 
-@pytest.mark.parametrize("test_input, test_kwargs, expected_data", [
-    (seq, {}, seq_concat.reshape(1, 8, 3, 4)),
-    (seq_with_units, {}, seq_concat_km.reshape(1, 8, 3, 4))
-])
-def test_sequence_plot_as_cube_ImageAnimator(test_input, test_kwargs, expected_data):
-    # Run plot method
+@pytest.mark.parametrize("test_input, test_kwargs, expected_data, expected_image_axes", [
+    (seq, {},
+        np.concatenate([d.data for d in seq.data], axis=seq._common_axis)[:, np.newaxis], [3, 2]),
+    (seq, {"plot_axis_indices": [1, 2]},
+        np.concatenate([d.data for d in seq.data], axis=seq._common_axis)[:, np.newaxis], [2, 3]),
+    (seq_with_units, {"data_unit": u.m},
+        np.concatenate([(d.data * d.unit).to_value(u.m)
+            for d in seq_with_units.data], axis=seq._common_axis)[:, np.newaxis],
+        [3, 2])
+    ])
+def test_sequence_plot_as_cube_2DAnimation(test_input, test_kwargs,
+                                           expected_data, expected_image_axes):
+    # Run plot method.
     output = test_input.plot_as_cube(**test_kwargs)
     # Check plot object properties are correct.
-    assert isinstance(output, ndcube.mixins.sequence_plotting.ImageAnimatorCubeLikeNDCubeSequence)
-    np.testing.assert_array_equal(output.data, expected_data)
+    assert isinstance(output, ndcube.mixins.sequence_plotting.NDCubeSequenceAnimator)
+    assert output.data.shape == expected_data.shape
+    assert output.image_axes == expected_image_axes
+    assert (output.data == expected_data).all()
+
+
+def test_sequence_plot_1DAnimation():
+    pass
+
+
+def test_sequence_plot_as_cube_1DAnimation():
+    pass
 
 
 @pytest.mark.parametrize("test_input, expected", [
@@ -628,7 +651,7 @@ def test_determine_sequence_units(test_input, expected):
     assert output_unit == expected[1]
 
 
-def test_determine_sequence_units():
+def test_determine_sequence_units_error():
     with pytest.raises(ValueError):
         output_seq_unit, output_unit = ndcube.mixins.sequence_plotting._determine_sequence_units(
             seq.data, u.m)
@@ -653,137 +676,3 @@ def test_prep_axes_kwargs_errors(test_input, expected_error):
     with pytest.raises(expected_error):
         output = ndcube.mixins.sequence_plotting._prep_axes_kwargs(*test_input)
 
-
-@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-    (seq, {"plot_axis_indices": 3},
-     (seq_stack.data, none_axis_ranges_axis3, "time [min]", "Data [None]",
-      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq_with_units, {"plot_axis_indices": -1, "data_unit": u.km},
-     (seq_stack_km.data, none_axis_ranges_axis3, "time [min]", "Data [km]",
-      (none_axis_ranges_axis3[-1].min(), none_axis_ranges_axis3[-1].max()),
-      (seq_stack_km.data.min(), seq_stack_km.data.max()))),
-
-    (seq_with_masks, {"plot_axis_indices": 0},
-     (seq_stack, none_axis_ranges_axis0, "meta.obs.sequence [None]", "Data [None]",
-      (none_axis_ranges_axis0[0].min(), none_axis_ranges_axis0[0].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq_with_some_masks, {"plot_axis_indices": 0},
-     (seq_stack, none_axis_ranges_axis0, "meta.obs.sequence [None]", "Data [None]",
-      (none_axis_ranges_axis0[0].min(), none_axis_ranges_axis0[0].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq, {"plot_axis_indices": 0, "axes_coordinates": "distance"},
-     (seq_stack.data, distance0_none_axis_ranges_axis0, "distance [cm]", "Data [None]",
-      (seq.sequence_axis_extra_coords["distance"].value.min(),
-       seq.sequence_axis_extra_coords["distance"].value.max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq, {"plot_axis_indices": 0, "axes_coordinates": "distance", "axes_units": "mm"},
-     (seq_stack.data, distance0_none_axis_ranges_axis0_mm, "distance [mm]", "Data [None]",
-      (seq.sequence_axis_extra_coords["distance"].to("mm").value.min(),
-       seq.sequence_axis_extra_coords["distance"].to("mm").value.max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq, {"plot_axis_indices": 0,
-           "axes_coordinates": _get_extra_coord_edges(userrangequantity_none_axis_ranges_axis0[0]) * u.J},
-     (seq_stack.data, userrangequantity_none_axis_ranges_axis0, " [J]", "Data [None]",
-      (userrangequantity_none_axis_ranges_axis0[0].min(),
-       userrangequantity_none_axis_ranges_axis0[0].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq, {"plot_axis_indices": 0, "axes_units": u.erg,
-           "axes_coordinates": _get_extra_coord_edges(userrangequantity_none_axis_ranges_axis0[0]) * u.J},
-     (seq_stack.data, userrangequantity_none_axis_ranges_axis0_1e7, " [erg]", "Data [None]",
-      (userrangequantity_none_axis_ranges_axis0_1e7[0].min(),
-       userrangequantity_none_axis_ranges_axis0_1e7[0].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq, {"plot_axis_indices": 2, "axes_coordinates": "hi"},
-     (seq_stack.data, hi2_none_axis_ranges_axis2, "hi [s]", "Data [None]",
-      (hi2_none_axis_ranges_axis2[2].min(), hi2_none_axis_ranges_axis2[2].max()),
-      (seq_stack.data.min(), seq_stack.data.max()))),
-
-    (seq, {"plot_axis_indices": 1, "axes_coordinates": "pix"},
-     (seq_stack.data, pix1_none_axis_ranges_axis1, "pix [pix]", "Data [None]",
-      (pix1_none_axis_ranges_axis1[1].min(), pix1_none_axis_ranges_axis1[1].max()),
-      (seq_stack.data.min(), seq_stack.data.max())))
-])
-def test_sequence_plot_LineAnimator(test_input, test_kwargs, expected_values):
-    # Unpack expected values
-    expected_data, expected_axis_ranges, expected_xlabel, \
-        expected_ylabel, expected_xlim, expected_ylim = expected_values
-    # Run plot method.
-    output = test_input.plot(**test_kwargs)
-    # Check right type of plot object is produced.
-    assert isinstance(output, ndcube.mixins.sequence_plotting.LineAnimatorNDCubeSequence)
-    # Check data being plotted is correct
-    np.testing.assert_array_equal(output.data, expected_data)
-    if isinstance(expected_data, np.ma.core.MaskedArray):
-        np.testing.assert_array_equal(output.data.mask, expected_data.mask)
-    # Check values of axes and sliders is correct.
-    for i in range(len(output.axis_ranges)):
-        _test_axis_ranges(output.axis_ranges[i], expected_axis_ranges[i])
-    # Check plot axis labels and limits are correct
-    assert output.xlabel == expected_xlabel
-    assert output.ylabel == expected_ylabel
-    assert output.xlim == expected_xlim
-    assert output.ylim == expected_ylim
-
-
-@pytest.mark.parametrize("test_input, test_kwargs, expected_values", [
-    (seq, {"plot_axis_indices": 2, "axes_units": u.s},
-     (seq_concat.data, cubelike_none_axis_ranges_axis2_s, "time [s]", "Data [None]",
-      (cubelike_none_axis_ranges_axis2_s[2].min(), cubelike_none_axis_ranges_axis2_s[2].max()),
-      (seq_concat.data.min(), seq_concat.data.max()))),
-
-    (seq, {"plot_axis_indices": 0},
-     (seq_concat.data, cubelike_none_axis_ranges_axis0,
-      "custom:pos.helioprojective.lat [deg]", "Data [None]",
-      (0, 7), (seq_concat.data.min(), seq_concat.data.max()))),
-
-    (seq_with_masks, {"plot_axis_indices": 0},
-     (seq_concat.data, cubelike_none_axis_ranges_axis0,
-      "custom:pos.helioprojective.lat [deg]", "Data [None]",
-      (0, 7), (seq_concat.data.min(), seq_concat.data.max()))),
-
-    (seq_with_some_masks, {"plot_axis_indices": -3},
-     (seq_concat.data, cubelike_none_axis_ranges_axis0,
-      "custom:pos.helioprojective.lat [deg]", "Data [None]",
-      (0, 7), (seq_concat.data.min(), seq_concat.data.max()))),
-
-    (seqm, {"plot_axis_indices": 0},
-     (seq_concat.data, cubelike_none_axis_ranges_axis0,
-      "custom:pos.helioprojective.lon [deg]", "Data [None]",
-      (0, 7), (seq_concat.data.min(), seq_concat.data.max())))
-])
-def test_sequence_plot_as_cube_LineAnimator(test_input, test_kwargs, expected_values):
-    # Unpack expected values
-    expected_data, expected_axis_ranges, expected_xlabel, \
-        expected_ylabel, expected_xlim, expected_ylim = expected_values
-    # Run plot method.
-    output = test_input.plot_as_cube(**test_kwargs)
-    # Check right type of plot object is produced.
-    assert isinstance(output, ndcube.mixins.sequence_plotting.LineAnimatorCubeLikeNDCubeSequence)
-    # Check data being plotted is correct
-    np.testing.assert_array_equal(output.data, expected_data)
-    if isinstance(expected_data, np.ma.core.MaskedArray):
-        np.testing.assert_array_equal(output.data.mask, expected_data.mask)
-    # Check values of axes and sliders is correct.
-    for i in range(len(output.axis_ranges)):
-        _test_axis_ranges(output.axis_ranges[i], expected_axis_ranges[i])
-    # Check plot axis labels and limits are correct
-    assert output.xlabel == expected_xlabel
-    assert output.ylabel == expected_ylabel
-    assert output.xlim == expected_xlim
-    assert output.ylim == expected_ylim
-
-
-def _test_axis_ranges(axis_ranges, expected_ranges):
-    if callable(axis_ranges):
-        assert np.allclose(axis_ranges(np.arange(len(expected_ranges))),
-                           expected_ranges)
-    else:
-        assert np.allclose(axis_ranges, expected_ranges)
