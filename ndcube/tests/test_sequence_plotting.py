@@ -598,9 +598,11 @@ def test_sequence_plot_as_cube_2D_image_errors(test_input, test_kwargs, expected
         np.stack([d.data for d in seq.data])[:, np.newaxis], [2, 3]),
     (seq_with_units, {"data_unit": u.m},
         np.stack([(d.data * d.unit).to_value(u.m) for d in seq_with_units.data])[:, np.newaxis],
-        [4, 3])
+        [4, 3]),
+    (seq, {"plot_axis_indices": -2},
+        np.stack([d.data for d in seq.data])[:, np.newaxis], [3])
     ])
-def test_sequence_plot_2DAnimation(test_input, test_kwargs, expected_data, expected_image_axes):
+def test_sequence_plot_animation(test_input, test_kwargs, expected_data, expected_image_axes):
     # Run plot method.
     output = test_input.plot(**test_kwargs)
     # Check plot object properties are correct.
@@ -618,10 +620,12 @@ def test_sequence_plot_2DAnimation(test_input, test_kwargs, expected_data, expec
     (seq_with_units, {"data_unit": u.m},
         np.concatenate([(d.data * d.unit).to_value(u.m)
                         for d in seq_with_units.data], axis=seq._common_axis)[:, np.newaxis],
-        [3, 2])
+        [3, 2]),
+    (seq, {"plot_axis_indices": -2},
+        np.concatenate([d.data for d in seq.data], axis=seq._common_axis)[:, np.newaxis], [2])
     ])
-def test_sequence_plot_as_cube_2DAnimation(test_input, test_kwargs,
-                                           expected_data, expected_image_axes):
+def test_sequence_plot_as_cube_animation(test_input, test_kwargs,
+                                         expected_data, expected_image_axes):
     # Run plot method.
     output = test_input.plot_as_cube(**test_kwargs)
     # Check plot object properties are correct.
@@ -629,14 +633,6 @@ def test_sequence_plot_as_cube_2DAnimation(test_input, test_kwargs,
     assert output.data.shape == expected_data.shape
     assert output.image_axes == expected_image_axes
     assert (output.data == expected_data).all()
-
-
-def test_sequence_plot_1DAnimation():
-    pass
-
-
-def test_sequence_plot_as_cube_1DAnimation():
-    pass
 
 
 @pytest.mark.parametrize("test_input, expected", [
