@@ -717,6 +717,22 @@ class NDCubeSequenceAnimator(ArrayAnimatorWCS):
                 # Also insert dummy units.
                 if axes_units is not None:
                     axes_units = axes_units.insert(i + 1, None)
+                # Iterate each plot axis index by the number of inserted
+                # dummy axes below it.
+                if plot_axis_indices is not None:
+                    # Determine how many dummy axes have been inserted below each cube axis.
+                    miss_ax_reversed = seq[0].missing_axes[::-1]
+                    cumul_dummy_axes = np.cumsum(miss_ax_reversed)[np.invert(miss_ax_reversed)]
+                    # Insert a 0 at the start to represent sequence axis
+                    # if not concatenating data along common axis.
+                    if not animate_as_cube:
+                        cumul_dummy_axes = np.insert(cumul_dummy_axes, 0, 0)
+                    # Iterate each plot axis index as necessary.
+                    for i, axis_idx in enumerate(plot_axis_indices):
+                        # First convert index to positive version for consistent conversion.
+                        if axis_idx < 0:
+                            axis_idx += len(cumul_dummy_axes)
+                        plot_axis_indices[i] = axis_idx + cumul_dummy_axes[axis_idx]
             data_stack  = data_stack.reshape(new_shape)
             n_seq_dims = len(new_shape)
         # Construct slices input.

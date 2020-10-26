@@ -617,7 +617,7 @@ def test_sequence_plot_2DAnimation(test_input, test_kwargs, expected_data, expec
         np.concatenate([d.data for d in seq.data], axis=seq._common_axis)[:, np.newaxis], [2, 3]),
     (seq_with_units, {"data_unit": u.m},
         np.concatenate([(d.data * d.unit).to_value(u.m)
-            for d in seq_with_units.data], axis=seq._common_axis)[:, np.newaxis],
+                        for d in seq_with_units.data], axis=seq._common_axis)[:, np.newaxis],
         [3, 2])
     ])
 def test_sequence_plot_as_cube_2DAnimation(test_input, test_kwargs,
