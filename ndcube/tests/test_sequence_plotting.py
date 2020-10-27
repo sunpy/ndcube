@@ -637,7 +637,6 @@ def test_sequence_plot_as_cube_animation(test_input, test_kwargs,
 
 @pytest.mark.parametrize("test_input, expected", [
     ((seq_with_unit0.data, None), (None, None)),
-    ((seq_with_unit0.data, u.km), (None, None)),
     ((seq_with_units.data, None), ([u.km, u.m, u.km, u.m], u.km)),
     ((seq_with_units.data, u.cm), ([u.km, u.m, u.km, u.m], u.cm))])
 def test_determine_sequence_units(test_input, expected):
@@ -647,10 +646,11 @@ def test_determine_sequence_units(test_input, expected):
     assert output_unit == expected[1]
 
 
-def test_determine_sequence_units_error():
+@pytest.mark.parametrize("input_data, input_unit", [(seq.data, u.m), (seq_with_unit0.data, u.km)])
+def test_determine_sequence_units_error(input_data, input_unit):
     with pytest.raises(ValueError):
         output_seq_unit, output_unit = ndcube.mixins.sequence_plotting._determine_sequence_units(
-            seq.data, u.m)
+            input_data, input_unit)
 
 
 @pytest.mark.parametrize("test_input, expected", [
