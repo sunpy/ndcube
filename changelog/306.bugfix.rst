@@ -1,0 +1,1 @@
+Move ImageAnimatorWCS class into ndcube from sunpy as it is no longer supported from sunpy 2.1 onwards.

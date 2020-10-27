@@ -6,12 +6,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units as u
 try:
-    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.animator import LineAnimator
 except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.imageanimator import LineAnimator
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
+from ndcube.visualization.animator import ImageAnimatorWCS
 
 __all__ = ['NDCubeSequencePlotMixin']
 

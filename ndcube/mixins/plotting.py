@@ -8,13 +8,14 @@ import astropy.units as u
 from astropy.visualization.wcsaxes import WCSAxes
 import sunpy.visualization.wcsaxes_compat as wcsaxes_compat
 try:
-    from sunpy.visualization.animator import ImageAnimator, ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.animator import ImageAnimator, LineAnimator
 except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimator, ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.imageanimator import ImageAnimator, LineAnimator
 
 from ndcube import utils
 from ndcube.utils.cube import _get_extra_coord_edges
 from ndcube.mixins import sequence_plotting
+from ndcube.visualization.animator import ImageAnimatorWCS
 
 __all__ = ['NDCubePlotMixin']
 
