@@ -8,13 +8,14 @@ from astropy.visualization.wcsaxes import WCSAxes
 import matplotlib
 import matplotlib.pyplot as plt
 try:
-    from sunpy.visualization.animator import ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.animator import LineAnimator
 except ImportError:
-    from sunpy.visualization.imageanimator import ImageAnimatorWCS, LineAnimator
+    from sunpy.visualization.imageanimator import LineAnimator
 
 from ndcube import NDCube
 from ndcube.utils.wcs import WCS
 from ndcube.mixins import plotting
+from ndcube.visualization.animator import ImageAnimatorWCS
 
 
 # sample data for tests
