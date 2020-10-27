@@ -43,6 +43,7 @@ jobs:
   parameters:
     submodules: false
     coverage: codecov
+    default_python: 3.8
     envs:
       - linux: pycodestyle
 
