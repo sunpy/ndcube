@@ -733,7 +733,7 @@ class NDCubeSequenceAnimator(ArrayAnimatorWCS):
                         if axis_idx < 0:
                             axis_idx += len(cumul_dummy_axes)
                         plot_axis_indices[i] = axis_idx + cumul_dummy_axes[axis_idx]
-            data_stack  = data_stack.reshape(new_shape)
+            data_stack = data_stack.reshape(new_shape)
             n_seq_dims = len(new_shape)
         # Construct slices input.
         if plot_axis_indices is None:
