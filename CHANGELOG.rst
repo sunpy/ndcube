@@ -1,3 +1,21 @@
+Ndcube v1.4.0 (2020-11-02)
+==========================
+
+Features
+--------
+
+- Add new method, `~ndcube.NDCube.axis_world_coord_values`, to return world coords for all pixels for all axes in WCS as quantity objects. (`#283 <https://github.com/sunpy/ndcube/pull/283>`__)
+
+
+Bug Fixes
+---------
+
+- Fix NDCube plotting bug when dependent axes are not first axes. (`#278 <https://github.com/sunpy/ndcube/pull/278>`__)
+- Change name of NDCube.axis_world_coord_values to NDCube.axis_world_coords_values to be consistent with NDCube.axis_world_coords (`#293 <https://github.com/sunpy/ndcube/pull/293>`__)
+- Move ImageAnimatorWCS class into ndcube from sunpy as it is no longer supported from sunpy 2.1 onwards. (`#306 <https://github.com/sunpy/ndcube/pull/306>`__)
+- Fix bug in setting y-axis limits for 1D animations when inf or nan present in data. (`#308 <https://github.com/sunpy/ndcube/pull/308>`__)
+
+
 Ndcube v1.3.2 (2020-04-20)
 ==========================
 

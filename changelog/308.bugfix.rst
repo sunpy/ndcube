@@ -1,1 +1,0 @@
-Fix bug in setting y-axis limits for 1D animations when inf or nan present in data.
