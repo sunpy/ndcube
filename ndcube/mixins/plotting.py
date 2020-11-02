@@ -427,14 +427,23 @@ class NDCubePlotMixin:
                                 "valid unit string in order to set data_unit.")
             else:
                 data = (self.data * self.unit).to(data_unit).value
+        # If min or max of data is inf or nan, set ylim of plot manually.
+        ylim = kwargs.pop("ylim", None)
+        if ylim is None and not np.isfinite([data.min(), data.max()]).all():
+            if self.mask is not None:
+                good_data = data[np.invert(self.mask)]
+            else:
+                good_data = data
+            ylim = (np.nanmin(good_data), np.nanmax(good_data))
+
         # Combine data with mask
         # data = np.ma.masked_array(data, self.mask)
         # Set default y label
         default_ylabel = f"Data [{unit_x_axis}]"
         # Initiate line animator object.
         ax = LineAnimator(data, plot_axis_index=plot_axis_index, axis_ranges=axes_coordinates,
-                          xlabel=default_xlabel,
-                          ylabel=f"Data [{data_unit}]", **kwargs)
+                          xlabel=default_xlabel, ylabel=f"Data [{data_unit}]", ylim=ylim,
+                          **kwargs)
         return ax
 
     def _derive_axes_coordinates(self, axes_coordinates, axes_units, data_shape, edges=False):
