@@ -375,7 +375,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = cube_dimensions.size
-        world_axis_types = self.world_axis_physical_types
+        world_axis_types = self.wcs.world_axis_physical_types[::-1]
 
         # Determine axis numbers of user supplied axes.
         if axes == ():
