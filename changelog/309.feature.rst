@@ -1,0 +1,1 @@
+Add new properties to NDCubeSequence, array_axis_physical_types and cube_like_array_axis_physical_types, and deprecate the world_axis_physical_types properties on NDCube and NDCubeSequence.

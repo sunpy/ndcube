@@ -1,19 +1,20 @@
 
 import abc
-import warnings
-import textwrap
-import numbers
 from collections import namedtuple
+import numbers
+import textwrap
+import warnings
 
-import numpy as np
 import astropy.nddata
 import astropy.units as u
+from astropy.utils.decorators import deprecated
+import numpy as np
 
-from ndcube import utils
+from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube import utils
 from ndcube.utils import wcs as wcs_utils
 from ndcube.utils.cube import _pixel_centers_or_edges, _get_dimension_for_pixel
-from ndcube.mixins import NDCubeSlicingMixin, NDCubePlotMixin
 
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
@@ -222,6 +223,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
+    @deprecated(since='1.4.1',
+                message='NDCube.world_axis_physical_types will be removed in version 2.0. '
+                        'Use NDCube.wcs.world_axis_physical_types or '
+                        'NDCube.array_axis_physical_types instead.')
     def world_axis_physical_types(self):
         """
         Returns an iterable of strings describing the physical type for each
@@ -370,7 +375,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Define the dimensions of the cube and the total number of axes.
         cube_dimensions = np.array(self.dimensions.value, dtype=int)
         n_dimensions = cube_dimensions.size
-        world_axis_types = self.world_axis_physical_types
+        world_axis_types = self.wcs.world_axis_physical_types[::-1]
 
         # Determine axis numbers of user supplied axes.
         if axes == ():
@@ -534,7 +539,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # Use inferred world axes to extract the desired coord value
             # and corresponding physical types.
             world_indices = np.array(list(world_indices), dtype=int)
-            axes_coords = np.array(axes_coords)[world_indices]
+            axes_coords = np.array(axes_coords, dtype=object)[world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
         # Return in array order.

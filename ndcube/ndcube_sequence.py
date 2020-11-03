@@ -1,12 +1,13 @@
-import textwrap
 import copy
 import numbers
+import textwrap
 
-import numpy as np
 import astropy.units as u
+from astropy.utils.decorators import deprecated
+import numpy as np
 
-from ndcube import utils
 from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin
+from ndcube import utils
 
 __all__ = ['NDCubeSequence']
 
@@ -60,8 +61,15 @@ class NDCubeSequenceBase:
         return tuple(dimensions)
 
     @property
+    @deprecated(since='1.4.1',
+                message='NDCubeSequence.world_axis_physical_types will be removed in ndcube 2.0'
+                        '.  Use NDCubeSequence.array_axis_physical_types instead.')
     def world_axis_physical_types(self):
         return tuple(["meta.obs.sequence"] + list(self.data[0].world_axis_physical_types))
+
+    @property
+    def array_axis_physical_types(self):
+        return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
 
     @property
     def cube_like_dimensions(self):
@@ -79,8 +87,18 @@ class NDCubeSequenceBase:
         return cube_like_dimensions
 
     @property
+    @deprecated(since='1.4.1',
+                message='NDCubeSequence.cube_like_world_axis_physical_types will be removed '
+                        'in ndcube 2.0.  '
+                        'Use NDCubeSequence.cube_like_array_axis_physical_types instead.')
     def cube_like_world_axis_physical_types(self):
         return self.data[0].world_axis_physical_types
+
+    @property
+    def cube_like_array_axis_physical_types(self):
+        if self._common_axis is None:
+            raise ValueError("Common axis must be set.")
+        return self.data[0].array_axis_physical_types
 
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
