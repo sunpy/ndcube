@@ -1,3 +1,13 @@
+Ndcube v1.4.1 (2020-11-03)
+==========================
+
+Features
+--------
+
+- Add (cube_like)array_axis_physical_types properties to NDCubeSequence and deprecate the world_axis_physical_types properties of NDCube and NDCubeSequence. (`#309 <https://github.com/sunpy/ndcube/pull/309>`__)
+- Add new properties to NDCubeSequence, array_axis_physical_types and cube_like_array_axis_physical_types, and deprecate the world_axis_physical_types properties on NDCube and NDCubeSequence. (`#309 <https://github.com/sunpy/ndcube/pull/309>`__)
+
+
 Ndcube v1.4.0 (2020-11-02)
 ==========================
 
