@@ -62,7 +62,7 @@ class NDCubeSequenceBase:
 
     @property
     @deprecated(since='1.4.1',
-                message='NDCubeSequence.world_axis_physical_types will be removed in ndcube 2.0' + \
+                message='NDCubeSequence.world_axis_physical_types will be removed in ndcube 2.0'
                         '.  Use NDCubeSequence.array_axis_physical_types instead.')
     def world_axis_physical_types(self):
         return tuple(["meta.obs.sequence"] + list(self.data[0].world_axis_physical_types))
@@ -88,8 +88,8 @@ class NDCubeSequenceBase:
 
     @property
     @deprecated(since='1.4.1',
-                message='NDCubeSequence.cube_like_world_axis_physical_types will be removed ' + \
-                        'in ndcube 2.0.  ' + \
+                message='NDCubeSequence.cube_like_world_axis_physical_types will be removed '
+                        'in ndcube 2.0.  '
                         'Use NDCubeSequence.cube_like_array_axis_physical_types instead.')
     def cube_like_world_axis_physical_types(self):
         return self.data[0].world_axis_physical_types

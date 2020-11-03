@@ -224,8 +224,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @property
     @deprecated(since='1.4.1',
-                message='NDCube.world_axis_physical_types will be removed in version 2.0. ' + \
-                        'Use NDCube.wcs.world_axis_physical_types or ' + \
+                message='NDCube.world_axis_physical_types will be removed in version 2.0. '
+                        'Use NDCube.wcs.world_axis_physical_types or '
                         'NDCube.array_axis_physical_types instead.')
     def world_axis_physical_types(self):
         """
