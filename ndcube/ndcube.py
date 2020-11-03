@@ -539,7 +539,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # Use inferred world axes to extract the desired coord value
             # and corresponding physical types.
             world_indices = np.array(list(world_indices), dtype=int)
-            axes_coords = np.array(axes_coords)[world_indices]
+            axes_coords = np.array(axes_coords, dtype=object)[world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
         # Return in array order.
