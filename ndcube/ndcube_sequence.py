@@ -87,25 +87,24 @@ class NDCubeSequenceBase:
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
             return self.data[item]
+        result = copy.deepcopy(self)
+        if isinstance(item, slice):
+            result.data = self.data[item]
         else:
-            result = copy.deepcopy(self)
-            if isinstance(item, slice):
-                result.data = self.data[item]
+            if isinstance(item[0], numbers.Integral):
+                result = result.data[item[0]][item[1:]]
             else:
-                if isinstance(item[0], numbers.Integral):
-                    result = result.data[item[0]][item[1:]]
+                result.data = [cube[item[1:]] for cube in result.data[item[0]]]
+            # Determine common axis after slicing.
+            if self._common_axis is not None:
+                drop_cube_axes = [isinstance(i, numbers.Integral) for i in item[1:]]
+                if (len(drop_cube_axes) > self._common_axis and
+                        drop_cube_axes[self._common_axis] is True):
+                    result._common_axis = None
                 else:
-                    item0_is_length1_slice = False
-                    if isinstance(item[0], slice):
-                        start = 0 if item[0].start is None else item[0].start
-                        stop = len(self.data) if item[0].stop is None else item[0].stop
-                        if stop - start == 1:
-                            item0_is_length1_slice = True
-                    if item0_is_length1_slice:
-                        result.data = [result.data[start][item[1:]]]
-                    else:
-                        result.data = [cube[item[1:]] for cube in result.data[item[0]]]
-            return result
+                    result._common_axis = \
+                            self._common_axis - sum(drop_cube_axes[:self._common_axis])
+        return result
 
     @property
     def index_as_cube(self):
