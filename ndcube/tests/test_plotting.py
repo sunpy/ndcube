@@ -5,8 +5,10 @@ import pytest
 import sunpy.visualization.animator
 from astropy.visualization.wcsaxes import WCSAxes
 
+from ndcube.tests.helpers import figure_test
 
-@pytest.mark.mpl_image_compare
+
+@figure_test
 def test_plot_1D_cube(ndcube_1d_simple):
     fig = plt.figure()
     ax = ndcube_1d_simple.plot()
@@ -14,7 +16,7 @@ def test_plot_1D_cube(ndcube_1d_simple):
     return fig
 
 
-@pytest.mark.mpl_image_compare
+@figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
                              ("simple", np.s_[0,0,0,:], {}),
@@ -40,7 +42,7 @@ def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
     return fig
 
 
-@pytest.mark.mpl_image_compare
+@figure_test
 def test_plot_2D_cube(ndcube_1d_simple):
     fig = plt.figure()
     ax = ndcube_1d_simple.plot()
@@ -48,7 +50,7 @@ def test_plot_2D_cube(ndcube_1d_simple):
     return fig
 
 
-@pytest.mark.mpl_image_compare
+@figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
                              ("simple", np.s_[0,0,:,:], {}),
@@ -70,7 +72,7 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
     return fig
 
 
-@pytest.mark.mpl_image_compare
+@figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs", "bugged"),
                          (
                              ("simple", np.s_[:,:,0,:], {}, False),
