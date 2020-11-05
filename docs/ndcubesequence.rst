@@ -257,10 +257,11 @@ sub-cube is represeted, just with sequence and common axes of length 1.::
 In the case the entire region came from a single sub-cube.  However,
 `~ndcube.NDCubeSequence.index_as_cube` also works when the region of
 interest spans multiple sub-cubes in the sequence.  Say we want the
-same region of interest in the 2nd and 3rd cube dimensions, but this time
-from the final slice along the 0th cube axis of the 0th sub-cube, the whole 1st
-sub-cube and the 0th slice of the 2nd sub-cube. In cube-like indexing
-this corresponds to slices 2 to 7 along to the 0th cube axis::
+same region of interest in the 2nd and 3rd cube dimensions, but this
+time from the final slice along the 0th cube axis of the 0th sub-cube
+the whole 1st sub-cube and the 0th slice of the 2nd sub-cube.
+In cube-like indexing this corresponds to slices 2 to 7 along to the
+0th cube axis::
 
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
