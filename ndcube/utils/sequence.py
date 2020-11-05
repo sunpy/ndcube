@@ -10,9 +10,9 @@ from collections import namedtuple
 import astropy.units as u
 import numpy as np
 
-__all__ = ['SequenceItem', 'convert_slice_nones_to_ints',
+__all__ = ['SequenceItem',
            'cube_like_index_to_sequence_and_common_axis_indices',
-           'convert_cube_like_tuple_item_to_sequence_items']
+           'cube_like_tuple_item_to_sequence_items']
 
 
 SequenceItem = namedtuple("SequenceItem", "sequence_index cube_item")
