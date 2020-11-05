@@ -133,7 +133,13 @@ class NDCubePlotMixin:
             data = data.T
 
         # Plot data
-        axes.imshow(data, **kwargs)
+        im = axes.imshow(data, **kwargs)
+
+        # Set current axes/image if pyplot is being used (makes colorbar work)
+        for i in plt.get_fignums():
+            if axes in plt.figure(i).axes:
+                plt.sca(axes)
+                plt.sci(im)
 
         return axes
 
