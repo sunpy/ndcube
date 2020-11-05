@@ -1,7 +1,7 @@
 import astropy.units as u
-from astropy.visualization.wcsaxes import WCSAxes
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.visualization.wcsaxes import WCSAxes
 from sunpy.visualization.animator import ArrayAnimatorWCS
 
 from . import plotting_utils as utils
