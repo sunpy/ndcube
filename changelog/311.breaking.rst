@@ -1,0 +1,1 @@
+Change output type when common axis item is a slice that covers only one subcube. Previously this would return an NDCube. Now an NDCubeSequence is always returned unless the common axis item is an integer. Also, refactor NDCubeSequence.index_as_cube so codebase is simpler.
