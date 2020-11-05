@@ -87,14 +87,15 @@ class NDCubeSequenceBase:
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
             return self.data[item]
-        result = copy.deepcopy(self)
+        # Create an empty sequence in which to place the sliced cubes.
+        result = type(self)([], meta=self.meta, common_axis=self._common_axis)
         if isinstance(item, slice):
             result.data = self.data[item]
         else:
             if isinstance(item[0], numbers.Integral):
-                result = result.data[item[0]][item[1:]]
+                result = self.data[item[0]][item[1:]]
             else:
-                result.data = [cube[item[1:]] for cube in result.data[item[0]]]
+                result.data = [cube[item[1:]] for cube in self.data[item[0]]]
             # Determine common axis after slicing.
             if self._common_axis is not None:
                 drop_cube_axes = [isinstance(i, numbers.Integral) for i in item[1:]]
