@@ -136,6 +136,19 @@ def test_slice_first_index_sequence_dimensions(test_input, expected):
     assert test_input.dimensions[0] == expected
 
 
+@pytest.mark.parametrize("test_sequence, test_item, expected_common_axis", [
+    (seq_time_common, (slice(None), 0), 0),
+    (seq_time_common, (slice(None), slice(0, 1)), 1),
+    (seq_time_common, (slice(None), slice(None), 0), None),
+    (seq_time_common, (slice(None), slice(None), slice(0, 1)), 1),
+    (seq_time_common, (slice(None), slice(None), slice(None), 0), 1),
+    (seq_bad_common_axis, (slice(None), 0), None)
+])
+def test_slice_common_axis(test_sequence, test_item, expected_common_axis):
+    sliced_sequence = test_sequence[test_item]
+    assert sliced_sequence._common_axis == expected_common_axis
+
+
 @pytest.mark.parametrize("test_input,expected", [
     (seq.index_as_cube[0:5].dimensions, (3 * u.pix, [2., 2., 1.] * u.pix, 3 * u.pix, 4 * u.pix)),
     (seq.index_as_cube[1:3].dimensions, (2 * u.pix, 1 * u.pix, 3 * u.pix, 4 * u.pix)),
