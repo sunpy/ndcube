@@ -10,18 +10,11 @@ from collections import namedtuple
 import astropy.units as u
 import numpy as np
 
-__all__ = ['SequenceSlice', 'SequenceItem', 'convert_slice_nones_to_ints',
+__all__ = ['SequenceItem', 'convert_slice_nones_to_ints',
            'cube_like_index_to_sequence_and_common_axis_indices',
            'convert_cube_like_tuple_item_to_sequence_items']
 
 
-SequenceSlice = namedtuple("SequenceSlice", "sequence_index common_axis_item")
-"""
-Define SequenceSlice named tuple of length 2. Its attributes are:
-sequence_index: an int giving the index of a cube within an NDCubeSequence.
-common_axis_item: slice of int index of to be to be applied to the common
-axis of the cube.
-"""
 SequenceItem = namedtuple("SequenceItem", "sequence_index cube_item")
 """
 Define SequenceItem named tuple of length 2. Its attributes are:
@@ -193,6 +186,8 @@ def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_length
         in the NDCubeSequence that would result by applying the input slicing item
         via the cube-like API.
     """
+    if not hasattr(item, "__len__"):
+        raise TypeError("item must be an iterable of slices and/or ints.")
     if len(item) <= common_axis:
         raise ValueError("item must be include an entry for the common axis, "
                          "i.e. length of item must be > common_axis.")
@@ -214,11 +209,11 @@ def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_length
         common_axis_stop = item[common_axis].stop
     item[common_axis] = slice(common_axis_start, common_axis_stop)
     start_sequence_index, start_common_axis_index = \
-            cube_like_index_to_sequence_and_common_axis_indices(
-                    item[common_axis].start, common_axis, common_axis_lengths)
+        cube_like_index_to_sequence_and_common_axis_indices(
+            item[common_axis].start, common_axis, common_axis_lengths)
     stop_sequence_index, stop_common_axis_index = \
-            cube_like_index_to_sequence_and_common_axis_indices(
-                    item[common_axis].stop - 1, common_axis, common_axis_lengths)
+        cube_like_index_to_sequence_and_common_axis_indices(
+            item[common_axis].stop - 1, common_axis, common_axis_lengths)
     stop_common_axis_index += 1
     # In the two lines above, the stop index was decremented by one in the
     # calculation of the stop sequence axis to avoid ticking over to new NDCube if not needed.
