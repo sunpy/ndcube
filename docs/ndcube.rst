@@ -311,7 +311,7 @@ world coordinates of each pixel/array element of the data cube,
 
 Note we set ``axes`` to ``2`` since ``axes`` is defined in data axis
 order.  We can also define the axis using any unique substring
-from the axis names defined in
+
 `ndcube.NDCube.wcs.world_axis_physical_types`::
 
   >>> my_cube.wcs.world_axis_physical_types
