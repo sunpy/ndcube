@@ -231,10 +231,10 @@ class NDCubeSequenceBase:
     def __str__(self):
         return (textwrap.dedent(f"""\
                 NDCubeSequence
-                ---------------------
-                Length of NDCubeSequence:  {self.dimensions[0]}
-                Shape of 1st NDCube: {self.dimensions[1::]}
-                Axis Types of 1st NDCube: {self.array_axis_physical_types[1:]}"""))
+                --------------
+                Dimensions:  {self.dimensions}
+                Physical Types of Axes: {self.array_axis_physical_types}
+                Common Cube Axis: {self._common_axis}"""))
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
@@ -271,4 +271,51 @@ class _IndexAsCubeSlicer:
         self.seq = seq
 
     def __getitem__(self, item):
-        return utils.sequence._index_sequence_as_cube(self.seq, item)
+        common_axis = self.seq._common_axis
+        common_axis_lengths = [int(cube.dimensions[common_axis].value) for cube in self.seq.data]
+        n_cube_dims = len(self.seq.cube_like_dimensions)
+        n_uncommon_cube_dims = n_cube_dims - 1
+        # If item is iint or slice, turn into a tuple, filling in items
+        # for unincluded axes with slice(None). This ensures it is
+        # treated the same as tuple items.
+        if isinstance(item, (numbers.Integral, slice)):
+            item = [item] + [slice(None)] * n_uncommon_cube_dims
+        else:
+            # Item must therefore be tuple. Ensure it has an entry for each axis.
+            item = list(item) + [slice(None)] * (n_cube_dims - len(item))
+        # If common axis item is slice(None), result is trivial as common_axis is not changed.
+        if item[common_axis] == slice(None):
+            # Create item for slicing through the default API and slice.
+            return self.seq[tuple([slice(None)] + item)]
+        if isinstance(item[common_axis], numbers.Integral):
+            # If common_axis item is an int or return an NDCube with dimensionality of N-1
+            sequence_index, common_axis_index = \
+                    utils.sequence.cube_like_index_to_sequence_and_common_axis_indices(
+                            item[common_axis], common_axis, common_axis_lengths)
+            # Insert index for common axis in item for slicing the NDCube.
+            cube_item = copy.deepcopy(item)
+            cube_item[common_axis] = common_axis_index
+            return self.seq.data[sequence_index][tuple(cube_item)]
+        else:
+            # item can now only be a tuple whose common axis item is a non-None slice object.
+            # Convert item into iterable of SequenceItems and slice each cube appropriately.
+            # item for common_axis must always be a slice for every cube,
+            # even if it is only a length-1 slice.
+            # Thus NDCubeSequence.index_as_cube can only slice away common axis if
+            # item is int or item's first item is an int.
+            # i.e. NDCubeSequence.index_as_cube cannot cause common_axis to become None
+            # since in all cases where the common_axis is sliced away involve an NDCube
+            # is returned, not an NDCubeSequence.
+            # common_axis of returned sequence must be altered if axes in front of it
+            # are sliced away.
+            sequence_items = utils.sequence.cube_like_tuple_item_to_sequence_items(
+                    item, common_axis, common_axis_lengths, n_cube_dims)
+            # Work out new common axis value if axes in front of it are sliced away.
+            new_common_axis = common_axis - sum([isinstance(i, numbers.Integral)
+                                                 for i in item[:common_axis]])
+            # Copy sequence and alter the data and common axis.
+            result = copy.deepcopy(self.seq)
+            result.data = [result.data[sequence_item.sequence_index][sequence_item.cube_item]
+                           for sequence_item in sequence_items]
+            result._common_axis = new_common_axis
+            return result
