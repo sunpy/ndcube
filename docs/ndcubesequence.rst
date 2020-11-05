@@ -179,10 +179,11 @@ the standard slicing API simulataneously slices the data arrays, WCS
 objects, masks, uncertainty arrays, etc. in each relevant sub-cube.
 For example, say we have three NDCubes in an `~ndcube.NDCubeSequence`,
 each of shape ``(3, 4, 5)``.  Say we want to obtain a region of
-interest between the 1st and 2nd pixels (inclusive) in the 2nd
-dimension and 1st and 3rd pixels (inclusive) in the 3rd dimension of
-the 0th slice along the 0th axis in only the 1st (not 0th) and 2nd
-sub-cubes in the sequence. This would be a cumbersome slicing operation
+interest from the 1st (not 0th) and 2nd cubes in the sequence.
+Let's say the region of interest in each cube is defined as the 0th slice
+along the 0th cube dimension, between the 1st and 2nd pixels (inclusive)
+in the 2nd dimension and between the 1st and 3rd pixels (inclusive)
+in the 3rd dimension. This would be a cumbersome slicing operation
 if treating the sub-cubes independently. (This would be made even worse
 without the power of `~ndcube.NDCube` where the data arrays, WCS
 objects, masks, uncertainty arrays, etc. would all have to be sliced
@@ -196,16 +197,28 @@ simple as indexing a single array::
   [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 This will return a new `~ndcube.NDCubeSequence` with 2 2-D NDCubes,
-one for each region of interest from the 3rd slice along the 0th axis
-in each original sub-cube.  If our regions of interest only came from
-a single sub-cube - say the 0th and 1st slices along the 0th axis in
-the 1st sub-cube - an NDCube is returned::
+one for each region of interest from each original sub-cube.
+If we want our region of interest to only apply to a single sub-cube,
+and we index the sequence axis with an `int`, an NDCube is returned::
 
-  >>> roi_from_single_subcube = my_sequence[1, 0:2, 1:3, 1:4]
+  >>> roi_from_single_subcube = my_sequence[1, 0, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
-  <Quantity [2., 2., 3.] pix>
+  <Quantity [2., 3.] pix>
   >>> roi_from_single_subcube.array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+
+However, as with numpy slicing, we can induce the slicing operation to return
+an `~ndcube.NDCubeSequence` by supplying a length-1 `slice` to the sequence
+axis, rather than an `int`. This sequence will still represent the same region
+of interest from the same single sub-cube, but the sequence axis will have a
+length of 1, rather than removed.::
+
+  >>> roi_length1_sequence = my_sequence[0:1, 0, 1:3, 1:4]
+  >>> roi_length1_sequence.dimensions
+  (<Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
+  >>> roi_length1_sequence.array_axis_physical_types
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+
 
 If a common axis has been defined for the `~ndcube.NDCubeSequence` one
 can think of it as a contiguous data set with different sections along
@@ -220,22 +233,35 @@ as a having an effective cube-like shape of ``(<Quantity 9.0 pix>,
 <Quantity 4.0 pix>, <Quantity 5.0 pix>)`` where the first sub-cube
 extends along the 0th cube-like axis from 0 to 3, the second from 3 to
 6 and the third from 6 to 9.  Say we want to extract the same region
-of interest as above, i.e. ``my_sequence[1, 0:2, 1:3, 1:4]``.  Then
+of interest as above, i.e. ``my_sequence[1, 0, 1:3, 1:4]``.  Then
 this can be acheived by entering::
 
-  >>> roi_from_single_subcube = my_sequence.index_as_cube[3:5, 1:3, 1:4]
+  >>> roi_from_single_subcube = my_sequence.index_as_cube[3, 1:3, 1:4]
   >>> roi_from_single_subcube.dimensions
-  <Quantity [2., 2., 3.] pix>
+  <Quantity [2., 3.] pix>
   >>> roi_from_single_subcube.array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
-In this case the entire region came from a single sub-cube.  However,
+
+This returns the same `~ndcube.NDCube` as above.  However, also as above,
+we can induce the return type to be an `~ndcube.NDCubeSequence` by supplying
+a length-1 `slice`.  As before, the same region of interest from the same
+sub-cube is represeted, just with sequence and common axes of length 1.::
+
+  >>> roi_length1_sequence = my_sequence.index_as_cube[3:4, 1:3, 1:4]
+  >>> roi_length1_sequence.dimensions
+  (<Quantity 1. pix>, <Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
+  >>> roi_length1_sequence.array_axis_physical_types
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+
+In the case the entire region came from a single sub-cube.  However,
 `~ndcube.NDCubeSequence.index_as_cube` also works when the region of
 interest spans multiple sub-cubes in the sequence.  Say we want the
-same region of interest in the 2nd and 3rd cube dimensions from the
-final slice along the 0th cube axis of the 0th sub-cube, the whole 1st
-sub-cube and the 0th slice of the 2nd sub-cube. In cube-like indexing
-this corresponds to slices 2 to 7 along to the 0th cube axis::
+same region of interest in the 2nd and 3rd cube dimensions, but this
+time from the final slice along the 0th cube axis of the 0th sub-cube
+the whole 1st sub-cube and the 0th slice of the 2nd sub-cube.
+In cube-like indexing this corresponds to slices 2 to 7 along to the
+0th cube axis::
 
   >>> roi_across_subcubes = my_sequence.index_as_cube[2:7, 1:3, 1:4]
   >>> roi_across_subcubes.dimensions
