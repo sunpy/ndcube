@@ -314,8 +314,7 @@ class _IndexAsCubeSlicer:
             new_common_axis = common_axis - sum([isinstance(i, numbers.Integral)
                                                  for i in item[:common_axis]])
             # Copy sequence and alter the data and common axis.
-            result = copy.deepcopy(self.seq)
-            result.data = [result.data[sequence_item.sequence_index][sequence_item.cube_item]
+            result = type(self.seq)([], meta=self.seq.meta, common_axis=new_common_axis)
+            result.data = [self.seq.data[sequence_item.sequence_index][sequence_item.cube_item]
                            for sequence_item in sequence_items]
-            result._common_axis = new_common_axis
             return result
