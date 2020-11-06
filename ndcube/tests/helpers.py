@@ -41,12 +41,11 @@ def get_hash_library_name():
 
 def figure_test(test_function):
     """
-    A decorator for a test that verifies the hash of the current figure or the
-    returned figure, with the name of the test function as the hash identifier
-    in the library. A PNG is also created in the 'result_image' directory,
-    which is created on the current path.
+    A decorator which marks the test as comparing the hash of the returned
+    figure to the hash library in the repository.
 
-    All such decorated tests are marked with `pytest.mark.figure` for convenient filtering.
+    A `matplotlib.figure.Figure` object should be returned or ``plt.gcf()``
+    will be called to get the figure object to compare to.
 
     Examples
     --------
