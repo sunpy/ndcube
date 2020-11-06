@@ -11,6 +11,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import sunpy
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
@@ -33,8 +34,9 @@ def get_hash_library_name():
     """
     ft2_version = f"{mpl.ft2font.__freetype_version__.replace('.', '')}"
     mpl_version = "dev" if "+" in mpl.__version__ else mpl.__version__.replace('.', '')
+    sunpy_version = "dev" if "dev" in sunpy.__version__ else sunpy.__version__.replace('.', '')
     astropy_version = "dev" if "dev" in astropy.__version__ else astropy.__version__.replace('.', '')
-    return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}_astropy_{astropy_version}.json"
+    return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}_astropy_{astropy_version}_sunpy_{sunpy_version}.json"
 
 
 def figure_test(test_function):
