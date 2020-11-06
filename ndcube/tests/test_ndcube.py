@@ -141,6 +141,27 @@ cube_rotated = NDCube(
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
 
+@pytest.fixture
+def simple_cube():
+    # Generate data
+    data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
+                     [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
+    data = np.array([data] * 5)
+
+    # Generate WCS.
+    ht = {'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 0.4, 'CRPIX4': 2, 'CRVAL4': 1,
+          'NAXIS4': 5,
+          'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0,
+          'NAXIS3': 2,
+          'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
+          'NAXIS2': 3,
+          'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0,
+          'NAXIS1': 4, 'DATEREF':"2020-01-01T00:00:00"}
+    wt = WCS(header=ht)
+
+    # Define NDCube
+    return NDCube(data, wt)
+
 
 @pytest.mark.parametrize(
     "nd_cube", [
@@ -758,3 +779,41 @@ def test_array_axis_physical_types():
     output = cube.array_axis_physical_types
     for i in range(len(expected)):
         assert all([physical_type in expected[i] for physical_type in output[i]])
+
+
+def test_crop():
+    pass
+
+
+def test_crop_by_values(simple_cube):
+    time_range = [0.5, 1.5] * u.min
+    wl_range = [3e-11, 4.5e-11] * u.m
+    lat_range = [0.6, 0.75] * u.deg
+    lon_range = [1, 1.5]*u.deg
+    expected = simple_cube[1:2, 0:1, 0:1, 0:3]
+    output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_with_nones(simple_cube):
+    intervals = [None] * 4
+    intervals[0] = [0.5, 1.5] * u.min
+    expected = simple_cube[:, :, :, 0:3]
+    output = simple_cube.crop_by_values(*intervals)
+    print(output.wcs.array_shape, expected.wcs.array_shape)
+    print(output.dimensions, expected.dimensions)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_all_nones(simple_cube):
+    intervals = [None] * 4
+    output = simple_cube.crop_by_values(*intervals)
+    helpers.assert_cubes_equal(output, simple_cube)
+
+
+def test_crop_by_values_value_error(simple_cube):
+    pass
+
+
+def test_crop_by_values_index_error(simple_cube):
+    pass
