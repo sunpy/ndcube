@@ -34,9 +34,11 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractproperty
-    def crop(self, lower_corner, upper_corner, coords_set='wcs', crop_by_values=False):
+    def crop(self, lower_corner, upper_corner, coords_set='wcs'):
         """
         Crops an NDCube given lower and upper real world limits.
+
+        Uses `astropy.wcs.WCS.world_to_array_index` to convert inputs to array indices.
 
         Parameters
         ----------
@@ -48,15 +50,36 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             The maximum real world values of the region of interest given in
             high level objects compatible with `astropy.wcs.WCS.world_to_array_index`
 
-        coords: `str`
+        coords_set: `str`
             The set of coordinates, 'wcs', 'extra coords', or 'combined' from which
             pixel bounds of the region of interest are calculated.
 
-        crop_by_values: `bool`
-            If True, lower_corner and upper_corner are converted to array indices via
-            `astropy.wcs.WCS.world_to_array_index_values`. Hence the objects with
-            lower_corner and upper_corner must conform to that API rather than the
-            `astropy.wcs.WCS.world_to_array_index` API.
+        Returns
+        -------
+        result: `ndcube.NDCube`
+
+        """
+
+    @abc.abstractproperty
+    def crop_by_values(self, lower_corner, upper_corner, coords_set='wcs'):
+        """
+        Crops an NDCube given lower and upper real world limits.
+
+        Uses `astropy.wcs.WCS.world_to_array_index_values` to convert inputs to array indices.
+
+        Parameters
+        ----------
+        lower_corner: iterable
+            The minimum real world values of the region of interest given in
+            high level objects compatible with `astropy.wcs.WCS.world_to_array_index_values`
+
+        upper_corner: iterable
+            The maximum real world values of the region of interest given in
+            high level objects compatible with `astropy.wcs.WCS.world_to_array_index_values`
+
+        coords_set: `str`
+            The set of coordinates, 'wcs', 'extra coords', or 'combined' from which
+            pixel bounds of the region of interest are calculated.
 
         Returns
         -------
@@ -352,8 +375,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def crop(self, lower_corner, upper_corner, coords_set='wcs', crop_by_values=False):
-        # The docstring is defined in NDCubeBase
+    def _crop(self, lower_corner, upper_corner, coords_set, crop_by_values):
         # Define which WCS object should be used to calculate array indices.
         allowed_coords_sets = {'wcs': self.wcs, 'extra coords': self.extra_coords,
                                'combined': self.combined_wcs}
@@ -367,12 +389,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             world_to_array_index = wcs.world_to_array_index_values
         else:
             world_to_array_index = wcs.world_to_array_index
+        # Get array indices from inputs.
         lower_indices = world_to_array_index(*lower_corner[::-1])
         upper_indices = world_to_array_index(*upper_corner[::-1])
         # Construct slice object from lower and upper indices.
         item = tuple([slice(lower, upper) for lower, upper in zip(lower_indices, upper_indices)])
         # Slice cube.
         return self[item]
+
+    def crop(self, lower_corner, upper_corner, coords_set="wcs"):
+        # The docstring is defined in NDCubeBase
+        return self._crop(lower_corner, upper_corner, coords_set, False)
+
+    def crop_by_values(self):
+        # The docstring is defined in NDCubeBase.
+        return self._crop(lower_corner, upper_corner, coords_set, True)
 
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         # The docstring is defined in NDDataBase
