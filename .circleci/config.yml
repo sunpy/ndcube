@@ -1,7 +1,9 @@
+version: 2.1
+
 no-backports: &no-backports
-  name: Skip any branches called backport*
+  name: Skip any branches called cherry-pick
   command: |
-    if [[ "${CIRCLE_BRANCH}" = *"backport"* ]]; then
+    if [[ "${CIRCLE_BRANCH}" == *"cherry-pick"* || "${CIRCLE_BRANCH}" == *"backport"* ]]; then
       circleci step halt
     fi
 
@@ -21,59 +23,95 @@ merge-check: &merge-check
 apt-run: &apt-install
   name: Install apt packages
   command: |
-    apt update
-    apt install -y graphviz build-essential
+    sudo apt update
+    sudo apt install -y graphviz build-essential libopenjp2-7 python3-dev
 
-version: 2
 jobs:
-  twine-check:
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - checkout
-      - run: *no-backports
-      - run: *skip-check
-      - run: *merge-check
-      - run: pip install -U pep517
-      - run: python -m pep517.build --source .
-      - run: python -m pip install -U --user --force-reinstall twine
-      - run: python -m twine check dist/*
 
-  html-docs:
+  figure:
+    parameters:
+      jobname:
+        type: string
     docker:
-      - image: continuumio/miniconda3
+      - image: circleci/python:3.8
+    environment:
+      TOXENV=<< parameters.jobname >>
     steps:
-      - checkout
       - run: *no-backports
+      - checkout
       - run: *skip-check
       - run: *merge-check
       - run: *apt-install
-      - run: pip install -U tox
-      - run: tox -e build_docs
-      - run:
-          name: Prepare for upload
-          command: |
-            # If it's not a PR, don't upload
-            if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
-              rm -r docs/_build/html/*
-            else
-              # If it is a PR, delete sources, because it's a lot of files
-              # which we don't really need to upload
-              rm -r docs/_build/html/_sources
-            fi
+      - run: pip install --user -U tox codecov tox-pypi-filter
+      - run: tox
+      - run: codecov
       - store_artifacts:
-          path: docs/_build/html
+          path: .tmp/<< parameters.jobname >>/figure_test_images
+      - run:
+          name: "Image comparison page is available at: "
+          command: echo "${CIRCLE_BUILD_URL}/artifacts/${CIRCLE_NODE_INDEX}/.tmp/${TOXENV}/figure_test_images/fig_comparison.html"
+
+  deploy-reference-images:
+    parameters:
+      jobname:
+        type: string
+    docker:
+      - image: circleci/python:3.8
+    environment:
+      TOXENV: << parameters.jobname >>
+      GIT_SSH_COMMAND: ssh -i ~/.ssh/id_rsa_7b8fc81c13a3b446ec9aa50d3f626978
+    steps:
+      - checkout
+      - run: *skip-check
+      - run: *merge-check
+      # Clear out all the ssh keys so that it always uses the write deploy key
+      - run: ssh-add -D
+      # Add private key for deploying to the figure tests repo
+      - add_ssh_keys:
+          fingerprints: "7b:8f:c8:1c:13:a3:b4:46:ec:9a:a5:0d:3f:62:69:78"
+      - run: ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - run: git config --global user.email "ndcube@circleci" && git config --global user.name "ndcube Circle CI"
+      - run: git clone git@github.com:sunpy/sunpy-figure-tests.git -b ndcube-${CIRCLE_BRANCH} ~/sunpy-figure-tests/
+      # Generate Reference images
+      - run: pip install --user -U tox codecov tox-pypi-filter
+      - run: tox -- --mpl-generate-path=/home/circleci/sunpy-figure-tests/figures/$TOXENV | tee toxlog
+      - run: |
+          hashlib=$(grep "^figure_hashes.*\.json$" toxlog)
+          cp ./sunpy/tests/$hashlib /home/circleci/sunpy-figure-tests/figures/$TOXENV/
+      - run: |
+          cd ~/sunpy-figure-tests/
+          git status
+          git add .
+          git commit -m "Update reference figures from ndcube ${CIRCLE_BRANCH}" || echo "No changes to reference images to deploy"
+          git push
 
 workflows:
   version: 2
 
-  twine-check:
+  figure-tests:
     jobs:
-      - twine-check
+      - figure:
+          name: << matrix.jobname >>
+          matrix:
+            parameters:
+              jobname:
+                - "py38-figure"
+                - "py37-figure-devdeps"
 
-  test-documentation:
-    jobs:
-      - html-docs
+      - deploy-reference-images:
+          name: baseline-<< matrix.jobname >>
+          matrix:
+            parameters:
+              jobname:
+                - "py38-figure"
+                - "py37-figure-devdeps"
+          requires:
+            - "py38-figure"
+            - "py37-figure-devdeps"
+          filters:
+            branches:
+              only:
+                - master
 
 notify:
   webhooks:
