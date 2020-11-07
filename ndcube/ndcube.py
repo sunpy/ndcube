@@ -34,25 +34,27 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractproperty
-    def crop(self, lower_corner, upper_corner, coords_set='wcs'):
+    def crop(self, *intervals, wcs=None):
         """
-        Crops an NDCube given lower and upper real world intervals.
-
-        Uses `astropy.wcs.WCS.world_to_array_index` to convert inputs to array indices.
+        Crops an NDCube given lower and upper real world bounds for each real world axis.
 
         Parameters
         ----------
-        lower_corner: iterable
-            The minimum real world values of the region of interest given in
-            high level objects compatible with `astropy.wcs.WCS.world_to_array_index`
+        intervals: iterable whose elements are high level astropy objects or None
+            An iterable of length-2 astropy higher level objects, e.g. SkyCoord,
+            each represents the lower and upper bounds of a real world axis/axes.
+            These are input to `astropy.wcs.WCS.world_to_array_index
+            so their number and order must be compatible with the API of that method.
+            Alternatively, None, can be provided instead of a higher level object.
+            In this case, a high level object will be derived that causes the relevant
+            axes to remain uncropped.
 
-        upper_corner: iterable
-            The maximum real world values of the region of interest given in
-            high level objects compatible with `astropy.wcs.WCS.world_to_array_index`
-
-        coords_set: `str`
-            The set of coordinates, 'wcs', 'extra coords', or 'combined' from which
-            pixel bounds of the region of interest are calculated.
+        wcs: `astropy.wcs.WCS`
+            The WCS object to used to convert the world values to array indices.
+            Although technically this can be any valid WCS, it will typically be
+            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            the WCS and extra coords.
+            Default=self.wcs
 
         Returns
         -------
@@ -64,17 +66,20 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     @abc.abstractproperty
     def crop_by_values(self, *intervals, wcs=None):
         """
-        Crops an NDCube given lower and upper real world intervals for each real world axis.
+        Crops an NDCube given lower and upper real world bounds for each real world axis.
 
         Parameters
         ----------
         intervals: iterable of `astropy.units.Quantity`
             An iterable of length-2 `~astropy.units.Quantity` where each represents
-            the lower and upper limits of a real world axis, respectively.
+            the lower and upper bounds of a real world axis, respectively.
             The number of quantities must equal the number of world dimensions,
             `~astropy.wcs.WCS.world_n_dim`, in the `~astropy.wcs.WCS` being used and
             must be provided in the same order as the
             `~astropy.wcs.world_axis_physical_types` property.
+            Alternatively, None can be provided instead of a Quantity.
+            In this case, a Quantity will be derived that causes the relevant
+            axis to remain uncropped.
 
         wcs: `astropy.wcs.WCS`
             The WCS object to used to convert the world values to array indices.
