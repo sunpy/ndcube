@@ -675,43 +675,6 @@ def test_slicing_error(test_input):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((cubem, [0.7 * u.deg, 1.3e-5 * u.deg, 1.02e-9 * u.m], [1 * u.deg, 1 * u.deg, 4.e-11 * u.m], None),
-     cubem[:, :, :3]),
-    ((cube_rotated, [0 * u.s, 1.5 * u.arcsec, 0 * u.arcsec], [1 * u.s, 1 * u.arcsec, 0.5 * u.arcsec], None),
-     cube_rotated[:, :4, 1:5]),
-    ((cubem, [0.7 * u.deg, 1.3e-5 * u.deg, 1.02e-9 * u.m], None, [1.7 * u.deg, 1 * u.deg, 1.06e-9 * u.m]),
-     cubem[:, :, :3]),
-    ((cube_rotated, [0 * u.s, 1.5 * u.arcsec, 0 * u.arcsec], None, [1 * u.s, 2.5 * u.arcsec, 0.5 * u.arcsec]),
-     cube_rotated[:, :4, 1:5]),
-    ((cube_rotated, [0, 1.5, 0], None, [1, 2.5, 0.5], ['s', 'arcsec', 'arcsec']),
-     cube_rotated[:, :4, 1:5])
-])
-def test_crop_by_coords(test_input, expected):
-    helpers.assert_cubes_equal(
-        test_input[0].crop_by_coords(*test_input[1:]), expected)
-
-
-@pytest.mark.parametrize("test_input", [
-    (ValueError, cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg), None),
-    (ValueError, cubem, [1 * u.s], [1 * u.s], [1 * u.s]),
-    (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg)),
-    (ValueError, cubem, [1], None, [1], ['s', 'deg']),
-    (TypeError, cubem, [1, 2, 3], None, [2, 3, 4])])
-def test_crop_by_coords_error(test_input):
-    with pytest.raises(test_input[0]):
-        test_input[1].crop_by_coords(*test_input[2:])
-
-
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [((cube, "bye", 0 * u.pix, 1.5 * u.pix), cube[:, :, 0:2]),
-     ((cubet, "bye", 0.5 * u.pix, 3.5 * u.pix), cubet[:, :, 1:4])])
-def test_crop_by_extra_coord(test_input, expected):
-    helpers.assert_cubes_equal(
-        test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
-
-
-@pytest.mark.parametrize("test_input,expected", [
     ((cubem, [2]), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),)),
     ((cubem, ['em']), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),)),
     ((cubem[0, 0], []), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),))
