@@ -786,22 +786,22 @@ def test_crop():
 
 
 def test_crop_by_values(simple_cube):
-    time_range = [0.5, 1.5] * u.min
+    time_range = [0.5, 1.1] * u.min
     wl_range = [3e-11, 4.5e-11] * u.m
     lat_range = [0.6, 0.75] * u.deg
     lon_range = [1, 1.5]*u.deg
-    expected = simple_cube[1:2, 0:1, 0:1, 0:3]
+    print(simple_cube.dimensions)
+    expected = simple_cube[1:3, 0:2, 0:2, 0:3]
     output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)
     helpers.assert_cubes_equal(output, expected)
 
 
 def test_crop_by_values_with_nones(simple_cube):
     intervals = [None] * 4
-    intervals[0] = [0.5, 1.5] * u.min
+    intervals[0] = [0.5, 1.1] * u.min
     expected = simple_cube[:, :, :, 0:3]
+    print(simple_cube.dimensions)
     output = simple_cube.crop_by_values(*intervals)
-    print(output.wcs.array_shape, expected.wcs.array_shape)
-    print(output.dimensions, expected.dimensions)
     helpers.assert_cubes_equal(output, expected)
 
 
