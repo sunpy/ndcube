@@ -781,8 +781,19 @@ def test_array_axis_physical_types():
         assert all([physical_type in expected[i] for physical_type in output[i]])
 
 
-def test_crop():
-    pass
+def test_crop(simple_cube):
+    intervals = simple_cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])
+    expected = simple_cube[1:3, 0:2, 0:2, 0:3]
+    output = simple_cube.crop(*intervals)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_with_nones(simple_cube):
+    intervals = [None] * 4
+    intervals[0] = simple_cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
+    expected = simple_cube[:, :, :, 0:3]
+    output = simple_cube.crop(*intervals)
+    helpers.assert_cubes_equal(output, expected)
 
 
 def test_crop_by_values(simple_cube):
@@ -790,7 +801,6 @@ def test_crop_by_values(simple_cube):
     wl_range = [3e-11, 4.5e-11] * u.m
     lat_range = [0.6, 0.75] * u.deg
     lon_range = [1, 1.5]*u.deg
-    print(simple_cube.dimensions)
     expected = simple_cube[1:3, 0:2, 0:2, 0:3]
     output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)
     helpers.assert_cubes_equal(output, expected)
@@ -811,9 +821,10 @@ def test_crop_by_values_all_nones(simple_cube):
     helpers.assert_cubes_equal(output, simple_cube)
 
 
-def test_crop_by_values_value_error(simple_cube):
-    pass
-
-
-def test_crop_by_values_index_error(simple_cube):
-    pass
+def test_crop_by_values_indexerror(simple_cube):
+    time_range = [0.5, 1.1] * u.min
+    wl_range = [-3e-11, -2.5e-11] * u.m
+    lat_range = [0.6, 0.75] * u.deg
+    lon_range = [1, 1.5]*u.deg
+    with pytest.raises(IndexError):
+        output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)

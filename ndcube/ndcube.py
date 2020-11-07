@@ -378,9 +378,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def crop(self, lower_corner, upper_corner, coords_set="wcs"):
+    def crop(self, *intervals, wcs=None):
         # The docstring is defined in NDCubeBase
-        return self._crop(lower_corner, upper_corner, coords_set, False)
+        return self._crop(*intervals, wcs, crop_by_values=False)
 
     def crop_by_values(self, *intervals, wcs=None):
         # The docstring is defined in NDCubeBase
@@ -409,19 +409,20 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # If user did not provide all intervals,
         # calculate missing intervals based on whole cube range along those axes.
         if none_intervals.any():
-            array_intervals = [np.array([0, d.value - 1], dtype=int) for d in self.dimensions]
+            # Calculate intervals for first and last index for all axes.
+            array_intervals = [[0, np.round(d.value - 1).astype(int)] for d in self.dimensions]
             intervals = list(array_index_to_world(*array_intervals))
+            # Overwrite intervals with user-supplied ones, if provided.
             for i, interval_is_none in enumerate(none_intervals):
                 if not interval_is_none:
                     intervals[i] = input_intervals[i]
         # Convert intervals to array indices.
         intervals_indices = world_to_array_index(*intervals)
-        # If lower and upper indices are < 0, then input interval
-        # is out of range of cube.
+        # Construct item which which to slice NDCube.
         item = []
         for i, indices in enumerate(intervals_indices):
-            # In upper limit index less than zero,
-            # then interval does not overlap with cube range.
+            # If upper limit index less than zero,
+            # then interval does not overlap with cube range. Raise error.
             if indices[-1] < 0:
                 physical_type = world_axis_physical_types[::-1][i]
                 cube_range = self.axis_world_coords_values(physical_type)
@@ -429,6 +430,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                  f"Physical type: {physical_type}; "
                                  f"Input interval: {intervals[::-1][i]}; "
                                  f"NDCube range: ({cube_range[0]}, {cube_range[-1]})")
+            # Construct slice for this axis and append to item.
+            # Increment upper idex by 1 to ensure the upper world coord
+            # is included in sliced cube.
             item.append(slice(max(0, indices[0]), indices[-1] + 1))
         return self[tuple(item)]
 
