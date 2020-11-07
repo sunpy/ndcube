@@ -378,72 +378,59 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def _crop(self, lower_corner, upper_corner, coords_set, crop_by_values):
-        # Define which WCS object should be used to calculate array indices.
-        allowed_coords_sets = {'wcs': self.wcs, 'extra coords': self.extra_coords,
-                               'combined': self.combined_wcs}
-        if coords_set not in allowed_coords_sets.keys():
-            raise ValueError("Unrecognized value.  "
-                             f"'coords_set must' be one of {allowed_coords_sets.keys()}")
-        else:
-            wcs = allowed_coords_sets[coords_set]
-        # Get array indices from inputs.
-        if crop_by_values:
-            world_to_array_index = wcs.world_to_array_index_values
-        else:
-            world_to_array_index = wcs.world_to_array_index
-        # Get array indices from inputs.
-        lower_indices = world_to_array_index(*lower_corner[::-1])
-        upper_indices = world_to_array_index(*upper_corner[::-1])
-        # Construct slice object from lower and upper indices.
-        item = tuple([slice(lower, upper) for lower, upper in zip(lower_indices, upper_indices)])
-        # Slice cube.
-        return self[item]
-
     def crop(self, lower_corner, upper_corner, coords_set="wcs"):
         # The docstring is defined in NDCubeBase
         return self._crop(lower_corner, upper_corner, coords_set, False)
 
     def crop_by_values(self, *intervals, wcs=None):
-        # The docstring is defined in NDCubeBase.
-        # Set default wcs.
-        if wcs is None:
-            wcs = self.wcs
-        world_axis_units = wcs.world_axis_units
-        world_axis_physical_types = wcs.world_axis_physical_types
+        # The docstring is defined in NDCubeBase
+        return self._crop(*intervals, wcs, crop_by_values=True)
+
+    def _crop(self, *intervals, wcs=None, crop_by_values=False):
         # If no intervals provided, return NDCube without slicing.
-        input_intervals = tuple(intervals)
-        intervals = list(intervals)
         none_intervals = np.array([interval is None for interval in intervals])
         if none_intervals.all():
             return self
+        input_intervals = tuple(intervals)
+        intervals = list(intervals)
+        # Set default wcs.
+        if wcs is None:
+            wcs = self.wcs
+        # Define functions to be used in converting between array indices and world coords
+        # based in input kwarg.
+        if crop_by_values:
+            world_to_array_index = wcs.world_to_array_index_values
+            array_index_to_world = wcs.array_index_to_world_values
+        else:
+            world_to_array_index = wcs.world_to_array_index
+            array_index_to_world = wcs.array_index_to_world
+        world_axis_units = wcs.world_axis_units
+        world_axis_physical_types = wcs.world_axis_physical_types
         # If user did not provide all intervals,
         # calculate missing intervals based on whole cube range along those axes.
         if none_intervals.any():
             array_intervals = [np.array([0, d.value - 1], dtype=int) for d in self.dimensions]
-            intervals = list(wcs.array_index_to_world_values(*array_intervals))
+            intervals = list(array_index_to_world(*array_intervals))
             for i, interval_is_none in enumerate(none_intervals):
                 if not interval_is_none:
                     intervals[i] = input_intervals[i]
         # Convert intervals to array indices.
-        intervals_indices = wcs.world_to_array_index_values(*intervals)
-        print(intervals_indices)
+        intervals_indices = world_to_array_index(*intervals)
         # If lower and upper indices are < 0, then input interval
         # is out of range of cube.
-        intervals_out_of_range = np.array([(indices < 0).all() for indices in intervals_indices])
-        if intervals_out_of_range.any():
-            i = np.arange(len(intervals_out_range))[0]
-            physical_type = world_axis_physical_types[::-1][i]
-            cube_range = self.axis_world_coords_values(physical_type)
-            raise IndexError("Input real world interval beyond range of NDCube. "
-                             f"Physical type: {physical_type}; "
-                             f"Input interval: {intervals[::-1][i]}; "
-                             f"NDCube range: ({cube_range[0]}, {cube_range[-1]})")
-        # Construct item with which to slice NDCube.
-        item = tuple([slice(indices[0], indices[-1] + 1) for indices in intervals_indices])
-        print(item)
-        return self[item]
-
+        item = []
+        for i, indices in enumerate(intervals_indices):
+            # In upper limit index less than zero,
+            # then interval does not overlap with cube range.
+            if indices[-1] < 0:
+                physical_type = world_axis_physical_types[::-1][i]
+                cube_range = self.axis_world_coords_values(physical_type)
+                raise IndexError("Input real world interval beyond range of NDCube. "
+                                 f"Physical type: {physical_type}; "
+                                 f"Input interval: {intervals[::-1][i]}; "
+                                 f"NDCube range: ({cube_range[0]}, {cube_range[-1]})")
+            item.append(slice(max(0, indices[0]), indices[-1] + 1))
+        return self[tuple(item)]
 
     def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
         # The docstring is defined in NDDataBase
