@@ -81,6 +81,7 @@ jobs:
           cp ./ndcube/tests/$hashlib /home/circleci/sunpy-figure-tests/figures/$TOXENV/
       - run: |
           cd ~/sunpy-figure-tests/
+          git pull
           git status
           git add .
           git commit -m "Update reference figures from ndcube ${CIRCLE_BRANCH}" || echo "No changes to reference images to deploy"
