@@ -101,9 +101,10 @@ def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs, bugged):
     return ax.fig
 
 
-@pytest.mark.parametrize(("ndcube_4d"), [("simple")])
-def test_mpl_axes(ndcube_4d):
-    ndcube_2d = ndcube_4d[:, :, 0, 0]
+@pytest.mark.parametrize(("ndcube_4d", "cslice"),
+                         [("simple", np.s_[:, :, 0, 0])], indirect=["ndcube_4d"])
+def test_mpl_axes(ndcube_4d, cslice):
+    ndcube_2d = ndcube_4d[cslice]
     ax = plt.subplot(projection=ndcube_2d)
     assert isinstance(ax, WCSAxes)
     plt.close()
