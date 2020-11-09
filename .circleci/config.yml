@@ -72,7 +72,7 @@ jobs:
           fingerprints: "b1:c8:b0:94:a8:ec:67:16:2b:0f:18:a9:49:a6:b1:db"
       - run: ssh-keyscan github.com >> ~/.ssh/known_hosts
       - run: git config --global user.email "ndcube@circleci" && git config --global user.name "ndcube Circle CI"
-      - run: git clone git@github.com:sunpy/sunpy-figure-tests.git -b ndcube-${CIRCLE_BRANCH} ~/sunpy-figure-tests/
+      - run: git clone git@github.com:sunpy/sunpy-figure-tests.git --depth 1 -b ndcube-${CIRCLE_BRANCH} ~/sunpy-figure-tests/
       # Generate Reference images
       - run: pip install --user -U tox codecov tox-pypi-filter
       - run: tox -- --mpl-generate-path=/home/circleci/sunpy-figure-tests/figures/$TOXENV | tee toxlog
