@@ -348,11 +348,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def crop(self, *intervals, wcs=None):
         # The docstring is defined in NDCubeBase
-        return self._crop(*intervals, wcs, crop_by_values=False)
+        return self._crop(*intervals, wcs=wcs, crop_by_values=False)
 
     def crop_by_values(self, *intervals, wcs=None):
         # The docstring is defined in NDCubeBase
-        return self._crop(*intervals, wcs, crop_by_values=True)
+        return self._crop(*intervals, wcs=wcs, crop_by_values=True)
 
     def _crop(self, *intervals, wcs=None, crop_by_values=False):
         # If no intervals provided, return NDCube without slicing.
@@ -367,8 +367,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Define functions to be used in converting between array indices and world coords
         # based in input kwarg.
         if crop_by_values:
-            world_to_array_index = wcs.world_to_array_index_values
-            array_index_to_world = wcs.array_index_to_world_values
+            try:
+                world_to_array_index = wcs.world_to_array_index_values
+                array_index_to_world = wcs.array_index_to_world_values
+            except AttributeError:
+                world_to_array_index = wcs.low_level_wcs.world_to_array_index_values
+                array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
         else:
             world_to_array_index = wcs.world_to_array_index
             array_index_to_world = wcs.array_index_to_world
@@ -386,6 +390,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     intervals[i] = input_intervals[i]
         # Convert intervals to array indices.
         intervals_indices = world_to_array_index(*intervals)
+        # Ensure return type is tuple of lists, even if only one axis returned.
+        if not isinstance(intervals_indices, tuple):
+            intervals_indices = (intervals_indices,)
         # Construct item which which to slice NDCube.
         item = []
         for i, indices in enumerate(intervals_indices):

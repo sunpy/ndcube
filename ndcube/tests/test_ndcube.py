@@ -7,7 +7,7 @@ from collections import OrderedDict
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.wcs import WCS
@@ -759,6 +759,22 @@ def test_crop_with_nones(simple_cube):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_1d_independent(simple_cube):
+    cube_1d = simple_cube[0, 0, :, 0]
+    wl_range = SpectralCoord([3e-11, 4.5e-11], unit=u.m)
+    expected = cube_1d[0:2]
+    output = cube_1d.crop(wl_range)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_1d_dependent(simple_cube):
+    cube_1d = simple_cube[0, :, 0, 0]
+    sky_range = cube_1d.wcs.array_index_to_world([0, 1])
+    expected = cube_1d[0:2]
+    output = cube_1d.crop(sky_range)
+    helpers.assert_cubes_equal(output, expected)
+
+
 def test_crop_by_values(simple_cube):
     time_range = [0.5, 1.1] * u.min
     wl_range = [3e-11, 4.5e-11] * u.m
@@ -791,3 +807,12 @@ def test_crop_by_values_indexerror(simple_cube):
     lon_range = [1, 1.5]*u.deg
     with pytest.raises(IndexError):
         output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)
+
+
+def test_crop_1d_dependent(simple_cube):
+    cube_1d = simple_cube[0, :, 0, 0]
+    lat_range = [0.6, 0.75] * u.deg
+    lon_range = [1, 1]*u.deg
+    expected = cube_1d[0:2]
+    output = cube_1d.crop_by_values(lat_range, lon_range)
+    helpers.assert_cubes_equal(output, expected)
