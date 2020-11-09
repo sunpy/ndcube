@@ -7,7 +7,7 @@ from collections import OrderedDict
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.wcs import WCS
@@ -140,6 +140,28 @@ cube_rotated = NDCube(
     extra_coords=[('time', 0, u.Quantity(range(data_rotated.shape[0]), unit=u.pix)),
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
+
+
+@pytest.fixture
+def simple_cube():
+    # Generate data
+    data = np.array([[[1, 2, 3, 4], [2, 4, 5, 3], [0, -1, 2, 3]],
+                     [[2, 4, 5, 1], [10, 5, 2, 2], [10, 3, 3, 0]]])
+    data = np.array([data] * 5)
+
+    # Generate WCS.
+    ht = {'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 0.4, 'CRPIX4': 2, 'CRVAL4': 1,
+          'NAXIS4': 5,
+          'CTYPE3': 'HPLT-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.5, 'CRPIX3': 0, 'CRVAL3': 0,
+          'NAXIS3': 2,
+          'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
+          'NAXIS2': 3,
+          'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0,
+          'NAXIS1': 4, 'DATEREF': "2020-01-01T00:00:00"}
+    wt = WCS(header=ht)
+
+    # Define NDCube
+    return NDCube(data, wt)
 
 
 @pytest.mark.parametrize(
@@ -654,43 +676,6 @@ def test_slicing_error(test_input):
 
 
 @pytest.mark.parametrize("test_input,expected", [
-    ((cubem, [0.7 * u.deg, 1.3e-5 * u.deg, 1.02e-9 * u.m], [1 * u.deg, 1 * u.deg, 4.e-11 * u.m], None),
-     cubem[:, :, :3]),
-    ((cube_rotated, [0 * u.s, 1.5 * u.arcsec, 0 * u.arcsec], [1 * u.s, 1 * u.arcsec, 0.5 * u.arcsec], None),
-     cube_rotated[:, :4, 1:5]),
-    ((cubem, [0.7 * u.deg, 1.3e-5 * u.deg, 1.02e-9 * u.m], None, [1.7 * u.deg, 1 * u.deg, 1.06e-9 * u.m]),
-     cubem[:, :, :3]),
-    ((cube_rotated, [0 * u.s, 1.5 * u.arcsec, 0 * u.arcsec], None, [1 * u.s, 2.5 * u.arcsec, 0.5 * u.arcsec]),
-     cube_rotated[:, :4, 1:5]),
-    ((cube_rotated, [0, 1.5, 0], None, [1, 2.5, 0.5], ['s', 'arcsec', 'arcsec']),
-     cube_rotated[:, :4, 1:5])
-])
-def test_crop_by_coords(test_input, expected):
-    helpers.assert_cubes_equal(
-        test_input[0].crop_by_coords(*test_input[1:]), expected)
-
-
-@pytest.mark.parametrize("test_input", [
-    (ValueError, cubem, u.Quantity([0], unit=u.deg), u.Quantity([1.5, 2.], unit=u.deg), None),
-    (ValueError, cubem, [1 * u.s], [1 * u.s], [1 * u.s]),
-    (ValueError, cubem, u.Quantity([0], unit=u.deg), None, u.Quantity([1.5, 2.], unit=u.deg)),
-    (ValueError, cubem, [1], None, [1], ['s', 'deg']),
-    (TypeError, cubem, [1, 2, 3], None, [2, 3, 4])])
-def test_crop_by_coords_error(test_input):
-    with pytest.raises(test_input[0]):
-        test_input[1].crop_by_coords(*test_input[2:])
-
-
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [((cube, "bye", 0 * u.pix, 1.5 * u.pix), cube[:, :, 0:2]),
-     ((cubet, "bye", 0.5 * u.pix, 3.5 * u.pix), cubet[:, :, 1:4])])
-def test_crop_by_extra_coord(test_input, expected):
-    helpers.assert_cubes_equal(
-        test_input[0].crop_by_extra_coord(*tuple(test_input[1:])), expected)
-
-
-@pytest.mark.parametrize("test_input,expected", [
     ((cubem, [2]), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),)),
     ((cubem, ['em']), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),)),
     ((cubem[0, 0], []), (u.Quantity([1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09], unit=u.m),))
@@ -758,3 +743,77 @@ def test_array_axis_physical_types():
     output = cube.array_axis_physical_types
     for i in range(len(expected)):
         assert all([physical_type in expected[i] for physical_type in output[i]])
+
+
+def test_crop(simple_cube):
+    intervals = simple_cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])
+    expected = simple_cube[1:3, 0:2, 0:2, 0:3]
+    output = simple_cube.crop(*intervals)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_with_nones(simple_cube):
+    intervals = [None] * 4
+    intervals[0] = simple_cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
+    expected = simple_cube[:, :, :, 0:3]
+    output = simple_cube.crop(*intervals)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_1d_independent(simple_cube):
+    cube_1d = simple_cube[0, 0, :, 0]
+    wl_range = SpectralCoord([3e-11, 4.5e-11], unit=u.m)
+    expected = cube_1d[0:2]
+    output = cube_1d.crop(wl_range)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_1d_dependent(simple_cube):
+    cube_1d = simple_cube[0, :, 0, 0]
+    sky_range = cube_1d.wcs.array_index_to_world([0, 1])
+    expected = cube_1d[0:2]
+    output = cube_1d.crop(sky_range)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values(simple_cube):
+    time_range = [0.5, 1.1] * u.min
+    wl_range = [3e-11, 4.5e-11] * u.m
+    lat_range = [0.6, 0.75] * u.deg
+    lon_range = [1, 1.5]*u.deg
+    expected = simple_cube[1:3, 0:2, 0:2, 0:3]
+    output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_with_nones(simple_cube):
+    intervals = [None] * 4
+    intervals[0] = [0.5, 1.1] * u.min
+    expected = simple_cube[:, :, :, 0:3]
+    print(simple_cube.dimensions)
+    output = simple_cube.crop_by_values(*intervals)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_all_nones(simple_cube):
+    intervals = [None] * 4
+    output = simple_cube.crop_by_values(*intervals)
+    helpers.assert_cubes_equal(output, simple_cube)
+
+
+def test_crop_by_values_indexerror(simple_cube):
+    time_range = [0.5, 1.1] * u.min
+    wl_range = [-3e-11, -2.5e-11] * u.m
+    lat_range = [0.6, 0.75] * u.deg
+    lon_range = [1, 1.5]*u.deg
+    with pytest.raises(IndexError):
+        output = simple_cube.crop_by_values(time_range, wl_range, lat_range, lon_range)
+
+
+def test_crop_1d_dependent(simple_cube):
+    cube_1d = simple_cube[0, :, 0, 0]
+    lat_range = [0.6, 0.75] * u.deg
+    lon_range = [1, 1]*u.deg
+    expected = cube_1d[0:2]
+    output = cube_1d.crop_by_values(lat_range, lon_range)
+    helpers.assert_cubes_equal(output, expected)

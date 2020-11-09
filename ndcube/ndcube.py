@@ -34,41 +34,66 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         pass
 
     @abc.abstractmethod
-    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
+    def crop(self, *intervals, wcs=None):
         """
-        Crops an NDCube given minimum values and interval widths along axes.
+        Crops an NDCube given lower and upper real world bounds for each real world axis.
 
         Parameters
         ----------
-        lower_corner: iterable of `astropy.units.Quantity` or `float`
-            The minimum desired values along each relevant axis after cropping
-            described in physical units consistent with the NDCube's wcs object.
-            The length of the iterable must equal the number of data dimensions
-            and must have the same order as the data.
+        intervals: iterable whose elements are high level astropy objects or None
+            An iterable of length-2 astropy higher level objects, e.g. SkyCoord,
+            each represents the lower and upper bounds of a real world axis/axes.
+            These are input to `astropy.wcs.WCS.world_to_array_index
+            so their number and order must be compatible with the API of that method.
+            Alternatively, None, can be provided instead of a higher level object.
+            In this case, a high level object will be derived that causes the relevant
+            axes to remain uncropped.
 
-        interval_widths: iterable of `astropy.units.Quantity` or `float`
-            The width of the region of interest in each dimension in physical
-            units consistent with the NDCube's wcs object. The length of the
-            iterable must equal the number of data dimensions and must have
-            the same order as the data. This argument will be removed in versions
-            2.0, please use upper_corner argument.
-
-        upper_corner: iterable of `astropy.units.Quantity` or `float`
-            The maximum desired values along each relevant axis after cropping
-            described in physical units consistent with the NDCube's wcs object.
-            The length of the iterable must equal the number of data dimensions
-            and must have the same order as the data.
-
-        units: iterable of `astropy.units.quantity.Quantity`, optionnal
-            If the inputs are set without units, the user must set the units
-            inside this argument as `str`.
-            The length of the iterable must equal the number of data dimensions
-            and must have the same order as the data.
+        wcs: `astropy.wcs.WCS`
+            The WCS object to used to convert the world values to array indices.
+            Although technically this can be any valid WCS, it will typically be
+            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            the WCS and extra coords.
+            Default=self.wcs
 
         Returns
         -------
-        result: NDCube
+        result: `ndcube.NDCube`
+
         """
+        pass
+
+    @abc.abstractmethod
+    def crop_by_values(self, *intervals, wcs=None):
+        """
+        Crops an NDCube given lower and upper real world bounds for each real world axis.
+
+        Parameters
+        ----------
+        intervals: iterable of `astropy.units.Quantity`
+            An iterable of length-2 `~astropy.units.Quantity` where each represents
+            the lower and upper bounds of a real world axis, respectively.
+            The number of quantities must equal the number of world dimensions,
+            `~astropy.wcs.WCS.world_n_dim`, in the `~astropy.wcs.WCS` being used and
+            must be provided in the same order as the
+            `~astropy.wcs.world_axis_physical_types` property.
+            Alternatively, None can be provided instead of a Quantity.
+            In this case, a Quantity will be derived that causes the relevant
+            axis to remain uncropped.
+
+        wcs: `astropy.wcs.WCS`
+            The WCS object to used to convert the world values to array indices.
+            Although technically this can be any valid WCS, it will typically be
+            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            the WCS and extra coords.
+            Default=self.wcs
+
+        Returns
+        -------
+        result: `ndcube.NDCube`
+
+        """
+        pass
 
 
 class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
@@ -321,111 +346,69 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     "value": self._extra_coords_wcs_axis[key]["value"]}
         return result
 
-    def crop_by_coords(self, lower_corner, interval_widths=None, upper_corner=None, units=None):
-        # The docstring is defined in NDDataBase
-        n_dim = self.data.ndim
-        # Raising a value error if the arguments have not the same dimensions.
-        # Calculation of upper_corner with the inputing interval_widths
-        # This part of the code will be removed in version 2.0
-        if interval_widths:
-            warnings.warn(
-                "interval_widths will be removed from the API in version 2.0"
-                ", please use upper_corner argument.")
-            if upper_corner:
-                raise ValueError("Only one of interval_widths or upper_corner "
-                                 "can be set. Recommend using upper_corner as "
-                                 "interval_widths is deprecated.")
-            if (len(lower_corner) != len(interval_widths)) or (len(lower_corner) != n_dim):
-                raise ValueError("lower_corner and interval_widths must have "
-                                 "same number of elements as number of data "
-                                 "dimensions.")
-            upper_corner = [lower_corner[i] + interval_widths[i] for i in range(n_dim)]
-        # Raising a value error if the arguments have not the same dimensions.
-        if (len(lower_corner) != len(upper_corner)) or (len(lower_corner) != n_dim):
-            raise ValueError("lower_corner and upper_corner must have the same "
-                             "number of elements as number of data dimensions.")
+    def crop(self, *intervals, wcs=None):
+        # The docstring is defined in NDCubeBase
+        return self._crop(*intervals, wcs=wcs, crop_by_values=False)
 
-        lower_corner = list(lower_corner)
-        upper_corner = list(upper_corner)
+    def crop_by_values(self, *intervals, wcs=None):
+        # The docstring is defined in NDCubeBase
+        return self._crop(*intervals, wcs=wcs, crop_by_values=True)
 
-        if units:
-            # Raising a value error if units have not the data dimensions.
-            if len(units) != n_dim:
-                raise ValueError('units must have same number of elements as '
-                                 'number of data dimensions.')
-            # If inputs are not Quantity objects, they are modified into specified units
-            lower_corner = [u.Quantity(lower_corner[i], unit=units[i])
-                            for i in range(self.data.ndim)]
-            upper_corner = [u.Quantity(upper_corner[i], unit=units[i])
-                            for i in range(self.data.ndim)]
+    def _crop(self, *intervals, wcs=None, crop_by_values=False):
+        # If no intervals provided, return NDCube without slicing.
+        none_intervals = np.array([interval is None for interval in intervals])
+        if none_intervals.all():
+            return self
+        input_intervals = tuple(intervals)
+        intervals = list(intervals)
+        # Set default wcs.
+        if wcs is None:
+            wcs = self.wcs
+        # Define functions to be used in converting between array indices and world coords
+        # based in input kwarg.
+        if crop_by_values:
+            try:
+                world_to_array_index = wcs.world_to_array_index_values
+                array_index_to_world = wcs.array_index_to_world_values
+            except AttributeError:
+                world_to_array_index = wcs.low_level_wcs.world_to_array_index_values
+                array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
         else:
-            if any([not isinstance(x, u.Quantity) for x in lower_corner + upper_corner]):
-                raise TypeError("lower_corner and interval_widths/upper_corner must be "
-                                "of type astropy.units.Quantity or the units kwarg "
-                                "must be set.")
-        # Get all corners of region of interest.
-        all_world_corners_grid = np.meshgrid(
-            *[u.Quantity([lower_corner[i], upper_corner[i]], unit=lower_corner[i].unit).value
-              for i in range(self.data.ndim)])
-        all_world_corners = [all_world_corners_grid[i].flatten() * lower_corner[i].unit
-                             for i in range(n_dim)]
-
-        # Convert them back to units of world_axis_units
-        world_axis_units = self.wcs.low_level_wcs.world_axis_units[::-1]
-        all_world_corners = [entries.to(world_axis_units[i]) for i, entries in enumerate(all_world_corners)]
-
-        # Here we are using `wcs.world_to_pixel_values` instead of NDCube's world_to_pixel as the latter
-        # requires high_level astropy objects to operate
-        # Since it is a low_level API, so input parameters need to be adjusted in wcs ordering.
-
-        # Convert to pixel coordinates
-        all_world_corners = all_world_corners[::-1]
-        all_pix_corners = self.wcs.low_level_wcs.world_to_pixel_values(*all_world_corners)
-        all_pix_corners = all_pix_corners[::-1]
-        all_pix_corners = tuple(u.Quantity(a, u.pix).value for a in all_pix_corners)
-
-        # Derive slicing item with which to slice NDCube.
-        # Be sure to round down min pixel and round up + 1 the max pixel.
-        item = tuple([slice(int(np.clip(axis_pixels.min(), 0, None)),
-                            int(np.ceil(axis_pixels.max())) + 1)
-                      for axis_pixels in all_pix_corners])
-        return self[item]
-
-    def crop_by_extra_coord(self, coord_name, min_coord_value, max_coord_value):
-        """
-        Crops an NDCube given a minimum value and interval width along an extra
-        coord.
-
-        Parameters
-        ----------
-        coord_name: `str`
-            Name of extra coordinate by which to crop.
-
-        min_coord_value: Single value `astropy.units.Quantity`
-            The minimum desired value of the extra coord after cropping.
-            Unit must be consistent with the extra coord on which cropping is based.
-
-        min_coord_value: Single value `astropy.units.Quantity`
-            The maximum desired value of the extra coord after cropping.
-            Unit must be consistent with the extra coord on which cropping is based.
-
-        Returns
-        -------
-        result: `ndcube.NDCube`
-        """
-        if not isinstance(coord_name, str):
-            raise TypeError("The API for this function has changed. "
-                            "Please give coord_name, min_coord_value, max_coord_value")
-        extra_coord_dict = self.extra_coords[coord_name]
-        if isinstance(extra_coord_dict["value"], u.Quantity):
-            extra_coord_values = extra_coord_dict["value"]
-        else:
-            extra_coord_values = np.asarray(extra_coord_dict["value"])
-        w = np.logical_and(extra_coord_values >= min_coord_value,
-                           extra_coord_values < max_coord_value)
-        w = np.arange(len(extra_coord_values))[w]
-        item = [slice(None)] * len(self.dimensions)
-        item[extra_coord_dict["axis"]] = slice(w[0], w[-1] + 1)
+            world_to_array_index = wcs.world_to_array_index
+            array_index_to_world = wcs.array_index_to_world
+        world_axis_units = wcs.world_axis_units
+        world_axis_physical_types = wcs.world_axis_physical_types
+        # If user did not provide all intervals,
+        # calculate missing intervals based on whole cube range along those axes.
+        if none_intervals.any():
+            # Calculate intervals for first and last index for all axes.
+            array_intervals = [[0, np.round(d.value - 1).astype(int)] for d in self.dimensions]
+            intervals = list(array_index_to_world(*array_intervals))
+            # Overwrite intervals with user-supplied ones, if provided.
+            for i, interval_is_none in enumerate(none_intervals):
+                if not interval_is_none:
+                    intervals[i] = input_intervals[i]
+        # Convert intervals to array indices.
+        intervals_indices = world_to_array_index(*intervals)
+        # Ensure return type is tuple of lists, even if only one axis returned.
+        if not isinstance(intervals_indices, tuple):
+            intervals_indices = (intervals_indices,)
+        # Construct item which which to slice NDCube.
+        item = []
+        for i, indices in enumerate(intervals_indices):
+            # If upper limit index less than zero,
+            # then interval does not overlap with cube range. Raise error.
+            if indices[-1] < 0:
+                physical_type = world_axis_physical_types[::-1][i]
+                cube_range = self.axis_world_coords_values(physical_type)
+                raise IndexError("Input real world interval beyond range of NDCube. "
+                                 f"Physical type: {physical_type}; "
+                                 f"Input interval: {intervals[::-1][i]}; "
+                                 f"NDCube range: ({cube_range[0]}, {cube_range[-1]})")
+            # Construct slice for this axis and append to item.
+            # Increment upper idex by 1 to ensure the upper world coord
+            # is included in sliced cube.
+            item.append(slice(max(0, indices[0]), indices[-1] + 1))
         return self[tuple(item)]
 
     def __str__(self):
