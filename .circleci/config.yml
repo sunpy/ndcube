@@ -59,16 +59,17 @@ jobs:
       - image: circleci/python:3.8
     environment:
       TOXENV: << parameters.jobname >>
-      GIT_SSH_COMMAND: ssh -i ~/.ssh/id_rsa_7b8fc81c13a3b446ec9aa50d3f626978
+      GIT_SSH_COMMAND: ssh -i ~/.ssh/id_rsa_b1c8b094a8ec67162b0f18a949a6b1db
     steps:
       - checkout
       - run: *skip-check
       - run: *merge-check
+      - run: *apt-install
       # Clear out all the ssh keys so that it always uses the write deploy key
       - run: ssh-add -D
       # Add private key for deploying to the figure tests repo
       - add_ssh_keys:
-          fingerprints: "7b:8f:c8:1c:13:a3:b4:46:ec:9a:a5:0d:3f:62:69:78"
+          fingerprints: "b1:c8:b0:94:a8:ec:67:16:2b:0f:18:a9:49:a6:b1:db"
       - run: ssh-keyscan github.com >> ~/.ssh/known_hosts
       - run: git config --global user.email "ndcube@circleci" && git config --global user.name "ndcube Circle CI"
       - run: git clone git@github.com:sunpy/sunpy-figure-tests.git -b ndcube-${CIRCLE_BRANCH} ~/sunpy-figure-tests/
