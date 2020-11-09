@@ -1,6 +1,7 @@
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.visualization.wcsaxes import WCSAxes
 from sunpy.visualization.animator import ArrayAnimatorWCS
 
 from . import plotting_utils as utils
@@ -133,7 +134,13 @@ class NDCubePlotMixin:
             data = data.T
 
         # Plot data
-        axes.imshow(data, **kwargs)
+        im = axes.imshow(data, **kwargs)
+
+        # Set current axes/image if pyplot is being used (makes colorbar work)
+        for i in plt.get_fignums():
+            if axes in plt.figure(i).axes:
+                plt.sca(axes)
+                plt.sci(im)
 
         return axes
 
@@ -161,3 +168,21 @@ class NDCubePlotMixin:
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         return ax
+
+    def _as_mpl_axes(self):
+        """
+        Compatibility hook for Matplotlib and WCSAxes.
+        This functionality requires the WCSAxes package to work. The reason
+        we include this here is that it allows users to use WCSAxes without
+        having to explicitly import WCSAxes
+        With this method, one can do::
+            fig = plt.figure()  # doctest: +SKIP
+            ax = plt.subplot(projection=my_ndcube)  # doctest: +SKIP
+        and this will generate a plot with the correct WCS coordinates on the
+        axes. See https://wcsaxes.readthedocs.io for more information.
+        """
+        kwargs = {'wcs': self.wcs}
+        n_dim = len(self.dimensions)
+        if n_dim > 2:
+            kwargs['slices'] = ['x', 'y'] + [None] * (ndim - 2)
+        return WCSAxes, kwargs

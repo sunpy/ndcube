@@ -43,10 +43,19 @@ def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
-def test_plot_2D_cube(ndcube_1d_simple):
+def test_plot_2D_cube(ndcube_2d_simple):
     fig = plt.figure()
-    ax = ndcube_1d_simple.plot()
+    ax = ndcube_2d_simple.plot()
     assert isinstance(ax, WCSAxes)
+    return fig
+
+
+@figure_test
+def test_plot_2D_cube_colorbar(ndcube_2d_simple):
+    fig = plt.figure()
+    ax = ndcube_2d_simple.plot()
+    assert isinstance(ax, WCSAxes)
+    plt.colorbar()
     return fig
 
 
@@ -99,3 +108,12 @@ def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs, bugged):
     assert isinstance(ax, sunpy.visualization.animator.ArrayAnimatorWCS)
 
     return ax.fig
+
+
+@pytest.mark.parametrize(("ndcube_4d", "cslice"),
+                         [("simple", np.s_[:, :, 0, 0])], indirect=["ndcube_4d"])
+def test_mpl_axes(ndcube_4d, cslice):
+    ndcube_2d = ndcube_4d[cslice]
+    ax = plt.subplot(projection=ndcube_2d)
+    assert isinstance(ax, WCSAxes)
+    plt.close()
