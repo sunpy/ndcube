@@ -1,0 +1,1 @@
+Fix bug in NDCube.axis_world_coords_values when number of pixel and world dimensions differ.

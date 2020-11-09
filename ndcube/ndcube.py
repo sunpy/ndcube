@@ -251,6 +251,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
+        wcs = self.wcs
+        if not isinstance(wcs, BaseLowLevelWCS):
+            wcs = wcs.low_level_wcs
         # Create meshgrid of all pixel coordinates.
         # If user, wants edges, set pixel values to pixel edges.
         # Else make pixel centers.
@@ -264,8 +267,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                        indexing='ij', sparse=True)
 
         # Get world coords for all axes and all pixels.
-        axes_coords = self.wcs.low_level_wcs.pixel_to_world_values(*pixel_inputs)
-        if self.wcs.low_level_wcs.world_n_dim == 1:
+        axes_coords = wcs.pixel_to_world_values(*pixel_inputs)
+        if wcs.world_n_dim == 1:
             axes_coords = [axes_coords]
         # Ensure it's a list not a tuple
         axes_coords = list(axes_coords)
@@ -273,11 +276,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Reduce duplication across independent dimensions for each coord
         # and transpose to make dimensions mimic numpy array order rather than WCS order.
         for i, axis_coord in enumerate(axes_coords):
-            slices = np.array([slice(None)] * self.wcs.world_n_dim)
-            slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
-            axes_coords[i] = axis_coord[tuple(slices)].T * u.Unit(self.wcs.low_level_wcs.world_axis_units[i])
+            slices = np.array([slice(None)] * wcs.pixel_n_dim)
+            slices[np.invert(wcs.axis_correlation_matrix[i])] = 0
+            axes_coords[i] = axis_coord[tuple(slices)].T * u.Unit(wcs.world_axis_units[i])
 
-        world_axis_physical_types = self.wcs.world_axis_physical_types
+        world_axis_physical_types = wcs.world_axis_physical_types
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
         if axes:
@@ -288,11 +291,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # If axis is int, it is a numpy order array axis.
                     # Convert to pixel axis in WCS order.
                     axis = wcs_utils.convert_between_array_and_pixel_axes(
-                            np.array([axis]), self.wcs.pixel_n_dim)[0]
+                            np.array([axis]), wcs.pixel_n_dim)[0]
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
                     world_indices.update(wcs_utils.pixel_axis_to_world_axes(
-                        axis, self.wcs.axis_correlation_matrix))
+                        axis, wcs.axis_correlation_matrix))
                 elif isinstance(axis, str):
                     # If axis is str, it is a physical type or substring of a physical type.
                     world_indices.update({wcs_utils.physical_type_to_world_axis(
