@@ -31,7 +31,9 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractproperty
     def dimensions(self):
-        pass
+        """
+        The pixel dimensions of the cube.
+        """
 
     @abc.abstractmethod
     def crop(self, *intervals, wcs=None):
@@ -61,7 +63,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         result: `ndcube.NDCube`
 
         """
-        pass
 
     @abc.abstractmethod
     def crop_by_values(self, *intervals, wcs=None):
@@ -93,7 +94,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         result: `ndcube.NDCube`
 
         """
-        pass
 
 
 class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
