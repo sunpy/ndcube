@@ -43,10 +43,19 @@ def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
-def test_plot_2D_cube(ndcube_1d_simple):
+def test_plot_2D_cube(ndcube_2d_simple):
     fig = plt.figure()
-    ax = ndcube_1d_simple.plot()
+    ax = ndcube_2d_simple.plot()
     assert isinstance(ax, WCSAxes)
+    return fig
+
+
+@figure_test
+def test_plot_2D_cube_colorbar(ndcube_2d_simple):
+    fig = plt.figure()
+    ax = ndcube_2d_simple.plot()
+    assert isinstance(ax, WCSAxes)
+    plt.colorbar()
     return fig
 
 
