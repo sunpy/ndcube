@@ -33,7 +33,7 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     def dimensions(self):
         pass
 
-    @abc.abstractproperty
+    @abc.abstractmethod
     def crop(self, *intervals, wcs=None):
         """
         Crops an NDCube given lower and upper real world bounds for each real world axis.
@@ -63,7 +63,7 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
         pass
 
-    @abc.abstractproperty
+    @abc.abstractmethod
     def crop_by_values(self, *intervals, wcs=None):
         """
         Crops an NDCube given lower and upper real world bounds for each real world axis.
