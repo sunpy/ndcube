@@ -141,6 +141,7 @@ cube_rotated = NDCube(
                   ('hello', 1, u.Quantity(range(data_rotated.shape[1]), unit=u.pix)),
                   ('bye', 2, u.Quantity(range(data_rotated.shape[2]), unit=u.pix))])
 
+
 @pytest.fixture
 def simple_cube():
     # Generate data
@@ -156,7 +157,7 @@ def simple_cube():
           'CTYPE2': 'WAVE    ', 'CUNIT2': 'Angstrom', 'CDELT2': 0.2, 'CRPIX2': 0, 'CRVAL2': 0,
           'NAXIS2': 3,
           'CTYPE1': 'TIME    ', 'CUNIT1': 'min', 'CDELT1': 0.4, 'CRPIX1': 0, 'CRVAL1': 0,
-          'NAXIS1': 4, 'DATEREF':"2020-01-01T00:00:00"}
+          'NAXIS1': 4, 'DATEREF': "2020-01-01T00:00:00"}
     wt = WCS(header=ht)
 
     # Define NDCube
