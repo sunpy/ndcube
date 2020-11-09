@@ -116,24 +116,28 @@ changed size and shape, each array element will still correspond to
 the same real world coordinates as they did before.  An example of how
 to slice a 3-D `~ndcube.NDCube` object is::
 
-  >>> my_cube_roi = my_cube[3:5, 10:100, 30:37]
+  >>> my_cube_roi = my_cube[0:2, 1:4, 1:4]
 
 Slicing can also reduce the dimension of an `~ndcube.NDCube`, e.g.::
 
-  >>> my_2d_cube = my_cube[0, 10:100, 30:37]
+  >>> my_2d_cube = my_cube[0, 1:4, 1:4]
 
 In addition to slicing by index, `~ndcube.NDCube` supports a basic
 version of slicing/indexing by real world coordinates via the
-`~ndcube.NDCube.crop_by_coords` method.  This takes a list of
-`astropy.units.Quantity` instances representing the minimum real world
-coordinates of the region of interest in each dimension.  The
-order of the coordinates must be the same as the order of the data
-axes.  A second iterable of `~astropy.units.Quantity` must also be
-provided which gives the widths of the region of interest in each data axis::
+`~ndcube.NDCube.crop` method.  This takes a list of high level astropy objects,
+e.g. `~astropy.time.Time`, `~astropy.coordinates.SkyCoord`,
+`~astropy.coordinates.SpectralCoord`, `~astropy,units.Quantity`, etc., which depend
+the physical types of the axes in the cube.  Each high level object
+represents the minimum and maximum real world coordinates of the region of interest
+in each dimension.  The order of the coordinates must be the same as that expected by
+`astropy.wcs.WCS.world_to_array_index`.::
 
   >>> import astropy.units as u
-  >>> my_cube_roi = my_cube.crop_by_coords([0.7*u.deg, 1.3e-5*u.deg, 1.04e-9*u.m],
-  ...                                     [0.6*u.deg, 1.*u.deg, 0.08e-9*u.m])
+  >>> from astropy.coordinates import SkyCoord, SpectralCoord
+  >>> from sunpy.coordinates.frames import Helioprojective
+  >>> wave_range = SpectralCoord([1.04e-9, 1.08e-9], unit=u.m)
+  >>> sky_range = SkyCoord(Tx=[1, 1.5], Ty=[0.5, 1.5], unit=u.deg, frame=Helioprojective)
+  >>> my_cube_roi = my_cube.crop(wave_range, sky_range)
 
 This method does not rebin or interpolate the data if the region of interest
 does not perfectly map onto the array's "pixel" grid.  Instead
