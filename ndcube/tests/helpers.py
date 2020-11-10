@@ -49,9 +49,13 @@ def figure_test(test_function):
 
     Examples
     --------
-    @figure_test
-    def test_simple_plot():
-        plt.plot([0,1])
+
+    .. code::
+
+        @figure_test
+        def test_simple_plot():
+            plt.plot([0,1])
+
     """
     hash_library_name = get_hash_library_name()
     hash_library_file = Path(__file__).parent / hash_library_name
