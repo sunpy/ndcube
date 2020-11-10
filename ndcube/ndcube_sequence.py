@@ -11,7 +11,7 @@ __all__ = ['NDCubeSequence']
 
 PLOTTING_NOT_SUPPORTED_ERROR = "NDCubeSequence plotting is no longer supported. " + \
     "To learn why or to tell us why it should be re-instated, read and comment on issue #315: " + \
-    "https://github.com/sunpy/ndcube/issues/315 . "
+    "https://github.com/sunpy/ndcube/issues/315 . " + \
     "To see a introductory guide on how to make your own NDCubeSequence plots, see the docs: " + \
     "https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting"
 
