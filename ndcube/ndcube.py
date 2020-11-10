@@ -1,24 +1,20 @@
-
 import abc
 import numbers
 import textwrap
-import warnings
 from collections import namedtuple
 
 import astropy.nddata
 import astropy.units as u
 import numpy as np
 import sunpy.coordinates
-from astropy.utils.misc import InheritDocstrings
-from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, custom_ctype_to_ucd_mapping
+from astropy.wcs.wcsapi import BaseLowLevelWCS
 
 import ndcube.utils.wcs as wcs_utils
 from ndcube import utils
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 
-__all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube', 'NDCubeOrdered']
+__all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 
 class NDCubeMetaClass(abc.ABCMeta):
@@ -31,7 +27,9 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
     @abc.abstractproperty
     def dimensions(self):
-        pass
+        """
+        The pixel dimensions of the cube.
+        """
 
     @abc.abstractmethod
     def crop(self, *intervals, wcs=None):
@@ -61,7 +59,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         result: `ndcube.NDCube`
 
         """
-        pass
 
     @abc.abstractmethod
     def crop_by_values(self, *intervals, wcs=None):
@@ -93,7 +90,6 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         result: `ndcube.NDCube`
 
         """
-        pass
 
 
 class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
@@ -461,77 +457,3 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
     pass
-
-
-class NDCubeOrdered(NDCube):
-    """
-    Class representing N dimensional cubes with oriented WCS. Extra arguments
-    are passed on to NDData's init. The order is TIME, SPECTRAL, SOLAR-x,
-    SOLAR-Y and any other dimension. For example, in an x, y, t cube the order
-    would be (t,x,y) and in a lambda, t, y cube the order will be (t, lambda,
-    y). Extra arguments are passed on to NDData's init.
-
-    Parameters
-    ----------
-    data: `numpy.ndarray`
-        The array holding the actual data in this object.
-
-    wcs: `ndcube.wcs.wcs.WCS`
-        The WCS object containing the axes' information. The axes'
-        priorities are time, spectral, celestial. This means that if
-        present, each of these axis will take precedence over the others.
-
-    uncertainty : any type, optional
-        Uncertainty in the dataset. Should have an attribute uncertainty_type
-        that defines what kind of uncertainty is stored, for example "std"
-        for standard deviation or "var" for variance. A metaclass defining
-        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
-        has no such attribute the uncertainty is stored as UnknownUncertainty.
-        Defaults to None.
-
-    mask : any type, optional
-        Mask for the dataset. Masks should follow the numpy convention
-        that valid data points are marked by False and invalid ones with True.
-        Defaults to None.
-
-    meta : dict-like object, optional
-        Additional meta information about the dataset. If no meta is provided
-        an empty collections.OrderedDict is created. Default is None.
-
-    unit : Unit-like or str, optional
-        Unit for the dataset. Strings that can be converted to a Unit are allowed.
-        Default is None.
-
-    copy : bool, optional
-        Indicates whether to save the arguments as copy. True copies every attribute
-        before saving it while False tries to save every parameter as reference.
-        Note however that it is not always possible to save the input as reference.
-        Default is False.
-    """
-
-    def __init__(self, data, wcs, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, **kwargs):
-        axtypes = list(wcs.wcs.ctype)[::-1]
-        array_order = utils.cube.select_order(axtypes)
-        result_data = data.transpose(array_order)
-        result_wcs = utils.wcs.reindex_wcs(wcs, np.array(array_order))
-        if uncertainty is not None:
-            result_uncertainty = uncertainty.transpose(array_order)
-        else:
-            result_uncertainty = None
-        if mask is not None:
-            result_mask = mask.transpose(array_order)
-        else:
-            result_mask = None
-        # Reorder extra coords if needed.
-        if extra_coords:
-            reordered_extra_coords = []
-            for coord in extra_coords:
-                coord_list = list(coord)
-                coord_list[1] = array_order[coord_list[1]]
-                reordered_extra_coords.append(tuple(coord_list))
-
-        super().__init__(result_data, result_wcs, uncertainty=result_uncertainty,
-                         mask=result_mask, meta=meta, unit=unit,
-                         extra_coords=reordered_extra_coords,
-                         copy=copy, **kwargs)

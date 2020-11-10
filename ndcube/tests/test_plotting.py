@@ -9,9 +9,9 @@ from ndcube.tests.helpers import figure_test
 
 
 @figure_test
-def test_plot_1D_cube(ndcube_1d_simple):
+def test_plot_1D_cube(ndcube_1d_l):
     fig = plt.figure()
-    ax = ndcube_1d_simple.plot()
+    ax = ndcube_1d_l.plot()
     assert isinstance(ax, WCSAxes)
     return fig
 
@@ -19,16 +19,15 @@ def test_plot_1D_cube(ndcube_1d_simple):
 @figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
-                             ("simple", np.s_[0,0,0,:], {}),
-                             ("simple", np.s_[0,0,:,0], {}),
-                             ("simple", np.s_[0,:,0,0], {}),
-                             ("simple", np.s_[:,0,0,0], {}),
+                             ("ln_lt_l_t", np.s_[0, 0, 0, :], {}),
+                             ("ln_lt_l_t", np.s_[0, 0, :, 0], {}),
+                             ("ln_lt_l_t", np.s_[0, :, 0, 0], {}),
+                             ("ln_lt_l_t", np.s_[:, 0, 0, 0], {}),
 
-                             ("uncertainty", np.s_[0,0,0,:], {}),
-                             ("unit_uncertainty", np.s_[0,0,0,:], {'data_unit': u.mJ}),
+                             ("uncertainty", np.s_[0, 0, 0, :], {}),
+                             ("unit_uncertainty", np.s_[0, 0, 0, :], {'data_unit': u.mJ}),
 
-                             ("mask", np.s_[0,0,0,:], {'marker': 'o'}),
-                         ),
+                             ("mask", np.s_[0, 0, 0, :], {'marker': 'o'}),),
                          indirect=["ndcube_4d"])
 def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
     # TODO: The output for the spatial plots is inconsistent between the lat
@@ -43,17 +42,17 @@ def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
-def test_plot_2D_cube(ndcube_2d_simple):
+def test_plot_2D_cube(ndcube_2d_ln_lt):
     fig = plt.figure()
-    ax = ndcube_2d_simple.plot()
+    ax = ndcube_2d_ln_lt.plot()
     assert isinstance(ax, WCSAxes)
     return fig
 
 
 @figure_test
-def test_plot_2D_cube_colorbar(ndcube_2d_simple):
+def test_plot_2D_cube_colorbar(ndcube_2d_ln_lt):
     fig = plt.figure()
-    ax = ndcube_2d_simple.plot()
+    ax = ndcube_2d_ln_lt.plot()
     assert isinstance(ax, WCSAxes)
     plt.colorbar()
     return fig
@@ -62,14 +61,11 @@ def test_plot_2D_cube_colorbar(ndcube_2d_simple):
 @figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
-                             ("simple", np.s_[0,0,:,:], {}),
-                             ("simple", np.s_[0,:,:,0], {}),
-                             ("simple", np.s_[:,:,0,0], {}),
-
-                             ("unit_uncertainty", np.s_[0,0,:,:], {'data_unit': u.mJ}),
-
-                             ("mask", np.s_[0,:,0,:], {}),
-                         ),
+                             ("ln_lt_l_t", np.s_[0, 0, :, :], {}),
+                             ("ln_lt_l_t", np.s_[0, :, :, 0], {}),
+                             ("ln_lt_l_t", np.s_[:, :, 0, 0], {}),
+                             ("unit_uncertainty", np.s_[0, 0, :, :], {'data_unit': u.mJ}),
+                             ("mask", np.s_[0, :, 0, :], {}),),
                          indirect=["ndcube_4d"])
 def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
     fig = plt.figure()
@@ -84,16 +80,15 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
 @figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs", "bugged"),
                          (
-                             ("simple", np.s_[:,:,0,:], {}, False),
-                             ("simple", np.s_[:,:,0,:], {'plot_axes': [..., 'x']}, False),
-                             ("simple", None, {}, False),
-                             ("simple", None, {"plot_axes": [0,0,'x','y']}, False),
-                             ("simple", None, {"plot_axes": [0,'x',0,'y']}, False),
-                             ("simple", np.s_[0,:,:,:], {}, True),
-                             ("simple", np.s_[:,:,:,:], {}, False),
-                             ("unit_uncertainty", np.s_[0,:,:,:], {'data_unit': u.mJ}, True),
-                             ("mask", np.s_[:,:,:,:], {}, False),
-                         ),
+                             ("ln_lt_l_t", np.s_[:, :, 0, :], {}, False),
+                             ("ln_lt_l_t", np.s_[:, :, 0, :], {'plot_axes': [..., 'x']}, False),
+                             ("ln_lt_l_t", None, {}, False),
+                             ("ln_lt_l_t", None, {"plot_axes": [0, 0, 'x', 'y']}, False),
+                             ("ln_lt_l_t", None, {"plot_axes": [0, 'x', 0, 'y']}, False),
+                             ("ln_lt_l_t", np.s_[0, :, :, :], {}, True),
+                             ("ln_lt_l_t", np.s_[:, :, :, :], {}, False),
+                             ("unit_uncertainty", np.s_[0, :, :, :], {'data_unit': u.mJ}, True),
+                             ("mask", np.s_[:, :, :, :], {}, False),),
                          indirect=["ndcube_4d"])
 def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs, bugged):
     if bugged:
@@ -111,7 +106,7 @@ def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs, bugged):
 
 
 @pytest.mark.parametrize(("ndcube_4d", "cslice"),
-                         [("simple", np.s_[:, :, 0, 0])], indirect=["ndcube_4d"])
+                         [("ln_lt_l_t", np.s_[:, :, 0, 0])], indirect=["ndcube_4d"])
 def test_mpl_axes(ndcube_4d, cslice):
     ndcube_2d = ndcube_4d[cslice]
     ax = plt.subplot(projection=ndcube_2d)

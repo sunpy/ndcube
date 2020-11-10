@@ -1,5 +1,5 @@
 from .ndcollection import NDCollection
-from .ndcube import NDCube, NDCubeOrdered
+from .ndcube import NDCube
 from .ndcube_sequence import NDCubeSequence
 
 try:
