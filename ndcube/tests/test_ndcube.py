@@ -266,3 +266,12 @@ def test_crop_by_values_indexerror(ndcube_4d_ln_lt_l_t):
     lon_range = [1, 1.5] * u.deg
     with pytest.raises(IndexError):
         ndcube_4d_ln_lt_l_t.crop_by_values(time_range, wl_range, lat_range, lon_range)
+
+
+def test_crop_1d_dependent_2(ndcube_4d_ln_lt_l_t):
+    cube_1d = ndcube_4d_ln_lt_l_t[0, :, 0, 0]
+    lon_range = [359.99, 359.996] * u.deg
+    lat_range = [0.00556, 0.01112] * u.deg
+    expected = cube_1d[0:2]
+    output = cube_1d.crop_by_values(lat_range, lon_range)
+    helpers.assert_cubes_equal(output, expected)
