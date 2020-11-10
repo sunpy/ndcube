@@ -1,17 +1,13 @@
-
 import abc
 import numbers
 import textwrap
-import warnings
 from collections import namedtuple
 
 import astropy.nddata
 import astropy.units as u
 import numpy as np
 import sunpy.coordinates
-from astropy.utils.misc import InheritDocstrings
-from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, custom_ctype_to_ucd_mapping
+from astropy.wcs.wcsapi import BaseLowLevelWCS
 
 import ndcube.utils.wcs as wcs_utils
 from ndcube import utils
