@@ -137,7 +137,9 @@ in each dimension.  The order of the coordinates must be the same as that expect
   >>> from sunpy.coordinates.frames import Helioprojective
   >>> wave_range = SpectralCoord([1.04e-9, 1.08e-9], unit=u.m)
   >>> sky_range = SkyCoord(Tx=[1, 1.5], Ty=[0.5, 1.5], unit=u.deg, frame=Helioprojective)
-  >>> my_cube_roi = my_cube.crop(wave_range, sky_range)
+  >>> lower_corner = [wave_range[0], sky_range[0]]
+  >>> upper_corner = [wave_range[-1], sky_range[-1]]
+  >>> my_cube_roi = my_cube.crop(lower_corner, upper_corner)
 
 This method does not rebin or interpolate the data if the region of interest
 does not perfectly map onto the array's "pixel" grid.  Instead
