@@ -165,6 +165,7 @@ ndcube/version.py
 .idea/vcs.xml
 .idea/jsLibraryMappings.xml
 .idea/ndcube.iml
+.idea/inspectionProfiles/Project_Default.xml
 
 # Sensitive or high-churn files:
 .idea/dataSources.ids
