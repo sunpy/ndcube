@@ -14,8 +14,14 @@ class GlobalCoords(Mapping):
     """
     A structured representation of coordinate information applicable to a whole NDCube.
     """
-    def __init__(self, NDCube):
-        pass
+    def __init__(self, NDCube, wcs=None):
+        super().__init__(wcs=wcs)
+
+        # Setup private attributes
+        self._wcs = None
+
+        # Set values using the setters for validation
+        self.wcs = wcs
 
     def add(self, name, physical_type):
         """
