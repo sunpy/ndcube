@@ -239,7 +239,7 @@ class LookupTableCoord:
 
         time = lookup_tables[0]
         deltas = (time[1:] - time[0]).to(u.s)
-        deltas = deltas.insert(0, 0)
+        deltas = deltas.insert(0, 0 * u.s)
 
         def _generate_time_lookup(deltas):
             return self._model_from_quantity((deltas,))
