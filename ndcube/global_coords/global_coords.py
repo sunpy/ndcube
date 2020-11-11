@@ -39,6 +39,8 @@ class GlobalCoords(Mapping):
         """
         A tuple of all the names.
         """
+        if len(self.wcs) >= 1:
+            return [*self.wcs]
 
     @property
     def physical_types(self):
