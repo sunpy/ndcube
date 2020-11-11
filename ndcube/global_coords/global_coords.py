@@ -37,7 +37,7 @@ class GlobalCoords(Mapping):
     @property
     def names(self):
         """
-        A tuple of all the names.
+        A tuple of all the names or keys.
         """
         if len(self.mapping) >= 1:
             return [*self.mapping]
@@ -52,11 +52,13 @@ class GlobalCoords(Mapping):
         """
         A set-like of all names in this collection.
         """
+        return set(self.mapping.keys())
 
     def values(self):
         """
         A set-like of all values in this collection
         """
+        return set(self.mapping.values())
 
     def __getitem__(self, item):
         """
