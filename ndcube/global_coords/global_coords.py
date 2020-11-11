@@ -62,6 +62,10 @@ class GlobalCoords(Mapping):
         """
         Index the collection by a name.
         """
+        return self.mapping[item]
 
     def __iter__(self):
-        pass
+        return iter(self.mapping)
+
+    def __len__(self):
+        return len(self.mapping)
