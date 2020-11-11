@@ -38,25 +38,25 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Parameters
         ----------
-        lower_corner: iterable of high level astropy objects or None
+        lower_corner: iterable whose elements are None or high level astropy objects
             An iterable of length-1 astropy higher level objects, e.g. SkyCoord,
             representing the real world coordinates of the lower corner of
             the region of interest.
             These are input to `astropy.wcs.WCS.world_to_array_index`
             so their number and order must be compatible with the API of that method.
             Alternatively, None, can be provided instead of a higher level object.
-            In this case, a high level object will be derived that causes the relevant
-            axes to remain uncropped.
+            In this case, the corresponding array axes will be cropped starting from
+            0th array index.
 
-        upper_corner: iterable of high level astropy objects or None
+        upper_corner: iterable whose elements are None or high level astropy objects
             An iterable of length-1 astropy higher level objects, e.g. SkyCoord,
             representing the real world coordinates of the upper corner of
             the region of interest.
             These are input to `astropy.wcs.WCS.world_to_array_index`
             so their number and order must be compatible with the API of that method.
             Alternatively, None, can be provided instead of a higher level object.
-            In this case, a high level object will be derived that causes the relevant
-            axes to remain uncropped.
+            In this case, the corresponding array axes will be cropped to include
+            the final array index.
 
         wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
             The WCS object to used to convert the world values to array indices.
@@ -78,7 +78,7 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
         Parameters
         ----------
-        lower_corner: iterable of `astropy.units.Quantity`, `float`, or None
+        lower_corner: iterable whose elements are None, `astropy.units.Quantity` or `float`
             An iterable of length-1 Quantities or floats, representing
             the real world coordinate values of the lower corner of
             the region of interest.
@@ -86,10 +86,10 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             so their number and order must be compatible with the API of that method,
             i.e. they must be in world axis order.
             Alternatively, None, can be provided instead of a Quantity or float.
-            In this case, a high level object will be derived that causes the relevant
-            axes to remain uncropped.
+            In this case, the corresponding array axes will be cropped starting from
+            0th array index.
 
-        upper_corner: iterable of `astropy.units.Quantity`, `float`, or None
+        upper_corner: iterable whose elements are None, `astropy.units.Quantity` or `float`
             An iterable of length-1 Quantities or floats, representing
             the real world coordinate values of the upper corner of
             the region of interest.
@@ -97,8 +97,8 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
             so their number and order must be compatible with the API of that method,
             i.e. they must be in world axis order.
             Alternatively, None, can be provided instead of a Quantity or float.
-            In this case, a high level object will be derived that causes the relevant
-            axes to remain uncropped.
+            In this case, the corresponding array axes will be cropped to include
+            the final array index.
 
         units: iterable of `astropy.units.Unit`
             The unit of the corresponding entries in lower_corner and upper_corner.
