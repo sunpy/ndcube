@@ -14,24 +14,25 @@ class GlobalCoords(Mapping):
     """
     A structured representation of coordinate information applicable to a whole NDCube.
     """
-    def __init__(self, NDCube, wcs=None):
-        super().__init__(wcs=wcs)
-
-        # Setup private attributes
-        self._wcs = None
+    def __init__(self, NDCube):
+        super().__init__()
 
         # Set values using the setters for validation
-        self.wcs = wcs
+        self.wcs = {}
 
     def add(self, name, physical_type):
         """
         Add a new coordinate to the collection.
         """
+        if len(self.wcs) > 1:
+            self.wcs[name] = wcs.world_axis_name or physical_type
 
     def remove(self, name):
         """
         Remove a coordinate from the collection
         """
+        if len(self.wcs) > 1:
+            del self.wcs[name]
 
     @property
     def names(self):
