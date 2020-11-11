@@ -248,7 +248,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         if self._lookup_tables:
             raise AttributeError(
-                "Can't set mapping manually when ExtraCoords is built from lookup tables."
+                "Can't set wcs manually when ExtraCoords is built from lookup tables."
             )
 
         if self._mapping is not None:
@@ -301,10 +301,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         subwcs = self.wcs[item]
 
-        new_mapping = []
-        for i, subitem in enumerate(item):
-            if not isinstance(subitem, Integral):
-                new_mapping.append(self.mapping[i])
+        new_mapping = [self.mapping[i]  for i, subitem in enumerate(item) if not isinstance(subitem, Integral)]
 
         return type(self)(wcs=subwcs, mapping=new_mapping)
 

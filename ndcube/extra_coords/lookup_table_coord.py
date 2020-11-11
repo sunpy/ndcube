@@ -53,7 +53,7 @@ class LookupTableCoord:
     -----
 
     The constructor to this class expects a single coordinate to be passed,
-    i.e. one coordinate frame (i.e. Celestial), although this could be built
+    i.e. one coordinate frame (e.g. Celestial), although this coordinate could be built
     from multiple lookup tables.
 
     The implementation of this class, however, allows the representation of
