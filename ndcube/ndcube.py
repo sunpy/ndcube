@@ -7,8 +7,7 @@ import astropy.nddata
 import astropy.units as u
 import numpy as np
 import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
-from astropy.wcs.wcsapi import HighLevelWCSWrapper
-from astropy.wcs.wcsapi.fitswcs import custom_ctype_to_ucd_mapping
+from astropy.wcs.wcsapi import BaseLowLevelWCS, HighLevelWCSWrapper
 
 import ndcube.utils.wcs as wcs_utils
 from ndcube.extra_coords import ExtraCoords
@@ -363,36 +362,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    @property
-    def extra_coords(self):
-        """
-        Dictionary of extra coords where each key is the name of an extra
-        coordinate supplied by user during instantiation of the NDCube.
-
-        The value of each key is itself a dictionary with the following
-        keys:   | 'axis': `int`   |     The number of the data axis to
-        which the extra coordinate corresponds.   | 'value':
-        `astropy.units.Quantity` or array-like   |     The value of the
-        extra coordinate at each pixel/array element along the   |
-        corresponding axis (given by the 'axis' key, above).  Note this
-        means   |     that the length of 'value' must be equal to the
-        length of the data axis   |     to which is corresponds.
-        """
-
-        if not self._extra_coords_wcs_axis:
-            result = None
-        else:
-            result = {}
-            for key in list(self._extra_coords_wcs_axis.keys()):
-                result[key] = {
-                    "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],
-                        wcs_utils._pixel_keep(self.wcs),
-                        self.wcs.low_level_wcs.pixel_n_dim),
-                    "value": self._extra_coords_wcs_axis[key]["value"]}
-        return result
-
-    def crop(self, lower_corner, upper_corner, wcs=None):
+    def crop(self, *intervals, wcs=None):
         # The docstring is defined in NDCubeBase
         if len(lower_corner) != len(upper_corner):
             raise ValueError("lower_corner must have same length as upper_corner, "

@@ -78,17 +78,17 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
-@pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs", "bugged"),
+@pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
-                             ("ln_lt_l_t", np.s_[:, :, 0, :], {}, False),
-                             ("ln_lt_l_t", np.s_[:, :, 0, :], {'plot_axes': [..., 'x']}, False),
-                             ("ln_lt_l_t", None, {}, False),
-                             ("ln_lt_l_t", None, {"plot_axes": [0, 0, 'x', 'y']}, False),
-                             ("ln_lt_l_t", None, {"plot_axes": [0, 'x', 0, 'y']}, False),
-                             ("ln_lt_l_t", np.s_[0, :, :, :], {}, True),
-                             ("ln_lt_l_t", np.s_[:, :, :, :], {}, False),
-                             ("unit_uncertainty", np.s_[0, :, :, :], {'data_unit': u.mJ}, True),
-                             ("mask", np.s_[:, :, :, :], {}, False),),
+                             ("ln_lt_l_t", np.s_[:, :, 0, :], {}),
+                             ("ln_lt_l_t", np.s_[:, :, 0, :], {'plot_axes': [..., 'x']}),
+                             ("ln_lt_l_t", None, {}),
+                             ("ln_lt_l_t", None, {"plot_axes": [0, 0, 'x', 'y']}),
+                             ("ln_lt_l_t", None, {"plot_axes": [0, 'x', 0, 'y']}),
+                             ("ln_lt_l_t", np.s_[0, :, :, :], {}),
+                             ("ln_lt_l_t", np.s_[:, :, :, :], {}),
+                             ("unit_uncertainty", np.s_[0, :, :, :], {'data_unit': u.mJ}),
+                             ("mask", np.s_[:, :, :, :], {}),),
                          indirect=["ndcube_4d"])
 def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs):
     if cslice:

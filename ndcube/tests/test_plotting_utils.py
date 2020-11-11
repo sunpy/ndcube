@@ -32,10 +32,6 @@ def test_prep_plot_kwargs_errors(ndcube_4d_ln_lt_l_t):
     with pytest.raises(ValueError):
         utils.prep_plot_kwargs(4, ndcube_4d_ln_lt_l_t.wcs, ['wibble'], None, None)
 
-    # axes_cooordinates has incorrect length
-    with pytest.raises(ValueError):
-        utils.prep_plot_kwargs(4, ndcube_4d_ln_lt_l_t.wcs, None, [1], None)
-
     # axes_coordinates is not in world_axis_physical_types
     with pytest.raises(ValueError):
         utils.prep_plot_kwargs(4, ndcube_4d_ln_lt_l_t.wcs, None, [..., "wibble"], None)
@@ -61,8 +57,8 @@ def test_prep_plot_kwargs_errors(ndcube_4d_ln_lt_l_t):
      (None, None, None),
      (['x', 'y'], None, None)),
     ("ln_lt",
-     (None, [..., 'custom:pos.helioprojective.lat'], None),
-     (['x', 'y'], [None, 'custom:pos.helioprojective.lat'], None)),
+     (None, [..., 'custom:pos.helioprojective.lon'], None),
+     (['x', 'y'], ['custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'], None)),
     ("ln_lt",
      (None, None, [u.deg, 'arcsec']),
      (['x', 'y'], None, [u.arcsec, u.deg])),

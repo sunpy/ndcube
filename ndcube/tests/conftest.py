@@ -2,8 +2,6 @@
 This file contains a set of common fixtures to get a set of different but
 predicable NDCube objects.
 """
-import datetime
-
 import astropy.units as u
 import numpy as np
 import pytest
@@ -41,7 +39,7 @@ def wcs_4d_t_l_lt_ln():
         'CRVAL4': 0,
 
         'DATEREF': "2020-01-01T00:00:00"
-        }
+    }
     return WCS(header=header)
 
 
@@ -65,7 +63,7 @@ def wcs_3d_l_lt_ln():
         'CDELT3': 10,
         'CRPIX3': 0,
         'CRVAL3': 0,
-        }
+    }
 
     return WCS(header=header)
 
@@ -86,6 +84,7 @@ def wcs_2d_lt_ln():
         'CRVAL2': 0,
     }
     return WCS(header=spatial)
+
 
 @pytest.fixture
 def wcs_1d_l():
@@ -140,10 +139,13 @@ def wcs_3d_ln_lt_t_rotated():
 
 @pytest.fixture
 def simple_extra_coords_3d():
-    data = data_nd((2, 3, 4))
-    return [('time', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
-            ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
-            ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))]
+    return ExtraCoords.from_lookup_tables(('time', 'hello', 'bye'),
+                                          (0, 1, 2),
+                                          (list(range(2)) * u.pix,
+                                           list(range(3)) * u.pix,
+                                           list(range(4)) * u.pix
+                                           )
+                                          )
 
 
 def data_nd(shape):
@@ -183,11 +185,10 @@ def ndcube_4d_mask(wcs_4d_t_l_lt_ln):
 
 
 @pytest.fixture
-def ndcube_4d_extra_coords(wcs_4d_t_l_lt_ln):
+def ndcube_4d_extra_coords(wcs_4d_t_l_lt_ln, simple_extra_coords_3d):
     shape = (5, 8, 10, 12)
     data_cube = data_nd(shape)
-    ec = extra_coords(data_cube)
-    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, extra_coords=ec)
+    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, extra_coords=simple_extra_coords_3d)
 
 
 @pytest.fixture
@@ -216,6 +217,7 @@ def ndcube_3d_ln_lt_l(wcs_3d_l_lt_ln, simple_extra_coords_3d):
     return NDCube(
         data,
         wcs_3d_l_lt_ln,
+        mask=mask,
         uncertainty=data,
         extra_coords=simple_extra_coords_3d
     )

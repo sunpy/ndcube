@@ -5,7 +5,6 @@ from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import NDCube
 from ndcube.tests import helpers
 
 
@@ -35,7 +34,8 @@ def test_wcs_object(all_ndcubes):
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
     assert len(sndc.dimensions) == 2
-    assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat", "custom:pos.helioprojective.lon"}
+    assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat",
+                                                       "custom:pos.helioprojective.lon"}
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
     if sndc.mask is not None:
@@ -43,7 +43,7 @@ def test_slicing_ln_lt(ndc, item):
 
     if ndc.extra_coords and ndc.extra_coords.keys():
         ec = sndc.extra_coords
-        assert set(ec.keys()) == {"time", "hello", "bye"}
+        assert set(ec.keys()) == {"time", "hello"}
 
     wcs = sndc.wcs
     assert isinstance(wcs, BaseHighLevelWCS)
@@ -78,7 +78,7 @@ def test_slicing_wave(ndc, item):
 
     if ndc.extra_coords and ndc.extra_coords.keys():
         ec = sndc.extra_coords
-        assert set(ec.keys()) == {"bye", "hello", "time"}
+        assert set(ec.keys()) == {"bye"}
 
     wcs = sndc.wcs
     assert isinstance(wcs, BaseHighLevelWCS)
@@ -112,7 +112,7 @@ def test_slicing_split_celestial(ndc, item):
 
     if ndc.extra_coords and ndc.extra_coords.keys():
         ec = sndc.extra_coords
-        assert set(ec.keys()) == {"hello", "bye", "time"}
+        assert set(ec.keys()) == {"hello", "bye"}
 
     assert isinstance(sndc.wcs, BaseHighLevelWCS)
     assert isinstance(sndc.wcs.low_level_wcs, SlicedLowLevelWCS)

@@ -3,6 +3,7 @@ import warnings
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
 from sunpy.visualization.animator import ArrayAnimatorWCS
 
