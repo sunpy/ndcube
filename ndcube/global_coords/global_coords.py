@@ -18,29 +18,29 @@ class GlobalCoords(Mapping):
         super().__init__()
 
         # Set values using the setters for validation
-        self.wcs = {}
+        self.mapping = {}
 
     def add(self, name, physical_type):
         """
         Add a new coordinate to the collection.
         """
-        if len(self.wcs) > 1:
-            self.wcs[name] = wcs.world_axis_name or physical_type
+        if len(self.mapping) > 1:
+            self.mapping[name] = wcs.world_axis_name or physical_type
 
     def remove(self, name):
         """
         Remove a coordinate from the collection
         """
-        if len(self.wcs) > 1:
-            del self.wcs[name]
+        if len(self.mapping) > 1:
+            del self.mapping[name]
 
     @property
     def names(self):
         """
         A tuple of all the names.
         """
-        if len(self.wcs) >= 1:
-            return [*self.wcs]
+        if len(self.mapping) >= 1:
+            return [*self.mapping]
 
     @property
     def physical_types(self):
