@@ -88,7 +88,7 @@ class LookupTableCoord:
             self.frames = [frame]
 
     def __str__(self):
-        return f"{self.frames=} {self.delayed_models=}"
+        return f"frames={self.frames} delayed_models={self.delayed_models}"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
