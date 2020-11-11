@@ -382,18 +382,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
         # The docstring is defined in NDCubeBase
         # Sanitize inputs.
-        n_world_dims = len(lower_corner)
-        if len(upper_corner) != n_world_dims:
+        n_coords = len(lower_corner)
+        if len(upper_corner) != n_coords:
             raise ValueError("lower_corner must have same length as upper_corner")
         if units is None:
-            units = [None] * n_world_dims
-        elif len(units) != n_world_dims:
+            units = [None] * n_coords
+        elif len(units) != n_coords:
             raise ValueError(
                 "units must be None or have same length as lower_corner and upper_corner.")
         # Convert float inputs to quantities using units.
+        types_with_units = (u.Quantity, type(None))
         for i, (lower, upper, unit) in enumerate(zip(lower_corner, upper_corner, units)):
-            lower_is_float = not ((lower is None) or isinstance(lower, u.Quantity))
-            upper_is_float = not ((upper is None) or isinstance(upper, u.Quantity))
+            lower_is_float = not isinstance(lower, types_with_units)
+            upper_is_float = not isinstance(upper, types_with_units)
             if unit is None and (lower_is_float or upper_is_float):
                 raise TypeError("If corner value is not a Quantity or None, "
                                 "unit must be a valid astropy Unit or unit string."
