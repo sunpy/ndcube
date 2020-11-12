@@ -1,11 +1,9 @@
-import unittest
 
 import numpy as np
 import pytest
 from astropy.wcs import WCS
 
 from ndcube import utils
-from ndcube.tests import helpers
 
 ht_with_celestial = {
     'CTYPE4': 'HPLN-TAN', 'CUNIT4': 'deg', 'CDELT4': 1, 'CRPIX4': 0, 'CRVAL4': 0, 'NAXIS4': 1,

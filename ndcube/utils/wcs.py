@@ -4,14 +4,10 @@
 Miscellaneous WCS utilities.
 """
 
-import re
-import numbers
-from copy import deepcopy
 from collections import UserDict
 
 import numpy as np
 from astropy import wcs
-from astropy.wcs._wcs import InconsistentAxisTypesError
 
 __all__ = ['wcs_ivoa_mapping', 'append_sequence_axis_to_wcs',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
@@ -237,9 +233,10 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
         widx = np.arange(len(world_axis_physical_types))[widx]
     if len(widx) != 1:
         raise ValueError(
-                "Input does not uniquely correspond to a physical type."
-                f" Expected unique substring of one of {world_axis_physical_types}."
-                f"  Got: {physical_type}")
+            "Input does not uniquely correspond to a physical type."
+            f" Expected unique substring of one of {world_axis_physical_types}."
+            f"  Got: {physical_type}"
+        )
     # Return axes with duplicates removed.
     return widx[0]
 

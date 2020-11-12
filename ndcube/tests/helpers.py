@@ -12,12 +12,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import sunpy
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS, SlicedLowLevelWCS
+from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
-from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 from numpy.testing import assert_equal
 
-from ndcube import NDCube, NDCubeSequence, utils
+from ndcube import NDCube, NDCubeSequence
 
 __all__ = ['figure_test',
            'get_hash_library_name',
@@ -89,7 +89,7 @@ def assert_metas_equal(test_input, expected_output):
 
 
 def assert_cubes_equal(test_input, expected_cube):
-    unit_tester = unittest.TestCase()
+    unittest.TestCase()
     assert isinstance(test_input, type(expected_cube))
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)

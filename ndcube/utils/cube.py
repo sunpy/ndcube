@@ -13,6 +13,7 @@ __all__ = [
     'convert_extra_coords_dict_to_input_format',
     'wcs_axis_to_data_ape14']
 
+
 # Deprecated in favor of utils.wcs.convert_between_array_and_pixel_axes.
 # Can only remove after extra_coords refactor.
 def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
@@ -51,7 +52,7 @@ def wcs_axis_to_data_ape14(wcs_axis, pixel_keep, naxes, old_order=False):
 
         # pixel_keep is the old order of all wcs axes
         # Get the old order of all data axes
-        old_data_order = naxes - 1 - pixel_keep
+        naxes - 1 - pixel_keep
 
         # Get a mapping of the old order and new order of all data axes
         new_wcs_order = np.unique(pixel_keep, return_inverse=True)[1]
