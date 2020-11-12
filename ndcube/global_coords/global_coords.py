@@ -19,10 +19,7 @@ class GlobalCoords(Mapping):
         """
         Add a new coordinate to the collection.
         """
-        try:
-            self.mapping[name] = (name, physical_type, gcoords)
-        except TypeError:
-            self.mapping[name] = (physical_type, physical_type, gcoords)
+        self.mapping[name] = (name, physical_type, gcoords)
 
     def remove(self, name):
         """
