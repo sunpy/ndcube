@@ -1,12 +1,3 @@
-Ndcube v2.0.0
-=============
-
-Features
---------
-
-- Introduce concept of global coordinates
-
-
 Ndcube v1.3.0 (2020-03-27)
 ==========================
 
