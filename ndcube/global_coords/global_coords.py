@@ -40,14 +40,14 @@ class GlobalCoords(Mapping):
     @property
     def names(self):
         """
-        A mutable list of all the names or keys.
+        A list of all the names or keys.
         """
         return list(self._internal_coords.keys())
 
     @property
     def physical_types(self):
         """
-        A mutable list of all physical types, one per coordinate.
+        A list of all physical types, one per coordinate.
         """
         physical_types_list = []
         for item in self._internal_coords.values():
@@ -57,7 +57,7 @@ class GlobalCoords(Mapping):
     @property
     def coords(self):
         """
-        A mutable list of all coords, one per coordinate.
+        A list of all coords, one per coordinate.
         """
         coords_list = []
         for item in self._internal_coords.values():
