@@ -3,10 +3,7 @@ import copy
 from typing import Any, Tuple, Union, Iterable
 from numbers import Integral
 from functools import reduce
-from collections import defaultdict
 
-import astropy.units as u
-from astropy.modeling import models
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
 
