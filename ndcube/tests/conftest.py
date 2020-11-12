@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from astropy.wcs import WCS
 
-from ndcube import NDCube
+from ndcube import NDCube, NDCubeSequence
 
 
 @pytest.fixture
@@ -260,6 +260,18 @@ def ndcube_1d_l(wcs_1d_l):
     shape = (10,)
     data_cube = data_nd(shape)
     return NDCube(data_cube, wcs=wcs_1d_l)
+
+
+@pytest.fixture
+def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
+    cube1 = ndcube_3d_ln_lt_l
+    cube2 = ndcube_3d_ln_lt_l
+    cube3 = ndcube_3d_ln_lt_l
+    cube4 = ndcube_3d_ln_lt_l
+    cube2.data[:] *= 2
+    cube3.data[:] *= 3
+    cube4.data[:] *= 4
+    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
 
 
 @pytest.fixture(params=[
