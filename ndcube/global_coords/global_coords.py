@@ -1,5 +1,5 @@
-from collections.abc import Mapping
 from collections import OrderedDict
+from collections.abc import Mapping
 
 __all__ = ['GlobalCoords']
 

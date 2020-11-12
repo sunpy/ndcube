@@ -1,4 +1,5 @@
 import astropy.units as u
+
 import ndcube
 from ndcube.global_coords import GlobalCoords
 
