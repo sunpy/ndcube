@@ -4,7 +4,6 @@ Utilities for ndcube sequence.
 """
 
 from copy import deepcopy
-from functools import singledispatch
 from collections import namedtuple
 
 import astropy.units as u

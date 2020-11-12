@@ -6,13 +6,14 @@ from collections import namedtuple
 import astropy.nddata
 import astropy.units as u
 import numpy as np
-import sunpy.coordinates
-from astropy.wcs.wcsapi import BaseLowLevelWCS
+import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+from astropy.wcs.wcsapi import BaseLowLevelWCS, HighLevelWCSWrapper
 
 import ndcube.utils.wcs as wcs_utils
-from ndcube import utils
+from ndcube.extra_coords import ExtraCoords
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
@@ -173,17 +174,35 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
-        # Enforce that the WCS object is a low_level_wcs object, and not None.
+        # Enforce that the WCS object is not None
         if self.wcs is None:
             raise TypeError("The WCS argument can not be None.")
 
         # Format extra coords.
-        if extra_coords:
-            self._extra_coords_wcs_axis = \
-                utils.cube._format_input_extra_coords_to_extra_coords_wcs_axis(
-                    extra_coords, wcs_utils._pixel_keep(wcs), wcs.pixel_n_dim, data.shape)
-        else:
-            self._extra_coords_wcs_axis = None
+        if not extra_coords:
+            extra_coords = ExtraCoords()
+
+        if not isinstance(extra_coords, ExtraCoords):
+            raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")
+
+        self._extra_coords = extra_coords
+
+    @property
+    def extra_coords(self):
+        return self._extra_coords
+
+    @property
+    def combined_wcs(self):
+        """
+        A `~astropy.wcs.wcsapi.BaseHighLevelWCS` object which combines ``.wcs`` with ``.extra_coords``.
+        """
+        if not self.extra_coords.wcs:
+            return self.wcs
+
+        mapping = list(range(self.wcs.pixel_n_dim)) + list(self.extra_coords.mapping)
+        return HighLevelWCSWrapper(
+            CompoundLowLevelWCS(self.wcs.low_level_wcs, self._extra_coords.wcs, mapping=mapping)
+        )
 
     @property
     def dimensions(self):
@@ -314,7 +333,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # If axis is int, it is a numpy order array axis.
                     # Convert to pixel axis in WCS order.
                     axis = wcs_utils.convert_between_array_and_pixel_axes(
-                            np.array([axis]), wcs.pixel_n_dim)[0]
+                        np.array([axis]), wcs.pixel_n_dim)[0]
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
                     world_indices.update(wcs_utils.pixel_axis_to_world_axes(
@@ -342,35 +361,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             identifiers.append(identifier)
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
-
-    @property
-    def extra_coords(self):
-        """
-        Dictionary of extra coords where each key is the name of an extra
-        coordinate supplied by user during instantiation of the NDCube.
-
-        The value of each key is itself a dictionary with the following
-        keys:   | 'axis': `int`   |     The number of the data axis to
-        which the extra coordinate corresponds.   | 'value':
-        `astropy.units.Quantity` or array-like   |     The value of the
-        extra coordinate at each pixel/array element along the   |
-        corresponding axis (given by the 'axis' key, above).  Note this
-        means   |     that the length of 'value' must be equal to the
-        length of the data axis   |     to which is corresponds.
-        """
-
-        if not self._extra_coords_wcs_axis:
-            result = None
-        else:
-            result = {}
-            for key in list(self._extra_coords_wcs_axis.keys()):
-                result[key] = {
-                    "axis": utils.cube.wcs_axis_to_data_ape14(
-                        self._extra_coords_wcs_axis[key]["wcs axis"],
-                        wcs_utils._pixel_keep(self.wcs),
-                        self.wcs.low_level_wcs.pixel_n_dim),
-                    "value": self._extra_coords_wcs_axis[key]["value"]}
-        return result
 
     def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeBase
@@ -433,8 +423,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             world_to_array_index = wcs.world_to_array_index
             array_index_to_world = wcs.array_index_to_world
-        world_axis_units = wcs.world_axis_units
-        world_axis_physical_types = wcs.world_axis_physical_types
+
+        wcs.world_axis_physical_types
         # If user did not provide all intervals,
         # calculate missing intervals based on whole cube range along those axes.
         if lower_nones.any() or upper_nones.any():

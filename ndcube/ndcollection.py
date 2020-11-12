@@ -1,13 +1,9 @@
-import copy
 import textwrap
 import collections.abc
 
 import numpy as np
 
 import ndcube.utils.collection as collection_utils
-from ndcube.ndcube import NDCube
-from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.cube import convert_extra_coords_dict_to_input_format
 
 __all__ = ["NDCollection"]
 
@@ -62,7 +58,8 @@ class NDCollection(dict):
                 aligned_axes = dict(zip(keys, aligned_axes))
         if kwargs:
             raise TypeError(
-                    f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'")
+                f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'"
+            )
         # Attach aligned axes to object.
         self.aligned_axes = aligned_axes
         if self.aligned_axes is None:
@@ -96,7 +93,8 @@ class NDCollection(dict):
         """
         if self.aligned_axes is not None:
             return np.asanyarray(self[self._first_key].dimensions, dtype=object)[
-                    np.array(self.aligned_axes[self._first_key])]
+                np.array(self.aligned_axes[self._first_key])
+            ]
 
     @property
     def aligned_world_axis_physical_types(self):
@@ -206,7 +204,7 @@ class NDCollection(dict):
         # by removing any that have been dropped.
         drop_aligned_axes_indices = np.array(drop_aligned_axes_indices)
         new_aligned_axes = collection_utils._update_aligned_axes(
-                drop_aligned_axes_indices, self.aligned_axes, self._first_key)
+            drop_aligned_axes_indices, self.aligned_axes, self._first_key)
 
         return collection_items, new_aligned_axes
 
@@ -224,7 +222,7 @@ class NDCollection(dict):
         # Extract desired cube from collection.
         popped_cube = super().pop(key)
         # Delete corresponding aligned axes
-        popped_aligned_axes = self.aligned_axes.pop(key)
+        self.aligned_axes.pop(key)
         return popped_cube
 
     def update(self, *args):
@@ -249,8 +247,9 @@ class NDCollection(dict):
         # Check aligned axes of new inputs are compatible with those in self.
         # As they've already been sanitized, only one set of aligned axes need be checked.
         collection_utils.assert_aligned_axes_compatible(
-                self[self._first_key].dimensions, new_data[0].dimensions,
-                self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]])
+            self[self._first_key].dimensions, new_data[0].dimensions,
+            self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]]
+        )
         # Update collection
         super().update(key_data_pairs)
         self.aligned_axes.update(new_aligned_axes)
