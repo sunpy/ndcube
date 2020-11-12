@@ -8,4 +8,4 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-__all__ = ['NDCube', 'NDCubeSequence', "NDCollection", "ExtraCoords"]
+__all__ = ['NDCube', 'NDCubeSequence', "NDCollection", "ExtraCoords", "GlobalCoords"]
