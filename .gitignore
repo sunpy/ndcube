@@ -149,7 +149,6 @@ docs/generated
 docs/api
 docs/whatsnew/latest_changelog.txt
 ndcube/version.py
-#htmlcov/
 .github_cache/
 
 # Created by https://www.gitignore.io/api/intellij
