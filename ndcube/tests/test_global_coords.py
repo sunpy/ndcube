@@ -1,7 +1,7 @@
 import astropy.units as u
 
-import ndcube
 from ndcube.global_coords import GlobalCoords
+
 
 @pytest.fixture
 def global_coords(ndcube_3d_ln_lt_l):
