@@ -8,6 +8,9 @@ class GlobalCoords(Mapping):
     A structured representation of coordinate information applicable to a whole NDCube.
     """
     def __init__(self, ndcube):
+        """
+        Init method.
+        """
         super().__init__()
         self._ndcube = ndcube
 
@@ -16,6 +19,9 @@ class GlobalCoords(Mapping):
 
     @property
     def _all_coords(self):
+        """
+        Establish the _all_coords property with an _internal_coords.
+        """
         return self._internal_coords
 
     def add(self, name, physical_type, coords):
@@ -51,7 +57,13 @@ class GlobalCoords(Mapping):
         return self.mapping[item]
 
     def __iter__(self):
+        """
+        Iterate over the collection.
+        """
         return iter(self.mapping)
 
     def __len__(self):
+        """
+        Establish the length of the collection.
+        """
         return len(self.mapping)
