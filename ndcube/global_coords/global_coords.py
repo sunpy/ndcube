@@ -15,11 +15,11 @@ class GlobalCoords(Mapping):
         # Set values using the setters for validation
         self.mapping = {}
 
-    def add(self, name, physical_type, gcoords):
+    def add(self, name, physical_type, coords):
         """
         Add a new coordinate to the collection.
         """
-        self.mapping[name] = [name, physical_type, gcoords]
+        self.mapping[name] = [name, physical_type, coords]
 
     def remove(self, name):
         """
