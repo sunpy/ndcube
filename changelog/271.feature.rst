@@ -1,0 +1,1 @@
+Implement a new `.ExtraCoords` class which allows the specification of extra coordinates via lookup tables or WCS. This class exposes the extra coords as an APE 14 WCS object.
