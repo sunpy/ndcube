@@ -46,7 +46,6 @@ class GlobalCoords(Mapping):
         """
         return [*self.mapping[1]]
 
-
     def __getitem__(self, item):
         """
         Index the collection by a name.
