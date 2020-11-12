@@ -159,17 +159,17 @@ def test_shared_pixel_axis_compound_3d(spectral_cube_3d_fitswcs, time_1d_fitswcs
     assert wcs.pixel_axis_names == ('', '', '')
     assert wcs.pixel_bounds is None
 
-    np.testing.assert_allclose(wcs.axis_correlation_matrix, [[True,  True,  False],
-                                                             [True,  True,  False],
+    np.testing.assert_allclose(wcs.axis_correlation_matrix, [[True, True, False],
+                                                             [True, True, False],
                                                              [False, False, True],
-                                                             [False, True,  False]])
+                                                             [False, True, False]])
 
     world = wcs.pixel_to_world_values(0, 0, 0)
-    np.testing.assert_allclose(world, ( 14, -12, -2.6e+10, -7.0))
+    np.testing.assert_allclose(world, (14, -12, -2.6e+10, -7.0))
     np.testing.assert_allclose(wcs.world_to_pixel_values(*world), (0, 0, 0))
 
     with pytest.raises(ValueError):
-        wcs.world_to_pixel_values(( 14, -12, -2.6e+10, -6.0))
+        wcs.world_to_pixel_values((14, -12, -2.6e+10, -6.0))
 
     with pytest.raises(ValueError):
-        wcs.world_to_pixel_values(( 14, -10, -2.6e+10, -7.0))
+        wcs.world_to_pixel_values((14, -10, -2.6e+10, -7.0))

@@ -21,6 +21,7 @@ def test_repr_str(lut_1d_distance):
 
     assert str(lut_1d_distance.delayed_models[0]) in repr(lut_1d_distance.delayed_models[0])
 
+
 def test_exceptions(lut_1d_distance):
     with pytest.raises(TypeError):
         LookupTableCoord(u.Quantity([1, 2, 3], u.nm), [1, 2, 3])
@@ -78,7 +79,7 @@ def test_3d_distance():
 
 
 def test_2d_nout_1_no_mesh():
-    lookup_table = np.arange(9).reshape(3,3) * u.km, np.arange(9, 18).reshape(3,3) * u.km
+    lookup_table = np.arange(9).reshape(3, 3) * u.km, np.arange(9, 18).reshape(3, 3) * u.km
 
     ltc = LookupTableCoord(*lookup_table, mesh=False)
     assert ltc.wcs.world_n_dim == 2

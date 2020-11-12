@@ -13,7 +13,7 @@ import ndcube.mixins.plotting_utils as utils
     (5, [..., 'x'], [None, None, None, None, 'x']),
     (5, [..., 'x', None], [None, None, None, 'x', None]),
     (5, [None, ..., 'x', None, 'y'], [None, None, 'x', None, 'y']),
-    ))
+))
 def test_expand_ellipsis(ndim, plist, output):
     result = utils._expand_ellipsis(ndim, plist)
     assert result == output
@@ -62,7 +62,7 @@ def test_prep_plot_kwargs_errors(ndcube_4d_ln_lt_l_t):
     ("ln_lt",
      (None, None, [u.deg, 'arcsec']),
      (['x', 'y'], None, [u.arcsec, u.deg])),
-    ), indirect=['ndcube_2d'])
+), indirect=['ndcube_2d'])
 def test_prep_plot_kwargs(ndcube_2d, args, output):
     result = utils.prep_plot_kwargs(2, ndcube_2d.wcs, *args)
     assert result == output

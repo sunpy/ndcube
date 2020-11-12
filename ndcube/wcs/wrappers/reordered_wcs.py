@@ -1,8 +1,6 @@
 
-import numbers
 
 import numpy as np
-from astropy.utils import isiterable
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 __all__ = ['ReorderedLowLevelWCS']

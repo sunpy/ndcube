@@ -298,7 +298,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         subwcs = self.wcs[item]
 
-        new_mapping = [self.mapping[i]  for i, subitem in enumerate(item) if not isinstance(subitem, Integral)]
+        new_mapping = [self.mapping[i] for i, subitem in enumerate(item) if not isinstance(subitem, Integral)]
 
         return type(self)(wcs=subwcs, mapping=new_mapping)
 

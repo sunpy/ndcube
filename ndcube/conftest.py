@@ -2,7 +2,6 @@
 This file contains a set of common fixtures to get a set of different but
 predicable NDCube objects.
 """
-import datetime
 
 import astropy.units as u
 import numpy as np

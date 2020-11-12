@@ -1,4 +1,3 @@
-import copy
 
 import astropy.units as u
 import astropy.wcs

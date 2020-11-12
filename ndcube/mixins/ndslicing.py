@@ -1,10 +1,6 @@
-import copy
 
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
-from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
-
-from ndcube import utils
 
 __all__ = ['NDCubeSlicingMixin']
 
@@ -52,7 +48,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         kwargs = super()._slice(item)
 
         # Store the original dimension of NDCube object before slicing
-        prev_dim = len(self.dimensions)
+        len(self.dimensions)
 
         kwargs['extra_coords'] = self.extra_coords[item]
 

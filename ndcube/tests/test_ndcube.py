@@ -196,9 +196,9 @@ def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
 
 def test_array_axis_physical_types(ndcube_4d_ln_lt_l_t):
     expected = [
-            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-            ('em.wl',), ('time',)]
+        ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
+        ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
+        ('em.wl',), ('time',)]
     output = ndcube_4d_ln_lt_l_t.array_axis_physical_types
     for i in range(len(expected)):
         assert all([physical_type in expected[i] for physical_type in output[i]])

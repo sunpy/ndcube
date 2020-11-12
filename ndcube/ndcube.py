@@ -333,7 +333,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     # If axis is int, it is a numpy order array axis.
                     # Convert to pixel axis in WCS order.
                     axis = wcs_utils.convert_between_array_and_pixel_axes(
-                            np.array([axis]), wcs.pixel_n_dim)[0]
+                        np.array([axis]), wcs.pixel_n_dim)[0]
                     # Get WCS world axis indices that correspond to the WCS pixel axis
                     # and add to list of indices of WCS world axes whose coords will be returned.
                     world_indices.update(wcs_utils.pixel_axis_to_world_axes(
@@ -423,8 +423,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             world_to_array_index = wcs.world_to_array_index
             array_index_to_world = wcs.array_index_to_world
-        world_axis_units = wcs.world_axis_units
-        world_axis_physical_types = wcs.world_axis_physical_types
+
+        wcs.world_axis_physical_types
         # If user did not provide all intervals,
         # calculate missing intervals based on whole cube range along those axes.
         if lower_nones.any() or upper_nones.any():

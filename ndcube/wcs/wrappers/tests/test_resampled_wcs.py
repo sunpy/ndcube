@@ -55,7 +55,7 @@ def test_2d(celestial_wcs):
     assert tuple(wcs.pixel_axis_names) == ('', '')
     assert tuple(wcs.world_axis_names) == ('Right Ascension',
                                            'Declination')
-    assert_equal(wcs.axis_correlation_matrix, np.ones((2,2)))
+    assert_equal(wcs.axis_correlation_matrix, np.ones((2, 2)))
 
     # Shapes and bounds should be floating-point if needed
     assert_allclose(wcs.pixel_shape, (15, 7/3))
