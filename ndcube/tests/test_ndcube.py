@@ -131,25 +131,32 @@ def test_slicing_split_celestial(ndc, item):
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
 def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes)
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09]*u.m)
+    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
+    coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, edges=False)
+    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
 def test_axis_world_coords_single_edges(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, edges=True)
-    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09]*u.m)
+    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
+
+    coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, edges=True)
+    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
 
 @pytest.mark.parametrize("ndc, item",
                          (
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
                          ),
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_3d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
+    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
+    coords = ndc[item].axis_world_coords()
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
@@ -168,18 +175,39 @@ def test_axis_world_coords_sliced_all_4d(ndc, item):
     assert u.allclose(coords, expected)
 
 
-@pytest.mark.xfail
 def test_axis_world_coords_all(ndcube_3d_ln_lt_l):
-    coords = ndcube_3d_ln_lt_l.axis_world_coord()
+    coords = ndcube_3d_ln_lt_l.axis_world_coords()
     assert len(coords) == 2
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
+    assert isinstance(coords[1], SkyCoord)
+
+    assert u.allclose(coords[1].Tx, [[9.99999999, 9.99999999, 9.99999999],
+                                     [19.99999994, 19.99999994, 19.99999994]] * u.arcsec)
+    assert u.allclose(coords[1].Ty, [[-19.99999991, -14.99999996, -9.99999998],
+                                     [-19.99999984, -14.9999999, -9.99999995]] * u.arcsec)
+
+
+def test_axis_world_coords_wave(ndcube_3d_ln_lt_l):
+    coords = ndcube_3d_ln_lt_l.axis_world_coords('em.wl')
+    assert len(coords) == 1
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
+
+@pytest.mark.parametrize('wapt', ('custom:pos.helioprojective.lon',
+                                  'custom:pos.helioprojective.lat'))
+def test_axis_world_coords_sky(ndcube_3d_ln_lt_l, wapt):
+    coords = ndcube_3d_ln_lt_l.axis_world_coords(wapt)
+    assert len(coords) == 1
+
     assert isinstance(coords[0], SkyCoord)
 
-    assert u.allclose(coords[0].Tx, [[0.60002173, 0.59999127, 0.5999608],
-                                     [1., 1., 1.]] * u.deg)
-    assert u.allclose(coords[0].Ty, [[1.26915033e-05, 4.99987815e-01, 9.99962939e-01],
-                                     [1.26918126e-05, 5.00000000e-01, 9.99987308e-01]] * u.deg)
-    assert isinstance(coords[1], u.Quantity)
-    assert u.allclose(coords[1], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0].Tx, [[9.99999999, 9.99999999, 9.99999999],
+                                     [19.99999994, 19.99999994, 19.99999994]] * u.arcsec)
+    assert u.allclose(coords[0].Ty, [[-19.99999991, -14.99999996, -9.99999998],
+                                     [-19.99999984, -14.9999999, -9.99999995]] * u.arcsec)
 
 
 def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
@@ -192,6 +220,30 @@ def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
     assert u.allclose(coords[1], [[-0.00555556, -0.00416667, -0.00277778],
                                   [-0.00555556, -0.00416667, -0.00277778]] * u.deg)
     assert u.allclose(coords[2], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
+
+def test_axis_world_coords_values_wave(ndcube_3d_ln_lt_l):
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values('em.wl')
+    assert len(coords) == 1
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
+
+def test_axis_world_coords_values_lon(ndcube_3d_ln_lt_l):
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values('custom:pos.helioprojective.lon')
+    assert len(coords) == 1
+    assert all(isinstance(c, u.Quantity) for c in coords)
+
+    assert u.allclose(coords[0], [[0.00277778, 0.00277778, 0.00277778],
+                                  [0.00555556, 0.00555556, 0.00555556]] * u.deg)
+
+
+def test_axis_world_coords_values_lat(ndcube_3d_ln_lt_l):
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values('custom:pos.helioprojective.lat')
+    assert len(coords) == 1
+    assert all(isinstance(c, u.Quantity) for c in coords)
+    assert u.allclose(coords[0], [[-0.00555556, -0.00416667, -0.00277778],
+                                  [-0.00555556, -0.00416667, -0.00277778]] * u.deg)
 
 
 def test_array_axis_physical_types(ndcube_4d_ln_lt_l_t):
