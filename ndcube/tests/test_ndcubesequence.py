@@ -197,39 +197,49 @@ def test_index_as_cube(ndc, item, expected_dimensions):
         (dim == expected_dim).all()
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    (seq1.explode_along_axis(0), (8 * u.pix, 3 * u.pix, 4 * u.pix)),
-    (seq1.explode_along_axis(1), (12 * u.pix, 2 * u.pix, 4 * u.pix)),
-    (seq1.explode_along_axis(2), (16 * u.pix, 2 * u.pix, 3 * u.pix)),
-])
-def test_explode_along_axis(test_input, expected):
-    assert test_input.dimensions == expected
+@pytest.mark.parametrize("ndc, axis, expected_dimensions", 
+        (
+            ("ndcubesequence_4c_ln_lt_l", 0, (8 * u.pix, 3 * u.pix, 4 * u.pix)),
+            ("ndcubesequence_4c_ln_lt_l_cax1", 1, (12 * u.pix, 2 * u.pix, 4 * u.pix)),
+            ("ndcubesequence_4c_ln_lt_l", 2, (16 * u.pix, 2 * u.pix, 3 * u.pix))
+        ),
+        indirect=("ndc",))
+def test_explode_along_axis(ndc, axis, expected_dimensions):
+    exploded_sequence = ndc.explode_along_axis(axis)
+    assert exploded_sequence.dimensions == expected_dimensions
+    assert exploded_sequence._common_axis is None
 
-
-def test_explode_along_axis_error():
+@pytest.mark.parametrize("ndc, axis", (("ndcubesequence_4c_ln_lt_l_cax1", 0),), indirect=("ndc",))
+def test_explode_along_axis_error(ndc, axis):
     with pytest.raises(ValueError):
-        seq.explode_along_axis(1)
+        ndc.explode_along_axis(axis)
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [(seq, (4 * u.pix, 2. * u.pix, 3. * u.pix, 4. * u.pix))])
-def test_dimensions(test_input, expected):
+@pytest.mark.parametrize("ndc, expected_dimensions",
+        (
+            ("ndcubesequence_4c_ln_lt_l_cax1", (4 * u.pix, 2. * u.pix, 3. * u.pix, 4. * u.pix)),
+        ),
+        indirect=("ndc",))
+def test_dimensions(ndc, expected_dimensions):
     unit_tester = unittest.TestCase()
-    unit_tester.assertEqual(test_input.dimensions, expected)
+    unit_tester.assertEqual(ndc.dimensions, expected_dimensions)
 
 
-@pytest.mark.parametrize(
-    "test_input,expected",
-    [(seq, u.Quantity([8., 3., 4], unit=u.pix))])
-def test_cube_like_dimensions(test_input, expected):
-    assert (seq.cube_like_dimensions == expected).all()
+@pytest.mark.parametrize("ndc, expected_dimensions",
+        (
+            ("ndcubesequence_4c_ln_lt_l_cax1", [2., 12, 4] * u.pix),
+        ),
+        indirect=("ndc",))
+def test_cube_like_dimensions(ndc, expected_dimensions):
+    print(ndc.cube_like_dimensions, expected_dimensions)
+    assert (ndc.cube_like_dimensions == expected_dimensions).all()
 
 
 @pytest.mark.parametrize("test_input", [(seq_bad_common_axis)])
 def test_cube_like_dimensions_error(test_input):
     with pytest.raises(TypeError):
         seq_bad_common_axis.cube_like_dimensions
+
 
 
 @pytest.mark.parametrize(

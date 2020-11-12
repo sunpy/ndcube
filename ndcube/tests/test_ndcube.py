@@ -35,7 +35,8 @@ def test_wcs_object(all_ndcubes):
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
     assert len(sndc.dimensions) == 2
-    assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat", "custom:pos.helioprojective.lon"}
+    assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat",
+                                                       "custom:pos.helioprojective.lon"}
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
     if sndc.mask is not None:
