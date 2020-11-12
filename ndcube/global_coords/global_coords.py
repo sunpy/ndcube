@@ -30,16 +30,16 @@ class GlobalCoords(Mapping):
     @property
     def names(self):
         """
-        A tuple of all the names or keys.
+        A mutable list of all the names or keys.
         """
-        return tuple([*self.mapping.keys()])
+        return [*self.mapping.keys()]
 
     @property
     def physical_types(self):
         """
-        A tuple of all physical types, one per coordinate.
+        A mutable list of all physical types, one per coordinate.
         """
-        return tuple(*self.mapping[1])
+        return [*self.mapping[1]]
 
     def keys(self):
         """
