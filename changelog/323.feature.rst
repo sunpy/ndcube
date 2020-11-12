@@ -1,1 +1,1 @@
-Introduce concept of global coordinates
+Introduce a new class, GlobalCoords, for holding scalar coordinates that don't apply to any pixel axes.
