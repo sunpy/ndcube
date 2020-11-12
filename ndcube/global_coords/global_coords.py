@@ -1,7 +1,5 @@
 from collections.abc import Mapping
 
-from ndcube import NDCube
-
 __all__ = ['GlobalCoords']
 
 
@@ -15,7 +13,7 @@ class GlobalCoords(Mapping):
 
         # Set values using the setters for validation
         self._internal_coords = {}
-        
+
     @property
     def _all_coords(self):
         return self._internal_coords
