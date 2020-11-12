@@ -362,7 +362,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    def crop(self, *intervals, wcs=None):
+    def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeBase
         if len(lower_corner) != len(upper_corner):
             raise ValueError("lower_corner must have same length as upper_corner, "

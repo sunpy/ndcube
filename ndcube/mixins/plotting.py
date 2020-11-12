@@ -188,8 +188,13 @@ class NDCubePlotMixin:
             for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types):
                 coord_params[coord_name] = {'format_unit': axis_unit}
 
-        # TODO: `_plot_2D_cube` transposes the array if 'y' is before 'x'.
-        # Investigate if this should be the case here, or if it shouldn't be done at all.
+        # TODO: Add support for transposing the array.
+        if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
+            warnings.warn(
+                "Animating a NDCube does not support transposing the array. The world axes "
+                "may not display as expected because the array will not be transposed.",
+                UserWarning
+            )
         plot_axes = [p if p is not None else 0 for p in plot_axes]
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
