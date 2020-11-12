@@ -17,6 +17,22 @@ def _expand_ellipsis(ndim, plist):
     return plist
 
 
+def _expand_ellipsis_axis_coordinates(plist, wapt):
+    if Ellipsis in plist:
+        if plist.count(Ellipsis) > 1:
+            raise IndexError("Only single ellipsis ('...') is permitted.")
+
+        # Replace the Ellipsis with the correct number of slice(None)s
+        e_ind = plist.index(Ellipsis)
+        plist.remove(Ellipsis)
+        n_e = len(wapt) - len(plist)
+        for i in range(n_e):
+            ind = e_ind + i
+            plist.insert(ind, wapt[i])
+
+    return plist
+
+
 def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
     """
     Prepare the kwargs for the plotting functions.
@@ -43,22 +59,16 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
         raise ValueError("'x' must be in plot_axes.")
 
     if axes_coordinates is not None:
-        axes_coordinates = _expand_ellipsis(naxis, axes_coordinates)
-        # Now axes_coordinates have been converted to a consistent convention,
-        # ensure their length equals the number of sequence dimensions.
-        if len(axes_coordinates) != naxis:
-            raise ValueError(f"length of axes_coordinates must be {naxis}.")
+        axes_coordinates = _expand_ellipsis_axis_coordinates(axes_coordinates, wcs.world_axis_physical_types)
         # Ensure all elements in axes_coordinates are of correct types.
-        ax_coord_types = (str,)
+        ax_coord_types = (str, type(None))
         for axis_coordinate in axes_coordinates:
             if isinstance(axis_coordinate, str):
-                # TODO: Needs support for extra coords and also validating that
-                # it is correlated with pixel dimension.
-                if axis_coordinate not in wcs.world_axis_physical_types:
+                # coordinates can be accessed by either name or type
+                if axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
                     raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
-            if axis_coordinate is not None and not isinstance(axis_coordinate, ax_coord_types):
-                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those.")
-        # TODO: Should we reverse order of axes_coordinates here?
+            if not isinstance(axis_coordinate, ax_coord_types):
+                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}.")
 
     if axes_units is not None:
         axes_units = _expand_ellipsis(wcs.world_n_dim, axes_units)

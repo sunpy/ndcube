@@ -1,5 +1,3 @@
-import copy
-import numbers
 
 import astropy.units as u
 import matplotlib as mpl
@@ -8,7 +6,6 @@ import numpy as np
 from sunpy.visualization.animator import ArrayAnimatorWCS
 
 from ndcube import utils
-from ndcube.utils.cube import _get_extra_coord_edges
 
 __all__ = ['NDCubeSequencePlotMixin']
 
@@ -114,8 +111,8 @@ class NDCubeSequencePlotMixin:
             else:
                 # Else produce an image or line animation depending number of plot axes.
                 ax = NDCubeSequenceAnimator(
-                        self, plot_axis_indices=plot_axis_indices, axes_units=axes_units,
-                        data_unit=data_unit, **kwargs)
+                    self, plot_axis_indices=plot_axis_indices, axes_units=axes_units,
+                    data_unit=data_unit, **kwargs)
         return ax
 
     def plot_as_cube(self, axes=None, plot_axis_indices=None,
@@ -692,6 +689,7 @@ class NDCubeSequenceAnimator(ArrayAnimatorWCS):
 
     Extra keywords are passed to parent class.
     """
+
     def __init__(self, seq, plot_axis_indices=None, axes_units=None, data_unit=None,
                  animate_as_cube=False, **kwargs):
         wcs = seq[0].wcs
@@ -723,7 +721,7 @@ class NDCubeSequenceAnimator(ArrayAnimatorWCS):
         # So invert plot_axis_indices.
         # If this behaviour changes, remove this index inversion.
         slices_indices = utils.wcs.convert_between_array_and_pixel_axes(
-                np.array(plot_axis_indices), n_seq_dims)
+            np.array(plot_axis_indices), n_seq_dims)
         slices = [0] * n_seq_dims
         # Set plot axes in format reauired by parent class.
         # By assigning y first with index -1, the below operations are valid

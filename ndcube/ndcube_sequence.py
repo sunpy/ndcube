@@ -104,7 +104,7 @@ class NDCubeSequenceBase:
                     result._common_axis = None
                 else:
                     result._common_axis = \
-                            self._common_axis - sum(drop_cube_axes[:self._common_axis])
+                        self._common_axis - sum(drop_cube_axes[:self._common_axis])
         return result
 
     @property
@@ -290,8 +290,8 @@ class _IndexAsCubeSlicer:
         if isinstance(item[common_axis], numbers.Integral):
             # If common_axis item is an int or return an NDCube with dimensionality of N-1
             sequence_index, common_axis_index = \
-                    utils.sequence.cube_like_index_to_sequence_and_common_axis_indices(
-                            item[common_axis], common_axis, common_axis_lengths)
+                utils.sequence.cube_like_index_to_sequence_and_common_axis_indices(
+                    item[common_axis], common_axis, common_axis_lengths)
             # Insert index for common axis in item for slicing the NDCube.
             cube_item = copy.deepcopy(item)
             cube_item[common_axis] = common_axis_index
@@ -309,7 +309,7 @@ class _IndexAsCubeSlicer:
             # common_axis of returned sequence must be altered if axes in front of it
             # are sliced away.
             sequence_items = utils.sequence.cube_like_tuple_item_to_sequence_items(
-                    item, common_axis, common_axis_lengths, n_cube_dims)
+                item, common_axis, common_axis_lengths, n_cube_dims)
             # Work out new common axis value if axes in front of it are sliced away.
             new_common_axis = common_axis - sum([isinstance(i, numbers.Integral)
                                                  for i in item[:common_axis]])
