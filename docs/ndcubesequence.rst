@@ -1,6 +1,7 @@
-.. _ndcubesequence:
-
 .. doctest-skip-all::
+    all
+
+.. _ndcubesequence:
 
 ==============
 NDCubeSequence

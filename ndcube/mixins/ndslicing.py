@@ -2,7 +2,7 @@ import copy
 
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
-from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 from ndcube import utils
 

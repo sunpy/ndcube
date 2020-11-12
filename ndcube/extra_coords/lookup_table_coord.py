@@ -9,7 +9,7 @@ from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.time import Time
-from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 __all__ = ['LookupTableCoord']
 

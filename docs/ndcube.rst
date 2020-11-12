@@ -1,6 +1,7 @@
-.. _ndcube:
-
 .. doctest-skip-all::
+    all
+
+.. _ndcube:
 
 ======
 NDCube
