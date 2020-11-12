@@ -1,10 +1,5 @@
 from collections.abc import Mapping
 
-import astropy.units as u
-from astropy.modeling import models
-from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
-from astropy.wcs.wcsapi.sliced_low_level_wcs import sanitize_slices
-
 from ndcube import NDCube
 
 __all__ = ['GlobalCoords']
@@ -25,7 +20,13 @@ class GlobalCoords(Mapping):
         Add a new coordinate to the collection.
         """
         if len(self.mapping) > 1:
-            self.mapping[name] = wcs.world_axis_name or physical_type
+            try:
+                self.mapping[name] = name
+                self.mapping[physical_type] = physical_type
+            except TypeError:
+                self.mapping[physical_type] = physical_type
+            else:
+                self.mapping[name] = name
 
     def remove(self, name):
         """
@@ -40,13 +41,15 @@ class GlobalCoords(Mapping):
         A tuple of all the names or keys.
         """
         if len(self.mapping) >= 1:
-            return [*self.mapping]
+            return [*self.mapping[name]]
 
     @property
     def physical_types(self):
         """
         A tuple of all physical types, one per coordinate.
         """
+        if len(self.mapping) >= 1:
+            return [*self.mapping[physical_type]]
 
     def keys(self):
         """
