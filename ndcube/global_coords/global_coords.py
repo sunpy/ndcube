@@ -9,11 +9,16 @@ class GlobalCoords(Mapping):
     """
     A structured representation of coordinate information applicable to a whole NDCube.
     """
-    def __init__(self, NDCube):
+    def __init__(self, ndcube):
         super().__init__()
+        self._ndcube = ndcube
 
         # Set values using the setters for validation
-        self.mapping = {}
+        self._internal_coords = {}
+        
+    @property
+    def _all_coords(self):
+        return self._internal_coords
 
     def add(self, name, physical_type, coords):
         """
@@ -41,17 +46,6 @@ class GlobalCoords(Mapping):
         """
         return [*self.mapping[1]]
 
-    def keys(self):
-        """
-        A set-like of all names in this collection.
-        """
-        return set(self.mapping.keys())
-
-    def values(self):
-        """
-        A set-like of all values in this collection
-        """
-        return set(self.mapping.values())
 
     def __getitem__(self, item):
         """
