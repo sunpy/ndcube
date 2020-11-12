@@ -1,0 +1,1 @@
+Introduce concept of global coordinates
