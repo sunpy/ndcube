@@ -15,41 +15,34 @@ class GlobalCoords(Mapping):
         # Set values using the setters for validation
         self.mapping = {}
 
-    def add(self, name, physical_type):
+    def add(self, name, physical_type, gcoords):
         """
         Add a new coordinate to the collection.
         """
-        if len(self.mapping) > 1:
-            try:
-                self.mapping[name] = name
-                self.mapping[physical_type] = physical_type
-            except TypeError:
-                self.mapping[physical_type] = physical_type
-            else:
-                self.mapping[name] = name
+        try:
+            self.mapping[name] = (name, physical_type, gcoords)
+        except TypeError:
+            self.mapping[name] = (physical_type, physical_type, gcoords)
 
     def remove(self, name):
         """
         Remove a coordinate from the collection
         """
-        if len(self.mapping) > 1:
-            del self.mapping[name]
+        del self.mapping[name]
 
     @property
     def names(self):
         """
         A tuple of all the names or keys.
         """
-        if len(self.mapping) >= 1:
-            return [*self.mapping[name]]
+        return tuple([*self.mapping.keys()])
 
     @property
     def physical_types(self):
         """
         A tuple of all physical types, one per coordinate.
         """
-        if len(self.mapping) >= 1:
-            return [*self.mapping[physical_type]]
+        return tuple(*self.mapping[1])
 
     def keys(self):
         """
