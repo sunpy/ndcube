@@ -15,7 +15,6 @@ class GlobalCoords(Mapping):
         super().__init__()
         self._ndcube = ndcube
 
-        # Set values using the setters for validation
         self._all_coords = OrderedDict()
 
     @property
