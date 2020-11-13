@@ -16,26 +16,26 @@ class GlobalCoords(Mapping):
         self._ndcube = ndcube
 
         # Set values using the setters for validation
-        self._internal_coords = OrderedDict()
+        self._all_coords = OrderedDict()
 
     @property
     def _all_coords(self):
         """
-        Establish the _all_coords property with an _internal_coords.
+        Establish the _all_coords property with an _all_coords.
         """
-        return self._internal_coords
+        return self._all_coords
 
     def add(self, name, physical_type, coords):
         """
         Add a new coordinate to the collection.
         """
-        self._internal_coords[name] = (physical_type, coords)
+        self._all_coords[name] = (physical_type, coords)
 
     def remove(self, name):
         """
         Remove a coordinate from the collection
         """
-        del self._internal_coords[name]
+        del self._all_coords[name]
 
     @property
     def names(self):
