@@ -68,4 +68,7 @@ class GlobalCoords(Mapping):
 
     @_all_coords.setter
     def _all_coords(self, value):
+        """
+        Use setter to set _all_coords
+        """
         self.__all_coords = value
