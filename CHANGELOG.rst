@@ -1,3 +1,24 @@
+Ndcube v1.3.0 (2020-03-27)
+==========================
+
+Features
+--------
+
+- Add new NDCollection class for linking and manipulating partially or non-aligned NDCubes or NDCubeSequences. (`#238 <https://github.com/sunpy/ndcube/pull/238>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed the files included and excluded from the tarball. (`#212 <https://github.com/sunpy/ndcube/pull/212>`__)
+- Fix crashing bug when an NDCube axis after the first is sliced with a numpy.int64. (`#223 <https://github.com/sunpy/ndcube/pull/223>`__)
+- Raises error if NDCube is sliced with an Ellipsis. (`#224 <https://github.com/sunpy/ndcube/pull/224>`__)
+- Changes behavior of NDCubeSequence slicing. Previously, a slice item of interval
+  length 1 would cause an NDCube object to be returned. Now an NDCubeSequence made
+  up of 1 NDCube is returned. This is consistent with how interval length 1 slice
+  items slice arrays. (`#241 <https://github.com/sunpy/ndcube/pull/241>`__)
+
+
 Ndcube v1.2.0 (2019-09-10)
 ==========================
 

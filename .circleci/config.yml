@@ -1,3 +1,12 @@
+version: 2.1
+
+no-backports: &no-backports
+  name: Skip any branches called cherry-pick
+  command: |
+    if [[ "${CIRCLE_BRANCH}" == *"cherry-pick"* || "${CIRCLE_BRANCH}" == *"backport"* ]]; then
+      circleci step halt
+    fi
+
 skip-check: &skip-check
   name: Check for [ci skip]
   command: bash .circleci/early_exit.sh
@@ -11,118 +20,101 @@ merge-check: &merge-check
       git checkout -qf pr/$CIRCLE_PR_NUMBER/merge
     fi
 
-permission-run: &permission-run
-  name: Fix permssions for installing
-  command: |
-    sudo chown -R circleci:circleci /usr/local/bin
-    sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
-    sudo chown -R circleci:circleci /usr/local/share/
-
 apt-run: &apt-install
   name: Install apt packages
   command: |
-    apt update
-    apt install -y graphviz build-essential
-
-sudo-apt-run: &sudo-apt-install
-  name: Install apt packages
-  command: |
     sudo apt update
-    sudo apt install -y graphviz build-essential
+    sudo apt install -y graphviz build-essential libopenjp2-7 python3-dev
 
-tox-install: &tox-install
-  name: Install Tox
-  command: |
-    pip install tox
-
-tox-conda-install: &tox-conda-install
-  name: Install Tox-Conda
-  command: |
-    pip install tox-conda
-
-version: 2
 jobs:
-  egg-info-36:
-    docker:
-      - image: circleci/python:3.6
-    steps:
-      - checkout
-      - run: *skip-check
-      - run: *merge-check
-      - run: python setup.py egg_info
 
-  egg-info-37:
+  figure:
+    parameters:
+      jobname:
+        type: string
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.8
+    environment:
+      TOXENV=<< parameters.jobname >>
     steps:
+      - run: *no-backports
       - checkout
       - run: *skip-check
       - run: *merge-check
-      - run: python setup.py egg_info
-
-  twine-check:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - run: *skip-check
-      - run: *merge-check
-      - run: *permission-run
-      - run: python setup.py sdist
-      - run: python -m pip install -U --user --force-reinstall twine
-      - run: python -m twine check dist/*
-
-  pip-install:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - run: *skip-check
-      - run: *merge-check
-      - run: *permission-run
-      - run: *sudo-apt-install
-      - run: pip install -U pip
-      - run: pip install --progress-bar off .[all,dev]
-      - run: pip install -e .[all,dev]
-      - run: python setup.py develop
-
-  html-docs:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - run: *skip-check
-      - run: *merge-check
-      - run: *permission-run
-      - run: *sudo-apt-install
-      - run: pip install -U tox
-      - run: tox -e build_docs
+      - run: *apt-install
+      - run: pip install --user -U tox tox-pypi-filter
+      - run: tox
+      - run: curl -s https://codecov.io/bash | bash
       - store_artifacts:
-          path: docs/_build/html
+          path: .tmp/<< parameters.jobname >>/figure_test_images
       - run:
-          name: "Built documentation is available at:"
-          command: DOCS_URL="${CIRCLE_BUILD_URL}/artifacts/${CIRCLE_NODE_INDEX}/${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}/docs/_build/html/index.html"; echo $DOCS_URL
+          name: "Image comparison page is available at: "
+          command: echo "${CIRCLE_BUILD_URL}/artifacts/${CIRCLE_NODE_INDEX}/.tmp/${TOXENV}/figure_test_images/fig_comparison.html"
+
+  deploy-reference-images:
+    parameters:
+      jobname:
+        type: string
+    docker:
+      - image: circleci/python:3.8
+    environment:
+      TOXENV: << parameters.jobname >>
+      GIT_SSH_COMMAND: ssh -i ~/.ssh/id_rsa_b1c8b094a8ec67162b0f18a949a6b1db
+    steps:
+      - checkout
+      - run: *skip-check
+      - run: *merge-check
+      - run: *apt-install
+      # Clear out all the ssh keys so that it always uses the write deploy key
+      - run: ssh-add -D
+      # Add private key for deploying to the figure tests repo
+      - add_ssh_keys:
+          fingerprints: "b1:c8:b0:94:a8:ec:67:16:2b:0f:18:a9:49:a6:b1:db"
+      - run: ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - run: git config --global user.email "ndcube@circleci" && git config --global user.name "ndcube Circle CI"
+      - run: git clone git@github.com:sunpy/sunpy-figure-tests.git --depth 1 -b ndcube-${CIRCLE_BRANCH} ~/sunpy-figure-tests/
+      # Generate Reference images
+      - run: pip install --user -U tox codecov tox-pypi-filter
+      - run: tox -- --mpl-generate-path=/home/circleci/sunpy-figure-tests/figures/$TOXENV | tee toxlog
+      - run: |
+          hashlib=$(grep "^figure_hashes.*\.json$" toxlog)
+          cp ./ndcube/tests/$hashlib /home/circleci/sunpy-figure-tests/figures/$TOXENV/
+      - run: |
+          cd ~/sunpy-figure-tests/
+          git pull
+          git status
+          git add .
+          git commit -m "Update reference figures from ndcube ${CIRCLE_BRANCH}" || echo "No changes to reference images to deploy"
+          git push
 
 workflows:
   version: 2
 
-  egg-info:
+  figure-tests:
     jobs:
-      - egg-info-36
-      - egg-info-37
+      - figure:
+          name: << matrix.jobname >>
+          matrix:
+            parameters:
+              jobname:
+                - "py38-figure"
+                - "py37-figure-devdeps"
 
-  twine-check:
-    jobs:
-      - twine-check
-
-  pip-install:
-    jobs:
-      - pip-install
-
-  test-documentation:
-    jobs:
-      - html-docs
+      - deploy-reference-images:
+          name: baseline-<< matrix.jobname >>
+          matrix:
+            parameters:
+              jobname:
+                - "py38-figure"
+                - "py37-figure-devdeps"
+          requires:
+            - "py38-figure"
+            - "py37-figure-devdeps"
+          filters:
+            branches:
+              only:
+                - master
 
 notify:
   webhooks:
-    - url: https://giles.cadair.com/circleci
+    - url: https://giles.cadair.dev/circleci
