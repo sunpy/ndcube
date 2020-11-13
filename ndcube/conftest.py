@@ -44,6 +44,38 @@ def wcs_4d_t_l_lt_ln():
 
 
 @pytest.fixture
+def wcs_4d_lt_t_l_ln():
+    header = {
+        'CTYPE1': 'HPLT-TAN',
+        'CUNIT1': 'arcsec',
+        'CDELT1': 20,
+        'CRPIX1': 0,
+        'CRVAL1': 0,
+
+        'CTYPE2': 'TIME    ',
+        'CUNIT2': 'min',
+        'CDELT2': 0.4,
+        'CRPIX2': 0,
+        'CRVAL2': 0,
+
+        'CTYPE3': 'WAVE    ',
+        'CUNIT3': 'Angstrom',
+        'CDELT3': 0.2,
+        'CRPIX3': 0,
+        'CRVAL3': 0,
+
+        'CTYPE4': 'HPLN-TAN',
+        'CUNIT4': 'arcsec',
+        'CDELT4': 5,
+        'CRPIX4': 5,
+        'CRVAL4': 0,
+
+        'DATEREF': "2020-01-01T00:00:00"
+    }
+    return WCS(header=header)
+
+
+@pytest.fixture
 def wcs_3d_l_lt_ln():
     header = {
         'CTYPE1': 'WAVE    ',
@@ -158,6 +190,14 @@ def generate_time_extra_coord(data_cube):
     shape = data_cube.shape[-1]
     lut = Time("2020-02-02T00:00:00", format="isot") + np.linspace(0, shape * 10, num=shape, endpoint=False) * u.s
     return ExtraCoords.from_lookup_tables(["extra_time"], [0], [lut])
+
+
+@pytest.fixture
+def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
+    shape = (5, 10, 12, 8)
+    wcs_4d_lt_t_l_ln.array_shape = shape
+    data_cube = data_nd(shape)
+    return NDCube(data_cube, wcs=wcs_4d_lt_t_l_ln)
 
 
 @pytest.fixture
