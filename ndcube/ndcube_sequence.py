@@ -127,18 +127,28 @@ class NDCubeSequenceBase:
         return _IndexAsCubeSlicer(self)
 
     @property
-    def common_axis_extra_coords(self):
-        if not isinstance(self._common_axis, int):
-            raise ValueError("Common axis is not set.")
-        # Get names and units of coords along common axis.
-        axis_coord_names, axis_coord_units = utils.sequence._get_axis_extra_coord_names_and_units(
-            self.data, self._common_axis)
-        # Compile dictionary of common axis extra coords.
-        if axis_coord_names is not None:
-            return utils.sequence._get_int_axis_extra_coords(
-                self.data, axis_coord_names, axis_coord_units, self._common_axis)
-        else:
-            return None
+    def common_axis_coords(self):
+        common_axis_names = []
+        for cube in self.data:
+            common_axis_names += list(cube.array_axis_extra_coords[common_axis])
+        common_axis_names = set(common_axis_names)
+        sequence_coords = {}
+        for key in common_axis_names:
+            exploded_coord = []
+            for cube in self.data:
+                len_common_axis = int(cube.dimensions.value[common_axis])
+                if key in cube.array_axis_physical_types[common_axis]:
+                    coord, mapping = cube.axis_world_coords(key, wcs=cube.combined_wcs)
+                    coord, mapping = coord[0], mapping[0]
+                    coord_axis = np.where(np.array(mapping) == common_axis)[0][0]
+                    item = [slice(None)] * len(coord.shape)
+                    for i in range(len_common_axis):
+                        item[coord_axis] = i
+                        exploded_coord.append(coord[tuple(item)])
+                else:
+                    exploded_coord += [None] * len_common_axis
+            sequence_coords[key] = exploded_coord
+        return sequence_coords
 
     @property
     def sequence_axis_extra_coords(self):
