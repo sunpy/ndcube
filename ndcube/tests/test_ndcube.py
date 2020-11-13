@@ -190,9 +190,14 @@ def test_axis_world_coords_all_4d_split(ndcube_4d_ln_l_t_lt):
                                   1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
 
 
-def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt):
-    coords = ndcube_4d_ln_l_t_lt.axis_world_coords('custom:pos.helioprojective.lat', 'em.wl')
+@pytest.mark.parametrize('wapt', (('custom:pos.helioprojective.lon', 'em.wl'),
+                                  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
+                                  (0, 1),
+                                  (0, 1, 3)))
+def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt, wapt):
+    coords = ndcube_4d_ln_l_t_lt.axis_world_coords(*wapt)
     assert len(coords) == 2
+
     assert isinstance(coords[0], SkyCoord)
     assert coords[0].shape == (5, 8)
 
