@@ -29,13 +29,13 @@ class GlobalCoords(Mapping):
         """
         Add a new coordinate to the collection.
         """
-        self._all_coords[name] = (physical_type, coords)
+        self._internal_coords[name] = (physical_type, coords)
 
     def remove(self, name):
         """
         Remove a coordinate from the collection
         """
-        del self._all_coords[name]
+        del self._internal_coords[name]
 
     @property
     def names(self):
