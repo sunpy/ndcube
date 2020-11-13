@@ -183,15 +183,21 @@ def test_axis_world_coords_all_4d_split(ndcube_4d_ln_l_t_lt):
     assert coords[0].shape == (5, 8)
 
     assert isinstance(coords[1], Time)
-    assert coords[1] == Time([58849.00000463, 58849.00000926, 58849.00001389, 58849.00001852,
-                              58849.00002315, 58849.00002778, 58849.00003241, 58849.00003704,
-                              58849.00004167, 58849.0000463, 58849.00005093, 58849.00005556],
-                             scale='utc', format='mjd')
-
-    assert False
+    assert coords[1].shape == (12,)
 
     assert isinstance(coords[2], u.Quantity)
     assert u.allclose(coords[2], [2.0e-11, 4.0e-11, 6.0e-11, 8.0e-11, 1.0e-10,
+                                  1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
+
+
+def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt):
+    coords = ndcube_4d_ln_l_t_lt.axis_world_coords('custom:pos.helioprojective.lat', 'em.wl')
+    assert len(coords) == 2
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+
+    assert isinstance(coords[1], u.Quantity)
+    assert u.allclose(coords[1], [2.0e-11, 4.0e-11, 6.0e-11, 8.0e-11, 1.0e-10,
                                   1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
 
 
