@@ -21,7 +21,7 @@ class GlobalCoords(Mapping):
     @property
     def _all_coords(self):
         """
-        Establish _all_coords as a property as some _internal_coords.
+        Establish _all_coords as a property returning some _internal_coords.
         """
         return self._internal_coords
 
