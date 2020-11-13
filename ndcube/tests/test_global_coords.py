@@ -1,6 +1,5 @@
 import astropy.units as u
 import pytest
-from collections import OrderedDict
 
 from ndcube.global_coords import GlobalCoords
 
