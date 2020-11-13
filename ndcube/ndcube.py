@@ -330,18 +330,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         world_indicies = self._calculate_world_indices_from_axes(axes, wcs)
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
-        object_indicies = [np.atleast_1d(object_names == object_names[i]).nonzero()[0][0] for i in world_indicies]
+        object_indicies = sorted(list(set([np.atleast_1d(object_names == object_names[i]).nonzero()[0][0] for i in world_indicies])))
 
+        # return tuple(axes_coords[i] for i in object_indicies)
         array_indicies = [[]] * len(set(object_names))
         for world_index, oname in enumerate(object_names):
             oinds = np.atleast_1d(object_names == oname).nonzero()[0][0]
             pixel_index = wcs_utils.world_axis_to_pixel_axes(world_index, wcs.axis_correlation_matrix)
             array_index = wcs_utils.convert_between_array_and_pixel_axes(pixel_index, wcs.pixel_n_dim)
-            array_indicies[oinds] = tuple(array_index)
+            array_indicies[oinds] = tuple(array_index[::-1])  # Invert to go from pixel order to array order
 
-        results = tuple(axes_coords[i] for i in object_indicies)
-        array_indicies = tuple(array_indicies[i] for i in object_indicies)
-        return results, array_indicies
+        return tuple(axes_coords[i] for i in object_indicies), tuple(array_indicies[i] for i in object_indicies)
 
     def axis_world_coords_values(self, *axes, edges=False, wcs=None):
         """
