@@ -42,29 +42,29 @@ class GlobalCoords(Mapping):
         """
         A list of all the names or keys.
         """
-        return tuple(self._internal_coords.keys())
+        return tuple(self._all_coords.keys())
 
     @property
     def physical_types(self):
         """
         A list of all physical types, one per coordinate.
         """
-        return tuple(item[0] for item in self._internal_coords.values())
+        return tuple(item[0] for item in self._all_coords.values())
 
     def __getitem__(self, item):
         """
         Index the collection by a name.
         """
-        return self._internal_coords[item]
+        return self._all_coords[item]
 
     def __iter__(self):
         """
         Iterate over the collection.
         """
-        return iter(self._internal_coords)
+        return iter(self._all_coords)
 
     def __len__(self):
         """
         Establish the length of the collection.
         """
-        return len(self._internal_coords)
+        return len(self._all_coords)
