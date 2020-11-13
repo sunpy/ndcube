@@ -352,8 +352,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             array_indicies[oinds] = tuple(array_index)
 
         results = tuple(axes_coords[i] for i in object_indicies)
-        results.array_indicies = tuple(array_indicies[i] for i in object_indicies)
-        return results
+        array_indicies = tuple(array_indicies[i] for i in object_indicies)
+        return results, array_indicies
 
     def axis_world_coords_values(self, *axes, edges=False, wcs=None):
         """
