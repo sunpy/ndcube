@@ -68,3 +68,7 @@ class GlobalCoords(Mapping):
         Establish the length of the collection.
         """
         return len(self._all_coords)
+
+    @_all_coords.setter
+    def _all_coords(self, value):
+        self.__all_coords = value
