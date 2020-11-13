@@ -37,7 +37,6 @@ def test_slice_sequence_axis(ndc, item):
     sliced_sequence = ndc[item]
     assert isinstance(sliced_sequence, NDCubeSequence)
     assert int(sliced_sequence.dimensions[0].value) == tuple_item[0].stop - tuple_item[0].start
-    print(sliced_sequence[0].dimensions, expected_cube0_dims, item, tuple_item)
     assert (sliced_sequence[0].dimensions == expected_cube0_dims).all()
 
 
@@ -72,18 +71,26 @@ def test_slice_common_axis(ndc, item, expected_common_axis):
 
 @pytest.mark.parametrize("ndc, item, expected_dimensions",
                          (
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7],
-                                 (3 * u.pix, 2 * u.pix, [2., 3., 1.] * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7, 0],
-                                 (3 * u.pix, [2., 3., 1.] * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[2:4],
-                                 (2 * u.pix, 2 * u.pix, 1 * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6],
-                                 (2 * u.pix, 2 * u.pix, 3 * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6, :, 0],
-                                 (3 * u.pix, 2 * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0::, 0, 0],
-                                 (4 * u.pix, 2 * u.pix))
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7], (3 * u.pix,
+                                                                             2 * u.pix,
+                                                                             [2., 3., 1.] * u.pix,
+                                                                             4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7, 0], (3 * u.pix,
+                                                                                [2., 3., 1.] * u.pix,
+                                                                                4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[2:4], (2 * u.pix,
+                                                                             2 * u.pix,
+                                                                             1 * u.pix,
+                                                                             4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6], (2 * u.pix,
+                                                                             2 * u.pix,
+                                                                             3 * u.pix,
+                                                                             4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6, :, 0], (3 * u.pix,
+                                                                                   2 * u.pix,
+                                                                                   4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0::, 0, 0], (4 * u.pix,
+                                                                                   2 * u.pix))
                          ),
                          indirect=("ndc",))
 def test_index_as_cube(ndc, item, expected_dimensions):
@@ -95,10 +102,15 @@ def test_index_as_cube(ndc, item, expected_dimensions):
 
 @pytest.mark.parametrize("ndc, axis, expected_dimensions",
                          (
-                             ("ndcubesequence_4c_ln_lt_l", 0, (8 * u.pix, 3 * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", 1,
-                              (12 * u.pix, 2 * u.pix, 4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l", 2, (16 * u.pix, 2 * u.pix, 3 * u.pix))
+                             ("ndcubesequence_4c_ln_lt_l", 0, (8 * u.pix,
+                                                               3 * u.pix,
+                                                               4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", 1, (12 * u.pix,
+                                                                    2 * u.pix,
+                                                                    4 * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l", 2, (16 * u.pix,
+                                                               2 * u.pix,
+                                                               3 * u.pix))
                          ),
                          indirect=("ndc",))
 def test_explode_along_axis(ndc, axis, expected_dimensions):
@@ -115,8 +127,10 @@ def test_explode_along_axis_error(ndc, axis):
 
 @pytest.mark.parametrize("ndc, expected_dimensions",
                          (
-                             ("ndcubesequence_4c_ln_lt_l_cax1",
-                              (4 * u.pix, 2. * u.pix, 3. * u.pix, 4. * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", (4 * u.pix,
+                                                                 2. * u.pix,
+                                                                 3. * u.pix,
+                                                                 4. * u.pix)),
                          ),
                          indirect=("ndc",))
 def test_dimensions(ndc, expected_dimensions):
@@ -130,7 +144,6 @@ def test_dimensions(ndc, expected_dimensions):
                          ),
                          indirect=("ndc",))
 def test_cube_like_dimensions(ndc, expected_dimensions):
-    print(ndc.cube_like_dimensions, expected_dimensions)
     assert (ndc.cube_like_dimensions == expected_dimensions).all()
 
 
