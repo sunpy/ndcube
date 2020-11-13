@@ -29,40 +29,27 @@ class GlobalCoords(Mapping):
         """
         Add a new coordinate to the collection.
         """
-        self._internal_coords[str(name)] = (name, physical_type, coords)
+        self._internal_coords[name] = (physical_type, coords)
 
     def remove(self, name):
         """
         Remove a coordinate from the collection
         """
-        del self._internal_coords[str(name)]
+        del self._internal_coords[name]
 
     @property
     def names(self):
         """
         A list of all the names or keys.
         """
-        return list(self._internal_coords.keys())
+        return tuple(self._internal_coords.keys())
 
     @property
     def physical_types(self):
         """
         A list of all physical types, one per coordinate.
         """
-        physical_types_list = []
-        for item in self._internal_coords.values():
-            physical_types_list.append(item[1])
-        return physical_types_list
-
-    @property
-    def coords(self):
-        """
-        A list of all coords, one per coordinate.
-        """
-        coords_list = []
-        for item in self._internal_coords.values():
-            coords_list.append(item[2])
-        return coords_list
+        return tuple(item[0] for item in self._internal_coords.values())
 
     def __getitem__(self, item):
         """
