@@ -55,7 +55,7 @@ class GlobalCoords(Mapping):
         Index the collection by a name.
         """
         physical_type, value = self._all_coords[item]
-        gc = GlobalCoords(self._ndcube)
+        gc = type(self)(self._ndcube)
         gc.add(item, physical_type, value)
         return gc
 
