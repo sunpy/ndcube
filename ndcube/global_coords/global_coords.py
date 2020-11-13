@@ -15,7 +15,6 @@ class GlobalCoords(Mapping):
         super().__init__()
         self._ndcube = ndcube
 
-        self._all_coords = OrderedDict()
         self._internal_coords = OrderedDict()
 
     @property
@@ -29,7 +28,7 @@ class GlobalCoords(Mapping):
         """
         Add a new coordinate to the collection.
         """
-        self._internal_coords[name] = [physical_type, coords]
+        self._internal_coords[name] = (physical_type, coords)
 
     def remove(self, name):
         """
@@ -55,7 +54,10 @@ class GlobalCoords(Mapping):
         """
         Index the collection by a name.
         """
-        return self._all_coords[item]
+        physical_type, value = self._all_coords[item]
+        gc = GlobalCoords(self._ndcube)
+        gc.add(item, physical_type, value)
+        return gc
 
     def __iter__(self):
         """
@@ -68,10 +70,3 @@ class GlobalCoords(Mapping):
         Establish the length of the collection.
         """
         return len(self._all_coords)
-
-    @_all_coords.setter
-    def _all_coords(self, value):
-        """
-        Use setter to set _all_coords
-        """
-        self.__all_coords = value
