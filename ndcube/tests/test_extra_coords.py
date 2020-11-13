@@ -37,7 +37,7 @@ def skycoord_2d_lut():
 # ExtraCoords from WCS
 
 
-def test_empty_ec(wcs_1d):
+def test_empty_ec(wcs_1d_l):
     ec = ExtraCoords()
     # Test slice of an empty EC
     assert ec[0].wcs is None
@@ -46,16 +46,16 @@ def test_empty_ec(wcs_1d):
     assert ec.wcs is None
     assert ec.keys() == tuple()
 
-    ec.wcs = wcs_1d
-    assert ec.wcs is wcs_1d
+    ec.wcs = wcs_1d_l
+    assert ec.wcs is wcs_1d_l
     ec.mapping = (0,)
     assert ec.mapping == (0,)
 
 
-def test_exceptions(wcs_1d):
+def test_exceptions(wcs_1d_l):
     # Test fail when one of wcs or mapping specified
     with pytest.raises(ValueError):
-        ExtraCoords(wcs=wcs_1d)
+        ExtraCoords(wcs=wcs_1d_l)
 
     with pytest.raises(ValueError):
         ExtraCoords(mapping=0)
@@ -65,7 +65,7 @@ def test_exceptions(wcs_1d):
         ExtraCoords.from_lookup_tables(None, (0,), (0, 0))
 
     # Test unable to add to WCS EC
-    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+    ec = ExtraCoords(wcs=wcs_1d_l, mapping=(0,))
     with pytest.raises(ValueError):
         ec.add_coordinate(None, 0, None)
 
@@ -73,13 +73,13 @@ def test_exceptions(wcs_1d):
         ExtraCoords()['empty']
 
 
-def test_mapping_setter(wcs_1d, wave_lut):
-    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+def test_mapping_setter(wcs_1d_l, wave_lut):
+    ec = ExtraCoords(wcs=wcs_1d_l, mapping=(0,))
     with pytest.raises(AttributeError):
         ec.mapping = None
 
     ec = ExtraCoords()
-    ec.wcs = wcs_1d
+    ec.wcs = wcs_1d_l
     with pytest.raises(ValueError):
         ec.mapping = (1,)
 
@@ -89,15 +89,15 @@ def test_mapping_setter(wcs_1d, wave_lut):
         ec.mapping = None
 
 
-def test_wcs_setter(wcs_1d, wave_lut):
-    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+def test_wcs_setter(wcs_1d_l, wave_lut):
+    ec = ExtraCoords(wcs=wcs_1d_l, mapping=(0,))
     with pytest.raises(AttributeError):
         ec.wcs = None
 
     ec = ExtraCoords()
     ec.mapping = (1,)
     with pytest.raises(ValueError):
-        ec.wcs = wcs_1d
+        ec.wcs = wcs_1d_l
 
     ec = ExtraCoords()
     ec.add_coordinate("wave", (0,), wave_lut)
@@ -105,12 +105,12 @@ def test_wcs_setter(wcs_1d, wave_lut):
         ec.wcs = None
 
 
-def test_wcs_1d(wcs_1d):
-    ec = ExtraCoords(wcs=wcs_1d, mapping=(0,))
+def test_wcs_1d(wcs_1d_l):
+    ec = ExtraCoords(wcs=wcs_1d_l, mapping=(0,))
 
     assert ec.keys() == ('spectral',)
     assert ec.mapping == (0,)
-    assert ec.wcs is wcs_1d
+    assert ec.wcs is wcs_1d_l
 
     subec = ec[1:]
     assert ec.keys() == ('spectral',)

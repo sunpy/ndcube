@@ -7,7 +7,7 @@ import astropy.nddata
 import astropy.units as u
 import numpy as np
 import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
-from astropy.wcs.wcsapi import BaseLowLevelWCS, HighLevelWCSWrapper
+from astropy.wcs.wcsapi import HighLevelWCSWrapper
 
 import ndcube.utils.wcs as wcs_utils
 from ndcube.extra_coords import ExtraCoords
@@ -230,7 +230,49 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
-    def axis_world_coords(self, *axes, edges=False):
+    def _generate_pixel_grid(self, edges):
+        # Create meshgrid of all pixel coordinates.
+        # If user, wants edges, set pixel values to pixel edges.
+        # Else make pixel centers.
+        wcs_shape = self.data.shape[::-1]
+        if edges:
+            wcs_shape = tuple(np.array(wcs_shape) + 1)
+            ranges = [np.arange(i) - 0.5 for i in wcs_shape]
+        else:
+            ranges = [np.arange(i) for i in wcs_shape]
+
+        return np.meshgrid(*ranges, indexing='ij', sparse=True)
+
+    def _calculate_world_indices_from_axes(self, axes, wcs):
+        """
+        Given an integer or string representation of a world axis, convert it
+        to a numerical index aligning to the position in
+        wcs.world_axis_object_components.
+        """
+        # Convert input axes to WCS world axis indices.
+        world_indices = set()
+        for axis in axes:
+            if isinstance(axis, numbers.Integral):
+                # If axis is int, it is a numpy order array axis.
+                # Convert to pixel axis in WCS order.
+                axis = wcs_utils.convert_between_array_and_pixel_axes(
+                    np.array([axis]), wcs.pixel_n_dim)[0]
+                # Get WCS world axis indices that correspond to the WCS pixel axis
+                # and add to list of indices of WCS world axes whose coords will be returned.
+                world_indices.update(wcs_utils.pixel_axis_to_world_axes(
+                    axis, wcs.axis_correlation_matrix))
+            elif isinstance(axis, str):
+                # If axis is str, it is a physical type or substring of a physical type.
+                world_indices.update({wcs_utils.physical_type_to_world_axis(
+                    axis, wcs.world_axis_physical_types)})
+            else:
+                raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
+                                "Must be of type (numbers.Integral, str)")
+        # Use inferred world axes to extract the desired coord value
+        # and corresponding physical types.
+        return np.array(list(world_indices), dtype=int)
+
+    def axis_world_coords(self, *axes, edges=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for all axes.
 
@@ -247,11 +289,18 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             instead of `pixel_values`. Default value is False,
             which returns `pixel_values`. True return `pixel_edges`
 
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
+            The WCS object to used to convert the world values to array indices.
+            Although technically this can be any valid WCS, it will typically be
+            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            the WCS and extra coords.
+            Default=self.wcs
+
         Returns
         -------
         axes_coords: `list`
             High level object giving the real world coords for the axes requested by user.
-            For example, SkyCoords.
+            For example, `~astropy.coordinates.SkyCoord` objects.
 
         Example
         -------
@@ -259,9 +308,41 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        raise NotImplementedError()
+        wcs = wcs or self.wcs
+        pixel_inputs = self._generate_pixel_grid(edges)
 
-    def axis_world_coords_values(self, *axes, edges=False):
+        # Get world coords for all axes and all pixels.
+        axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
+        if self.wcs.world_n_dim == 1:
+            axes_coords = [axes_coords]
+        # Ensure it's a list not a tuple
+        axes_coords = list(axes_coords)
+
+        # Reduce duplication across independent dimensions for each coord
+        # and transpose to make dimensions mimic numpy array order rather than WCS order.
+        for i, axis_coord in enumerate(axes_coords):
+            slices = np.array([slice(None)] * wcs.pixel_n_dim)
+            slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
+            axes_coords[i] = axis_coord[tuple(slices)].T
+
+        if not axes:
+            return axes_coords
+
+        world_indicies = self._calculate_world_indices_from_axes(axes, wcs)
+        object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
+        object_indicies = sorted(list(set([np.atleast_1d(object_names == object_names[i]).nonzero()[0][0] for i in world_indicies])))
+
+        # return tuple(axes_coords[i] for i in object_indicies)
+        array_indicies = [[]] * len(set(object_names))
+        for world_index, oname in enumerate(object_names):
+            oinds = np.atleast_1d(object_names == oname).nonzero()[0][0]
+            pixel_index = wcs_utils.world_axis_to_pixel_axes(world_index, wcs.axis_correlation_matrix)
+            array_index = wcs_utils.convert_between_array_and_pixel_axes(pixel_index, wcs.pixel_n_dim)
+            array_indicies[oinds] = tuple(array_index[::-1])  # Invert to go from pixel order to array order
+
+        return tuple(axes_coords[i] for i in object_indicies), tuple(array_indicies[i] for i in object_indicies)
+
+    def axis_world_coords_values(self, *axes, edges=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for desired axes.
 
@@ -280,6 +361,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             in the returned coords.
             Default=False, i.e. pixel centers are returned.
 
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
+            The WCS object to used to convert the world values to array indices.
+            Although technically this can be any valid WCS, it will typically be
+            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            the WCS and extra coords.
+            Default=self.wcs
+
         Returns
         -------
         coord_values: `collections.namedtuple`
@@ -293,20 +381,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
-        wcs = self.wcs
-        if not isinstance(wcs, BaseLowLevelWCS):
-            wcs = wcs.low_level_wcs
-        # Create meshgrid of all pixel coordinates.
-        # If user, wants edges, set pixel values to pixel edges.
-        # Else make pixel centers.
-        wcs_shape = self.data.shape[::-1]
-        if edges:
-            wcs_shape = tuple(np.array(wcs_shape) + 1)
-            pixel_inputs = np.meshgrid(*[np.arange(i) - 0.5 for i in wcs_shape],
-                                       indexing='ij', sparse=True)
-        else:
-            pixel_inputs = np.meshgrid(*[np.arange(i) for i in wcs_shape],
-                                       indexing='ij', sparse=True)
+        wcs = (wcs or self.wcs).low_level_wcs
+
+        pixel_inputs = self._generate_pixel_grid(edges)
 
         # Get world coords for all axes and all pixels.
         axes_coords = wcs.pixel_to_world_values(*pixel_inputs)
@@ -326,28 +403,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
         if axes:
-            # Convert input axes to WCS world axis indices.
-            world_indices = set()
-            for axis in axes:
-                if isinstance(axis, numbers.Integral):
-                    # If axis is int, it is a numpy order array axis.
-                    # Convert to pixel axis in WCS order.
-                    axis = wcs_utils.convert_between_array_and_pixel_axes(
-                        np.array([axis]), wcs.pixel_n_dim)[0]
-                    # Get WCS world axis indices that correspond to the WCS pixel axis
-                    # and add to list of indices of WCS world axes whose coords will be returned.
-                    world_indices.update(wcs_utils.pixel_axis_to_world_axes(
-                        axis, wcs.axis_correlation_matrix))
-                elif isinstance(axis, str):
-                    # If axis is str, it is a physical type or substring of a physical type.
-                    world_indices.update({wcs_utils.physical_type_to_world_axis(
-                        axis, world_axis_physical_types)})
-                else:
-                    raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
-                                    "Must be of type (numbers.Integral, str)")
-            # Use inferred world axes to extract the desired coord value
-            # and corresponding physical types.
-            world_indices = np.array(list(world_indices), dtype=int)
+            world_indices = self._calculate_world_indices_from_axes(axes, wcs)
             axes_coords = np.array(axes_coords)[world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
