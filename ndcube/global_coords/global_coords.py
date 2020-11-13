@@ -20,6 +20,9 @@ class GlobalCoords(Mapping):
 
     @property
     def _all_coords(self):
+        """
+        Establish _all_coords as a property as some _internal_coords.
+        """
         return self._internal_coords
 
     def add(self, name, physical_type, coords):
