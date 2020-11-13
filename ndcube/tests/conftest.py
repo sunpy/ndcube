@@ -2,14 +2,13 @@
 This file contains a set of common fixtures to get a set of different but
 predicable NDCube objects.
 """
-import datetime
-
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.time import Time
 from astropy.wcs import WCS
 
-from ndcube import NDCube
+from ndcube import ExtraCoords, NDCube, NDCubeSequence
 
 
 @pytest.fixture
@@ -40,7 +39,7 @@ def wcs_4d_t_l_lt_ln():
         'CRVAL4': 0,
 
         'DATEREF': "2020-01-01T00:00:00"
-        }
+    }
     return WCS(header=header)
 
 
@@ -64,7 +63,7 @@ def wcs_3d_l_lt_ln():
         'CDELT3': 10,
         'CRPIX3': 0,
         'CRVAL3': 0,
-        }
+    }
 
     return WCS(header=header)
 
@@ -85,6 +84,7 @@ def wcs_2d_lt_ln():
         'CRVAL2': 0,
     }
     return WCS(header=spatial)
+
 
 @pytest.fixture
 def wcs_1d_l():
@@ -139,10 +139,13 @@ def wcs_3d_ln_lt_t_rotated():
 
 @pytest.fixture
 def simple_extra_coords_3d():
-    data = data_nd((2, 3, 4))
-    return [('time', 0, u.Quantity(range(data.shape[0]), unit=u.pix)),
-            ('hello', 1, u.Quantity(range(data.shape[1]), unit=u.pix)),
-            ('bye', 2, u.Quantity(range(data.shape[2]), unit=u.pix))]
+    return ExtraCoords.from_lookup_tables(('time', 'hello', 'bye'),
+                                          (0, 1, 2),
+                                          (list(range(2)) * u.pix,
+                                           list(range(3)) * u.pix,
+                                           list(range(4)) * u.pix
+                                           )
+                                          )
 
 
 def data_nd(shape):
@@ -150,16 +153,10 @@ def data_nd(shape):
     return np.arange(nelem).reshape(shape)
 
 
-def extra_coords(data_cube):
-    return [
-        ('time', 0, u.Quantity(range(data_cube.shape[1]), unit=u.s)),
-        ('hello', 1, u.Quantity(range(data_cube.shape[2]), unit=u.W)),
-        ('bye', 2, u.Quantity(range(data_cube.shape[3]), unit=u.m)),
-        ('another time', 2, np.array(
-            [datetime.datetime(2000, 1, 1) + datetime.timedelta(minutes=i)
-             for i in range(data_cube.shape[2])])),
-        ('array coord', 2, np.arange(100, 100 + data_cube.shape[3]))
-    ]
+def generate_time_extra_coord(data_cube):
+    shape = data_cube.shape[-1]
+    lut = Time("2020-02-02T00:00:00", format="isot") + np.linspace(0, shape * 10, num=shape, endpoint=False) * u.s
+    return ExtraCoords.from_lookup_tables(["extra_time"], [0], [lut])
 
 
 @pytest.fixture
@@ -188,11 +185,10 @@ def ndcube_4d_mask(wcs_4d_t_l_lt_ln):
 
 
 @pytest.fixture
-def ndcube_4d_extra_coords(wcs_4d_t_l_lt_ln):
+def ndcube_4d_extra_coords(wcs_4d_t_l_lt_ln, simple_extra_coords_3d):
     shape = (5, 8, 10, 12)
     data_cube = data_nd(shape)
-    ec = extra_coords(data_cube)
-    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, extra_coords=ec)
+    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, extra_coords=simple_extra_coords_3d)
 
 
 @pytest.fixture
@@ -221,6 +217,7 @@ def ndcube_3d_ln_lt_l(wcs_3d_l_lt_ln, simple_extra_coords_3d):
     return NDCube(
         data,
         wcs_3d_l_lt_ln,
+        mask=mask,
         uncertainty=data,
         extra_coords=simple_extra_coords_3d
     )
@@ -260,6 +257,30 @@ def ndcube_1d_l(wcs_1d_l):
     shape = (10,)
     data_cube = data_nd(shape)
     return NDCube(data_cube, wcs=wcs_1d_l)
+
+
+@pytest.fixture
+def ndcubesequence_4c_ln_lt_l(ndcube_3d_ln_lt_l):
+    cube1 = ndcube_3d_ln_lt_l
+    cube2 = ndcube_3d_ln_lt_l
+    cube3 = ndcube_3d_ln_lt_l
+    cube4 = ndcube_3d_ln_lt_l
+    cube2.data[:] *= 2
+    cube3.data[:] *= 3
+    cube4.data[:] *= 4
+    return NDCubeSequence([cube1, cube2, cube3, cube4])
+
+
+@pytest.fixture
+def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
+    cube1 = ndcube_3d_ln_lt_l
+    cube2 = ndcube_3d_ln_lt_l
+    cube3 = ndcube_3d_ln_lt_l
+    cube4 = ndcube_3d_ln_lt_l
+    cube2.data[:] *= 2
+    cube3.data[:] *= 3
+    cube4.data[:] *= 4
+    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
 
 
 @pytest.fixture(params=[

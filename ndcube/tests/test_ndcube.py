@@ -5,7 +5,6 @@ from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import NDCube
 from ndcube.tests import helpers
 
 
@@ -35,7 +34,8 @@ def test_wcs_object(all_ndcubes):
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
     assert len(sndc.dimensions) == 2
-    assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat", "custom:pos.helioprojective.lon"}
+    assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat",
+                                                       "custom:pos.helioprojective.lon"}
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
     if sndc.mask is not None:
@@ -43,7 +43,7 @@ def test_slicing_ln_lt(ndc, item):
 
     if ndc.extra_coords and ndc.extra_coords.keys():
         ec = sndc.extra_coords
-        assert set(ec.keys()) == {"time", "hello", "bye"}
+        assert set(ec.keys()) == {"time", "hello"}
 
     wcs = sndc.wcs
     assert isinstance(wcs, BaseHighLevelWCS)
@@ -78,7 +78,7 @@ def test_slicing_wave(ndc, item):
 
     if ndc.extra_coords and ndc.extra_coords.keys():
         ec = sndc.extra_coords
-        assert set(ec.keys()) == {"bye", "hello", "time"}
+        assert set(ec.keys()) == {"bye"}
 
     wcs = sndc.wcs
     assert isinstance(wcs, BaseHighLevelWCS)
@@ -112,7 +112,7 @@ def test_slicing_split_celestial(ndc, item):
 
     if ndc.extra_coords and ndc.extra_coords.keys():
         ec = sndc.extra_coords
-        assert set(ec.keys()) == {"hello", "bye", "time"}
+        assert set(ec.keys()) == {"hello", "bye"}
 
     assert isinstance(sndc.wcs, BaseHighLevelWCS)
     assert isinstance(sndc.wcs.low_level_wcs, SlicedLowLevelWCS)
@@ -196,9 +196,9 @@ def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
 
 def test_array_axis_physical_types(ndcube_4d_ln_lt_l_t):
     expected = [
-            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-            ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-            ('em.wl',), ('time',)]
+        ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
+        ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
+        ('em.wl',), ('time',)]
     output = ndcube_4d_ln_lt_l_t.array_axis_physical_types
     for i in range(len(expected)):
         assert all([physical_type in expected[i] for physical_type in output[i]])
@@ -206,16 +206,21 @@ def test_array_axis_physical_types(ndcube_4d_ln_lt_l_t):
 
 def test_crop(ndcube_4d_ln_lt_l_t):
     intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])
+    lower_corner = [coord[0] for coord in intervals]
+    upper_corner = [coord[-1] for coord in intervals]
     expected = ndcube_4d_ln_lt_l_t[1:3, 0:2, 0:2, 0:3]
-    output = ndcube_4d_ln_lt_l_t.crop(*intervals)
+    output = ndcube_4d_ln_lt_l_t.crop(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
 
 def test_crop_with_nones(ndcube_4d_ln_lt_l_t):
-    intervals = [None] * 4
-    intervals[0] = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
+    lower_corner = [None] * 3
+    upper_corner = [None] * 3
+    interval0 = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
+    lower_corner[0] = interval0[0]
+    upper_corner[0] = interval0[-1]
     expected = ndcube_4d_ln_lt_l_t[:, :, :, 0:3]
-    output = ndcube_4d_ln_lt_l_t.crop(*intervals)
+    output = ndcube_4d_ln_lt_l_t.crop(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -223,7 +228,7 @@ def test_crop_1d_independent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, 0, :, 0]
     wl_range = SpectralCoord([3e-11, 4.5e-11], unit=u.m)
     expected = cube_1d[0:2]
-    output = cube_1d.crop(wl_range)
+    output = cube_1d.crop([wl_range[0]], [wl_range[-1]])
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -231,47 +236,70 @@ def test_crop_1d_dependent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, :, 0, 0]
     sky_range = cube_1d.wcs.array_index_to_world([0, 1])
     expected = cube_1d[0:2]
-    output = cube_1d.crop(sky_range)
+    output = cube_1d.crop([sky_range[0]], [sky_range[-1]])
     helpers.assert_cubes_equal(output, expected)
 
 
 def test_crop_by_values(ndcube_4d_ln_lt_l_t):
-    time_range = [0.4, 1.2] * u.min
-    wl_range = [2e-11, 4e-11] * u.m
-    lon_range = [359.99, 359.996] * u.deg
-    lat_range = [0.00556, 0.01112] * u.deg
+    intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
+    units = [u.min, u.m, u.deg, u.deg]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
     expected = ndcube_4d_ln_lt_l_t[1:3, 0:2, 0:2, 0:3]
-    output = ndcube_4d_ln_lt_l_t.crop_by_values(time_range, wl_range, lat_range, lon_range)
+    output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_coords_with_units(ndcube_4d_ln_lt_l_t):
+    intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
+    units = [u.min, u.m, u.deg, u.deg]
+    lower_corner = [coord[0] for coord in intervals]
+    upper_corner = [coord[-1] for coord in intervals]
+    lower_corner[0] *= u.min
+    upper_corner[0] *= u.min
+    lower_corner[1] *= u.m
+    upper_corner[1] *= u.m
+    lower_corner[2] *= u.deg
+    units[0] = None
+    expected = ndcube_4d_ln_lt_l_t[1:3, 0:2, 0:2, 0:3]
+    output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=units)
     helpers.assert_cubes_equal(output, expected)
 
 
 def test_crop_by_values_with_nones(ndcube_4d_ln_lt_l_t):
-    intervals = [None] * 4
-    intervals[0] = [0.5, 1.1] * u.min
+    lower_corner = [None] * 4
+    lower_corner[0] = 0.5 * u.min
+    upper_corner = [None] * 4
+    upper_corner[0] = 1.1 * u.min
     expected = ndcube_4d_ln_lt_l_t[:, :, :, 0:3]
-    output = ndcube_4d_ln_lt_l_t.crop_by_values(*intervals)
+    output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
 
 def test_crop_by_values_all_nones(ndcube_4d_ln_lt_l_t):
-    intervals = [None] * 4
-    output = ndcube_4d_ln_lt_l_t.crop_by_values(*intervals)
+    lower_corner = [None] * 4
+    upper_corner = [None] * 4
+    output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, ndcube_4d_ln_lt_l_t)
 
 
 def test_crop_by_values_indexerror(ndcube_4d_ln_lt_l_t):
-    time_range = [0.5, 1.1] * u.min
-    wl_range = [-3e-11, -2.5e-11] * u.m
-    lat_range = [0.6, 0.75] * u.deg
-    lon_range = [1, 1.5] * u.deg
+    intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
+    units = [u.min, u.m, u.deg, u.deg]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    lower_corner[1] *= -1
+    upper_corner[1] *= -1
     with pytest.raises(IndexError):
-        ndcube_4d_ln_lt_l_t.crop_by_values(time_range, wl_range, lat_range, lon_range)
+        ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
 
 
-def test_crop_1d_dependent_2(ndcube_4d_ln_lt_l_t):
+def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, :, 0, 0]
-    lon_range = [359.99, 359.996] * u.deg
-    lat_range = [0.00556, 0.01112] * u.deg
+    print(cube_1d.array_axis_physical_types)
+    lat_range, lon_range = cube_1d.wcs.low_level_wcs.array_index_to_world_values([0, 1])
+    lower_corner = [lat_range[0] * u.deg, lon_range[0] * u.deg]
+    upper_corner = [lat_range[-1] * u.deg, lon_range[-1] * u.deg]
     expected = cube_1d[0:2]
-    output = cube_1d.crop_by_values(lat_range, lon_range)
+    output = cube_1d.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)

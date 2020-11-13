@@ -21,6 +21,9 @@ is_development = '.dev' in __version__
 
 # -- General configuration ---------------------------------------------------
 
+# Don't warn when we override doctest
+suppress_warnings = ['app.add_directive', ]
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -36,6 +39,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.smart_resolver',
+    # See https://github.com/astropy/pytest-doctestplus/pull/113
+    'sphinx_astropy.ext.doctest',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
