@@ -128,9 +128,10 @@ class NDCubeSequenceBase:
 
     @property
     def common_axis_coords(self):
+        common_axis = self._common_axis
         common_axis_names = []
         for cube in self.data:
-            common_axis_names += list(cube.array_axis_extra_coords[common_axis])
+            common_axis_names += list(cube.array_axis_physical_types[common_axis])
         common_axis_names = set(common_axis_names)
         sequence_coords = {}
         for key in common_axis_names:
@@ -138,7 +139,11 @@ class NDCubeSequenceBase:
             for cube in self.data:
                 len_common_axis = int(cube.dimensions.value[common_axis])
                 if key in cube.array_axis_physical_types[common_axis]:
-                    coord, mapping = cube.axis_world_coords(key, wcs=cube.combined_wcs)
+                    try:
+                        coord, mapping = cube.axis_world_coords(key, wcs=cube.combined_wcs)
+                    except AttributeError:
+                        coord, mapping = cube.axis_world_coords(key,
+                                                                wcs=cube.combined_wcs.low_level_wcs)
                     coord, mapping = coord[0], mapping[0]
                     coord_axis = np.where(np.array(mapping) == common_axis)[0][0]
                     item = [slice(None)] * len(coord.shape)

@@ -3,6 +3,7 @@ import unittest
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.time import Time, TimeDelta
 
 from ndcube import NDCube, NDCubeSequence
 
@@ -151,3 +152,16 @@ def test_cube_like_dimensions(ndc, expected_dimensions):
 def test_cube_like_dimensions_error(ndc):
     with pytest.raises(TypeError):
         ndc.cube_like_dimensions
+
+
+@pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
+def test_common_axis_coords(ndc):
+    common_axis_length = int(ndc.cube_like_dimensions[ndc._common_axis].value)
+    base_time = Time('2000-01-01', format='fits', scale='utc')
+    expected = {'time': [base_time + TimeDelta(60 * i, format='sec')
+                         for i in range(common_axis_length)]
+               }
+    print(expected)
+    output = ndc.common_axis_coords
+    print(output)
+    assert output == expected

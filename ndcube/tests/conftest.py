@@ -5,7 +5,7 @@ predicable NDCube objects.
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import ExtraCoords, NDCube, NDCubeSequence
@@ -63,6 +63,32 @@ def wcs_3d_l_lt_ln():
         'CDELT3': 10,
         'CRPIX3': 0,
         'CRVAL3': 0,
+    }
+
+    return WCS(header=header)
+
+
+@pytest.fixture
+def wcs_3d_lt_ln_l():
+    header = {
+
+        'CTYPE1': 'HPLN-TAN',
+        'CUNIT1': 'arcsec',
+        'CDELT1': 10,
+        'CRPIX1': 0,
+        'CRVAL1': 0,
+
+        'CTYPE2': 'HPLT-TAN',
+        'CUNIT2': 'arcsec',
+        'CDELT2': 5,
+        'CRPIX2': 5,
+        'CRVAL2': 0,
+
+        'CTYPE3': 'WAVE    ',
+        'CUNIT3': 'Angstrom',
+        'CDELT3': 0.2,
+        'CRPIX3': 0,
+        'CRVAL3': 10,
     }
 
     return WCS(header=header)
@@ -281,6 +307,47 @@ def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
     cube3.data[:] *= 3
     cube4.data[:] *= 4
     return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
+
+
+def time_extra_coords(shape, axis, base):
+    return ExtraCoords.from_lookup_tables(
+        ('time',),
+        (axis,),
+        (base + TimeDelta([i * 60 for i in range(shape[axis])], format='sec'),)
+        )
+
+
+def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base):
+    shape = (10, 5, 8)
+    wcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    mask = data_cube < 0
+    extra_coords = time_extra_coords(shape, time_axis, time_base)
+    return NDCube(data_cube,
+                  wcs_3d_lt_ln_l,
+                  mask=mask,
+                  uncertainty=data_cube,
+                  extra_coords=extra_coords
+                  )
+
+
+@pytest.fixture
+def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
+    common_axis = 1
+
+    base_time1 = Time('2000-01-01', format='fits', scale='utc')
+    cube1 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time1)
+ 
+    shape = cube1.data.shape
+    base_time2 = base_time1 + TimeDelta([shape[common_axis] * 60], format='sec')
+    cube2 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time2)
+    cube2.data[:] *= 2
+
+    base_time3 = base_time2 + TimeDelta([shape[common_axis] * 60], format='sec')
+    cube3 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time3)
+    cube3.data[:] *= 3
+
+    return NDCubeSequence([cube1, cube2, cube3], common_axis=common_axis)
 
 
 @pytest.fixture(params=[
