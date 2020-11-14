@@ -1,6 +1,7 @@
 import astropy.units as u
 import pytest
 
+
 from ndcube.global_coords import GlobalCoords
 
 
@@ -65,3 +66,12 @@ def test_global_coords_len(global_coords):
     global_coords.add('name1', 'physical_type1', coord1)
     global_coords.add('name2', 'physical_type2', coord2)
     assert len(global_coords) == 2
+
+
+@pytest.mark.xfail(raises=KeyError)
+def test_global_coords_remove_nonexistent_name(global_coords):
+    coord1 = 1 * u.m
+    coord2 = 2 * u.s
+    global_coords.add('name1', 'physical_type1', coord1)
+    global_coords.add('name2', 'physical_type2', coord2)
+    global_coords.remove('name0')  # x-failing the function on purpose
