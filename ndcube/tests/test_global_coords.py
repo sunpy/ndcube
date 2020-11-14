@@ -1,7 +1,6 @@
 import astropy.units as u
 import pytest
 
-
 from ndcube.global_coords import GlobalCoords
 
 
