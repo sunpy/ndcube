@@ -72,7 +72,7 @@ def test_global_coords_remove_nonexistent_name(global_coords):
     coord2 = 2 * u.s
     global_coords.add('name1', 'physical_type1', coord1)
     global_coords.add('name2', 'physical_type2', coord2)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         global_coords.remove('name0')
 
 
