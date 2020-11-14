@@ -57,3 +57,11 @@ def test_dict_keys_and_values(global_coords):
     global_coords.add('name2', 'physical_type2', coord2)
     assert global_coords.names == ('name1', 'name2')
     assert global_coords.physical_types == ('physical_type1', 'physical_type2')
+
+
+def test_global_coords_len(global_coords):
+    coord1 = 1 * u.m
+    coord2 = 2 * u.s
+    global_coords.add('name1', 'physical_type1', coord1)
+    global_coords.add('name2', 'physical_type2', coord2)
+    assert len(global_coords) == 2
