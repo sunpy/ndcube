@@ -1,0 +1,1 @@
+Implement NDCubeSequence.sequence_axis_coords to replace NDCubeSequence.sequence_axis_extra_coords. In contrast to old property, this new property collates coordinates from the wcs as well as extra_coords.
