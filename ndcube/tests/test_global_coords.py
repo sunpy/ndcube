@@ -16,7 +16,6 @@ def test_add(gc):
     gc.add('name2', 'physical_type2', coord2)
     assert gc.names == ('name1', 'name2')
     assert gc.physical_types == ('physical_type1', 'physical_type2')
-    assert gc.coords == (coord1, coord2)
 
 
 def test_remove(gc):
@@ -28,7 +27,6 @@ def test_remove(gc):
     assert len(gc) == 1
     assert gc.names == ('name1',)
     assert gc.physical_types == ('physical_type1',)
-    assert gc.coords == (coord1,)
 
 
 def test_overwrite(gc):
@@ -73,17 +71,23 @@ def test_physical_types(gc):
     assert gc.physical_types == ('physical_type1', 'physical_type2')
 
 
-def test_coords(gc):
-    coord1 = 1 * u.m
-    coord2 = 2 * u.s
-    gc.add('name1', 'physical_type1', coord1)
-    gc.add('name2', 'physical_type2', coord2)
-    assert gc.coords == (coord1, coord2)
-
-
 def test_len(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
     gc.add('name1', 'physical_type1', coord1)
     gc.add('name2', 'physical_type2', coord2)
     assert len(gc) == 2
+
+
+def test_get_coords(gc):
+    coord1 = 1 * u.m
+    coord2 = 2 * u.s
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    value_list = list(gc.values())
+    for i, element in enumerate(value_list):
+        if i == 0:
+            assert element[1] == coord1
+        if i == 1:
+            assert element[1] == coord2
+
