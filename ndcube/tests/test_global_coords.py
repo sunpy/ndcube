@@ -15,8 +15,8 @@ def test_add(gc):
     gc.add('name1', 'physical_type1', coord1)
     gc.add('name2', 'physical_type2', coord2)
     assert gc.names == ('name1', 'name2')
-    assert gc.physical_types == ('physical_type1', 'physical_type2')
-    assert gc.coords == (coord1, coord2)
+    assert gc.physical_types == {'name1': 'physical_type1', 'name2': 'physical_type2'}
+    assert gc.coords == {'name1': coord1, 'name2': coord2}
 
 
 def test_remove(gc):
@@ -27,8 +27,8 @@ def test_remove(gc):
     gc.remove('name2')
     assert len(gc) == 1
     assert gc.names == ('name1',)
-    assert gc.physical_types == ('physical_type1',)
-    assert gc.coords == (coord1,)
+    assert gc.physical_types == {'name1': 'physical_type1'}
+    assert gc.coords == {'name1': coord1}
 
 
 def test_overwrite(gc):
@@ -70,7 +70,7 @@ def test_physical_types(gc):
     coord2 = 2 * u.s
     gc.add('name1', 'physical_type1', coord1)
     gc.add('name2', 'physical_type2', coord2)
-    assert gc.physical_types == ('physical_type1', 'physical_type2')
+    assert gc.physical_types == {'name1': 'physical_type1', 'name2': 'physical_type2'}
 
 
 def test_coords(gc):
@@ -78,7 +78,7 @@ def test_coords(gc):
     coord2 = 2 * u.s
     gc.add('name1', 'physical_type1', coord1)
     gc.add('name2', 'physical_type2', coord2)
-    assert gc.coords == (coord1, coord2)
+    assert gc.coords == {'name1': coord1, 'name2': coord2}
 
 
 def test_len(gc):
