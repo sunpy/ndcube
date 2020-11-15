@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b833e3a9-cc8b-4a41-b8be-799bff5457d8" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ndcube/tests/test_global_coords.py" beforeDir="false" afterPath="$PROJECT_DIR$/ndcube/tests/test_global_coords.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ndcube/global_coords/global_coords.py" beforeDir="false" afterPath="$PROJECT_DIR$/ndcube/global_coords/global_coords.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,7 +39,7 @@
       <workItem from="1605186088785" duration="7303000" />
       <workItem from="1605196073898" duration="869000" />
       <workItem from="1605261389407" duration="15212000" />
-      <workItem from="1605399323140" duration="3105000" />
+      <workItem from="1605399323140" duration="3314000" />
     </task>
     <servers />
   </component>
