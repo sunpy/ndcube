@@ -151,3 +151,11 @@ def test_cube_like_dimensions(ndc, expected_dimensions):
 def test_cube_like_dimensions_error(ndc):
     with pytest.raises(TypeError):
         ndc.cube_like_dimensions
+
+
+@pytest.mark.parametrize("ndc", (("ndcubesequence_4c_ln_lt_l",)), indirect=("ndc",))
+def test_sequence_axis_coords(ndc):
+    expected = {'global coord': [None, <Quantity 0. pix>, None],
+                'distance': [<Quantity 1. um>, <Quantity 2. um>, None]}
+    output = ndc.sequence_axis_coords
+    assert output == expected
