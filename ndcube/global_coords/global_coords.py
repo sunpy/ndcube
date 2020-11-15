@@ -49,12 +49,7 @@ class GlobalCoords(Mapping):
         """
         A tuple of all physical types, one per coordinate.
         """
-        return dict((key, value[0]) for key, value in self.items())
-
-    @property
-    def coords(self):
-        return dict((key, value[1]) for key, value in self.items())
-
+        return tuple(item[0] for item in self.values())
 def get_physical_type(self, name):
     """Return the physical type of a specific coordinate."""
     return self._all_coords[name][0]
