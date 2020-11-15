@@ -55,6 +55,13 @@ class GlobalCoords(Mapping):
     def coords(self):
         return dict((key, value[1]) for key, value in self.items())
 
+def get_physical_type(self, name):
+    """Return the physical type of a specific coordinate."""
+    return self._all_coords[name][0]
+
+def get_coord(self, name):
+    """Return value of a specific coordinate."""
+    return self._all_coords[name][1]
     def __getitem__(self, item):
         """
         Index the collection by a name.
