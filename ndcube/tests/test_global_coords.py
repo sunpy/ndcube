@@ -5,71 +5,85 @@ from ndcube.global_coords import GlobalCoords
 
 
 @pytest.fixture
-def global_coords(ndcube_3d_ln_lt_l):
-    return GlobalCoords(ndcube_3d_ln_lt_l)
+def gc():
+    return GlobalCoords()
 
 
-def test_adding_global_coords(global_coords):
+def test_add(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name2', 'physical_type2', coord2)
-    assert global_coords.values == ('name1', 'name2')
-    assert global_coords.physical_types == ('physical_type1', 'physical_type2')
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    assert gc.names == ('name1', 'name2')
+    assert gc.physical_types == ('physical_type1', 'physical_type2')
+    assert gc.coords == (coord1, coord2)
 
 
-def test_removing_global_coords(global_coords):
+def test_remove(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name2', 'physical_type2', coord2)
-    global_coords.remove('name2')
-    assert len(global_coords) == 1
-    assert global_coords.values == ('name1',)
-    assert global_coords.physical_types == ('physical_type1',)
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    gc.remove('name2')
+    assert len(gc) == 1
+    assert gc.names == ('name1',)
+    assert gc.physical_types == ('physical_type1',)
+    assert gc.coords == (coord1,)
 
 
-def test_replacing_global_coords(global_coords):
+def test_overwrite(gc):
+    with pytest.raises(ValueError):
+        coord1 = 1 * u.m
+        coord2 = 2 * u.s
+        gc.add('name1', 'physical_type1', coord1)
+        gc.add('name1', 'physical_type2', coord2)
+
+
+def test_iterating(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name1', 'physical_type2', coord2)
-    assert global_coords.values == ('name1',)
-    assert global_coords.physical_types == ('physical_type2',)
-
-
-def test_iterating(global_coords):
-    coord1 = 1 * u.m
-    coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name2', 'physical_type2', coord2)
-    for i, gc_item in enumerate(global_coords.keys()):
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    for i, gc_item in enumerate(gc):
         if i == 0:
-            assert (i, gc_item) == (0, 'name1')
+            assert gc_item == 'name1'
         if i == 1:
-            assert (i, gc_item) == (1, 'name2')
+            assert gc_item == 'name2'
 
 
-def test_slicing(global_coords):
+def test_slicing(gc):
+    coord1 = 1 * u.m
+    gc.add('name1', 'physical_type1', coord1)
+    assert gc['name1'] == ('physical_type1', u.Quantity(1., u.m))
+
+
+def test_names(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name2', 'physical_type2', coord2)
-    assert global_coords['name1']._all_coords == {'name1': ('physical_type1', u.Quantity(1., u.m))}
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    assert gc.names == ('name1', 'name2')
 
 
-def test_dict_values_and_physical_types(global_coords):
+def test_physical_types(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name2', 'physical_type2', coord2)
-    assert global_coords.values == ('name1', 'name2')
-    assert global_coords.physical_types == ('physical_type1', 'physical_type2')
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    assert gc.physical_types == ('physical_type1', 'physical_type2')
 
 
-def test_global_coords_len(global_coords):
+def test_coords(gc):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
-    global_coords.add('name1', 'physical_type1', coord1)
-    global_coords.add('name2', 'physical_type2', coord2)
-    assert len(global_coords) == 2
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    assert gc.coords == (coord1, coord2)
+
+
+def test_len(gc):
+    coord1 = 1 * u.m
+    coord2 = 2 * u.s
+    gc.add('name1', 'physical_type1', coord1)
+    gc.add('name2', 'physical_type2', coord2)
+    assert len(gc) == 2
