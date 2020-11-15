@@ -159,9 +159,13 @@ def test_common_axis_coords(ndc):
     common_axis_length = int(ndc.cube_like_dimensions[ndc._common_axis].value)
     base_time = Time('2000-01-01', format='fits', scale='utc')
     expected = {'time': [base_time + TimeDelta(60 * i, format='sec')
-                         for i in range(common_axis_length)]
-               }
-    print(expected)
+                         for i in range(common_axis_length)]}
     output = ndc.common_axis_coords
-    print(output)
+
+
+@pytest.mark.parametrize("ndc", (("ndcubesequence_4c_ln_lt_l",)), indirect=("ndc",))
+def test_sequence_axis_coords(ndc):
+    expected = {'global coord': [None, <Quantity 0. pix>, None],
+                'distance': [<Quantity 1. um>, <Quantity 2. um>, None]}
+    output = ndc.sequence_axis_coords
     assert output == expected

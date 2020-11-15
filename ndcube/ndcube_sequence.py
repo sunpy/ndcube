@@ -5,6 +5,7 @@ import textwrap
 import astropy.units as u
 import numpy as np
 
+from ndcube import GlobalCoords
 from ndcube import utils
 from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin
 
@@ -154,6 +155,20 @@ class NDCubeSequenceBase:
                     exploded_coord += [None] * len_common_axis
             sequence_coords[key] = exploded_coord
         return sequence_coords
+
+    @property
+    def sequence_axis_coords(self):
+        # Collect names of global coords in each cube.
+        global_names = set.union(*[set(cube.global_coords.keys())
+                                   for cube in self.data
+                                   if isinstance(cube.global_coords, GlobalCoords)])
+        # For each coord, combine values from each cube's global coords property.
+        # If coord not present in cube, insert None.
+        return dict(
+            [(name, [cube.global_coords.get_coord(name)
+                     if isinstance(cube.global_coords, GlobalCoords) and name in cube.global_coords
+                     else None for cube in self.data]
+             ) for name in global_names])
 
     @property
     def sequence_axis_extra_coords(self):
