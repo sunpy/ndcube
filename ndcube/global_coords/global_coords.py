@@ -49,11 +49,11 @@ class GlobalCoords(Mapping):
         """
         A tuple of all physical types, one per coordinate.
         """
-        return tuple(item[0] for item in self._all_coords.values())
+        return dict((key, value[0]) for key, value in self.items())
 
     @property
     def coords(self):
-        return tuple(item[1] for item in self._all_coords.values())
+        return dict((key, value[1]) for key, value in self.items())
 
     def __getitem__(self, item):
         """
