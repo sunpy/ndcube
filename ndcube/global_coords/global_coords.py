@@ -37,7 +37,7 @@ class GlobalCoords(Mapping):
         del self._internal_coords[name]
 
     @property
-    def names(self):
+    def values(self):
         """
         A tuple of all the names or keys.
         """
