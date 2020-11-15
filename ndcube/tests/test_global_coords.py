@@ -90,4 +90,3 @@ def test_get_coords(gc):
             assert element[1] == coord1
         if i == 1:
             assert element[1] == coord2
-
