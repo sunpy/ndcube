@@ -140,6 +140,25 @@ class NDCubeSequenceBase:
         else:
             return None
 
+    @proeprty
+    def sequence_axis_coords(self):
+        # Collect names of global coords in each cube.
+        global_names = set()
+        sequence_coords = {}
+        for cube in self.data:
+            if isinstance(cube.global_coords, GlobalCoords):
+                for name in cube.global_coords.names:
+                    global_names.add(name)
+        for name in global_names:
+            coord = []
+            for cube in self.data:
+                if isinstance(cube.global_coords, GlobalCoords) and name in cube.global_coords.names:
+                    coord.append(cube.global_coords.get_coord(name))
+                else:
+                    coord.append(None)
+            sequence_coords[name] = coord
+        return sequence_coords
+
     @property
     def sequence_axis_extra_coords(self):
         sequence_coord_names, sequence_coord_units = \
