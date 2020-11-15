@@ -79,14 +79,13 @@ def test_len(gc):
     assert len(gc) == 2
 
 
-def test_get_coords(gc):
+def test_get_coord(gc):
     coord1 = 1 * u.m
-    coord2 = 2 * u.s
     gc.add('name1', 'physical_type1', coord1)
-    gc.add('name2', 'physical_type2', coord2)
-    value_list = list(gc.values())
-    for i, element in enumerate(value_list):
-        if i == 0:
-            assert element[1] == coord1
-        if i == 1:
-            assert element[1] == coord2
+    assert gc.get_coord('name1') == coord1
+    
+    
+def test_get_physical_type(gc):
+    coord1 = 1 * u.m
+    gc.add('name1', 'physical_type1', coord1)
+    assert gc.get_phsyical_type('name1') == 'physical_type1'
