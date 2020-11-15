@@ -163,9 +163,9 @@ def test_common_axis_coords(ndc):
     output = ndc.common_axis_coords
 
 
-@pytest.mark.parametrize("ndc", (("ndcubesequence_4c_ln_lt_l",)), indirect=("ndc",))
+@pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
 def test_sequence_axis_coords(ndc):
-    expected = {'global coord': [None, <Quantity 0. pix>, None],
-                'distance': [<Quantity 1. um>, <Quantity 2. um>, None]}
+    expected = {'global coord': [None, 0*u.pix, None],
+                'distance': [1*u.m, 2*u.m, None]}
     output = ndc.sequence_axis_coords
     assert output == expected
