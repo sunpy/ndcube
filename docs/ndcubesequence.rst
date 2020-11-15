@@ -407,39 +407,10 @@ sequence plotting, let us know with a comment on that issue.
 
 However, you can still visualize the data in `~ndcube.NDCubeSequence` in a number of ways.
 You can slice out a single `~ndcube.NDCube` and use its `~ndcube.NDCube.plot` method.
-Or you can write your own mixin class to define the plotting methods.
-Or finally, you can extract the data and use the myriad of plotting packages available in
-the Python ecosystem.  Below, we will outline these latter two options in a little more
-detail.
-
-Writing Your Own NDCubeSequence Plot Mixin
-------------------------------------------
-
-Just because ndcube no longer provides plotting support doesn't mean you can't write your own
-plotting functionality for `~ndcube.NDCubeSequence`.
-In many cases, this might be simpler as you may be able to make some assumptions about the
-data you will be analyzing and therefore won't have to write as generalized a tool.
-The best way to do this is to write your own mixin class defining the plot methods, e.g.
-
-.. code-block:: python
-
-   class MySequencePlotMixin:
-       def plot(self, **kwargs):
-           pass  # Write code to plot data here.
-
-       def plot_as_cube(self, **kwargs):
-           pass  # Write code to plot data concatenated along common axis here.
-
-Then you can create your own ``NDCubeSequence`` by combining your mixin with
-`~ndcube.NDCubeSequenceBase` which holds all the non-plotting functionality of the
-`~ndcube.NDCubeSequence`.
-
-.. code-block:: python
-
-    class MySequence(NDCubeSequenceBase, MySequencePlotMixin):
-
-This will create a new class, ``MySequence``, which contains all the functionality of
-`~ndcube.NDCubeSequence` plus the plot methods you've defined in ``MySequencePlotMixin``.
+You can extract the data and use the myriad of plotting packages available in
+the Python ecosystem.
+Finally, if you are advanced, you can write your own mixin class to define the plotting methods.
+Below, we will outline these latter two options in a little more detail.
 
 Extracting and Plotting NDCubeSequence Data with Matplotlib
 -----------------------------------------------------------
@@ -489,10 +460,11 @@ in a given pixel changes over time.::
 
     >>> import matplotlib as mpl
     >>> import matplotlib.pyplot as plt
+    >>> from astropy.time import Time
     >>> # Combine spectrum over time for pixel 0, 0.
     >>> spectrum_sequence = my_sequence[0, 0]
     >>> intensity = np.stack([cube.data for cube in spectrum_sequence[0, 0], axis=0)
-    >>> times = spectrum_sequence.global_coords["time"]
+    >>> times = Time(spectrum_sequence.sequence_axis_coords["time"])
     >>> # Assume that the wavelength in each pixel doesn't change as we move through the sequence.
     >>> wavelength = spectrum_sequence[0].axis_world_coords("em.wl")
     >>> # As the times may not be uniform, we can use NonUniformImage
@@ -523,11 +495,11 @@ Therefore, we could do the following::
 
     >>> from ndcube.visualization import ImageAnimator
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> times = my_sequence.global_coords["time"]
-    >>> time_range = [times[0], times[-1]]
+    >>> time_range = [my_sequence[0].global_coords.get_coord("time"),
+                      my_sequence[-1].global_coords.get_coord("time")]
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
-    >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values()
+    >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values(wcs=my_sequence[0].wcs)
     >>> lon_range = [lon[0], lon[-1]]
     >>> lat_range = [lat[0], lat[-1]]
     >>> wave_range = [wavelength[0], wavelength[-1]]
@@ -540,8 +512,8 @@ Alternatively we can animate how the one 1-D spectrum changes by using
 
     >>> from ndcube.visualization import ImageAnimator
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> times = my_sequence.global_coords["time"]
-    >>> time_range = [times[0], times[-1]]
+    >>> time_range = [my_sequence[0].global_coords.get_coord("time"),
+                      my_sequence[-1].global_coords.get_coord("time")]
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
     >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values()
@@ -551,6 +523,35 @@ Alternatively we can animate how the one 1-D spectrum changes by using
     >>> animation = LineAnimator(data, plot_axis_index=-1,
                                  axis_ranges=[time_range, lon_range, lat_range, wave_range])
     >>> plt.show()
+
+Writing Your Own NDCubeSequence Plot Mixin
+------------------------------------------
+
+Just because ndcube no longer provides plotting support doesn't mean you can't write your own
+plotting functionality for `~ndcube.NDCubeSequence`.
+In many cases, this might be simpler as you may be able to make some assumptions about the
+data you will be analyzing and therefore won't have to write as generalized a tool.
+The best way to do this is to write your own mixin class defining the plot methods, e.g.
+
+.. code-block:: python
+
+   class MySequencePlotMixin:
+       def plot(self, **kwargs):
+           pass  # Write code to plot data here.
+
+       def plot_as_cube(self, **kwargs):
+           pass  # Write code to plot data concatenated along common axis here.
+
+Then you can create your own ``NDCubeSequence`` by combining your mixin with
+`~ndcube.NDCubeSequenceBase` which holds all the non-plotting functionality of the
+`~ndcube.NDCubeSequence`.
+
+.. code-block:: python
+
+    class MySequence(NDCubeSequenceBase, MySequencePlotMixin):
+
+This will create a new class, ``MySequence``, which contains all the functionality of
+`~ndcube.NDCubeSequence` plus the plot methods you've defined in ``MySequencePlotMixin``.
 
 There are many other ways you could visualize the data in your `~ndcube.NDCubeSequence`
 and many other visualization packages in the Python ecosystem that you could use.
