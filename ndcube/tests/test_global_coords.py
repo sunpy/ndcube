@@ -29,7 +29,7 @@ def test_removing_global_coords(global_coords):
     assert global_coords.physical_types == ('physical_type1',)
 
 
-def test_replace_global_coords(global_coords):
+def test_replacing_global_coords(global_coords):
     coord1 = 1 * u.m
     coord2 = 2 * u.s
     global_coords.add('name1', 'physical_type1', coord1)
