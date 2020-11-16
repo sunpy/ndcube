@@ -7,10 +7,9 @@ Miscellaneous WCS utilities.
 from collections import UserDict
 
 import numpy as np
-from astropy import wcs
 from astropy.wcs.wcsapi import low_level_api
 
-__all__ = ['wcs_ivoa_mapping', 'append_sequence_axis_to_wcs',
+__all__ = ['wcs_ivoa_mapping',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
            'physical_type_to_world_axis', 'get_dependent_pixel_axes',
@@ -47,26 +46,6 @@ wcs_to_ivoa = {
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
-
-
-def append_sequence_axis_to_wcs(wcs_object):
-    """
-    Appends a 1-to-1 dummy axis to a WCS object.
-    """
-    dummy_number = wcs_object.naxis + 1
-    wcs_header = wcs_object.to_header()
-    wcs_header.append((f"CTYPE{dummy_number}", "ITER",
-                       "A unitless iteration-by-one axis."))
-    wcs_header.append((f"CRPIX{dummy_number}", 0.,
-                       "Pixel coordinate of reference point"))
-    wcs_header.append((f"CDELT{dummy_number}", 1.,
-                       "Coordinate increment at reference point"))
-    wcs_header.append((f"CRVAL{dummy_number}", 0.,
-                       "Coordinate value at reference point"))
-    wcs_header.append((f"CUNIT{dummy_number}", "pix",
-                       "Coordinate value at reference point"))
-    wcs_header["WCSAXES"] = dummy_number
-    return wcs.WCS(wcs_header)
 
 
 def _pixel_keep(wcs_object):

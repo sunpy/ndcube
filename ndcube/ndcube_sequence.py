@@ -6,9 +6,17 @@ import astropy.units as u
 import numpy as np
 
 from ndcube import utils
-from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin
 
 __all__ = ['NDCubeSequence']
+
+PLOTTING_NOT_SUPPORTED_ERROR = """NDCubeSequence plotting is no longer supported.
+To learn why or to tell us why it should be re-instated, read and comment on issue #315:
+
+    https://github.com/sunpy/ndcube/issues/315
+
+To see a introductory guide on how to make your own NDCubeSequence plots, see the docs:
+
+    https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting"""
 
 
 class NDCubeSequenceBase:
@@ -247,8 +255,12 @@ class NDCubeSequenceBase:
         return cls(data_list, meta=meta, common_axis=common_axis)
 
 
-class NDCubeSequence(NDCubeSequenceBase, NDCubeSequencePlotMixin):
-    pass
+class NDCubeSequence(NDCubeSequenceBase):
+    def plot(self, **kwargs):
+        raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
+
+    def plot_as_cube(self, **kwargs):
+        raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
 
 
 """
