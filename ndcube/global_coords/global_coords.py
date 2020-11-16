@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from collections.abc import Mapping
 
+from ndcube.utils.wcs import validate_physical_types
+
 __all__ = ['GlobalCoords']
 
 
@@ -28,18 +30,35 @@ class GlobalCoords(Mapping):
         """
         return self._internal_coords
 
-    def add(self, name, physical_type, coords):
+    def add(self, name, physical_type, coord):
         """
         Add a new coordinate to the collection.
+
+        Parameters
+        ----------
+        name : `str`
+            The name for the coordinate.
+        physical_type : `str`
+            An IOVA UCD1+ physical type description for the coordinate
+            (http://www.ivoa.net/documents/latest/UCDlist.html). If no matching UCD
+            type exists, this can instead be ``"custom:xxx"``, where ``xxx`` is an
+            arbitrary string. If not known, can be `None`.
+        coord : `object`
+            The object describing the coordinate value, for example a
+            `~astropy.units.Quantity` or a `~astropy.coordinates.SkyCoord`.
         """
         if name in self._internal_coords.keys():
             raise ValueError("coordinate with same name already exists: "
                              f"{name}: {self._internal_coords[name]}")
-        self._internal_coords[name] = (physical_type, coords)
+
+        # Ensure the physical type is valid
+        validate_physical_types((physical_type,))
+
+        self._internal_coords[name] = (physical_type, coord)
 
     def remove(self, name):
         """
-        Remove a coordinate from the collection
+        Remove a coordinate from the collection.
         """
         del self._internal_coords[name]
 

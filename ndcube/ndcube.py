@@ -187,12 +187,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")
 
         self._extra_coords = extra_coords
-
         self._global_coords = GlobalCoords(self)
 
     @property
     def extra_coords(self):
+        """
+        An `.ExtraCoords` object holding extra coordinates aligned to array axes.
+        """
         return self._extra_coords
+
+    @property
+    def global_coords(self):
+        """
+        A `.GlobalCoords` object holding coordinate metadata not aligned to an array axis.
+        """
+        return self._global_coords
 
     @property
     def combined_wcs(self):
