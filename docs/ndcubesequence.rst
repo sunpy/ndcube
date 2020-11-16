@@ -18,7 +18,7 @@ effectively a list of `~ndcube.NDCube` instances with some helper
 methods attached.
 
 Initialization
---------------
+==============
 
 To initialize the most basic `~ndcube.NDCubeSequence` object, all you
 need is a list of `~ndcube.NDCube` instances.  So let us first define
@@ -107,7 +107,7 @@ than more manually delving into the ``.data`` attribute.  For more
 explanation, see the section on :ref:`sequence_slicing`.
 
 Common Axis
------------
+===========
 
 It is possible (although not required) to set a common axis of the
 `~ndcube.NDCubeSequence`.  A common axis is defined as the axis of the
@@ -141,7 +141,7 @@ more details on these features.
 .. _dimensions:
 
 Dimensions
-----------
+==========
 
 Analagous to `ndcube.NDCube.dimensions`, there is also a
 `ndcube.NDCubeSequence.dimensions` property for
@@ -176,7 +176,8 @@ word that best describes it.  To call, simply do::
 .. _sequence_slicing:
 
 Slicing
--------
+=======
+
 As with `~ndcube.NDCube`, slicing an `~ndcube.NDCubeSequence` using
 the standard slicing API simulataneously slices the data arrays, WCS
 objects, masks, uncertainty arrays, etc. in each relevant sub-cube.
@@ -278,7 +279,7 @@ lengths of each cube individually.  See section on :ref:`dimensions`
 for more detail.
 
 Cube-like Dimensions
---------------------
+====================
 
 To help with handling an `~ndcube.NDCubeSequence` with a common axis
 as if it were a single cube, there exist cube-like equivalents of the
@@ -303,7 +304,7 @@ single `~astropy.units.Quantity` in pixel units, as if it were
 `~astropy.units.Quantity`.
 
 Common Axis Extra Coordinates
------------------------------
+=============================
 
 If a common axis is defined, it may be useful to view the extra
 coordinates along that common axis defined by each of the sub-cube
@@ -342,7 +343,7 @@ effectively sliced when the `~ndcube.NDCubeSequence` is sliced, e.g.::
         datetime.datetime(2000, 1, 1, 0, 8)], dtype=object)}
 
 Sequence Axis Extra Coordinates
--------------------------------
+===============================
 Analgous to `~ndcube.NDCubeSequence.common_axis_extra_coords`, it is
 also possible to access the extra coordinates that are not assigned to any
 `~ndcube.NDCube` data axis via the
@@ -357,26 +358,8 @@ assigned to the sequence axis.  Hence the property's name.::
   >>> my_sequence.sequence_axis_extra_coords
   {'label': array(['hello', 'world', '!'], dtype=object)}
 
-
-Plotting
---------
-
-Just like `~ndcube.NDCube`, `~ndcube.NDCubeSequence` provide simple but powerful
-plotting APIs to help users visualize their data.
-Two plotting methods, `~ndcube.NDCubeSequence.plot` and
-`~ndcube.NDCubeSequence.plot_as_cube`, are provided which correspond to the
-sequence and cube-like representations of the data, respectively.
-These methods allows the sequence to be animated as though it were one
-contiguous `~ndcube.NDCube`.
-Both methods have the same API and same kwargs as `ndcube.NDCube.plot`.
-See documentation for `ndcube.NDCube.plot` for more details.
-The main substantive difference between them is how the axis inputs relate to
-dimensionality of the data, i.e. the same way that the inputs to NDCubeSequence
-slicing and `~ndcube.NDCubeSequence.index_as_cube` differ.
-
-
 Explode Along Axis
-------------------
+==================
 
 During analysis of some data - say of a stack of images - it may be
 necessary to make some different fine-pointing adjustments to each
@@ -411,41 +394,169 @@ dimensions.shape ``(<Quantity 3.0 pix>, <Quantity 3.0 pix>, <Quantity
 Note that any cube axis can be input.  A common axis need not be
 defined.
 
-Extracting Data Arrays
--------------------------
+Plotting
+========
 
-It is possible that you may have some procedures that are designed to operate on arrays instead of
-`~ndcube.NDCubeSequence` objects.
-"Therefore it may be useful to extract the data (or other array-like information such as `uncertainty` or `mask`) in the `~ndcube.NDCubeSequence`
-into a single `~numpy.ndarray`.
-A succinct way of doing this operation is using python's list comprehension features.
+Since ndcube 2.0, `~ndcube.NDCubeSequence` does not provide plotting methods.
+The rationale is explained in `Issue #315 <https://github.com/sunpy/ndcube/issues/315>`
+in our GitHub repo.
+If you feel that `~ndcube.NDCubeSequence` should support plotting again,
+please read and comment on that issue telling us about your use case.
+Better still, let us know that you would like to work on the necessary tools to enable
+sequence plotting, let us know with a comment on that issue.
 
+Despite this, you can still visualize the data in `~ndcube.NDCubeSequence` in a number of ways.
+You can slice out a single `~ndcube.NDCube` and use its `~ndcube.NDCube.plot` method.
+You can extract the data and use the myriad of plotting packages available in
+the Python ecosystem.
+Finally, if you want to be advanced enough, you can write your own mixin class to define
+the plotting methods.
+Below, we will outline these latter two options in a little more detail.
+
+Extracting and Plotting NDCubeSequence Data with Matplotlib
+-----------------------------------------------------------
+
+In order to produce plots (or perform other analysis) outside of the ``ndcube`` framework,
+it may be useful to extract the data from the `~ndcube.NDCubeSequence` into single
+`~numpy.ndarray` instances.
 In the above examples we defined the `my_sequence` `~ndcube.NDCubeSequence` object.::
 
     >>> # Print dimensions of my_sequence as a reminder
     >>> print(my_sequence.dimensions)
     (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
 
-In this section we will use this object to demonstrate extracting data arrays from `~ndcube.NDCubeSequence` objects.
-For example, say we wanted to make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_sequence`.::
+To make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_sequence`.::
 
-    >>> # Make a single 4D array of data in sequence.
-    >>> data = np.stack([cube.data for cube in my_sequence.data])
+    >>> # Make a single 4D array of data in sequence with the sequence axis as the 0th.
+    >>> data4d = np.stack([cube.data for cube in my_sequence.data], axis=0)
     >>> print(data.shape)
     (3, 3, 4, 5)
 
-If instead, we want to define a 3D array where every `~ndcube.NDCube` in the `~ndcube.NDCubeSequence` is appended
-together, we can use `numpy`'s `vstack` function::
+The same applies to other array-like data in the `~ndcube.NDCubeSequence`, like
+``uncertainty`` and ``mask``.
+If instead, we want to define a 3D array where every `~ndcube.NDCube` in the
+`~ndcube.NDCubeSequence` is appended along the ``common_axis``,
+we can use `numpy.concatenate` function::
 
     >>> # Make a 3D array
-    >>> data = np.vstack([cube.data for cube in my_sequence.data])
+    >>> data3d = np.concatenate([cube.data for cube in my_sequence.data],
+                                axis=my_sequence._common_axis)
     >>> print(data.shape)
     (9, 4, 5)
 
-Finally, we can also create 3D arrays by slicing `~ndcube.NDCubeSequence` objects.
-Here we slice the `~ndcube.NDCubeSequence` along the fastest-changing dimension::
+Having extracted the data, we can now use matplotlib to visualize it.
+Let's say we want to produce a timeseries of how intensity changes in a
+given pixel at a given wavelength.  We stored time in ``my_sequence.global_coords``
+and associated it with the ``common_axis``.  Therefore, we could do::
 
-    >>> # Slice sequence to make 3D array
-    >>> data = np.stack([cube[2].data for cube in my_sequence.data])
-    >>> print(data.shape)
-    (3, 4, 5)
+    >>> import matplotlib.pyplot as plt
+    >>> # Get intensity at pixel 0, 0, 0 in each cube.
+    >>> intensity = np.array([cube.data[0, 0, 0] for cube in my_sequence])
+    >>> times = my_sequence.common_axis_coords["time"]
+    >>> plt.plot(times, intensity)
+    >>> plt.show()
+
+Alternatively, we could produce a 2D dynamic spectrum showing how the spectrum
+in a given pixel changes over time.::
+
+    >>> import matplotlib as mpl
+    >>> import matplotlib.pyplot as plt
+    >>> from astropy.time import Time
+    >>> # Combine spectrum over time for pixel 0, 0.
+    >>> spectrum_sequence = my_sequence[0, 0]
+    >>> intensity = np.stack([cube.data for cube in spectrum_sequence[0, 0], axis=0)
+    >>> times = Time(spectrum_sequence.sequence_axis_coords["time"])
+    >>> # Assume that the wavelength in each pixel doesn't change as we move through the sequence.
+    >>> wavelength = spectrum_sequence[0].axis_world_coords("em.wl")
+    >>> # As the times may not be uniform, we can use NonUniformImage
+    >>> # to show non-uniform pixel sizes.
+    >>> fig, ax = plt.subplots(1, 1)
+    >>> im = mpl.image.NonUniformImage(
+    ...     ax, extent=(times[0], times[-1], wavelength[0], wavelength[-1]))
+    >>> im.set_data(times, wavelength, intensity)
+    >>> ax.add_image(im)
+    >>> ax.set_xlim(times[0], times[-1])
+    >>> ax.set_ylim(wavelength[0], wavelength[-1])
+    >>> plt.show()
+
+Now let's say we want to animate our data, for example, show how the intensity
+changes over wavelength and time.
+For this we can use `~ndcube.visualization.animator.ImageAnimator`.
+This class is not well suited to displaying the complex relationship between coordinates
+that we are used to with `~astropy.visualization.wcsaxes.WCSAxes`.
+For example, non-linear coordinates non-independent coordinates.
+The difficulty and complexity in correctly representing this in a generalized way
+when dealing with a sequence of WCS objects is one reason plotting is currently
+no longer supported by `~ndcube.NDCubeSequence`.
+Nontheless, `~ndcube.visualization.animator.ImageAnimator` can still give us an idea
+of how the data is changing.
+In ``my_sequence``, the sequence axis represents time, the 0th and 1st cube axes
+represent latittude and longitude, while the final axis represents wavelength.
+Therefore, we could do the following::
+
+    >>> from ndcube.visualization import ImageAnimator
+    >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
+    >>> time_range = [my_sequence[0, 0].global_coords.get_coord("time"),
+                      my_sequence[-1, 0].global_coords.get_coord("time")]
+    >>> # Assume that the field of view or wavelength grid is not changing over time.
+    >>> # Also assume the coordinates are independent and linear with the pixel grid.
+    >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values(wcs=my_sequence[0].wcs)
+    >>> lon_range = [lon[0], lon[-1]]
+    >>> lat_range = [lat[0], lat[-1]]
+    >>> wave_range = [wavelength[0], wavelength[-1]]
+    >>> animation = ImageAnimator(data, image_axes=[2, 1],
+                                  axis_ranges=[time_range, lon_range, lat_range, wave_range])
+    >>> plt.show()
+
+Alternatively we can animate how the one 1-D spectrum changes by using
+`~ndcube.visualization.animator.LineAnimator`::
+
+    >>> from ndcube.visualization import ImageAnimator
+    >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
+    >>> time_range = [my_sequence[0, 0].global_coords.get_coord("time"),
+                      my_sequence[-1, 0].global_coords.get_coord("time")]
+    >>> # Assume that the field of view or wavelength grid is not changing over time.
+    >>> # Also assume the coordinates are independent and linear with the pixel grid.
+    >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values()
+    >>> lon_range = [lon[0], lon[-1]]
+    >>> lat_range = [lat[0], lat[-1]]
+    >>> wave_range = [wavelength[0], wavelength[-1]]
+    >>> animation = LineAnimator(data, plot_axis_index=-1,
+                                 axis_ranges=[time_range, lon_range, lat_range, wave_range])
+    >>> plt.show()
+
+Writing Your Own NDCubeSequence Plot Mixin
+------------------------------------------
+
+Just because ndcube no longer provides plotting support doesn't mean you can't write your own
+plotting functionality for `~ndcube.NDCubeSequence`.
+In many cases, this might be simpler as you may be able to make some assumptions about the
+data you will be analyzing and therefore won't have to write as generalized a tool.
+The best way to do this is to write your own mixin class defining the plot methods, e.g.
+
+.. code-block:: python
+
+   class MySequencePlotMixin:
+       def plot(self, **kwargs):
+           pass  # Write code to plot data here.
+
+       def plot_as_cube(self, **kwargs):
+           pass  # Write code to plot data concatenated along common axis here.
+
+Then you can create your own ``NDCubeSequence`` by combining your mixin with
+`~ndcube.NDCubeSequenceBase` which holds all the non-plotting functionality of the
+`~ndcube.NDCubeSequence`.
+
+.. code-block:: python
+
+    class MySequence(NDCubeSequenceBase, MySequencePlotMixin):
+
+This will create a new class, ``MySequence``, which contains all the functionality of
+`~ndcube.NDCubeSequence` plus the plot methods you've defined in ``MySequencePlotMixin``.
+
+There are many other ways you could visualize the data in your `~ndcube.NDCubeSequence`
+and many other visualization packages in the Python ecosystem that you could use.
+These examples show just a few simple ways.  But hopefully this has shown you that
+it's still possible to visualize the data in your `~ndcube.NDCubeSequence`,
+whether by creating your own mixin, following the above examples, or by using
+some other infrastructure.
