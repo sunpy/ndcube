@@ -405,11 +405,12 @@ please read and comment on that issue telling us about your use case.
 Better still, let us know that you would like to work on the necessary tools to enable
 sequence plotting, let us know with a comment on that issue.
 
-However, you can still visualize the data in `~ndcube.NDCubeSequence` in a number of ways.
+Despite this, you can still visualize the data in `~ndcube.NDCubeSequence` in a number of ways.
 You can slice out a single `~ndcube.NDCube` and use its `~ndcube.NDCube.plot` method.
 You can extract the data and use the myriad of plotting packages available in
 the Python ecosystem.
-Finally, if you are advanced, you can write your own mixin class to define the plotting methods.
+Finally, if you want to be advanced enough, you can write your own mixin class to define
+the plotting methods.
 Below, we will outline these latter two options in a little more detail.
 
 Extracting and Plotting NDCubeSequence Data with Matplotlib
@@ -431,15 +432,15 @@ To make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_se
     >>> print(data.shape)
     (3, 3, 4, 5)
 
-The same applies to other array-like data in the `~ndcube.NDCubeSequence`, like 
+The same applies to other array-like data in the `~ndcube.NDCubeSequence`, like
 ``uncertainty`` and ``mask``.
 If instead, we want to define a 3D array where every `~ndcube.NDCube` in the
-`~ndcube.NDCubeSequence` is appended along the ``common_axis``, 
+`~ndcube.NDCubeSequence` is appended along the ``common_axis``,
 we can use `numpy.concatenate` function::
 
     >>> # Make a 3D array
     >>> data3d = np.concatenate([cube.data for cube in my_sequence.data],
-                              axis=my_sequence._common_axis)
+                                axis=my_sequence._common_axis)
     >>> print(data.shape)
     (9, 4, 5)
 
@@ -451,7 +452,7 @@ and associated it with the ``common_axis``.  Therefore, we could do::
     >>> import matplotlib.pyplot as plt
     >>> # Get intensity at pixel 0, 0, 0 in each cube.
     >>> intensity = np.array([cube.data[0, 0, 0] for cube in my_sequence])
-    >>> times = my_sequence.global_coords["time"]
+    >>> times = my_sequence.common_axis_coords["time"]
     >>> plt.plot(times, intensity)
     >>> plt.show()
 
@@ -495,8 +496,8 @@ Therefore, we could do the following::
 
     >>> from ndcube.visualization import ImageAnimator
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> time_range = [my_sequence[0].global_coords.get_coord("time"),
-                      my_sequence[-1].global_coords.get_coord("time")]
+    >>> time_range = [my_sequence[0, 0].global_coords.get_coord("time"),
+                      my_sequence[-1, 0].global_coords.get_coord("time")]
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
     >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values(wcs=my_sequence[0].wcs)
@@ -512,8 +513,8 @@ Alternatively we can animate how the one 1-D spectrum changes by using
 
     >>> from ndcube.visualization import ImageAnimator
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> time_range = [my_sequence[0].global_coords.get_coord("time"),
-                      my_sequence[-1].global_coords.get_coord("time")]
+    >>> time_range = [my_sequence[0, 0].global_coords.get_coord("time"),
+                      my_sequence[-1, 0].global_coords.get_coord("time")]
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
     >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values()

@@ -7,7 +7,6 @@ Miscellaneous WCS utilities.
 from collections import UserDict
 
 import numpy as np
-from astropy import wcs
 from astropy.wcs.wcsapi import low_level_api
 
 __all__ = ['wcs_ivoa_mapping',
