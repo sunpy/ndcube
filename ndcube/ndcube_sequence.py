@@ -5,8 +5,7 @@ import textwrap
 import astropy.units as u
 import numpy as np
 
-from ndcube import GlobalCoords
-from ndcube import utils
+from ndcube import GlobalCoords, utils
 from ndcube.mixins.sequence_plotting import NDCubeSequencePlotMixin
 
 __all__ = ['NDCubeSequence']

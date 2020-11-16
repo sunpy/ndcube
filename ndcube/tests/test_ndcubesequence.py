@@ -4,7 +4,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from ndcube import GlobalCoords, NDCube, NDCubeSequence
+from ndcube import NDCube, NDCubeSequence
 
 
 def derive_sliced_cube_dims(orig_cube_dims, tuple_item):
