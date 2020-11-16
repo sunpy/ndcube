@@ -11,6 +11,7 @@ from astropy.wcs.wcsapi import BaseLowLevelWCS, HighLevelWCSWrapper
 
 import ndcube.utils.wcs as wcs_utils
 from ndcube.extra_coords import ExtraCoords
+from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
@@ -186,10 +187,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")
 
         self._extra_coords = extra_coords
+        self._global_coords = GlobalCoords(self)
 
     @property
     def extra_coords(self):
+        """
+        An `.ExtraCoords` object holding extra coordinates aligned to array axes.
+        """
         return self._extra_coords
+
+    @property
+    def global_coords(self):
+        """
+        A `.GlobalCoords` object holding coordinate metadata not aligned to an array axis.
+        """
+        return self._global_coords
 
     @property
     def combined_wcs(self):

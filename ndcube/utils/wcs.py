@@ -8,13 +8,14 @@ from collections import UserDict
 
 import numpy as np
 from astropy import wcs
+from astropy.wcs.wcsapi import low_level_api
 
 __all__ = ['wcs_ivoa_mapping',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
-           'physical_type_to_world_axis',
-           'get_dependent_pixel_axes', 'get_dependent_array_axes',
-           'get_dependent_world_axes', 'get_dependent_physical_types']
+           'physical_type_to_world_axis', 'get_dependent_pixel_axes',
+           'get_dependent_array_axes', 'get_dependent_world_axes',
+           'get_dependent_physical_types', 'validate_physical_types']
 
 
 class TwoWayDict(UserDict):
@@ -346,3 +347,18 @@ def get_dependent_physical_types(physical_type, wcs):
     dependent_world_axes = get_dependent_world_axes(world_axis, wcs.axis_correlation_matrix)
     dependent_physical_types = np.array(world_axis_physical_types)[dependent_world_axes]
     return dependent_physical_types
+
+
+def validate_physical_types(physical_types):
+    """
+    Validate a list of physical types against the UCD1+ standard
+    """
+    try:
+        low_level_api.validate_physical_types(physical_types)
+    except ValueError as e:
+        invalid_type = str(e).split(':')[1].strip()
+        raise ValueError(
+            f"'{invalid_type}' is not a valid IOVA UCD1+ physical type. "
+            "It must be a string specified in the list (http://www.ivoa.net/documents/latest/UCDlist.html) "
+            "or if no matching type exists it can be any string prepended with 'custom:'."
+        )
