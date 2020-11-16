@@ -7,18 +7,24 @@ __all__ = ['GlobalCoords']
 class GlobalCoords(Mapping):
     """
     A structured representation of coordinate information applicable to a whole NDCube.
+
+    Parameters
+    ----------
+    ndcube : `.NDCube`, optional
+        The parent ndcube for this object. Used to extract global coordinates
+        from the wcs and extra coords of the ndcube. If not specified only
+        coordinates explicitly added will be shown.
     """
-    def __init__(self):
-        """
-        Init method.
-        """
+    def __init__(self, ndcube=None):
         super().__init__()
+        self._ndcube = ndcube
         self._internal_coords = OrderedDict()
 
     @property
     def _all_coords(self):
         """
-        Establish _all_coords as a property returning some _internal_coords.
+        A dynamic dictionary of all global coordinates, stored here or derived
+        from the ndcube object.
         """
         return self._internal_coords
 
@@ -38,32 +44,35 @@ class GlobalCoords(Mapping):
         del self._internal_coords[name]
 
     @property
-    def names(self):
-        """
-        A tuple of all the names or keys.
-        """
-        return tuple(self._all_coords.keys())
-
-    @property
     def physical_types(self):
         """
-        A tuple of all physical types, one per coordinate.
+        A mapping of names to physical types for each coordinate.
         """
-        return tuple(item[0] for item in self.values())
+        return dict((name, value[0]) for name, value in self._all_coords.items())
 
-    def get_physical_type(self, name):
-        """Return the physical type of a specific coordinate."""
-        return self._all_coords[name][0]
+    def filter_by_physical_type(self, physical_type):
+        """
+        Filter this object to coordinates with a given physical type.
 
-    def get_coord(self, name):
-        """Return value of a specific coordinate."""
-        return self._all_coords[name][1]
+        Parameters
+        ----------
+        physical_type: `str`
+            The physical type to filter by.
+
+        Returns
+        -------
+        `.GlobalCoords`
+            A new object storing just the coordinates with the given physical type.
+        """
+        gc = GlobalCoords()
+        gc._internal_coords = dict(filter(lambda x: x[1][0] == physical_type, self._all_coords.items()))
+        return gc
 
     def __getitem__(self, item):
         """
         Index the collection by a name.
         """
-        return self._all_coords[item]
+        return self._all_coords[item][1]
 
     def __iter__(self):
         """
@@ -78,8 +87,7 @@ class GlobalCoords(Mapping):
         return len(self._all_coords)
 
     def __str__(self):
-        names_and_coords = zip(self.names, self._all_coords.values())
-        return f"GlobalCoords({[(name, coord) for name, coord in names_and_coords]})"
+        return f"GlobalCoords({[(name, coord) for name, coord in self.items()]})"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
