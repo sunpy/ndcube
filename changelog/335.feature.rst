@@ -1,0 +1,1 @@
+New property, NDCubeSequence.sequence_axis_coords creates lists of GlobalCoords from each NDCube in the sequence.  This replaces NDCubeSequence.sequence_axis_extra_coords, but because it uses the GlobaCoords infrastructure, can handle more than just coords that began as extra coords.
