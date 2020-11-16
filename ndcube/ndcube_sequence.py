@@ -5,7 +5,7 @@ import textwrap
 import astropy.units as u
 import numpy as np
 
-from ndcube import utils
+from ndcube import GlobalCoords, utils
 
 __all__ = ['NDCubeSequence']
 
@@ -149,59 +149,17 @@ class NDCubeSequenceBase:
             return None
 
     @property
-    def sequence_axis_extra_coords(self):
-        sequence_coord_names, sequence_coord_units = \
-            utils.sequence._get_axis_extra_coord_names_and_units(self.data, None)
-        if sequence_coord_names is not None:
-            # Define empty dictionary which will hold the extra coord
-            # values not assigned a cube data axis.
-            sequence_extra_coords = {}
-            # Define list of None signifying unit of each coord.  It will
-            # be filled in in for loop below.
-            sequence_coord_units = [None] * len(sequence_coord_names)
-            # Iterate through cubes and populate values of each extra coord
-            # not assigned a cube data axis.
-            cube_extra_coords = [cube.extra_coords for cube in self.data]
-            for i, coord_key in enumerate(sequence_coord_names):
-                coord_values = np.array([None] * len(self.data), dtype=object)
-                for j, cube in enumerate(self.data):
-                    # Construct list of coord values from each cube for given extra coord.
-                    try:
-                        coord_values[j] = cube_extra_coords[j][coord_key]["value"]
-                        # Determine whether extra coord is a quantity by checking
-                        # whether any one value has a unit. As we are not
-                        # assuming that all cubes have the same extra coords
-                        # along the sequence axis, we will keep checking as we
-                        # move through the cubes until all cubes are checked or
-                        # we have found a unit.
-                        if (isinstance(cube_extra_coords[j][coord_key]["value"], u.Quantity) and
-                                not sequence_coord_units[i]):
-                            sequence_coord_units[i] = cube_extra_coords[j][coord_key]["value"].unit
-                    except KeyError:
-                        pass
-                # If the extra coord is normally a Quantity, replace all
-                # None occurrences in coord value array with a NaN, and
-                # convert coord_values from an array of Quantities to a
-                # single Quantity of length equal to number of cubes in
-                # sequence.
-                w_none = np.where(coord_values == None)[0]  # NOQA
-                if sequence_coord_units[i]:
-                    # This part of if statement is coded in an apparently
-                    # round about way but necessitated because you can't
-                    # put a NaN quantity into an array and keep its unit.
-                    w_not_none = np.where(coord_values != None)[0]  # NOQA
-                    coord_values = u.Quantity(list(coord_values[w_not_none]),
-                                              unit=sequence_coord_units[i])
-                    coord_values = list(coord_values.value)
-                    for index in w_none:
-                        coord_values.insert(index, np.nan)
-                    coord_values = u.Quantity(coord_values, unit=sequence_coord_units[i]).flatten()
-                else:
-                    coord_values[w_none] = np.nan
-                sequence_extra_coords[coord_key] = coord_values
-        else:
-            sequence_extra_coords = None
-        return sequence_extra_coords
+    def sequence_axis_coords(self):
+        # Collect names of global coords in each cube.
+        global_names = set.union(*[set(cube.global_coords.keys())
+                                   for cube in self.data
+                                   if isinstance(cube.global_coords, GlobalCoords)])
+        # For each coord, combine values from each cube's global coords property.
+        # If coord not present in cube, insert None.
+        return dict(
+            [(name, [cube.global_coords[name] if name in cube.global_coords else None
+                     for cube in self.data])
+             for name in global_names])
 
     def explode_along_axis(self, axis):
         """
