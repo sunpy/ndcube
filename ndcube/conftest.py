@@ -8,7 +8,7 @@ import pytest
 from astropy.time import Time
 from astropy.wcs import WCS
 
-from ndcube import ExtraCoords, NDCube
+from ndcube import ExtraCoords, NDCube, NDCubeSequence
 
 
 @pytest.fixture
@@ -324,3 +324,75 @@ def ndc(request):
     A fixture for use with indirect to lookup other fixtures.
     """
     return request.getfixturevalue(request.param)
+
+
+
+@pytest.fixture
+def ndcubesequence_4c_ln_lt_l(ndcube_3d_ln_lt_l):
+    cube1 = ndcube_3d_ln_lt_l
+    cube2 = ndcube_3d_ln_lt_l
+    cube3 = ndcube_3d_ln_lt_l
+    cube4 = ndcube_3d_ln_lt_l
+    cube2.data[:] *= 2
+    cube3.data[:] *= 3
+    cube4.data[:] *= 4
+    return NDCubeSequence([cube1, cube2, cube3, cube4])
+
+
+@pytest.fixture
+def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
+    cube1 = ndcube_3d_ln_lt_l
+    cube2 = ndcube_3d_ln_lt_l
+    cube3 = ndcube_3d_ln_lt_l
+    cube4 = ndcube_3d_ln_lt_l
+    cube2.data[:] *= 2
+    cube3.data[:] *= 3
+    cube4.data[:] *= 4
+    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
+
+
+def time_extra_coords(shape, axis, base):
+    return ExtraCoords.from_lookup_tables(
+        ('time',),
+        (axis,),
+        (base + TimeDelta([i * 60 for i in range(shape[axis])], format='sec'),))
+
+
+def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_coords):
+    shape = (10, 5, 8)
+    wcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    mask = data_cube < 0
+    extra_coords = time_extra_coords(shape, time_axis, time_base)
+    cube = NDCube(data_cube,
+                  wcs_3d_lt_ln_l,
+                  mask=mask,
+                  uncertainty=data_cube,
+                  extra_coords=extra_coords)
+    cube._global_coords = global_coords
+    return cube
+
+
+@pytest.fixture
+def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
+    common_axis = 1
+
+    base_time1 = Time('2000-01-01', format='fits', scale='utc')
+    gc1 = GlobalCoords()
+    gc1.add('distance', 'custom:distance', 1*u.m)
+    cube1 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time1, gc1)
+
+    shape = cube1.data.shape
+    base_time2 = base_time1 + TimeDelta([shape[common_axis] * 60], format='sec')
+    gc2 = GlobalCoords()
+    gc2.add('distance', 'custom:distance', 2*u.m)
+    gc2.add('global coord', 'custom:physical_type', 0*u.pix)
+    cube2 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time2, gc2)
+    cube2.data[:] *= 2
+
+    base_time3 = base_time2 + TimeDelta([shape[common_axis] * 60], format='sec')
+    gc3 = GlobalCoords()
+    cube3 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time3, gc3)
+    cube3.data[:] *= 3
+
+    return NDCubeSequence([cube1, cube2, cube3], common_axis=common_axis)
