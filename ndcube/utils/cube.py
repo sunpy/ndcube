@@ -202,3 +202,77 @@ def _get_extra_coord_edges(value, axis=-1):
         # Revert the shape of the edges array
         edges = np.moveaxis(edges, -1, axis)
     return edges
+
+
+def calculate_world_indices_from_axes(wcs, axes):
+    """
+    Given an integer or string representation of a world axis, convert it
+    to a numerical index aligning to the position in
+    wcs.world_axis_object_components.
+    """
+    # Convert input axes to WCS world axis indices.
+    world_indices = set()
+    for axis in axes:
+        if isinstance(axis, numbers.Integral):
+            # If axis is int, it is a numpy order array axis.
+            # Convert to pixel axis in WCS order.
+            axis = wcs_utils.convert_between_array_and_pixel_axes(
+                np.array([axis]), wcs.pixel_n_dim)[0]
+            # Get WCS world axis indices that correspond to the WCS pixel axis
+            # and add to list of indices of WCS world axes whose coords will be returned.
+            world_indices.update(wcs_utils.pixel_axis_to_world_axes(
+                axis, wcs.axis_correlation_matrix))
+        elif isinstance(axis, str):
+            # If axis is str, it is a physical type or substring of a physical type.
+            world_indices.update({wcs_utils.physical_type_to_world_axis(
+                axis, wcs.world_axis_physical_types)})
+        else:
+            raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
+                            "Must be of type (numbers.Integral, str)")
+    # Use inferred world axes to extract the desired coord value
+    # and corresponding physical types.
+    return np.array(list(world_indices), dtype=int)
+
+
+def array_indicies_for_world_objects(wcs, axes=None):
+    """
+    Calculate the array indices corresponding to each high level world object.
+
+    This function is to assist in comparing the return values from
+    `.NDCube.axis_world_coords` or
+    `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_pixel` it returns a tuple of
+    the same length as the output from those methods with each element being
+    the array indices corresponding to those objects.
+
+    Parameters
+    ----------
+    wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
+        The wcs object used to calculate world coordinates.
+    axes : iterable of `int` or `str`
+        Axis number in numpy ordering or unique substring of
+        ``wcs.world_axis_physical_types``
+        of axes for which real world coordinates are desired.
+        axes=None implies all axes will be returned.
+
+    Returns
+    -------
+    array_indices : `tuple` of `tuple` of `int`
+        For each world object, a tuple of array axes identified by their number.
+    """
+    if axes:
+        world_indices = calculate_world_indices_from_axes(wcs, axes)
+    else:
+        world_indices = np.arange(wcs.world_n_dim)
+
+    object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
+    object_indices = sorted(list(set([np.atleast_1d(object_names == object_names[i]).nonzero()[0][0]
+                                      for i in world_indices])))
+
+    array_indices = [[]] * len(set(object_names))
+    for world_index, oname in enumerate(object_names):
+        oinds = np.atleast_1d(object_names == oname).nonzero()[0][0]
+        pixel_index = utils.wcs.world_axis_to_pixel_axes(world_index, wcs.axis_correlation_matrix)
+        array_index = utils.wcs.convert_between_array_and_pixel_axes(pixel_index, wcs.pixel_n_dim)
+        array_indices[oinds] = tuple(array_index[::-1])  # Invert to go from pixel order to array order
+
+    return array_indicies
