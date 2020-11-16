@@ -4,7 +4,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
-from ndcube import NDCube, NDCubeSequence
+from ndcube import GlobalCoords, NDCube, NDCubeSequence
 
 
 def derive_sliced_cube_dims(orig_cube_dims, tuple_item):
@@ -151,3 +151,11 @@ def test_cube_like_dimensions(ndc, expected_dimensions):
 def test_cube_like_dimensions_error(ndc):
     with pytest.raises(TypeError):
         ndc.cube_like_dimensions
+
+
+@pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
+def test_sequence_axis_coords(ndc):
+    expected = {'global coord': [None, 0*u.pix, None],
+                'distance': [1*u.m, 2*u.m, None]}
+    output = ndc.sequence_axis_coords
+    assert output == expected
