@@ -300,22 +300,37 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Ensure it's a list not a tuple
         axes_coords = list(axes_coords)
 
+        object_names = np.array([wao_comp[0] for wao_comp in wcs.low_level_wcs.world_axis_object_components])
+        unique_obj_names = utils.misc.unique_sorted(object_names)
+        world_axes_for_obj = [np.where(object_names == name)[0] for name in unique_obj_names]
+
         # Reduce duplication across independent dimensions for each coord
         # and transpose to make dimensions mimic numpy array order rather than WCS order.
+        # This assumes all the high level objects are array-like, which seems
+        # to be the case for all the astropy ones, but it's not actually
+        # mandated by APE 14
         for i, axis_coord in enumerate(axes_coords):
+            world_axes = world_axes_for_obj[i]
             slices = np.array([slice(None)] * wcs.pixel_n_dim)
-            slices[np.invert(self.wcs.axis_correlation_matrix[i])] = 0
+            for k in world_axes:
+                slices[np.invert(wcs.axis_correlation_matrix[k])] = 0
             axes_coords[i] = axis_coord[tuple(slices)].T
 
         if not axes:
             return axes_coords
 
-        world_indicies = utils.cube.calculate_world_indices_from_axes(wcs, axes)
-        object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
-        object_indicies = sorted(list(set([np.atleast_1d(object_names == object_names[i]).nonzero()[0][0]
-                                           for i in world_indicies])))
+        # Create a mapping from world index in the WCS to object index in axes_coords
+        world_index_to_object_index = {}
+        for object_index, world_axes in enumerate(world_axes_for_obj):
+            for world_index in world_axes:
+                world_index_to_object_index[world_index] = object_index
 
-        return tuple(axes_coords[i] for i in object_indicies)
+        world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
+        object_indices = utils.misc.unique_sorted(
+            [world_index_to_object_index[world_index] for world_index in world_indices]
+        )
+
+        return tuple(axes_coords[i] for i in object_indices)
 
     def axis_world_coords_values(self, *axes, edges=False, wcs=None):
         """
@@ -378,7 +393,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
         if axes:
-            world_indices = utils.cube.calculate_world_indices_from_axes(wcs, axes)
+            world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
             axes_coords = np.array(axes_coords)[world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 

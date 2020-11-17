@@ -129,12 +129,18 @@ def test_slicing_split_celestial(ndc, item):
                                                               [False, True]], dtype=bool))
 
 
+def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
+    coords = ndcube_3d_l_ln_lt_ectime.axis_world_coords('em.wl')
+    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09,
+                               1.12e-09, 1.14e-09, 1.16e-09, 1.18e-09, 1.20e-09] * u.m)
+
+
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
 def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes)
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
-    coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, edges=False)
+    coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes)
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
@@ -190,10 +196,12 @@ def test_axis_world_coords_all_4d_split(ndcube_4d_ln_l_t_lt):
                                   1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
 
 
-@pytest.mark.parametrize('wapt', (('custom:pos.helioprojective.lon', 'em.wl'),
-                                  ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
-                                  (0, 1),
-                                  (0, 1, 3)))
+@pytest.mark.parametrize('wapt', (
+    ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
+    ('custom:pos.helioprojective.lat', 'em.wl'),
+    (0, 1),
+    (0, 1, 3)
+))
 def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt, wapt):
     coords = ndcube_4d_ln_l_t_lt.axis_world_coords(*wapt)
     assert len(coords) == 2
@@ -379,7 +387,6 @@ def test_crop_by_values_indexerror(ndcube_4d_ln_lt_l_t):
 
 def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, :, 0, 0]
-    print(cube_1d.array_axis_physical_types)
     lat_range, lon_range = cube_1d.wcs.low_level_wcs.array_index_to_world_values([0, 1])
     lower_corner = [lat_range[0] * u.deg, lon_range[0] * u.deg]
     upper_corner = [lat_range[-1] * u.deg, lon_range[-1] * u.deg]

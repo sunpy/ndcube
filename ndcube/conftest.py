@@ -5,10 +5,48 @@ predicable NDCube objects.
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import ExtraCoords, NDCube, NDCubeSequence
+
+################################################################################
+# Helper Functions
+################################################################################
+
+def data_nd(shape):
+    nelem = np.product(shape)
+    return np.arange(nelem).reshape(shape)
+
+
+def time_extra_coords(shape, axis, base):
+    return ExtraCoords.from_lookup_tables(
+        ('time',),
+        (axis,),
+        (base + TimeDelta([i * 60 for i in range(shape[axis])], format='sec'),))
+
+
+def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_coords=None):
+    shape = (10, 5, 8)
+    wcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    mask = data_cube < 0
+    extra_coords = time_extra_coords(shape, time_axis, time_base)
+    cube = NDCube(data_cube,
+                  wcs_3d_lt_ln_l,
+                  mask=mask,
+                  uncertainty=data_cube,
+                  extra_coords=extra_coords)
+
+    if global_coords:
+        cube._global_coords = global_coords
+
+    return cube
+
+
+################################################################################
+# WCS Fixtures
+################################################################################
 
 
 @pytest.fixture
@@ -101,6 +139,32 @@ def wcs_3d_l_lt_ln():
 
 
 @pytest.fixture
+def wcs_3d_lt_ln_l():
+    header = {
+
+        'CTYPE1': 'HPLN-TAN',
+        'CUNIT1': 'arcsec',
+        'CDELT1': 10,
+        'CRPIX1': 0,
+        'CRVAL1': 0,
+
+        'CTYPE2': 'HPLT-TAN',
+        'CUNIT2': 'arcsec',
+        'CDELT2': 5,
+        'CRPIX2': 5,
+        'CRVAL2': 0,
+
+        'CTYPE3': 'WAVE    ',
+        'CUNIT3': 'Angstrom',
+        'CDELT3': 0.2,
+        'CRPIX3': 0,
+        'CRVAL3': 10,
+    }
+
+    return WCS(header=header)
+
+
+@pytest.fixture
 def wcs_2d_lt_ln():
     spatial = {
         'CTYPE1': 'HPLT-TAN',
@@ -170,6 +234,11 @@ def wcs_3d_ln_lt_t_rotated():
     return WCS(header=h_rotated)
 
 
+################################################################################
+# Extra and Global Coords Fixtures
+################################################################################
+
+
 @pytest.fixture
 def simple_extra_coords_3d():
     return ExtraCoords.from_lookup_tables(('time', 'hello', 'bye'),
@@ -181,16 +250,9 @@ def simple_extra_coords_3d():
                                           )
 
 
-def data_nd(shape):
-    nelem = np.product(shape)
-    return np.arange(nelem).reshape(shape)
-
-
-def generate_time_extra_coord(data_cube):
-    shape = data_cube.shape[-1]
-    lut = Time("2020-02-02T00:00:00", format="isot") + np.linspace(0, shape * 10, num=shape, endpoint=False) * u.s
-    return ExtraCoords.from_lookup_tables(["extra_time"], [0], [lut])
-
+################################################################################
+# NDCube Fixtures
+################################################################################
 
 @pytest.fixture
 def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
@@ -279,6 +341,12 @@ def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
 
 
 @pytest.fixture
+def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l):
+    return gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l,
+                                        1,
+                                        Time('2000-01-01', format='fits', scale='utc'))
+
+@pytest.fixture
 def ndcube_2d_ln_lt(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
@@ -326,6 +394,10 @@ def ndc(request):
     return request.getfixturevalue(request.param)
 
 
+################################################################################
+# NDCubeSequence Fixtures
+################################################################################
+
 
 @pytest.fixture
 def ndcubesequence_4c_ln_lt_l(ndcube_3d_ln_lt_l):
@@ -351,28 +423,6 @@ def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
     return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
 
 
-def time_extra_coords(shape, axis, base):
-    return ExtraCoords.from_lookup_tables(
-        ('time',),
-        (axis,),
-        (base + TimeDelta([i * 60 for i in range(shape[axis])], format='sec'),))
-
-
-def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_coords):
-    shape = (10, 5, 8)
-    wcs_3d_lt_ln_l.array_shape = shape
-    data_cube = data_nd(shape)
-    mask = data_cube < 0
-    extra_coords = time_extra_coords(shape, time_axis, time_base)
-    cube = NDCube(data_cube,
-                  wcs_3d_lt_ln_l,
-                  mask=mask,
-                  uncertainty=data_cube,
-                  extra_coords=extra_coords)
-    cube._global_coords = global_coords
-    return cube
-
-
 @pytest.fixture
 def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
     common_axis = 1
@@ -380,19 +430,19 @@ def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
     base_time1 = Time('2000-01-01', format='fits', scale='utc')
     gc1 = GlobalCoords()
     gc1.add('distance', 'custom:distance', 1*u.m)
-    cube1 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time1, gc1)
+    cube1 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time1, gc1)
 
     shape = cube1.data.shape
     base_time2 = base_time1 + TimeDelta([shape[common_axis] * 60], format='sec')
     gc2 = GlobalCoords()
     gc2.add('distance', 'custom:distance', 2*u.m)
     gc2.add('global coord', 'custom:physical_type', 0*u.pix)
-    cube2 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time2, gc2)
+    cube2 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time2, gc2)
     cube2.data[:] *= 2
 
     base_time3 = base_time2 + TimeDelta([shape[common_axis] * 60], format='sec')
     gc3 = GlobalCoords()
-    cube3 = ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time3, gc3)
+    cube3 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time3, gc3)
     cube3.data[:] *= 3
 
     return NDCubeSequence([cube1, cube2, cube3], common_axis=common_axis)
