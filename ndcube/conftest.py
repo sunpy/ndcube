@@ -14,6 +14,7 @@ from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
 # Helper Functions
 ################################################################################
 
+
 def data_nd(shape):
     nelem = np.product(shape)
     return np.arange(nelem).reshape(shape)

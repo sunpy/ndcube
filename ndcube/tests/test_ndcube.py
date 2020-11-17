@@ -130,9 +130,21 @@ def test_slicing_split_celestial(ndc, item):
 
 
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
-    coords = ndcube_3d_l_ln_lt_ectime.axis_world_coords('em.wl')
+    cube = ndcube_3d_l_ln_lt_ectime
+
+    coords = cube.axis_world_coords('em.wl')
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09,
                                1.12e-09, 1.14e-09, 1.16e-09, 1.18e-09, 1.20e-09] * u.m)
+
+    coords = cube.axis_world_coords()
+    assert len(coords) == 2
+
+    coords = cube.axis_world_coords(wcs=cube.combined_wcs)
+    assert len(coords) == 3
+
+    # TODO: Fix this
+    # coords = cube.axis_world_coords(wcs=cube.extra_coords.wcs)
+    # assert len(coords) == 1
 
 
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))

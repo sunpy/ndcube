@@ -290,12 +290,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        wcs = wcs or self.wcs
+        wcs = wcs if wcs is not None else self.wcs
         pixel_inputs = self._generate_pixel_grid(edges)
 
         # Get world coords for all axes and all pixels.
-        axes_coords = self.wcs.pixel_to_world(*pixel_inputs)
-        if self.wcs.world_n_dim == 1:
+        axes_coords = wcs.pixel_to_world(*pixel_inputs)
+        if wcs.world_n_dim == 1:
             axes_coords = [axes_coords]
         # Ensure it's a list not a tuple
         axes_coords = list(axes_coords)
