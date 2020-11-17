@@ -8,7 +8,7 @@ import pytest
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
-from ndcube import ExtraCoords, NDCube, NDCubeSequence
+from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
 
 ################################################################################
 # Helper Functions
