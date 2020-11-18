@@ -254,6 +254,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return np.meshgrid(*ranges, indexing='ij', sparse=True)
 
+    @utils.misc.sanitise_wcs
     def axis_world_coords(self, *axes, edges=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for all axes.
@@ -290,7 +291,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        wcs = wcs if wcs is not None else self.wcs
         pixel_inputs = self._generate_pixel_grid(edges)
 
         # Get world coords for all axes and all pixels.
@@ -332,6 +332,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return tuple(axes_coords[i] for i in object_indices)
 
+    @utils.misc.sanitise_wcs
     def axis_world_coords_values(self, *axes, edges=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for desired axes.
@@ -371,7 +372,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
-        wcs = (wcs or self.wcs).low_level_wcs
+        wcs = wcs.low_level_wcs
 
         pixel_inputs = self._generate_pixel_grid(edges)
 
@@ -408,6 +409,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
+    @utils.misc.sanitise_wcs
     def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeBase
         if len(lower_corner) != len(upper_corner):
@@ -415,6 +417,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                              f"lower_corner: {lower_corner}; upper_corner: {upper_corner}")
         return self._crop(lower_corner, upper_corner, wcs, False)
 
+    @utils.misc.sanitise_wcs
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
         # The docstring is defined in NDCubeBase
         # Sanitize inputs.
@@ -454,9 +457,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         upper_nones = np.array([upper is None for upper in upper_corner])
         if (lower_nones & upper_nones).all():
             return self
-        # Set default wcs.
-        if wcs is None:
-            wcs = self.wcs
+
         # Define functions to be used in converting between array indices and world coords
         # based in input kwarg.
         if crop_by_values:
@@ -470,7 +471,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             world_to_array_index = wcs.world_to_array_index
             array_index_to_world = wcs.array_index_to_world
 
-        wcs.world_axis_physical_types
         # If user did not provide all intervals,
         # calculate missing intervals based on whole cube range along those axes.
         if lower_nones.any() or upper_nones.any():
