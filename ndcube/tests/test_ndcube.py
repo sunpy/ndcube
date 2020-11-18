@@ -142,9 +142,15 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     coords = cube.axis_world_coords(wcs=cube.combined_wcs)
     assert len(coords) == 3
 
-    # TODO: Fix this
-    # coords = cube.axis_world_coords(wcs=cube.extra_coords.wcs)
-    # assert len(coords) == 1
+    coords = cube.axis_world_coords(wcs=cube.extra_coords)
+    assert len(coords) == 1
+    assert isinstance(coords[0], Time)
+    assert coords[0].shape == (5,)
+
+    coords = cube.axis_world_coords_values(wcs=cube.extra_coords)
+    assert len(coords) == 1
+    assert isinstance(coords[0], u.Quantity)
+    assert coords[0].shape == (5,)
 
 
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))

@@ -23,9 +23,10 @@ def sanitise_wcs(func):
     This decorator is only designed to be used on methods of NDCube.
 
     It will find the wcs argument, keyword or positional and if it is None, set
-    it to `self.wcs`, if it is a `.ExtraCoords` object then it will call the
-    ``.wcs`` property on the `.ExtraCoords`. It will finally verify that the
-    object passed is a HighLevelWCS object.
+    it to `self.wcs`.
+    It will then verify that the WCS has a matching number of pixel dimensions
+    to the dimensionality of the array. It will finally verify that the object
+    passed is a HighLevelWCS object, or an ExtraCoords object.
     """
     @wraps(func)
     def wcs_wrapper(*args, **kwargs):
@@ -37,11 +38,15 @@ def sanitise_wcs(func):
         if wcs is None:
             wcs = self.wcs
 
-        if isinstance(wcs, ExtraCoords):
-            wcs = wcs.wcs
+        if not isinstance(wcs, ExtraCoords):
+            if not wcs.pixel_n_dim == self.data.ndim:
+                raise ValueError("The supplied WCS must have the same number of "
+                                 "pixel dimensions as the NDCube object. "
+                                 "If you specified `cube.extra_coords.wcs` "
+                                 "please just pass `cube.extra_coords`.")
 
-        if not isinstance(wcs, BaseHighLevelWCS):
-            raise TypeError("wcs argument must be a High Level WCS object.")
+        if not isinstance(wcs, (BaseHighLevelWCS, ExtraCoords)):
+            raise TypeError("wcs argument must be a High Level WCS or an ExtraCoords object.")
 
         params.arguments['wcs'] = wcs
 

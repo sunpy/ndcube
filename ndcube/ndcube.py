@@ -241,7 +241,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
-    def _generate_pixel_grid(self, edges):
+    def _generate_pixel_grid(self, edges, wcs):
         # Create meshgrid of all pixel coordinates.
         # If user, wants edges, set pixel values to pixel edges.
         # Else make pixel centers.
@@ -251,6 +251,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             ranges = [np.arange(i) - 0.5 for i in wcs_shape]
         else:
             ranges = [np.arange(i) for i in wcs_shape]
+
+        if isinstance(wcs, ExtraCoords):
+            ranges = [ranges[i] for i in wcs.mapping]
 
         return np.meshgrid(*ranges, indexing='ij', sparse=True)
 
@@ -291,7 +294,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        pixel_inputs = self._generate_pixel_grid(edges)
+        pixel_inputs = self._generate_pixel_grid(edges, wcs)
+
+        if isinstance(wcs, ExtraCoords):
+            wcs = wcs.wcs
 
         # Get world coords for all axes and all pixels.
         axes_coords = wcs.pixel_to_world(*pixel_inputs)
@@ -372,9 +378,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
-        wcs = wcs.low_level_wcs
+        pixel_inputs = self._generate_pixel_grid(edges, wcs)
 
-        pixel_inputs = self._generate_pixel_grid(edges)
+        if isinstance(wcs, ExtraCoords):
+            wcs = wcs.wcs
+
+        wcs = wcs.low_level_wcs
 
         # Get world coords for all axes and all pixels.
         axes_coords = wcs.pixel_to_world_values(*pixel_inputs)
