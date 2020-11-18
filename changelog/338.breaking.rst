@@ -1,0 +1,1 @@
+Update NDCube.array_axis_physical_types return physical types from extra coords as well as the WCS.
