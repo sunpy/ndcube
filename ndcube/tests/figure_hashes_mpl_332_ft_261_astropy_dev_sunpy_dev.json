@@ -1,5 +1,5 @@
 {
-  "ndcube.tests.test_plotting.test_plot_1D_cube": "e068d61b6141b4d85c2d11f426f9dc5288cd2a88e0c52fab5e2a0658532314ec",
+  "ndcube.tests.test_plotting.test_plot_1D_cube": "9cb2c58dc884dc0b5c63afb79341ec23008a31863ae335bb885d8a89abff6b4c",
   "ndcube.tests.test_plotting.test_plot_1D_cube_from_slice[ln_lt_l_t-cslice0-kwargs0]": "ea89b5d1c2fdcf34ba353dffe528f5ecd5ce364a77f43a08d00a6a7f11a869f4",
   "ndcube.tests.test_plotting.test_plot_1D_cube_from_slice[ln_lt_l_t-cslice1-kwargs1]": "f5d10df37509d1ba9429deb95ee29cf37dddea1a30f4c84cf2b10034c74c31bd",
   "ndcube.tests.test_plotting.test_plot_1D_cube_from_slice[ln_lt_l_t-cslice2-kwargs2]": "e48765a561ea0f43f5a80d3da27fd71654b18d276cbb7617e1918843012425f9",
