@@ -54,7 +54,9 @@ class ExtraCoordsABC(abc.ABC):
         array_dimension
             The pixel dimension(s), in the array, to which this lookup table corresponds.
         lookup_table
-            The lookup table.
+            The lookup table. Note, if this table is multi-dimensional it must
+            (currently) be specified with its axes in world order, so
+            transposed with respect to the data array.
         """
 
     @abc.abstractmethod

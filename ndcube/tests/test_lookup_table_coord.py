@@ -210,3 +210,11 @@ def test_join_3d():
     assert u.allclose(world[1], 0 * u.nm)
 
     assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
+
+
+def test_2d_quantity():
+    shape = (3, 3)
+    data = np.arange(np.product(shape)).reshape(shape) * u.m / u.s
+
+    ltc = LookupTableCoord(data)
+    assert u.allclose(ltc.wcs.pixel_to_world(0, 0), 0 * u.m / u.s)

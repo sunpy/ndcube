@@ -1,0 +1,2 @@
+Implement `.NDCube.world_axis_coords` which returns high level coordinate
+objects for all, or a subset of, axes.
