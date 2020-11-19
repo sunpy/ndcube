@@ -1,3 +1,12 @@
+Ndcube v1.4.2 (2020-11-19)
+==========================
+
+Bug Fixes
+---------
+
+- Fix bug whereby common axis was not updated appropriately when slicing an NDCubeSequence. (`#310 <https://github.com/sunpy/ndcube/pull/310>`__)
+
+
 Ndcube v1.4.1 (2020-11-03)
 ==========================
 
