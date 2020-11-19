@@ -121,3 +121,39 @@ def test_get_dependent_physical_types(test_wcs):
     output = utils.wcs.get_dependent_physical_types("time", test_wcs)
     expected = np.array(['custom:pos.helioprojective.lon', 'time'])
     assert all(output == expected)
+
+
+def test_array_indices_for_world_objects(wcs_4d_t_l_lt_ln):
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_t_l_lt_ln, None)
+    assert len(array_indices) == 3
+    assert array_indices == ((3,), (2,), (0, 1))
+
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_t_l_lt_ln, ('time',))
+    assert len(array_indices) == 1
+    assert array_indices == ((3,),)
+
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_t_l_lt_ln, ('time', 'em.wl'))
+    assert len(array_indices) == 2
+    assert array_indices == ((3,), (2,))
+
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_t_l_lt_ln, ('lat',))
+    assert len(array_indices) == 1
+    assert array_indices == ((0, 1),)
+
+
+def test_array_indices_for_world_objects_2(wcs_4d_lt_t_l_ln):
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_lt_t_l_ln, None)
+    assert len(array_indices) == 3
+    assert array_indices == ((0, 3), (2,), (1,))
+
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_lt_t_l_ln, ('lat',))
+    assert len(array_indices) == 1
+    assert array_indices == ((0, 3),)
+
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_lt_t_l_ln, ('lat', 'time'))
+    assert len(array_indices) == 2
+    assert array_indices == ((0, 3), (2,))
+
+    array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_lt_t_l_ln, ('lon', 'time'))
+    assert len(array_indices) == 2
+    assert array_indices == ((0, 3), (2,))
