@@ -34,6 +34,14 @@ def skycoord_1d_lut():
 def skycoord_2d_lut():
     data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
     return SkyCoord(*data, unit=u.deg)
+
+
+@pytest.fixture
+def quantity_2d_lut():
+    ec_shape = (3, 3)
+    return np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
+
+
 # ExtraCoords from WCS
 
 
@@ -210,7 +218,12 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
     assert sub_ec.wcs.world_n_dim == 1
     assert sub_ec.wcs.world_axis_names == ("exposure_time",)
 
-# Extra coords from a WCS.
+
+def test_extra_coords_2d_quantity(quantity_2d_lut):
+    ec = ExtraCoords()
+    ec.add_coordinate("velocity", (0, 1), quantity_2d_lut)
+
+    ec.wcs.pixel_to_world(0, 0)
 
 # Inspecting an extra coords
 # Should be able to see what tables exists, what axes they account to, and what

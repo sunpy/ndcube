@@ -418,9 +418,9 @@ def array_indicies_for_world_objects(wcs, axes=None):
         For each world object, a tuple of array axes identified by their number.
     """
     if axes:
-        world_indices = calculate_world_indices_from_axes(wcs, axes)
+        calculate_world_indices_from_axes(wcs, axes)
     else:
-        world_indices = np.arange(wcs.world_n_dim)
+        np.arange(wcs.world_n_dim)
 
     object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
 

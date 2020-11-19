@@ -153,6 +153,24 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     assert coords[0].shape == (5,)
 
 
+def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    ec_shape = cube.data.shape[1:3]
+    data = np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
+
+    # The lookup table has to be in world order so transpose it.
+    cube.extra_coords.add_coordinate('velocity', (1, 2), data.T)
+
+    coords = cube.axis_world_coords(wcs=cube.extra_coords)
+    assert len(coords) == 1
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], data)
+
+    coords = cube.axis_world_coords(wcs=cube.combined_wcs)
+    assert len(coords) == 4
+    assert u.allclose(coords[3], data)
+
+
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
 def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes)

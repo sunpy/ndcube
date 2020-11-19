@@ -5,6 +5,7 @@ predicable NDCube objects.
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.coordinates import SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
@@ -13,6 +14,13 @@ from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
 ################################################################################
 # Helper Functions
 ################################################################################
+
+
+def skycoord_2d_lut(shape):
+    total_len = np.product(shape)
+    data = (np.arange(total_len).reshape(shape),
+            np.arange(total_len, total_len * 2).reshape(shape))
+    return SkyCoord(*data, unit=u.deg)
 
 
 def data_nd(shape):

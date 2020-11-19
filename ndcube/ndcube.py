@@ -4,9 +4,11 @@ from collections import namedtuple
 
 import astropy.nddata
 import astropy.units as u
+import gwcs
 import numpy as np
 import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
 from astropy.wcs.wcsapi import HighLevelWCSWrapper
+from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
@@ -252,10 +254,23 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             ranges = [np.arange(i) for i in wcs_shape]
 
+        # Limit the pixel dimensions to the ones present in the ExtraCoords
         if isinstance(wcs, ExtraCoords):
             ranges = [ranges[i] for i in wcs.mapping]
 
-        return np.meshgrid(*ranges, indexing='ij', sparse=True)
+        # Astropy modeling seems unable to handle the output with sparse=True,
+        # so we try and detect all possible uses of gwcs.
+        # https://github.com/astropy/astropy/issues/11060
+        sparse = True
+        if (isinstance(wcs, (ExtraCoords, gwcs.WCS)) or
+            isinstance(wcs.low_level_wcs, (CompoundLowLevelWCS, gwcs.WCS)) or
+            (isinstance(wcs.low_level_wcs, SlicedLowLevelWCS) and
+             isinstance(wcs.low_level_wcs._wcs, (CompoundLowLevelWCS, gwcs.WCS))
+             )
+        ):  # NOQA
+            sparse = False
+
+        return np.meshgrid(*ranges, indexing='ij', sparse=sparse)
 
     @utils.misc.sanitise_wcs
     def axis_world_coords(self, *axes, edges=False, wcs=None):
@@ -301,7 +316,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Get world coords for all axes and all pixels.
         axes_coords = wcs.pixel_to_world(*pixel_inputs)
-        if wcs.world_n_dim == 1:
+
+        # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
+        if wcs.world_n_dim == 1 and not isinstance(axes_coords, tuple):
             axes_coords = [axes_coords]
         # Ensure it's a list not a tuple
         axes_coords = list(axes_coords)
