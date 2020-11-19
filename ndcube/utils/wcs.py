@@ -427,9 +427,13 @@ def array_indices_for_world_objects(wcs, axes=None):
     else:
         world_indices = np.arange(wcs.world_n_dim)
 
-    object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
+    try:
+        object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
+    except AttributeError:
+        object_names = np.array([wao_comp[0]
+                                 for wao_comp in wcs.low_level_wcs.world_axis_object_components])
 
-    array_indices = [[]] * len(set(object_names))
+    array_indices = [[]] * len(object_names)
     for world_index, oname in enumerate(object_names):
         # If this world index is deselected by axes= then skip
         if world_index not in world_indices:

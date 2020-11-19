@@ -140,14 +140,16 @@ class NDCubeSequenceBase:
         # Get coordinate objects associated with the common axis in all cubes.
         common_axis_names = set.intersection(*[set(cube.array_axis_physical_types[common_axis])
                                                for cube in self.data]) 
-        common_coords = [cube.axis_world_coords(common_axis, wcs=self.combined_wcs)[0]
-                         for cube in self.data]
-        mappings = [cube.axis_world_coords(common_axis], wcs=self.combined_wcs)[1]
-                    for cube in self.data]
-        # For each coordinate object, generate a list of length-1 objects
-        # along the common axis spanning all cubes.
-        # Assume coordinate objects are returned in the same
-        # order by the WCS of each cube.
+        common_coords = []
+        mappings = []
+        for i, cube in enumerate(self.data):
+            cube_wcs = cube.combined_wcs
+            common_coords.append(cube.axis_world_coords(common_axis, wcs=cube_wcs))
+            mappings.append(utils.wcs.array_indices_for_world_objects(cube_wcs,
+                                                                      axes=(common_axis,)))
+        # For each coordinate, break up and then combine the coordinate objects across
+        # the cubes into a list of coordinate objects that are length-1 and sequential
+        # along the common axis.
         sequence_coords = []
         for coord_idx in range(len(common_coords[0])):
             exploded_coord = []
@@ -158,7 +160,7 @@ class NDCubeSequenceBase:
                 for i in range(coord.shape[axis]):
                     item[axis] = i
                     exploded_coord.append(coord[tuple(item)])
-            sequence.append(exploded_coord)
+            sequence_coords.append(exploded_coord)
         return sequence_coords
 
     @property
