@@ -230,16 +230,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @property
     def array_axis_physical_types(self):
         """
-        Returns the WCS physical types associated with each array axis.
+        Returns the physical types associated with each array axis.
 
         Returns an iterable of tuples where each tuple corresponds to an array axis and
-        holds strings denoting the WCS physical types associated with that array axis.
+        holds strings denoting the physical types associated with that array axis.
         Since multiple physical types can be associated with one array axis, tuples can
         be of different lengths. Likewise, as a single physical type can correspond to
         multiple array axes, the same physical type string can appear in multiple tuples.
+
+        The physical types are drawn from the WCS ExtraCoords objects.
         """
-        world_axis_physical_types = np.array(self.wcs.world_axis_physical_types)
-        axis_correlation_matrix = self.wcs.axis_correlation_matrix
+        wcs = self.combined_wcs
+        world_axis_physical_types = np.array(wcs.world_axis_physical_types)
+        axis_correlation_matrix = wcs.axis_correlation_matrix
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
