@@ -135,18 +135,31 @@ class NDCubeSequenceBase:
         return _IndexAsCubeSlicer(self)
 
     @property
-    def common_axis_extra_coords(self):
-        if not isinstance(self._common_axis, int):
-            raise ValueError("Common axis is not set.")
-        # Get names and units of coords along common axis.
-        axis_coord_names, axis_coord_units = utils.sequence._get_axis_extra_coord_names_and_units(
-            self.data, self._common_axis)
-        # Compile dictionary of common axis extra coords.
-        if axis_coord_names is not None:
-            return utils.sequence._get_int_axis_extra_coords(
-                self.data, axis_coord_names, axis_coord_units, self._common_axis)
-        else:
-            return None
+    def common_axis_coords(self):
+        common_axis = self._common_axis
+        # Get coordinate objects associated with the common axis in all cubes.
+        common_axis_names = set.intersection(*[set(cube.array_axis_physical_types[common_axis])
+                                               for cube in self.data]) 
+        common_coords = [cube.axis_world_coords(common_axis, wcs=self.combined_wcs)[0]
+                         for cube in self.data]
+        mappings = [cube.axis_world_coords(common_axis], wcs=self.combined_wcs)[1]
+                    for cube in self.data]
+        # For each coordinate object, generate a list of length-1 objects
+        # along the common axis spanning all cubes.
+        # Assume coordinate objects are returned in the same
+        # order by the WCS of each cube.
+        sequence_coords = []
+        for coord_idx in range(len(common_coords[0])):
+            exploded_coord = []
+            for cube_idx in range(len(common_coords)):
+                coord = common_coords[cube_idx][coord_idx]
+                axis = np.where(np.array(mappings[cube_idx][coord_idx]) == common_axis)[0][0]
+                item = [slice(None)] * len(coord.shape)
+                for i in range(coord.shape[axis]):
+                    item[axis] = i
+                    exploded_coord.append(coord[tuple(item)])
+            sequence.append(exploded_coord)
+        return sequence_coords
 
     @property
     def sequence_axis_coords(self):
