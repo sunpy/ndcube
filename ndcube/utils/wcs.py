@@ -10,7 +10,7 @@ from collections import UserDict
 import numpy as np
 from astropy.wcs.wcsapi import low_level_api
 
-__all__ = ['array_indicies_for_world_objects',
+__all__ = ['array_indices_for_world_objects',
            'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
@@ -392,7 +392,7 @@ def calculate_world_indices_from_axes(wcs, axes):
     return np.unique(np.array(world_indices, dtype=int))
 
 
-def array_indicies_for_world_objects(wcs, axes=None):
+def array_indices_for_world_objects(wcs, axes=None):
     """
     Calculate the array indices corresponding to each high level world object.
 
@@ -415,20 +415,29 @@ def array_indicies_for_world_objects(wcs, axes=None):
     Returns
     -------
     array_indices : `tuple` of `tuple` of `int`
-        For each world object, a tuple of array axes identified by their number.
+        For each world object, a tuple of array axes identified by their
+        number. Array indices in each sub-tuple are not guaranteed to be
+        ordered with respect to the arrays in the object, as the object could
+        be an object like ``SkyCoord`` where there is a separation of the two
+        coordinates. The array indices will be returned in the sub-tuple in
+        array index order, i.e ascending.
     """
     if axes:
-        calculate_world_indices_from_axes(wcs, axes)
+        world_indices = calculate_world_indices_from_axes(wcs, axes)
     else:
-        np.arange(wcs.world_n_dim)
+        world_indices = np.arange(wcs.world_n_dim)
 
     object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
 
     array_indices = [[]] * len(set(object_names))
     for world_index, oname in enumerate(object_names):
+        # If this world index is deselected by axes= then skip
+        if world_index not in world_indices:
+            continue
+
         oinds = np.atleast_1d(object_names == oname).nonzero()[0][0]
         pixel_index = world_axis_to_pixel_axes(world_index, wcs.axis_correlation_matrix)
         array_index = convert_between_array_and_pixel_axes(pixel_index, wcs.pixel_n_dim)
         array_indices[oinds] = tuple(array_index[::-1])  # Invert to go from pixel order to array order
 
-    return array_indices
+    return tuple(ai for ai in array_indices if ai)
