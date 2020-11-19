@@ -139,7 +139,7 @@ class NDCubeSequenceBase:
         common_axis = self._common_axis
         # Get coordinate objects associated with the common axis in all cubes.
         common_axis_names = set.intersection(*[set(cube.array_axis_physical_types[common_axis])
-                                               for cube in self.data]) 
+                                               for cube in self.data])
         common_coords = []
         mappings = []
         for i, cube in enumerate(self.data):

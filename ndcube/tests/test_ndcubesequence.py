@@ -156,11 +156,26 @@ def test_cube_like_dimensions_error(ndc):
 
 @pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
 def test_common_axis_coords(ndc):
-    common_axis_length = int(ndc.cube_like_dimensions[ndc._common_axis].value)
+    # Construct expected skycoord
+    common_coords = [cube.axis_world_coords('lon') for cube in ndc]
+    expected_skycoords = []
+    for cube_coords in common_coords:
+        expected_skycoords += [cube_coords[0][i] for i in range(len(cube_coords[0]))]
+    # Construct expected Times
     base_time = Time('2000-01-01', format='fits', scale='utc')
-    expected = {'time': [base_time + TimeDelta(60 * i, format='sec')
-                         for i in range(common_axis_length)]}
+    expected_times = [base_time + TimeDelta(60*i, format='sec') for i in range(15)]
+    # Run test function.
     output = ndc.common_axis_coords
+    #  Check right number of coords returned.
+    assert len(output) == 2
+    output_skycoords, output_times = output
+    # Check SkyCoords are equal.
+    for output_coord, expected_coord in zip(output_skycoords, expected_skycoords):
+        assert all(output_coord == expected_coord)
+    # Check times are equal
+    for output_time, expected_time in zip(output_times, expected_times):
+        td = output_time - expected_time
+        assert u.allclose(td.to(u.s), 0*u.s, atol=1e-10*u.s)
 
 
 @pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
