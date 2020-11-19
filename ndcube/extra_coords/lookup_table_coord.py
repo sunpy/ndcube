@@ -190,7 +190,13 @@ class LookupTableCoord:
             **kwargs
         }
 
-        return TabularND(points, lookup_table, **kwargs)
+        t = TabularND(points, lookup_table, **kwargs)
+
+        # TODO: Remove this when there is a new gWCS release
+        # Work around https://github.com/spacetelescope/gwcs/pull/331
+        t.bounding_box = None
+
+        return t
 
     @classmethod
     def _generate_compound_model(cls, *lookup_tables, mesh=True):
@@ -218,7 +224,7 @@ class LookupTableCoord:
         name = None
         axes_type = "CUSTOM"
 
-        if isinstance(unit, (u.Unit, u.IrreducibleUnit)):
+        if isinstance(unit, (u.Unit, u.IrreducibleUnit, u.CompositeUnit)):
             unit = tuple([unit] * naxes)
 
         if all([u.m.is_equivalent(un) for un in unit]):
@@ -258,6 +264,9 @@ class LookupTableCoord:
         components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
         ref_frame = sc.frame.replicate_without_data()
         units = list(c.unit for c in components)
+
+        if names and len(names) != 2:
+            names = None
 
         # TODO: Currently this limits you to 2D due to gwcs#120
         frame = cf.CelestialFrame(reference_frame=ref_frame,
