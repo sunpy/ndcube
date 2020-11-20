@@ -11,9 +11,9 @@ by a WCS (World Coordinate System) translation.
 
    introduction
    installation
-   ndcube
-   ndcubesequence
-   ndcollection
+   data_classes
+   coordinates
+   visualization
    contributing
    getting_help
    api
