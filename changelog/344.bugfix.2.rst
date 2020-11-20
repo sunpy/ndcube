@@ -1,1 +1,1 @@
-Fixes IndexError in utils.wcs.array_indices_for_world_objects which occured when some of the world axes are dependent.
+Fixes IndexError in `~ndcube.utils.wcs.array_indices_for_world_objects` which occurred when some of the world axes are dependent.
