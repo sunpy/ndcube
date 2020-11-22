@@ -1,0 +1,1 @@
+New property, `ndcube.NDCollection.aligned_axis_physical_types`.  This replaces `~ndcube.NDCollection.aligned_world_axis_physical_types` and returns a list of tuples, where each tuple gives the physical types common between all memebers of the collection for a given aligned axis.
