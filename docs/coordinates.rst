@@ -85,7 +85,7 @@ One of the most common use cases for `~ndcube.GlobalCoords` is slicing.  In addi
   >>> my_2d_cube.global_coords['em.wl']
   <SpectralCoord 1e-9 m>
 
-.. _coordinate_transformations:
+.. _ndcube_coordinates:
 
 NDCube Coordinate Transformations
 =================================
@@ -178,6 +178,8 @@ Working with Raw Coordinates
 As shown, `~ndcube.NDCube.axis_world_coords` returns high level coordinate objects.  However, users and developers also have the option to use `ndcube.NDCube.axis_world_coords_values`.  The API for this method is exactly the same as `~ndcube.NDCube.axis_world_coords`.  However, it returns `~astropy.units.Quantity` objects for each physical type.  These are returned in the same order as `~astropy.wcs.WCS.world_axis_physical_types`.  These objects do not contain important contextual information, such as reference frame, which is needed to fully interpret the coordinate values.  However for some use cases this level of completeness is not needed.::
 
   >>> my_cube.axis_world_coords_values()
+
+.. _ndcubesequence_coordinates::
 
 NDCubeSequence Coordinate Transformations
 =========================================

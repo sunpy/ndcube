@@ -13,6 +13,7 @@ by a WCS (World Coordinate System) translation.
    installation
    data_classes
    coordinates
+   slicing
    visualization
    contributing
    getting_help
