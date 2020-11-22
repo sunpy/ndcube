@@ -139,10 +139,16 @@ def test_aligned_dimensions(collection, expected_aligned_dimensions):
     assert all(collection.aligned_dimensions == expected_aligned_dimensions)
 
 
-@pytest.mark.parametrize("collection, expected_aligned_types", [
-    (cube_collection, ['em.wl', 'custom:pos.helioprojective.lon',
-                       'custom:pos.helioprojective.lat']),
-    (seq_collection, ['meta.obs.sequence', 'custom:pos.helioprojective.lon',
-                      'custom:pos.helioprojective.lat', 'em.wl'])])
-def test_aligned_world_axis_physical_types(collection, expected_aligned_types):
-    assert set(collection.aligned_world_axis_physical_types) == set(expected_aligned_types)
+@pytest.mark.parametrize("collection, expected", [
+    (cube_collection, [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+                       ('em.wl',)]),
+    (seq_collection, [('meta.obs.sequence',),
+                      ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+                      ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+                      ('em.wl',)])])
+def test_aligned_axis_physical_types(collection, expected):
+    output = collection.aligned_axis_physical_types
+    print(output)
+    assert len(output) == len(expected)
+    for output_axis_types, expect_axis_types in zip(output, expected):
+        assert set(output_axis_types) == set(expect_axis_types)
