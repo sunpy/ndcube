@@ -426,18 +426,20 @@ def array_indices_for_world_objects(wcs, axes=None):
         world_indices = calculate_world_indices_from_axes(wcs, axes)
     else:
         world_indices = np.arange(wcs.world_n_dim)
-
-    object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
-
-    array_indices = [[]] * len(set(object_names))
+    object_names = np.array([wao_comp[0]
+                             for wao_comp in wcs.low_level_wcs.world_axis_object_components])
+    array_indices = [[]] * len(object_names)
     for world_index, oname in enumerate(object_names):
         # If this world index is deselected by axes= then skip
         if world_index not in world_indices:
             continue
-
+        # Select the first occurence of the object name.
+        # Other occurences are ignored so as to return duplicate coordinate objects.
         oinds = np.atleast_1d(object_names == oname).nonzero()[0][0]
+        # Calculate the array axes corresponding the coordinate's world axis
+        # and enter them into the element of the array indices array corresponding
+        # to the relevant world coordinate object.
         pixel_index = world_axis_to_pixel_axes(world_index, wcs.axis_correlation_matrix)
         array_index = convert_between_array_and_pixel_axes(pixel_index, wcs.pixel_n_dim)
-        array_indices[oinds] = tuple(array_index[::-1])  # Invert to go from pixel order to array order
-
+        array_indices[oinds] = tuple(array_index[::-1])  # Invert from pixel order to array order
     return tuple(ai for ai in array_indices if ai)

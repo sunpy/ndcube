@@ -1,0 +1,1 @@
+Implement `ndcube.NDCubeSequence.common_axis_coords` to replace `~ndcube.NDCubeSequence.common_axis_extra_coords`. In contrast to old property, this new property collates coordinates from the wcs as well as extra_coords.

@@ -78,7 +78,7 @@ class NDCollection(dict):
             Cube keys: {tuple(self.keys())}
             Number of Cubes: {len(self)}
             Aligned dimensions: {self.aligned_dimensions}
-            Aligned world physical axis types: {self.aligned_world_axis_physical_types}"""))
+            Aligned physical types: {self.aligned_axis_physical_types}"""))
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
@@ -97,21 +97,22 @@ class NDCollection(dict):
             ]
 
     @property
-    def aligned_world_axis_physical_types(self):
+    def aligned_axis_physical_types(self):
         """
-        Returns the physical types of the aligned axes of an ND object in the collection.
+        Returns the physical types of each aligned axis common to all objects in the collection.
 
-        If there are no aligned axes, returns None. The types are not ordered with any
-        reference to array or wcs axes.
-
+        If there are no aligned axes, raises a ValueError.  If there are no physical types
+        to an aligned axis, an empty tuple is returned for that axis.
         """
-        if self.aligned_axes is not None:
-            # Get physical types for each aligned axis in one member of collection.
-            # As by definition axes are aligned, we should only need info from one cube/sequence.
-            axis_types = np.array(self[self._first_key].array_axis_physical_types)
-            aligned_axis_types = axis_types[np.array(self.aligned_axes[self._first_key])]
-            # Remove duplicates and return
-            return list(set([axis_type for axis in aligned_axis_types for axis_type in axis]))
+        if self.aligned_axes is None:
+            raise ValueError("aligned_axes must be set to use this property.")
+        # Get array axis physical types for each aligned axis for all members of collection.
+        collection_types = [
+            np.array(cube.array_axis_physical_types)[np.array(self.aligned_axes[name])]
+            for name, cube in self.items()]
+        # Return physical types common to all members of collection for each axis.
+        return [tuple(set.intersection(*[set(cube_types[i]) for cube_types in collection_types]))
+                for i in range(self.n_aligned_axes)]
 
     def __getitem__(self, item):
         # There are two ways to slice:
