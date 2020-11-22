@@ -3,22 +3,33 @@ Coordinates
 ===========
 In the :ref:`ndcube` section we showed how `~ndcube.NDCube`'s slicing ensures the coordinate transformations remain consistent with the data as it is sliced.  In this section we will discuss the many other ways in which the ndcube classes support the integration of data and its coordinates.
 
+But first let's recreate the data, uncertainty, mask and meta components of the `~ndcube.NDCube` we created in the :ref:`ndcube` section.::
+
+  >>> import numpy as np
+  >>> import astropy.units as u
+  >>> from astropy.time import Time, TimeDelta
+  >>> from astropy.nddata import StdDevUncertainty
+  >>> from ndcube import NDCube, ExtraCoords
+  >>> data = np.ones((3, 4, 5))
+  >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
+  >>> mask = np.zeros_like(my_cube.data, dtype=bool)
+  >>> meta = {"Description": "This is example NDCube metadata."}
+
+
 .. _extra_coords:
 
 ExtraCoords
 ===========
 In the :ref:`ndcube` section we saw that the WCS object stored at `nducbe.NDCube.wcs` contains the primary set of coordinate transformations that describe the data.  However, what if you have alternative or additional coordinates that are not represented by the WCS?  The `ndcube.ExtraCoords` class provides users with a mechanism of attaching such coordinates to their `~ndcube.NDCube` instances.
 
-Let's consider data from a slit spectrograph.  The first axis represents the position of the slit, the 2nd axis represents position along the slit.  Together these represent positions on the sky represented by coupled coordinates like latitude and longitude.  The final axis represents the spectral dimension.  The WCS nicely describes the relationship between the array axes and these 3 world coordinates.  However, if the spectrograph is in rastering mode -- i.e. moving the slit sequentially to build up and 2-D image of a region -- then the first axis is also associated with time.  This is because it takes time for the slit to be moved, a measurement taken and then the slit moved again.  If the time dimension is not captured by the WCS, then users can represent it as an extra coordinate.  Coordinates can be compiled as lookup tables, gathered in an `~ndcube.ExtraCoords` object and attached to an `~ndcube.NDCube` during instantiation.::
+Let's consider data from a slit spectrograph.  The first axis represents the position of the slit, the 2nd axis represents position along the slit.  Together these represent positions on the sky represented by coupled coordinates like latitude and longitude.  The final axis represents the spectral dimension.  The WCS nicely describes the relationship between the array axes and these three world coordinates.  However, if the spectrograph is in rastering mode -- i.e. moving the slit sequentially to build up and 2-D image of a region -- then the first axis is also associated with time.  This is because it takes time for the slit to be moved, a measurement taken and then the slit moved again.  If the time dimension is not captured by the WCS, then users can represent it as an extra coordinate.  Coordinates can be compiled as lookup tables, gathered in an `~ndcube.ExtraCoords` object and attached to an `~ndcube.NDCube` during instantiation.::
 
-  >>> from astropy.time import Time, TimeDelta
-  >>> from ndcube import ExtraCoords
   >>> # Define Time object giving the times along the 1st axis.
   >>> time_axis = 0
   >>> time_axis_length = int(my_cube.dimensions[axis].value)
   >>> base_time = Time('2000-01-01', format='fits', scale='utc')
   >>> timestamps = Time(base_time + TimeDelta(60 * i, format='sec') for i in range(time_axis_length))
-  >>> # Construct an empty ExtraCoords object hen add the time coordinate.
+  >>> # Construct an empty ExtraCoords object then add the time coordinate.
   >>> my_extra_coords = ExtraCoords()
   >>> # To add a coordinate, supply its name, array axes, and values at each arrya element.
   >>> my_extra_coords.add_coordinate('time', (0,), timestamps)
@@ -33,35 +44,33 @@ Extra coordinates can be be combined with the primary WCS via `ndcube.NDCube.com
 
 GlobalCoords
 ============
-
 Sometimes coordinate are not associated with any axis.  Take the case of a 2-D `~ndcube.NDCube` representing a single image.  The time at which that image was taken is important piece of coordinate information.  But because it is not associated with either the x and y axes, it cannot be stored in the WCS or `~ndcube.ExtraCoords` objects.  Storing such coordinates in the role of the `ndcube.GlobalCoords` class.  Let' assume that ``my_cube`` was taken by a pixelated spectroscopic detector that measures position and wavelength simultaneously.  ``my_cube`` thus represents a single 3-D frame measurement taken at a given time.  Now let's attach the frame time using `~ndcube.GlobalCoords`.::
 
+  >>> import astropy.units as u
   >>> from astropy.time import Time
   >>> from ndcube import GlobalCoords
-  >>> # Generate a fresh version of my_cube.
-  >>> my_cube = NDCube(data, input_wcs, uncertainty=uncertainty, mask=mask,
-  ...                  meta=meta, unit=u.ct)
   >>> # To add a global coord, provide a name, physical type, and value.
-  >>> my_cube.global_coords.add('time', 'time', Time('2000-01-01', format='fits', scale='utc'))
+  >>> my_cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
   
 `~ndcube.GlobalCoords` allows multiple coordinates of the same physical type.  Therefore when adding a global coordinate, you must provide a unique coordinate name, its physical time and the coordinate value.  The value of the coordinate can be accessed by indexing the `~ndcube.GlobalCoords` instance with the coordinate name::
 
-  >>> my_cube.global_coords['time']
-  <Time format='fits', scale='utc', value='2000-01-01T00:00:00.000'>
+  >>> my_cube.global_coords['distance']
+  <Quantity 1 m>
 
 The coordinate's physical type can be accessed via the `~ndcube.GlobalCoords.physical_types` `dict` property::
 
-  >>> my_cube.global_coords.physical_types['time']
-  
+  >>> my_cube.global_coords.physical_types['distance']
+  'pos.distance'
+
 Because `~ndcube.GlobalCoords` inherits from `Mapping`, it contains a number of mixin methods similar to those of `dict`.::
 
   >>> list(my_cube.global_coords.keys())  # Returns a list of global coordinate names
-  ['time']
+  ['distance']
   >>> list(my_cube.global_coords.values()  # Returns a list of coordinate values
-  [<Time format='fits', scale='utc', value='2000-01-01T00:00:00.000'>]
+  [<Quantity 1 m>]
   >>> list(my_cube.global_coords.items())  # Returns a list of (name, value) pairs
-  [('time', <Time format='fits', scale='utc', value='2000-01-01T00:00:00.000'>)]
-  
+  [('distance', <Quantity 1 m>)]
+
 One of the most common use cases for `~ndcube.GlobalCoords` is slicing.  In addition to tracking and updating the `~ndcube.NDCube.wcs` and `~ndcube.NDCube.extra_coords` objects, `~ndcube.NDCube`'s slicing infrastucture also identifies when an axis has been dropped and remembers the value of any independent coordinates at the location along that axis at which the cube was sliced.  Let's demonstrate this by slicing away the wavelength axis of ``my_cube``.::
 
   >>> my_2d_cube = my_cube[:, :, 0]
@@ -70,7 +79,7 @@ One of the most common use cases for `~ndcube.GlobalCoords` is slicing.  In addi
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
   >>> # The wavelength value at the slicing location is now in the GLobalCoords object.
   >>> list(my_2d_cube.global_coords.keys())
-  ['time', 'em.wl']
+  ['distance', 'em.wl']
   >>> my_2d_cube.global_coords.physical_types['em.wl']
   'em.wl'
   >>> my_2d_cube.global_coords['em.wl']
