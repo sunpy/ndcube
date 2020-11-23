@@ -74,6 +74,7 @@ Sometimes coordinates are not associated with any axis.  Take the case of a 2-D 
 .. code-block:: python
 
   >>> import astropy.units as u
+  >>> my_cube = NDCube(data, input_wcs)
   >>> my_cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
 
 `~ndcube.GlobalCoords` allows multiple coordinates of the same physical type.  Therefore when adding a global coordinate, you must provide a unique coordinate name, its physical time and the coordinate value.  The value of the coordinate can be accessed by indexing the `~ndcube.GlobalCoords` instance with the coordinate name.
@@ -108,7 +109,7 @@ One of the most common use cases for `~ndcube.GlobalCoords` is associated with s
   >>> my_2d_cube = my_cube[:, :, 0]
   >>> my_2d_cube.array_axis_physical_types  # Note the wavelength axis is now gone.
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time')]
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
 
   >>> # The wavelength value at the slicing location is now in the GLobalCoords object.
   >>> list(my_2d_cube.global_coords.keys())
