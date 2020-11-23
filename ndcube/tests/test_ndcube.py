@@ -129,6 +129,13 @@ def test_slicing_split_celestial(ndc, item):
                                                               [False, True]], dtype=bool))
 
 
+def test_slicing_preserves_global_coords(ndcube_3d_ln_lt_l):
+    ndc = ndcube_3d_ln_lt_l
+    ndc.global_coords.add('distance', 'pos.distance', 1 * u.m)
+    sndc = ndc[0]
+    assert sndc._global_coords._internal_coords == ndc._global_coords._internal_coords
+
+
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
 
