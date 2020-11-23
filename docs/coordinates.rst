@@ -112,11 +112,11 @@ One of the most common use cases for `~ndcube.GlobalCoords` is associated with s
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
 
   >>> # The wavelength value at the slicing location is now in the GLobalCoords object.
-  >>> list(my_2d_cube.global_coords.keys())
-  ['distance', 'em.wl']
-  >>> my_2d_cube.global_coords.physical_types['em.wl']
-  'em.wl'
-  >>> my_2d_cube.global_coords['em.wl']
+  >>> list(my_2d_cube.global_coords.keys())  # doctest: +SKIP
+  ['distance', 'em.wl']  # doctest: +SKIP
+  >>> my_2d_cube.global_coords.physical_types['em.wl']  # doctest: +SKIP
+  'em.wl'  # doctest: +SKIP
+  >>> my_2d_cube.global_coords['em.wl']  # doctest: +SKIP
   <SpectralCoord 1e-9 m>
 
 .. _cube_coordinates:
@@ -128,7 +128,6 @@ WCS objects are a powerful and concise way of storing complex functional coordin
 .. code-block:: python
 
   >>> my_cube.axis_world_coords(2)
-  WARNING: target cannot be converted to ICRS, so will not be set on SpectralCoord [astropy.wcs.wcsapi.fitswcs]
   (<SpectralCoord [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,)
 
 Alternatively we can provide a unique substring of the physical type of the coordinate, stored in `ndcube.NDCube.wcs.world_axis_physical_types`:
@@ -139,7 +138,6 @@ Alternatively we can provide a unique substring of the physical type of the coor
   ['em.wl', 'custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon']
   >>> # Since 'wl' is unique to the wavelength axis name, let's use that.
   >>> my_cube.axis_world_coords('wl')
-  WARNING: target cannot be converted to ICRS, so will not be set on SpectralCoord [astropy.wcs.wcsapi.fitswcs]
   (<SpectralCoord [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,)
 
 As discussed above, some WCS axes are not independent.  For those axes, `~ndcube.NDCube.axis_world_coords` returns objects with the same number of dimensions as dependent axes.  For example, helioprojective longitude and latitude are dependent.  Therefore if we ask for longitude, we will get back a `~astropy.coordinates.SkyCoord` with containing 2-D latitude and longitude arrays with the same shape as the array axes to which they correspond.  For example:
@@ -147,7 +145,6 @@ As discussed above, some WCS axes are not independent.  For those axes, `~ndcube
 .. code-block:: python
 
   >>> celestial = my_cube.axis_world_coords('lon')[0]  # Must extract object from returned tuple with [0]
-  WARNING: target cannot be converted to ICRS, so will not be set on SpectralCoord [astropy.wcs.wcsapi.fitswcs]
   >>> my_cube.dimensions
   <Quantity [3., 4., 5.] pix>
   >>> celestial.shape

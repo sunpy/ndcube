@@ -288,7 +288,7 @@ We can also see the physical properties to which the aligned axes correspond by 
 
 .. code-block:: python
 
-  >>> my_collection.aligned_axis_physical_types
+  >>> my_collection.aligned_axis_physical_types  # doctest: +SKIP
   [('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'), ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat')]
 
 This returns the a `list` of `tuple` giving the physical types that correspond to each aligned axis.  For each aligned axis, only physical types are associated with all the cubes in the collection are returned.  Note that there is no there is no requirement that all aligned axes must represent the same physical types.  They just have to be the same length.  Therefore, is it possible that this property returns no physical types.
