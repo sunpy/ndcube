@@ -1,8 +1,8 @@
 .. _plotting
 
-=============
-Visualization
-=============
+==========================
+Visualizing ndcube Objects
+==========================
 
 .. _cube_plotting
 

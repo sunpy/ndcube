@@ -1,6 +1,8 @@
-===========
-Coordinates
-===========
+.. _coordinates::
+
+=============================
+Coordinates and ndcube Objects
+==============================
 In the :ref:`ndcube` section we showed how `~ndcube.NDCube`'s slicing ensures the coordinate transformations remain consistent with the data as it is sliced.  In this section we will discuss the many other ways in which the ndcube classes support the integration of data and its coordinates.
 
 But first let's recreate the data and WCS components of an `~ndcube.NDCube` for use in our demonstration.
@@ -16,7 +18,7 @@ But first let's recreate the data and WCS components of an `~ndcube.NDCube` for 
   ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
   >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
-.. _extra_coords:
+.. _extra_coords::
 
 ExtraCoords
 ===========
@@ -43,7 +45,7 @@ An indefinite number of coordinates can be added in this way.  Alternatively, we
   >>> my_extra_coords.keys()
   ('time',)
 
-The values of the coordinates can be accessed via `~ndcube.ExtraCoords.wcs`.  This property generates a WCS object based on the coordinates stored in the `~ndcube.ExtraCoords` object.  It should be noted that because `~ndcube.ExtraCoords` is a stand alone object, its WCS does not necessarily match the data array of an `~ndcube.NDCube`.  To convert the extra coordinates into a WCS directly applicable to an `~ndcube.NDCube`, see the :ref:`combined_wcs` section below on `~ndcube.NDCube.combined_wcs`.
+The values of the coordinates can be accessed via `~ndcube.ExtraCoords.wcs`.  This property generates a WCS object based on the coordinates stored in the `~ndcube.ExtraCoords` object.  It should be noted that because `~ndcube.ExtraCoords` is a stand alone object, its WCS does not necessarily match the data array of an `~ndcube.NDCube`.  To convert the extra coordinates into a WCS directly applicable to an `~ndcube.NDCube`, see the :ref:`combined_wcs` section below.
 
 Finally, the `~ndcube.ExtraCoords` object can be attached to an `~ndcube.NDCube`  during instantiation and access via the `~ndcube.NDCube.extra_coords` property.
 

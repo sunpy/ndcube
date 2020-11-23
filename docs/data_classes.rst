@@ -3,7 +3,7 @@
 ============
 Data Classes
 ============
-ndcube provides its features via its data classes: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.  This section describes the purpose of each and how they are structured and instantiated.
+ndcube provides its features via its data classes: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.  This section describes the purpose of each and how they are structured and instantiated.  To learn how to slicem visualize and perform coordinate transformations with these classes, see the :ref:`slicing`, :ref:`plotting` and :ref:`coordinates` sections.
 
 .. _ndcube:
 

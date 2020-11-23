@@ -1,4 +1,4 @@
-.. _slicing:
+.. _slicing::
 
 ======================
 Slicing ndcube Objects

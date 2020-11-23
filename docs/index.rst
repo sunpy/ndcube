@@ -7,7 +7,7 @@ package designed for handling n-dimensional datacubes described
 by a WCS (World Coordinate System) translation.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    introduction
    installation

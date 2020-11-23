@@ -10,7 +10,7 @@ What is ndcube?
 ===============
 ndcube is a free, open-source, community-developed Python package whose purpose is to link astronomical data and coordinates in single objects.  These objects can be manipulated via array-like slicing operations which modify both the data and coordinate systems simultaneously.  They also allow coordinate transformations to be performed with reference to the size of the data array and produce visualisations whose axes are automatically described by the coordinates.  This coupling of data and coordinates allows users to analyze their data more quickly and accurately, thus helping to boost their scientific output.
 
-In this guide we will introduce you to ndcube's primary data classes, `~ndcube.NDCube`, `~ndcube.NDCubeSequence`, and `~ndcube.NDCollection` (Section :ref:`data_classes`).  We will then discuss the functionalities they provide including coordinate support (Section :ref:`coordinates`) and visualisation (Section :ref:`visualisation`).  There are also helpful sections on how to install ndcube (Section :ref:`installation`), get help (Section :ref:`getting_help`) and contribute to the package (Section :ref:`contributing`).
+In this guide we will introduce you to ndcube's primary data classes, `~ndcube.NDCube`, `~ndcube.NDCubeSequence`, and `~ndcube.NDCollection` (Section :ref:`data_classes`).  We will then discuss the functionalities they provide including coordinate support (Section :ref:`coordinates`) and visualisation (:ref:`plotting`).  There are also helpful sections on :ref:`installation`, `getting_help` and :ref:`contributing`.
 
 Why ndcube?
 ===========
