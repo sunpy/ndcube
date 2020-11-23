@@ -49,6 +49,7 @@ Note that in keeping the convention of `numpy.ma.masked_array` ``True`` means th
 
 .. code-block:: python
 
+  >>> import astropy.units as u
   >>> from astropy.nddata import StdDevUncertainty
   >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
   >>> mask = np.zeros_like(my_cube.data, dtype=bool)
@@ -110,7 +111,7 @@ To initialize the most basic `~ndcube.NDCubeSequence` object, all you need is a 
   >>> my_cube1 = NDCube(data1, input_wcs)
   >>> my_cube2 = NDCube(data2, input_wcs)
 
-Creating an `~ndcube.NDCubeSequence` is simply a case of providing the list of `~ndcube.NDCube` objects to the `~ndcube.NDCubeSequence` class.  We also have the option to provide some sequence-level metadata.
+Creating an `~ndcube.NDCubeSequence` is simply a case of providing the list of `~ndcube.NDCube` objects to the `~ndcube.NDCubeSequence` class.  We also have the option of providing some sequence-level metadata.  This is in addition to anything located in the ``.meta`` objects of the NDCubes.
 
 .. code-block:: python
 
@@ -147,14 +148,18 @@ Equivalent to `ndcube.NDCube.array_axis_physical_types`, `ndcube.NDCubeSequence.
 `ndcube.NDCube.array_axis_physical_types`.  The sequence axis is given the label ``'meta.obs.sequence'`` as it is the IVOA UCD1+ controlled word that best describes it.  To call, simply do::
 
   >>> my_sequence.array_axis_physical_types
-  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+  [('meta.obs.sequence',),
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('em.wl',)]
   
 Once again, we can see the physical types associated with each axis in the cube-like paradigm be calling `ndcube.NDCubeSequence.cube_like_array_axis_physical_types` .
 
 .. code-block:: python
 
   >>> my_sequence.cube_like_array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('em.wl',)]
 
 Explode Along Axis
 ------------------
@@ -201,29 +206,16 @@ NDCollection
 
 One possible application of `~ndcube.NDCollection` is linking observations with derived data products.  Let's say we have a 3D `~ndcube.NDCube` representing space-space-wavelength.  Then let's say we fit a spectral line in each pixel's spectrum and extract its linewidth.  Now we have a 2D spatial map of linewidth with the same spatial axes as the original 3D cube.  There is a clear relationship between these two objects and so it makes sense to store them together.  An `~ndcube.NDCubeSequence` is not appropriate here as the physical properties represented by the two objects is different, they do not have an order within their common coordinate space, and they do not have the same dimensionality.  Instead let's use an `~ndcube.NDCollection`.
 
-First, let's define the `~ndcube.NDCube` instances.  Let there be 10x20 spatial pixels and 30 pixels along the spectral axis.
+Let's use ``my_cube`` defined above as our observations cube and define a "linewidth cube".
 
 .. code-block:: python
 
-  >>> import numpy as np
-  >>> from astropy.wcs import WCS
-  >>> from ndcube import NDCube
-
-  >>> # Define observations NDCube.
-  >>> data = np.ones((10, 20, 30)) # dummy data
-  >>> obs_wcs_dict = {
-  ...    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 30,
-  ...    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 20,
-  ...    'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 10}
-  >>> obs_wcs = WCS(obs_wcs_dict)
-  >>> obs_cube = NDCube(data, obs_wcs)
-
   >>> # Define derived linewidth NDCube
-  >>> linewidth_data = np.ones((10, 20)) / 2 # dummy data
+  >>> linewidth_data = np.ones((3, 4)) / 2 # dummy data
   >>> linewidth_wcs_dict = {
   ...    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 20,
   ...    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 10}
-  >>> linewidth_wcs = WCS(linewidth_wcs_dict)
+  >>> linewidth_wcs = astropy.wcs.WCS(linewidth_wcs_dict)
   >>> linewidth_cube = NDCube(linewidth_data, linewidth_wcs)
 
 To combine these ND objects into an `~ndcube.NDCollection`, simply supply a sequence of
@@ -232,7 +224,7 @@ To combine these ND objects into an `~ndcube.NDCollection`, simply supply a sequ
 .. code-block:: python
 
   >>> from ndcube import NDCollection
-  >>> my_collection = NDCollection([("observations", obs_cube), ("linewidths", linewidth_cube)])
+  >>> my_collection = NDCollection([("observations", my_cube), ("linewidths", linewidth_cube)])
 
 To access each ND object in ``my_collection`` index it with the name of the desired object, just like a `dict`:
 
@@ -254,7 +246,7 @@ Aligned Axes
 .. code-block:: python
 
   >>> my_collection = NDCollection(
-  ...    [("observations", obs_cube), ("linewidths", linewidth_cube)], aligned_axes=(0, 1))
+  ...    [("observations", my_cube), ("linewidths", linewidth_cube)], aligned_axes=(0, 1))
 
 We can see which axes are aligned by inpecting the ``aligned_axes`` attribute:
 
@@ -270,15 +262,15 @@ As you can see, this gives us the axes for each ND object separately.  We should
   >>> linewidth_wcs_dict_reversed = {
   ...    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 20,
   ...    'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.4, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 10}
-  >>> linewidth_wcs_reversed = WCS(linewidth_wcs_dict_reversed)
+  >>> linewidth_wcs_reversed = astropy.wcs.WCS(linewidth_wcs_dict_reversed)
   >>> linewidth_cube_reversed = NDCube(linewidth_data.transpose(), linewidth_wcs_reversed)
 
-We can still define an `~ndcube.NDCollection` with aligned axes by supplying a tuple of tuples, giving the aligned axes of each ND object separately.  In this case, the 0th axis of the ``observations`` object is aligned with the 1st axis of the ``linewidths`` object and vice versa.
+We can still define an `~ndcube.NDCollection` with aligned axes by supplying a tuple of tuples, giving the aligned axes of each ND object separately.  In this case, the 1st axis of the ``observations`` cube is aligned with the 2nd axis of the ``linewidths`` cube and vice versa.
 
 .. code-block:: python
 
    >>> my_collection_reversed = NDCollection(
-   ...    [("observations", obs_cube), ("linewidths", linewidth_cube_reversed)],
+   ...    [("observations", my_cube), ("linewidths", linewidth_cube_reversed)],
    ...    aligned_axes=((0, 1), (1, 0)))
    >>> my_collection_reversed.aligned_axes
    {'observations': (0, 1), 'linewidths': (1, 0)}
@@ -288,7 +280,7 @@ Because aligned axes must have the same lengths, we can get the lengths of the a
 .. code-block:: python
 
   >>> my_collection.aligned_dimensions
-  <Quantity [10., 20.] pix>
+  <Quantity [3., 4.] pix>
 
 Note that this only tells us the lengths of the aligned axes.  To see the lengths of the non-aligned axes, e.g. the spectral axis of the ``observations`` object, you must inspect that ND object individually.
 
@@ -297,8 +289,8 @@ We can also see the physical properties to which the aligned axes correspond by 
 .. code-block:: python
 
   >>> my_collection.aligned_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
+  [('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
+   ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat')]
 
 This returns the a `list` of `tuple` giving the physical types that correspond to each aligned axis.  For each aligned axis, only physical types are associated with all the cubes in the collection are returned.  Note that there is no there is no requirement that all aligned axes must represent the same physical types.  They just have to be the same length.  Therefore, is it possible that this property returns no physical types.
 

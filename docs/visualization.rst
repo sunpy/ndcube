@@ -36,46 +36,80 @@ Despite this the lack of `~ndcube.NDCubeSequence` visualization support, you can
 
 Extracting and Plotting NDCubeSequence Data with Matplotlib
 -----------------------------------------------------------
-
 In order to produce plots (or perform other analysis) outside of the ``ndcube`` framework,
 it may be useful to extract the data from the `~ndcube.NDCubeSequence` into single
-`~numpy.ndarray` instances.
-In the above examples we defined the `my_sequence` `~ndcube.NDCubeSequence` object.::
+`~numpy.ndarray` instances.  Let's first define an `~ndcube.NDCubeSequence` with a common axis of 0 and and time as an extra coord streching across the cube along the common axis.  Then we show how to extract and plot the data.
 
-    >>> # Print dimensions of my_sequence as a reminder
-    >>> print(my_sequence.dimensions)
-    (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+.. code-block:: python
 
-To make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_sequence`.::
+  >>> import astropy.wcs
+  >>> import numpy as np
+  >>> from astropy.time import Time, TimeDelta
+  >>> from ndcube import ExtraCoords, NDCube, NDCubeSequence
 
-    >>> # Make a single 4D array of data in sequence with the sequence axis as the 0th.
+  >>> # Define data for cubes
+  >>> data0 = np.random.random((3, 4, 5))
+  >>> data1 = data0 * 2
+  >>> data2 = data1 * 2
+
+  >>> # Define WCS object for all cubes.
+  >>> wcs_input_dict = {
+  ... 'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
+  ... 'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
+  ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
+  >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
+  
+  >>> # Define time extra coordinates of time for each cube.
+  >>> common_axis = 0
+  >>> base_time = Time('2000-01-01', format='fits', scale='utc')
+  >>> timestamps0 = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(data0.shape[common_axis])])
+  >>> extra_coords0 = ExtraCoords()
+  >>> extra_coords0.add_coordinate('time', 2, timestamps0)
+  >>> timestamps1 = Time([base_time + TimeDelta(60 * (i+1), format='sec') for i in range(data1.shape[common_axis])])
+  >>> extra_coords1 = ExtraCoords()
+  >>> extra_coords1.add_coordinate('time', 2, timestamps1)
+  >>> timestamps2 = Time([base_time + TimeDelta(60 * (i+1), format='sec') for i in range(data2.shape[common_axis])])
+  >>> extra_coords2 = ExtraCoords()
+  >>> extra_coords2.add_coordinate('time', 2, timestamps2)
+
+  >>> my_cube0 = NDCube(data0, input_wcs, extra_coords=extra_coords0)
+  >>> my_cube1 = NDCube(data1, input_wcs, extra_coords=extra_coords1)
+  >>> my_cube2 = NDCube(data2, input_wcs, extra_coords=extra_coords2)
+  
+  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2], common_axis=common_axis)
+
+To make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_sequence`.
+
+.. code-block:: python
+
     >>> data4d = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> print(data.shape)
+    >>> data4d.shape
     (3, 3, 4, 5)
 
-The same applies to other array-like data in the `~ndcube.NDCubeSequence`, like
-``uncertainty`` and ``mask``.
-If instead, we want to define a 3D array where every `~ndcube.NDCube` in the
-`~ndcube.NDCubeSequence` is appended along the ``common_axis``,
-we can use `numpy.concatenate` function::
+The same applies to other array-like data in the `~ndcube.NDCubeSequence`, like ``uncertainty`` and ``mask``.  If instead, we want to define a 3D array where every `~ndcube.NDCube` in the `~ndcube.NDCubeSequence` is appended along the ``common_axis``, we can use `numpy.concatenate` function.
 
-    >>> # Make a 3D array
+.. code-block:: python
+
     >>> data3d = np.concatenate([cube.data for cube in my_sequence.data],
-                                axis=my_sequence._common_axis)
-    >>> print(data.shape)
+    ...                         axis=my_sequence._common_axis)
+    >>> data3d.shape
     (9, 4, 5)
 
 Having extracted the data, we can now use matplotlib to visualize it.
 Let's say we want to produce a timeseries of how intensity changes in a
-given pixel at a given wavelength.  We stored time in ``my_sequence.global_coords``
-and associated it with the ``common_axis``.  Therefore, we could do::
+given pixel at a given wavelength.  We stored time in ``my_sequence.common_axis_coords``
+and associated it with the ``common_axis``.  Therefore, we could do:
+
+.. code-block:: python
 
     >>> import matplotlib.pyplot as plt
     >>> # Get intensity at pixel 0, 0, 0 in each cube.
     >>> intensity = np.array([cube.data[0, 0, 0] for cube in my_sequence])
-    >>> times = my_sequence.common_axis_coords["time"]
-    >>> plt.plot(times, intensity)
-    >>> plt.show()
+    >>> times = Time([cube.axis_world_coords('time', wcs=cube.combined_wcs)[0][0] for cube in my_sequence])
+    >>> plt.plot(times.datetime, intensity)  # doctest: SKIP
+    >>> plt.xlabel("Time")  # doctest: SKIP
+    >>> plt.ylabel("Intensity")  # doctest: SKIP
+    >>> plt.show()  # doctest: SKIP
 
 Alternatively, we could produce a 2D dynamic spectrum showing how the spectrum
 in a given pixel changes over time.::
@@ -84,21 +118,22 @@ in a given pixel changes over time.::
     >>> import matplotlib.pyplot as plt
     >>> from astropy.time import Time
     >>> # Combine spectrum over time for pixel 0, 0.
-    >>> spectrum_sequence = my_sequence[0, 0]
-    >>> intensity = np.stack([cube.data for cube in spectrum_sequence[0, 0], axis=0)
-    >>> times = Time(spectrum_sequence.sequence_axis_coords["time"])
+    >>> spectrum_sequence = my_sequence[:, :, 0]
+    >>> intensity = np.concatenate([cube.data for cube in spectrum_sequence.data], axis=0)
+    >>> times = Time(np.concatenate([cube.axis_world_coords('time', wcs=cube.combined_wcs)[0].value for cube in my_sequence]), format='fits', scale='utc')
     >>> # Assume that the wavelength in each pixel doesn't change as we move through the sequence.
-    >>> wavelength = spectrum_sequence[0].axis_world_coords("em.wl")
-    >>> # As the times may not be uniform, we can use NonUniformImage
-    >>> # to show non-uniform pixel sizes.
-    >>> fig, ax = plt.subplots(1, 1)
+    >>> wavelength = spectrum_sequence[0].axis_world_coords("em.wl")[0]
+    >>> # As the times may not be uniform, we can use NonUniformImage to show non-uniform pixel sizes.
+    >>> fig, ax = plt.subplots(1, 1)  # doctest: SKIP
     >>> im = mpl.image.NonUniformImage(
     ...     ax, extent=(times[0], times[-1], wavelength[0], wavelength[-1]))
-    >>> im.set_data(times, wavelength, intensity)
-    >>> ax.add_image(im)
-    >>> ax.set_xlim(times[0], times[-1])
-    >>> ax.set_ylim(wavelength[0], wavelength[-1])
-    >>> plt.show()
+    >>> im.set_data(wavelength, times.mjd, intensity)  # doctest: SKIP
+    >>> ax.add_image(im)  # doctest: SKIP
+    >>> ax.set_xlim(times.mjd[0], times.mjd[-1])  # doctest: SKIP
+    >>> ax.set_xlabel("Time [Modified Julian Day]")
+    >>> ax.set_ylim(wavelength[0].value, wavelength[-1].value)  # doctest: SKIP
+    >>> ax.set_ylabel(f"Wavelength [{wavelength.unit}]")
+    >>> plt.show()  # doctest: SKIP
 
 Now let's say we want to animate our data, for example, show how the intensity
 changes over wavelength and time.
@@ -115,36 +150,20 @@ In ``my_sequence``, the sequence axis represents time, the 0th and 1st cube axes
 represent latittude and longitude, while the final axis represents wavelength.
 Therefore, we could do the following::
 
-    >>> from ndcube.visualization import ImageAnimator
+    >>> from sunpy.visualization.animator import ImageAnimator  # doctest: SKIP
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> time_range = [my_sequence[0, 0].global_coords.get_coord("time"),
-                      my_sequence[-1, 0].global_coords.get_coord("time")]
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
-    >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values(wcs=my_sequence[0].wcs)
-    >>> lon_range = [lon[0], lon[-1]]
-    >>> lat_range = [lat[0], lat[-1]]
-    >>> wave_range = [wavelength[0], wavelength[-1]]
-    >>> animation = ImageAnimator(data, image_axes=[2, 1],
-                                  axis_ranges=[time_range, lon_range, lat_range, wave_range])
-    >>> plt.show()
+    >>> animation = ImageAnimator(data, image_axes=[2, 1])  # doctest: SKIP
+    >>> plt.show()  # doctest: SKIP
 
 Alternatively we can animate how the one 1-D spectrum changes by using
 `~ndcube.visualization.animator.LineAnimator`::
 
-    >>> from ndcube.visualization import ImageAnimator
+    >>> from sunpy.visualization.animator import LineAnimator  # doctest: SKIP
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> time_range = [my_sequence[0, 0].global_coords.get_coord("time"),
-                      my_sequence[-1, 0].global_coords.get_coord("time")]
-    >>> # Assume that the field of view or wavelength grid is not changing over time.
-    >>> # Also assume the coordinates are independent and linear with the pixel grid.
-    >>> lon, lat, wavelength = my_sequence[0].axis_world_coords_values()
-    >>> lon_range = [lon[0], lon[-1]]
-    >>> lat_range = [lat[0], lat[-1]]
-    >>> wave_range = [wavelength[0], wavelength[-1]]
-    >>> animation = LineAnimator(data, plot_axis_index=-1,
-                                 axis_ranges=[time_range, lon_range, lat_range, wave_range])
-    >>> plt.show()
+    >>> animation = LineAnimator(data, plot_axis_index=-1)  # doctest: SKIP
+    >>> plt.show()  # doctest: SKIP
 
 Writing Your Own NDCubeSequence Plot Mixin
 ------------------------------------------
