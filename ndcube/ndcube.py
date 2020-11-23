@@ -343,7 +343,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             axes_coords[i] = axis_coord[tuple(slices)].T
 
         if not axes:
-            return axes_coords
+            return tuple(axes_coords)
 
         # Create a mapping from world index in the WCS to object index in axes_coords
         world_index_to_object_index = {}
