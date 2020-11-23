@@ -8,21 +8,29 @@ Visualization
 
 Visualizing NDCubes
 ===================
-`~ndcube.NDCube` provides a simple-to-use, yet powerful visualization method, `~ndcube.NDCube.plot`, which produces sensible visualizations based on the dimensionality of the data and optional user inputs.  It is intended to be a useful quicklook tool and not a replacement for high quality plots or animations, e.g. for publications.  The plot method can be called very simply.::
+`~ndcube.NDCube` provides a simple-to-use, yet powerful visualization method, `~ndcube.NDCube.plot`, which produces sensible visualizations based on the dimensionality of the data and optional user inputs.  It is intended to be a useful quicklook tool and not a replacement for high quality plots or animations, e.g. for publications.  The plot method can be called very simply.
+
+.. code-block:: python
 
   >>> my_cube.plot() # doctest: +SKIP
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.  For for data with two array axes, an image is produced similar to that of `matplotlib.pyplot.imshow`.  For a >2 array axes, an animation object is returned displaying either a line or image with sliders for each additional array axis.  These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
 
-Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.::
+Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
+
+.. code-block:: python
 
   >>> my_cube[0, 10:100, :].plot() # doctest: +SKIP
 
-No args are required. The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`. However optional keywords enable customization of the visualization.  For `~ndcube.NDCube` instances with more than one array axis, the ``plot_axes`` keyword is used to determine which array axes are displayed on which plot axes.  It is set to a list with a length equal to the number of array axes.  The array axis to be displayed on the x-axis is marked by ``'x'`` in the corresponding element of the ``plot_axes`` list, while the array axis for the y-axis is marked with a '``'y'``.  If no ``'y'`` axis is provided, a line animation is produced.  By default the ``plot_axes`` argument is set so that the last array axis to shown on the x-axis and the penultimate array axis is shown on the y-axis.::
+No args are required. The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`. However optional keywords enable customization of the visualization.  For `~ndcube.NDCube` instances with more than one array axis, the ``plot_axes`` keyword is used to determine which array axes are displayed on which plot axes.  It is set to a list with a length equal to the number of array axes.  The array axis to be displayed on the x-axis is marked by ``'x'`` in the corresponding element of the ``plot_axes`` list, while the array axis for the y-axis is marked with a '``'y'``.  If no ``'y'`` axis is provided, a line animation is produced.  By default the ``plot_axes`` argument is set so that the last array axis to shown on the x-axis and the penultimate array axis is shown on the y-axis.
+
+.. code-block:: python
 
   >>> my_cube.plot(plot_axes=[..., 'y', 'x']) # doctest: +SKIP
-  
-`~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.  This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.  It also enables the coordinates along the plot axes to be updated between frames of an animation. `ndcube.NDCube.plot` therefore allows users to decide which WCS object to use, either `~ndcube.NDCube.wcs` or `~ndcube.NDCube.combined_wcs` which also includes the `~ndcube.ExtraCoords`.  In principle, another third-part WCS can be used so long as it is a valid description of all array axes.::
+
+`~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.  This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.  It also enables the coordinates along the plot axes to be updated between frames of an animation. `ndcube.NDCube.plot` therefore allows users to decide which WCS object to use, either `~ndcube.NDCube.wcs` or `~ndcube.NDCube.combined_wcs` which also includes the `~ndcube.ExtraCoords`.  In principle, another third-part WCS can be used so long as it is a valid description of all array axes.
+
+.. code-block:: python
 
   >>> my_cube.plot(wcs=my_cube.combined_wcs)   # doctest: +SKIP
 
@@ -58,7 +66,7 @@ it may be useful to extract the data from the `~ndcube.NDCubeSequence` into sing
   ... 'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
   ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
   >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
-  
+
   >>> # Define time extra coordinates of time for each cube.
   >>> common_axis = 0
   >>> base_time = Time('2000-01-01', format='fits', scale='utc')
@@ -75,7 +83,7 @@ it may be useful to extract the data from the `~ndcube.NDCubeSequence` into sing
   >>> my_cube0 = NDCube(data0, input_wcs, extra_coords=extra_coords0)
   >>> my_cube1 = NDCube(data1, input_wcs, extra_coords=extra_coords1)
   >>> my_cube2 = NDCube(data2, input_wcs, extra_coords=extra_coords2)
-  
+
   >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2], common_axis=common_axis)
 
 To make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_sequence`.
@@ -106,13 +114,15 @@ and associated it with the ``common_axis``.  Therefore, we could do:
     >>> # Get intensity at pixel 0, 0, 0 in each cube.
     >>> intensity = np.array([cube.data[0, 0, 0] for cube in my_sequence])
     >>> times = Time([cube.axis_world_coords('time', wcs=cube.combined_wcs)[0][0] for cube in my_sequence])
-    >>> plt.plot(times.datetime, intensity)  # doctest: SKIP
-    >>> plt.xlabel("Time")  # doctest: SKIP
-    >>> plt.ylabel("Intensity")  # doctest: SKIP
-    >>> plt.show()  # doctest: SKIP
+    >>> plt.plot(times.datetime, intensity)  # doctest: +SKIP
+    >>> plt.xlabel("Time")  # doctest: +SKIP
+    >>> plt.ylabel("Intensity")  # doctest: +SKIP
+    >>> plt.show()  # doctest: +SKIP
 
 Alternatively, we could produce a 2D dynamic spectrum showing how the spectrum
-in a given pixel changes over time.::
+in a given pixel changes over time.
+
+.. code-block:: python
 
     >>> import matplotlib as mpl
     >>> import matplotlib.pyplot as plt
@@ -124,16 +134,16 @@ in a given pixel changes over time.::
     >>> # Assume that the wavelength in each pixel doesn't change as we move through the sequence.
     >>> wavelength = spectrum_sequence[0].axis_world_coords("em.wl")[0]
     >>> # As the times may not be uniform, we can use NonUniformImage to show non-uniform pixel sizes.
-    >>> fig, ax = plt.subplots(1, 1)  # doctest: SKIP
+    >>> fig, ax = plt.subplots(1, 1)  # doctest: +SKIP
     >>> im = mpl.image.NonUniformImage(
-    ...     ax, extent=(times[0], times[-1], wavelength[0], wavelength[-1]))
-    >>> im.set_data(wavelength, times.mjd, intensity)  # doctest: SKIP
-    >>> ax.add_image(im)  # doctest: SKIP
-    >>> ax.set_xlim(times.mjd[0], times.mjd[-1])  # doctest: SKIP
-    >>> ax.set_xlabel("Time [Modified Julian Day]")
-    >>> ax.set_ylim(wavelength[0].value, wavelength[-1].value)  # doctest: SKIP
-    >>> ax.set_ylabel(f"Wavelength [{wavelength.unit}]")
-    >>> plt.show()  # doctest: SKIP
+    ...     ax, extent=(times[0], times[-1], wavelength[0], wavelength[-1]))  # doctest: +SKIP
+    >>> im.set_data(wavelength, times.mjd, intensity)  # doctest: +SKIP
+    >>> ax.add_image(im)  # doctest: +SKIP
+    >>> ax.set_xlim(times.mjd[0], times.mjd[-1])  # doctest: +SKIP
+    >>> ax.set_xlabel("Time [Modified Julian Day]")  # doctest: +SKIP
+    >>> ax.set_ylim(wavelength[0].value, wavelength[-1].value)  # doctest: +SKIP
+    >>> ax.set_ylabel(f"Wavelength [{wavelength.unit}]")  # doctest: +SKIP
+    >>> plt.show()  # doctest: +SKIP
 
 Now let's say we want to animate our data, for example, show how the intensity
 changes over wavelength and time.
@@ -144,26 +154,30 @@ For example, non-linear coordinates non-independent coordinates.
 The difficulty and complexity in correctly representing this in a generalized way
 when dealing with a sequence of WCS objects is one reason plotting is currently
 no longer supported by `~ndcube.NDCubeSequence`.
-Nontheless, `~ndcube.visualization.animator.ImageAnimator` can still give us an idea
+Nontheless, `~sunpy.visualization.animator.ImageAnimator` can still give us an idea
 of how the data is changing.
 In ``my_sequence``, the sequence axis represents time, the 0th and 1st cube axes
 represent latittude and longitude, while the final axis represents wavelength.
-Therefore, we could do the following::
+Therefore, we could do the following.
 
-    >>> from sunpy.visualization.animator import ImageAnimator  # doctest: SKIP
+.. code-block:: python
+
+    >>> from sunpy.visualization.animator import ImageAnimator  # doctest: +SKIP
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
-    >>> animation = ImageAnimator(data, image_axes=[2, 1])  # doctest: SKIP
-    >>> plt.show()  # doctest: SKIP
+    >>> animation = ImageAnimator(data, image_axes=[2, 1])  # doctest: +SKIP
+    >>> plt.show()  # doctest: +SKIP
 
 Alternatively we can animate how the one 1-D spectrum changes by using
-`~ndcube.visualization.animator.LineAnimator`::
+`~sunpy.visualization.animator.LineAnimator`.
 
-    >>> from sunpy.visualization.animator import LineAnimator  # doctest: SKIP
+.. code-block:: python
+
+    >>> from sunpy.visualization.animator import LineAnimator  # doctest: +SKIP
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
-    >>> animation = LineAnimator(data, plot_axis_index=-1)  # doctest: SKIP
-    >>> plt.show()  # doctest: SKIP
+    >>> animation = LineAnimator(data, plot_axis_index=-1)  # doctest: +SKIP
+    >>> plt.show()  # doctest: +SKIP
 
 Writing Your Own NDCubeSequence Plot Mixin
 ------------------------------------------

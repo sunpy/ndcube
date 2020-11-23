@@ -72,7 +72,7 @@ axis types, `~ndcube.NDCube.dimensions` and `~ndcube.NDCube.array_axis_physical_
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
 
-`~ndcube.NDCube.dimensions` returns an `~astropy.units.Quantity` of pixel units giving the length of each dimension in the `~ndcube.NDCube` while `~ndcube.NDCube.array_axis_physical_types` returns tuples of strings denoting the types of physical properties represented by each array axis.  The tuples are arranged in array axis order.  As more than one physical type can be associated with an array axis, the length of each tuple can be greater than 1.  This is the case for the 1st and 2nd array array axes which are associated with the coupled world axes of helioprojective latitude and longitude. The axis names are in accordance with the International Virtual Observatory Alliance (IVOA) 
+`~ndcube.NDCube.dimensions` returns an `~astropy.units.Quantity` of pixel units giving the length of each dimension in the `~ndcube.NDCube` while `~ndcube.NDCube.array_axis_physical_types` returns tuples of strings denoting the types of physical properties represented by each array axis.  The tuples are arranged in array axis order.  As more than one physical type can be associated with an array axis, the length of each tuple can be greater than 1.  This is the case for the 1st and 2nd array array axes which are associated with the coupled world axes of helioprojective latitude and longitude. The axis names are in accordance with the International Virtual Observatory Alliance (IVOA)
 `UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
 
 `~ndcube.NDCube` provides many helpful features, specifically regarding coordinate transformations, slicing and visualization.  See the :ref:`cube_coordinates`, :ref:`cube_slicing` and :ref:`cube_plotting` sections.
@@ -151,7 +151,7 @@ Equivalent to `ndcube.NDCube.array_axis_physical_types`, `ndcube.NDCubeSequence.
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
-  
+
 Once again, we can see the physical types associated with each axis in the cube-like paradigm be calling `ndcube.NDCubeSequence.cube_like_array_axis_physical_types` .
 
 .. code-block:: python
@@ -289,8 +289,7 @@ We can also see the physical properties to which the aligned axes correspond by 
 .. code-block:: python
 
   >>> my_collection.aligned_axis_physical_types
-  [('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'),
-   ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat')]
+  [('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'), ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat')]
 
 This returns the a `list` of `tuple` giving the physical types that correspond to each aligned axis.  For each aligned axis, only physical types are associated with all the cubes in the collection are returned.  Note that there is no there is no requirement that all aligned axes must represent the same physical types.  They just have to be the same length.  Therefore, is it possible that this property returns no physical types.
 

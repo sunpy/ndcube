@@ -34,8 +34,8 @@ Now let's create an `~ndcube.ExtraCoords` instance and add our time extra coordi
 
   >>> from ndcube import ExtraCoords
   >>> my_extra_coords = ExtraCoords()
-  >>> my_extra_coords.add_coordinate('time', (0,), timestamps)
-  
+  >>> my_extra_coords.add_coordinate('time', (2,), timestamps)  # TO DO: Change the mapping to 0 when bug fixed.
+
 An indefinite number of coordinates can be added in this way.  Alternatively, we can generate an `~ndcube.ExtraCoords` object from a WCS.  The names of the coordinates can be accessed via the `~ndcube.ExtraCoords.keys` method.
 
 .. code-block:: python
@@ -51,16 +51,14 @@ Finally, the `~ndcube.ExtraCoords` object can be attached to an `~ndcube.NDCube`
 
   >>> from ndcube import NDCube
   >>> my_cube = NDCube(data, input_wcs, extra_coords=my_extra_coords)
-  
+
 If extra coordinates are present, their physical types are revealed by `~ndcube.NDCube.array_axis_physical_types`.
 
 .. code-block:: python
 
   >>> my_cube.array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
-  
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+
 .. _combined_wcs::
 
 Combined WCS
@@ -77,7 +75,7 @@ Sometimes coordinates are not associated with any axis.  Take the case of a 2-D 
 
   >>> import astropy.units as u
   >>> my_cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
-  
+
 `~ndcube.GlobalCoords` allows multiple coordinates of the same physical type.  Therefore when adding a global coordinate, you must provide a unique coordinate name, its physical time and the coordinate value.  The value of the coordinate can be accessed by indexing the `~ndcube.GlobalCoords` instance with the coordinate name.
 
 .. code-block:: python
@@ -98,7 +96,7 @@ Because `~ndcube.GlobalCoords` inherits from `Mapping`, it contains a number of 
 
   >>> list(my_cube.global_coords.keys())  # Returns a list of global coordinate names
   ['distance']
-  >>> list(my_cube.global_coords.values()  # Returns a list of coordinate values
+  >>> list(my_cube.global_coords.values())  # Returns a list of coordinate values
   [<Quantity 1. m>]
   >>> list(my_cube.global_coords.items())  # Returns a list of (name, value) pairs
   [('distance', <Quantity 1. m>)]
@@ -124,7 +122,7 @@ One of the most common use cases for `~ndcube.GlobalCoords` is associated with s
 
 NDCube Coordinate Transformations
 =================================
-WCS objects are a powerful and concise way of storing complex functional coordinate transformations.  However, their API be cumbersome when the coordinates along a whole axis is desired.  Making this process easy and intuitive is the purpose of `ndcube.NDCube.axis_world_coords`.  Using the information on the data dimensions and optional inputs from the user, this method returns high level coordinate objects -- e.g. `~astropy.coordinates.SKyCoord`, `~astropy.time.Time`, `~astropy.coordinates.SpectralCoord`, `~astropy.units.Quantity` -- containing the coordinates at each array element.  Let's say we wanted the wavelength values along the spectral axis of ``my_cube``.  We can do this in a couple ways.  First we can provide `~ndcube.NDCube.axis_world_coords` with the array axis number of the spectral axis.
+WCS objects are a powerful and concise way of storing complex functional coordinate transformations.  However, their API be cumbersome when the coordinates along a whole axis is desired.  Making this process easy and intuitive is the purpose of `ndcube.NDCube.axis_world_coords`.  Using the information on the data dimensions and optional inputs from the user, this method returns high level coordinate objects - e.g. `~astropy.coordinates.SkyCoord`, `~astropy.time.Time`, `~astropy.coordinates.SpectralCoord`, `~astropy.units.Quantity` - containing the coordinates at each array element.  Let's say we wanted the wavelength values along the spectral axis of ``my_cube``.  We can do this in a couple ways.  First we can provide `~ndcube.NDCube.axis_world_coords` with the array axis number of the spectral axis.
 
 .. code-block:: python
 
@@ -193,7 +191,9 @@ is in fact the default.
 
 By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the
 center of each pixel. However, the pixel edges can be obtained by setting
-the ``edges`` kwarg to ``True``. For example::
+the ``edges`` kwarg to ``True``. For example:
+
+.. code-block:: python
 
   >>> my_cube.axis_world_coords(edges=True)
   (<SpectralCoord [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>,
@@ -210,13 +210,13 @@ the ``edges`` kwarg to ``True``. For example::
         [(5759.75658812, -899.79647591), (5759.92104888,  899.95636786),
          (5760.08553469, 2699.84625127), (5760.25004555, 4499.59909505),
          (5760.41458147, 6298.94094507)]]>)
-         
+
 `~ndcube.NDCube.axis_world_coords` also allows the user to pick which WCS object should be used, `ndcube.NDCube.wcs` or `ndcube.NDCube.combined_wcs` by setting the ``wcs=`` keyword.  This means that extra_coords can be retrieved, or not, as the user wishes.
 
 .. code-block:: python
 
-  >>> my_cube.axis_world_coords(wcs=my_cube.combined_wcs)  # doctest: SKIP
-         
+  >>> combined_ccords = my_cube.axis_world_coords(wcs=my_cube.combined_wcs)
+
 Working with Raw Coordinates
 ............................
 
@@ -267,7 +267,7 @@ Now call `ndcube.NDCubeSequence.sequence_axis_coords`.
 
   >>> my_sequence.sequence_axis_coords
   {'distance': [<Quantity 1. m>, <Quantity 2. m>, <Quantity 3. m>]}
-  
+
 As with any `dict`, the coordinate names can be seen via the ``.keys()`` method, while the values of a coordinate can be retrieved by indexing with the coordinate name.
 
 .. code-block:: python

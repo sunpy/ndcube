@@ -31,7 +31,7 @@ To slice ``my_cube``, simply do something like:
 .. code-block:: python
 
   >>> my_cube_roi = my_cube[0:2, 1:4, 1:4]
-  
+
 Slicing can also reduce the dimensionality of an `~ndcube.NDCube`, e.g.:
 
 .. code-block:: python
@@ -146,7 +146,7 @@ Recall that, ``my_sequence`` has a shape of ``(<Quantity 3. pix>, <Quantity 3. p
 .. code-block:: python
 
   >>> my_sequence.cube_like_dimensions
-  (<Quantity 9. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+  <Quantity [9., 4., 5.] pix>
 
 Now say we want to extract the same region of interest as above, i.e. ``my_sequence[1, 0, 1:3, 1:4]``.  This can be achieved by entering:
 
@@ -225,7 +225,7 @@ To demonstrate, let's instantiate an `~ndcube.NDCollection` with aligned axes, a
   >>> # Enter my_cube, defined in a previous section, with the cube defined just above.
   >>> from ndcube import NDCollection
   >>> my_collection = NDCollection([("observations", my_cube), ("linewidths", linewidth_cube)],
-                                   aligned_axes=(0, 1))
+  ...                              aligned_axes=(0, 1))
 
 To slice an `~ndcube.NDCollection` you can simply do the following:
 
@@ -246,13 +246,13 @@ Note that we still have the same number of ND objects, but both have been sliced
   ...    'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.4, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 10}
   >>> linewidth_wcs_reversed = astropy.wcs.WCS(linewidth_wcs_dict_reversed)
   >>> linewidth_cube_reversed = NDCube(linewidth_data.transpose(), linewidth_wcs_reversed)
-  
+
   >>> my_collection_reversed = NDCollection([("observations", my_cube),
-                                             ("linewidths", linewidth_cube_reversed)],
-                                            aligned_axes=((0, 1), (1, 0)))
+  ...                                        ("linewidths", linewidth_cube_reversed)],
+  ...                                       aligned_axes=((0, 1), (1, 0)))
 
   >>> sliced_collection_reversed = my_collection_reversed[1:3, 3:8]
   >>> sliced_collection_reversed.keys()
   dict_keys(['observations', 'linewidths'])
   >>> sliced_collection_reversed.aligned_dimensions
-  <Quantity [2.0, 5.0] pix>
+  <Quantity [2.0, 1.0] pix>
