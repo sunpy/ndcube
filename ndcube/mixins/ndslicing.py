@@ -19,7 +19,9 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
 
-        return super().__getitem__(item)
+        sliced_cube = super().__getitem__(item)
+        sliced_cube._global_coords._internal_coords = self._global_coords._internal_coords
+        return sliced_cube
 
     def _slice(self, item):
         """Construct a set of keyword arguments to initialise a new (sliced)
