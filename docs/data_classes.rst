@@ -1,9 +1,9 @@
 .. _data_classes:
 
 ============
-Data Classes
+Data Objects
 ============
-ndcube provides its features via its data classes: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.
+ndcube provides its features via its data objects: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.
 This section describes the purpose of each and how they are structured and instantiated.
 To learn how to slice, visualize, and perform coordinate transformations with these classes, see the :ref:`slicing`, :ref:`plotting` and :ref:`coordinates` sections.
 
@@ -16,20 +16,40 @@ It's designed for managing a single data array and set of WCS transformations.
 `~ndcube.NDCube` provides unified slicing, visualization, coordinate conversion APIs as well as APIs for inspecting the data, coordinate transformations and metadata.
 `~ndcube.NDCube` does this in a way that is not specific to any number or physical type of axis.
 It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an array and a set of WCS transformations.
+This makes `~ndcube.NDCube` ideal as a base class for classes represent specific types of data, e.g. images.
+It enables developers and scientists to focus on developing what's needed for their specific research while leveraging standarized APIs for non-data-type-specific functionalities (e.g. slicing).
 Moreover, `~ndcube.NDCube` is agnostic to the fundamental array type in which the data is stored, as long as it behaves like a numpy array.
 Meanwhile, the WCS object can be any class, as long as it adhere's to the AstroPy `wcsapi (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_ specification.
-These features and flexibility make `~ndcube.NDCube` ideal for subclassing when creating tools for specific data types of data.
-It enables developers and scientists to focus on developing the tools needed for their specific research while leveraging standarized APIs for non-data-type-specific functionalities (e.g. slicing).
+
+Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can hold optional supplementary data in addition to its data array and primary WCS transformations.
+These include:
+general metadata (located at ``.meta``);
+the unit of the data (an `astropy.units.Unit` or unit `str` located at ``.unit``);
+the uncertainty of each data value (subclass of `astropy.nddata.NDUncertainty` located at ``.uncertainty``);
+and a mask marking unreliable data values (boolean array located at ``mask``).
+Note that in keeping the convention of `numpy.ma.masked_array`, ``True`` means that the corresponding data value is masked, i.e. it is bad data, while ``False`` signifies good data.
+`~ndcube.NDCube` also provides classes for representing additional coordinates not included in the primary WCS object.
+These are `~ndcube.ExtraCoords` (located at ``.extra_coords``) - for additional coordinates associated with specific data axes - and `~ndcube.GlobalCoords` (located at ``.global_coords``) for scalar coordinates associated with the `~ndcube.NDCube` as a whole.
+These are discussed in :ref:`coordinates`.
+
+The figure below tries to make it easier to visualize and `~ndcube.NDCube` instance and the relationships between its components.
+Array-based components are in blue (``.data``, ``.uncertainty``, and ``.mask``), metadata components in green (``.meta`` and ``.unit``), and coordinate components in red (``.wcs``, ``.extra_coords``, and ``.global_coords``).
+Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~ndcube.NDCube`.
+
+.. image:: images/ndcube_diagram.png
+  :width: 400
+  :alt: Components of an NDCube
+
 
 Initialize an NDCube
 --------------------
 To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarray`-like array containing the data and an APE-14-compliant WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
-Let's create a 3-D array of data with shape ``(3, 4, 5)`` where every value is 1.
+Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values.
 
 .. code-block:: python
 
   >>> import numpy as np
-  >>> data = np.ones((3, 4, 5))
+  >>> data = np.random.rand((3, 4, 5))
 
 Now let's create an `astropy.wcs.WCS` object.
 Let the first world axis be wavelength, the second be helioprojective longitude, the third be helioprojective latitude.
@@ -53,16 +73,11 @@ Now we can create an `~ndcube.NDCube`.
   >>> my_cube = NDCube(data, input_wcs)
 
 The data array is stored in ``mycube.data`` while the WCS object is stored in ``my_cube.wcs``.
-However, when manipulating/slicing the data it is better to slice the object as a whole.
-(See section on :ref:`ndcube_slicing`.)
-So the ``.data`` attribute should only be used to access specific raw data values.
+The ``.data`` attribute should only be used to access specific raw data values.
+When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` instance as a whole so as to ensure that supporting data - e.g. coordinates, uncertainties, mask - remain consistent.
+(See :ref:`cube_slicing`.)
 
-Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can also hold additional supplementary data including:
-metadata located at `NDCube.meta`;
-an uncertainty array located at `NDCube.uncertainty` (subclass of `astropy.nddata.NDUncertainty`) describing the uncertainty of each data array value;
-a data unit (`astropy.units.Unit` or unit `str`);
-and a mask (boolean array), located at `NDCube.mask`, marking reliable and unreliable pixels.
-Note that in keeping the convention of `numpy.ma.masked_array` ``True`` means that the corresponding data array axis is masked, i.e. it is bad data, while ``False`` signifies good data.
+To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can  the following:
 
 .. code-block:: python
 
@@ -73,6 +88,8 @@ Note that in keeping the convention of `numpy.ma.masked_array` ``True`` means th
   >>> meta = {"Description": "This is example NDCube metadata."}
   >>> my_cube = NDCube(data, input_wcs, uncertainty=uncertainty, mask=mask,
   ...                  meta=meta, unit=u.ct)
+
+Generating `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` objects and attaching them to your `~ndcube.NDCube` is demonstrated in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
 Dimensions and Physical Types
 -----------------------------
@@ -131,7 +148,7 @@ Let's first define three 3-D NDCubes for slit-spectrograph data as we did in the
 
   >>> # Define data for cubes
   >>> import numpy as np
-  >>> data0 = np.ones((3, 4, 5))
+  >>> data0 = np.random.rand((3, 4, 5))
   >>> data1 = data0 * 2
   >>> data2 = data1 * 2
 
@@ -257,7 +274,7 @@ Let's use ``my_cube`` defined above as our observations cube and define a "linew
 .. code-block:: python
 
   >>> # Define derived linewidth NDCube
-  >>> linewidth_data = np.ones((3, 4)) / 2 # dummy data
+  >>> linewidth_data = np.random.rand((3, 4)) / 2 # dummy data
   >>> linewidth_wcs_dict = {
   ...    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 20,
   ...    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 10}
@@ -351,7 +368,7 @@ Note that there is no there is no requirement that all aligned axes must represe
 They just have to be the same length.
 Therefore, is it possible that this property returns no physical types.
 
-The real power behing `~ndcube.NDCollection.aligned_axes` is that is enables all objects within the `~ndcube.NDCollection` to be sliced along the aligned axes simultaneously form the `~ndcube.NDCollection` level.
+The real power behind `~ndcube.NDCollection.aligned_axes` is that it enables all objects within the `~ndcube.NDCollection` to be sliced along the aligned axes simultaneously from the `~ndcube.NDCollection` level.
 This allows users to quickly and accurately crop their entire data set to a region of interest, thereby speeding up their analysis workflow.
 See the :ref:`collection_slicing` to see this in action.
 
