@@ -4,7 +4,7 @@
 Installing ndcube
 =================
 
-ndcube requires Python 3.5+, SunPy 0.9+, astropy and matplotlib.
+ndcube requires Python 3.5+, astropy 4.2+, and matplotlib.
 
 Installing the Stable Version
 -----------------------------
