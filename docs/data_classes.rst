@@ -123,20 +123,32 @@ NDCubeSequence
 The `~ndcube.NDCube` objects within an `~ndcube.NDCubeSequence` must be have the same shape and physical types associated with each axis.
 They must also be arranged in some order.
 The direction in which the cubes are ordered is referred to as the "sequence axis".
-The sequence axis can be in addition and perpendicular to the cubes' axes, or parallel to one, i.e. they can be arranged in order along one of the cubes' axes.
-For example, say we have two images with a shape of 512 x 512 represented by two 2-D `~ndcube.NDCube` objects.
-Let's also say they that were taken at two different times, but that their WCS transformations only describe their celestial coordinates.
+For example, say we have four images with a shape of 512 x 512 represented by four 2-D `~ndcube.NDCube` objects.
+Let's also say they that were taken at different times, but that their WCS transformations only describe their celestial coordinates.
 We can place these `~ndcube.NDCube` objects into a `~ndcube.NDCubeSequence` where the sequence axis acts as a 3rd axis representing time.
-Thus, the data set has an effective shape of ``(2, 512, 512)``.
-However, say those two images are of adjacent regions of the sky.
-In that case there is an ordering in one of the spatial axes, say the first.
-If we set the common axis to that cube axis (``common_axis=0``), then we can also treat the data as if it were a single cube with a shape of ``(1024, 512)``.
+Thus, the data set has an effective shape of ``(4, 512, 512)``.
+This is shown in panel a) in the figure below.
+The cubes are represented as blue squares (representing its array-based data) inset with a smaller red square (representing its coordinates and metadata).
+The 2-D cubes are stacked in a 3rd dimension labeled "sequence axis".
 
-Setting a common axis is optional and if one is not set it simply means can only treat the data as if it were an N+1-D cube.
-However if a common axis is set, it does not prevent the user from treating the data as an N+1-D cube.
+.. image:: images/ndcubesequence_diagram.png
+  :width: 400
+  :alt: Schematic of an NDCubeSequence and its two configurations.
+
+However, let's also say that the images represent tiles in a mosaic that, when combined, form a map of the sky much larger than the field of view of the instrument.
+Thus the images represent adjacent regions of the sky.
+In that case the cubes are not only ordered in time, but also along one of their spatial axes.
+Another way of saying this is that the sequence axis is parallel to one of the cubes' axes.
+The cube axis that's parallel to the sequence axis is known as the common axis.
+Let's say in our example that the common axis is the x-axis of the cubes.
+Thus, we can also treat the data set as if it were a single image with a shape of ``(2048, 512)``.
+See panel b) of the figure above.
+
+Setting a common axis is optional and if one is not set it simply means can only treat the data in configuration a) in the figure above.
+However if a common axis is set, it means the users can treat the data in configuration a) or b).
 `~ndcube.NDCubeSequence` has different versions of its methods whose names are prefixed with ``cube_like`` that account for the common axis.
 Equivalent non-cube-like methods do not.
-This allows users to switch back and forth between the N+1-D and concatenated N-D data models as their use cases require.
+This allows users to switch back and forth between configurations a) and b) as their use case demands.
 This flexibility makes `~ndcube.NDCubeSequence` a powerful tool when handling complex N-D dimensional data described by different but comparable coordinate transformations.
 
 Initializing an NDCubeSequence
