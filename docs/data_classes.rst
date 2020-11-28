@@ -44,33 +44,11 @@ Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~
 Initialize an NDCube
 --------------------
 To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarray`-like array containing the data and an APE-14-compliant WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
-Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values.
+Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.  Remember that due to convention, the order of WCS axes is reversed relative to the data array.
 
 .. code-block:: python
-
-  >>> import numpy as np
-  >>> data = np.random.rand((3, 4, 5))
-
-Now let's create an `astropy.wcs.WCS` object.
-Let the first world axis be wavelength, the second be helioprojective longitude, the third be helioprojective latitude.
-Remember that due to convention, the order WCS axes is reversed relative to the data array.
-This means that the first two array axes will correspond to helioprojective latitude and longitude and the third to wavelength.
-
-.. code-block:: python
-
-  >>> import astropy.wcs
-  >>> wcs_input_dict = {
-  ... 'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-  ... 'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-  ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
-  >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
-
-Now we can create an `~ndcube.NDCube`.
-
-.. code-block:: python
-
-  >>> from ndcube import NDCube
-  >>> my_cube = NDCube(data, input_wcs)
+   :linenos:
+   .. literalinclude:: sample_code/simple_ndcube.py
 
 The data array is stored in ``mycube.data`` while the WCS object is stored in ``my_cube.wcs``.
 The ``.data`` attribute should only be used to access specific raw data values.
