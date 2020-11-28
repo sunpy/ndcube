@@ -5,7 +5,7 @@ from ndcube import NDCube
 
 # Define data array
 data = np.random.rand(3, 4, 5)
-data =
+data = k
 # Define WCS transformations in an astropy WCS object.
 wcs = astropy.wcs.WCS(naxis=3)
 wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
