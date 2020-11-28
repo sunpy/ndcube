@@ -62,8 +62,9 @@ To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncer
    .. literalinclude:: sample_code/ndcube_data_wcs.py
    :lines: 16-17
    .. literalinclude:: sample_code/ndcube_uncert_mask_meta_unit.py
+   :lines: 4-10
    .. literalinclude:: sample_code/simple_ndcube.py
-   :lines: 3-5
+   :lines: 5-
 
 Generating `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` objects and attaching them to your `~ndcube.NDCube` is demonstrated in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
