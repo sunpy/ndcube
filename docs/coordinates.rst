@@ -1,4 +1,4 @@
-.. _coordinates::
+.. _coordinates:
 
 =============================
 Coordinates and ndcube Objects
@@ -19,7 +19,7 @@ But first let's recreate the data and WCS components of an `~ndcube.NDCube` for 
   ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
   >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
-.. _extra_coords::
+.. _extra_coords:
 
 ExtraCoords
 ===========
@@ -72,7 +72,7 @@ If extra coordinates are present, their physical types are revealed by `~ndcube.
   >>> my_cube.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
-.. _combined_wcs::
+.. _combined_wcs:
 
 Combined WCS
 ------------
@@ -249,7 +249,7 @@ This means that extra_coords can be retrieved, or not, as the user wishes.
 
 .. code-block:: python
 
-  >>> combined_ccords = my_cube.axis_world_coords(wcs=my_cube.combined_wcs)
+  >>> combined_coords = my_cube.axis_world_coords(wcs=my_cube.combined_wcs)
 
 Working with Raw Coordinates
 ............................
@@ -266,7 +266,7 @@ However for some use cases this level of completeness is not needed.
 
   >>> coord_values = my_cube.axis_world_coords_values()
 
-.. _sequence_coordinates::
+.. _sequence_coordinates:
 
 NDCubeSequence Coordinate Transformations
 =========================================

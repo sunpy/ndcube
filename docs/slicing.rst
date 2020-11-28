@@ -1,13 +1,13 @@
-.. _slicing::
+.. _slicing:
 
-======================
-Slicing ndcube Objects
-======================
+==================
+Slicing ND Objects
+==================
 Arguably the most useful feature ndcube provides is the slicing of its data classes.
 Users can apply the standard slicing notation to ND objects (or real world coordinates in the case of `ndcube.NDCube.crop`) which alter the data and WCS transformations consistently and simultaneously.
 This enables users to rapidly and reliably identify and extract regions of interest in their data, thereby allowing them to move closer to the speed of thought during their analysis.
 
-.. _cube_slicing::
+.. _cube_slicing:
 
 Slicing NDCubes
 ===============
@@ -74,7 +74,7 @@ It does not rebin or interpolate the data.  The order of the high level coordina
   >>> upper_corner = [wave_range[-1], sky_range[-1]]
   >>> my_cube_roi = my_cube.crop(lower_corner, upper_corner)
 
-.. _slicing_sequence::
+.. _slicing_sequence:
 
 Slicing NDCubeSequences
 =======================
@@ -216,7 +216,7 @@ In cube-like indexing this corresponds to slices 2 to 7 along to their 1st cube 
 Notice that since the sub-cubes are now of different lengths along the common axis, the corresponding `~astropy.units.Quantity` gives the
 lengths of each cube individually.
 
-.. _collection_slicing::
+.. _collection_slicing:
 
 Slicing NDCollections
 =====================
