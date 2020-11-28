@@ -46,10 +46,7 @@ Initialize an NDCube
 To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarray`-like array containing the data and an APE-14-compliant WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
 Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.  Remember that due to convention, the order of WCS axes is reversed relative to the data array.
 
-.. code-block:: python
-   .. literalinclude:: sample_code/ndcube_data_wcs.py
-   .. literalinclude:: sample_code/simple_ndcube.py
-   :lines: 2-5
+.. include:: code_block/instantiate_simple_ndcube.rst
 
 The data array is stored in ``mycube.data`` while the WCS object is stored in ``my_cube.wcs``.
 The ``.data`` attribute should only be used to access specific raw data values.
@@ -58,13 +55,7 @@ When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` in
 
 To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can  the following:
 
-.. code-block:: python
-   .. literalinclude:: sample_code/ndcube_data_wcs.py
-   :lines: 16-17
-   .. literalinclude:: sample_code/ndcube_uncert_mask_meta_unit.py
-   :lines: 4-10
-   .. literalinclude:: sample_code/simple_ndcube.py
-   :lines: 5-
+.. include:: code_block/instantiate_ndcube.rst
 
 Generating `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` objects and attaching them to your `~ndcube.NDCube` is demonstrated in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
