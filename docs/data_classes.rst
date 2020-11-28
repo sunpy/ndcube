@@ -47,8 +47,9 @@ To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarra
 Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.  Remember that due to convention, the order of WCS axes is reversed relative to the data array.
 
 .. code-block:: python
-   :linenos:
+   .. literalinclude:: sample_code/ndcube_data_wcs.py
    .. literalinclude:: sample_code/simple_ndcube.py
+   :lines: 2-5
 
 The data array is stored in ``mycube.data`` while the WCS object is stored in ``my_cube.wcs``.
 The ``.data`` attribute should only be used to access specific raw data values.
