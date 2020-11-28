@@ -59,14 +59,11 @@ When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` in
 To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can  the following:
 
 .. code-block:: python
-
-  >>> import astropy.units as u
-  >>> from astropy.nddata import StdDevUncertainty
-  >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
-  >>> mask = np.zeros_like(my_cube.data, dtype=bool)
-  >>> meta = {"Description": "This is example NDCube metadata."}
-  >>> my_cube = NDCube(data, input_wcs, uncertainty=uncertainty, mask=mask,
-  ...                  meta=meta, unit=u.ct)
+   .. literalinclude:: sample_code/ndcube_data_wcs.py
+   :lines: 16-17
+   .. literalinclude:: sample_code/ndcube_uncert_mask_meta_unit.py
+   .. literalinclude:: sample_code/simple_ndcube.py
+   :lines: 3-5
 
 Generating `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` objects and attaching them to your `~ndcube.NDCube` is demonstrated in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
