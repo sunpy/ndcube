@@ -45,20 +45,15 @@ Having defined our `~ndcube.NDCube` as before:
 
 The plot method can be called very simply.
 
-.. code-block:: python
-
-  >>> my_cube.plot() # doctest: +SKIP
-
-For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
-
 .. plot::
   :include-source:
 
   >>> import matplotlib.pyplot as plt
-  >>> ax = my_cube[0, 0,].plot()
+  >>> ax = my_cube.plot()
   >>> plt.show()
 
-
+For a >2 array axes, as is the case here, an animation object is returned displaying either a line or image with sliders for each additional array axis.
+These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
 For for data with two array axes, an image is produced similar to that of `matplotlib.pyplot.imshow`.
 
 .. plot::
@@ -67,9 +62,13 @@ For for data with two array axes, an image is produced similar to that of `matpl
   >>> ax = my_cube[0].plot()
   >>> plt.show()
 
+For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
-For a >2 array axes, an animation object is returned displaying either a line or image with sliders for each additional array axis.
-These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
+.. plot::
+  :include-source:
+
+  >>> ax = my_cube[0, 0,].plot()
+  >>> plt.show()
 
 Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
 
