@@ -59,8 +59,8 @@ For for data with two array axes, an image is produced similar to that of `matpl
 .. plot::
   :include-source:
 
-  >>> ax = my_cube[0].plot()
-  >>> plt.show()
+  ax = my_cube[0].plot()
+  plt.show()
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
