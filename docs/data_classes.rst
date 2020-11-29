@@ -1,8 +1,8 @@
 .. _data_classes:
 
-============
-Data Objects
-============
+==========
+ND Objects
+==========
 ndcube provides its features via its data objects: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.
 This section describes the purpose of each and how they are structured and instantiated.
 To learn how to slice, visualize, and perform coordinate transformations with these classes, see the :ref:`slicing`, :ref:`plotting` and :ref:`coordinates` sections.
@@ -37,7 +37,7 @@ Array-based components are in blue (``.data``, ``.uncertainty``, and ``.mask``),
 Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~ndcube.NDCube`.
 
 .. image:: images/ndcube_diagram.png
-  :width: 400
+  :width: 800
   :alt: Components of an NDCube
 
 

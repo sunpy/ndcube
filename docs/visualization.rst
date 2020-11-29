@@ -1,8 +1,8 @@
 .. _plotting
 
-==========================
-Visualizing ndcube Objects
-==========================
+======================
+Visualizing ND Objects
+======================
 
 .. _cube_plotting
 
@@ -10,6 +10,39 @@ Visualizing NDCubes
 ===================
 `~ndcube.NDCube` provides a simple-to-use, yet powerful visualization method, `~ndcube.NDCube.plot`, which produces sensible visualizations based on the dimensionality of the data and optional user inputs.
 It is intended to be a useful quicklook tool and not a replacement for high quality plots or animations, e.g. for publications.
+Having defined our `~ndcube.NDCube` as before:
+
+.. code-block:: python
+
+  >>> import astropy.units as u
+  >>> import astropy.wcs
+  >>> import numpy as np
+  >>> from astropy.nddata import StdDevUncertainty
+
+  >>> from ndcube import NDCube
+
+  >>> # Define data array.
+  >>> data = np.random.rand(4, 4, 5)
+
+  >>> # Define WCS transformations in an astropy WCS object.
+  >>> wcs = astropy.wcs.WCS(naxis=3)
+  >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+  >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
+  >>> wcs.wcs.crpix = 0, 2, 2
+  >>> wcs.wcs.crval = 10, 0.5, 1
+
+  >>> # Define mask.  Initially set all elements unmasked.
+  >>> mask = np.zeros_like(data, dtype=bool)
+  >>> mask[0, 0][:] = True  # Now mask some values.
+  >>> # Define uncertainty, metadata and unit.
+  >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
+  >>> meta = {"Description": "This is example NDCube metadata."}
+  >>> unit = u.ct
+
+  >>> # Instantiate NDCube with supporting data.
+  >>> my_cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta, unit=unit)
+
 The plot method can be called very simply.
 
 .. code-block:: python
@@ -17,15 +50,34 @@ The plot method can be called very simply.
   >>> my_cube.plot() # doctest: +SKIP
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
+
+.. plot::
+  :include-source:
+
+  >>> import matplotlib.pyplot as plt
+  >>> ax = my_cube[0, 0,].plot()
+  >>> plt.show()
+
+
 For for data with two array axes, an image is produced similar to that of `matplotlib.pyplot.imshow`.
+
+.. plot::
+  :include-source:
+
+  >>> ax = my_cube[0].plot()
+  >>> plt.show()
+
+
 For a >2 array axes, an animation object is returned displaying either a line or image with sliders for each additional array axis.
 These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
 
 Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
 
-.. code-block:: python
+.. plot::
+  :include-source:
 
-  >>> my_cube[0, 10:100, :].plot() # doctest: +SKIP
+  >>> ax = my_cube[0, 1:3, :].plot()
+  >>> plt.show()
 
 No args are required.
 The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
@@ -35,9 +87,11 @@ The array axis to be displayed on the x-axis is marked by ``'x'`` in the corresp
 If no ``'y'`` axis is provided, a line animation is produced.
 By default the ``plot_axes`` argument is set so that the last array axis to shown on the x-axis and the penultimate array axis is shown on the y-axis.
 
-.. code-block:: python
+.. plot::
+  :include-source:
 
-  >>> my_cube.plot(plot_axes=[..., 'y', 'x']) # doctest: +SKIP
+  >>> ax = my_cube[0].plot(plot_axes=[..., 'y', 'x'])
+  >>> plt.show()
 
 `~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.
 This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.
@@ -45,9 +99,11 @@ It also enables the coordinates along the plot axes to be updated between frames
 `ndcube.NDCube.plot` therefore allows users to decide which WCS object to use, either `~ndcube.NDCube.wcs` or `~ndcube.NDCube.combined_wcs` which also includes the `~ndcube.ExtraCoords`.
 In principle, another third-part WCS can be used so long as it is a valid description of all array axes.
 
-.. code-block:: python
+.. plot::
+  :include-source:
 
-  >>> my_cube.plot(wcs=my_cube.combined_wcs)   # doctest: +SKIP
+  >>> ax = my_cube[0].plot(wcs=my_cube.combined_wcs) 
+  >>> plt.show()
 
 Visualizing NDCubeSequences
 ===========================
