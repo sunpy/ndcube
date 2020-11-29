@@ -144,7 +144,7 @@ Say we have three NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4,
   >>> data0 = np.random.rand(*shape)
   >>> data1 = np.random.rand(*shape)
   >>> data2 = np.random.rand(*shape)
-  >>> data4 = np.random.rand(*shape)
+  >>> data3 = np.random.rand(*shape)
 
   >>> # Define WCS transformations. Let all cubes have same WCS.
   >>> wcs = astropy.wcs.WCS(naxis=3)

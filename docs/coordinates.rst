@@ -1,6 +1,6 @@
 .. _coordinates:
 
-=============================
+==============================
 Coordinates and ndcube Objects
 ==============================
 In the :ref:`ndcube` section we showed how `~ndcube.NDCube`'s slicing ensures the coordinate transformations remain consistent with the data as it is sliced.
