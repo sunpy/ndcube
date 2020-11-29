@@ -52,15 +52,16 @@ The plot method can be called very simply.
   >>> ax = my_cube.plot()
   >>> plt.show()
 
-For a >2 array axes, as is the case here, an animation object is returned displaying either a line or image with sliders for each additional array axis.
+For a >2 array axes, as is the case above, an animation object is returned displaying either a line or image with sliders for each additional array axis.
 These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
+
 For for data with two array axes, an image is produced similar to that of `matplotlib.pyplot.imshow`.
 
 .. plot::
   :include-source:
 
-  ax = my_cube[0].plot()
-  plt.show()
+  >>> ax = my_cube[0].plot()
+  >>> plt.show()
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
@@ -101,7 +102,7 @@ In principle, another third-part WCS can be used so long as it is a valid descri
 .. plot::
   :include-source:
 
-  >>> ax = my_cube[0].plot(wcs=my_cube.combined_wcs) 
+  >>> ax = my_cube[0].plot(wcs=my_cube[0].combined_wcs) 
   >>> plt.show()
 
 Visualizing NDCubeSequences
