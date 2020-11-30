@@ -32,7 +32,7 @@ Note that in keeping the convention of `numpy.ma.masked_array`, ``True`` means t
 These are `~ndcube.ExtraCoords` (located at ``.extra_coords``) - for additional coordinates associated with specific data axes - and `~ndcube.GlobalCoords` (located at ``.global_coords``) for scalar coordinates associated with the `~ndcube.NDCube` as a whole.
 These are discussed in :ref:`coordinates`.
 
-The figure below tries to make it easier to visualize and `~ndcube.NDCube` instance and the relationships between its components.
+The figure below shows a schematic of an `~ndcube.NDCube` instance and the relationships between its components.
 Array-based components are in blue (``.data``, ``.uncertainty``, and ``.mask``), metadata components in green (``.meta`` and ``.unit``), and coordinate components in red (``.wcs``, ``.extra_coords``, and ``.global_coords``).
 Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~ndcube.NDCube`.
 
