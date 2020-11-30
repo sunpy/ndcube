@@ -21,7 +21,7 @@ To demonstrate `~ndcube.NDCube`'s slicing in action, let's first recreate the `~
 
 To slice ``my_cube``, simply do something like:
 
-.. code-block:: python
+.. expanding-code-block:: python
 
   >>> import astropy.units as u
   >>> import astropy.wcs
