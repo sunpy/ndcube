@@ -44,7 +44,9 @@ Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~
 Initialize an NDCube
 --------------------
 To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarray`-like array containing the data and an APE-14-compliant WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
-Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.  Remember that due to convention, the order of WCS axes is reversed relative to the data array.
+Let's create a 3-D array of data with shape ``(4, 4, 5)`` and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.
+This could represent images of the Sun taken at different wavelengths.
+Remember that due to convention, the order of WCS axes is reversed relative to the data array.
 
 .. code-block:: python
 

@@ -67,13 +67,16 @@ For for data with two array axes, an image is produced similar to that of `matpl
   >>> ax = my_cube[0].plot()
   >>> plt.show()
 
+Note that the bottom row is of the image is empty because those array elements are marked ``True`` is ``.mask``.
+
+
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
 .. plot::
   :context:
   :include-source:
 
-  >>> ax = my_cube[0, 0,].plot()
+  >>> ax = my_cube[1, 1].plot()
   >>> plt.show()
 
 Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
@@ -82,7 +85,7 @@ Setting the x and y ranges of the plot can be done simply by indexing the `~ndcu
   :context:
   :include-source:
 
-  >>> ax = my_cube[0, 1:3, :].plot()
+  >>> ax = my_cube[0, 1:3, 1:4].plot()
   >>> plt.show()
 
 No args are required.
@@ -97,7 +100,7 @@ By default the ``plot_axes`` argument is set so that the last array axis to show
   :context:
   :include-source:
 
-  >>> ax = my_cube[0].plot(plot_axes=[..., 'y', 'x'])
+  >>> ax = my_cube.plot(plot_axes=[None, 'x', 'y'])
   >>> plt.show()
 
 `~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.
@@ -110,7 +113,7 @@ In principle, another third-part WCS can be used so long as it is a valid descri
   :context:
   :include-source:
 
-  >>> ax = my_cube[0].plot(wcs=my_cube[0].combined_wcs)
+  >>> ax = my_cube.plot(wcs=my_cube.combined_wcs)
   >>> plt.show()
 
 Visualizing NDCubeSequences

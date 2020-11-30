@@ -28,13 +28,14 @@ ExtraCoords
 ===========
 In the :ref:`ndcube` section we saw that the WCS object stored at `nducbe.NDCube.wcs` contains the primary set of coordinate transformations that describe the data.
 However, what if we have alternative or additional coordinates that are not represented by the WCS?
-For example, say we have a raster scan from a scanning slit spectrograph whose x-axis is folded in with time because the x-axis is built up over sequential exposures taken at different slit positions.
-In this case our WCS might describe latitude and longitude, but omit time.
-How can we represent time without having to construct a whole new custom WCS object?
-The answer is by using the `ndcube.ExtraCoords` class.
+For example, say we have a raster scan from a scanning slit spectrograph whose x-axis is folded in with time.
+This occurs because the x-axis is built up over sequential exposures taken at different slit positions.
+Our WCS might describe latitude and longitude, but omit time.
+So how can we represent time without having to construct a whole new custom WCS object?
+One way is to use the `ndcube.ExtraCoords` class.
 It provides users with a mechanism of attaching coordinates to their `~ndcube.NDCube` instances in addition to those in the primary WCS object.
 This may be desired because, as above, the primary WCS omits a physical type.
-Or it may be because the users have an alternative set of coordinates that they would like to be able to keep seperate from the primary set at ``.wcs`` for some reason.
+Or it may be that the users have an alternative set of coordinates that they would like to be able to keep separate from the primary set at ``.wcs`` for some reason.
 To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~astropy.time.Time` object representing the time at each element along the first axis of the ``data`` arrar defined above.
 
 .. code-block:: python
@@ -271,7 +272,7 @@ Working with Raw Coordinates
 If users would prefer not to deal with high level coordinate objects, they can elect to use `ndcube.NDCube.axis_world_coords_values`.
 The API for this method is the same as `~ndcube.NDCube.axis_world_coords`.
 The only difference is that `~astropy.units.Quantity` objects are returned, one for each physical type requested.
-In the above case this means that there would be seperate `~astropy.units.Quantity` objects for latitude and longitude, but they would both have the same 2-D shape.
+In the above case this means that there would be separate `~astropy.units.Quantity` objects for latitude and longitude, but they would both have the same 2-D shape.
 The `~astropy.units.Quantity` objects are returned in world order and correspond to the physical types in the `~astropy.wcs.WCS.world_axis_physical_types`.
 The `~astropy.units.Quantity` objects do not contain important contextual information, such as reference frame, which is needed to fully interpret the coordinate values.
 However for some use cases this level of completeness is not needed.
