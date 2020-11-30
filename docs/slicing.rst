@@ -94,6 +94,7 @@ However, the wavelength value at the location where the `~ndcube.NDCube` was sli
   >>> my_2d_cube.global_coords['em.wl']  # doctest: +SKIP
 
 This is true for all coordinates, in both the ``.wcs`` and ``.extra_coords`` objects, that no longer correspond to any array axes after slicing.
+See the :ref:`global_coords` section for more.
 
 .. _ndcube_crop::
 
@@ -198,7 +199,7 @@ We can confirm the dimensionality and physical types of the new sequence by chec
 .. code-block:: python
 
   >>> regions_of_interest_in_sequence.dimensions
-  (<Quantity 2. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
+  (<Quantity 3. pix>, <Quantity 2. pix>, <Quantity 2. pix>, <Quantity 2. pix>, )
   >>> regions_of_interest_in_sequence.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),

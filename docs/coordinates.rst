@@ -1,12 +1,10 @@
 .. _coordinates:
 
-==============================
-Coordinates and ndcube Objects
-==============================
-In the :ref:`ndcube` section we showed how `~ndcube.NDCube`'s slicing ensures the coordinate transformations remain consistent with the data as it is sliced.
+==========================
+Coordinate Transformations
+==========================
 In this section we will discuss the many other ways in which the ndcube classes support the integration of data and its coordinates.
-
-But first let's recreate the data and WCS components of an `~ndcube.NDCube` for use in our demonstration.
+Let's start by first recreating the data and WCS components of an `~ndcube.NDCube` for use in our demonstration.
 
 .. code-block:: python
 
@@ -24,9 +22,15 @@ But first let's recreate the data and WCS components of an `~ndcube.NDCube` for 
 ExtraCoords
 ===========
 In the :ref:`ndcube` section we saw that the WCS object stored at `nducbe.NDCube.wcs` contains the primary set of coordinate transformations that describe the data.
-However, what if you have alternative or additional coordinates that are not represented by the WCS?
-The `ndcube.ExtraCoords` class provides users with a mechanism of attaching such coordinates to their `~ndcube.NDCube` instances.
-Let's start by creating a `~astropy.time.Time` object representing the times corresponding to each position along the 1st axis of the data array defined above.
+However, what if we have alternative or additional coordinates that are not represented by the WCS?
+For example, say we have a raster scan from a scanning slit spectrograph whose x-axis is folded in with time because the x-axis is built up over sequential exposures taken at different slit positions.
+In this case our WCS might describe latitude and longitude, but omit time.
+How can we represent time without having to construct a whole new custom WCS object?
+The answer is by using the `ndcube.ExtraCoords` class.
+It provides users with a mechanism of attaching coordinates to their `~ndcube.NDCube` instances in addition to those in the primary WCS object.
+This may be desired because, as above, the primary WCS omits a physical type.
+Or it may be because the users have an alternative set of coordinates that they would like to be able to keep seperate from the primary set at ``.wcs`` for some reason.
+To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~astropy.time.Time` object representing the times corresponding to each position along the 1st axis of the data array defined above.
 
 .. code-block:: python
 
@@ -89,13 +93,13 @@ The time at which that image was taken is important piece of coordinate informat
 But because the data does not have a 3rd dimension, it cannot be stored in the WCS or `~ndcube.ExtraCoords` objects.
 Storing such coordinates is the role of the `ndcube.GlobalCoords` class.
 `~ndcube.NDCube` is instatiated with an empty `~ndcube.GlobalCoords` object already attached at `ndcube.NDCube.global_coords`.
+Coordinates can be added to this object if and when the user sees fit.
 Let's attach a scalar global coordinate to ``my_cube`` representing some kind of distance.
 We do by supplying the coordinate's name, physical type and value via the `~ndcube.GlobalCoords.add` method.
 
 .. code-block:: python
 
   >>> import astropy.units as u
-  >>> my_cube = NDCube(data, input_wcs)
   >>> my_cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
 
 `~ndcube.GlobalCoords` allows multiple coordinates of the same physical type.
@@ -125,9 +129,9 @@ Because `~ndcube.GlobalCoords` inherits from `Mapping`, it contains a number of 
   >>> list(my_cube.global_coords.items())  # Returns a list of (name, value) pairs
   [('distance', <Quantity 1. m>)]
 
-One of the most common use cases for `~ndcube.GlobalCoords` is associated with slicing.
-In addition to tracking and updating the `~ndcube.NDCube.wcs` and `~ndcube.NDCube.extra_coords` objects, `~ndcube.NDCube`'s slicing infrastucture also identifies when an axis has been dropped.
-It determines the value of any independent coordinates at the location along the dropped axis axis at which the cube was sliced and enters it into the `~ndcube.GlobalCoords` object.
+One of the most common use cases for `~ndcube.GlobalCoords` is associated with slicing (:ref:`cube_slicing`).
+In addition to tracking and updating the `~ndcube.NDCube.wcs` and `~ndcube.NDCube.extra_coords` objects, `~ndcube.NDCube`'s slicing infrastucture also identifies when coordinates no longer correspond to array axes due to slicing.
+The values of such dropped coordinates are stored in the `astropy.wcs.WCS` instance from where `~ndcube.GlobalCoords` can access and return them.
 
 .. code-block:: python
 
@@ -146,8 +150,8 @@ It determines the value of any independent coordinates at the location along the
 
 .. _cube_coordinates:
 
-NDCube Coordinate Transformations
-=================================
+NDCube Coordinates
+==================
 WCS objects are a powerful and concise way of storing complex functional coordinate transformations.
 However, their API be cumbersome when the coordinates along a whole axis is desired.
 Making this process easy and intuitive is the purpose of `ndcube.NDCube.axis_world_coords`.
@@ -268,8 +272,8 @@ However for some use cases this level of completeness is not needed.
 
 .. _sequence_coordinates:
 
-NDCubeSequence Coordinate Transformations
-=========================================
+NDCubeSequence Coordinates
+==========================
 
 Sequence Axis Coordinates
 -------------------------
