@@ -19,18 +19,14 @@ This makes `~ndcube.NDCube`'s slicing infrastructure very powerful.
 
 To demonstrate `~ndcube.NDCube`'s slicing in action, let's first recreate the `~ndcube.NDCube` instance from :ref:`ndcube`.
 
-.. code-block:: python
-
+..
   >>> import astropy.units as u
   >>> import astropy.wcs
   >>> import numpy as np
   >>> from astropy.nddata import StdDevUncertainty
-
   >>> from ndcube import NDCube
-
   >>> # Define data array.
   >>> data = np.random.rand(4, 4, 5)
-
   >>> # Define WCS transformations in an astropy WCS object.
   >>> wcs = astropy.wcs.WCS(naxis=3)
   >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
@@ -38,7 +34,6 @@ To demonstrate `~ndcube.NDCube`'s slicing in action, let's first recreate the `~
   >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
-
   >>> # Define mask.  Initially set all elements unmasked.
   >>> mask = np.zeros_like(data, dtype=bool)
   >>> mask[0, 0][:] = True  # Now mask some values.
@@ -46,7 +41,6 @@ To demonstrate `~ndcube.NDCube`'s slicing in action, let's first recreate the `~
   >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
   >>> meta = {"Description": "This is example NDCube metadata."}
   >>> unit = u.ct
-
   >>> # Instantiate NDCube with supporting data.
   >>> my_cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta, unit=unit)
 
@@ -96,7 +90,7 @@ However, the wavelength value at the location where the `~ndcube.NDCube` was sli
 This is true for all coordinates, in both the ``.wcs`` and ``.extra_coords`` objects, that no longer correspond to any array axes after slicing.
 See the :ref:`global_coords` section for more.
 
-.. _ndcube_crop::
+.. _ndcube_crop:
 
 Cropping with Real World Coordinates
 ------------------------------------
@@ -124,7 +118,7 @@ It does not rebin or interpolate the data.  The order of the high level coordina
   >>> upper_corner = [wave_range[-1], sky_range[-1]]
   >>> my_cube_roi = my_cube.crop(lower_corner, upper_corner)
 
-.. _slicing_sequence:
+.. _sequence_slicing:
 
 Slicing NDCubeSequences
 =======================
@@ -164,7 +158,7 @@ Say we have three NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4,
   >>> # Instantiate NDCubeSequence. Let the common axis be 0.
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], common_axis=0)
 
-Just as we did in the :ref:`ndcubsequence` section, let's represent this `~ndcube.NDCubeSequence` pictorally in the figure below.
+Just as we did in the :ref:`ndcubesequence` section, let's represent this `~ndcube.NDCubeSequence` pictorally in the figure below.
 Each `~ndcube.NDCube` is represented by a blue square inset with a smaller red one.
 The blue square represents its array-based data while the red square represents its coordinate and metadata.
 Panel a) shows the sequence in its default configuration, with the sequence axis acting as an axis perpendicular and in addition to the cube axes.
@@ -199,11 +193,9 @@ We can confirm the dimensionality and physical types of the new sequence by chec
 .. code-block:: python
 
   >>> regions_of_interest_in_sequence.dimensions
-  (<Quantity 3. pix>, <Quantity 2. pix>, <Quantity 2. pix>, <Quantity 2. pix>, )
+  (<Quantity 3. pix>, <Quantity 2. pix>, <Quantity 2. pix>, <Quantity 2. pix>)
   >>> regions_of_interest_in_sequence.array_axis_physical_types
-  [('meta.obs.sequence',),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 If we want our region of interest to only apply to a single sub-cube, and we index the sequence axis with an `int`, an `~ndcube.NDCube` is returned.
 
@@ -319,7 +311,7 @@ To demonstrate, let's instantiate an `~ndcube.NDCollection` with aligned axes, a
 .. code-block:: python
 
   >>> # Define derived linewidth NDCube to link with my_cube, defined above, in an NDCollection.
-  >>> linewidth_data = np.ones((3, 4)) / 2 # dummy data
+  >>> linewidth_data = np.random.rand(4, 4) / 2 # dummy data
   >>> linewidth_wcs_dict = {
   ...    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 20,
   ...    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 10}

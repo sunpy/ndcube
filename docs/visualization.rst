@@ -1,10 +1,10 @@
-.. _plotting
+.. _plotting:
 
 ======================
 Visualizing ND Objects
 ======================
 
-.. _cube_plotting
+.. _cube_plotting:
 
 Visualizing NDCubes
 ===================
@@ -45,7 +45,7 @@ Having defined our `~ndcube.NDCube` as before:
 
 The plot method can be called very simply.
 
-.. plot::
+..
   :include-source:
 
   >>> import matplotlib.pyplot as plt
@@ -57,7 +57,7 @@ These sliders are used to sequentially update the line or image as it moves alon
 
 For for data with two array axes, an image is produced similar to that of `matplotlib.pyplot.imshow`.
 
-.. plot::
+..
   :include-source:
 
   >>> ax = my_cube[0].plot()
@@ -65,7 +65,7 @@ For for data with two array axes, an image is produced similar to that of `matpl
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
-.. plot::
+..
   :include-source:
 
   >>> ax = my_cube[0, 0,].plot()
@@ -73,7 +73,7 @@ For data with one array axis, a line plot is produced, similar to `matplotlib.py
 
 Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
 
-.. plot::
+..
   :include-source:
 
   >>> ax = my_cube[0, 1:3, :].plot()
@@ -87,7 +87,7 @@ The array axis to be displayed on the x-axis is marked by ``'x'`` in the corresp
 If no ``'y'`` axis is provided, a line animation is produced.
 By default the ``plot_axes`` argument is set so that the last array axis to shown on the x-axis and the penultimate array axis is shown on the y-axis.
 
-.. plot::
+..
   :include-source:
 
   >>> ax = my_cube[0].plot(plot_axes=[..., 'y', 'x'])
@@ -99,7 +99,7 @@ It also enables the coordinates along the plot axes to be updated between frames
 `ndcube.NDCube.plot` therefore allows users to decide which WCS object to use, either `~ndcube.NDCube.wcs` or `~ndcube.NDCube.combined_wcs` which also includes the `~ndcube.ExtraCoords`.
 In principle, another third-part WCS can be used so long as it is a valid description of all array axes.
 
-.. plot::
+..
   :include-source:
 
   >>> ax = my_cube[0].plot(wcs=my_cube[0].combined_wcs) 

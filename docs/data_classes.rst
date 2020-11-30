@@ -46,7 +46,25 @@ Initialize an NDCube
 To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarray`-like array containing the data and an APE-14-compliant WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
 Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.  Remember that due to convention, the order of WCS axes is reversed relative to the data array.
 
-.. include:: code_block/instantiate_simple_ndcube.rst
+.. code-block:: python
+
+  >>> import astropy.wcs
+  >>> import numpy as np
+
+  >>> from ndcube import NDCube
+
+  >>> # Define data array.
+  >>> data = np.random.rand(3, 4, 5)
+  >>> # Define WCS transformations in an astropy WCS object.
+  >>> wcs = astropy.wcs.WCS(naxis=3)
+  >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+  >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
+  >>> wcs.wcs.crpix = 0, 2, 2
+  >>> wcs.wcs.crval = 10, 0.5, 1
+
+  >>> # Now instantiate the NDCube
+  >>> my_cube = NDCube(data, wcs=wcs)
 
 The data array is stored in ``mycube.data`` while the WCS object is stored in ``my_cube.wcs``.
 The ``.data`` attribute should only be used to access specific raw data values.
@@ -55,7 +73,36 @@ When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` in
 
 To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can  the following:
 
-.. include:: code_block/instantiate_ndcube.rst
+.. code-block:: python
+
+  >>> import astropy.units as u
+  >>> import astropy.wcs
+  >>> import numpy as np
+  >>> from astropy.nddata import StdDevUncertainty
+
+  >>> from ndcube import NDCube
+
+  >>> # Define data array.
+  >>> data = np.random.rand(4, 4, 5)
+
+  >>> # Define WCS transformations in an astropy WCS object.
+  >>> wcs = astropy.wcs.WCS(naxis=3)
+  >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+  >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
+  >>> wcs.wcs.crpix = 0, 2, 2
+  >>> wcs.wcs.crval = 10, 0.5, 1
+
+  >>> # Define mask.  Initially set all elements unmasked.
+  >>> mask = np.zeros_like(data, dtype=bool)
+  >>> mask[0, 0][:] = True  # Now mask some values.
+  >>> # Define uncertainty, metadata and unit.
+  >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
+  >>> meta = {"Description": "This is example NDCube metadata."}
+  >>> unit = u.ct
+
+  >>> # Instantiate NDCube with supporting data.
+  >>> my_cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta, unit=unit)
 
 Generating `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` objects and attaching them to your `~ndcube.NDCube` is demonstrated in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
@@ -67,7 +114,7 @@ Dimensions and Physical Types
 .. code-block:: python
 
   >>> my_cube.dimensions
-  <Quantity [3., 4., 5.] pix>
+  <Quantity [4., 4., 5.] pix>
   >>> my_cube.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
@@ -128,7 +175,7 @@ Let's first define three 3-D NDCubes for slit-spectrograph data as we did in the
 
   >>> # Define data for cubes
   >>> import numpy as np
-  >>> data0 = np.random.rand((3, 4, 5))
+  >>> data0 = np.random.rand(3, 4, 5)
   >>> data1 = data0 * 2
   >>> data2 = data1 * 2
 
@@ -254,7 +301,7 @@ Let's use ``my_cube`` defined above as our observations cube and define a "linew
 .. code-block:: python
 
   >>> # Define derived linewidth NDCube
-  >>> linewidth_data = np.random.rand((3, 4)) / 2 # dummy data
+  >>> linewidth_data = np.random.rand(4, 4) / 2 # dummy data
   >>> linewidth_wcs_dict = {
   ...    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 20,
   ...    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 10}
@@ -330,7 +377,7 @@ Because aligned axes must have the same lengths, we can get the lengths of the a
 .. code-block:: python
 
   >>> my_collection.aligned_dimensions
-  <Quantity [3., 4.] pix>
+  <Quantity [4., 4.] pix>
 
 Note that this only tells us the lengths of the aligned axes.
 To see the lengths of the non-aligned axes, e.g. the spectral axis of the ``observations`` object, you must inspect that ND object individually.

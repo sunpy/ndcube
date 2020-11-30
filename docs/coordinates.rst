@@ -256,7 +256,7 @@ This means that extra_coords can be retrieved, or not, as the user wishes.
   >>> combined_coords = my_cube.axis_world_coords(wcs=my_cube.combined_wcs)
 
 Working with Raw Coordinates
-............................
+----------------------------
 
 If users would prefer not to deal with high level coordinate objects, they can elect to use `ndcube.NDCube.axis_world_coords_values`.
 The API for this method is the same as `~ndcube.NDCube.axis_world_coords`.
