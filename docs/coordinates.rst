@@ -4,18 +4,23 @@
 Coordinate Transformations
 ==========================
 In this section we will discuss the many other ways in which the ndcube classes support the integration of data and its coordinates.
-Let's start by first recreating the data and WCS components of an `~ndcube.NDCube` for use in our demonstration.
+In doing so we will use the data array and WCS object defined below.
 
 .. code-block:: python
 
-  >>> import numpy as np
   >>> import astropy.wcs
-  >>> data = np.ones((3, 4, 5))
-  >>> wcs_input_dict = {
-  ... 'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-  ... 'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-  ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
-  >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
+  >>> import numpy as np
+
+  >>> # Define data array.
+  >>> data = np.random.rand(4, 4, 5)
+
+  >>> # Define WCS transformations in an astropy WCS object.
+  >>> wcs = astropy.wcs.WCS(naxis=3)
+  >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+  >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
+  >>> wcs.wcs.crpix = 0, 2, 2
+  >>> wcs.wcs.crval = 10, 0.5, 1
 
 .. _extra_coords:
 
@@ -30,7 +35,7 @@ The answer is by using the `ndcube.ExtraCoords` class.
 It provides users with a mechanism of attaching coordinates to their `~ndcube.NDCube` instances in addition to those in the primary WCS object.
 This may be desired because, as above, the primary WCS omits a physical type.
 Or it may be because the users have an alternative set of coordinates that they would like to be able to keep seperate from the primary set at ``.wcs`` for some reason.
-To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~astropy.time.Time` object representing the times corresponding to each position along the 1st axis of the data array defined above.
+To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~astropy.time.Time` object representing the time at each element along the first axis of the ``data`` arrar defined above.
 
 .. code-block:: python
 
@@ -57,24 +62,23 @@ The names of the coordinates can be accessed via the `~ndcube.ExtraCoords.keys` 
   >>> my_extra_coords.keys()
   ('time',)
 
-The values of the coordinates can be accessed via `~ndcube.ExtraCoords.wcs`.
-This property generates a WCS object based on the coordinates stored in the `~ndcube.ExtraCoords` object.
-It should be noted that because `~ndcube.ExtraCoords` is a stand alone object, its WCS does not necessarily match the data array of an `~ndcube.NDCube`.
-To convert the extra coordinates into a WCS directly applicable to an `~ndcube.NDCube`, see the :ref:`combined_wcs` section below.
-
-Finally, the `~ndcube.ExtraCoords` object can be attached to an `~ndcube.NDCube`  during instantiation and access via the `~ndcube.NDCube.extra_coords` property.
+We can instantiate an `~ndcube.NDCube` using the ``data`` array and ``wcs`` object defined at the top of this section and attach ``my_extra_coords``.
 
 .. code-block:: python
 
   >>> from ndcube import NDCube
-  >>> my_cube = NDCube(data, input_wcs, extra_coords=my_extra_coords)
+  >>> my_cube = NDCube(data, wcs=wcs, extra_coords=my_extra_coords)
 
+``my_extra_coords`` is accessible via the `ndcube.NDCube.extra_coords` property.
 If extra coordinates are present, their physical types are revealed by `~ndcube.NDCube.array_axis_physical_types`.
 
 .. code-block:: python
 
   >>> my_cube.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
+
+The values of the extra coordinates at each array index can be retrieved using and combination of `ndcube.NDCube.axis_world_coords` and `ndcube.NDCube.combined_wcs`.
+See the :ref:`cube_coordinates` and :ref:`combined_wcs` sections below.
 
 .. _combined_wcs:
 
@@ -185,9 +189,9 @@ For example:
 
   >>> celestial = my_cube.axis_world_coords('lon')[0]  # Must extract object from returned tuple with [0]
   >>> my_cube.dimensions
-  <Quantity [3., 4., 5.] pix>
+  <Quantity [4., 4., 5.] pix>
   >>> celestial.shape
-  (3, 4)
+  (4, 4)
   >>> celestial
   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
     [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
@@ -195,7 +199,9 @@ For example:
      [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
       (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
      [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
-      (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)]]>
+      (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)],
+     [(6479.70323031, 4.56860725e-02), (6479.92250932, 1.79982456e+03),
+      (6480.14182173, 3.59960344e+03), (6480.36116753, 5.39910830e+03)]]>
 
 It is also possible to request more than one axis's world coordinates by setting ``axes`` to an iterable of data axis number and/or axis type strings.
 The coordinate objects are returned in world axis order in accordance with APE 14.
@@ -203,28 +209,30 @@ The coordinate objects are returned in world axis order in accordance with APE 1
 .. code-block:: python
 
   >>> my_cube.axis_world_coords(2, 'lon')
-  (<SpectralCoord [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,
-   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
-       [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
-         (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
-        [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
-         (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
-        [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
-         (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)]]>)
+  (<SpectralCoord [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>, <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
+      [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
+        (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
+       [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
+        (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
+       [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
+        (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)],
+       [(6479.70323031, 4.56860725e-02), (6479.92250932, 1.79982456e+03),
+        (6480.14182173, 3.59960344e+03), (6480.36116753, 5.39910830e+03)]]>)
 
 If the user wants the world coordinates for all the axes, ``axes`` can be set to ``None``, which is in fact the default.
 
 .. code-block:: python
 
   >>> my_cube.axis_world_coords()
-  (<SpectralCoord [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>,
-   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
-       [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
-         (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
-        [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
-         (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
-        [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
-         (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)]]>)
+  (<SpectralCoord [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09] m>, <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
+      [[(2160.07821927, 4.56894119e-02), (2159.96856373, 1.79995614e+03),
+        (2159.85889149, 3.59986658e+03), (2159.74920255, 5.39950295e+03)],
+       [(3600.        , 4.56905253e-02), (3600.        , 1.80000000e+03),
+        (3600.        , 3.59995431e+03), (3600.        , 5.39963453e+03)],
+       [(5039.92178073, 4.56894119e-02), (5040.03143627, 1.79995614e+03),
+        (5040.14110851, 3.59986658e+03), (5040.25079745, 5.39950295e+03)],
+       [(6479.70323031, 4.56860725e-02), (6479.92250932, 1.79982456e+03),
+        (6480.14182173, 3.59960344e+03), (6480.36116753, 5.39910830e+03)]]>)
 
 By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the center of each pixel.
 However, the pixel edges can be obtained by setting the ``edges`` kwarg to ``True``.
@@ -233,20 +241,22 @@ For example:
 .. code-block:: python
 
   >>> my_cube.axis_world_coords(edges=True)
-  (<SpectralCoord [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>,
-   <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
-       [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),
-         (1439.91446531, 2699.84625127), (1439.74995445, 4499.59909505),
-         (1439.58541853, 6298.94094507)],
-        [(2880.05774973, -899.84032206), (2880.00292413,  900.00022848),
-         (2879.94809018, 2699.97783871), (2879.89324788, 4499.81838925),
-         (2879.83839723, 6299.24788597)],
-        [(4319.94225027, -899.84032206), (4319.99707587,  900.00022848),
-         (4320.05190982, 2699.97783871), (4320.10675212, 4499.81838925),
-         (4320.16160277, 6299.24788597)],
-        [(5759.75658812, -899.79647591), (5759.92104888,  899.95636786),
-         (5760.08553469, 2699.84625127), (5760.25004555, 4499.59909505),
-         (5760.41458147, 6298.94094507)]]>)
+  (<SpectralCoord [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>, <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
+      [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),
+        (1439.91446531, 2699.84625127), (1439.74995445, 4499.59909505),
+        (1439.58541853, 6298.94094507)],
+       [(2880.05774973, -899.84032206), (2880.00292413,  900.00022848),
+        (2879.94809018, 2699.97783871), (2879.89324788, 4499.81838925),
+        (2879.83839723, 6299.24788597)],
+       [(4319.94225027, -899.84032206), (4319.99707587,  900.00022848),
+        (4320.05190982, 2699.97783871), (4320.10675212, 4499.81838925),
+        (4320.16160277, 6299.24788597)],
+       [(5759.75658812, -899.79647591), (5759.92104888,  899.95636786),
+        (5760.08553469, 2699.84625127), (5760.25004555, 4499.59909505),
+        (5760.41458147, 6298.94094507)],
+       [(7199.36047891, -899.70880283), (7199.63452676,  899.86866585),
+        (7199.90861634, 2699.58313412), (7200.18274766, 4499.1606028 ),
+        (7200.45692072, 6298.32719784)]]>)
 
 `~ndcube.NDCube.axis_world_coords` also allows the user to pick which WCS object should be used, `ndcube.NDCube.wcs` or `ndcube.NDCube.combined_wcs` by setting the ``wcs=`` keyword.
 This means that extra_coords can be retrieved, or not, as the user wishes.
@@ -281,40 +291,48 @@ As described in the :ref:`ndcubesequence` section, the sequence axis can be thou
 In that model, the `~ndcube.GlobalCoords` on each `~ndcube.NDCube` represent coordinate values along the sequence axis.
 The `ndcube.NDCubeSequence.sequence_axis_coords` property collates a list for each global coordinate with each element giving the coordinate value from the corresponding `~ndcube.NDCube`.
 These lists are returned as a `dict` with the keys being the coordinate names.
-To demonstrate this, whose cubes have `~ndcube.GlobalCoords`.
+To demonstrate this, let's call `ndcube.NDCube.sequence_axis_coords` on an `~ndcube.NDCubeSequence` whose cubes have `~ndcube.GlobalCoords`.
+(Click the "Instantiating NDCubeSequence" link below to reveal the code used to create the `~ndcube.NDCubeSequence`.)
 
-.. code-block:: python
-
-  >>> # Define data for cubes
-  >>> import numpy as np
-  >>> data0 = np.ones((3, 4, 5))
-  >>> data1 = data0 * 2
-  >>> data2 = data1 * 2
-
-  >>> # Define WCS object for all cubes.
-  >>> import astropy.wcs
-  >>> wcs_input_dict = {
-  ... 'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-  ... 'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-  ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
-  >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
+.. expanding-code-block:: python
+  :summary: Instantiating NDCubeSequence
 
   >>> import astropy.units as u
+  >>> import astropy.wcs
+  >>> import numpy as np
   >>> from ndcube import NDCube, NDCubeSequence
-  >>> my_cube0 = NDCube(data0, input_wcs)
-  >>> my_cube0.global_coords.add('distance', 'pos.distance', 1 * u.m)
-  >>> my_cube1 = NDCube(data1, input_wcs)
-  >>> my_cube1.global_coords.add('distance', 'pos.distance', 2 * u.m)
-  >>> my_cube2 = NDCube(data2, input_wcs)
-  >>> my_cube2.global_coords.add('distance', 'pos.distance', 3 * u.m)
-  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2])
 
-Now call `ndcube.NDCubeSequence.sequence_axis_coords`.
+  >>> # Define data arrays.
+  >>> shape = (4, 4, 5)
+  >>> data0 = np.random.rand(*shape)
+  >>> data1 = np.random.rand(*shape)
+  >>> data2 = np.random.rand(*shape)
+  >>> data3 = np.random.rand(*shape)
+
+  >>> # Define WCS transformations.
+  >>> wcs = astropy.wcs.WCS(naxis=3)
+  >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+  >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
+  >>> wcs.wcs.crpix = 0, 2, 2
+  >>> wcs.wcs.crval = 10, 0.5, 1
+
+  >>> # Instantiate NDCubes.
+  >>> cube0 = NDCube(data0, wcs=wcs)
+  >>> cube0.global_coords.add('distance', 'pos.distance', 1*u.m)
+  >>> cube1 = NDCube(data1, wcs=wcs)
+  >>> cube1.global_coords.add('distance', 'pos.distance', 2*u.m)
+  >>> cube2 = NDCube(data2, wcs=wcs)
+  >>> cube2.global_coords.add('distance', 'pos.distance', 3*u.m)
+  >>> cube3 = NDCube(data3, wcs=wcs)
+  >>> cube3.global_coords.add('distance', 'pos.distance', 4*u.m)
+
+  >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3])
 
 .. code-block:: python
 
   >>> my_sequence.sequence_axis_coords
-  {'distance': [<Quantity 1. m>, <Quantity 2. m>, <Quantity 3. m>]}
+  {'distance': [<Quantity 1. m>, <Quantity 2. m>, <Quantity 3. m>, <Quantity 4. m>]}
 
 As with any `dict`, the coordinate names can be seen via the ``.keys()`` method, while the values of a coordinate can be retrieved by indexing with the coordinate name.
 
@@ -323,31 +341,82 @@ As with any `dict`, the coordinate names can be seen via the ``.keys()`` method,
   >>> my_sequence.sequence_axis_coords.keys()
   dict_keys(['distance'])
   >>> my_sequence.sequence_axis_coords['distance']
-  [<Quantity 1. m>, <Quantity 2. m>, <Quantity 3. m>]
+  [<Quantity 1. m>, <Quantity 2. m>, <Quantity 3. m>, <Quantity 4. m>]
 
 Common Axis Coordinates
 -----------------------
 The :ref:`ndcubesequence` section also explains how a common axis can be defined for a `~ndcube.NDCubeSequence`, signifying that the sequence axis is parallel to one of the `~ndcube.NDCube` array axes.
-This means the cubes can be thought of as arranged sequentially along that axis.
-In this model, coordinates along the common_axis can be concatenated because they are ordered.
-The `ndcube.NDCubeSequence.common_axis_coords` property finds the physical types associated with the common axis in each cube and concatenates them.
+Take the example of an `~ndcube.NDCubeSequence` of four 3-D NDCubes with axes of space-space-wavelength.
+Suppose that each cube represents a different interval in the spectral dimension and that the cubes are arranged in ascending wavelength order within the `~ndcube.NDCubeSequence`, i.e. ``common_axis=2``.
+If each NDCube has a shape of ``(4, 4, 5)``, then there are 20 positions along the common axis (5 array elements x 4 NDCubes).
+
+The purpose of `ndcube.NDCubeSequence.common_axis_coords` is to make it easy to get the value of a coordinate at any point along the common axis, irrespective of the cube to which it corresponds.
+It determines which coordinates within the NDCubes' WCS and `~ndcube.ExtraCoords` objects both correspond to the common axis and are common among all cubes.
+For each of these coordinates, it produces a list with the same length as the common axis.
+Each entry gives the coordinate value(s) at that position along the common axis.
+The coordinates are in world axis order.
+
+.. expanding-code-block:: python
+  :summary: Click to see instantiation of NDCubeSequence
+
+  >>> from copy import deepcopy
+
+  >>> import astropy.units as u
+  >>> import astropy.wcs
+  >>> import numpy as np
+
+  >>> from ndcube import NDCube, NDCubeSequence
+
+  >>> # Define data arrays.
+  >>> shape = (4, 4, 5)
+  >>> data0 = np.random.rand(*shape)
+  >>> data1 = np.random.rand(*shape)
+  >>> data2 = np.random.rand(*shape)
+  >>> data3 = np.random.rand(*shape)
+
+  >>> # Define WCS transformations.
+  >>> wcs0 = astropy.wcs.WCS(naxis=3)
+  >>> wcs0.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs0.wcs.cunit = 'm', 'deg', 'deg'
+  >>> wcs0.wcs.cdelt = 2e-11, 0.5, 0.4
+  >>> wcs0.wcs.crpix = 0, 2, 2
+  >>> wcs0.wcs.crval = 1e-9, 0.5, 1
+  >>> wcs1 = deepcopy(wcs0)
+  >>> wcs1.wcs.crval[0] = 1.1e-9
+  >>> wcs2 = deepcopy(wcs0)
+  >>> wcs2.wcs.crval[0] = 1.2e-9
+  >>> wcs3 = deepcopy(wcs0)
+  >>> wcs3.wcs.crval[0] = 1.3e-9
+
+  >>> # Instantiate NDCubes.
+  >>> cube0 = NDCube(data0, wcs=wcs0)
+  >>> cube1 = NDCube(data1, wcs=wcs1)
+  >>> cube2 = NDCube(data2, wcs=wcs2)
+  >>> cube3 = NDCube(data3, wcs=wcs3)
+
+  # Instantiate NDCubeSequence.
+  >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], common_axis=2)
 
 .. code-block:: python
 
-  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2], common_axis=2)
   >>> my_sequence.common_axis_coords
   [[<SpectralCoord 1.02e-09 m>,
     <SpectralCoord 1.04e-09 m>,
     <SpectralCoord 1.06e-09 m>,
     <SpectralCoord 1.08e-09 m>,
     <SpectralCoord 1.1e-09 m>,
-    <SpectralCoord 1.02e-09 m>,
-    <SpectralCoord 1.04e-09 m>,
-    <SpectralCoord 1.06e-09 m>,
-    <SpectralCoord 1.08e-09 m>,
-    <SpectralCoord 1.1e-09 m>,
-    <SpectralCoord 1.02e-09 m>,
-    <SpectralCoord 1.04e-09 m>,
-    <SpectralCoord 1.06e-09 m>,
-    <SpectralCoord 1.08e-09 m>,
-    <SpectralCoord 1.1e-09 m>]]
+    <SpectralCoord 1.12e-09 m>,
+    <SpectralCoord 1.14e-09 m>,
+    <SpectralCoord 1.16e-09 m>,
+    <SpectralCoord 1.18e-09 m>,
+    <SpectralCoord 1.2e-09 m>,
+    <SpectralCoord 1.22e-09 m>,
+    <SpectralCoord 1.24e-09 m>,
+    <SpectralCoord 1.26e-09 m>,
+    <SpectralCoord 1.28e-09 m>,
+    <SpectralCoord 1.3e-09 m>,
+    <SpectralCoord 1.32e-09 m>,
+    <SpectralCoord 1.34e-09 m>,
+    <SpectralCoord 1.36e-09 m>,
+    <SpectralCoord 1.38e-09 m>,
+    <SpectralCoord 1.4e-09 m>]]

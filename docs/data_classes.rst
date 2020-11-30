@@ -54,7 +54,7 @@ Let's create a 3-D array of data with shape ``(3, 4, 5)`` with random values and
   >>> from ndcube import NDCube
 
   >>> # Define data array.
-  >>> data = np.random.rand(3, 4, 5)
+  >>> data = np.random.rand(4, 4, 5)
   >>> # Define WCS transformations in an astropy WCS object.
   >>> wcs = astropy.wcs.WCS(naxis=3)
   >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
@@ -173,33 +173,45 @@ Let's first define three 3-D NDCubes for slit-spectrograph data as we did in the
 
 .. code-block:: python
 
-  >>> # Define data for cubes
-  >>> import numpy as np
-  >>> data0 = np.random.rand(3, 4, 5)
-  >>> data1 = data0 * 2
-  >>> data2 = data1 * 2
-
-  >>> # Define WCS object for all cubes.
+  >>> import astropy.units as u
   >>> import astropy.wcs
-  >>> wcs_input_dict = {
-  ... 'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-  ... 'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-  ... 'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
-  >>> input_wcs = astropy.wcs.WCS(wcs_input_dict)
-
+  >>> import numpy as np
   >>> from ndcube import NDCube, NDCubeSequence
-  >>> my_cube0 = NDCube(data0, input_wcs)
-  >>> my_cube1 = NDCube(data1, input_wcs)
-  >>> my_cube2 = NDCube(data2, input_wcs)
+
+  >>> # Define data arrays.
+  >>> shape = (4, 4, 5)
+  >>> data0 = np.random.rand(*shape)
+  >>> data1 = np.random.rand(*shape)
+  >>> data2 = np.random.rand(*shape)
+  >>> data3 = np.random.rand(*shape)
+
+  >>> # Define WCS transformations. Let all cubes have same WCS.
+  >>> wcs = astropy.wcs.WCS(naxis=3)
+  >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+  >>> wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+  >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
+  >>> wcs.wcs.crpix = 0, 2, 2
+  >>> wcs.wcs.crval = 10, 0.5, 1
+
+  >>> # Instantiate NDCubes.
+  >>> cube0 = NDCube(data0, wcs=wcs)
+  >>> cube1 = NDCube(data1, wcs=wcs)
+  >>> cube2 = NDCube(data2, wcs=wcs)
+  >>> cube3 = NDCube(data3, wcs=wcs)
 
 Creating an `~ndcube.NDCubeSequence` is simply a case of providing the list of `~ndcube.NDCube` objects to the `~ndcube.NDCubeSequence` class.
+
+.. code-block:: python
+
+  >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3])
+
 We also have the option of providing some sequence-level metadata.
 This is in addition to anything located in the ``.meta`` objects of the NDCubes.
 
 .. code-block:: python
 
   >>> my_sequence_metadata = {"Description": "This is some sample NDCubeSequence metadata."}
-  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2], meta=my_sequence_metadata)
+  >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], meta=my_sequence_metadata)
 
 The `~ndcube.NDCube` instances are stored in ``my_sequence.data`` while the metadata is stored at ``my_sequence.meta``.
 If we wanted to define a common cube axis, we must set it during instantiation.
@@ -208,7 +220,7 @@ Additionally, let's also provide some sequence-level metadata.
 
 .. code-block:: python
 
-  >>> my_sequence = NDCubeSequence([my_cube0, my_cube1, my_cube2], common_axis=0)
+  >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], common_axis=0)
 
 .. _dimensions:
 
@@ -220,7 +232,7 @@ Analagous to `ndcube.NDCube.dimensions`, there is also a `ndcube.NDCubeSequence.
 .. code-block:: python
 
   >>> my_sequence.dimensions
-  (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+  (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
 
 Slightly differently to `ndcube.NDCube.dimensions`, `ndcube.NDCubeSequence.dimensions` returns a tuple of `astropy.units.Quantity` instances with pixel units, giving the length of each axis.
 To see the dimensionality of the sequence in the cube-like paradigm, i.e. taking into account the common axis, use the `ndcube.NDCubeSequence.cube_like_dimensions` property.
@@ -228,7 +240,7 @@ To see the dimensionality of the sequence in the cube-like paradigm, i.e. taking
 .. code-block:: python
 
   >>> my_sequence.cube_like_dimensions
-  <Quantity [9., 4., 5.] pix>
+  <Quantity [16., 4., 5.] pix>
 
 Equivalent to `ndcube.NDCube.array_axis_physical_types`, `ndcube.NDCubeSequence.array_axis_physical_types` returns a list of tuples of physical axis types.
 The same `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_ are used for the cube axes as is used in `ndcube.NDCube.array_axis_physical_types`.
@@ -265,15 +277,15 @@ To call it, simply provide the number of the data cube axis along which you wish
 
   >>> exploded_sequence = my_sequence.explode_along_axis(0)
 
-Assuming we are using the same ``my_sequence`` as above, with dimensions of ``(<Quantity 3.0 pix>, <Quantity 3.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an `~ndcube.NDCubeSequence` of nine 2-D NDCubes each with shape ``(<Quantity 4.0 pix>, <Quantity 5.0 pix>)``.
+Assuming we are using the same ``my_sequence`` as above, with dimensions of ``(<Quantity 4.0 pix>, <Quantity 4.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an `~ndcube.NDCubeSequence` of nine 2-D NDCubes each with shape ``(<Quantity 4.0 pix>, <Quantity 5.0 pix>)``.
 
 .. code-block:: python
 
   >>> # Check old and new shapes of the squence
   >>> my_sequence.dimensions
-  (<Quantity 3. pix>, <Quantity 3. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+  (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
   >>> exploded_sequence.dimensions
-  (<Quantity 9. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+  (<Quantity 16. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
 
 Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.  A common axis need not be defined.
 
@@ -302,10 +314,12 @@ Let's use ``my_cube`` defined above as our observations cube and define a "linew
 
   >>> # Define derived linewidth NDCube
   >>> linewidth_data = np.random.rand(4, 4) / 2 # dummy data
-  >>> linewidth_wcs_dict = {
-  ...    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 20,
-  ...    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 10}
-  >>> linewidth_wcs = astropy.wcs.WCS(linewidth_wcs_dict)
+  >>> linewidth_wcs = astropy.wcs.WCS(naxis=2)
+  >>> linewidth_wcs.wcs.ctype = 'HPLT-TAN', 'HPLN-TAN'
+  >>> linewidth_wcs.wcs.cunit = 'deg', 'deg'
+  >>> linewidth_wcs.wcs.cdelt = 0.5, 0.4
+  >>> linewidth_wcs.wcs.crpix = 2, 2
+  >>> linewidth_wcs.wcs.crval = 0.5, 1
   >>> linewidth_cube = NDCube(linewidth_data, linewidth_wcs)
 
 To combine these ND objects into an `~ndcube.NDCollection`, simply supply a sequence of ``(key, value)`` pairs in the same way that you initialize and dictionary.
@@ -355,10 +369,12 @@ Let's say we reversed the axes of our ``linewidths`` ND object for some reason:
 
 .. code-block:: python
 
-  >>> linewidth_wcs_dict_reversed = {
-  ...    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 20,
-  ...    'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.4, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 10}
-  >>> linewidth_wcs_reversed = astropy.wcs.WCS(linewidth_wcs_dict_reversed)
+  >>> linewidth_wcs_reversed = astropy.wcs.WCS(naxis=2)
+  >>> linewidth_wcs_reversed.wcs.ctype = 'HPLN-TAN', 'HPLT-TAN'
+  >>> linewidth_wcs_reversed.wcs.cunit = 'deg', 'deg'
+  >>> linewidth_wcs_reversed.wcs.cdelt = 0.4, 0.5
+  >>> linewidth_wcs_reversed.wcs.crpix = 2, 2
+  >>> linewidth_wcs_reversed.wcs.crval = 1, 0.5
   >>> linewidth_cube_reversed = NDCube(linewidth_data.transpose(), linewidth_wcs_reversed)
 
 We can still define an `~ndcube.NDCollection` with aligned axes by supplying a tuple of tuples, giving the aligned axes of each ND object separately.
@@ -389,11 +405,13 @@ We can also see the physical properties to which the aligned axes correspond by 
   >>> my_collection.aligned_axis_physical_types  # doctest: +SKIP
   [('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat'), ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat')]
 
-This returns the a `list` of `tuple` giving the physical types that correspond to each aligned axis.
-For each aligned axis, only physical types are associated with all the cubes in the collection are returned.
+This returns the a `list` of `tuple` in array axis order giving the physical types that correspond to each aligned axis.
+For each aligned axis, only physical types associated with all the cubes in the collection are returned.
 Note that there is no there is no requirement that all aligned axes must represent the same physical types.
 They just have to be the same length.
 Therefore, is it possible that this property returns no physical types.
+The physical types within each tuple are returned unordered, not in world axis order as might be expected.
+This is because there is no requirement that members must have the same axis ordering.
 
 The real power behind `~ndcube.NDCollection.aligned_axes` is that it enables all objects within the `~ndcube.NDCollection` to be sliced along the aligned axes simultaneously from the `~ndcube.NDCollection` level.
 This allows users to quickly and accurately crop their entire data set to a region of interest, thereby speeding up their analysis workflow.
