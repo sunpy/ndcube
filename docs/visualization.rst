@@ -10,7 +10,7 @@ Visualizing NDCubes
 ===================
 `~ndcube.NDCube` provides a simple-to-use, yet powerful visualization method, `~ndcube.NDCube.plot`, which produces sensible visualizations based on the dimensionality of the data and optional user inputs.
 It is intended to be a useful quicklook tool and not a replacement for high quality plots or animations, e.g. for publications.
-Having defined our `~ndcube.NDCube` as before:
+Let's define an `~ndcube.NDCube` as with a shape of ``(4, 4, 5)`` and physical axes of helioprojective longitude, latitude and wavelength.  (Click the "Source code" link immediately below to see this `~ndcube.NDCube` instantiated.)
 
 .. plot::
   :context: reset
@@ -36,7 +36,7 @@ Having defined our `~ndcube.NDCube` as before:
 
   >>> # Define mask.  Initially set all elements unmasked.
   >>> mask = np.zeros_like(data, dtype=bool)
-  >>> mask[0, 0][:] = True  # Now mask some values.
+  >>> mask[-1, -1][:] = True  # Now mask some values.
   >>> # Define uncertainty, metadata and unit.
   >>> uncertainty = StdDevUncertainty(np.sqrt(np.abs(data)))
   >>> meta = {"Description": "This is example NDCube metadata."}
@@ -57,6 +57,8 @@ The plot method can be called very simply.
 
 For a >2 array axes, as is the case above, an animation object is returned displaying either a line or image with sliders for each additional array axis.
 These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
+By default and image animation is returned.
+(See below to learn how to use ``plot_axes`` kwarg to produce a line animation.)
 
 For for data with two array axes, an image is produced similar to that of `matplotlib.pyplot.imshow`.
 
@@ -117,6 +119,22 @@ By default the ``plot_axes`` argument is set so that the last array axis to show
   >>> plt.cla()
   >>> plt.close()
 
+The ``plot_axes`` kwarg can also be used to generated a line animation by omitting the ``'y'`` entry.
+
+.. plot::
+  :context:
+  :include-source:
+
+  >>> ax = my_cube.plot(plot_axes=[None, None, 'x'])
+  >>> plt.show()
+
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+  >>> plt.cla()
+  >>> plt.close()
+  
 `~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.
 This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.
 It also enables the coordinates along the plot axes to be updated between frames of an animation.

@@ -33,16 +33,10 @@ feature, please use the developer mailing list.
 Live Chat
 ---------
 
-SunPy has a `chat room`_ that uses `Matrix`_ which will open directly in
-your browser. Stop by and say hello. Talk with the SunPy and ndcube
-users and developers and get started.
-
-If you are using IRC hosted on `freenode`_, then you can join the same
-channel (bridged into matrix) by joining the (#sunpy) channel on
-freenode.
+SunPy has a `element.io channel`_ which will open directly in your browser.
+Stop by and say hello.
+Talk with the SunPy and ndcube users and developers and get started.
 
 .. _`general mailing list`: https://groups.google.com/forum/#!forum/sunpy
 .. _`developer mailing list`: https://groups.google.com/forum/#!forum/sunpy-dev
-.. _`chat room`: https://riot.im/app/#/room/#sunpy:openastronomy.org
-.. _`Matrix`: https://matrix.org/blog/home/
-.. _`freenode`: https://freenode.net/
+.. _`element.io channel`: https://openastronomy.element.io/#/room/#sunpy:openastronomy.org
