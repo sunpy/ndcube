@@ -165,7 +165,7 @@ See panel b) of the figure above.
 
 Setting a common axis is optional and does not force the user to interact with the data as if it were in configuration b).
 Instead `~ndcube.NDCubeSequence` has different versions of its methods whose names are prefixed with ``cube_like`` that account for the common axis and equivalent non-cube-like methods that do not.
-This allows users to switch back and forth between configurations a) and b) as their use case demands without the requiring the user to have two versions of the same data.
+This allows users to switch back and forth between configurations a) and b) as their use case demands without requiring the user to have two versions of the same data.
 This flexibility makes `~ndcube.NDCubeSequence` a powerful tool when handling complex N-D dimensional data described by different but comparable coordinate transformations.
 
 Initializing an NDCubeSequence

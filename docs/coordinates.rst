@@ -15,7 +15,7 @@ The foundation of the AstroPy WCS implementation is the `~astropy.wcs.WCS` objec
 It also executes these transformations via methods like `~astropy.wcs.WCS.world_to_pixel` and `~astropy.wcs.WCS.world_to_pixel` which convert between pixel indices and world coordinate values.
 However, these methods are independent of the data array and the `~astropy.wcs.WCS` object carries little or no information about the data itself.
 That is why the ndcube package is needed.
-Nonetheless, AstroPy's WCS implementation is a crucial pillar of ndcube, as is its more generalized offshoot `gWCS <https://gwcs.readthedocs.io/en/stable/>`_ which provides greater generalization for the loss of some performance.
+Nonetheless, AstroPy's WCS implementation is a crucial pillar of ndcube, as is the more generalized offshoot `gWCS <https://gwcs.readthedocs.io/en/stable/>`_ which provides greater generalization for the loss of some performance.
 Crucially though for ndcube, both implementations adhere to the `AstroPy WCS API (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
 A familiarity with WCS and the AstroPy and gWCS Python implementations will be helpful (although hopefully not essential) in understanding this guide.
 We therefore encourage users to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ and the `gWCS documentation <https://gwcs.readthedocs.io/en/stable/>`_ to learn more.
@@ -144,7 +144,7 @@ The coordinate's physical type can be accessed via the `~ndcube.GlobalCoords.phy
   >>> my_cube.global_coords.physical_types['distance']
   'pos.distance'
 
-Because `~ndcube.GlobalCoords` inherits from `Mapping`, it contains a number of mixin methods similar to those of `dict`.
+Because `~ndcube.GlobalCoords` inherits from `~collections.abc.Mapping`, it contains a number of mixin methods similar to those of `dict`.
 
 .. code-block:: python
 
