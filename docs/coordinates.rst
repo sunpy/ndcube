@@ -3,7 +3,24 @@
 ==========================
 Coordinate Transformations
 ==========================
-In this section we will discuss the ways in which ND objects support the integration of data and coordinates.
+
+Introduction to WCS
+===================
+
+To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework, specifically the tools written by AstroPy that implement this framework in Python.
+WCS allows a wide variety of projections, rotations and transformations be stored and executed.
+Because it allows coordinates transformations to be stored functionally, rather than in memory-heavy lookup tables, and because it caters for both astronomy-specific coordinate systems (e.g. RA & Dec.) as well as simpler, more common ones (e.g. wavelength), WCS has become the most common coordinate transformation framework in astronomy.
+
+The foundation of the AstroPy WCS implementation is the `~astropy.wcs.WCS` object, which stores the critical information describing the coordinate transformations (e.g. the reference pixel and its corresponding coordinate values, ``crpix`` and ``crval``, and the projection type, ``ctype``).
+It also executes these transformations via methods like `~astropy.wcs.WCS.world_to_pixel` and `~astropy.wcs.WCS.world_to_pixel` which convert between pixel indices and world coordinate values.
+However, these methods are independent of the data array and the `~astropy.wcs.WCS` object carries little or no information about the data itself.
+That is why the ndcube package is needed.
+Nonetheless, AstroPy's WCS implementation is a crucial pillar of ndcube, as is its more generalized offshoot `gWCS <https://gwcs.readthedocs.io/en/stable/>`_ which provides greater generalization for the loss of some performance.
+Crucially though for ndcube, both implementations adhere to the `AstroPy WCS API (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
+A familiarity with WCS and the AstroPy and gWCS Python implementations will be helpful (although hopefully not essential) in understanding this guide.
+We therefore encourage users to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ and the `gWCS documentation <https://gwcs.readthedocs.io/en/stable/>`_ to learn more.
+
+In this section we will discuss the features ndcube has built upon the Astropy and gWCS WCS implementations to support the integration of data and coordinates.
 In doing so we will use the data array and WCS object defined below.
 
 .. code-block:: python
@@ -21,15 +38,6 @@ In doing so we will use the data array and WCS object defined below.
   >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
-
-Introduction to WCS
-===================
-
-To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework.
-This framework allows a wide variety of projections, rotations and transformations be stored and executed.
-Because this framework allows coordinates transformations to be stored functionally, rather than in memory-heavy lookup tables, and because it caters for projections often used in astronomy, e.g. RA & Dec., WCS has become the most common coordinate transformation framework in astronomy.
-Much of ndcube's coordinate, visualization and even slicing infrastructure relies on WCS and leverages the tools developed by AstroPy.
-We encourage users unfamiliar with WCS to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ to learn more.
 
 .. _extra_coords:
 

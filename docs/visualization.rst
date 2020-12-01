@@ -134,7 +134,7 @@ The ``plot_axes`` kwarg can also be used to generated a line animation by omitti
   >>> plt.clf()
   >>> plt.cla()
   >>> plt.close()
-  
+
 `~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.
 This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.
 It also enables the coordinates along the plot axes to be updated between frames of an animation.
