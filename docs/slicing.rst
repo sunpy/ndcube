@@ -306,7 +306,7 @@ However, also recall that we can mark axes of the member ND objects that are ali
 The value in this is that it enables users to slice all the members of the collection simultaneously from the `~ndcube.NDCollection` level.
 This can only be done for aligned axes.
 Non-aligned axes must be sliced separately.
-Nonethless, `~ndcube.NDCollection`'s slicing capability represents one of its greatest advantages over a simple Python `dict`, making it a powerful tool for rapidly and reliably cropping multiple components of a data set to a region of interest.
+Nonetheless, `~ndcube.NDCollection`'s slicing capability represents one of its greatest advantages over a simple Python `dict`, making it a powerful tool for rapidly and reliably cropping multiple components of a data set to a region of interest.
 This has the potential to drastically speed up analysis workflows.
 
 To demonstrate, let's instantiate an `~ndcube.NDCollection` with aligned axes, as we did in the :ref:`ndcollection` section.
