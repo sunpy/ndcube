@@ -47,7 +47,7 @@ getting the latest updates over reliablility, or want to contribute
 to the development of ndcube, you will need to install the development
 version via `GitHub`_. Let's step through how to do this using
 anaconda.  For information on installing the anaconda
-distribution, see the `anaconda website`_.
+distribution, see the `miniconda website`_.
 
 First, create a conda environment on your local machine to hold the
 ndcube bleeding edge version. Using a new environment allows you to
