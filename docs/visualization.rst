@@ -88,6 +88,13 @@ Setting the x and y ranges of the plot can be done simply by indexing the `~ndcu
   >>> ax = my_cube[0, 1:3, 1:4].plot()
   >>> plt.show()
 
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+  >>> plt.cla()
+  >>> plt.close()
+
 No args are required.
 The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
 However optional keywords enable customization of the visualization.
@@ -103,6 +110,13 @@ By default the ``plot_axes`` argument is set so that the last array axis to show
   >>> ax = my_cube.plot(plot_axes=[None, 'x', 'y'])
   >>> plt.show()
 
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+  >>> plt.cla()
+  >>> plt.close()
+
 `~ndcube.NDCube.plot` uses `~astropy.visualization.wcsaxes.WCSAxes` to produce all plots.
 This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.
 It also enables the coordinates along the plot axes to be updated between frames of an animation.
@@ -115,6 +129,13 @@ In principle, another third-part WCS can be used so long as it is a valid descri
 
   >>> ax = my_cube.plot(wcs=my_cube.combined_wcs)
   >>> plt.show()
+
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+  >>> plt.cla()
+  >>> plt.close()
 
 Visualizing NDCubeSequences
 ===========================
