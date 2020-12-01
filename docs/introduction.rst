@@ -67,8 +67,8 @@ This data model would require translation of the source data to fit inside an xa
 That being said, xarray has a rich feature set and there is nothing beyond a lack of developer time hindering the astronomy and xarray communities from collaborating to provide a common set of tools which would suit everyone’s purposes.
 See `this issue <https://github.com/pydata/xarray/issues/3620#>`_.
 
-Why is ndcube 2.0?
-==================
+Why ndcube 2.0?
+===============
 ndcube 2.0 is a major API-breaking rewrite of ndcube.
 It has been written to take advantage of many new features not available when ndcube 1.0 was written.
 Some of these have been made possible by the upstreaming of ndcube functionalities to astropy.
