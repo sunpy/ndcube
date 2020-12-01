@@ -69,7 +69,7 @@ For for data with two array axes, an image is produced similar to that of `matpl
   >>> ax = my_cube[0].plot()
   >>> plt.show()
 
-Note that the bottom row is of the image is empty because those array elements are marked ``True`` is ``.mask``.
+Note that the bottom row of the image is empty because those array elements are marked ``True`` is ``.mask``.
 
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
@@ -160,7 +160,7 @@ Visualizing NDCubeSequences
 Since ndcube 2.0, the `~ndcube.NDCubeSequence` visualization support has been dropped.
 The rationale for this is outlined in `Issue #321 <https://github.com/sunpy/ndcube/issues/321>`_ on the ndcube GitHub repo.
 If you feel that `~ndcube.NDCubeSequence` visualization should be supported again, please let us know by commenting on that issue and telling us of your use case.
-Better still, if you would like to work on the infrastructure required to support `~ndcube.NDCubeSequence` visualization is a post ndcube 2.0 world let us know by commenting on the issue.
+Better still, if you would like to work on the infrastructure required to support `~ndcube.NDCubeSequence` visualization in a post ndcube 2.0 world let us know by commenting on the issue.
 
 Despite this the lack of `~ndcube.NDCubeSequence` visualization support, you can still visualize the data in `~ndcube.NDCubeSequence` in a number of ways.
 You can slice out a single `~ndcube.NDCube` and use its `~ndcube.NDCube.plot` method.
@@ -171,7 +171,7 @@ Below, we will outline these latter two options in a little more detail.
 Extracting and Plotting NDCubeSequence Data with Matplotlib
 -----------------------------------------------------------
 In order to produce plots (or perform other analysis) outside of the ``ndcube`` framework, it may be useful to extract the data from the `~ndcube.NDCubeSequence` into single `~numpy.ndarray` instances.
-Let's first define an `~ndcube.NDCubeSequence` with a common axis of 0 and and time as an extra coord stretching across the cube along the common axis.
+Let's first define an `~ndcube.NDCubeSequence` with a common axis of 0 and time as an extra coord stretching across the cube along the common axis.
 Then we show how to extract and plot the data.
 
 .. code-block:: python
