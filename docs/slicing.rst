@@ -17,8 +17,6 @@ This is achieved by applying the standard slicing API to the `~ndcube.NDCube`.
 Because many of the inspection properties such `~ndcube.NDCube.dimensions` and `~ndcube.NDCube.array_axis_physical_types` are calculated on the fly, the information they return after slicing is also consistent with the sliced `~ndcube.NDCube`.
 This makes `~ndcube.NDCube`'s slicing infrastructure very powerful.
 
-To demonstrate `~ndcube.NDCube`'s slicing in action, let's first recreate the `~ndcube.NDCube` instance from :ref:`ndcube`.
-
 To slice ``my_cube``, simply do something like:
 
 .. expanding-code-block:: python
@@ -102,7 +100,7 @@ See the :ref:`global_coords` section for more.
 Cropping with Real World Coordinates
 ------------------------------------
 In addition to slicing by index, `~ndcube.NDCube` supports slicing by real world coordinates via the `~ndcube.NDCube.crop` method.
-This takes two iterables of high level astropy objects -- e.g. `~astropy.time.Time`, `~astropy.coordinates.SkyCoord`, `~astropy.coordinates.SpectralCoord`, `~astropy,units.Quantity` etc. -- which relate to the physical types of the axes in the cube.
+This takes two iterables of high level coordinate objects, e.g. `~astropy.time.Time`, `~astropy.coordinates.SkyCoord`, `~astropy.coordinates.SpectralCoord`, `~astropy,units.Quantity` etc.
 Each iterable describes a single location in the data array in real world coordinates.
 The first iterable describes the lower corner of the region of interest and thus contains the lower limit of each real world coordinate.
 The second iterable represents the upper corner of the region of interest and thus contains the upper limit of each real world coordinate.
@@ -117,12 +115,8 @@ It does not rebin or interpolate the data.  The order of the high level coordina
   >>> # Use coordinate objects to mark the lower limit of the region of interest.
   >>> lower_corner = [SpectralCoord(1.04e-9, unit=u.m),
   ...                 SkyCoord(Tx=1, Ty=0.5, unit=u.deg, frame=Helioprojective)]
-  >>> lower_corner = [SpectralCoord(1.04e-9, unit=u.m),
-  ...                 SkyCoord(Tx=1, Ty=0.5, unit=u.deg, frame=Helioprojective)]
-  >>> wave_range = SpectralCoord([1.04e-9, 1.08e-9], unit=u.m)
-  >>> sky_range = SkyCoord(Tx=[1, 1.5], Ty=[0.5, 1.5], unit=u.deg, frame=Helioprojective)
-  >>> lower_corner = [wave_range[0], sky_range[0]]
-  >>> upper_corner = [wave_range[-1], sky_range[-1]]
+  >>> upper_corner = [SpectralCoord(1.08e-9, unit=u.m),
+  ...                 SkyCoord(Tx=1.5, Ty=1.5, unit=u.deg, frame=Helioprojective)]
   >>> my_cube_roi = my_cube.crop(lower_corner, upper_corner)
 
 .. _sequence_slicing:
@@ -130,11 +124,12 @@ It does not rebin or interpolate the data.  The order of the high level coordina
 Slicing NDCubeSequences
 =======================
 As with `~ndcube.NDCube`, `~ndcube.NDCubeSequence` is sliced by applying the standard slicing API.
-The `~ndcube.NDCubeSequence` slicing infrastrcuture determines which cubes should be kept from the input for the sequence axis, then passes the rest of the slicing off to desired NDCubes.
+The `~ndcube.NDCubeSequence` slicing infrastrcuture determines which cubes should be kept based on the sequence axis input, then passes the rest of the slicing off to desired NDCubes.
 Thus the data arrays, WCS transformations, masks, uncertainty arrays, and extra coordinates are all altered accorindingly in each relevant sub-cube.
 Say we have three NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4, 5)``.
 
-.. code-block:: python
+.. expanding-code-block:: python
+  :summary: Click to see the instantiation of the NDCubeSequence.
 
   >>> import astropy.units as u
   >>> import astropy.wcs
@@ -165,11 +160,13 @@ Say we have three NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4,
   >>> # Instantiate NDCubeSequence. Let the common axis be 0.
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], common_axis=0)
 
+
 Just as we did in the :ref:`ndcubesequence` section, let's represent this `~ndcube.NDCubeSequence` pictorally in the figure below.
 Each `~ndcube.NDCube` is represented by a blue square inset with a smaller red one.
 The blue square represents its array-based data while the red square represents its coordinate and metadata.
 Panel a) shows the sequence in its default configuration, with the sequence axis acting as an axis perpendicular and in addition to the cube axes.
-However because we defined ``common_axis=0`` above, we can think of the cubes as arrange sequentially along that axis, as represented in panel b).
+However let's say we defined ``common_axis=0`` above.
+In that case we can also think of the cubes as arrange sequentially along that axis, as represented in panel b).
 For ease of representation we have not shown the 3rd axis of the cubes.
 
 .. image:: images/ndcubesequence_diagram.png
@@ -184,7 +181,7 @@ However, with `~ndcube.NDCubeSequence` this becomes as simple as indexing a sing
 
 .. code-block:: python
 
-  >>> regions_of_interest_in_sequence = my_sequence[1:4, 1:3, 1:3, 1:3]
+  >>> my_sequence_roi = my_sequence[1:4, 1:3, 1:3, 1:3]
 
 The result of this operation is shown in the next figure.
 The new `~ndcube.NDCubeSequence` contains only three cubes.
@@ -199,19 +196,19 @@ We can confirm the dimensionality and physical types of the new sequence by chec
 
 .. code-block:: python
 
-  >>> regions_of_interest_in_sequence.dimensions
+  >>> my_sequence_roi.dimensions
   (<Quantity 3. pix>, <Quantity 2. pix>, <Quantity 2. pix>, <Quantity 2. pix>)
-  >>> regions_of_interest_in_sequence.array_axis_physical_types
+  >>> my_sequence_roi.array_axis_physical_types
   [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 If we want our region of interest to only apply to a single sub-cube, and we index the sequence axis with an `int`, an `~ndcube.NDCube` is returned.
 
 .. code-block:: python
 
-  >>> roi_from_single_subcube = my_sequence[1, 0, 1:3, 1:4]
-  >>> roi_from_single_subcube.dimensions
+  >>> single_cube_roi = my_sequence[1, 0, 1:3, 1:4]
+  >>> single_cube_roi.dimensions
   <Quantity [2., 3.] pix>
-  >>> roi_from_single_subcube.array_axis_physical_types
+  >>> single_cube_roi.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
 
@@ -239,7 +236,7 @@ Instead, we simply have the option of using regular slicing or `ndcube.NDCubeSeq
 
 In the above example, we set the common axis to ``0``.
 Recall that, ``my_sequence`` has a shape of ``(<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)``.
-Therefore is has ``cube-like`` dimensions of ``(<Quantity 16. pix>, <Quantity 4. pix>, <Quantity 5. pix>)`` where the first sub-cube extends along the 0th cube-like axis from 0 to 4, the second from 4 to 8 and the third from 8 to 12, and the fourth from 12 to 16.
+Therefore it has ``cube-like`` dimensions of ``(<Quantity 16. pix>, <Quantity 4. pix>, <Quantity 5. pix>)`` where the first sub-cube extends along the 0th cube-like axis from 0 to 4, the second from 4 to 8 and the third from 8 to 12, and the fourth from 12 to 16.
 
 .. code-block:: python
 
@@ -251,10 +248,10 @@ This can be achieved by entering:
 
 .. code-block:: python
 
-  >>> roi_from_single_subcube = my_sequence.index_as_cube[4, 1:3, 1:4]
-  >>> roi_from_single_subcube.dimensions
+  >>> single_cube_roi = my_sequence.index_as_cube[4, 1:3, 1:4]
+  >>> single_cube_roi.dimensions
   <Quantity [2., 3.] pix>
-  >>> roi_from_single_subcube.array_axis_physical_types
+  >>> single_cube_roi.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
 
@@ -278,15 +275,15 @@ However, `~ndcube.NDCubeSequence.index_as_cube` also works when the region of in
 Say we want the same region of interest in the 2nd and 3rd cube dimensions, but this time from the final slice along the 1st cube axis of the 1st sub-cube the whole 2nd sub-cube and the 1st slice of the 3rd sub-cube.
 In cube-like indexing this corresponds to slices 3 to 9 along to their 1st cube axis.
 
-..code-block:: python
+.. code-block:: python
 
-  >>> roi_across_subcubes = my_sequence.index_as_cube[3:9, 1:3, 1:4]
-  >>> roi_across_subcubes.dimensions
+  >>> roi_across_cubes = my_sequence.index_as_cube[3:9, 1:3, 1:4]
+  >>> roi_across_cubes.dimensions
   (<Quantity 3. pix>,
    <Quantity [1., 4., 1.] pix>,
    <Quantity 2. pix>,
    <Quantity 3. pix>)
-  >>> roi_across_subcubes.array_axis_physical_types
+  >>> roi_across_cubes.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),

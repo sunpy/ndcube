@@ -3,7 +3,7 @@
 ==========================
 Coordinate Transformations
 ==========================
-In this section we will discuss the many other ways in which the ndcube classes support the integration of data and its coordinates.
+In this section we will discuss the ways in which ND objects support the integration of data and coordinates.
 In doing so we will use the data array and WCS object defined below.
 
 .. code-block:: python
@@ -33,10 +33,10 @@ This occurs because the x-axis is built up over sequential exposures taken at di
 Our WCS might describe latitude and longitude, but omit time.
 So how can we represent time without having to construct a whole new custom WCS object?
 One way is to use the `ndcube.ExtraCoords` class.
-It provides users with a mechanism of attaching coordinates to their `~ndcube.NDCube` instances in addition to those in the primary WCS object.
+It provides a mechanism of attaching coordinates to `~ndcube.NDCube` instances in addition to those in the primary WCS object.
 This may be desired because, as above, the primary WCS omits a physical type.
-Or it may be that the users have an alternative set of coordinates that they would like to be able to keep separate from the primary set at ``.wcs`` for some reason.
-To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~astropy.time.Time` object representing the time at each element along the first axis of the ``data`` arrar defined above.
+Or it may be that the users have an alternative set of coordinates to the primary set at ``.wcs``.
+To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~astropy.time.Time` object representing the time at each location along the first axis of the ``data`` array defined above.
 
 .. code-block:: python
 
@@ -46,16 +46,18 @@ To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~ast
 
 Now let's create an `~ndcube.ExtraCoords` instance and add our time extra coordinate to it.
 To do this we need to supply the physical type of the coordinate, the array axis to which is corresponds, and the values of the coordinate.
-The number of values should equal the length of the axis.
+The number of values should equal the length of the axis and the physical type must be a valid `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_ word.
+If one does not exist for your coordinate, prepend the type with ``custom:``.
 
 .. code-block:: python
 
   >>> from ndcube import ExtraCoords
   >>> my_extra_coords = ExtraCoords()
-  >>> my_extra_coords.add_coordinate('time', (2,), timestamps)  # TO DO: Change the mapping to 0 when bug fixed.
+  >>> my_extra_coords.add_coordinate('time', (2,), timestamps)  # TO DO: Change the mapping to 0 Issue #342 resolved.
 
 An indefinite number of coordinates can be added in this way.
 Alternatively, we can generate an `~ndcube.ExtraCoords` object from a WCS.
+
 The names of the coordinates can be accessed via the `~ndcube.ExtraCoords.keys` method.
 
 .. code-block:: python
@@ -100,15 +102,17 @@ Storing such coordinates is the role of the `ndcube.GlobalCoords` class.
 `~ndcube.NDCube` is instatiated with an empty `~ndcube.GlobalCoords` object already attached at `ndcube.NDCube.global_coords`.
 Coordinates can be added to this object if and when the user sees fit.
 Let's attach a scalar global coordinate to ``my_cube`` representing some kind of distance.
-We do by supplying the coordinate's name, physical type and value via the `~ndcube.GlobalCoords.add` method.
+We do this by supplying the coordinate's name, physical type and value via the `~ndcube.GlobalCoords.add` method.
 
 .. code-block:: python
 
   >>> import astropy.units as u
   >>> my_cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
 
-`~ndcube.GlobalCoords` allows multiple coordinates of the same physical type.
-Therefore when adding a global coordinate, you must provide a unique coordinate name, its physical time and the coordinate value.
+Because `~ndcube.GlobalCoords` allows multiple coordinates of the same physical type, a unique coordinate name must be provided.
+Furthermore the physical type must be a valid `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_ word.
+If one does not exist for your coordinate, prepend the type with ``custom:``.
+
 The value of the coordinate can be accessed by indexing the `~ndcube.GlobalCoords` instance with the coordinate name.
 
 .. code-block:: python
@@ -134,9 +138,9 @@ Because `~ndcube.GlobalCoords` inherits from `Mapping`, it contains a number of 
   >>> list(my_cube.global_coords.items())  # Returns a list of (name, value) pairs
   [('distance', <Quantity 1. m>)]
 
-One of the most common use cases for `~ndcube.GlobalCoords` is associated with slicing (:ref:`cube_slicing`).
-In addition to tracking and updating the `~ndcube.NDCube.wcs` and `~ndcube.NDCube.extra_coords` objects, `~ndcube.NDCube`'s slicing infrastucture also identifies when coordinates no longer correspond to array axes due to slicing.
-The values of such dropped coordinates are stored in the `astropy.wcs.WCS` instance from where `~ndcube.GlobalCoords` can access and return them.
+A common use case for `~ndcube.GlobalCoords` is associated with slicing (:ref:`cube_slicing`).
+In addition to tracking and updating the `~ndcube.NDCube.wcs` and `~ndcube.NDCube.extra_coords` objects, `~ndcube.NDCube`'s slicing infrastucture also identifies when the array axes to which a coordinate corresponds are dropped.
+The values of dropped coordiantes at the position where the `~ndcube.NDCube` was sliced are stored in the `astropy.wcs.WCS` instance from where `~ndcube.GlobalCoords` can access and return them.
 
 .. code-block:: python
 
@@ -158,9 +162,9 @@ The values of such dropped coordinates are stored in the `astropy.wcs.WCS` insta
 NDCube Coordinates
 ==================
 WCS objects are a powerful and concise way of storing complex functional coordinate transformations.
-However, their API be cumbersome when the coordinates along a whole axis is desired.
+However, their API can be cumbersome when the coordinates along a whole axis are desired.
 Making this process easy and intuitive is the purpose of `ndcube.NDCube.axis_world_coords`.
-Using the information on the data dimensions and optional inputs from the user, this method returns high level coordinate objects - e.g. `~astropy.coordinates.SkyCoord`, `~astropy.time.Time`, `~astropy.coordinates.SpectralCoord`, `~astropy.units.Quantity` - containing the coordinates at each array element.
+Using the information on the data dimensions and optional inputs from the user, this method returns high level coordinate objects --- e.g. `~astropy.coordinates.SkyCoord`, `~astropy.time.Time`, `~astropy.coordinates.SpectralCoord`, `~astropy.units.Quantity` --- containing the coordinates at each array element.
 Let's say we wanted the wavelength values along the spectral axis of ``my_cube``.
 We can do this in a couple ways.
 First we can provide `~ndcube.NDCube.axis_world_coords` with the array axis number of the spectral axis.
@@ -273,7 +277,7 @@ If users would prefer not to deal with high level coordinate objects, they can e
 The API for this method is the same as `~ndcube.NDCube.axis_world_coords`.
 The only difference is that `~astropy.units.Quantity` objects are returned, one for each physical type requested.
 In the above case this means that there would be separate `~astropy.units.Quantity` objects for latitude and longitude, but they would both have the same 2-D shape.
-The `~astropy.units.Quantity` objects are returned in world order and correspond to the physical types in the `~astropy.wcs.WCS.world_axis_physical_types`.
+The `~astropy.units.Quantity` objects are returned in world order and correspond to the physical types in the `astropy.wcs.WCS.world_axis_physical_types`.
 The `~astropy.units.Quantity` objects do not contain important contextual information, such as reference frame, which is needed to fully interpret the coordinate values.
 However for some use cases this level of completeness is not needed.
 
@@ -352,10 +356,10 @@ Suppose that each cube represents a different interval in the spectral dimension
 If each NDCube has a shape of ``(4, 4, 5)``, then there are 20 positions along the common axis (5 array elements x 4 NDCubes).
 
 The purpose of `ndcube.NDCubeSequence.common_axis_coords` is to make it easy to get the value of a coordinate at any point along the common axis, irrespective of the cube to which it corresponds.
-It determines which coordinates within the NDCubes' WCS and `~ndcube.ExtraCoords` objects both correspond to the common axis and are common among all cubes.
-For each of these coordinates, it produces a list with the same length as the common axis.
+It determines which coordinates within the NDCubes' WCS and `~ndcube.ExtraCoords` objects correspond to the common axis and are present in all cubes.
+For each of these coordinates, a list is produced with the same length as the common axis.
 Each entry gives the coordinate value(s) at that position along the common axis.
-The coordinates are in world axis order.
+The coordinates are returned in world axis order.
 
 .. expanding-code-block:: python
   :summary: Click to see instantiation of NDCubeSequence
