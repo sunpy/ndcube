@@ -15,7 +15,7 @@ NDCube
 It's designed to manage a single data array and set of WCS transformations.
 `~ndcube.NDCube` provides unified slicing, visualization, coordinate transformation and self-inspection APIs which are independent of the number and physical types of axes.
 It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the AstroPy `WCS API (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
-This makes `~ndcube.NDCube` an powerful base class when developing tools for specific data types.
+This makes `~ndcube.NDCube` a powerful base class when developing tools for specific data types.
 
 Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can hold optional supplementary data in addition to its data array and primary WCS transformations.
 These include:
@@ -269,7 +269,7 @@ Once again, we can see the physical types associated with each axis in the cube-
 Explode Along Axis
 ------------------
 During analysis of some data --- say of a stack of images --- it may be necessary to make some different fine-pointing adjustments to each image that isn't accounted for the in the original WCS translations, e.g. due to satellite wobble.
-If these changes are not describable with a single WCS object, it may be desirable to break up the N-D sub-cubes of an `~ndcube.NDCubeSequence` into an sequence of sub-cubes with dimension N-1.
+If these changes are not describable with a single WCS object, it may be desirable to break up the N-D sub-cubes of an `~ndcube.NDCubeSequence` into a sequence of sub-cubes with dimension N-1.
 This would enable a separate WCS object to be associated with each image and hence allow individual pointing adjustments.
 
 Rather than manually dividing the cubes up and deriving the corresponding WCS object for each exposure, `~ndcube.NDCubeSequence` provides a useful method, `~ndcube.NDCubeSequence.explode_along_axis`.
@@ -298,7 +298,7 @@ To learn how to slice `~ndcube.NDCubeSequence` instances and manipulate sequence
 NDCollection
 ============
 `~ndcube.NDCollection` is a container class for grouping `~ndcube.NDCube` or `~ndcube.NDCubeSequence` instances in an unordered way.
-`~ndcube.NDCollection` therefore is differs from `~ndcube.NDCubeSequence` in that the objects contained are not considered to be in any order, are not assumed to represent measurements of the same physical property, and they can have different dimensionalities.
+`~ndcube.NDCollection` therefore differs from `~ndcube.NDCubeSequence` in that the objects contained are not considered to be in any order, are not assumed to represent measurements of the same physical property, and they can have different dimensionalities.
 However `~ndcube.NDCollection` is more powerful than a simple `dict` because it enables us to identify axes that are aligned between the objects and hence provides some limited slicing functionality.
 (See :ref:`collection_slicing` to for more on slicing.)
 
@@ -346,7 +346,7 @@ And just like a `dict` we can see the different names available using the ``keys
 
 Aligned Axes
 ------------
-In the above example, the linewidth object's axes are aligned with the first two axes of observations object.
+In the above example, the linewidth object's axes are aligned with the first two axes of the observations object.
 Designating these axes as aligned allows both members of the collection to be simultanouesly sliced, thus enabling users to quickly and accurately crop their entire data set to a region of interest.
 (For more on this, see :ref:`collection_slicing`.)
 There are a few ways to designate aligned axes.
@@ -366,7 +366,7 @@ We can see which axes are aligned by inpecting the ``aligned_axes`` attribute:
   {'observations': (0, 1), 'linewidths': (0, 1)}
 
 This gives us the array axes for each ND object separately.
-We should read this as array axis 0 of ``observations`` is aligned with the array axis 0 of ``'linewidths'``, as so on.
+We should read this as array axis 0 of ``observations`` is aligned with the array axis 0 of ``'linewidths'``, and so on.
 However, the mapping can be more complicated.
 Let's say we reversed the axes of our ``linewidths`` ND object for some reason:
 
@@ -413,9 +413,9 @@ We can also see the physical properties to which the aligned axes correspond by 
 
 This returns a `list` of `tuple` in array axis order giving the physical types that correspond to each aligned axis.
 For each aligned axis, only physical types associated with all the cubes in the collection are returned.
-Note that there is no there is no requirement that all aligned axes must represent the same physical types.
+Note that there is no requirement that all aligned axes must represent the same physical types.
 They just have to be the same length.
-Therefore, is it possible that this property returns no physical types.
+Therefore, it is possible that this property returns no physical types.
 The physical types within each tuple are returned unordered, not in world axis order as might be expected.
 This is because there is no requirement that members must have the same axis ordering.
 

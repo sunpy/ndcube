@@ -157,7 +157,7 @@ Because `~ndcube.GlobalCoords` inherits from `~collections.abc.Mapping`, it cont
 
 A common use case for `~ndcube.GlobalCoords` is associated with slicing (:ref:`cube_slicing`).
 In addition to tracking and updating the `~ndcube.NDCube.wcs` and `~ndcube.NDCube.extra_coords` objects, `~ndcube.NDCube`'s slicing infrastucture also identifies when the array axes to which a coordinate corresponds are dropped.
-The values of dropped coordiantes at the position where the `~ndcube.NDCube` was sliced are stored in the `astropy.wcs.WCS` instance from where `~ndcube.GlobalCoords` can access and return them.
+The values of dropped coordinates at the position where the `~ndcube.NDCube` was sliced are stored in the `astropy.wcs.WCS` instance from where `~ndcube.GlobalCoords` can access and return them.
 
 .. code-block:: python
 
@@ -204,7 +204,7 @@ Alternatively we can provide a unique substring of the physical type of the coor
 As discussed above, some WCS axes are not independent.
 For those axes, `~ndcube.NDCube.axis_world_coords` returns objects with the same number of dimensions as dependent axes.
 For example, helioprojective longitude and latitude are dependent.
-Therefore if we ask for longitude, we will get back a `~astropy.coordinates.SkyCoord` with containing 2-D latitude and longitude arrays with the same shape as the array axes to which they correspond.
+Therefore if we ask for longitude, we will get back a `~astropy.coordinates.SkyCoord` containing 2-D latitude and longitude arrays with the same shape as the array axes to which they correspond.
 For example:
 
 .. code-block:: python
