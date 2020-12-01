@@ -215,7 +215,7 @@ This is in addition to anything located in the ``.meta`` objects of the NDCubes.
   >>> my_sequence_metadata = {"Description": "This is some sample NDCubeSequence metadata."}
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], meta=my_sequence_metadata)
   >>> my_sequence.meta
-  {'Description": "This is some sample NDCubeSequence metadata.'}
+  {'Description': 'This is some sample NDCubeSequence metadata.'}
 
 The `~ndcube.NDCube` instances are stored in ``my_sequence.data`` while the metadata is stored at ``my_sequence.meta``.
 If we wanted to define a common axis, we must set it during instantiation.
