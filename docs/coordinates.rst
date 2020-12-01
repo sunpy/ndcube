@@ -22,6 +22,15 @@ In doing so we will use the data array and WCS object defined below.
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
 
+Introduction to WCS
+===================
+
+To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework.
+This framework allows a wide variety of projections, rotations and transformations be stored and executed.
+Because this framework allows coordinates transformations to be stored functionally, rather than in memory-heavy lookup tables, and because it caters for projections often used in astronomy, e.g. RA & Dec., WCS has become the most common coordinate transformation framework in astronomy.
+Much of ndcube's coordinate, visualization and even slicing infrastructure relies on WCS and leverages the tools developed by AstroPy.
+We encourage users unfamiliar with WCS to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ to learn more.
+
 .. _extra_coords:
 
 ExtraCoords
