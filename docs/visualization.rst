@@ -97,10 +97,10 @@ Setting the x and y ranges of the plot can be done simply by indexing the `~ndcu
   >>> plt.cla()
   >>> plt.close()
 
-No args are required.
-The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
+Note how no arguments are required, the necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
 However optional keywords enable customization of the visualization.
-For `~ndcube.NDCube` instances with more than one array axis, the ``plot_axes`` keyword is used to determine which array axes are displayed on which plot axes.It is set to a list with a length equal to the number of array axes.
+For `~ndcube.NDCube` instances with more than one array axis, the ``plot_axes`` keyword is used to determine which array axes are displayed on which plot axes.
+It is set to a list with a length equal to the number of array axes.
 The array axis to be displayed on the x-axis is marked by ``'x'`` in the corresponding element of the ``plot_axes`` list, while the array axis for the y-axis is marked with a ``'y'``.
 If no ``'y'`` axis is provided, a line animation is produced.
 By default the ``plot_axes`` argument is set so that the last array axis to shown on the x-axis and the penultimate array axis is shown on the y-axis.
@@ -139,7 +139,6 @@ The ``plot_axes`` kwarg can also be used to generated a line animation by omitti
 This enables a rigorous representation of the coordinates on the plot, including those that are not aligned to the pixel grid.
 It also enables the coordinates along the plot axes to be updated between frames of an animation.
 `ndcube.NDCube.plot` therefore allows users to decide which WCS object to use, either `~ndcube.NDCube.wcs` or `~ndcube.NDCube.combined_wcs` which also includes the `~ndcube.ExtraCoords`.
-In principle, another third-part WCS can be used so long as it is a valid description of all array axes.
 
 .. plot::
   :context:

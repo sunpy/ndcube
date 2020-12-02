@@ -14,7 +14,7 @@ NDCube
 `~ndcube.NDCube` is the primary data class the ndcube package.
 It's designed to manage a single data array and set of WCS transformations.
 `~ndcube.NDCube` provides unified slicing, visualization, coordinate transformation and self-inspection APIs which are independent of the number and physical types of axes.
-It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the AstroPy `WCS API (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
+It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the Astropy `WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
 This makes `~ndcube.NDCube` a powerful base class when developing tools for specific data types.
 
 Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can hold optional supplementary data in addition to its data array and primary WCS transformations.
@@ -25,7 +25,7 @@ the uncertainty of each data value (subclass of `astropy.nddata.NDUncertainty` l
 and a mask marking unreliable data values (boolean array located at ``.mask``).
 Note that in keeping with the convention of `numpy.ma.masked_array`, ``True`` means that the corresponding data value is masked, i.e. it is bad data, while ``False`` signifies good data.
 `~ndcube.NDCube` also provides classes for representing additional coordinates not included in the primary WCS object.
-These are `~ndcube.ExtraCoords` (located at ``.extra_coords``) --- for additional coordinates associated with specific data axes --- and `~ndcube.GlobalCoords` (located at ``.global_coords``) for scalar coordinates associated with the `~ndcube.NDCube` as a whole.
+These are `~ndcube.ExtraCoords` (located at ``.extra_coords``) --- for additional coordinates associated with specific array axes --- and `~ndcube.GlobalCoords` (located at ``.global_coords``) for scalar coordinates associated with the `~ndcube.NDCube` as a whole.
 These are discussed in the section in this guide on :ref:`coordinates`.
 
 The figure below shows a schematic of an `~ndcube.NDCube` instance and the relationships between its components.
@@ -39,7 +39,7 @@ Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~
 
 Initializing an NDCube
 ----------------------
-To initialize the most basic `~ndcube.NDCube` object, we need is a `numpy.ndarray`-like array containing the data and an APE-14-compliant WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
+To initialize the most basic `~ndcube.NDCube` object, we need a `numpy.ndarray`-like array containing the data and a WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
 Let's create a 3-D array of data with shape ``(4, 4, 5)`` and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.
 This could represent images of the Sun taken at different wavelengths.
 Remember that due to convention, the order of WCS axes is reversed relative to the data array.
@@ -69,7 +69,7 @@ The ``.data`` attribute should only be used to access specific raw data values.
 When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` instance as a whole so as to ensure that supporting data --- e.g. coordinates, uncertainties, mask --- remain consistent.
 (See :ref:`cube_slicing`.)
 
-To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can  the following:
+To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can do the following:
 
 .. code-block:: python
 
@@ -118,7 +118,7 @@ Dimensions and Physical Types
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
 
-`~ndcube.NDCube.dimensions` returns a `~astropy.units.Quantity` of pixel units giving the length of each dimension in the `~ndcube.NDCube`.
+`~ndcube.NDCube.dimensions` returns a `~astropy.units.Quantity` in pixel units giving the length of each dimension in the `~ndcube.NDCube`.
 `~ndcube.NDCube.array_axis_physical_types` returns tuples of strings denoting the types of physical properties represented by each array axis.
 The tuples are arranged in array axis order, while the physical types inside each tuple are returned in world order.
 As more than one physical type can be associated with an array axis, the length of each tuple can be greater than 1.
@@ -237,7 +237,7 @@ Analagous to `ndcube.NDCube.dimensions`, there is also a `ndcube.NDCubeSequence.
   >>> my_sequence.dimensions
   (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
 
-Slightly differently to `ndcube.NDCube.dimensions`, `ndcube.NDCubeSequence.dimensions` returns a tuple of `astropy.units.Quantity` instances with pixel units, giving the length of each axis.
+Slightly differently to `ndcube.NDCube.dimensions`, `ndcube.NDCubeSequence.dimensions` returns a tuple of `astropy.units.Quantity` instances in pixel units, giving the length of each axis.
 To see the dimensionality of the sequence in the cube-like paradigm, i.e. taking into account the common axis, use the `ndcube.NDCubeSequence.cube_like_dimensions` property.
 
 .. code-block:: python

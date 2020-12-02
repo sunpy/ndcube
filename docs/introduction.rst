@@ -34,13 +34,13 @@ To help the reader we will briefly clarify their meaning here.
 
 A WCS object describes any number of physical types.
 These are referred to as world axes and the order in which they are stored in the WCS object is referred to as world order (or world axis order).
-These physical types map to axes of a data array, which are referred to as pixel axes.
+These physical types are mapped through the WCS to one or more "pixel" axes.
 Although in the simplest case, one world axis would uniquely map to one pixel axis, it is possible for multiple world axes can be associated with multiple pixel axes and vice versa.
 This is especially common when dealing with projections of the sky onto 2-D image planes.
 Take the example of an image of the Sun taken from Earth.
 The world axis of helioprojective longitude is dependent on helioprojective latitude, i.e. there is not one pixel axis for longitude and another for latitude.
 Both world axes are associated with both pixel axes.
-In an APE-14-compliant WCS object, the mapping between pixel and world axes is described by the `~astropy.wcs.WCS.axis_correlation_matrix`.
+In a WCS object, the mapping between pixel and world axes is described by the `~astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
 
 Due to unfortunate convention, WCS orders its pixel axes in the inverse order to numpy.
 Therefore we use the term "array axes" to refer to pixel axes which have been reversed to reflect the axis order of the numpy data array.
@@ -83,6 +83,6 @@ ndcube's visualisation code has been rewritten to exclusively use `~astropy.visu
 However, it also allows for a more complete and accurate representation of coordinates along plot axes and animations.
 `~ndcube.NDCube.extra_coords` has been completely re-written to serve as an extra WCS, which can be readily constructed from lookup tables.
 This enables users to easily include the extra coordinates when visualizing the data.
-Finally, a new `~ndcube.GlobalCoords` class can to hold coordinates that do not refer to any axis.
+Finally, a new `~ndcube.GlobalCoords` class can hold coordinates that do not refer to any axis.
 This is particularly useful when the dimensionality of an `~ndcube.NDCube` is reduced by slicing.
 The value of a coordinate at the location along the dropped axis at which the `~ndcube.NDCube` was sliced can be retained.

@@ -7,17 +7,17 @@ Coordinate Transformations
 Introduction to WCS
 ===================
 
-To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework, specifically the tools written by AstroPy that implement this framework in Python.
+To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework, specifically the tools written by Astropy that implement this framework in Python.
 WCS allows a wide variety of projections, rotations and transformations be stored and executed.
 Because it allows coordinates transformations to be stored functionally, rather than in memory-heavy lookup tables, and because it caters for both astronomy-specific coordinate systems (e.g. RA & Dec.) as well as simpler, more common ones (e.g. wavelength), WCS has become the most common coordinate transformation framework in astronomy.
 
-The foundation of the AstroPy WCS implementation is the `~astropy.wcs.WCS` object, which stores the critical information describing the coordinate transformations (e.g. the reference pixel and its corresponding coordinate values, ``crpix`` and ``crval``, and the projection type, ``ctype``).
-It also executes these transformations via methods like `~astropy.wcs.WCS.world_to_pixel` and `~astropy.wcs.WCS.world_to_pixel` which convert between pixel indices and world coordinate values.
+The foundation of the Astropy WCS implementation is the `~astropy.wcs.WCS` object, which stores the critical information describing the coordinate transformations (e.g. the reference pixel and its corresponding coordinate values, ``crpix`` and ``crval``, and the projection type, ``ctype``).
+It also executes these transformations via methods like `~astropy.wcs.WCS.world_to_pixel` and `~astropy.wcs.WCS.pixel_to_world` which convert between pixel indices and world coordinate values.
 However, these methods are independent of the data array and the `~astropy.wcs.WCS` object carries little or no information about the data itself.
 That is why the ndcube package is needed.
-Nonetheless, AstroPy's WCS implementation is a crucial pillar of ndcube, as is the more generalized offshoot `gWCS <https://gwcs.readthedocs.io/en/stable/>`_ which provides greater generalization for the loss of some performance.
-Crucially though for ndcube, both implementations adhere to the `AstroPy WCS API (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
-A familiarity with WCS and the AstroPy and gWCS Python implementations will be helpful (although hopefully not essential) in understanding this guide.
+Nonetheless, Astropy's WCS implementation is a crucial pillar of ndcube, as is the more generalized offshoot `gWCS <https://gwcs.readthedocs.io/en/stable/>`_ which provides greater generalization outside of the FITS data model.
+Crucially though for ndcube, both implementations adhere to the `Astropy WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
+A familiarity with WCS and the Astropy and gWCS Python implementations will be helpful (although hopefully not essential) in understanding this guide.
 We therefore encourage users to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ and the `gWCS documentation <https://gwcs.readthedocs.io/en/stable/>`_ to learn more.
 
 In this section we will discuss the features ndcube has built upon the Astropy and gWCS WCS implementations to support the integration of data and coordinates.
@@ -70,7 +70,7 @@ If one does not exist for your coordinate, prepend the type with ``custom:``.
 
   >>> from ndcube import ExtraCoords
   >>> my_extra_coords = ExtraCoords()
-  >>> my_extra_coords.add_coordinate('time', (2,), timestamps)  # TO DO: Change the mapping to 0 Issue #342 resolved.
+  >>> my_extra_coords.add_coordinate('time', (2,), timestamps)  # TODO: Change the mapping to 0 Issue #342 resolved.
 
 An indefinite number of coordinates can be added in this way.
 Alternatively, we can generate an `~ndcube.ExtraCoords` object from a WCS.
@@ -226,7 +226,7 @@ For example:
       (6480.14182173, 3.59960344e+03), (6480.36116753, 5.39910830e+03)]]>
 
 It is also possible to request more than one axis's world coordinates by setting ``axes`` to an iterable of data axis number and/or axis type strings.
-The coordinate objects are returned in world axis order in accordance with APE 14.
+The coordinate objects are returned in world axis order.
 
 .. code-block:: python
 
