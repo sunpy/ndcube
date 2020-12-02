@@ -20,7 +20,7 @@ This makes `~ndcube.NDCube`'s slicing infrastructure very powerful.
 To slice ``my_cube``, simply do something like:
 
 .. expanding-code-block:: python
-  :summary: Expand to see my_cube instantiated.
+  :summary: Expand to see <span class="pre">my_cube</span> instantiated.
 
   >>> import astropy.units as u
   >>> import astropy.wcs
@@ -105,7 +105,7 @@ Each iterable describes a single location in the data array in real world coordi
 The first iterable describes the lower corner of the region of interest and thus contains the lower limit of each real world coordinate.
 The second iterable represents the upper corner of the region of interest and thus contains the upper limit of each real world coordinate.
 The crop method indentifies the smallest rectangular region in the data array that contains both the lower and upper limits in all the real world coordinates, and crops the `~ndcube.NDCube` to that region.
-It does not rebin or interpolate the data.  The order of the high level coordinate objects in each iterable must be the same as that expected by `astropy.wcs.WCS.world_to_array_index`, namely in world order.
+It does not rebin or interpolate the data.  The order of the high level coordinate objects in each iterable must be the same as that expected by `astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`, namely in world order.
 
 .. code-block:: python
 
