@@ -154,6 +154,8 @@ It also enables the coordinates along the plot axes to be updated between frames
   >>> plt.cla()
   >>> plt.close()
 
+.. _sequence_plotting:
+
 Visualizing NDCubeSequences
 ===========================
 Since ndcube 2.0, the `~ndcube.NDCubeSequence` visualization support has been dropped.

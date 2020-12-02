@@ -126,10 +126,28 @@ Slicing NDCubeSequences
 As with `~ndcube.NDCube`, `~ndcube.NDCubeSequence` is sliced by applying the standard slicing API.
 The `~ndcube.NDCubeSequence` slicing infrastrcuture determines which cubes should be kept based on the sequence axis input, then passes the rest of the slicing off to desired NDCubes.
 Thus the data arrays, WCS transformations, masks, uncertainty arrays, and extra coordinates are all altered accorindingly in each relevant sub-cube.
-Say we have three NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4, 5)``.
+
+Just as we did in the :ref:`ndcubesequence` section, let's represent this `~ndcube.NDCubeSequence` pictorally in the figure below.
+Each `~ndcube.NDCube` is represented by a blue square inset with a smaller red one.
+The blue square represents its array-based data while the red square represents its coordinate and metadata.
+Panel a) shows the sequence in its default configuration, with the sequence axis acting as an axis perpendicular and in addition to the cube axes.
+However let's say we defined ``common_axis=0`` above.
+In that case we can also think of the cubes as arrange sequentially along that axis, as represented in panel b).
+For ease of representation we have not shown the 3rd axis of the cubes.
+
+.. image:: images/ndcubesequence_diagram.png
+  :width: 800
+  :alt: Schematic of an NDCubeSequence before slicing.
+
+Say we have four NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4, 5)``.
+Now suppose we want to obtain a region of interest from the 2nd, 3rd, and 4th cubes in the sequence.
+Let the region of interest in each cube be defined as between the 2nd and 3rd pixels (inclusive) in all cube dimensions.
+This would be a cumbersome slicing operation if treating the sub-cubes independently.
+(This would be made even worse without the power of `~ndcube.NDCube` where the data arrays, WCS objects, masks, uncertainty arrays, etc. would all have to be sliced independently!)
+However, with `~ndcube.NDCubeSequence` this becomes as simple as indexing a single array.
 
 .. expanding-code-block:: python
-  :summary: Click to see the instantiation of the NDCubeSequence.
+  :summary: Click to reveal/hide the instantiation of the NDCubeSequence.
 
   >>> import astropy.units as u
   >>> import astropy.wcs
@@ -159,25 +177,6 @@ Say we have three NDCubes in an `~ndcube.NDCubeSequence`, each of shape ``(4, 4,
 
   >>> # Instantiate NDCubeSequence. Let the common axis be 0.
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2, cube3], common_axis=0)
-
-
-Just as we did in the :ref:`ndcubesequence` section, let's represent this `~ndcube.NDCubeSequence` pictorally in the figure below.
-Each `~ndcube.NDCube` is represented by a blue square inset with a smaller red one.
-The blue square represents its array-based data while the red square represents its coordinate and metadata.
-Panel a) shows the sequence in its default configuration, with the sequence axis acting as an axis perpendicular and in addition to the cube axes.
-However let's say we defined ``common_axis=0`` above.
-In that case we can also think of the cubes as arrange sequentially along that axis, as represented in panel b).
-For ease of representation we have not shown the 3rd axis of the cubes.
-
-.. image:: images/ndcubesequence_diagram.png
-  :width: 800
-  :alt: Schematic of an NDCubeSequence before slicing.
-
-Now say we want to obtain a region of interest from the 2nd, 3rd, and 4th cubes in the sequence.
-Let's say the region of interest in each cube is defined as between the 2nd and 3rd pixels (inclusive) in all cube dimensions.
-This would be a cumbersome slicing operation if treating the sub-cubes independently.
-(This would be made even worse without the power of `~ndcube.NDCube` where the data arrays, WCS objects, masks, uncertainty arrays, etc. would all have to be sliced independently!)
-However, with `~ndcube.NDCubeSequence` this becomes as simple as indexing a single array.
 
 .. code-block:: python
 
@@ -310,43 +309,54 @@ Nonetheless, `~ndcube.NDCollection`'s slicing capability represents one of its g
 This has the potential to drastically speed up analysis workflows.
 
 To demonstrate, let's instantiate an `~ndcube.NDCollection` with aligned axes, as we did in the :ref:`ndcollection` section.
-(We have already defined ``my_cube`` in the :ref:`cube_slicing` section.)
+
+.. expanding-code-block:: python
+  :summary: Click to reveal/hide the instantiation of the 'linewidths' cube.  We'll use my_cube defined above for the 'observations' cube.
+
+  >>> # Define derived linewidth NDCube
+  >>> linewidth_data = np.random.rand(4, 4) / 2 # dummy data
+  >>> linewidth_wcs = astropy.wcs.WCS(naxis=2)
+  >>> linewidth_wcs.wcs.ctype = 'HPLT-TAN', 'HPLN-TAN'
+  >>> linewidth_wcs.wcs.cunit = 'deg', 'deg'
+  >>> linewidth_wcs.wcs.cdelt = 0.5, 0.4
+  >>> linewidth_wcs.wcs.crpix = 2, 2
+  >>> linewidth_wcs.wcs.crval = 0.5, 1
+  >>> linewidth_cube = NDCube(linewidth_data, linewidth_wcs)
 
 .. code-block:: python
 
-  >>> # Define derived linewidth NDCube to link with my_cube, defined above, in an NDCollection.
-  >>> linewidth_data = np.random.rand(4, 4) / 2 # dummy data
-  >>> linewidth_wcs_dict = {
-  ...    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 20,
-  ...    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 10}
-  >>> linewidth_wcs = astropy.wcs.WCS(linewidth_wcs_dict)
-  >>> linewidth_cube = NDCube(linewidth_data, linewidth_wcs)
-
-  >>> # Enter my_cube, defined in a previous section, with the cube defined just above.
   >>> from ndcube import NDCollection
   >>> my_collection = NDCollection([("observations", my_cube), ("linewidths", linewidth_cube)],
   ...                              aligned_axes=(0, 1))
 
-To slice an `~ndcube.NDCollection` you can simply do the following:
+To slice the `~ndcube.NDCollection` you can simply do the following:
 
 .. code-block:: python
 
   >>> sliced_collection = my_collection[1:3, 3:8]
+
+Note that we still have the same number of ND objects, but both have been sliced using the inputs provided by the user.
+The slicing takes account of and updates the aligned axis information.
+Thus a self-consistent result is obtained.
+
+.. code-block:: python
+
   >>> sliced_collection.keys()
   dict_keys(['observations', 'linewidths'])
   >>> sliced_collection.aligned_dimensions
   <Quantity [2.0, 1.0] pix>
 
-Note that we still have the same number of ND objects, but both have been sliced using the inputs provided by the user.
-The slicing takes account of and updates the aligned axis information.
-Therefore a self-consistent result would be obtained even if the aligned axes are not in order.
+This is true even if the aligned axes are not in order.
+Let's say we axis order of the ``linewidths`` cube was reversed.
 
 .. code-block:: python
 
-  >>> linewidth_wcs_dict_reversed = {
-  ...    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 20,
-  ...    'CTYPE1': 'HPLN-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.4, 'CRPIX1': 2, 'CRVAL1': 1, 'NAXIS1': 10}
-  >>> linewidth_wcs_reversed = astropy.wcs.WCS(linewidth_wcs_dict_reversed)
+  >>> linewidth_wcs_reversed = astropy.wcs.WCS(naxis=2)
+  >>> linewidth_wcs_reversed.wcs.ctype = 'HPLN-TAN', 'HPLT-TAN'
+  >>> linewidth_wcs_reversed.wcs.cunit = 'deg', 'deg'
+  >>> linewidth_wcs_reversed.wcs.cdelt = 0.4, 0.5
+  >>> linewidth_wcs_reversed.wcs.crpix = 2, 2
+  >>> linewidth_wcs_reversed.wcs.crval = 1, 0.5
   >>> linewidth_cube_reversed = NDCube(linewidth_data.transpose(), linewidth_wcs_reversed)
 
   >>> my_collection_reversed = NDCollection([("observations", my_cube),
@@ -358,3 +368,5 @@ Therefore a self-consistent result would be obtained even if the aligned axes ar
   dict_keys(['observations', 'linewidths'])
   >>> sliced_collection_reversed.aligned_dimensions
   <Quantity [2.0, 1.0] pix>
+
+The same result is obtained.

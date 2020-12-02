@@ -102,7 +102,7 @@ To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncer
   >>> # Instantiate NDCube with supporting data.
   >>> my_cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta, unit=unit)
 
-Generating `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` objects and attaching them to your `~ndcube.NDCube` is demonstrated in the :ref:`extra_coords` and :ref:`global_coords` sections.
+Attaching coordinates in addition to those described by ``NDCube.wcs`` via `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` is discussed in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
 Dimensions and Physical Types
 -----------------------------
@@ -125,8 +125,39 @@ As more than one physical type can be associated with an array axis, the length 
 This is the case for the 1st and 2nd array array axes which are associated with the coupled world axes of helioprojective latitude and longitude.
 The axis names are in generated in accordance with the International Virtual Observatory Alliance (IVOA) `UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
 
-`~ndcube.NDCube` provides many helpful features, specifically regarding coordinate transformations, slicing and visualization.
-See the :ref:`cube_coordinates`, :ref:`cube_slicing` and :ref:`cube_plotting` sections for more.
+.. _explode_cube:
+
+Explode NDCube Along Axis
+-------------------------
+During analysis of some data --- say a of stack of images --- it may be necessary to make some different fine-pointing adjustments to each image that isn't accounted for the in the original WCS translations, e.g. due to satellite wobble.
+If these changes are not describable with a single WCS object, it may be desirable to break up the NDCube along a given axis into a sequence of (N-1)DCubes each with their own WCS.
+This would enable each WCS to be altered separately.
+
+This is the purpose of the `ndcube.NDCube.explode_along_axis` method.
+To explode ``my_cube`` along the last array axis so that we have 5 2-D images, each at a different wavelength, simply call the `~ndcube.NDCube.explode_along_axis` and supply it with the array axis along which the `~ndcube.NDCube` should be exploded.
+
+.. code-block:: python
+
+  >>> exploded = my_cube.explode_along_axis(2)
+
+This returns an `~ndcube.NDCubeSequence` with where the sequence axis acts as the wavelength axis.
+
+.. code-block:: python
+
+  >>> exploded.dimensions  # doctest: +SKIP
+  (<Quantity 5. pix>, <Quantity 4. pix>, <Quantity 4. pix>)
+  >>> exploded.array_axis_physical_types  # doctest: +SKIP
+  [('meta.obs.sequence',),
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
+
+To learn more about this object, read the :ref:`ndcubesequence` section below.
+
+And Much More!
+--------------
+
+`~ndcube.NDCube` provides many more helpful features, specifically for coordinate transformations, slicing and visualization.
+See the :ref:`cube_coordinates`, :ref:`cube_slicing` and :ref:`cube_plotting` sections to learn more.
 
 .. _ndcubesequence:
 
@@ -171,9 +202,10 @@ This flexibility makes `~ndcube.NDCubeSequence` a powerful tool when handling co
 Initializing an NDCubeSequence
 ------------------------------
 To initialize the most basic `~ndcube.NDCubeSequence`, all you need is a list of `~ndcube.NDCube` instances.
-Let's first define four 3-D NDCubes.
+Let's say we have four 3-D NDCubes with shapes of ``(4, 4, 5)`` and physical types of helioprojective longitude, latitude and wavelength.
 
-.. code-block:: python
+.. expanding-code-block:: python
+  :summary: Click to see NDCubes instantiated for use in the following NDCubeSequence
 
   >>> import astropy.units as u
   >>> import astropy.wcs
@@ -201,7 +233,8 @@ Let's first define four 3-D NDCubes.
   >>> cube2 = NDCube(data2, wcs=wcs)
   >>> cube3 = NDCube(data3, wcs=wcs)
 
-Creating an `~ndcube.NDCubeSequence` is simply a case of providing the list of `~ndcube.NDCube` objects to the `~ndcube.NDCubeSequence` class.
+
+To generate an `~ndcube.NDCubeSequence`, simply provide the list of `~ndcube.NDCube` objects to the `~ndcube.NDCubeSequence` class.
 
 .. code-block:: python
 
@@ -266,32 +299,38 @@ Once again, we can see the physical types associated with each axis in the cube-
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
 
+.. _explode_sequence:
+
 Explode Along Axis
 ------------------
-During analysis of some data --- say of a stack of images --- it may be necessary to make some different fine-pointing adjustments to each image that isn't accounted for the in the original WCS translations, e.g. due to satellite wobble.
-If these changes are not describable with a single WCS object, it may be desirable to break up the N-D sub-cubes of an `~ndcube.NDCubeSequence` into a sequence of sub-cubes with dimension N-1.
-This would enable a separate WCS object to be associated with each image and hence allow individual pointing adjustments.
+Just like `~ndcube.NDCube`, `~ndcube.NDCubeSequence` has an `~ndcube.NDCubeSequence.explode_along_axis` method.
+Its purpose and API are exactly the same as `ndcube.NDCube.explode_along_axis` and we refer readers to the (:ref:`explode_cube`) section describing it.
 
-Rather than manually dividing the cubes up and deriving the corresponding WCS object for each exposure, `~ndcube.NDCubeSequence` provides a useful method, `~ndcube.NDCubeSequence.explode_along_axis`.
-To call it, simply provide the number of the array axis along which you wish to break up the cubes.
-
-.. code-block:: python
-
-  >>> exploded_sequence = my_sequence.explode_along_axis(0)
-
-Assuming we are using the same ``my_sequence`` as above, with dimensions of ``(<Quantity 4.0 pix>, <Quantity 4.0 pix>, <Quantity 4.0 pix>, <Quantity 5.0 pix>)``, the ``exploded_sequence`` will be an `~ndcube.NDCubeSequence` of nine 2-D NDCubes each with shape ``(4, 5)``.
+To demonstrate the behavior of `ndcube.NDCubeSequence.explode_along_axis` version of this method, let's consider ``my_sequence`` defined above.
+It contains four `~ndcube.NDCube` instances, each with a shape of ``(4, 4, 5)`` and physical types of helioprojective longitude, latitude and wavelength.
+Let's break up the cubes along the final (wavelength) axis so we have a sequence of 20 2D cubes, each representing a single image with a shape of ``(4, 4)``.
+To do this let's call `~ndcube.NDCube.explode_along_axis` and supply it with the array axis along which the cubes should be exploded.
+Note that the array axis numbers are relative to the NDCubes, not the NDCubeSequence.
+So to explode along the wavelength axis, we should use an array axis index of ``2``.
 
 .. code-block:: python
+
+  >>> exploded_sequence = my_sequence.explode_along_axis(2)  # doctest: +SKIP
 
   >>> # Check old and new shapes of the squence
-  >>> my_sequence.dimensions
+  >>> my_sequence.dimensions  # doctest: +SKIP
   (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
-  >>> exploded_sequence.dimensions
-  (<Quantity 16. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
+  >>> exploded_sequence.dimensions  # doctest: +SKIP
+  (<Quantity 20. pix>, <Quantity 4. pix>, <Quantity 4. pix>)
 
-Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.  A common axis need not be defined.
+Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.
+A common axis need not be defined and if one is it need not be the axis along which the `~ndcube.NDCubeSequence` is exploded.
 
-To learn how to slice `~ndcube.NDCubeSequence` instances and manipulate sequence coordinates, see the :ref:`sequence_slicing` and :ref:`sequence_coordinates` sections.
+And Much More
+-------------
+
+`~ndcube.NDCubeSequence` provides many more helpful features, specifically for coordinate transformations, slicing and visualization.
+See the :ref:`sequence_coordinates`, :ref:`sequence_slicing` and :ref:`sequence_plotting` sections to learn more.
 
 .. _ndcollection:
 
@@ -343,6 +382,15 @@ And just like a `dict` we can see the different names available using the ``keys
 
   >>> my_collection.keys()
   dict_keys(['observations', 'linewidths'])
+
+Editing NDCollections
+---------------------
+
+Because `~ndcube.NDCollection` inherits from `dict`, we can edit the collection using many of the same methods.
+These have the same or analagous APIs to the `dict` versions and include `del`, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
+Some `dict` methods may not be implemented on `~ndcube.NDCollection` if they are not consistent with its design.
+
+.. _aligned_axes:
 
 Aligned Axes
 ------------
@@ -419,9 +467,7 @@ Therefore, it is possible that this property returns no physical types.
 The physical types within each tuple are returned unordered, not in world axis order as might be expected.
 This is because there is no requirement that members must have the same axis ordering.
 
-Editing NDCollections
----------------------
-
-Because `~ndcube.NDCollection` inherits from `dict`, we can edit the collection using many of the same methods.
-These have the same or analagous APIs to the `dict` versions and include `del`, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
-Some `dict` methods may not be implemented on `~ndcube.NDCollection` if they are not consistent with its design.
+As mentioned at the start of this sub-section, the greatest benefit of `~ndcube.NDCollection.aligned_axes` is that enables all members of an `~ndcube.NDCollection` to be sliced simultaneously, at least along the aligned axes.
+This makes it easy to crop an entire data set, including multiple sets of observations and derived products, to a single region of interest.
+This can drastically simplify and speed up analysis workflows.
+To learn more, see the section on :ref:`collection_slicing`.
