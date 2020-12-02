@@ -11,7 +11,7 @@ To describe the mapping between array elements/pixels and real world coordinates
 WCS allows a wide variety of projections, rotations and transformations be stored and executed.
 Because it allows coordinates transformations to be stored functionally, rather than in memory-heavy lookup tables, and because it caters for both astronomy-specific coordinate systems (e.g. RA & Dec.) as well as simpler, more common ones (e.g. wavelength), WCS has become the most common coordinate transformation framework in astronomy.
 
-The foundation of the Astropy WCS implementation is the `~astropy.wcs.WCS` object, which stores the critical information describing the coordinate transformations (e.g. the reference pixel and its corresponding coordinate values, ``crpix`` and ``crval``, and the projection type, ``ctype``).
+The most commonly used WCS implementation in Python is the `~astropy.wcs.WCS` object, which stores the critical information describing the coordinate transformations as described by the FITS data model (e.g. the reference pixel and its corresponding coordinate values, ``CRPIX`` and ``CRVAL``, and the projection type, ``CTYPE`` etc.).
 It also executes these transformations via methods like `~astropy.wcs.WCS.world_to_pixel` and `~astropy.wcs.WCS.pixel_to_world` which convert between pixel indices and world coordinate values.
 However, these methods are independent of the data array and the `~astropy.wcs.WCS` object carries little or no information about the data itself.
 That is why the ndcube package is needed.
