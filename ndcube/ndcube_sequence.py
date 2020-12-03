@@ -187,11 +187,7 @@ class NDCubeSequenceBase:
         axis : `int`
             The axis along which the data is to be changed.
         """
-        # if axis is None then set axis as common axis.
-        if self._common_axis is not None:
-            if self._common_axis != axis:
-                raise ValueError("axis and common_axis should be equal.")
-        # is axis is -ve then calculate the axis from the length of the dimensions of one cube
+        # If axis is -ve then calculate the axis from the length of the dimensions of one cube.
         if axis < 0:
             axis = len(self.dimensions[1::]) + axis
         # To store the resultant cube

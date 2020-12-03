@@ -315,12 +315,12 @@ So to explode along the wavelength axis, we should use an array axis index of ``
 
 .. code-block:: python
 
-  >>> exploded_sequence = my_sequence.explode_along_axis(2)  # doctest: +SKIP
+  >>> exploded_sequence = my_sequence.explode_along_axis(2)
 
   >>> # Check old and new shapes of the squence
-  >>> my_sequence.dimensions  # doctest: +SKIP
+  >>> my_sequence.dimensions
   (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
-  >>> exploded_sequence.dimensions  # doctest: +SKIP
+  >>> exploded_sequence.dimensions
   (<Quantity 20. pix>, <Quantity 4. pix>, <Quantity 4. pix>)
 
 Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.
