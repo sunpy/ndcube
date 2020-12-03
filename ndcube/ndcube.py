@@ -624,4 +624,3 @@ class NDCube(NDCubeBase, NDCubePlotMixin):
         Default is False.
 
     """
-    pass
