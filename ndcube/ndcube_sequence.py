@@ -202,8 +202,15 @@ class NDCubeSequenceBase:
                 result_cubes_slice[axis] = index
                 # appending the sliced cubes in the result_cube list
                 result_cubes.append(ndcube.__getitem__(tuple(result_cubes_slice)))
+        # Determine common axis for new sequence.
+        if self._common_axis is None or self._common_axis == axis:
+            new_common_axis = None
+        elif self._common_axis > axis:
+            new_common_axis = self._common_axis - 1
+        elif self._common_axis < axis:
+            new_common_axis = self._common_axis
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
-        return self._new_instance(result_cubes, meta=self.meta)
+        return self._new_instance(result_cubes, common_axis=new_common_axis, meta=self.meta)
 
     def __str__(self):
         return (textwrap.dedent(f"""\
