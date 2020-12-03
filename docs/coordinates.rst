@@ -21,7 +21,7 @@ A familiarity with WCS and the Astropy and gWCS Python implementations will be h
 We therefore encourage users to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ and the `gWCS documentation <https://gwcs.readthedocs.io/en/stable/>`_ to learn more.
 
 In this section we will discuss the features ndcube has built upon these implementations to support the integration of data and coordinates.
-  
+
 NDCube Coordinates
 ==================
 Although WCS objects are a powerful and concise way of storing complex functional coordinate transformations, their API can be cumbersome when the coordinates along a whole axis are desired.
@@ -37,7 +37,7 @@ First we can provide `~ndcube.NDCube.axis_world_coords` with the array axis numb
 
   >>> import astropy.wcs
   >>> import numpy as np
-  
+
   >>> from ndcube import NDCube
 
   >>> # Define data array.
@@ -50,7 +50,7 @@ First we can provide `~ndcube.NDCube.axis_world_coords` with the array axis numb
   >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
-  
+
   >>> # Now instantiate the NDCube
   >>> my_cube = NDCube(data, wcs=wcs)
 
