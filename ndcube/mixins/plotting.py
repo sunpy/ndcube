@@ -18,7 +18,7 @@ class NDCubePlotMixin:
     """
 
     def plot(self, axes=None, plot_axes=None, axes_coordinates=None,
-             axes_units=None, data_unit=None, **kwargs):
+             axes_units=None, data_unit=None, wcs=None, **kwargs):
         """
         Visualize the `~ndcube.NDCube`.
 
@@ -47,6 +47,9 @@ class NDCubePlotMixin:
         data_unit: `astropy.unit.Unit`
             The data is changed to the unit given or the ``NDCube.unit`` if not
             given.
+
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
+            The WCS object to define the coordinates of the plot axes.
         """
         naxis = self.wcs.pixel_n_dim
 
@@ -55,6 +58,8 @@ class NDCubePlotMixin:
             plot_wcs = self.wcs.low_level_wcs
         else:
             plot_wcs = self.combined_wcs.low_level_wcs
+        if wcs is not None:
+            plot_wcs = wcs.low_level_wcs
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(

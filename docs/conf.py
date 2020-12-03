@@ -28,6 +28,7 @@ suppress_warnings = ['app.add_directive', ]
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -39,9 +40,11 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.smart_resolver',
-    # See https://github.com/astropy/pytest-doctestplus/pull/113
-    'sphinx_astropy.ext.doctest',
+    'sunpy.util.sphinx.doctest',
+    'ndcube.utils.sphinx.code_context'
 ]
+
+# Define code to be run by doctest in front of every code block.
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']

@@ -1,14 +1,17 @@
-============
-Installation
-============
+.. _installation:
 
-ndcube requires Python 3.5+, SunPy 0.9+, astropy and matplotlib.
+=================
+Installing ndcube
+=================
+
+ndcube requires Python 3.7+, astropy 4.2+, and matplotlib.
 
 Installing the Stable Version
 -----------------------------
-There are two options for installing the stable version of ndcube. The first is
-via the anaconda distribution using the conda-forge channel.  For more
-information on installing the anaconda distribution, see the `anaconda
+There are two options for installing the stable version of ndcube.
+The first is via the miniconda distribution using the conda-forge channel.
+(The anaconda distribution can also be used but because miniconda is more lightweight we recommend it.)
+For more information on installing the miniconda or anaconda distribution, see the `miniconda
 website`_.
 
 .. code-block:: console
@@ -44,7 +47,7 @@ getting the latest updates over reliablility, or want to contribute
 to the development of ndcube, you will need to install the development
 version via `GitHub`_. Let's step through how to do this using
 anaconda.  For information on installing the anaconda
-distribution, see the `anaconda website`_.
+distribution, see the `miniconda website`_.
 
 First, create a conda environment on your local machine to hold the
 ndcube bleeding edge version. Using a new environment allows you to
@@ -90,6 +93,6 @@ get the latest updates by regularly doing:
 
 		$ git pull origin master
 
-.. _anaconda website: https://docs.anaconda.com/anaconda/install.html
+.. _miniconda website: https://docs.conda.io/en/latest/miniconda.html
 .. _GitHub: https://github.com/
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube

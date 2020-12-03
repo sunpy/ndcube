@@ -3,49 +3,86 @@ An Introduction to ndcube
 =========================
 
 N-dimensional Data in Astronomy
--------------------------------
-N-dimensional data sets are common in all areas of science and beyond.  For example, a series of images taken sequentially with a CCD camera can be stored as a single 3-D array with two spatial axes and one temporal axis.  Each array-element can represent the reading in a pixel at a given time.  In astronomy, the relationship between the pixel coordinate and the location and time in the Universe being observed is often represented by the World Coordinate System (WCS) framework.  WCS's ability to handle many different types (e.g. spatial, temporal, spectral, etc.) of transformations make it a succinct, standardized and powerful way to relate pixels from an observation or cells in a simulation grid to the location in the Universe to which they correspond.  Due of the prevalence of N-D data and the importance of the transformations, there exist mature scientific Python packages (e.g. numpy and astropy) that contain powerful tools to handle N-D arrays and WCS transformations.
+===============================
+N-dimensional data sets are common in all areas of science and beyond.
+For example, a series of images taken sequentially with a CCD camera can be stored as a single 3-D array with two spatial axes and one temporal axis.
+The value in each array-element can represent the reading in a pixel at a given time.
+In astronomy, the relationship between the array element and the location and time in the Universe being observed is often represented by the World Coordinate System (WCS) framework.
+WCS's ability to handle many different physical types (e.g. spatial, temporal, spectral, etc.) and projections (e.g. RA and Dec., helioprojective latitude and longitude, etc.) make it a succinct, standardized and powerful way to relate array axes to the physical properties they represent.
+Due of the prevalence of N-D data and the importance of coordinate transformations, there exist mature Python packages that handle them.
+For example, arrays can be handled by numpy and dask and coordinates by astropy's WCS and coordinates modules.
+If you want to treat these components separately, then these existing tools work well.
+However, they are not suited to treating data and coordinates in a combined way.
 
 What is ndcube?
----------------
-ndcube is a free, open-source, community-developed Python package whose purpose is to provide an interface uniting N-dimensional data arrays with the coordinate information that describes them.
-There are many Python tools that provide half of these functionalities, e.g. array handling by numpy and dask or coordinate transformations by astropy's WCS and coordinates modules.
-If you have only one of these components then these existing tools work well for you.
-However, the value of ndcube is in enabling array-like operations that modify both the data array and coordinate system together.
+===============
+ndcube is a free, open-source, community-developed Python package whose purpose is to link astronomical data and coordinates in single objects.
+These objects can be manipulated via array-like slicing operations which modify both the data and coordinate systems simultaneously.
+They also allow coordinate transformations to be performed with reference to the size of the data array and produce visualisations whose axes are automatically described by the coordinates.
+This coupling of data and coordinates allows users to analyze their data more quickly and accurately, thus helping to boost their scientific output.
 
-ndcube provides a its features via two primary data classes: `~ndcube.NDCube` and `~ndcube.NDCubeSequence`.
-The former is for managing a single array and set of WCS transformations, while the latter is for handling multiple arrays, each described by their own set of WCS transformations.
-These classes provide unified slicing, visualization, coordinate conversion APIs as well as APIs for inspecting the data, coordinate transformations and metadata.
-ndcube does this in a way that is not specific to any number or physical type of axis, and so can in principle be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as the data are represented by an array and a set of WCS transformations.
-Moreover, ndcube is agnostic to the fundamental array type in which the data is stored, so long as it behaves like a numpy array.
-Meanwhile, the WCS object can be any class, as long as it adhere's to the AstroPy `wcsapi (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_ specification.
-These features make ndcube's data classes ideal to subclass when creating tools for specific types of data, while keeping the non-data-specific functionalities (e.g. slicing) common between classes.
+In this guide we will introduce you to ndcube's primary data classes, `~ndcube.NDCube`, `~ndcube.NDCubeSequence`, and `~ndcube.NDCollection` (:ref:`data_classes`).
+We will then discuss the functionalities they provide including :ref:`coordinates` and :ref:`plotting`.
+There are also helpful sections on :ref:`installation`, :ref:`getting_help` and :ref:`contributing`.
+
+.. _axes_definitions:
+
+Important Concepts: Array, Pixel, and World Axes
+================================================
+Throughout this guide we will refer to array axes, pixel axes and world axes, a nomenclature drawn from astropy.
+To help the reader we will briefly clarify their meaning here.
+
+A WCS object describes any number of physical types.
+These are referred to as world axes and the order in which they are stored in the WCS object is referred to as world order (or world axis order).
+These physical types are mapped through the WCS to one or more "pixel" axes.
+Although in the simplest case, one world axis would uniquely map to one pixel axis, it is possible for multiple world axes can be associated with multiple pixel axes and vice versa.
+This is especially common when dealing with projections of the sky onto 2-D image planes.
+Take the example of an image of the Sun taken from Earth.
+The world axis of helioprojective longitude is dependent on helioprojective latitude, i.e. there is not one pixel axis for longitude and another for latitude.
+Both world axes are associated with both pixel axes.
+In a WCS object, the mapping between pixel and world axes is described by the `~astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
+
+Due to unfortunate convention, WCS orders its pixel axes in the inverse order to numpy.
+Therefore we use the term "array axes" to refer to pixel axes which have been reversed to reflect the axis order of the numpy data array.
+Take for example a numpy array with three dimensions.
+Since the array axes are simply the reverse of the pixel axes, the first axis of the array corresponds to the 3rd pixel axis.
+And the 2nd array axis corresponds to the 2nd pixel axis.
+If the array had four axes, the first array axis would correspond to the fourth pixel axis and the second array axis would correspond to the third pixel axis and so on.
+
+In ndcube, inputs and outputs are given in either array axis order or world axis order, depending on the types of information.
+Throughout these docs and in the docstrings we will endeavor to highlight which order is relevant.
+However a good rule of thumb is that if you are using a sequence of coordinate objects to describe locations in the data cube -- for example in the input of `ndcube.NDCube.crop` or the output of `ndcube.NDCube.axis_world_coords` -- they should be in world axis order.
+In almost all other cases, array axis order is used.
 
 Why ndcube?
------------
-The most similar project to ndcube is xarray and it’s worth addressing why ndcube exists in its own right, rather than devoting time and effort to building tools around xarray.
-The fundamental reason to opt for ndcube is a requirement to harness the astronomy-specific World Coordinate System (WCS) tooling provided by packages like Astropy (which now also supports gWCS).
-The data model of xarray centered on the requirements and conventions of the geosciences, which while being very similar to that of astronomy in conception, is sufficently different in construction to cause much friction.
-Utilize the astropy WCS infrastructure enables us to directly read the most common file formats in astronomy (FITS), although the FITS WCS data model is also commonly used outside of FITS files.
+===========
+It's worth addressing the role ndcube plays within the scientific Python ecosystem and why it exists separately from its most similar package, xarray.
+The fundamental reason to opt for ndcube is to harness the astronomy-specific World Coordinate System (WCS).
+The data model of xarray centers on the requirements and conventions of the geosciences.
+Although very similar to those of astronomy in conception, they are sufficently different in construction to cause significant friction.
+Moreover, utilizing the astropy WCS infrastructure enables us to directly read the most common file format in astronomy, FITS.
+Although the FITS WCS data model is also commonly used outside of FITS files.
 This data model would require translation of the source data to fit inside an xarray object.
 
-That being said, xarray has a richer feature set and there is nothing beyond a lack of developer time hindering the astronomy and xarray communities from collaborating to provide a common set of tools which would suit everyone’s purposes.
-See for instance `this issue <https://github.com/pydata/xarray/issues/3620#>`_.
+That being said, xarray has a rich feature set and there is nothing beyond a lack of developer time hindering the astronomy and xarray communities from collaborating to provide a common set of tools which would suit everyone’s purposes.
+See `this issue <https://github.com/pydata/xarray/issues/3620#>`_.
 
-Why is ndcube 2.0?
-------------------
+Why ndcube 2.0?
+===============
 ndcube 2.0 is a major API-breaking rewrite of ndcube.
 It has been written to take advantage of many new features not available when ndcube 1.0 was written.
-Some of these have been made possible by functionalities originally written for ndcube being upstreamed to astropy to improve the WCS support.
-Others are the result of various long running projects maturing, such as the acceptance and implementation of astropy's WCS API (APE 14) and the maturing of the gWCS package.
-These developments encouraged the reassesment of the state of ndcube and to rebase it onto this new functionality, leading to the development of ndcube 2.0.
+Some of these have been made possible by the upstreaming of ndcube functionalities to astropy.
+Others are due to the fruition of long running projects such as the implementation of astropy's `WCS API (APE 14) <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_ and the maturing of the `gWCS <https://gwcs.readthedocs.io/en/latest/>`_ package.
+These developments encouraged the reassesment of the state of ndcube, leading to the development of ndcube 2.0.
 
-The main feature of ndcube 2.0 is the removal of all the specific WCS handling code that was previously required in 1.0.
-All WCS manipulation and slicing code has now been upstreamed to astropy and ndcube uses the generalised wcsapi functionality for all these features.
+The main feature of ndcube 2.0 is the removal and upstreaming of almost all specific WCS handling code to astropy and the use of the astropy's generalised WCS API.
 This has the consequence of bringing high-level coordinate objects into the realm of ndcube.
-This includes astropy's SkyCoord object which combines coordinate and reference frame information to give users all the information they need to correctly interpret their coordinates.
-However in many cases, users can continue to deal with raw coordinate values without reference frame information if they choose.
-ndcube's visualisation code has been rewritten to exclusively apply WCSAxes, tremendously simplifying it’s implementation, at the expense of some flexibility.
+This includes astropy's `~astropy.coordinates.SkyCoord` object which combines coordinate and reference frame information to give users a full description of their coordinates.
+However users can continue to deal with raw coordinate values without reference frame information if they so choose.
+ndcube's visualisation code has been rewritten to exclusively use `~astropy.visualization.wcsaxes.WCSAxes`, tremendously simplifying it’s implementation, at the expense of some flexibility.
 However, it also allows for a more complete and accurate representation of coordinates along plot axes and animations.
-Extra_coords has been completely re-written to serve as an extra WCS, which can be readily constructed from lookup tables.
-This enables users to easily combine the extra_coords and WCS coords and to utilize the WCSAxes infrastructure for visualizing extra_coords in their plots.
+`~ndcube.NDCube.extra_coords` has been completely re-written to serve as an extra WCS, which can be readily constructed from lookup tables.
+This enables users to easily include the extra coordinates when visualizing the data.
+Finally, a new `~ndcube.GlobalCoords` class can hold coordinates that do not refer to any axis.
+This is particularly useful when the dimensionality of an `~ndcube.NDCube` is reduced by slicing.
+The value of a coordinate at the location along the dropped axis at which the `~ndcube.NDCube` was sliced can be retained.
