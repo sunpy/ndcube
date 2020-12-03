@@ -144,9 +144,9 @@ This returns an `~ndcube.NDCubeSequence` with where the sequence axis acts as th
 
 .. code-block:: python
 
-  >>> exploded.dimensions  # doctest: +SKIP
+  >>> exploded.dimensions
   (<Quantity 5. pix>, <Quantity 4. pix>, <Quantity 4. pix>)
-  >>> exploded.array_axis_physical_types  # doctest: +SKIP
+  >>> exploded.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
