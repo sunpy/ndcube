@@ -1,0 +1,1 @@
+Stop `ndcube.NDCube.explode_along_axis` setting a common axis to the output `~ndcube.NDCubeSequence`.  The output sequence should have no common axis.
