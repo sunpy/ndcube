@@ -547,17 +547,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def explode_along_axis(self, axis):
         """
-        Separates slices of NDCubes along a given cube axis into a
-        NDCubeSequence of (N-1)DCubes.
+        Separates slices of NDCubes along a given axis into an NDCubeSequence of (N-1)DCubes.
 
         Parameters
         ----------
         axis : `int`
-            The axis along which the data is to be changed.
+            The array axis along which the data is to be changed.
 
         Returns
         -------
-        result : `ndcube_sequence.NDCubeSequence`
+        result : `ndcube.NDCubeSequence`
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
@@ -577,7 +576,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # Appending the sliced cubes in the result_cube list
             result_cubes.append(sliced_cube)
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
-        return NDCubeSequence(result_cubes, common_axis=axis, meta=self.meta)
+        return NDCubeSequence(result_cubes, meta=self.meta)
 
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):

@@ -120,12 +120,6 @@ def test_explode_along_axis(ndc, axis, expected_dimensions):
     assert exploded_sequence._common_axis is None
 
 
-@pytest.mark.parametrize("ndc, axis", (("ndcubesequence_4c_ln_lt_l_cax1", 0),), indirect=("ndc",))
-def test_explode_along_axis_error(ndc, axis):
-    with pytest.raises(ValueError):
-        ndc.explode_along_axis(axis)
-
-
 @pytest.mark.parametrize("ndc, expected_dimensions",
                          (
                              ("ndcubesequence_4c_ln_lt_l_cax1", (4 * u.pix,
