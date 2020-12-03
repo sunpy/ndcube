@@ -108,16 +108,27 @@ def test_index_as_cube(ndc, item, expected_dimensions):
                                                                4 * u.pix)),
                              ("ndcubesequence_4c_ln_lt_l_cax1", 1, (12 * u.pix,
                                                                     2 * u.pix,
-                                                                    4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l", 2, (16 * u.pix,
-                                                               2 * u.pix,
-                                                               3 * u.pix))
+                                                                    4 * u.pix))
                          ),
                          indirect=("ndc",))
-def test_explode_along_axis(ndc, axis, expected_dimensions):
+def test_explode_along_axis_common_axis_None(ndc, axis, expected_dimensions):
     exploded_sequence = ndc.explode_along_axis(axis)
     assert exploded_sequence.dimensions == expected_dimensions
     assert exploded_sequence._common_axis is None
+
+
+@pytest.mark.parametrize("ndc", (('ndcubesequence_4c_ln_lt_l_cax1',)), indirect=("ndc",))
+def test_explode_along_axis_common_axis_same(ndc):
+    exploded_sequence = ndc.explode_along_axis(2)
+    assert exploded_sequence.dimensions == (16*u.pix, 2*u.pix, 3*u.pix)
+    assert exploded_sequence._common_axis == ndc._common_axis
+
+
+@pytest.mark.parametrize("ndc", (('ndcubesequence_4c_ln_lt_l_cax1',)), indirect=("ndc",))
+def test_explode_along_axis_common_axis_changed(ndc):
+    exploded_sequence = ndc.explode_along_axis(0)
+    assert exploded_sequence.dimensions == (8*u.pix, 3*u.pix, 4*u.pix)
+    assert exploded_sequence._common_axis == ndc._common_axis - 1
 
 
 @pytest.mark.parametrize("ndc, expected_dimensions",
