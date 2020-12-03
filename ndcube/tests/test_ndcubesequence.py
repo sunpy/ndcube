@@ -185,7 +185,6 @@ def test_common_axis_coords(ndc):
 
 @pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
 def test_sequence_axis_coords(ndc):
-    expected = {'global coord': [None, 0*u.pix, None],
-                'distance': [1*u.m, 2*u.m, None]}
+    expected = {'distance': [1*u.m, 2*u.m, 3*u.m]}
     output = ndc.sequence_axis_coords
     assert output == expected

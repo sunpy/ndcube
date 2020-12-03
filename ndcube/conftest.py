@@ -451,6 +451,7 @@ def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
 
     base_time3 = base_time2 + TimeDelta([shape[common_axis] * 60], format='sec')
     gc3 = GlobalCoords()
+    gc3.add('distance', 'custom:distance', 3*u.m)
     cube3 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time3, gc3)
     cube3.data[:] *= 3
 
