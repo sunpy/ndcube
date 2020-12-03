@@ -4,6 +4,7 @@ Reference/API
 =============
 
 .. automodapi:: ndcube
+   :inherited-members:
 
 .. automodapi:: ndcube.mixins
 
