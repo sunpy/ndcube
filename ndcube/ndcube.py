@@ -31,7 +31,7 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
     @abc.abstractproperty
     def dimensions(self):
         """
-        The pixel dimensions of the cube.
+        The array dimensions of the cube.
         """
 
     @abc.abstractmethod
@@ -124,8 +124,7 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
 
 class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
-    Class representing N dimensional cubes. Extra arguments are passed on to
-    `~astropy.nddata.NDData`.
+    Class representing N-D data described by a single array and set of WCS transformations.
 
     Parameters
     ----------
@@ -580,4 +579,48 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
 
 class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
-    pass
+    """
+    Class representing N-D data described by a single array and set of WCS transformations.
+
+    Parameters
+    ----------
+    data: `numpy.ndarray`
+        The array holding the actual data in this object.
+
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+        The WCS object containing the axes' information, optional only if
+        ``data`` is an `astropy.nddata.NDData` object.
+
+    uncertainty : any type, optional
+        Uncertainty in the dataset. Should have an attribute uncertainty_type
+        that defines what kind of uncertainty is stored, for example "std"
+        for standard deviation or "var" for variance. A metaclass defining
+        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
+        has no such attribute the uncertainty is stored as UnknownUncertainty.
+        Defaults to None.
+
+    mask : any type, optional
+        Mask for the dataset. Masks should follow the numpy convention
+        that valid data points are marked by False and invalid ones with True.
+        Defaults to None.
+
+    meta : dict-like object, optional
+        Additional meta information about the dataset. If no meta is provided
+        an empty collections.OrderedDict is created. Default is None.
+
+    unit : Unit-like or str, optional
+        Unit for the dataset. Strings that can be converted to a Unit are allowed.
+        Default is None.
+
+    extra_coords : iterable of `tuple`, each with three entries
+        (`str`, `int`, `astropy.units.quantity` or array-like)
+        Gives the name, axis of data, and values of coordinates of a data axis not
+        included in the WCS object.
+
+    copy : bool, optional
+        Indicates whether to save the arguments as copy. True copies every attribute
+        before saving it while False tries to save every parameter as reference.
+        Note however that it is not always possible to save the input as reference.
+        Default is False.
+
+    """

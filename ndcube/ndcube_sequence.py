@@ -5,7 +5,7 @@ import textwrap
 import astropy.units as u
 import numpy as np
 
-from ndcube import GlobalCoords, utils
+from ndcube import utils
 
 __all__ = ['NDCubeSequence']
 
@@ -21,24 +21,26 @@ To see a introductory guide on how to make your own NDCubeSequence plots, see th
 
 class NDCubeSequenceBase:
     """
-    Class representing list of cubes.
+    Class representing a sequence of `~ndcube.NDCube`-like objects.
+
+    The cubes are assumed to have the same dimensionality and axis physical types.
 
     Parameters
     ----------
     data_list : `list`
-        List of cubes.
+        List of `ndcube.NDCube`-like objects.
 
     meta : `dict` or None
-        The header of the NDCubeSequence.
+        Meta data relevant to the sequence as a whole.
 
     common_axis: `int` or None
-        The data axis which is common between the NDCubeSequence and the Cubes within.
-        For example, if the Cubes are sequenced in chronological order and time is
-        one of the zeroth axis of each Cube, then common_axis should be se to 0.
-        This enables the option for the NDCubeSequence to be indexed as though it is
-        one single Cube.
+        The array axis of the cubes along which the cubes are ordered.
+        For example, if the cubes are sequenced in chronological order and time is
+        the 1st axis of each Cube, then common_axis should be set to 0.
+        This enables the "cube_like" methods to be used, e.g.
+        `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
+        were a single cube concatenated along the common axis.
     """
-
     def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
         self.data = data_list
         self.meta = meta
@@ -49,6 +51,9 @@ class NDCubeSequenceBase:
 
     @property
     def dimensions(self):
+        """
+        The length of each axis including the sequence axis.
+        """
         return self._dimensions
 
     @property
@@ -69,10 +74,16 @@ class NDCubeSequenceBase:
 
     @property
     def array_axis_physical_types(self):
+        """
+        The physical types associated with each array axis, including the sequence axis.
+        """
         return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
 
     @property
     def cube_like_dimensions(self):
+        """
+        The length of each array axis as if all cubes were concatenated along the common axis.
+        """
         if not isinstance(self._common_axis, int):
             raise TypeError("Common axis must be set.")
         dimensions = list(self._dimensions)
@@ -88,6 +99,9 @@ class NDCubeSequenceBase:
 
     @property
     def cube_like_array_axis_physical_types(self):
+        """
+        The physical types associated with each array axis, omitting the sequence axis.
+        """
         if self._common_axis is None:
             raise ValueError("Common axis must be set.")
         return self.data[0].array_axis_physical_types
@@ -118,7 +132,7 @@ class NDCubeSequenceBase:
     @property
     def index_as_cube(self):
         """
-        Method to slice the NDCubesequence instance as a single cube.
+        Slice the NDCubesequence instance as a single cube concatenated along the common axis.
 
         Example
         -------
@@ -128,7 +142,7 @@ class NDCubeSequenceBase:
         >>> # return zeroth time slice of cubeB in via normal NDCubeSequence indexing.
         >>> cs[1,:,0,:] # doctest: +SKIP
         >>> # Return same slice using this function
-        >>> cs.index_sequence_as_cube[3:6, 0, :] # doctest: +SKIP
+        >>> cs.index_as_cube[3:6, 0, :] # doctest: +SKIP
         """
         if self._common_axis is None:
             raise ValueError("common_axis cannot be None")
@@ -136,6 +150,14 @@ class NDCubeSequenceBase:
 
     @property
     def common_axis_coords(self):
+        """
+        The coordinate values at each location along the common axis across all cubes.
+
+        Only coordinates associated with the common axis in all cubes in the sequence
+        are returned.  Coordinates from different cubes are concatenated along the
+        common axis.  They thus represent the coordinate values at each location as
+        if all cubes in the sequence were concatenated along the common axis.
+        """
         common_axis = self._common_axis
         # Get coordinate objects associated with the common axis in all cubes.
         common_axis_names = set.intersection(*[set(cube.array_axis_physical_types[common_axis])
@@ -165,27 +187,32 @@ class NDCubeSequenceBase:
 
     @property
     def sequence_axis_coords(self):
-        # Collect names of global coords in each cube.
-        global_names = set.union(*[set(cube.global_coords.keys())
-                                   for cube in self.data
-                                   if isinstance(cube.global_coords, GlobalCoords)])
+        """
+        Return the coordinate values along the sequence axis.
+
+        These are compiled from the `~ndcube.GlobalCoords` objects attached to each
+        `~ndcube.NDCube` where each cube represents a location along the sequence axis.
+        Only coordinates that are common to all cubes are returned.
+        """
+        # Collect names of global coords common to all cubes.
+        global_names = set.intersection(*[set(cube.global_coords.keys()) for cube in self.data])
         # For each coord, combine values from each cube's global coords property.
-        # If coord not present in cube, insert None.
-        return dict(
-            [(name, [cube.global_coords[name] if name in cube.global_coords else None
-                     for cube in self.data])
-             for name in global_names])
+        return dict([(name, [cube.global_coords[name] for cube in self.data])
+                     for name in global_names])
 
     def explode_along_axis(self, axis):
         """
-        Separates slices of NDCubes in sequence along a given cube axis into
-        (N-1)DCubes.
+        Separates slices of N-D cubes along a given cube axis into (N-1)D cubes.
 
         Parameters
         ----------
-
         axis : `int`
             The axis along which the data is to be changed.
+
+        Returns
+        -------
+        `ndcube.NDCubeSequence`
+            New sequence of (N-1)D cubes broken up along given axis.
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube.
         if axis < 0:
@@ -232,6 +259,27 @@ class NDCubeSequenceBase:
 
 
 class NDCubeSequence(NDCubeSequenceBase):
+    """
+    Class representing a sequence of `~ndcube.NDCube`-like objects.
+
+    The cubes are assumed to have the same dimensionality and axis physical types.
+
+    Parameters
+    ----------
+    data_list : `list`
+        List of `ndcube.NDCube`-like objects.
+
+    meta : `dict` or None
+        Meta data relevant to the sequence as a whole.
+
+    common_axis: `int` or None
+        The array axis of the cubes along which the cubes are ordered.
+        For example, if the cubes are sequenced in chronological order and time is
+        the 1st axis of each Cube, then common_axis should be set to 0.
+        This enables the "cube_like" methods to be used, e.g.
+        `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
+        were a single cube concatenated along the common axis.
+    """
     def plot(self, **kwargs):
         raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
 

@@ -105,6 +105,23 @@ class ExtraCoordsABC(abc.ABC):
 
 
 class ExtraCoords(ExtraCoordsABC):
+    """
+    A representation of additional world coordinates associated with pixel axes.
+
+    ExtraCoords can be initialised by either specifying a
+    `~astropy.wcs.wcsapi.LowLevelWCS` object and a ``mapping``, or it can be
+    built up by specifying one or more lookup tables.
+
+    Parameters
+    ----------
+    wcs
+        The WCS specifying the extra coordinates.
+    mapping
+       The mapping between the array dimensions and pixel dimensions in the
+       extra coords object. This is an iterable of ``(array_dimension, pixel_dimension)`` pairs
+       of length equal to the number of pixel dimensions in the extra coords.
+
+    """
     def __init__(self, *, wcs=None, mapping=None):
         if (wcs is None and mapping is not None) or (wcs is not None and mapping is None):
             raise ValueError("Either both WCS and mapping have to be specified together or neither.")
