@@ -33,10 +33,10 @@ feature, please use the developer mailing list.
 Live Chat
 ---------
 
-SunPy has a `element.io channel`_ which will open directly in your browser.
+SunPy has a `matrix channel`_ which will open directly in your browser.
 Stop by and say hello.
 Talk with the SunPy and ndcube users and developers and get started.
 
 .. _`general mailing list`: https://groups.google.com/forum/#!forum/sunpy
 .. _`developer mailing list`: https://groups.google.com/forum/#!forum/sunpy-dev
-.. _`element.io channel`: https://openastronomy.element.io/#/room/#sunpy:openastronomy.org
+.. _`matrix channel`: https://openastronomy.element.io/#/room/#sunpy:openastronomy.org
