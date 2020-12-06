@@ -6,7 +6,6 @@ Utilities for ndcube sequence.
 from copy import deepcopy
 from collections import namedtuple
 
-import astropy.units as u
 import numpy as np
 
 __all__ = ['SequenceItem',
