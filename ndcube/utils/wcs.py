@@ -10,13 +10,14 @@ from collections import UserDict
 import numpy as np
 from astropy.wcs.wcsapi import low_level_api
 
-__all__ = ['array_indices_for_world_objects',
+__all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
            'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
            'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
            'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
            'physical_type_to_world_axis', 'get_dependent_pixel_axes',
            'get_dependent_array_axes', 'get_dependent_world_axes',
-           'get_dependent_physical_types', 'validate_physical_types']
+           'get_dependent_physical_types', 'array_indices_for_world_objects',
+           'validate_physical_types']
 
 
 class TwoWayDict(UserDict):
@@ -48,23 +49,6 @@ wcs_to_ivoa = {
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
-
-
-def _pixel_keep(wcs_object):
-    """Returns the value of the _pixel_keep attribute if available
-    else returns the array of all pixel dimension present.
-
-    Parameters
-    ----------
-    wcs_object : `astropy.wcs.WCS` or alike object
-
-    Returns
-    -------
-    list or `np.ndarray` object
-    """
-    if hasattr(wcs_object, "_pixel_keep"):
-        return wcs_object._pixel_keep
-    return np.arange(wcs_object.pixel_n_dim)
 
 
 def convert_between_array_and_pixel_axes(axis, naxes):
