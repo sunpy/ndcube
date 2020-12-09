@@ -50,6 +50,10 @@ class NDCubePlotMixin:
 
         wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
             The WCS object to define the coordinates of the plot axes.
+
+        kwargs :
+            Any additional keyword arguments are given to
+            `sunpy.visualization.animator.ArrayAnimatorWCS`.
         """
         naxis = self.wcs.pixel_n_dim
 
