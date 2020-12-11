@@ -52,8 +52,11 @@ class NDCubePlotMixin:
             The WCS object to define the coordinates of the plot axes.
 
         kwargs :
-            Any additional keyword arguments are given to
-            `sunpy.visualization.animator.ArrayAnimatorWCS`.
+            Additional keyword arguments are given to the underlying plotting infrastructure
+            which depends on the dimensionality of the data and whether 1 or 2 plot_axes are defined.
+            Animations: `sunpy.visualization.animator.ArrayAnimatorWCS`
+            Static 2-D images: `matplotllib.pyplot.imshow`
+            Static 1-D line plots: `matplotllib.pyplot.plot`
         """
         naxis = self.wcs.pixel_n_dim
 
