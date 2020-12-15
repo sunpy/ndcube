@@ -44,7 +44,9 @@ wcs_to_ivoa = {
     "PIXEL": "instr.pixel",
     "XPIXEL": "custom:instr.pixel.x",
     "YPIXEL": "custom:instr.pixel.y",
-    "ZPIXEL": "custom:instr.pixel.z"
+    "ZPIXEL": "custom:instr.pixel.z",
+    "HECR": "custom:pos.heliographic.distance",
+    "HECH": "pos.bodyrc.alt",
 }
 wcs_ivoa_mapping = TwoWayDict()
 for key in wcs_to_ivoa.keys():
