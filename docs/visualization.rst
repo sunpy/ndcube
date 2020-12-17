@@ -187,7 +187,7 @@ This includes adding the output of `ndcube.NDCube.plot` to an existing axes obje
   >>> # Create the colorbar axes object and scale it by the image.
   >>> cax = fig.add_axes([0.85, 0.1, 0.05, 0.6])
   >>> im = ax.get_images()[0]  # Retrieve the plot AxesImage by which to scale colorbar.
-  >>> fig.colorbar(im, cax=cax, label="Intensity")
+  >>> cbar = fig.colorbar(im, cax=cax, label="Intensity")
 
 .. _sequence_plotting:
 
