@@ -78,6 +78,15 @@ def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
+def test_animate_2D_cube(ndcube_2d_ln_lt):
+    cube = ndcube_2d_ln_lt
+    ax = cube.plot(plot_axes=[None, 'x'])
+    assert isinstance(ax, sunpy.visualization.animator.ArrayAnimatorWCS)
+
+    return ax.fig
+
+
+@figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
                              ("ln_lt_l_t", np.s_[:, :, 0, :], {}),
