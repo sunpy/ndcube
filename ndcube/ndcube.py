@@ -440,23 +440,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @utils.misc.sanitise_wcs
     def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeBase
-        if len(lower_corner) != len(upper_corner):
-            raise ValueError("lower_corner must have same length as upper_corner, "
-                             f"lower_corner: {lower_corner}; upper_corner: {upper_corner}")
+        lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
         return self._crop(lower_corner, upper_corner, wcs, False)
 
     @utils.misc.sanitise_wcs
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
         # The docstring is defined in NDCubeBase
         # Sanitize inputs.
+        lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
         n_coords = len(lower_corner)
-        if len(upper_corner) != n_coords:
-            raise ValueError("lower_corner must have same length as upper_corner")
         if units is None:
             units = [None] * n_coords
         elif len(units) != n_coords:
-            raise ValueError(
-                "units must be None or have same length as lower_corner and upper_corner.")
+            raise ValueError("units must be None or have same length as corner inputs.")
         # Convert float inputs to quantities using units.
         types_with_units = (u.Quantity, type(None))
         for i, (lower, upper, unit) in enumerate(zip(lower_corner, upper_corner, units)):

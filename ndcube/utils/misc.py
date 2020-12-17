@@ -53,3 +53,14 @@ def sanitise_wcs(func):
         return func(*params.args, **params.kwargs)
 
     return wcs_wrapper
+
+
+def sanitize_corners(*corners):
+    """Sanitize corner inputs to NDCube crop methods."""
+    corners = [list(corner) if isinstance(corner, (tuple, list)) else [corner]
+               for corner in corners]
+    n_coords = [len(corner) for corner in corners]
+    if len(set(n_coords)) != 1:
+        raise ValueError("All corner inputs must have same number of coordinate objects. "
+                         f"Lengths of corner objects: {n_coords}")
+    return corners
