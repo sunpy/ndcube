@@ -491,6 +491,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             except AttributeError:
                 world_to_array_index = wcs.low_level_wcs.world_to_array_index_values
                 array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
+            # Convert coordinates to units used by WCS as WCS.world_to_array_index
+            # does not handle quantities.
+            lower_corner = utils.misc.convert_quantities_to_units(lower_corner,
+                                                                  self.wcs.world_axis_units)
+            upper_corner = utils.misc.convert_quantities_to_units(upper_corner,
+                                                                  self.wcs.world_axis_units)
         else:
             world_to_array_index = wcs.world_to_array_index
             array_index_to_world = wcs.array_index_to_world

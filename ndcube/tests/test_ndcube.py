@@ -390,6 +390,11 @@ def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     units = [u.min, u.m, u.deg, u.deg]
     lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
     upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    # Ensure some quantities are in units different from each other
+    # and those stored in the WCS.
+    lower_corner[0] = lower_corner[0].to(u.ms)
+    lower_corner[-1] = lower_corner[-1].to(u.arcsec)
+    upper_corner[-1] = upper_corner[-1].to(u.arcsec)
     expected = ndcube_4d_ln_lt_l_t[1:3, 0:2, 0:2, 0:3]
     output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
