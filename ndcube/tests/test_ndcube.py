@@ -1,4 +1,5 @@
 import astropy.units as u
+import astropy.wcs
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
@@ -347,6 +348,16 @@ def test_crop(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_tuple_non_tuple_input(ndcube_2d_ln_lt):
+    cube = ndcube_2d_ln_lt
+    frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
+    lower_corner = SkyCoord(Tx=359.99667, Ty=-0.0011111111, unit="deg", frame=frame)
+    upper_corner = SkyCoord(Tx=0.0044444444, Ty=0.0011111111, unit="deg", frame=frame)
+    cropped_by_tuples = cube.crop((lower_corner,), (upper_corner,))
+    cropped_by_coords = cube.crop(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(cropped_by_tuples, cropped_by_coords)
+
+
 def test_crop_with_nones(ndcube_4d_ln_lt_l_t):
     lower_corner = [None] * 3
     upper_corner = [None] * 3
@@ -431,6 +442,16 @@ def test_crop_by_values_indexerror(ndcube_4d_ln_lt_l_t):
     upper_corner[1] *= -1
     with pytest.raises(IndexError):
         ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
+
+
+def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
+    with pytest.raises(ValueError):
+        ndcube_4d_ln_lt_l_t.crop_by_values([None, None], [None, None], units=["m"])
+
+
+def test_crop_by_values_valueerror2(ndcube_4d_ln_lt_l_t):
+    with pytest.raises(ValueError):
+        ndcube_4d_ln_lt_l_t.crop_by_values([None], [None, None])
 
 
 def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):

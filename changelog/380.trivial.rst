@@ -1,0 +1,1 @@
+Allow corner inputs to `~ndcube.NDCube.crop` to not be wrapped in a `tuple` is only one high level coordinate objects required.
