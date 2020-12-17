@@ -79,7 +79,7 @@ class NDCubePlotMixin:
                 ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
 
-            elif naxis == 2:
+            elif naxis == 2 and 'y' in plot_axes:
                 ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
             else:
