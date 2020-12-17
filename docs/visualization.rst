@@ -33,6 +33,7 @@ Let's define an `~ndcube.NDCube` as with a shape of ``(4, 4, 5)`` and physical a
   >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
+  >>> wcs.wcs.cname = 'wavelength', 'HPC lat', 'HPC lon'
 
   >>> # Define mask.  Initially set all elements unmasked.
   >>> mask = np.zeros_like(data, dtype=bool)
@@ -55,6 +56,12 @@ The plot method can be called very simply.
   >>> ax = my_cube.plot()
   >>> plt.show()
 
+Note how no arguments are required.
+The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
+The axis labels are taken from the WCS axis names defined in ``my_cube.wcs.wcs.cname``.
+Defining these when the WCS is instantiated allows users to customize their axis names.
+However if they choose not to, the axis names are derived from the physical types in ``my_cube.wcs.world_axis_physical_types``.
+The type of visualization returned is derived from the dimensionality of the data.
 For a >2 array axes, as is the case above, an animation object is returned displaying either a line or image with sliders for each additional array axis.
 These sliders are used to sequentially update the line or image as it moves along its corresponding array axis, thus animating the data.
 By default and image animation is returned.
@@ -68,9 +75,6 @@ For for data with two array axes, an image is produced similar to that of `matpl
 
   >>> ax = my_cube[0].plot()
   >>> plt.show()
-
-Note that the bottom row of the image is empty because those array elements are marked ``True`` is ``.mask``.
-
 
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
@@ -97,10 +101,13 @@ Setting the x and y ranges of the plot can be done simply by indexing the `~ndcu
   >>> plt.cla()
   >>> plt.close()
 
-Note how no arguments are required, the necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
-However optional keywords enable customization of the visualization.
+Note that sometimes axis tickmarks are missing.
+This is a caused by a bug in `~astropy.visualization.wcsaes.WCSAxes` whereby the ticks and labels are omitted if the plot extends beyond the valid range of the WCS projection.
+This can happen when `matplotlib` pads the axes and can be overcome by zooming into the image slightly so that the plot boundaries are again within the valid range of the WCS projection.
+
+Visualizations can be customized via the use of kwargs.
 For `~ndcube.NDCube` instances with more than one array axis, the ``plot_axes`` keyword is used to determine which array axes are displayed on which plot axes.
-It is set to a list with a length equal to the number of array axes.
+It is set to a list with a length equal to the number of array axes in array axis order.
 The array axis to be displayed on the x-axis is marked by ``'x'`` in the corresponding element of the ``plot_axes`` list, while the array axis for the y-axis is marked with a ``'y'``.
 If no ``'y'`` axis is provided, a line animation is produced.
 By default the ``plot_axes`` argument is set so that the last array axis to shown on the x-axis and the penultimate array axis is shown on the y-axis.
@@ -153,6 +160,34 @@ It also enables the coordinates along the plot axes to be updated between frames
   >>> plt.clf()
   >>> plt.cla()
   >>> plt.close()
+
+Adding Colorbars
+----------------
+Working with the output of `ndcube.NDCube.plot` is the context of matplotlib figures and axes can be a great way of creating more complex plots.
+Here we will show two examples of home to add a colorbar.
+
+The first is simple and depends on `matplotlib.pyplot`.
+
+.. code-block:: python
+
+  >>> my_cube.plot()  # doctest: +SKIP
+  >>> plt.colorbar()  # doctest: +SKIP
+
+The second example shows how to more intricately play with `~ndcube.NDCube` visualizations and matplotlib figures and axes.
+This includes adding the output of `ndcube.NDCube.plot` to an existing axes object.
+
+.. plot::
+  :context:
+  :include-source:
+
+  >>> fig = plt.figure()  # Create a figure
+  >>> # Create WCSAxes object and then add the NDCube plot by setting the axes kwarg.
+  >>> ax = fig.add_axes([0.1, 0.1, 0.6, 0.6], projection=my_cube[0].wcs)
+  >>> ax = my_cube[0].plot(axes=ax)
+  >>> # Create the colorbar axes object and scale it by the image.
+  >>> cax = fig.add_axes([0.85, 0.1, 0.05, 0.6])
+  >>> im = ax.get_images()[0]  # Retrieve the plot AxesImage by which to scale colorbar.
+  >>> fig.colorbar(im, cax=cax, label="Intensity")
 
 .. _sequence_plotting:
 
