@@ -60,6 +60,7 @@ Remember that due to convention, the order of WCS axes is reversed relative to t
   >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
+  >>> wcs.wcs.cname = 'wavelength', 'HPC lat', 'HPC lon'
 
   >>> # Now instantiate the NDCube
   >>> my_cube = NDCube(data, wcs=wcs)
@@ -90,6 +91,7 @@ To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncer
   >>> wcs.wcs.cdelt = 0.2, 0.5, 0.4
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
+  >>> wcs.wcs.cname = 'wavelength', 'HPC lat', 'HPC lon'
 
   >>> # Define mask.  Initially set all elements unmasked.
   >>> mask = np.zeros_like(data, dtype=bool)
