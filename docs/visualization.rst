@@ -102,7 +102,7 @@ Setting the x and y ranges of the plot can be done simply by indexing the `~ndcu
   >>> plt.close()
 
 Note that sometimes axis tickmarks are missing.
-This is a caused by a bug in `~astropy.visualization.wcsaes.WCSAxes` whereby the ticks and labels are omitted if the plot extends beyond the valid range of the WCS projection.
+This is a caused by a behavior in `~astropy.visualization.wcsaes.WCSAxes` whereby the ticks and labels are omitted if the plot extends beyond the valid range of the WCS projection.
 This can happen when `matplotlib` pads the axes and can be overcome by zooming into the image slightly so that the plot boundaries are again within the valid range of the WCS projection.
 
 Visualizations can be customized via the use of kwargs.
@@ -168,10 +168,20 @@ Here we will show two examples of home to add a colorbar.
 
 The first is simple and depends on `matplotlib.pyplot`.
 
-.. code-block:: python
+.. plot::
+  :context:
+  :include-source:
 
-  >>> my_cube.plot()  # doctest: +SKIP
-  >>> plt.colorbar()  # doctest: +SKIP
+  >>> ax = my_cube[0].plot()
+  >>> cbar = plt.colorbar(orientation="horizontal")
+  >>> plt.show()
+
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+  >>> plt.cla()
+  >>> plt.close()
 
 The second example shows how to more intricately play with `~ndcube.NDCube` visualizations and matplotlib figures and axes.
 This includes adding the output of `ndcube.NDCube.plot` to an existing axes object.
@@ -188,6 +198,7 @@ This includes adding the output of `ndcube.NDCube.plot` to an existing axes obje
   >>> cax = fig.add_axes([0.85, 0.1, 0.05, 0.6])
   >>> im = ax.get_images()[0]  # Retrieve the plot AxesImage by which to scale colorbar.
   >>> cbar = fig.colorbar(im, cax=cax, label="Intensity")
+  >>> plt.show()
 
 .. _sequence_plotting:
 
