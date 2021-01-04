@@ -580,7 +580,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return NDCubeSequence(result_cubes, meta=self.meta)
 
 
-class NDCube(NDCubeBase, NDCubePlotMixin):
+class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
