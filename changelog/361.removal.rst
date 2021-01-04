@@ -1,2 +1,0 @@
-Remove NDCube inheritance on NDArithmeticMixin.  Arithmetic methods are currently not supported by NDCube but it is
-intended they will be in the future. This inheritance can be put back at that time.
