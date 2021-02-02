@@ -45,7 +45,7 @@ Installing the Development Version
 The stable version of ndcube will be reliable. However, if you value
 getting the latest updates over reliablility, or want to contribute
 to the development of ndcube, you will need to install the development
-version via `GitHub`_. Let's step through how to do this using
+version via `ndcube GitHub repository`_. Let's step through how to do this using
 anaconda.  For information on installing the anaconda
 distribution, see the `miniconda website`_.
 
@@ -94,5 +94,4 @@ get the latest updates by regularly doing:
 		$ git pull origin master
 
 .. _miniconda website: https://docs.conda.io/en/latest/miniconda.html
-.. _GitHub: https://github.com/sunpy/ndcube
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube
