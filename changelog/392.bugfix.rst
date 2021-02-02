@@ -1,0 +1,1 @@
+updated ndcube github repository link in `ndcube.docs.installation.rst`.
