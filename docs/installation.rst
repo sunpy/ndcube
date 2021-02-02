@@ -94,5 +94,5 @@ get the latest updates by regularly doing:
 		$ git pull origin master
 
 .. _miniconda website: https://docs.conda.io/en/latest/miniconda.html
-.. _GitHub: https://github.com/
+.. _GitHub: https://github.com/sunpy/ndcube
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube
