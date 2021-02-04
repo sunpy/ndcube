@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
-from sunpy.visualization.animator import ArrayAnimatorWCS
+try:
+    from sunpy.visualization.animator import ArrayAnimatorWCS
+    sunpy_available = True
+except ImportError:
+    sunpy_available = False
 
 from . import plotting_utils as utils
 
@@ -82,10 +86,13 @@ class NDCubePlotMixin:
             elif naxis == 2 and 'y' in plot_axes:
                 ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
-            else:
+            elif sunpy_available:
                 ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
                                         axes_coordinates=axes_coordinates,
                                         axes_units=axes_units, **kwargs)
+            else:
+                raise ModuleNotFoundError("Sunpy is required for animated "
+                                          "cube plots.")
 
         return ax
 
