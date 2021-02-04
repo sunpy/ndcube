@@ -1,2 +1,5 @@
 from .ndslicing import NDCubeSlicingMixin
-from .plotting import NDCubePlotMixin
+try:
+    from .plotting import NDCubePlotMixin
+except ImportError:
+    pass

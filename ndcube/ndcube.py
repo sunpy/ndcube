@@ -6,19 +6,33 @@ import astropy.nddata
 import astropy.units as u
 import gwcs
 import numpy as np
-import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+try:
+    import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+    sunpy_available = True
+except ImportError:
+    sunpy_available = False
 from astropy.wcs.wcsapi import HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
-from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
+from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
+class PlaceholderClass:
+    def plot(self, **kwargs):
+        raise ModuleNotFoundError("Plotting functionality requires sunpy, "
+                                  "which is not installed.")
+
+if sunpy_available:
+    from ndcube.mixins import NDCubePlotMixin
+    plotting_mixin = NDCubePlotMixin
+else:
+    plotting_mixin = PlaceholderClass
 
 class NDCubeMetaClass(abc.ABCMeta):
     """
@@ -580,7 +594,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return NDCubeSequence(result_cubes, meta=self.meta)
 
 
-class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
+class NDCube(NDCubeBase, plotting_mixin, astropy.nddata.NDArithmeticMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
