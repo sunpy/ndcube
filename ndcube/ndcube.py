@@ -23,10 +23,12 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
+
 class PlaceholderClass:
     def plot(self, **kwargs):
         raise ModuleNotFoundError("Plotting functionality requires sunpy, "
                                   "which is not installed.")
+
 
 if sunpy_available:
     from ndcube.mixins import NDCubePlotMixin
