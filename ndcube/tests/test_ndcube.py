@@ -167,7 +167,7 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     data = np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
 
     # The lookup table has to be in world order so transpose it.
-    cube.extra_coords.add_coordinate('velocity', (1, 2), data.T)
+    cube.extra_coords.add('velocity', (1, 2), data.T)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1

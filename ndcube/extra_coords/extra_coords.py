@@ -39,7 +39,7 @@ class ExtraCoordsABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def add_coordinate(self,
+    def add(self,
                        name: str,
                        array_dimension: Union[int, Iterable[int]],
                        lookup_table: Any,
@@ -144,7 +144,7 @@ class ExtraCoords(ExtraCoordsABC):
         """
         Construct an ExtraCoords instance from lookup tables.
 
-        This is a convience wrapper around `.add_coordinate` which does not
+        This is a convience wrapper around `.add` which does not
         expose all the options available in that method.
 
         Parameters
@@ -172,11 +172,11 @@ class ExtraCoords(ExtraCoordsABC):
         extra_coords = cls()
 
         for name, pixel_dim, lookup_table in zip(names, pixel_dimensions, lookup_tables):
-            extra_coords.add_coordinate(name, pixel_dim, lookup_table)
+            extra_coords.add(name, pixel_dim, lookup_table)
 
         return extra_coords
 
-    def add_coordinate(self, name, array_dimension, lookup_table, **kwargs):
+    def add(self, name, array_dimension, lookup_table, **kwargs):
         # docstring in ABC
 
         if self._wcs is not None:

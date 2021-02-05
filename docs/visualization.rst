@@ -249,13 +249,13 @@ Then we show how to extract and plot the data.
   >>> base_time = Time('2000-01-01', format='fits', scale='utc')
   >>> timestamps0 = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(data0.shape[common_axis])])
   >>> extra_coords0 = ExtraCoords()
-  >>> extra_coords0.add_coordinate('time', 2, timestamps0)
+  >>> extra_coords0.add('time', 2, timestamps0)
   >>> timestamps1 = Time([base_time + TimeDelta(60 * (i+1), format='sec') for i in range(data1.shape[common_axis])])
   >>> extra_coords1 = ExtraCoords()
-  >>> extra_coords1.add_coordinate('time', 2, timestamps1)
+  >>> extra_coords1.add('time', 2, timestamps1)
   >>> timestamps2 = Time([base_time + TimeDelta(60 * (i+1), format='sec') for i in range(data2.shape[common_axis])])
   >>> extra_coords2 = ExtraCoords()
-  >>> extra_coords2.add_coordinate('time', 2, timestamps2)
+  >>> extra_coords2.add('time', 2, timestamps2)
 
   >>> # Define the cubes
   >>> cube0 = NDCube(data0, wcs=wcs, extra_coords=extra_coords0)
