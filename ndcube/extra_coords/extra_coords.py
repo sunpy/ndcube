@@ -40,10 +40,10 @@ class ExtraCoordsABC(abc.ABC):
 
     @abc.abstractmethod
     def add(self,
-                       name: str,
-                       array_dimension: Union[int, Iterable[int]],
-                       lookup_table: Any,
-                       **kwargs):
+            name: str,
+            array_dimension: Union[int, Iterable[int]],
+            lookup_table: Any,
+            **kwargs):
         """
         Add a coordinate to this ``ExtraCoords`` based on a lookup table.
 
