@@ -138,11 +138,22 @@ class NDCubePlotMixin:
             if yerror is not None:
                 yerror = np.ma.masked_array(yerror, self.mask)
 
+        # The centers of the bins are integer values, so the edges are at 0.5
+        x = np.arange(ydata.size + 1) - 0.5
+        # Need to append the final value to get `axes.step` to draw the final
+        # bin. When NDCube depends on matplotlib>=3.4, `axes.stairs` can be
+        # used instead to avoid this extra step.
+        ydata = np.append(ydata, ydata[-1])
+
+        lines = axes.step(x, ydata, where='post', **kwargs)
         if yerror is not None:
-            # We plot against pixel coordinates
-            axes.errorbar(np.arange(len(ydata)), ydata, yerr=yerror, **kwargs)
-        else:
-            axes.plot(ydata, **kwargs)
+            yerror = np.append(yerror, yerror[-1])
+            axes.step(x, ydata + yerror, where='post',
+                      color=lines[0].get_color(),
+                      lw=lines[0].get_linewidth() / 2, **kwargs)
+            axes.step(x, ydata - yerror, where='post',
+                      color=lines[0].get_color(),
+                      lw=lines[0].get_linewidth() / 2, **kwargs)
 
         axes.set_ylabel(default_ylabel)
 
