@@ -75,7 +75,7 @@ def test_exceptions(wcs_1d_l):
     # Test unable to add to WCS EC
     ec = ExtraCoords(wcs=wcs_1d_l, mapping=(0,))
     with pytest.raises(ValueError):
-        ec.add_coordinate(None, 0, None)
+        ec.add(None, 0, None)
 
     with pytest.raises(KeyError):
         ExtraCoords()['empty']
@@ -92,7 +92,7 @@ def test_mapping_setter(wcs_1d_l, wave_lut):
         ec.mapping = (1,)
 
     ec = ExtraCoords()
-    ec.add_coordinate("wave", (0,), wave_lut)
+    ec.add("wave", (0,), wave_lut)
     with pytest.raises(AttributeError):
         ec.mapping = None
 
@@ -108,7 +108,7 @@ def test_wcs_setter(wcs_1d_l, wave_lut):
         ec.wcs = wcs_1d_l
 
     ec = ExtraCoords()
-    ec.add_coordinate("wave", (0,), wave_lut)
+    ec.add("wave", (0,), wave_lut)
     with pytest.raises(AttributeError):
         ec.wcs = None
 
@@ -166,7 +166,7 @@ def test_skycoord(skycoord_1d_lut):
 
 def test_skycoord_1_pixel(skycoord_1d_lut):
     ec = ExtraCoords()
-    ec.add_coordinate(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
+    ec.add(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (0,)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -182,7 +182,7 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
 
 def test_skycoord_mesh_false(skycoord_2d_lut):
     ec = ExtraCoords()
-    ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
+    ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (0, 1)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -193,8 +193,8 @@ def test_skycoord_mesh_false(skycoord_2d_lut):
 
 def test_extra_coords_index(skycoord_2d_lut, time_lut):
     ec = ExtraCoords()
-    ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
-    ec.add_coordinate("exposure_time", (0,), time_lut)
+    ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
+    ec.add("exposure_time", (0,), time_lut)
     assert len(ec._lookup_tables) == 2
     assert ec.mapping == (0, 1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -221,7 +221,7 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
 
 def test_extra_coords_2d_quantity(quantity_2d_lut):
     ec = ExtraCoords()
-    ec.add_coordinate("velocity", (0, 1), quantity_2d_lut)
+    ec.add("velocity", (0, 1), quantity_2d_lut)
 
     ec.wcs.pixel_to_world(0, 0)
 
@@ -236,7 +236,7 @@ def test_extra_coords_2d_quantity(quantity_2d_lut):
 def test_add_coord_after_create(time_lut):
     ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
-    ndc.extra_coords.add_coordinate("time", 0, time_lut)
+    ndc.extra_coords.add("time", 0, time_lut)
 
     assert len(ndc.extra_coords._lookup_tables) == 1
 
@@ -246,7 +246,7 @@ def test_add_coord_after_create(time_lut):
 def test_combined_wcs(time_lut):
     ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
-    ndc.extra_coords.add_coordinate("time", 0, time_lut)
+    ndc.extra_coords.add("time", 0, time_lut)
 
     cwcs = ndc.combined_wcs
     assert cwcs.world_n_dim == 3
@@ -258,8 +258,8 @@ def test_combined_wcs(time_lut):
 
 def test_slice_extra_1d(time_lut, wave_lut):
     ec = ExtraCoords()
-    ec.add_coordinate("time", 0, time_lut)
-    ec.add_coordinate("wavey", 1, wave_lut)
+    ec.add("time", 0, time_lut)
+    ec.add("wavey", 1, wave_lut)
 
     sec = ec[:, 3:7]
     assert len(sec._lookup_tables) == 2
@@ -272,8 +272,8 @@ def test_slice_extra_1d(time_lut, wave_lut):
 
 def test_slice_extra_2d(time_lut, skycoord_2d_lut):
     ec = ExtraCoords()
-    ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
-    ec.add_coordinate("exposure_time", (0,), time_lut)
+    ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
+    ec.add("exposure_time", (0,), time_lut)
 
     sec = ec[1:5, 1:5]
     assert len(sec._lookup_tables) == 2
@@ -289,8 +289,8 @@ def test_slice_extra_2d(time_lut, skycoord_2d_lut):
 
 def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
     ec = ExtraCoords()
-    ec.add_coordinate(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
-    ec.add_coordinate("exposure_time", (0,), time_lut)
+    ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
+    ec.add("exposure_time", (0,), time_lut)
 
     sec = ec[0, :]
     assert len(sec._lookup_tables) == 1
@@ -314,8 +314,8 @@ def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
 
 def test_slice_extra_twice(time_lut, wave_lut):
     ec = ExtraCoords()
-    ec.add_coordinate("time", 0, time_lut)
-    ec.add_coordinate("wavey", 1, wave_lut)
+    ec.add("time", 0, time_lut)
+    ec.add("wavey", 1, wave_lut)
 
     sec = ec[1:, 0]
     assert len(sec._lookup_tables) == 1

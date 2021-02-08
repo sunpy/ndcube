@@ -1,0 +1,1 @@
+Rename `.ExtraCoords.add` method from previous name "add_coordinate".

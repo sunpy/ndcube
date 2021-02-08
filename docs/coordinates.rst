@@ -204,7 +204,7 @@ If one does not exist for your coordinate, prepend the type with ``custom:``.
 
 .. code-block:: python
 
-  >>> my_cube.extra_coords.add_coordinate('time', (2,), timestamps)  # TODO: Change the mapping to 0 Issue #342 resolved.
+  >>> my_cube.extra_coords.add('time', (2,), timestamps)  # TODO: Change the mapping to 0 Issue #342 resolved.
 
 An indefinite number of coordinates can be added in this way.
 The names of the coordinates can be accessed via the `~ndcube.ExtraCoords.keys` method.
