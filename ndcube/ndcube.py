@@ -218,12 +218,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @property
     def dimensions(self):
-        """
-        Returns a named tuple with two attributes: 'shape' gives the shape of
-        the data dimensions; 'axis_types' gives the WCS axis type of each
-        dimension, e.g. WAVE or HPLT-TAN for wavelength of helioprojected
-        latitude.
-        """
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
