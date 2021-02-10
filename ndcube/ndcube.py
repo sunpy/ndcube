@@ -322,8 +322,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
         if wcs.world_n_dim == 1 and not isinstance(axes_coords, tuple):
             axes_coords = [axes_coords]
-        # Ensure it's a list not a tuple
-        axes_coords = list(axes_coords)
+        # Ensure it's a list not a tuple or bare SkyCoords object
+        if type(axes_coords) != list:
+            if type(axes_coords) == tuple:
+                axes_coords = list(axes_coords)
+            else:
+                axes_coords = [axes_coords,]
 
         object_names = np.array([wao_comp[0] for wao_comp in wcs.low_level_wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
