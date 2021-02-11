@@ -1,0 +1,10 @@
+Plotting functionality on `NDCube` has been refactored to use pluggable
+"plotter" classes. All plotting functionality can now be accessed via the
+`.NDCube.plotter` attribute, with `.NDCube.plot` becoming an alias for
+`.NDCube.plotter.plot`.
+
+Advanced users, or package maintainers that which to customise the plotting
+functionality of an ``NDCube`` instance can set the ``.plotter`` attribute of
+a cube to be a subclass of `ndcube.visualization.BasePlotter` which then
+customises the behaviour of the ``NDCube.plot()`` method and provides any other
+methods implemented on the plotter.

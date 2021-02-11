@@ -1,5 +1,6 @@
 import abc
 import textwrap
+import warnings
 from copy import deepcopy
 from collections import namedtuple
 
@@ -19,20 +20,16 @@ from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
-from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
+from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.visualization import PlotterDescriptor
+from ndcube.visualization.mpl_plotter import MatplotlibPlotter
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 
-class NDCubeMetaClass(abc.ABCMeta):
-    """
-    A metaclass that combines `abc.ABCMeta`.
-    """
-
-
-class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
+class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
 
     @abc.abstractproperty
     def dimensions(self):
@@ -634,7 +631,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return NDCubeSequence(result_cubes, meta=self.meta)
 
 
-class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
+class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
@@ -680,3 +677,26 @@ class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
         Default is False.
 
     """
+    plotter = PlotterDescriptor(default_type=MatplotlibPlotter)
+
+    def _as_mpl_axes(self):
+        if hasattr(self.plotter, "_as_mpl_axes"):
+            return self.plotter._as_mpl_axes()
+        else:
+            warnings.warn(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
+                          "The default MatplotlibPlotter._as_mpl_axes method will be used instead.",
+                          UserWarning)
+
+            plotter = MatplotlibPlotter(self)
+            return plotter._as_mpl_axes()
+
+    def plot(self, *args, **kwargs):
+        """
+        A convenience function for the plotters default ``plot()`` method.
+
+        Calling this method is the same as calling ``cube.plotter.plot``, the
+        behaviour of this method can change if the `NDCube.plotter` class is
+        set to a different ``Plotter`` class.
+
+        """
+        return self.plotter.plot(*args, **kwargs)
