@@ -1,0 +1,2 @@
+Make sunpy an optional dependence. Without it, the _animate_cube plotting
+functionality will be disabled.
