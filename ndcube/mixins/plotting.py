@@ -186,7 +186,7 @@ class NDCubePlotMixin:
                       axes_units=None, data_unit=None, **kwargs):
 
         try:
-            from sunpy.visualization.animator import ArrayAnimatorWCS
+            from sunpy.visualization.animator import ArrayAnimatorWCS  # isort:skip
         except ImportError:
             raise ImportError("Sunpy is required for animated "
                               "cube plots.")
