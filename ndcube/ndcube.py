@@ -7,6 +7,7 @@ import astropy.units as u
 import gwcs
 import numpy as np
 try:
+    # Import sunpy coordinates if available to register the frames and WCS functions with astropy
     import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
 except ImportError:
     pass
