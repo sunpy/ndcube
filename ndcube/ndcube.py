@@ -6,7 +6,12 @@ import astropy.nddata
 import astropy.units as u
 import gwcs
 import numpy as np
-import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+
+try:
+    # Import sunpy coordinates if available to register the frames and WCS functions with astropy
+    import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+except ImportError:
+    pass
 from astropy.wcs.wcsapi import HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
