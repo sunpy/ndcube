@@ -323,8 +323,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if wcs.world_n_dim == 1 and not isinstance(axes_coords, tuple):
             axes_coords = [axes_coords]
         # Ensure it's a list, not a tuple or bare SkyCoords object
-        if type(axes_coords) != list:
-            if type(axes_coords) == tuple:
+        if not isinstance(axes_coords, list):
+            if isinstance(axes_coords, tuple):
                 axes_coords = list(axes_coords)
             else:
                 axes_coords = [axes_coords]
