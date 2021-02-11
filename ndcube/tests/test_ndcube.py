@@ -293,6 +293,17 @@ def test_axis_world_coords_sky(ndcube_3d_ln_lt_l, wapt):
                                      [-19.99999984, -14.9999999, -9.99999995]] * u.arcsec)
 
 
+def test_axes_world_coords_sky_only(ndcube_2d_ln_lt):
+    coords = ndcube_2d_ln_lt.axis_world_coords()
+
+    assert len(coords) == 1
+    assert isinstance(coords[0], SkyCoord)
+    assert u.allclose(coords[0].Tx[:, 0], [-16, -12, -8, -4, 0, 4, 8,
+                                           12, 16, 20] * u.arcsec, atol=1e-5 * u.arcsec)
+    assert u.allclose(coords[0].Ty[0, :], [-8, -6, -4, -2, 0, 2, 4, 6, 8, 10,
+                                           12, 14] * u.arcsec, atol=1e-5 * u.arcsec)
+
+
 def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values()
     assert len(coords) == 3
