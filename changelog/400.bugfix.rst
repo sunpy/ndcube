@@ -1,2 +1,2 @@
-Fix bug in NDCube.axis_world_coords_values when axes_coords is initially a 
+Fix bug in NDCube.axis_world_coords_values when axes_coords is initially a
 bare astropy coordinate object rather than a list/tuple of coordinate objects.
