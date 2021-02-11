@@ -6,12 +6,6 @@ import numpy as np
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
 
-try:
-    from sunpy.visualization.animator import ArrayAnimatorWCS
-    sunpy_available = True
-except ImportError:
-    sunpy_available = False
-
 from . import plotting_utils as utils
 
 __all__ = ['NDCubePlotMixin']
@@ -191,9 +185,11 @@ class NDCubePlotMixin:
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
 
-        if not sunpy_available:
-            raise ModuleNotFoundError("Sunpy is required for animated "
-                                      "cube plots.")
+        try:
+            from sunpy.visualization.animator import ArrayAnimatorWCS
+        except ImportError:
+            raise ImportError("Sunpy is required for animated "
+                              "cube plots.")
 
         # If data_unit set, convert data to that unit
         if data_unit is None:
