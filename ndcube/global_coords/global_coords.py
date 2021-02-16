@@ -1,5 +1,7 @@
 from collections import OrderedDict
 from collections.abc import Mapping
+import numpy as np
+import astropy.units as u
 
 from ndcube.utils.wcs import validate_physical_types
 
@@ -28,6 +30,18 @@ class GlobalCoords(Mapping):
         A dynamic dictionary of all global coordinates, stored here or derived
         from the ndcube object.
         """
+        if hasattr(self._ndcube.wcs.low_level_wcs, "dropped_world_dimensions"):
+            dropped_world = self._ndcube.wcs.low_level_wcs.dropped_world_dimensions
+            extra_internal = {}
+            if dropped_world != {}:
+                for i in range(len(dropped_world["value"])):
+                    name = "dropped_world_axis_{}".format(i)
+                    val = np.full(self._ndcube.data.shape, dropped_world["value"][i])
+                    val = val * u.Unit(dropped_world["world_axis_units"][0])
+                    physical_type = dropped_world["world_axis_physical_types"][i]
+                    extra_internal[name] = (physical_type, val)
+                return {**extra_internal, **self._internal_coords}
+
         return self._internal_coords
 
     def add(self, name, physical_type, coord):
