@@ -155,6 +155,7 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     assert u.allclose(all_coords["dropped_world_axis_0"][1], 1.02e-9 * u.m)
     assert all_coords["dropped_world_axis_0"][0] == "em.wl"
 
+
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
 

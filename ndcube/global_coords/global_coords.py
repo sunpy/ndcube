@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from collections.abc import Mapping
+
 import astropy.units as u
 
 from ndcube.utils.wcs import validate_physical_types
