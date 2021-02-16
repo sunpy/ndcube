@@ -30,6 +30,9 @@ class GlobalCoords(Mapping):
         A dynamic dictionary of all global coordinates, stored here or derived
         from the ndcube object.
         """
+        if self._ndcube is None:
+            return self._internal_coords
+
         if hasattr(self._ndcube.wcs.low_level_wcs, "dropped_world_dimensions"):
             dropped_world = self._ndcube.wcs.low_level_wcs.dropped_world_dimensions
             extra_internal = {}
