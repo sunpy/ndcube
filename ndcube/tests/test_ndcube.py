@@ -144,14 +144,16 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     assert sndc.global_coords._all_coords == {}
 
     sndc = ndc[0, 0, :]
-    assert u.allclose(sndc.global_coords._all_coords["dropped_world_axis_0"][1], -0.00555556 * u.deg)
-    assert u.allclose(sndc.global_coords._all_coords["dropped_world_axis_1"][1], 0.00277778 * u.deg)
-    assert sndc.global_coords._all_coords["dropped_world_axis_0"][0] == "custom:pos.helioprojective.lat"
-    assert sndc.global_coords._all_coords["dropped_world_axis_1"][0] == "custom:pos.helioprojective.lon"
+    all_coords = sndc.global_coords._all_coords
+    assert u.allclose(all_coords["dropped_world_axis_0"][1], -0.00555556 * u.deg)
+    assert u.allclose(all_coords["dropped_world_axis_1"][1], 0.00277778 * u.deg)
+    assert all_coords["dropped_world_axis_0"][0] == "custom:pos.helioprojective.lat"
+    assert all_coords["dropped_world_axis_1"][0] == "custom:pos.helioprojective.lon"
 
     sndc = ndc[:, :, 0]
-    assert u.allclose(sndc.global_coords._all_coords["dropped_world_axis_0"][1], 1.02e-9 * u.m)
-    assert sndc.global_coords._all_coords["dropped_world_axis_0"][0] == "em.wl"
+    all_coords = sndc.global_coords._all_coords
+    assert u.allclose(all_coords["dropped_world_axis_0"][1], 1.02e-9 * u.m)
+    assert all_coords["dropped_world_axis_0"][0] == "em.wl"
 
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
