@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from collections.abc import Mapping
-import numpy as np
 import astropy.units as u
 
 from ndcube.utils.wcs import validate_physical_types
@@ -36,7 +35,7 @@ class GlobalCoords(Mapping):
             if dropped_world != {}:
                 for i in range(len(dropped_world["value"])):
                     name = "dropped_world_axis_{}".format(i)
-                    val = dropped_world["value"][i]* u.Unit(dropped_world["world_axis_units"][0])
+                    val = dropped_world["value"][i] * u.Unit(dropped_world["world_axis_units"][0])
                     physical_type = dropped_world["world_axis_physical_types"][i]
                     extra_internal[name] = (physical_type, val)
                 return {**extra_internal, **self._internal_coords}
