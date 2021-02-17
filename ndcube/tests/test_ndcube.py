@@ -137,6 +137,28 @@ def test_slicing_preserves_global_coords(ndcube_3d_ln_lt_l):
     assert sndc._global_coords._internal_coords == ndc._global_coords._internal_coords
 
 
+def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
+    ndc = ndcube_3d_ln_lt_l
+    lat_key = "custom:pos.helioprojective.lat"
+    lon_key = "custom:pos.helioprojective.lon"
+    wl_key = "em.wl"
+
+    sndc = ndc[:, 0, :]
+    assert sndc.global_coords._all_coords == {}
+
+    sndc = ndc[0, 0, :]
+    all_coords = sndc.global_coords._all_coords
+    assert u.allclose(all_coords[lat_key][1], -0.00555556 * u.deg)
+    assert u.allclose(all_coords[lon_key][1], 0.00277778 * u.deg)
+    assert all_coords[lat_key][0] == lat_key
+    assert all_coords[lon_key][0] == lon_key
+
+    sndc = ndc[:, :, 0]
+    all_coords = sndc.global_coords._all_coords
+    assert u.allclose(all_coords[wl_key][1], 1.02e-9 * u.m)
+    assert all_coords[wl_key][0] == wl_key
+
+
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
 
