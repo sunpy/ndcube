@@ -35,14 +35,15 @@ class GlobalCoords(Mapping):
 
         if hasattr(self._ndcube.wcs.low_level_wcs, "dropped_world_dimensions"):
             dropped_world = self._ndcube.wcs.low_level_wcs.dropped_world_dimensions
-            extra_internal = {}
+            wcs_dropped = {}
             if dropped_world != {}:
                 for i in range(len(dropped_world["value"])):
-                    name = "dropped_world_axis_{}".format(i)
+                    name = dropped_world["world_axis_names"][i] or\
+                        dropped_world["world_axis_physical_types"][i]
                     val = dropped_world["value"][i] * u.Unit(dropped_world["world_axis_units"][0])
                     physical_type = dropped_world["world_axis_physical_types"][i]
-                    extra_internal[name] = (physical_type, val)
-                return {**extra_internal, **self._internal_coords}
+                    wcs_dropped[name] = (physical_type, val)
+                return {**wcs_dropped, **self._internal_coords}
 
         return self._internal_coords
 
