@@ -38,8 +38,8 @@ class GlobalCoords(Mapping):
             wcs_dropped = {}
             if dropped_world != {}:
                 for i in range(len(dropped_world["value"])):
-                    name = dropped_world["world_axis_names"][i] or\
-                        dropped_world["world_axis_physical_types"][i]
+                    name = (dropped_world["world_axis_names"][i] or
+                            dropped_world["world_axis_physical_types"][i])
                     val = dropped_world["value"][i] * u.Unit(dropped_world["world_axis_units"][0])
                     physical_type = dropped_world["world_axis_physical_types"][i]
                     wcs_dropped[name] = (physical_type, val)
