@@ -1,5 +1,6 @@
+import abc
 from numbers import Integral
-from functools import partial
+from collections import defaultdict
 
 import astropy.units as u
 import gwcs
@@ -12,6 +13,31 @@ from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 __all__ = ['LookupTableCoord']
+
+
+def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
+    """
+    Generate a simple frame, where all axes have the same type and unit.
+    """
+    axes_order = tuple(range(naxes))
+
+    name = None
+    axes_type = "CUSTOM"
+
+    if isinstance(unit, (u.Unit, u.IrreducibleUnit, u.CompositeUnit)):
+        unit = tuple([unit] * naxes)
+
+    if all([u.m.is_equivalent(un) for un in unit]):
+        axes_type = "SPATIAL"
+
+    if all([u.pix.is_equivalent(un) for un in unit]):
+        name = "PixelFrame"
+        axes_type = "PIXEL"
+
+    axes_type = tuple([axes_type] * naxes)
+
+    return cf.CoordinateFrame(naxes, axes_type, axes_order, unit=unit,
+                              axes_names=names, name=name, axis_physical_types=physical_types)
 
 
 class LookupTableCoord:
@@ -67,8 +93,8 @@ class LookupTableCoord:
     """
 
     def __init__(self, *lookup_tables, mesh=True, names=None, physical_types=None):
-        self.delayed_models = []
-        self.frames = []
+        self._lookup_tables = []
+        self._dropped_world_dimensions = None
 
         if lookup_tables:
             lt0 = lookup_tables[0]
@@ -76,19 +102,18 @@ class LookupTableCoord:
                 raise TypeError("All lookup tables must be the same type")
 
             type_map = {
-                u.Quantity: self._from_quantity,
-                Time: self._from_time,
-                SkyCoord: self._from_skycoord
+                u.Quantity: QuantityLookupTable,
+                Time: TimeLookupTable,
+                SkyCoord: SkyCoordLookupTable,
             }
-            delayed_model, frame = type_map[type(lt0)](lookup_tables,
-                                                       mesh=mesh,
-                                                       names=names,
-                                                       physical_types=physical_types)
-            self.delayed_models = [delayed_model]
-            self.frames = [frame]
+
+            self._lookup_tables.append(type_map[type(lt0)](*lookup_tables,
+                                                           mesh=mesh,
+                                                           names=names,
+                                                           physical_types=physical_types))
 
     def __str__(self):
-        return f"frames={self.frames} delayed_models={self.delayed_models}"
+        return f"LookupTableCoord(tables={self._lookup_tables})"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
@@ -99,17 +124,30 @@ class LookupTableCoord:
                 "Can only concatenate LookupTableCoord objects with other LookupTableCoord objects.")
 
         new_lutc = type(self)()
-        new_lutc.delayed_models = self.delayed_models + other.delayed_models
-        new_lutc.frames = self.frames + other.frames
-
-        # We must now re-index the frames so that they align with the composite frame
-        ind = 0
-        for f in new_lutc.frames:
-            new_ind = ind + f.naxes
-            f._axes_order = tuple(range(ind, new_ind))
-            ind = new_ind
+        new_lutc._lookup_tables = self._lookup_tables + other._lookup_tables
 
         return new_lutc
+
+    @staticmethod
+    def _append_frame_to_dropped_dimensions(dropped_world_dimensions, frame):
+        if "world_axis_object_classes" not in dropped_world_dimensions:
+            dropped_world_dimensions["world_axis_object_classes"] = dict()
+
+        wao_classes = frame._world_axis_object_classes
+        wao_components = frame._world_axis_object_components
+
+        dropped_world_dimensions["world_axis_names"].append(frame.axes_names)
+        dropped_world_dimensions["world_axis_physical_types"].append(frame.world_axis_physical_types)
+        dropped_world_dimensions["world_axis_units"].append(frame.world_axis_units)
+        dropped_world_dimensions["world_axis_object_components"].append(wao_components)
+        dropped_world_dimensions["world_axis_object_classes"].update(dict(
+            filter(
+                lambda x: x[0] == wao_components[0][0], wao_classes.items()
+            )
+        ))
+        dropped_world_dimensions["serialized_classes"] = False
+
+        return dropped_world_dimensions
 
     def __getitem__(self, item):
         """
@@ -118,6 +156,8 @@ class LookupTableCoord:
         If no lookup tables remain after slicing `None` is returned.
         """
         item = sanitize_slices(item, self.model.n_inputs)
+
+        dropped_world_dimensions = defaultdict(list)
 
         ind = 0
         new_dmodels = []
@@ -137,6 +177,11 @@ class LookupTableCoord:
             if not all(isinstance(it, Integral) for it in sub_items):
                 new_dmodels.append(dmodel[sub_items])
                 new_frames.append(frame)
+            else:
+                self._append_frame_to_dropped_dimensions(dropped_world_dimensions, frame)
+                dropped_world_dimensions["value"].append(
+                    [0 * list(model.input_units.values())[i] for i in range(n_axes)]
+                )
 
         if not new_dmodels:
             return
@@ -145,27 +190,62 @@ class LookupTableCoord:
         new_lutc = type(self)()
         new_lutc.delayed_models = new_dmodels
         new_lutc.frames = new_frames
+        new_lutc._dropped_world_dimensions = dropped_world_dimensions
         return new_lutc
 
     @property
     def model(self):
-        model = self.delayed_models[0]()
-        for m2 in self.delayed_models[1:]:
-            model = model & m2()
+        model = self._lookup_tables[0].generate_model()
+        for m2 in self._lookup_tables[1:]:
+            model = model & m2.generate_model()
         return model
 
     @property
     def frame(self):
-        if len(self.frames) == 1:
-            return self.frames[0]
+        if len(self._lookup_tables) == 1:
+            return self._lookup_tables[0].generate_frame()
         else:
-            return cf.CompositeFrame(self.frames)
+            frames = [t.generate_frame() for t in self._lookup_tables]
+
+            # We now have to set the axes_order of all the frames so that we
+            # have one consistent WCS with the correct number of pixel
+            # dimensions.
+            ind = 0
+            for f in frames:
+                new_ind = ind + f.naxes
+                f._axes_order = tuple(range(ind, new_ind))
+                ind = new_ind
+
+            return cf.CompositeFrame(frames)
 
     @property
     def wcs(self):
         return gwcs.WCS(forward_transform=self.model,
-                        input_frame=self._generate_generic_frame(self.model.n_inputs, u.pix),
+                        input_frame=_generate_generic_frame(self.model.n_inputs, u.pix),
                         output_frame=self.frame)
+
+    @property
+    def dropped_word_dimensions(self):
+        return self._dropped_world_dimensions or {}
+
+
+class BaseLookupTable(abc.ABC):
+    """
+    A Base LookupTable contains a single lookup table coordinate.
+
+    This can be multi-dimensional, to support use cases for coupled dimensions,
+    such as SkyCoord, or a 3D grid of distances where three 1D lookup tables
+    are supplied for each of the axes. The upshot of this is that each
+    BaseLookupTable has only one gWCS frame.
+
+    The contrasts with LookupTableCoord which can contain multiple physical
+    coordinates, meaning it can have multiple gWCS frames.
+    """
+    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+        self.tables = tables
+        self.mesh = mesh
+        self.names = names
+        self.physical_types = physical_types
 
     @staticmethod
     def generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
@@ -199,7 +279,7 @@ class LookupTableCoord:
         return t
 
     @classmethod
-    def _generate_compound_model(cls, *lookup_tables, mesh=True):
+    def generate_compound_model(cls, *lookup_tables, mesh=True):
         """
         Takes a set of quantities and returns a ND compound model.
         """
@@ -214,113 +294,107 @@ class LookupTableCoord:
         mapping = list(range(lookup_tables[0].ndim)) * len(lookup_tables)
         return models.Mapping(mapping) | model
 
-    @staticmethod
-    def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
-        """
-        Generate a simple frame, where all axes have the same type and unit.
-        """
-        axes_order = tuple(range(naxes))
-
-        name = None
-        axes_type = "CUSTOM"
-
-        if isinstance(unit, (u.Unit, u.IrreducibleUnit, u.CompositeUnit)):
-            unit = tuple([unit] * naxes)
-
-        if all([u.m.is_equivalent(un) for un in unit]):
-            axes_type = "SPATIAL"
-
-        if all([u.pix.is_equivalent(un) for un in unit]):
-            name = "PixelFrame"
-            axes_type = "PIXEL"
-
-        axes_type = tuple([axes_type] * naxes)
-
-        return cf.CoordinateFrame(naxes, axes_type, axes_order, unit=unit,
-                                  axes_names=names, name=name, axis_physical_types=physical_types)
-
-    def _from_time(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
+    def model_from_quantity(self, lookup_tables, mesh=False):
         if len(lookup_tables) > 1:
-            raise ValueError("Can only parse one time lookup table.")
+            return self.generate_compound_model(*lookup_tables, mesh=mesh)
 
-        time = lookup_tables[0]
-        deltas = (time[1:] - time[0]).to(u.s)
-        deltas = deltas.insert(0, 0 * u.s)
+        return self.generate_tabular(lookup_tables[0])
 
-        def _generate_time_lookup(deltas):
-            return self._model_from_quantity((deltas,))
+    @abc.abstractmethod
+    def generate_frame(self):
+        """
+        Generate the Frame for this LookupTable.
+        """
 
-        frame = cf.TemporalFrame(lookup_tables[0][0], unit=u.s, axes_names=names, name="TemporalFrame")
-        return DelayedLookupTable(deltas, _generate_time_lookup, mesh), frame
+    @abc.abstractmethod
+    def generate_model(self):
+        """
+        Generate the Astropy Model for this LookupTable.
+        """
 
-    def _from_skycoord(self, lookup_tables, mesh=False, names=None, physical_types=None, **kwargs):
-        if len(lookup_tables) > 1:
-            raise ValueError("Can only parse one SkyCoord lookup table.")
+class QuantityLookupTable(BaseLookupTable):
+    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+        if not all([isinstance(t, u.Quantity) for t in tables]):
+            raise TypeError("All Tables must be astropy Quantity objects")
+        if not all([t.unit.is_equivalent(tables[0].unit) for t in tables]):
+            raise u.UnitsError("All lookup tables must have equivalent units.")
 
-        def _generate_skycoord_lookup(components):
-            return self._model_from_quantity(components, mesh=mesh)
+        self.unit = tables[0].unit
 
-        sc = lookup_tables[0]
+        super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+
+    def generate_frame(self):
+        """
+        Generate the Frame for this LookupTable.
+        """
+        return _generate_generic_frame(len(self.tables), self.unit, self.names, self.physical_types)
+
+    def generate_model(self):
+        """
+        Generate the Astropy Model for this LookupTable.
+        """
+        return self.model_from_quantity(self.tables, self.mesh)
+
+
+class SkyCoordLookupTable(BaseLookupTable):
+    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+        if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
+            raise TypeError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
+
+        super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+    def generate_frame(self):
+        """
+        Generate the Frame for this LookupTable.
+        """
+        sc = self.tables[0]
         components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
         ref_frame = sc.frame.replicate_without_data()
         units = list(c.unit for c in components)
 
-        if names and len(names) != 2:
+        names = self.names
+        if self.names and len(self.names) != 2:
             names = None
 
         # TODO: Currently this limits you to 2D due to gwcs#120
-        frame = cf.CelestialFrame(reference_frame=ref_frame,
+        return cf.CelestialFrame(reference_frame=ref_frame,
                                   unit=units,
                                   axes_names=names,
-                                  axis_physical_types=physical_types,
+                                  axis_physical_types=self.physical_types,
                                   name="CelestialFrame")
 
-        return DelayedLookupTable(components, _generate_skycoord_lookup, mesh), frame
-
-    def _model_from_quantity(self, lookup_tables, mesh=False):
-        if len(lookup_tables) > 1:
-            return self._generate_compound_model(*lookup_tables, mesh=mesh)
-
-        return self.generate_tabular(lookup_tables[0])
-
-    def _from_quantity(self, lookup_tables, mesh=False, names=None, physical_types=None):
-        if not all(lt.unit.is_equivalent(lookup_tables[0].unit) for lt in lookup_tables):
-            raise u.UnitsError("All lookup tables must have equivalent units.")
-
-        unit = u.Quantity(lookup_tables).unit
-
-        frame = self._generate_generic_frame(len(lookup_tables), unit, names, physical_types)
-
-        return DelayedLookupTable(lookup_tables, partial(self._model_from_quantity, mesh=mesh), mesh), frame
+    def generate_model(self):
+        """
+        Generate the Astropy Model for this LookupTable.
+        """
+        sc = self.tables[0]
+        components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
+        return self.model_from_quantity(components, mesh=self.mesh)
 
 
-class DelayedLookupTable:
-    """
-    A wrapper to create a lookup table model on demand.
-    """
+class TimeLookupTable(BaseLookupTable):
+    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+        if mesh:
+            # Override the default, mesh is meaningless when the length of the
+            # table is one anyway.
+            mesh = False
 
-    def __init__(self, lookup_table, model_function, mesh=True):
-        self.lookup_table = lookup_table
-        self.model_function = model_function
-        self.mesh = mesh
+        if not len(tables) == 1 and isinstance(tables[0], Time):
+            raise TypeError("TimeLookupTable can only be constructed from a single Time object")
 
-    def __call__(self):
-        return self.model_function(self.lookup_table)
+        super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
 
-    def __getitem__(self, item):
-        if isinstance(self.lookup_table, tuple):
-            if self.mesh:
-                assert len(item) == len(self.lookup_table)
-                newlt = tuple(lt[sub_item] for lt, sub_item in zip(self.lookup_table, item))
-            else:
-                newlt = tuple(lt[item] for lt in self.lookup_table)
-        else:
-            newlt = self.lookup_table[item]
+    def generate_frame(self):
+        """
+        Generate the Frame for this LookupTable.
+        """
+        return cf.TemporalFrame(self.tables[0][0], unit=u.s, axes_names=self.names, name="TemporalFrame")
 
-        return type(self)(newlt, self.model_function)
+    def generate_model(self):
+        """
+        Generate the Astropy Model for this LookupTable.
+        """
+        time = self.tables[0]
+        deltas = (time[1:] - time[0]).to(u.s)
+        deltas = deltas.insert(0, 0 * u.s)
 
-    def __str__(self):
-        return f"DelayedLookupTable(lookup_table={self.lookup_table}"
-
-    def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return self.model_from_quantity((deltas,), mesh=False)

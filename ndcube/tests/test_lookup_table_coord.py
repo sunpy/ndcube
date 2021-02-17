@@ -77,6 +77,11 @@ def test_3d_distance():
     assert len(sub_ltc.delayed_models[0].lookup_table[1]) == 6
     assert len(sub_ltc.delayed_models[0].lookup_table[2]) == 7
 
+    sub_ltc = ltc[0]
+
+    assert ltc.wcs.world_n_dim == 2
+    assert ltc.wcs.pixel_n_dim == 2
+
 
 def test_2d_nout_1_no_mesh():
     lookup_table = np.arange(9).reshape(3, 3) * u.km, np.arange(9, 18).reshape(3, 3) * u.km
@@ -97,6 +102,11 @@ def test_2d_nout_1_no_mesh():
     sub_ltc = ltc[0:2, 0:2]
     assert sub_ltc.delayed_models[0].lookup_table[0].shape == (2, 2)
     assert sub_ltc.delayed_models[0].lookup_table[1].shape == (2, 2)
+
+    sub_ltc = ltc[0]
+
+    assert ltc.wcs.world_n_dim == 2
+    assert ltc.wcs.pixel_n_dim == 2
 
 
 def test_1d_skycoord_no_mesh():
@@ -218,3 +228,20 @@ def test_2d_quantity():
 
     ltc = LookupTableCoord(data)
     assert u.allclose(ltc.wcs.pixel_to_world(0, 0), 0 * u.m / u.s)
+
+def test_dropped_world_1():
+    time_ltc = LookupTableCoord(Time(["2011-01-01T00:00:00",
+                                      "2011-01-01T00:00:10",
+                                      "2011-01-01T00:00:20",
+                                      "2011-01-01T00:00:30"], format="isot"))
+
+    wave_ltc = LookupTableCoord(range(10) * u.nm)
+
+    ltc = time_ltc & wave_ltc
+
+    assert isinstance(ltc.dropped_word_dimensions, dict)
+    assert len(ltc.dropped_word_dimensions) == 0
+
+    sub_ltc = ltc[0]
+    assert isinstance(sub_ltc.dropped_word_dimensions, dict)
+    assert len(sub_ltc.dropped_word_dimensions) == 1
