@@ -497,6 +497,7 @@ def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     output = cube_1d.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
+
 def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
     cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
@@ -510,8 +511,8 @@ def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
     ec3 = cube3.extra_coords
 
     assert cube.global_coords == cube3.global_coords
-    assert not cube.global_coords is cube3.global_coords
+    assert cube.global_coords is not cube3.global_coords
     assert ec.keys() == ec3.keys()
     assert ec.mapping == ec3.mapping
     assert np.allclose(ec.wcs.pixel_to_world_values(1), ec3.wcs.pixel_to_world_values(1))
-    assert not ec is ec3
+    assert ec is not ec3

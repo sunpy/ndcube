@@ -1,6 +1,6 @@
 import abc
-from copy import deepcopy
 import textwrap
+from copy import deepcopy
 from collections import namedtuple
 
 import astropy.nddata
