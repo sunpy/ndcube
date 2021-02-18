@@ -1,6 +1,5 @@
 import abc
 from numbers import Integral
-from collections import defaultdict
 
 import astropy.units as u
 import gwcs
@@ -102,9 +101,9 @@ class LookupTableCoord:
                 raise TypeError("All lookup tables must be the same type")
 
             type_map = {
-                u.Quantity: QuantityLookupTable,
-                Time: TimeLookupTable,
-                SkyCoord: SkyCoordLookupTable,
+                u.Quantity: QuantityTableCoordinate,
+                SkyCoord: SkyCoordTableCoordinate,
+                Time: TimeTableCoordinate,
             }
 
             self._lookup_tables.append(type_map[type(lt0)](*lookup_tables,
@@ -157,17 +156,10 @@ class LookupTableCoord:
         """
         item = sanitize_slices(item, self.model.n_inputs)
 
-        dropped_world_dimensions = defaultdict(list)
-
         ind = 0
-        new_dmodels = []
-        new_frames = []
-        for dmodel, frame in zip(self.delayed_models, self.frames):
-            # We have to instantiate the actual model to know how many inputs
-            # it has, as the lookup table to model conversion is an arbitrary
-            # function.
-            model = dmodel()
-            n_axes = model.n_inputs
+        new_coords = []
+        for coord in self._lookup_tables:
+            n_axes = coord.n_inputs
 
             # Extract the parts of the slice that correspond to this model
             sub_items = tuple(item[i] for i in range(ind, ind + n_axes))
@@ -175,22 +167,17 @@ class LookupTableCoord:
 
             # If all the slice elements are ints then we are dropping this model
             if not all(isinstance(it, Integral) for it in sub_items):
-                new_dmodels.append(dmodel[sub_items])
-                new_frames.append(frame)
-            else:
-                self._append_frame_to_dropped_dimensions(dropped_world_dimensions, frame)
-                dropped_world_dimensions["value"].append(
-                    [0 * list(model.input_units.values())[i] for i in range(n_axes)]
-                )
+                new = coord[sub_items]
+                if new is None:
+                    raise ValueError("You have no power here...")
+                new_coords.append(new)
 
-        if not new_dmodels:
+        if not new_coords:
             return
 
         # Return a new instance with the smaller tables
         new_lutc = type(self)()
-        new_lutc.delayed_models = new_dmodels
-        new_lutc.frames = new_frames
-        new_lutc._dropped_world_dimensions = dropped_world_dimensions
+        new_lutc._lookup_tables = new_coords
         return new_lutc
 
     @property
@@ -229,7 +216,7 @@ class LookupTableCoord:
         return self._dropped_world_dimensions or {}
 
 
-class BaseLookupTable(abc.ABC):
+class BaseTableCoordinate(abc.ABC):
     """
     A Base LookupTable contains a single lookup table coordinate.
 
@@ -242,10 +229,19 @@ class BaseLookupTable(abc.ABC):
     coordinates, meaning it can have multiple gWCS frames.
     """
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
-        self.tables = tables
+        self.table = tables
         self.mesh = mesh
         self.names = names
         self.physical_types = physical_types
+
+    @property
+    @abc.abstractmethod
+    def n_inputs(self):
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, item):
+        pass
 
     @staticmethod
     def generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
@@ -312,7 +308,7 @@ class BaseLookupTable(abc.ABC):
         Generate the Astropy Model for this LookupTable.
         """
 
-class QuantityLookupTable(BaseLookupTable):
+class QuantityTableCoordinate(BaseTableCoordinate):
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not all([isinstance(t, u.Quantity) for t in tables]):
             raise TypeError("All Tables must be astropy Quantity objects")
@@ -323,30 +319,79 @@ class QuantityLookupTable(BaseLookupTable):
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
 
+    @property
+    def n_inputs(self):
+        return len(self.table)
+
+    def __getitem__(self, item):
+        if not len(item) == len(self.table):
+            raise ValueError("Can not slice with incorrect length")
+
+        tables = []
+        names = []
+        physical_types = []
+
+        if self.mesh:
+            for i, (ele, table) in enumerate(zip(item, self.table)):
+                if isinstance(ele, Integral):
+                    continue
+                tables.append(table[ele])
+                if self.names:
+                    names.append(self.names[i])
+                if self.physical_types:
+                    physical_types.append(self.physical_types[i])
+        else:
+            for i, table in enumerate(self.table):
+                tables.append(table[item])
+                if self.names:
+                    names.append(self.names[i])
+                if self.physical_types:
+                    physical_types.append(self.physical_types[i])
+
+        names = names or None
+        physical_types = physical_types or None
+
+        return type(self)(*tables, mesh=self.mesh, names=names, physical_types=physical_types)
+
+
     def generate_frame(self):
         """
         Generate the Frame for this LookupTable.
         """
-        return _generate_generic_frame(len(self.tables), self.unit, self.names, self.physical_types)
+        return _generate_generic_frame(len(self.table), self.unit, self.names, self.physical_types)
 
     def generate_model(self):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        return self.model_from_quantity(self.tables, self.mesh)
+        return self.model_from_quantity(self.table, self.mesh)
 
 
-class SkyCoordLookupTable(BaseLookupTable):
+class SkyCoordTableCoordinate(BaseTableCoordinate):
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise TypeError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+        self.table = self.table[0]
+
+    @property
+    def n_inputs(self):
+        return len(self.table.data.components)
+
+    def __getitem__(self, item):
+        if not len(item) == 1:
+            raise ValueError("Can not slice with incorrect length")
+        if isinstance(item, Integral):
+            return None
+
+        return type(self)(self.table[item], mesh=self.mesh, names=self.names, physical_types=self.physical_types)
+
     def generate_frame(self):
         """
         Generate the Frame for this LookupTable.
         """
-        sc = self.tables[0]
+        sc = self.table
         components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
         ref_frame = sc.frame.replicate_without_data()
         units = list(c.unit for c in components)
@@ -366,12 +411,12 @@ class SkyCoordLookupTable(BaseLookupTable):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        sc = self.tables[0]
+        sc = self.table
         components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
         return self.model_from_quantity(components, mesh=self.mesh)
 
 
-class TimeLookupTable(BaseLookupTable):
+class TimeTableCoordinate(BaseTableCoordinate):
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if mesh:
             # Override the default, mesh is meaningless when the length of the
@@ -382,18 +427,31 @@ class TimeLookupTable(BaseLookupTable):
             raise TypeError("TimeLookupTable can only be constructed from a single Time object")
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+        self.table = self.table[0]
+
+    @property
+    def n_inputs(self):
+        return 1
+
+    def __getitem__(self, item):
+        if not len(item) == 1:
+            raise ValueError("Can not slice with incorrect length")
+        if isinstance(item, Integral):
+            return None
+
+        return type(self)(self.table[item], mesh=self.mesh, names=self.names, physical_types=self.physical_types)
 
     def generate_frame(self):
         """
         Generate the Frame for this LookupTable.
         """
-        return cf.TemporalFrame(self.tables[0][0], unit=u.s, axes_names=self.names, name="TemporalFrame")
+        return cf.TemporalFrame(self.table[0], unit=u.s, axes_names=self.names, name="TemporalFrame")
 
     def generate_model(self):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        time = self.tables[0]
+        time = self.table
         deltas = (time[1:] - time[0]).to(u.s)
         deltas = deltas.insert(0, 0 * u.s)
 
