@@ -7,6 +7,7 @@ from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
+from ndcube import NDCube
 from ndcube.tests import helpers
 
 
@@ -495,3 +496,22 @@ def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     expected = cube_1d[0:2]
     output = cube_1d.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
+
+def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime
+    cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
+    cube2 = NDCube(cube)
+
+    assert cube.global_coords is cube2.global_coords
+    assert cube.extra_coords is cube2.extra_coords
+
+    cube3 = NDCube(cube, copy=True)
+    ec = cube.extra_coords
+    ec3 = cube3.extra_coords
+
+    assert cube.global_coords == cube3.global_coords
+    assert not cube.global_coords is cube3.global_coords
+    assert ec.keys() == ec3.keys()
+    assert ec.mapping == ec3.mapping
+    assert np.allclose(ec.wcs.pixel_to_world_values(1), ec3.wcs.pixel_to_world_values(1))
+    assert not ec is ec3
