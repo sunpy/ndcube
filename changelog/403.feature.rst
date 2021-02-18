@@ -1,0 +1,1 @@
+Enable instantiating an NDCube from an existing NDCube by copying extra/global coords.
