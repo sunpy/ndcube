@@ -255,6 +255,7 @@ def _assert_skycoord_equal(sc1, sc2):
     for c1, c2 in zip(components1, components2):
         assert u.allclose(c1, c2)
 
+
 def test_slicing_skycoord_table_coordinate():
     # 1D, no mesh
     sc = SkyCoord(range(10)*u.deg, range(10)*u.deg)
@@ -324,38 +325,36 @@ def test_2d_nout_1_no_mesh_slice(lut_2d_distance_no_mesh):
 
 def test_1d_skycoord_no_mesh_slice(lut_1d_skycoord_no_mesh):
     sub_ltc = lut_1d_skycoord_no_mesh[0:4]
-    assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
-    assert sub_ltc.delayed_models[0].lookup_table[1].shape == (4, )
+    assert sub_ltc._lookup_tables[0].table.shape == (4, )
+    assert sub_ltc._lookup_tables[0].table.shape == (4, )
 
 
 def test_2d_skycoord_mesh_slice(lut_2d_skycoord_mesh):
     sub_ltc = lut_2d_skycoord_mesh[0:4, 0:5]
-    assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
-    assert sub_ltc.delayed_models[0].lookup_table[1].shape == (5, )
+    assert sub_ltc._lookup_tables[0].table.shape == (4, 5)
 
 
 def test_2d_skycoord_no_mesh_slice(lut_2d_skycoord_no_mesh):
     sub_ltc = lut_2d_skycoord_no_mesh[1:3, 1:2]
-    assert sub_ltc.delayed_models[0].lookup_table[0].shape == (2, 1)
-    assert sub_ltc.delayed_models[0].lookup_table[1].shape == (2, 1)
+    assert sub_ltc._lookup_tables[0].table.shape == (2, 1)
 
 
 def test_1d_time_slice(lut_1d_time):
     sub_ltc = lut_1d_time[1:3]
-    assert sub_ltc.delayed_models[0].lookup_table.shape == (2,)
+    assert sub_ltc._lookup_tables[0].table.shape == (2,)
 
 
 def test_join_slice(lut_1d_time, lut_1d_wave):
     ltc = lut_1d_time & lut_1d_wave
 
     sub_ltc = ltc[1:3, 1:3]
-    assert len(sub_ltc.delayed_models) == 2
-    assert sub_ltc.delayed_models[0].lookup_table.shape == (2,)
-    assert sub_ltc.delayed_models[1].lookup_table[0].shape == (2,)
+    assert len(sub_ltc._lookup_tables) == 2
+    assert sub_ltc._lookup_tables[0].table.shape == (2,)
+    assert sub_ltc._lookup_tables[1].table[0].shape == (2,)
 
     sub_ltc = ltc[1:3, 2]
-    assert len(sub_ltc.delayed_models) == 1
-    assert sub_ltc.delayed_models[0].lookup_table.shape == (2,)
+    assert len(sub_ltc._lookup_tables) == 1
+    assert sub_ltc._lookup_tables[0].table.shape == (2,)
 
 
 def test_dropped_world_1(lut_1d_time, lut_1d_wave):

@@ -308,6 +308,7 @@ class BaseTableCoordinate(abc.ABC):
         Generate the Astropy Model for this LookupTable.
         """
 
+
 class QuantityTableCoordinate(BaseTableCoordinate):
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not all([isinstance(t, u.Quantity) for t in tables]):
@@ -355,7 +356,6 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         return type(self)(*tables, mesh=self.mesh, names=names, physical_types=physical_types)
 
-
     def generate_frame(self):
         """
         Generate the Frame for this LookupTable.
@@ -390,7 +390,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
     @property
     def n_inputs(self):
-        return len(self.table.data.components)
+        return self.table.ndim
 
     def __getitem__(self, item):
         if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
@@ -413,10 +413,10 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
         # TODO: Currently this limits you to 2D due to gwcs#120
         return cf.CelestialFrame(reference_frame=ref_frame,
-                                  unit=units,
-                                  axes_names=names,
-                                  axis_physical_types=self.physical_types,
-                                  name="CelestialFrame")
+                                 unit=units,
+                                 axes_names=names,
+                                 axis_physical_types=self.physical_types,
+                                 name="CelestialFrame")
 
     def generate_model(self):
         """
