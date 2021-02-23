@@ -374,27 +374,29 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise TypeError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
 
-        super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+        self._was_meshed = False
+        sc = tables[0]
+
+        if mesh:
+            components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
+            units = [c.unit for c in components]
+            coords = [u.Quantity(mesh, unit=unit) for mesh, unit in zip(np.meshgrid(*components), units)]
+            sc = SkyCoord(*coords, frame=sc)
+            mesh = False
+            self._was_meshed = True  # An internal flag to know if we meshed the input
+
+        super().__init__(sc, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
 
     @property
     def n_inputs(self):
         return len(self.table.data.components)
 
-    def _slice_mesh(self, item):
-        pass
-
-    def _slice_no_mesh(self, item):
+    def __getitem__(self, item):
         if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
             raise ValueError("Can not slice with incorrect length")
 
-        return type(self)(self.table[item], mesh=self.mesh, names=self.names, physical_types=self.physical_types)
-
-    def __getitem__(self, item):
-        if self.mesh:
-            return self._slice_mesh(item)
-
-        return self._slice_no_mesh(item)
+        return type(self)(self.table[item], mesh=False, names=self.names, physical_types=self.physical_types)
 
     def generate_frame(self):
         """
@@ -443,10 +445,8 @@ class TimeTableCoordinate(BaseTableCoordinate):
         return 1
 
     def __getitem__(self, item):
-        if not len(item) == 1:
+        if not (isinstance(item, (slice, Integral)) or len(item) == 1):
             raise ValueError("Can not slice with incorrect length")
-        if isinstance(item, Integral):
-            return None
 
         return type(self)(self.table[item], mesh=self.mesh, names=self.names, physical_types=self.physical_types)
 
