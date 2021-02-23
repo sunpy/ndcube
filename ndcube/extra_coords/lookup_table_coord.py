@@ -324,7 +324,9 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         return len(self.table)
 
     def __getitem__(self, item):
-        if not len(item) == len(self.table):
+        if isinstance(item, (slice, Integral)):
+            item = (item,)
+        if not (len(item) == len(self.table) or len(item) == self.table[0].ndim):
             raise ValueError("Can not slice with incorrect length")
 
         tables = []
@@ -333,8 +335,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         if self.mesh:
             for i, (ele, table) in enumerate(zip(item, self.table)):
-                if isinstance(ele, Integral):
-                    continue
+                # if isinstance(ele, Integral):
+                #     continue
                 tables.append(table[ele])
                 if self.names:
                     names.append(self.names[i])
@@ -379,13 +381,20 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     def n_inputs(self):
         return len(self.table.data.components)
 
-    def __getitem__(self, item):
-        if not len(item) == 1:
+    def _slice_mesh(self, item):
+        pass
+
+    def _slice_no_mesh(self, item):
+        if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
             raise ValueError("Can not slice with incorrect length")
-        if isinstance(item, Integral):
-            return None
 
         return type(self)(self.table[item], mesh=self.mesh, names=self.names, physical_types=self.physical_types)
+
+    def __getitem__(self, item):
+        if self.mesh:
+            return self._slice_mesh(item)
+
+        return self._slice_no_mesh(item)
 
     def generate_frame(self):
         """
