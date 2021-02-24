@@ -357,12 +357,12 @@ def test_join_slice(lut_1d_time, lut_1d_wave):
     assert sub_ltc._lookup_tables[0].table.shape == (2,)
 
 
-def test_dropped_world_1(lut_1d_time, lut_1d_wave):
-    ltc = lut_1d_time & lut_1d_wave
+# def test_dropped_world_1(lut_1d_time, lut_1d_wave):
+#     ltc = lut_1d_time & lut_1d_wave
 
-    assert isinstance(ltc.dropped_word_dimensions, dict)
-    assert len(ltc.dropped_word_dimensions) == 0
+#     assert isinstance(ltc.dropped_word_dimensions, dict)
+#     assert len(ltc.dropped_word_dimensions) == 0
 
-    sub_ltc = ltc[0]
-    assert isinstance(sub_ltc.dropped_word_dimensions, dict)
-    assert len(sub_ltc.dropped_word_dimensions) == 1
+#     sub_ltc = ltc[0]
+#     assert isinstance(sub_ltc.dropped_word_dimensions, dict)
+#     assert len(sub_ltc.dropped_word_dimensions) == 1

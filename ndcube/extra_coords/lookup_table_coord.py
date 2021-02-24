@@ -316,6 +316,12 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         if not all([t.unit.is_equivalent(tables[0].unit) for t in tables]):
             raise u.UnitsError("All lookup tables must have equivalent units.")
 
+        if isinstance(names, str):
+            names = [names]
+
+        if names is not None and len(names) != len(tables):
+            raise ValueError("The number of names should match the number of world dimensions")
+
         self.unit = tables[0].unit
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
@@ -373,6 +379,8 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise TypeError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
+        if names is not None and len(names) != 2:
+            raise ValueError("The number of names must equal two one for lat one for lon.")
 
         self._was_meshed = False
         sc = tables[0]
@@ -436,6 +444,12 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         if not len(tables) == 1 and isinstance(tables[0], Time):
             raise TypeError("TimeLookupTable can only be constructed from a single Time object")
+
+        if names is not None and not(isinstance(names, str) or len(names) != 1):
+            raise ValueError("A Time coordinate can only have one name")
+
+        if isinstance(names, str):
+            names = [names]
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
