@@ -112,7 +112,7 @@ class LookupTableCoord:
                                                            physical_types=physical_types))
 
     def __str__(self):
-        return f"LookupTableCoord(tables={self._lookup_tables})"
+        return f"LookupTableCoord(tables=[{', '.join([str(t) for t in self._lookup_tables])}])"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
@@ -242,6 +242,12 @@ class BaseTableCoordinate(abc.ABC):
     @abc.abstractmethod
     def __getitem__(self, item):
         pass
+
+    def __str__(self):
+        return str(self.table)
+
+    def __repr__(self):
+        return f"{object.__repr__(self)}\n{self}"
 
     @staticmethod
     def generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
@@ -404,7 +410,10 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
             raise ValueError("Can not slice with incorrect length")
 
-        return type(self)(self.table[item], mesh=False, names=self.names, physical_types=self.physical_types)
+        return type(self)(self.table[item],
+                          mesh=False,
+                          names=self.names,
+                          physical_types=self.physical_types)
 
     def generate_frame(self):
         """
@@ -436,23 +445,23 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
 
 class TimeTableCoordinate(BaseTableCoordinate):
-    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
-        if mesh:
-            # Override the default, mesh is meaningless when the length of the
-            # table is one anyway.
-            mesh = False
+    def __init__(self, *tables, mesh=False, names=None, physical_types=None, reference_time=None):
+        # Override the default, mesh is meaningless when the length of the
+        # table is one anyway.
+        mesh = False
 
         if not len(tables) == 1 and isinstance(tables[0], Time):
             raise TypeError("TimeLookupTable can only be constructed from a single Time object")
 
-        if names is not None and not(isinstance(names, str) or len(names) != 1):
-            raise ValueError("A Time coordinate can only have one name")
-
         if isinstance(names, str):
             names = [names]
 
+        if names is not None and len(names) != 1:
+            raise ValueError("A Time coordinate can only have one name")
+
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
+        self.reference_time = reference_time or self.table[0]
 
     @property
     def n_inputs(self):
@@ -462,20 +471,26 @@ class TimeTableCoordinate(BaseTableCoordinate):
         if not (isinstance(item, (slice, Integral)) or len(item) == 1):
             raise ValueError("Can not slice with incorrect length")
 
-        return type(self)(self.table[item], mesh=self.mesh, names=self.names, physical_types=self.physical_types)
+        return type(self)(self.table[item],
+                          mesh=self.mesh,
+                          names=self.names,
+                          physical_types=self.physical_types,
+                          reference_time=self.reference_time)
 
     def generate_frame(self):
         """
         Generate the Frame for this LookupTable.
         """
-        return cf.TemporalFrame(self.table[0], unit=u.s, axes_names=self.names, name="TemporalFrame")
+        return cf.TemporalFrame(self.reference_time,
+                                unit=u.s,
+                                axes_names=self.names,
+                                name="TemporalFrame")
 
     def generate_model(self):
         """
         Generate the Astropy Model for this LookupTable.
         """
         time = self.table
-        deltas = (time[1:] - time[0]).to(u.s)
-        deltas = deltas.insert(0, 0 * u.s)
+        deltas = (time - self.reference_time).to(u.s)
 
         return self.model_from_quantity((deltas,), mesh=False)
