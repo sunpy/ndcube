@@ -335,26 +335,3 @@ class ExtraCoords(ExtraCoordsABC):
         # If we get here this object is empty, so just return an empty extra coords
         # This is done to simplify the slicing in NDCube
         return self
-
-    @property
-    def dropped_world_dimensions(self):
-        """
-        Return a APE-14 a-like representation of any sliced out world dimensions.
-        """
-
-        if self._wcs:
-            if isinstance(self._wcs, SlicedLowLevelWCS):
-                return self._wcs.dropped_world_dimensions
-
-        if self._lookup_tables:
-            dropped_world_dimensions = defaultdict(list)
-            dropped_world_dimensions["world_axis_object_classes"] = dict()
-            for lutc in self._lookup_tables:
-                for key, value in lutc.dropped_world_dimensions.items():
-                    if key == "world_axis_object_classes":
-                        dropped_world_dimensions[key].update(value)
-                    dropped_world_dimensions[key] += value
-
-            return dropped_world_dimensions
-
-        return dict()

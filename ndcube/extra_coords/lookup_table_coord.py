@@ -93,7 +93,6 @@ class LookupTableCoord:
 
     def __init__(self, *lookup_tables, mesh=True, names=None, physical_types=None):
         self._lookup_tables = []
-        self._dropped_world_dimensions = None
 
         if lookup_tables:
             lt0 = lookup_tables[0]
@@ -126,27 +125,6 @@ class LookupTableCoord:
         new_lutc._lookup_tables = self._lookup_tables + other._lookup_tables
 
         return new_lutc
-
-    @staticmethod
-    def _append_frame_to_dropped_dimensions(dropped_world_dimensions, frame):
-        if "world_axis_object_classes" not in dropped_world_dimensions:
-            dropped_world_dimensions["world_axis_object_classes"] = dict()
-
-        wao_classes = frame._world_axis_object_classes
-        wao_components = frame._world_axis_object_components
-
-        dropped_world_dimensions["world_axis_names"].append(frame.axes_names)
-        dropped_world_dimensions["world_axis_physical_types"].append(frame.world_axis_physical_types)
-        dropped_world_dimensions["world_axis_units"].append(frame.world_axis_units)
-        dropped_world_dimensions["world_axis_object_components"].append(wao_components)
-        dropped_world_dimensions["world_axis_object_classes"].update(dict(
-            filter(
-                lambda x: x[0] == wao_components[0][0], wao_classes.items()
-            )
-        ))
-        dropped_world_dimensions["serialized_classes"] = False
-
-        return dropped_world_dimensions
 
     def __getitem__(self, item):
         """
@@ -210,10 +188,6 @@ class LookupTableCoord:
         return gwcs.WCS(forward_transform=self.model,
                         input_frame=_generate_generic_frame(self.model.n_inputs, u.pix),
                         output_frame=self.frame)
-
-    @property
-    def dropped_word_dimensions(self):
-        return self._dropped_world_dimensions or {}
 
 
 class BaseTableCoordinate(abc.ABC):

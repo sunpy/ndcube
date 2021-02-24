@@ -305,11 +305,6 @@ def test_3d_distance_slice(lut_3d_distance_mesh):
     assert len(sub_ltc._lookup_tables[0].table[1]) == 6
     assert len(sub_ltc._lookup_tables[0].table[2]) == 7
 
-    # sub_ltc = ltc[0]
-
-    # assert ltc.wcs.world_n_dim == 2
-    # assert ltc.wcs.pixel_n_dim == 2
-
 
 def test_2d_nout_1_no_mesh_slice(lut_2d_distance_no_mesh):
     ltc = lut_2d_distance_no_mesh
@@ -355,14 +350,3 @@ def test_join_slice(lut_1d_time, lut_1d_wave):
     sub_ltc = ltc[1:3, 2]
     assert len(sub_ltc._lookup_tables) == 1
     assert sub_ltc._lookup_tables[0].table.shape == (2,)
-
-
-# def test_dropped_world_1(lut_1d_time, lut_1d_wave):
-#     ltc = lut_1d_time & lut_1d_wave
-
-#     assert isinstance(ltc.dropped_word_dimensions, dict)
-#     assert len(ltc.dropped_word_dimensions) == 0
-
-#     sub_ltc = ltc[0]
-#     assert isinstance(sub_ltc.dropped_word_dimensions, dict)
-#     assert len(sub_ltc.dropped_word_dimensions) == 1
