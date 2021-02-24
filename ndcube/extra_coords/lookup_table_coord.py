@@ -322,8 +322,6 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         if self.mesh:
             for i, (ele, table) in enumerate(zip(item, self.table)):
-                # if isinstance(ele, Integral):
-                #     continue
                 tables.append(table[ele])
                 if self.names:
                     names.append(self.names[i])
@@ -439,7 +437,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
     @property
     def n_inputs(self):
-        return 1
+        return 1  # Must be 1 as TimeTableCoordinate can only be 1-D
 
     def __getitem__(self, item):
         if not (isinstance(item, (slice, Integral)) or len(item) == 1):
