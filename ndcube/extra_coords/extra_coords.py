@@ -5,7 +5,7 @@ from numbers import Integral
 from functools import reduce
 
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
-from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 from .lookup_table_coord import LookupTableCoord
 
