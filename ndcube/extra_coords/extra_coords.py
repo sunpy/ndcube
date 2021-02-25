@@ -1,13 +1,16 @@
 import abc
-import copy
 from typing import Any, Tuple, Union, Iterable
 from numbers import Integral
 from functools import reduce
 
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
-from .lookup_table_coord import LookupTableCoord
+from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
+                                 SkyCoordTableCoordinate, TimeTableCoordinate)
 
 __all__ = ['ExtraCoords']
 
@@ -184,8 +187,22 @@ class ExtraCoords(ExtraCoordsABC):
                 "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
             )
 
-        lutc = LookupTableCoord(lookup_table, names=name, **kwargs)
-        self._lookup_tables.append((array_dimension, lutc))
+        kwargs['names'] = [name] if not isinstance(name, (list, tuple)) else name
+
+        if isinstance(lookup_table, BaseTableCoordinate):
+            coord = lookup_table
+        elif isinstance(lookup_table, Time):
+            coord = TimeTableCoordinate(lookup_table, **kwargs)
+        elif isinstance(lookup_table, SkyCoord):
+            coord = SkyCoordTableCoordinate(lookup_table, **kwargs)
+        elif isinstance(lookup_table, (list, tuple)):
+            coord = QuantityTableCoordinate(*lookup_table, **kwargs)
+        elif isinstance(lookup_table, u.Quantity):
+            coord = QuantityTableCoordinate(lookup_table, **kwargs)
+        else:
+            raise TypeError(f"The input type {type(lookup_table)} isn't supported")
+
+        self._lookup_tables.append((array_dimension, coord))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
         self._lookup_tables = list(sorted(self._lookup_tables,
@@ -246,14 +263,11 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return None
 
-        lutcs = set(lt[1] for lt in self._lookup_tables)
+        tcoords = set(lt[1] for lt in self._lookup_tables)
         # created a sorted list of unique items
         _tmp = set()  # a temporary set
-        lutcs = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
-        out = copy.deepcopy(lutcs[0])
-        for lut in lutcs[1:]:
-            out = out & lut
-        return out.wcs
+        tcoords = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
+        return MultipleTableCoordinate(*tcoords).wcs
 
     @wcs.setter
     def wcs(self, wcs):
@@ -298,10 +312,13 @@ class ExtraCoords(ExtraCoordsABC):
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
             lut_slice = tuple(item[i] for i in lut_axes) if isinstance(item, tuple) else item
+            if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
+                lut_slice = lut_slice[0]
 
             sliced_lut = lut[lut_slice]
-            if sliced_lut:
+            if not isinstance(lut_slice, Integral):
                 new_lookup_tables.add((lut_axis, sliced_lut))
+            # TODO: Handle dropped table here
 
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = tuple(new_lookup_tables)

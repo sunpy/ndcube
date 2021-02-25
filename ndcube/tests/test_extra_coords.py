@@ -155,7 +155,8 @@ def test_two_1d_from_lut(time_lut):
 
 
 def test_skycoord(skycoord_1d_lut):
-    ec = ExtraCoords.from_lookup_tables((("lat", "lon"),), ((0, 1),), (skycoord_1d_lut,))
+    ec = ExtraCoords()
+    ec.add(("lat", "lon"), (0, 1), skycoord_1d_lut, mesh=True)
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (0, 1)
     assert isinstance(ec.wcs, gwcs.WCS)
