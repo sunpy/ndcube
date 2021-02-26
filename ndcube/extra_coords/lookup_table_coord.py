@@ -107,8 +107,8 @@ class BaseTableCoordinate(abc.ABC):
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         self.table = tables
         self.mesh = mesh
-        self.names = names
-        self.physical_types = physical_types
+        self.names = names if not isinstance(names, str) else [names]
+        self.physical_types = physical_types if not isinstance(physical_types, str) else [physical_types]
 
     @abc.abstractmethod
     def __getitem__(self, item):
@@ -172,15 +172,19 @@ class QuantityTableCoordinate(BaseTableCoordinate):
     """
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not all([isinstance(t, u.Quantity) for t in tables]):
-            raise TypeError("All Tables must be astropy Quantity objects")
+            raise TypeError("All tables must be astropy Quantity objects")
         if not all([t.unit.is_equivalent(tables[0].unit) for t in tables]):
-            raise u.UnitsError("All lookup tables must have equivalent units.")
+            raise u.UnitsError("All tables must have equivalent units.")
 
         if isinstance(names, str):
             names = [names]
+        if isinstance(physical_types, str):
+            physical_types = [physical_types]
 
         if names is not None and len(names) != len(tables):
             raise ValueError("The number of names should match the number of world dimensions")
+        if physical_types is not None and len(physical_types) != len(tables):
+            raise ValueError("The number of physical types should match the number of world dimensions")
 
         self.unit = tables[0].unit
 
@@ -241,9 +245,14 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     """
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
-            raise TypeError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
+            raise ValueError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
+
+        if isinstance(names, str):
+            names = [names]
         if names is not None and len(names) != 2:
-            raise ValueError("The number of names must equal two one for lat one for lon.")
+            raise ValueError("The number of names must equal two for a SkyCoord table.")
+        if physical_types is not None and len(physical_types) != 2:
+            raise ValueError("The number of physical types must equal two for a SkyCoord table.")
 
         self._was_meshed = False
         sc = tables[0]
@@ -278,14 +287,10 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         ref_frame = sc.frame.replicate_without_data()
         units = list(c.unit for c in components)
 
-        names = self.names
-        if self.names and len(self.names) != 2:
-            names = None
-
         # TODO: Currently this limits you to 2D due to gwcs#120
         return cf.CelestialFrame(reference_frame=ref_frame,
                                  unit=units,
-                                 axes_names=names,
+                                 axes_names=self.names,
                                  axis_physical_types=self.physical_types,
                                  name="CelestialFrame")
 
@@ -305,13 +310,17 @@ class TimeTableCoordinate(BaseTableCoordinate):
     """
     def __init__(self, *tables, names=None, physical_types=None, reference_time=None):
         if not len(tables) == 1 and isinstance(tables[0], Time):
-            raise TypeError("TimeLookupTable can only be constructed from a single Time object")
+            raise ValueError("TimeLookupTable can only be constructed from a single Time object.")
 
         if isinstance(names, str):
             names = [names]
+        if isinstance(physical_types, str):
+            physical_types = [physical_types]
 
         if names is not None and len(names) != 1:
-            raise ValueError("A Time coordinate can only have one name")
+            raise ValueError("A Time coordinate can only have one name.")
+        if physical_types is not None and len(physical_types) != 1:
+            raise ValueError("A Time coordinate can only have one physical type.")
 
         super().__init__(*tables, mesh=False, names=names, physical_types=physical_types)
         self.table = self.table[0]
