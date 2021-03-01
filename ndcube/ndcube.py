@@ -1,5 +1,6 @@
 import abc
 import textwrap
+from copy import deepcopy
 from collections import namedtuple
 
 import astropy.nddata
@@ -186,13 +187,27 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Format extra coords.
         if not extra_coords:
-            extra_coords = ExtraCoords()
+            # Get existing extra_coords if initializing from an NDCube
+            if hasattr(data, "extra_coords"):
+                extra_coords = data.extra_coords
+            else:
+                extra_coords = ExtraCoords()
 
         if not isinstance(extra_coords, ExtraCoords):
             raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")
 
+        # Get existing global_coords if initializing from an NDCube
+        if hasattr(data, "global_coords"):
+            global_coords = data._global_coords
+        else:
+            global_coords = GlobalCoords(self)
+
+        if copy:
+            extra_coords = deepcopy(extra_coords)
+            global_coords = deepcopy(global_coords)
+
         self._extra_coords = extra_coords
-        self._global_coords = GlobalCoords(self)
+        self._global_coords = global_coords
 
     @property
     def extra_coords(self):
