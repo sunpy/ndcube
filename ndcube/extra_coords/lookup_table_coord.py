@@ -5,12 +5,13 @@ import astropy.units as u
 import gwcs
 import gwcs.coordinate_frames as cf
 import numpy as np
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.time import Time
 
-__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
+__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate',
+           'QuantityTableCoordinate']
 
 
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
@@ -303,6 +304,35 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
         return _model_from_quantity(components, mesh=self.mesh)
 
+
+class SpectralCoordTableCoordinate(BaseTableCoordinate):
+    """
+    A lookup table created from a `~astropy.coordinates.SpectralCoord`.
+    """
+    def __init__(self, *tables, names=None, physical_types=None):
+        if not len(tables) == 1 and isinstance(tables[0], Time):
+            raise ValueError("TimeLookupTable can only be constructed from a single Time object.")
+
+        if isinstance(names, str):
+            names = [names]
+        if names is not None and len(names) != 1:
+             raise ValueError("A SpectralCoord may only have one name.")
+         if physical_types is not None and len(physical_types) != 1:
+             raise ValueError("A SpectralCoord table may only have one physical type.")
+
+    def __getitem__(self, item):
+
+    @property
+    def frame(self):
+        """
+        Generate the Frame for this LookupTable.
+        """
+        sc = self.table
+        return cf.SpectralFrame()
+
+    @property
+    def model(self):
+        pass
 
 class TimeTableCoordinate(BaseTableCoordinate):
     """
