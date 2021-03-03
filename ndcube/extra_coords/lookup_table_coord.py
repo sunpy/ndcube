@@ -11,7 +11,7 @@ from astropy.modeling.models import tabular_model
 from astropy.time import Time
 
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate',
-           'QuantityTableCoordinate']
+           'SpectralCoordTableCoordinate', 'QuantityTableCoordinate']
 
 
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
@@ -310,17 +310,29 @@ class SpectralCoordTableCoordinate(BaseTableCoordinate):
     A lookup table created from a `~astropy.coordinates.SpectralCoord`.
     """
     def __init__(self, *tables, names=None, physical_types=None):
-        if not len(tables) == 1 and isinstance(tables[0], Time):
-            raise ValueError("TimeLookupTable can only be constructed from a single Time object.")
+        if not len(tables) == 1 and isinstance(tables[0], SpectralCoord):
+            raise ValueError("TimeLookupTable can only be constructed from a single"
+                             "SpectralCoord object.")
 
         if isinstance(names, str):
             names = [names]
         if names is not None and len(names) != 1:
              raise ValueError("A SpectralCoord may only have one name.")
-         if physical_types is not None and len(physical_types) != 1:
-             raise ValueError("A SpectralCoord table may only have one physical type.")
+        if physical_types is not None and len(physical_types) != 1:
+            raise ValueError("A SpectralCoord table may only have one physical type.")
+
+        sc = tables[0]
+
+        super().__init__(sc, names=names, physical_types=physical_types)
+        self.table = self.table[0]
 
     def __getitem__(self, item):
+        if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
+            raise ValueError("Can not slice with incorrect length")
+
+        return type(self)(self.table[item],
+                          names=self.names,
+                          physical_types=self.physical_types)
 
     @property
     def frame(self):
@@ -328,11 +340,15 @@ class SpectralCoordTableCoordinate(BaseTableCoordinate):
         Generate the Frame for this LookupTable.
         """
         sc = self.table
-        return cf.SpectralFrame()
+        return cf.SpectralFrame(reference_frame=sc.observer,
+                                unit=sc.unit,
+                                axes_names=self.names,
+                                axis_physical_types=self.physical_types,
+                                name="SpectralFrame")
 
     @property
     def model(self):
-        pass
+        return _model_from_quantity(self.table)
 
 class TimeTableCoordinate(BaseTableCoordinate):
     """
