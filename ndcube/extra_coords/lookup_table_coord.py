@@ -317,7 +317,7 @@ class SpectralCoordTableCoordinate(BaseTableCoordinate):
         if isinstance(names, str):
             names = [names]
         if names is not None and len(names) != 1:
-             raise ValueError("A SpectralCoord may only have one name.")
+            raise ValueError("A SpectralCoord may only have one name.")
         if physical_types is not None and len(physical_types) != 1:
             raise ValueError("A SpectralCoord table may only have one physical type.")
 
@@ -349,6 +349,7 @@ class SpectralCoordTableCoordinate(BaseTableCoordinate):
     @property
     def model(self):
         return _model_from_quantity(self.table)
+
 
 class TimeTableCoordinate(BaseTableCoordinate):
     """
