@@ -434,6 +434,109 @@ def test_slicing_errors(lut_1d_time, lut_1d_wave, lut_1d_distance, lut_2d_skycoo
     assert "length of the slice" in str(ei)
 
 
+def test_mtc_dropped_table(lut_1d_time):
+    mtc = MultipleTableCoordinate(lut_1d_time)
+    sub = mtc[0]
+
+    assert len(sub._table_coords) == 0
+    assert len(sub._dropped_coords) == 1
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    wao_classes = dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert all(len(value) == 1 for value in dwd.values())
+
+    assert dwd["world_axis_names"] == ["time"]
+    assert dwd["world_axis_units"] == ["s"]
+    assert dwd["world_axis_physical_types"] == ["time"]
+    assert dwd["world_axis_object_components"][0][0:2] == ("temporal", 0)
+    assert wao_classes["temporal"][0] is Time
+    assert dwd["value"] == [0*u.s]
+
+
+def test_mtc_dropped_table_join(lut_1d_time, lut_2d_skycoord_mesh):
+    mtc = MultipleTableCoordinate(lut_1d_time, lut_2d_skycoord_mesh)
+    sub = mtc[0, :, :]
+
+    assert len(sub._table_coords) == 1
+    assert len(sub._dropped_coords) == 1
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    wao_classes = dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert all(len(value) == 1 for value in dwd.values())
+
+    assert dwd["world_axis_names"] == ["time"]
+    assert all(isinstance(u, str) for u in dwd["world_axis_units"])
+    assert dwd["world_axis_units"] == ["s"]
+    assert dwd["world_axis_physical_types"] == ["time"]
+    assert dwd["world_axis_object_components"][0][0:2] == ("temporal", 0)
+    assert wao_classes["temporal"][0] is Time
+    assert dwd["value"] == [0*u.s]
+
+
+def test_mtc_dropped_table_skycoord_join(lut_1d_time, lut_2d_skycoord_mesh):
+    mtc = MultipleTableCoordinate(lut_1d_time, lut_2d_skycoord_mesh)
+    sub = mtc[:, 0, 0]
+
+    assert len(sub._table_coords) == 1
+    assert len(sub._dropped_coords) == 1
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    wao_classes = dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert all(len(value) == 2 for value in dwd.values())
+
+    assert dwd["world_axis_names"] == ["lon", "lat"]
+    assert all(isinstance(u, str) for u in dwd["world_axis_units"])
+    assert dwd["world_axis_units"] == ["deg", "deg"]
+    assert dwd["world_axis_physical_types"] == ["pos.eq.ra", "pos.eq.dec"]
+    assert dwd["world_axis_object_components"] == [("celestial", 0, "spherical.lon"), ("celestial", 1, "spherical.lat")]
+    assert wao_classes["celestial"][0] is SkyCoord
+    assert dwd["value"] == [0*u.deg, 0*u.deg]
+
+
+def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
+    mtc = MultipleTableCoordinate(lut_1d_time, lut_2d_distance_no_mesh)
+    sub = mtc[:, 0, 0]
+
+    assert len(sub._table_coords) == 1
+    assert len(sub._dropped_coords) == 1
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    wao_classes = dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert dwd
+    assert all(len(value) == 2 for value in dwd.values())
+
+    assert dwd["world_axis_names"] == [None, None]
+    assert all(isinstance(u, str) for u in dwd["world_axis_units"])
+    assert dwd["world_axis_units"] == ["km", "km"]
+    assert dwd["world_axis_physical_types"] == ["custom:SPATIAL", "custom:SPATIAL"]
+    assert dwd["world_axis_object_components"] == [("SPATIAL0", 0, "value"), ("SPATIAL1", 0, "value")]
+    assert wao_classes["SPATIAL0"][0] is u.Quantity
+    assert wao_classes["SPATIAL1"][0] is u.Quantity
+    assert dwd["value"] == [0*u.km, 9*u.km]
+
+
+def test_mtc_dropped_quantity_join(lut_1d_time, lut_2d_distance_no_mesh):
+    mtc = MultipleTableCoordinate(lut_1d_time, lut_2d_distance_no_mesh)
+    sub = mtc[:, 0, :]
+
+    assert len(sub._table_coords) == 2
+    assert len(sub._dropped_coords) == 0
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert all(len(value) == 2 for value in dwd.values())
+
+
 ################################################################################
 # Tests of & operator
 ################################################################################

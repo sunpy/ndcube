@@ -1,5 +1,6 @@
 import abc
 from numbers import Integral
+from collections import defaultdict
 
 import astropy.units as u
 import gwcs
@@ -46,6 +47,9 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
         raise TypeError("lookup_table must be a Quantity.")  # pragma: no cover
 
     ndim = lookup_table.ndim
+    if ndim == 0:
+        lookup_table = u.Quantity([lookup_table])
+        ndim = lookup_table.ndim
     TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
 
     # The integer location is at the centre of the pixel.
@@ -109,6 +113,8 @@ class BaseTableCoordinate(abc.ABC):
         self.mesh = mesh
         self.names = names if not isinstance(names, str) else [names]
         self.physical_types = physical_types if not isinstance(physical_types, str) else [physical_types]
+        self._dropped_world_dimensions = defaultdict(list)
+        self._dropped_world_dimensions["world_axis_object_classes"] = dict()
 
     @abc.abstractmethod
     def __getitem__(self, item):
@@ -134,6 +140,22 @@ class BaseTableCoordinate(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def n_inputs(self):
+        """
+        Number of pixel dimensions in this table.
+        """
+
+    @abc.abstractmethod
+    def is_scalar(self):
+        """
+        Return a boolean if this coordinate is a scalar.
+
+        This is used by `.MultipleTableCoordinate` and `.ExtraCoords` to know
+        if the dimension has been "dropped".
+        """
+
+    @property
+    @abc.abstractmethod
     def frame(self):
         """
         Generate the Frame for this LookupTable.
@@ -155,6 +177,10 @@ class BaseTableCoordinate(abc.ABC):
         return gwcs.WCS(forward_transform=model,
                         input_frame=_generate_generic_frame(model.n_inputs, u.pix),
                         output_frame=self.frame)
+
+    @property
+    def dropped_world_dimensions(self):
+        return self._dropped_world_dimensions
 
 
 class QuantityTableCoordinate(BaseTableCoordinate):
@@ -190,35 +216,47 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
 
+    def _slice_table(self, i, table, item, new_components):
+        # TODO: drop dimensions when one of the tables is removed
+        # We can't however do this here if we end up dropping *all* the dimensions
+        # because then we don't have a table any more and is_scalar explodes
+        # if isinstance(item, Integral):
+        #     # Drop this dimension
+        #     return
+
+        new_components["tables"].append(table[item])
+        if self.names:
+            new_components["names"].append(self.names[i])
+        if self.physical_types:
+            new_components["physical_types"].append(self.physical_types[i])
+
     def __getitem__(self, item):
         if isinstance(item, (slice, Integral)):
             item = (item,)
         if not (len(item) == len(self.table) or len(item) == self.table[0].ndim):
             raise ValueError("Can not slice with incorrect length")
 
-        tables = []
-        names = []
-        physical_types = []
+        new_components = defaultdict(list)
 
         if self.mesh:
             for i, (ele, table) in enumerate(zip(item, self.table)):
-                tables.append(table[ele])
-                if self.names:
-                    names.append(self.names[i])
-                if self.physical_types:
-                    physical_types.append(self.physical_types[i])
+                self._slice_table(i, table, ele, new_components)
         else:
             for i, table in enumerate(self.table):
-                tables.append(table[item])
-                if self.names:
-                    names.append(self.names[i])
-                if self.physical_types:
-                    physical_types.append(self.physical_types[i])
+                self._slice_table(i, table, item, new_components)
 
-        names = names or None
-        physical_types = physical_types or None
+        names = new_components["names"] or None
+        physical_types = new_components["physical_types"] or None
 
-        return type(self)(*tables, mesh=self.mesh, names=names, physical_types=physical_types)
+        ret_table = type(self)(*new_components["tables"], mesh=self.mesh, names=names, physical_types=physical_types)
+        return ret_table
+
+    @property
+    def n_inputs(self):
+        return len(self.table)
+
+    def is_scalar(self):
+        return all(t.shape == tuple() for t in self.table)
 
     @property
     def frame(self):
@@ -267,6 +305,13 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
         super().__init__(sc, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
+
+    @property
+    def n_inputs(self):
+        return self.table.ndim
+
+    def is_scalar(self):
+        return self.table.shape == tuple()
 
     def __getitem__(self, item):
         if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
@@ -336,6 +381,13 @@ class TimeTableCoordinate(BaseTableCoordinate):
                           reference_time=self.reference_time)
 
     @property
+    def n_inputs(self):
+        return 1  # The time table has to be one dimensional
+
+    def is_scalar(self):
+        return self.table.shape == tuple()
+
+    @property
     def frame(self):
         """
         Generate the Frame for this LookupTable.
@@ -381,6 +433,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
             raise TypeError("All arguments must be BaseTableCoordinate instances, such as QuantityTableCoordinate, "
                             "and not instances of MultipleTableCoordinate.")
         self._table_coords = list(table_coordinates)
+        self._dropped_coords = list()
 
     def __str__(self):
         return f"MultipleTableCoordinate(tables=[{', '.join([str(t) for t in self._table_coords])}])"
@@ -407,14 +460,32 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         if isinstance(item, (slice, Integral)):
             item = (item,)
 
-        if not len(item) == len(self._table_coords):
+        if not len(item) == self.n_inputs:
             raise ValueError(
-                f"length of the slice ({len(item)}) must match the number of coordinates {len(self._table_coords)}")
+                f"length of the slice ({len(item)}) must match the number of coordinates {self.n_inputs}")
 
         new_tables = []
-        for table, tslice in zip(self._table_coords, item):
-            new_tables.append(table[tslice])
-        return MultipleTableCoordinate(*new_tables)
+        dropped_tables = []
+        i = 0
+        for table in self._table_coords:
+            tslice = item[i:i+table.n_inputs]
+            i += table.n_inputs
+            new_table = table[tslice]
+            if new_table.is_scalar():
+                dropped_tables.append(new_table)
+            else:
+                new_tables.append(new_table)
+
+        new = MultipleTableCoordinate(*new_tables)
+        new._dropped_coords = dropped_tables
+        return new
+
+    @property
+    def n_inputs(self):
+        return sum(t.n_inputs for t in self._table_coords)
+
+    def is_scalar(self):
+        return False
 
     @property
     def model(self):
@@ -446,3 +517,38 @@ class MultipleTableCoordinate(BaseTableCoordinate):
                 ind = new_ind
 
             return cf.CompositeFrame(frames)
+
+    @property
+    def dropped_world_dimensions(self):
+        dropped_world_dimensions = defaultdict(list)
+        dropped_world_dimensions["world_axis_object_classes"] = dict()
+
+        # Combine the dicts on the tables with our dict
+        for lutc in self._table_coords:
+            for key, value in lutc.dropped_world_dimensions.items():
+                if key == "world_axis_object_classes":
+                    dropped_world_dimensions[key].update(value)
+                else:
+                    dropped_world_dimensions[key] += value
+
+        # Generate the dict from the dropped tables
+        for dropped in self._dropped_coords:
+            wao_classes = dropped.frame._world_axis_object_classes
+            wao_components = dropped.frame._world_axis_object_components
+
+            for i in range(dropped.frame.naxes):
+                dropped_world_dimensions["world_axis_names"].append(dropped.frame.axes_names[i] or None)
+                dropped_world_dimensions["world_axis_physical_types"].append(dropped.frame.axis_physical_types[i] or None)
+                dropped_world_dimensions["world_axis_units"].append(dropped.frame.unit[i].to_string())
+                dropped_world_dimensions["world_axis_object_components"].append(wao_components[i])
+                dropped_world_dimensions["world_axis_object_classes"].update(dict(
+                    filter(
+                        lambda x: x[0] == wao_components[i][0], wao_classes.items()
+                    )
+                ))
+                coord = dropped.frame.coordinate_to_quantity(dropped.table)
+                if dropped.frame.naxes > 1 or (isinstance(coord, (tuple, list)) and len(coord) == 1):
+                    coord = coord[i]
+                dropped_world_dimensions["value"].append(coord)
+
+        return dropped_world_dimensions

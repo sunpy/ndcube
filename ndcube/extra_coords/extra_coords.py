@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
-from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
 from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                                  SkyCoordTableCoordinate, TimeTableCoordinate)
@@ -136,7 +136,8 @@ class ExtraCoords(ExtraCoordsABC):
         self._mapping = None
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables = []
+        self._lookup_tables = tuple()
+        self._dropped_tables = tuple()
 
         # Set values using the setters for validation
         self.wcs = wcs
@@ -308,6 +309,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         Returns a new ExtraCoords object with modified lookup tables.
         """
+        dropped_tables = set()
         new_lookup_tables = set()
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
@@ -316,12 +318,15 @@ class ExtraCoords(ExtraCoordsABC):
                 lut_slice = lut_slice[0]
 
             sliced_lut = lut[lut_slice]
-            if not isinstance(lut_slice, Integral):
+
+            if sliced_lut.is_scalar():
+                dropped_tables.add(sliced_lut)
+            else:
                 new_lookup_tables.add((lut_axis, sliced_lut))
-            # TODO: Handle dropped table here
 
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = tuple(new_lookup_tables)
+        new_extra_coords._dropped_tables = tuple(dropped_tables)
         return new_extra_coords
 
     def _getitem_wcs(self, item):
@@ -352,3 +357,21 @@ class ExtraCoords(ExtraCoordsABC):
         # If we get here this object is empty, so just return an empty extra coords
         # This is done to simplify the slicing in NDCube
         return self
+
+    @property
+    def dropped_world_dimensions(self):
+        """
+        Return a APE-14 a-like representation of any sliced out world dimensions.
+        """
+
+        if self._wcs:
+            if isinstance(self._wcs, SlicedLowLevelWCS):
+                return self._wcs.dropped_world_dimensions
+
+        if self._lookup_tables or self._dropped_tables:
+            mtc = MultipleTableCoordinate(*self._lookup_tables)
+            mtc._dropped_coords = self._dropped_tables
+
+            return mtc.dropped_world_dimensions
+
+        return dict()
