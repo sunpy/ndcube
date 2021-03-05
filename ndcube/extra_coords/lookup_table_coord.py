@@ -1,4 +1,5 @@
 import abc
+import copy
 from numbers import Integral
 from collections import defaultdict
 
@@ -216,13 +217,19 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
 
-    def _slice_table(self, i, table, item, new_components):
-        # TODO: drop dimensions when one of the tables is removed
-        # We can't however do this here if we end up dropping *all* the dimensions
-        # because then we don't have a table any more and is_scalar explodes
-        # if isinstance(item, Integral):
-        #     # Drop this dimension
-        #     return
+    def _slice_table(self, i, table, item, new_components, whole_slice):
+        # If mesh is True then we can drop a dimension
+        if isinstance(item, Integral) and (
+                isinstance(whole_slice, tuple) and
+                not(all(isinstance(i, Integral) for i in whole_slice))):
+            dwd = new_components["dropped_world_dimensions"]
+            dwd["value"].append(table[item])
+            dwd["world_axis_names"].append(self.names[i] if self.names else None)
+            dwd["world_axis_physical_types"].append(self.frame.axis_physical_types[i])
+            dwd["world_axis_units"].append(table.unit.to_string())
+            dwd["world_axis_object_components"].append((f"quantity{i}", 0, "value"))
+            dwd["world_axis_object_classes"].update({f"quantity{i}": (u.Quantity, tuple(), {"unit", table.unit.to_string()})})
+            return
 
         new_components["tables"].append(table[item])
         if self.names:
@@ -237,18 +244,20 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             raise ValueError("Can not slice with incorrect length")
 
         new_components = defaultdict(list)
+        new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
 
         if self.mesh:
             for i, (ele, table) in enumerate(zip(item, self.table)):
-                self._slice_table(i, table, ele, new_components)
+                self._slice_table(i, table, ele, new_components, whole_slice=item)
         else:
             for i, table in enumerate(self.table):
-                self._slice_table(i, table, item, new_components)
+                self._slice_table(i, table, item, new_components, whole_slice=item)
 
         names = new_components["names"] or None
         physical_types = new_components["physical_types"] or None
 
         ret_table = type(self)(*new_components["tables"], mesh=self.mesh, names=names, physical_types=physical_types)
+        ret_table._dropped_world_dimensions = new_components["dropped_world_dimensions"]
         return ret_table
 
     @property

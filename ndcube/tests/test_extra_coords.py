@@ -329,3 +329,20 @@ def test_slice_extra_twice(time_lut, wave_lut):
 
     assert u.allclose(sec['time'].wcs.pixel_to_world_values(list(range(0, 2))),
                       ec['time'].wcs.pixel_to_world_values(list(range(2, 4))))
+
+
+def test_slice_extra_1d_drop(time_lut, wave_lut):
+    ec = ExtraCoords()
+    ec.add("time", 0, time_lut)
+    ec.add("wavey", 1, wave_lut)
+
+    sec = ec[:, 3]
+    assert len(sec._lookup_tables) == 1
+
+    assert u.allclose(sec['time'].wcs.pixel_to_world_values(list(range(4))),
+                      ec['time'].wcs.pixel_to_world_values(list(range(4))))
+
+    dwd = sec.dropped_world_dimensions
+    dwd.pop("world_axis_object_classes")
+    assert dwd
+    assert dwd["world_axis_units"] == ["nm"]

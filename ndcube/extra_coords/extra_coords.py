@@ -136,8 +136,8 @@ class ExtraCoords(ExtraCoordsABC):
         self._mapping = None
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables = tuple()
-        self._dropped_tables = tuple()
+        self._lookup_tables = list()
+        self._dropped_tables = list()
 
         # Set values using the setters for validation
         self.wcs = wcs
@@ -325,8 +325,8 @@ class ExtraCoords(ExtraCoordsABC):
                 new_lookup_tables.add((lut_axis, sliced_lut))
 
         new_extra_coords = type(self)()
-        new_extra_coords._lookup_tables = tuple(new_lookup_tables)
-        new_extra_coords._dropped_tables = tuple(dropped_tables)
+        new_extra_coords._lookup_tables = list(new_lookup_tables)
+        new_extra_coords._dropped_tables = list(dropped_tables)
         return new_extra_coords
 
     def _getitem_wcs(self, item):
@@ -369,7 +369,7 @@ class ExtraCoords(ExtraCoordsABC):
                 return self._wcs.dropped_world_dimensions
 
         if self._lookup_tables or self._dropped_tables:
-            mtc = MultipleTableCoordinate(*self._lookup_tables)
+            mtc = MultipleTableCoordinate(*[lt[1] for lt in self._lookup_tables])
             mtc._dropped_coords = self._dropped_tables
 
             return mtc.dropped_world_dimensions

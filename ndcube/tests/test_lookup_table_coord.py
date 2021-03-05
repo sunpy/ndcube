@@ -292,7 +292,9 @@ def test_slicing_quantity_table_coordinate():
     assert u.allclose(qtc[2:8, 2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2:8, 2:8].table[1], range(2, 8)*u.m)
 
-    assert u.allclose(qtc[2, 2:8].table[0], 2*u.m)
+    # we have dropped one dimension
+    assert len(qtc[2, 2:8].table) == 1
+    assert u.allclose(qtc[2, 2:8].table[0], range(2, 8)*u.m)
 
     assert qtc.names == ['x', 'y']
     assert qtc.physical_types == ['pos:x', 'pos:y']
@@ -521,6 +523,44 @@ def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
     assert wao_classes["SPATIAL0"][0] is u.Quantity
     assert wao_classes["SPATIAL1"][0] is u.Quantity
     assert dwd["value"] == [0*u.km, 9*u.km]
+
+
+def test_mtc_dropped_quantity_inside_table(lut_3d_distance_mesh):
+    sub = lut_3d_distance_mesh[:, 0, :]
+
+    assert len(sub.table) == 2
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert dwd
+    assert all(len(value) == 1 for value in dwd.values())
+
+    sub = lut_3d_distance_mesh[:, 0, 0]
+
+    assert len(sub.table) == 1
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    dwd.pop("world_axis_object_classes")
+    assert all(isinstance(value, list) for value in dwd.values())
+    assert dwd
+    assert all(len(value) == 2 for value in dwd.values())
+
+
+def test_mtc_dropped_quantity_inside_table_no_mesh(lut_2d_distance_no_mesh):
+    """
+    When not meshing, we don't drop a coord, as the coordinate for the sliced
+    out axis can still vary along the remaining coordinate.
+    """
+    sub = lut_2d_distance_no_mesh[:, 0]
+
+    assert len(sub.table) == 2
+
+    dwd = sub.dropped_world_dimensions
+    assert isinstance(dwd, dict)
+    assert not dwd
 
 
 def test_mtc_dropped_quantity_join(lut_1d_time, lut_2d_distance_no_mesh):
