@@ -508,6 +508,8 @@ def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
     assert len(sub._table_coords) == 1
     assert len(sub._dropped_coords) == 1
 
+    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
     wao_classes = dwd.pop("world_axis_object_classes")
@@ -529,6 +531,8 @@ def test_mtc_dropped_quantity_inside_table(lut_3d_distance_mesh):
     sub = lut_3d_distance_mesh[:, 0, :]
 
     assert len(sub.table) == 2
+
+    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
@@ -558,6 +562,8 @@ def test_mtc_dropped_quantity_inside_table_no_mesh(lut_2d_distance_no_mesh):
 
     assert len(sub.table) == 2
 
+    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
     assert not dwd
@@ -569,6 +575,8 @@ def test_mtc_dropped_quantity_join(lut_1d_time, lut_2d_distance_no_mesh):
 
     assert len(sub._table_coords) == 2
     assert len(sub._dropped_coords) == 0
+
+    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
