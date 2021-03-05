@@ -48,9 +48,6 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
         raise TypeError("lookup_table must be a Quantity.")  # pragma: no cover
 
     ndim = lookup_table.ndim
-    if ndim == 0:
-        lookup_table = u.Quantity([lookup_table])
-        ndim = lookup_table.ndim
     TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
 
     # The integer location is at the centre of the pixel.
