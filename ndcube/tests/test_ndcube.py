@@ -143,16 +143,17 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     lat_key = "custom:pos.helioprojective.lat"
     lon_key = "custom:pos.helioprojective.lon"
     wl_key = "em.wl"
+    celestial_key = "helioprojective"
 
     sndc = ndc[:, 0, :]
     assert sndc.global_coords._all_coords == {}
 
     sndc = ndc[0, 0, :]
     all_coords = sndc.global_coords._all_coords
-    assert u.allclose(all_coords[lat_key][1], -0.00555556 * u.deg)
-    assert u.allclose(all_coords[lon_key][1], 0.00277778 * u.deg)
-    assert all_coords[lat_key][0] == lat_key
-    assert all_coords[lon_key][0] == lon_key
+    assert isinstance(all_coords[celestial_key][1], SkyCoord)
+    assert u.allclose(all_coords[celestial_key][1].Ty, -0.00555556 * u.deg)
+    assert u.allclose(all_coords[celestial_key][1].Tx, 0.00277778 * u.deg)
+    assert all_coords[celestial_key][0] == (lat_key, lon_key)
 
     sndc = ndc[:, :, 0]
     all_coords = sndc.global_coords._all_coords
