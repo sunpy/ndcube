@@ -104,8 +104,9 @@ class GlobalCoords(Mapping):
 
         if hasattr(self._ndcube.wcs.low_level_wcs, "dropped_world_dimensions"):
             dropped_world = copy.deepcopy(self._ndcube.wcs.low_level_wcs.dropped_world_dimensions)
-            wcs_dropped = self._convert_dropped_to_internal(dropped_world)
-            all_coords.update(wcs_dropped)
+            if dropped_world:
+                wcs_dropped = self._convert_dropped_to_internal(dropped_world)
+                all_coords.update(wcs_dropped)
 
         # TODO: Implement dropped_world_dimensions on ExtraCoords
         # ec_dropped = self._ndcube.extra_coords.dropped_world_dimensions
