@@ -1,5 +1,8 @@
 import astropy.units as u
+import numpy as np
 import pytest
+from astropy.coordinates import SkyCoord
+from astropy.coordinates.spectral_coordinate import SpectralCoord
 
 from ndcube.global_coords import GlobalCoords
 
@@ -82,8 +85,35 @@ def test_filter(gc_coords):
     assert filtered.physical_types == {'name1': 'custom:physical_type1'}
 
 
-def test_dropped_to_internal(ndcube_4d_ln_l_t_lt):
+def test_dropped_to_global(ndcube_4d_ln_l_t_lt):
     ndcube_4d_ln_l_t_lt.wcs.wcs.cname = ['lat', 'time', 'wavelength', 'lon']
-    sub = ndcube_4d_ln_l_t_lt[0, :, 0, 0]
+    sub = ndcube_4d_ln_l_t_lt[0, 0, :, 0]
     gc = sub.global_coords
     assert len(gc) == 2
+
+    assert isinstance(gc["helioprojective"], SkyCoord)
+    assert isinstance(gc["wavelength"], SpectralCoord)
+
+
+def test_dropped_to_global_ec(ndcube_4d_ln_lt_l_t):
+    ndcube_4d_ln_lt_l_t.extra_coords.add("test1", 0, np.arange(ndcube_4d_ln_lt_l_t.data.shape[0]) * u.m)
+    sub = ndcube_4d_ln_lt_l_t[0, 0, :, :]
+    gc = sub.global_coords
+    assert len(gc) == 2
+
+    assert isinstance(gc["helioprojective"], SkyCoord)
+    assert isinstance(gc["test1"], u.Quantity)
+
+
+@pytest.mark.xfail
+def test_dropped_to_global_ec_gwcs_fail(ndcube_4d_extra_coords):
+    sub = ndcube_4d_extra_coords[0, 0, :, :]
+    gc = sub.global_coords
+
+    # Due to https://github.com/spacetelescope/gwcs/issues/358 one of the two
+    # extra coords overwrites the other here.
+    assert len(gc) == 3
+
+    assert isinstance(gc["helioprojective"], SkyCoord)
+    assert isinstance(gc["time"], u.Quantity)
+    assert isinstance(gc["hello"], u.Quantity)

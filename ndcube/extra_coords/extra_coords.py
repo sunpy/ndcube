@@ -375,3 +375,10 @@ class ExtraCoords(ExtraCoordsABC):
             return mtc.dropped_world_dimensions
 
         return dict()
+
+    def __str__(self):
+        elements = [f"{', '.join(table.names)} ({axes}): {table}" for axes, table in self._lookup_tables]
+        return f"ExtraCoords({', '.join(elements)})"
+
+    def __repr__(self):
+        return f"{object.__repr__(self)}\n{self}"

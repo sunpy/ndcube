@@ -537,24 +537,18 @@ class MultipleTableCoordinate(BaseTableCoordinate):
                 else:
                     dropped_world_dimensions[key] += value
 
-        # Generate the dict from the dropped tables
-        for dropped in self._dropped_coords:
-            wao_classes = dropped.frame._world_axis_object_classes
-            wao_components = dropped.frame._world_axis_object_components
+        dropped_multi_table = MultipleTableCoordinate(*self._dropped_coords)
 
-            for i in range(dropped.frame.naxes):
-                dropped_world_dimensions["world_axis_names"].append(dropped.frame.axes_names[i] or None)
-                dropped_world_dimensions["world_axis_physical_types"].append(dropped.frame.axis_physical_types[i] or None)
-                dropped_world_dimensions["world_axis_units"].append(dropped.frame.unit[i].to_string())
-                dropped_world_dimensions["world_axis_object_components"].append(wao_components[i])
-                dropped_world_dimensions["world_axis_object_classes"].update(dict(
-                    filter(
-                        lambda x: x[0] == wao_components[i][0], wao_classes.items()
-                    )
-                ))
-                coord = dropped.frame.coordinate_to_quantity(dropped.table)
-                if dropped.frame.naxes > 1 or (isinstance(coord, (tuple, list)) and len(coord) == 1):
-                    coord = coord[i]
-                dropped_world_dimensions["value"].append(coord)
+        dropped_world_dimensions["world_axis_names"] += list(dropped_multi_table.frame.axes_names)
+        dropped_world_dimensions["world_axis_physical_types"] += list(dropped_multi_table.frame.axis_physical_types)
+        dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in dropped_multi_table.frame.unit]
+        dropped_world_dimensions["world_axis_object_components"] += dropped_multi_table.frame._world_axis_object_components
+        dropped_world_dimensions["world_axis_object_classes"].update(dropped_multi_table.frame._world_axis_object_classes)
+
+        for i, dropped in enumerate(self._dropped_coords):
+            coord = dropped.frame.coordinate_to_quantity(*dropped.table)
+            if dropped.frame.naxes > 1 or (isinstance(coord, (tuple, list)) and len(coord) == 1):
+                coord = coord[i]
+            dropped_world_dimensions["value"].append(coord)
 
         return dropped_world_dimensions

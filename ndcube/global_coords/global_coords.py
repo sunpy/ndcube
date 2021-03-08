@@ -108,10 +108,9 @@ class GlobalCoords(Mapping):
                 wcs_dropped = self._convert_dropped_to_internal(dropped_world)
                 all_coords.update(wcs_dropped)
 
-        # TODO: Implement dropped_world_dimensions on ExtraCoords
-        # ec_dropped = self._ndcube.extra_coords.dropped_world_dimensions
-        # if "value" in ec_dropped:
-        #     all_coords.update(self._convert_dropped_to_internal(ec_dropped))
+        ec_dropped = self._ndcube.extra_coords.dropped_world_dimensions
+        if "value" in ec_dropped:
+            all_coords.update(self._convert_dropped_to_internal(ec_dropped))
 
         return all_coords
 
