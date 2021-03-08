@@ -80,3 +80,10 @@ def test_filter(gc_coords):
     assert 'name1' in filtered
     assert u.allclose(filtered['name1'], 1 * u.m)
     assert filtered.physical_types == {'name1': 'custom:physical_type1'}
+
+
+def test_dropped_to_internal(ndcube_4d_ln_l_t_lt):
+    ndcube_4d_ln_l_t_lt.wcs.wcs.cname = ['lat', 'time', 'wavelength', 'lon']
+    sub = ndcube_4d_ln_l_t_lt[0, :, 0, 0]
+    gc = sub.global_coords
+    assert len(gc) == 2
