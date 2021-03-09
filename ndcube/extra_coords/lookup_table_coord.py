@@ -545,10 +545,21 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         dropped_world_dimensions["world_axis_object_components"] += dropped_multi_table.frame._world_axis_object_components
         dropped_world_dimensions["world_axis_object_classes"].update(dropped_multi_table.frame._world_axis_object_classes)
 
-        for i, dropped in enumerate(self._dropped_coords):
-            coord = dropped.frame.coordinate_to_quantity(*dropped.table)
-            if dropped.frame.naxes > 1 or (isinstance(coord, (tuple, list)) and len(coord) == 1):
-                coord = coord[i]
-            dropped_world_dimensions["value"].append(coord)
+        for dropped in self._dropped_coords:
+            # If the table is a tuple (QuantityTableCoordinate) then we need to
+            # squish the input
+            if isinstance(dropped.table, tuple):
+                coord = dropped.frame.coordinate_to_quantity(*dropped.table)
+            else:
+                coord = dropped.frame.coordinate_to_quantity(dropped.table)
+
+            # We want the value in the output dict to be a flat list of values
+            # in the order of world_axis_object_components, so if we get a
+            # tuple of coordinates out of gWCS then append them to the list, if
+            # we only get one quantity out then append to the list.
+            if isinstance(coord, tuple):
+                dropped_world_dimensions["value"] += list(coord)
+            else:
+                dropped_world_dimensions["value"].append(coord)
 
         return dropped_world_dimensions
