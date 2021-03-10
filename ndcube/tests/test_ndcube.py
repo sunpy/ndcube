@@ -7,7 +7,7 @@ from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import NDCube
+from ndcube import ExtraCoords, NDCube
 from ndcube.tests import helpers
 
 
@@ -140,6 +140,8 @@ def test_slicing_preserves_global_coords(ndcube_3d_ln_lt_l):
 
 def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     ndc = ndcube_3d_ln_lt_l
+    # Run this test without extra coords
+    ndc._extra_coords = ExtraCoords()
     lat_key = "custom:pos.helioprojective.lat"
     lon_key = "custom:pos.helioprojective.lon"
     wl_key = "em.wl"
