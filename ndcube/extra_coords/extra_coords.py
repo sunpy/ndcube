@@ -361,7 +361,7 @@ class ExtraCoords(ExtraCoordsABC):
     @property
     def dropped_world_dimensions(self):
         """
-        Return a APE-14 a-like representation of any sliced out world dimensions.
+        Return an APE-14 like representation of any sliced out world dimensions.
         """
 
         if self._wcs:
