@@ -215,10 +215,22 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
 
     def _slice_table(self, i, table, item, new_components, whole_slice):
+        """
+        Apply a slice, or part of a slice to one of the quantity arrays.
+
+        i is the index of the element in `self.table`
+        table is the element in `self.table`
+        item is the part of the slice to be applied to `table`
+        new_components is the dictionary to append the output to
+        whole_slice is the complete slice being applied to the whole Table object.
+        """
         # If mesh is True then we can drop a dimension
+        # If mesh is false then all the dimensions contained in this Table are
+        # coupled so we can never drop only one of them only this whole Table
+        # can be dropped.
         if isinstance(item, Integral) and (
                 isinstance(whole_slice, tuple) and
-                not(all(isinstance(i, Integral) for i in whole_slice))):
+                not(all(isinstance(k, Integral) for k in whole_slice))):
             dwd = new_components["dropped_world_dimensions"]
             dwd["value"].append(table[item])
             dwd["world_axis_names"].append(self.names[i] if self.names else None)

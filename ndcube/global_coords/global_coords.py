@@ -71,7 +71,7 @@ class GlobalCoords(Mapping):
 
             # convert lists to strings if a single coordinate
             physical_types = physical_types[0] if len(physical_types) == 1 else tuple(physical_types)
-            names = names[0] if len(names) == 1 else names
+            names = names[0] if len(set(names)) == 1 else names
 
             klass, ar, kw, *rest = classes[key]
             if len(rest) == 0:
