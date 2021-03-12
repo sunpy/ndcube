@@ -15,6 +15,7 @@ by a WCS (World Coordinate System) translation.
    coordinates
    slicing
    visualization
+   tabular_coordinates
    contributing
    getting_help
    api
