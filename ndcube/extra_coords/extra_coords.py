@@ -9,8 +9,8 @@ from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
-from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
-                                 SkyCoordTableCoordinate, TimeTableCoordinate)
+from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
+                          SkyCoordTableCoordinate, TimeTableCoordinate)
 
 __all__ = ['ExtraCoords']
 

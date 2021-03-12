@@ -551,7 +551,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         dropped_multi_table = MultipleTableCoordinate(*self._dropped_coords)
 
-        dropped_world_dimensions["world_axis_names"] += list(dropped_multi_table.frame.axes_names)
+        dropped_world_dimensions["world_axis_names"] += [name or None for name in dropped_multi_table.frame.axes_names]
         dropped_world_dimensions["world_axis_physical_types"] += list(dropped_multi_table.frame.axis_physical_types)
         dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in dropped_multi_table.frame.unit]
         dropped_world_dimensions["world_axis_object_components"] += dropped_multi_table.frame._world_axis_object_components
