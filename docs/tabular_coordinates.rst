@@ -37,7 +37,7 @@ A simple example of constructing a WCS from a lookup table is the following temp
 
   >>> from astropy.time import Time
   >>> import astropy.units as u
-  >>> from ndcube.extra_coords.lookup_table_coord import TimeTableCoordinate
+  >>> from ndcube.extra_coords import TimeTableCoordinate
 
   >>> time_axis = Time("2021-01-01T00:00:00") + (list(range(10)) * u.hour)
   >>> time_axis
@@ -65,10 +65,15 @@ This `gwcs.WCS` object can then be passed to the constructor of `.NDCube` alongs
 Combining Two Coordinates into a Single WCS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We can extend this example to be a space-space-time cube::
+We can extend this example to be a space-space-time cube.
+In this example we are going to utilize the ``mesh=`` keyword argument for the first time.
+This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a similar way to the way `numpy.meshgrid` works.
+When ``mesh=`` is used with `~astropy.coordinates.SkyCoord` the input is passed trough `numpy.meshgrid`, when it is used with `.QuantityTableCoordinate` the mesh is done dynamically.
+
+.. code-block::
 
   >>> from astropy.coordinates import SkyCoord
-  >>> from ndcube.extra_coords.lookup_table_coord import SkyCoordTableCoordinate
+  >>> from ndcube.extra_coords import SkyCoordTableCoordinate
 
   >>> icrs_table = SkyCoord(range(10)*u.deg, range(10)*u.deg)
   >>> icrs_table
@@ -79,34 +84,34 @@ We can extend this example to be a space-space-time cube::
   >>> gwcs = (TimeTableCoordinate(time_axis) & SkyCoordTableCoordinate(icrs_table, mesh=True)).wcs
   >>> gwcs
   <WCS(output_frame=CompositeFrame, input_frame=PixelFrame, forward_transform=Model: CompoundModel
-      Inputs: ('x', 'x0', 'x1')
-      Outputs: ('y', 'y0', 'y1')
-      Model set size: 1
-      Expression: [0] & ([1] | [2] & [3])
-      Components:
-          [0]: <Tabular1D(points=(<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>,), lookup_table=[    0.  3600.  7200. 10800. 14400. 18000. 21600. 25200. 28800. 32400.] s)>
-      <BLANKLINE>
-          [1]: <Mapping([0, 1, 0, 1])>
-      <BLANKLINE>
-          [2]: <Tabular2D(points=[<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>, <Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>], lookup_table=[[0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
-           [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]] deg)>
-      <BLANKLINE>
-          [3]: <Tabular2D(points=[<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>, <Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>], lookup_table=[[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-           [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
-           [2. 2. 2. 2. 2. 2. 2. 2. 2. 2.]
-           [3. 3. 3. 3. 3. 3. 3. 3. 3. 3.]
-           [4. 4. 4. 4. 4. 4. 4. 4. 4. 4.]
-           [5. 5. 5. 5. 5. 5. 5. 5. 5. 5.]
-           [6. 6. 6. 6. 6. 6. 6. 6. 6. 6.]
-           [7. 7. 7. 7. 7. 7. 7. 7. 7. 7.]
-           [8. 8. 8. 8. 8. 8. 8. 8. 8. 8.]
-           [9. 9. 9. 9. 9. 9. 9. 9. 9. 9.]] deg)>
-      Parameters:)>
+  Inputs: ('x', 'x0', 'x1')
+  Outputs: ('y', 'y0', 'y1')
+  Model set size: 1
+  Expression: [0] & ([1] | [2] & [3])
+  Components:
+      [0]: <Tabular1D(points=(<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>,), lookup_table=[    0.  3600.  7200. 10800. 14400. 18000. 21600. 25200. 28800. 32400.] s)>
+  <BLANKLINE>
+      [1]: <Mapping([0, 1, 0, 1])>
+  <BLANKLINE>
+      [2]: <Tabular2D(points=[<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>, <Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>], lookup_table=[[0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+       [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]] deg)>
+  <BLANKLINE>
+      [3]: <Tabular2D(points=[<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>, <Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>], lookup_table=[[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+       [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+       [2. 2. 2. 2. 2. 2. 2. 2. 2. 2.]
+       [3. 3. 3. 3. 3. 3. 3. 3. 3. 3.]
+       [4. 4. 4. 4. 4. 4. 4. 4. 4. 4.]
+       [5. 5. 5. 5. 5. 5. 5. 5. 5. 5.]
+       [6. 6. 6. 6. 6. 6. 6. 6. 6. 6.]
+       [7. 7. 7. 7. 7. 7. 7. 7. 7. 7.]
+       [8. 8. 8. 8. 8. 8. 8. 8. 8. 8.]
+       [9. 9. 9. 9. 9. 9. 9. 9. 9. 9.]] deg)>
+  Parameters:)>
