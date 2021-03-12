@@ -5,8 +5,8 @@ import pytest
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
-from ndcube.extra_coords.lookup_table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
-                                                    SkyCoordTableCoordinate, TimeTableCoordinate)
+from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
+                                             SkyCoordTableCoordinate, TimeTableCoordinate)
 
 
 @pytest.fixture
