@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
-#
-# This file does only contain a selection of the most common options. For a
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
-
 
 # -- Project information -----------------------------------------------------
 
@@ -20,9 +15,6 @@ release = __version__
 is_development = '.dev' in __version__
 
 # -- General configuration ---------------------------------------------------
-
-# Don't warn when we override doctest
-suppress_warnings = ['app.add_directive', ]
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -40,8 +32,9 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.smart_resolver',
-    'sunpy.util.sphinx.doctest',
-    'ndcube.utils.sphinx.code_context'
+    'ndcube.utils.sphinx.code_context',
+    'sphinx_changelog',
+    'pytest_doctestplus.sphinx.doctestplus',
 ]
 
 # Define code to be run by doctest in front of every code block.
@@ -90,7 +83,6 @@ try:
 except ImportError:
     html_theme = 'default'
 
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -107,17 +99,3 @@ graphviz_dot_args = [
     '-Gfontsize=10',
     '-Gfontname=Helvetica Neue, Helvetica, Arial, sans-serif'
 ]
-
-
-"""
-Write the latest changelog into the documentation.
-"""
-target_file = os.path.abspath("./whatsnew/latest_changelog.txt")
-try:
-    from sunpy.util.towncrier import generate_changelog_for_docs
-    if is_development:
-        generate_changelog_for_docs("../", target_file)
-except Exception as e:
-    print(f"Failed to add changelog to docs with error {e}.")
-# Make sure the file exists or else sphinx will complain.
-open(target_file, 'a').close()
