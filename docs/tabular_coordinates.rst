@@ -67,8 +67,8 @@ Combining Two Coordinates into a Single WCS
 
 We can extend this example to be a space-space-time cube.
 In this example we are going to utilize the ``mesh=`` keyword argument for the first time.
-This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a similar way to the way `numpy.meshgrid` works.
-When ``mesh=`` is used with `~astropy.coordinates.SkyCoord` the input is passed trough `numpy.meshgrid`, when it is used with `.QuantityTableCoordinate` the mesh is done dynamically.
+This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a similar way to `numpy.meshgrid`.
+When ``mesh=`` is used with `~astropy.coordinates.SkyCoord` the input is passed through `numpy.meshgrid`, when it is used with `.QuantityTableCoordinate` the mesh is done dynamically.
 
 .. code-block::
 
