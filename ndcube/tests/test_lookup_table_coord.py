@@ -159,7 +159,7 @@ def test_2d_nout_1_no_mesh(lut_2d_distance_no_mesh):
                       (0, 9)*u.km)
 
     # TODO: this model is not invertable
-    # assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 9*u.km), (0, 0))
+    assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 9*u.km), (0, 0))
 
 
 def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
@@ -168,11 +168,21 @@ def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
     assert ltc.model.n_inputs == 1
     assert ltc.model.n_outputs == 2
 
+    pixel_coords = (0,)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
+
 
 def test_2d_skycoord_mesh(lut_2d_skycoord_mesh):
     ltc = lut_2d_skycoord_mesh
     assert ltc.model.n_inputs == 2
     assert ltc.model.n_outputs == 2
+
+    pixel_coords = (0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
 
 
 def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
@@ -182,6 +192,11 @@ def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
     assert ltc.model.n_outputs == 3
 
     # Known failure due to gwcs#120
+
+    # pixel_coords = (0, 0, 0)*u.pix
+    # sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    # pix = ltc.wcs.world_to_pixel(sc)
+    # assert u.allclose(pix, pixel_coords.value)
 
     # assert isinstance(ltc.wcs, gwcs.WCS)
     #
@@ -196,6 +211,11 @@ def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
 
     assert ltc.model.n_inputs == 2
     assert ltc.model.n_outputs == 2
+
+    pixel_coords = (0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
 
 
 def test_1d_time(lut_1d_time):
@@ -232,8 +252,12 @@ def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
     assert isinstance(world[0], SkyCoord)
     assert u.allclose(world[1], 0 * u.nm)
 
-    # TODO: Investigate this, something about inverse model
-    # assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
+    pixel_coords = (0, 0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
+
+    assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
 
 
 def test_2d_quantity():
@@ -375,11 +399,6 @@ def test_2d_nout_1_no_mesh_slice(lut_2d_distance_no_mesh):
     sub_ltc = ltc[0:2, 0:2]
     assert sub_ltc.table[0].shape == (2, 2)
     assert sub_ltc.table[1].shape == (2, 2)
-
-    # sub_ltc = ltc[0]
-
-    # assert ltc.wcs.world_n_dim == 2
-    # assert ltc.wcs.pixel_n_dim == 2
 
 
 def test_1d_skycoord_no_mesh_slice(lut_1d_skycoord_no_mesh):
