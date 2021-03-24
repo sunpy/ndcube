@@ -108,7 +108,6 @@ def test_dropped_to_global_ec(ndcube_4d_ln_lt_l_t):
     assert isinstance(gc["test1"], u.Quantity)
 
 
-@pytest.mark.xfail
 def test_dropped_to_global_ec_gwcs_fail(ndcube_4d_extra_coords):
     sub = ndcube_4d_extra_coords[0, 0, :, :]
     gc = sub.global_coords
