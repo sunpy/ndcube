@@ -3,7 +3,7 @@ import gwcs
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import NDCube
@@ -350,3 +350,25 @@ def test_slice_extra_1d_drop(time_lut, wave_lut):
     dwd.pop("world_axis_object_classes")
     assert dwd
     assert dwd["world_axis_units"] == ["nm"]
+
+
+def test_dropped_dimension_reordering():
+    data = np.ones((3, 4, 5))
+    wcs_input_dict = {
+        'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
+        'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
+        'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
+    input_wcs = WCS(wcs_input_dict)
+
+    base_time = Time('2000-01-01', format='fits', scale='utc')
+    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(data.shape[0])])
+
+    my_cube = NDCube(data, input_wcs)
+    my_cube.extra_coords.add('time', (0,), timestamps)
+
+    # If the argument to extra_coords.add is array index then it should end up
+    # in the first element of array_axis_physical_types
+    assert "time" in my_cube.array_axis_physical_types[0]
+
+    # When we slice out the dimension with the extra coord in it should go away.
+    assert "time" not in my_cube[0].array_axis_physical_types[0]

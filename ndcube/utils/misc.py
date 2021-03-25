@@ -4,8 +4,6 @@ from functools import wraps
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 
-from ndcube.extra_coords import ExtraCoords
-
 __all__ = ['sanitise_wcs', 'unique_sorted']
 
 
@@ -29,6 +27,9 @@ def sanitise_wcs(func):
     to the dimensionality of the array. It will finally verify that the object
     passed is a HighLevelWCS object, or an ExtraCoords object.
     """
+    # This needs to be here to prevent a circular import
+    from ndcube.extra_coords import ExtraCoords
+
     @wraps(func)
     def wcs_wrapper(*args, **kwargs):
         sig = inspect.signature(func)

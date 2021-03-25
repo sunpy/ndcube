@@ -74,9 +74,9 @@ def convert_between_array_and_pixel_axes(axis, naxes):
     """
     # Check type of input.
     if not isinstance(axis, np.ndarray):
-        raise TypeError("input must be of array type. Got type: {type(axis)}")
+        raise TypeError(f"input must be of array type. Got type: {type(axis)}")
     if axis.dtype.char not in np.typecodes['AllInteger']:
-        raise TypeError("input dtype must be of int type.  Got dtype: {axis.dtype})")
+        raise TypeError(f"input dtype must be of int type.  Got dtype: {axis.dtype})")
     # Convert negative indices to positive equivalents.
     axis[axis < 0] += naxes
     if any(axis > naxes - 1):
