@@ -44,8 +44,8 @@ def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_co
     cube = NDCube(data_cube,
                   wcs_3d_lt_ln_l,
                   mask=mask,
-                  uncertainty=data_cube,
-                  extra_coords=extra_coords)
+                  uncertainty=data_cube)
+    cube._extra_coords = extra_coords
 
     if global_coords:
         cube._global_coords = global_coords
@@ -300,7 +300,9 @@ def ndcube_4d_mask(wcs_4d_t_l_lt_ln):
 def ndcube_4d_extra_coords(wcs_4d_t_l_lt_ln, simple_extra_coords_3d):
     shape = (5, 8, 10, 12)
     data_cube = data_nd(shape)
-    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, extra_coords=simple_extra_coords_3d)
+    cube = NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln)
+    cube._extra_coords = simple_extra_coords_3d
+    return cube
 
 
 @pytest.fixture
@@ -326,13 +328,14 @@ def ndcube_3d_ln_lt_l(wcs_3d_l_lt_ln, simple_extra_coords_3d):
     wcs_3d_l_lt_ln.array_shape = shape
     data = data_nd(shape)
     mask = data > 0
-    return NDCube(
+    cube = NDCube(
         data,
         wcs_3d_l_lt_ln,
         mask=mask,
         uncertainty=data,
-        extra_coords=simple_extra_coords_3d
     )
+    cube._extra_coords = simple_extra_coords_3d
+    return cube
 
 
 @pytest.fixture
@@ -340,13 +343,14 @@ def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
     data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
                              [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]]])
     mask_rotated = data_rotated >= 0
-    return NDCube(
+    cube = NDCube(
         data_rotated,
         wcs_3d_ln_lt_t_rotated,
         mask=mask_rotated,
         uncertainty=data_rotated,
-        extra_coords=simple_extra_coords_3d
     )
+    cube._extra_coords = simple_extra_coords_3d
+    return cube
 
 
 @pytest.fixture

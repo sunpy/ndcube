@@ -6,7 +6,7 @@ from functools import reduce
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
 from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
@@ -33,14 +33,6 @@ class ExtraCoordsABC(abc.ABC):
        of length equal to the number of pixel dimensions in the extra coords.
 
     """
-
-    @abc.abstractmethod
-    def __init__(self,
-                 *,
-                 wcs: BaseLowLevelWCS = None,
-                 mapping: Iterable[Tuple[int, int]] = None):
-        pass
-
     @abc.abstractmethod
     def add(self,
             name: str,
@@ -125,23 +117,20 @@ class ExtraCoords(ExtraCoordsABC):
        of length equal to the number of pixel dimensions in the extra coords.
 
     """
-    def __init__(self, *, wcs=None, mapping=None):
-        if (wcs is None and mapping is not None) or (wcs is not None and mapping is None):
-            raise ValueError("Either both WCS and mapping have to be specified together or neither.")
-
-        super().__init__(wcs=wcs, mapping=mapping)
+    def __init__(self, ndcube=None):
+        super().__init__()
 
         # Setup private attributes
         self._wcs = None
         self._mapping = None
+
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
         self._lookup_tables = list()
         self._dropped_tables = list()
 
-        # Set values using the setters for validation
-        self.wcs = wcs
-        self.mapping = mapping
+        # We need a reference to the parent NDCube
+        self._ndcube = ndcube
 
     @classmethod
     def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables):
@@ -341,7 +330,10 @@ class ExtraCoords(ExtraCoordsABC):
 
         new_mapping = [self.mapping[i] for i, subitem in enumerate(item) if not isinstance(subitem, Integral)]
 
-        return type(self)(wcs=subwcs, mapping=new_mapping)
+        new_ec = type(self)()
+        new_ec.wcs = subwcs
+        new_ec.mapping = new_mapping
+        return new_ec
 
     def __getitem__(self, item):
         # docstring in ABC
