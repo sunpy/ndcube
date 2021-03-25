@@ -1,13 +1,16 @@
 import abc
 from typing import Any, Tuple, Union, Iterable
 from numbers import Integral
-from functools import reduce
+from functools import reduce, partial
 
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
+
+from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 
 from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                                  SkyCoordTableCoordinate, TimeTableCoordinate)
@@ -223,8 +226,12 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return tuple()
 
+        # The mapping is from the array index (position in the list) to the
+        # pixel dimensions (numbers in the list)
         lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
-        return tuple(reduce(list.__add__, lts))
+        converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.dimensions))
+        pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
+        return tuple(reduce(list.__add__, pixel_indicies))
 
     @mapping.setter
     def mapping(self, mapping):
