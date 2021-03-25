@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import astropy.units as u
 import gwcs
 import numpy as np
@@ -133,11 +135,21 @@ def test_wcs_1d(wcs_1d_l):
     assert subec.wcs is None
 
 
+@pytest.fixture
+def extra_coords_wave(wave_lut):
+    cube = MagicMock()
+    cube.dimensions = [10] * u.pix
+    ec = ExtraCoords(cube)
+    ec.add("wave", 0, wave_lut)
+
+    return ec
+
+
 # Extra Coords from lookup tables
 
 # A single lookup along a dimension, i.e. Time along the second dim.
-def test_single_from_lut(wave_lut):
-    ec = ExtraCoords.from_lookup_tables(("wave",), (0,), (wave_lut,))
+def test_single_from_lut(extra_coords_wave):
+    ec = extra_coords_wave
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (0,)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -147,9 +159,13 @@ def test_single_from_lut(wave_lut):
 
 
 def test_two_1d_from_lut(time_lut):
+    cube = MagicMock()
+    cube.dimensions = [10] * u.pix
+    ec = ExtraCoords(cube)
+
     exposure_lut = range(10) * u.s
-    ec = ExtraCoords.from_lookup_tables(("time", "exposure_time"),
-                                        (0, 0), (time_lut, exposure_lut))
+    ec.add("time", 0, time_lut)
+    ec.add("exposure_time", 0, exposure_lut)
     assert len(ec._lookup_tables) == 2
     assert ec.mapping == (0, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -159,10 +175,13 @@ def test_two_1d_from_lut(time_lut):
 
 
 def test_skycoord(skycoord_1d_lut):
-    ec = ExtraCoords()
+    cube = MagicMock()
+    cube.dimensions = [10, 10] * u.pix
+
+    ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_1d_lut, mesh=True)
     assert len(ec._lookup_tables) == 1
-    assert ec.mapping == (0, 1)
+    assert ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert ec.wcs.pixel_n_dim == 2
     assert ec.wcs.world_n_dim == 2
@@ -170,7 +189,10 @@ def test_skycoord(skycoord_1d_lut):
 
 
 def test_skycoord_1_pixel(skycoord_1d_lut):
-    ec = ExtraCoords()
+    cube = MagicMock()
+    cube.dimensions = [10] * u.pix
+
+    ec = ExtraCoords(cube)
     ec.add(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (0,)
@@ -186,10 +208,13 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
 
 
 def test_skycoord_mesh_false(skycoord_2d_lut):
-    ec = ExtraCoords()
+    cube = MagicMock()
+    cube.dimensions = [10, 10] * u.pix
+
+    ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
-    assert ec.mapping == (0, 1)
+    assert ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert ec.wcs.pixel_n_dim == 2
     assert ec.wcs.world_n_dim == 2
@@ -197,27 +222,32 @@ def test_skycoord_mesh_false(skycoord_2d_lut):
 
 
 def test_extra_coords_index(skycoord_2d_lut, time_lut):
-    ec = ExtraCoords()
+    cube = MagicMock()
+    cube.dimensions = [10, 10] * u.pix
+
+    ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     ec.add("exposure_time", (0,), time_lut)
     assert len(ec._lookup_tables) == 2
-    assert ec.mapping == (0, 1, 0)
+    assert ec.mapping == (1, 0, 1)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert ec.wcs.pixel_n_dim == 3
     assert ec.wcs.world_n_dim == 3
     assert ec.wcs.world_axis_names == ("lat", "lon", "exposure_time")
 
     sub_ec = ec["lon"]
+    sub_ec._ndcube = cube
     assert len(sub_ec._lookup_tables) == 1
-    assert sub_ec.mapping == (0, 1)
+    assert sub_ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert sub_ec.wcs.pixel_n_dim == 2
     assert sub_ec.wcs.world_n_dim == 2
     assert sub_ec.wcs.world_axis_names == ("lat", "lon")
 
     sub_ec = ec["exposure_time"]
+    sub_ec._ndcube = cube
     assert len(sub_ec._lookup_tables) == 1
-    assert sub_ec.mapping == (0,)
+    assert sub_ec.mapping == (1,)
     assert isinstance(ec.wcs, gwcs.WCS)
     assert sub_ec.wcs.pixel_n_dim == 1
     assert sub_ec.wcs.world_n_dim == 1
