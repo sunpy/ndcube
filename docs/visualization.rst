@@ -253,11 +253,11 @@ Then we show how to extract and plot the data.
 
   >>> # Define the cubes
   >>> cube0 = NDCube(data0, wcs=wcs)
-  >>> cube0.extra_coords.add('time', 2, timestamps0)
+  >>> cube0.extra_coords.add('time', 0, timestamps0)
   >>> cube1 = NDCube(data1, wcs=wcs)
-  >>> cube1.extra_coords.add('time', 2, timestamps1)
+  >>> cube1.extra_coords.add('time', 0, timestamps1)
   >>> cube2 = NDCube(data2, wcs=wcs)
-  >>> cube2.extra_coords.add('time', 2, timestamps2)
+  >>> cube2.extra_coords.add('time', 0, timestamps2)
 
   >>> # Define the sequence
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2], common_axis=common_axis)
