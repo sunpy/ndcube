@@ -206,6 +206,8 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
     assert sec.wcs.world_n_dim == 2
     assert sec.wcs.world_axis_names == ("lon", "lat")
 
+    assert isinstance(sec.wcs.pixel_to_world(0), SkyCoord)
+
 
 def test_skycoord_mesh_false(skycoord_2d_lut):
     cube = MagicMock()
