@@ -256,6 +256,7 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
     assert sub_ec.wcs.world_axis_names == ("exposure_time",)
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_extra_coords_2d_quantity(quantity_2d_lut):
     ec = ExtraCoords()
     ec.add("velocity", (0, 1), quantity_2d_lut)
