@@ -33,6 +33,10 @@ Constructing a WCS from Lookup Tables
 ndcube supports constructing lookup tables from `~astropy.coordinates.SkyCoord`,  `~astropy.time.Time` and `~astropy.units.Quantity` objects.
 These objects are wrapped in `.BaseTableCoordinate` objects which can be composed together into a multi-dimensional WCS.
 
+.. note::
+
+   Only one dimensional tables are currently supported. It is possible to construct higher dimensional lookup tables by "meshing" the inputs, which is described below.
+
 A simple example of constructing a WCS from a lookup table is the following temporal axis::
 
   >>> from astropy.time import Time
@@ -68,7 +72,6 @@ Combining Two Coordinates into a Single WCS
 We can extend this example to be a space-space-time cube.
 In this example we are going to utilize the ``mesh=`` keyword argument for the first time.
 This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a similar way to `numpy.meshgrid`.
-When ``mesh=`` is used with `~astropy.coordinates.SkyCoord` the input is passed through `numpy.meshgrid`, when it is used with `.QuantityTableCoordinate` the mesh is done dynamically.
 
 .. code-block::
 
@@ -95,3 +98,9 @@ When ``mesh=`` is used with `~astropy.coordinates.SkyCoord` the input is passed 
   <BLANKLINE>
       [2]: <Tabular1D(points=(<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>,), lookup_table=[0. 1. 2. 3. 4. 5. 6. 7. 8. 9.] deg)>
   Parameters:)>
+
+As you can see the coordinate information is stored in memory efficient one dimensional tables, and then converted to a two dimensional coordinate when needed.
+
+.. note::
+
+   Due to `a limitation <https://github.com/spacetelescope/gwcs/issues/120>`__ in gwcs only unit spherical (two dimensional) SkyCoords are supported at this time.
