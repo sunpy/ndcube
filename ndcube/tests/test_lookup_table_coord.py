@@ -364,16 +364,6 @@ def test_slicing_skycoord_table_coordinate():
     _assert_skycoord_equal(stc[2:8, 2:8].table, sc[2:8, 2:8])
     _assert_skycoord_equal(stc[2, 2:8].table, sc[2, 2:8])
 
-    # 2D with mesh
-    # When mesh is True the constructor will run meshgrid
-    # sc = SkyCoord(*u.Quantity(np.meshgrid(range(10), range(10)), u.deg))
-    # stc = SkyCoordTableCoordinate(SkyCoord(range(10), range(10), unit=u.deg), mesh=True)
-
-    # _assert_skycoord_equal(stc.table, sc)
-
-    # _assert_skycoord_equal(stc[2:8, 2:8].table, sc[2:8, 2:8])
-    # _assert_skycoord_equal(stc[2, 2:8].table, sc[2, 2:8])
-
 
 def test_slicing_time_table_coordinate():
     data = Time(["2011-01-01T00:00:00",
