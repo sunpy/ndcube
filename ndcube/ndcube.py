@@ -19,8 +19,9 @@ from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
-from ndcube.mixins import NDCubePlotMixin, NDCubeSlicingMixin
+from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.visualization.mpl_visualizer import MatplotlibVisualizer
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
@@ -598,7 +599,26 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return NDCubeSequence(result_cubes, meta=self.meta)
 
 
-class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
+class VisualizerDescriptor:
+    def __init__(self, default_type=None):
+        self._default_type = default_type
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return
+
+        if obj._vis_instance is None and self._default_type is not None:
+            self.__set__(obj, self._default_type)
+
+        return obj._vis_instance
+
+    def __set__(self, obj, value):
+        if not isinstance(value, type):
+            raise TypeError("NDCube.visualizer can only be set with an uninitialised visualizer instance")
+        obj._vis_instance = value(obj)
+
+
+class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
@@ -644,3 +664,13 @@ class NDCube(NDCubeBase, NDCubePlotMixin, astropy.nddata.NDArithmeticMixin):
         Default is False.
 
     """
+
+    visualizer = VisualizerDescriptor(default_type=MatplotlibVisualizer)
+
+    def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
+                 unit=None, extra_coords=None, copy=False, **kwargs):
+
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
+                         meta=meta, unit=unit, extra_coords=extra_coords, copy=copy, **kwargs)
+
+        self._vis_instance = None
