@@ -11,6 +11,7 @@ from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.time import Time
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
 
@@ -212,6 +213,10 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         self.unit = tables[0].unit
 
+        dims = np.array([t.ndim for t in tables])
+        if not mesh and any(dims > 1):
+            raise NotImplementedError("Support for lookup tables with more than one dimension is not yet implemented")
+
         super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
 
     def _slice_table(self, i, table, item, new_components, whole_slice):
@@ -310,35 +315,50 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         if physical_types is not None and len(physical_types) != 2:
             raise ValueError("The number of physical types must equal two for a SkyCoord table.")
 
-        self._was_meshed = False
         sc = tables[0]
-
-        if mesh:
-            components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
-            units = [c.unit for c in components]
-            coords = [u.Quantity(mesh, unit=unit) for mesh, unit in zip(np.meshgrid(*components), units)]
-            sc = SkyCoord(*coords, frame=sc)
-            mesh = False
-            self._was_meshed = True  # An internal flag to know if we meshed the input
 
         super().__init__(sc, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
+        self._slice = sanitize_slices(np.s_[...], self.n_inputs)
 
     @property
     def n_inputs(self):
-        return self.table.ndim
+        return len(self.table.data.components)
 
     def is_scalar(self):
         return self.table.shape == tuple()
 
-    def __getitem__(self, item):
-        if not (isinstance(item, (slice, Integral)) or len(item) == self.table.ndim):
-            raise ValueError("Can not slice with incorrect length")
+    @staticmethod
+    def combine_slices(slice1, slice2):
+        ints = [isinstance(s, Integral) for s in (slice1, slice2)]
+        if all(ints):
+            raise ValueError("Can not combine two integers")
+        if any(ints):
+            return (slice1, slice2)[ints.index(True)]
+        return combine_slices(slice1, slice2)
 
-        return type(self)(self.table[item],
-                          mesh=False,
-                          names=self.names,
-                          physical_types=self.physical_types)
+    def __getitem__(self, item):
+        # override the error for consistency
+        try:
+            sane_item = sanitize_slices(item, self.n_inputs)
+        except ValueError as ex:
+            raise ValueError("Can not slice with incorrect length") from ex
+
+        if not self.mesh:
+            return type(self)(self.table[item],
+                              mesh=False,
+                              names=self.names,
+                              physical_types=self.physical_types)
+        else:
+            self._slice = [self.combine_slices(a, b) for a, b in zip(sane_item, self._slice)]
+            if all([isinstance(s, Integral) for s in self._slice]):
+                # Here we rebuild the SkyCoord with the slice applied to the individual components.
+                new_sc = SkyCoord(self.table.realize_frame(type(self.table.data)(*self._sliced_components)))
+                return type(self)(new_sc,
+                                  mesh=False,
+                                  names=self.names,
+                                  physical_types=self.physical_types)
+            return self
 
     @property
     def frame(self):
@@ -358,13 +378,16 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
                                  name="CelestialFrame")
 
     @property
+    def _sliced_components(self):
+        return tuple(getattr(self.table.data, comp)[slc]
+                     for comp, slc in zip(self.table.data.components, self._slice))
+
+    @property
     def model(self):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        sc = self.table
-        components = tuple(getattr(sc.data, comp) for comp in sc.data.components)
-        return _model_from_quantity(components, mesh=self.mesh)
+        return _model_from_quantity(self._sliced_components, mesh=self.mesh)
 
 
 class TimeTableCoordinate(BaseTableCoordinate):
@@ -551,7 +574,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         dropped_multi_table = MultipleTableCoordinate(*self._dropped_coords)
 
-        dropped_world_dimensions["world_axis_names"] += list(dropped_multi_table.frame.axes_names)
+        dropped_world_dimensions["world_axis_names"] += [name or None for name in dropped_multi_table.frame.axes_names]
         dropped_world_dimensions["world_axis_physical_types"] += list(dropped_multi_table.frame.axis_physical_types)
         dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in dropped_multi_table.frame.unit]
         dropped_world_dimensions["world_axis_object_components"] += dropped_multi_table.frame._world_axis_object_components
