@@ -517,12 +517,12 @@ def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
     assert dwd
     assert all(len(value) == 2 for value in dwd.values())
 
-    assert dwd["world_axis_names"] == [None, None]
+    assert dwd["world_axis_names"] == ["", ""]
     assert all(isinstance(u, str) for u in dwd["world_axis_units"])
     assert dwd["world_axis_units"] == ["km", "km"]
     assert dwd["world_axis_physical_types"] == ["custom:SPATIAL", "custom:SPATIAL"]
-    assert dwd["world_axis_object_components"] == [("SPATIAL0", 0, "value"), ("SPATIAL1", 0, "value")]
-    assert wao_classes["SPATIAL0"][0] is u.Quantity
+    assert dwd["world_axis_object_components"] == [("SPATIAL", 0, "value"), ("SPATIAL1", 0, "value")]
+    assert wao_classes["SPATIAL"][0] is u.Quantity
     assert wao_classes["SPATIAL1"][0] is u.Quantity
     assert dwd["value"] == [0*u.km, 9*u.km]
 
@@ -566,6 +566,7 @@ def test_mtc_dropped_quantity_inside_table_no_mesh(lut_2d_distance_no_mesh):
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
+    dwd.pop("world_axis_object_classes")
     assert not dwd
 
 

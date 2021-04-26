@@ -204,7 +204,7 @@ If one does not exist for your coordinate, prepend the type with ``custom:``.
 
 .. code-block:: python
 
-  >>> my_cube.extra_coords.add('time', (2,), timestamps)  # TODO: Change the mapping to 0 Issue #342 resolved.
+  >>> my_cube.extra_coords.add('time', (0,), timestamps)
 
 An indefinite number of coordinates can be added in this way.
 The names of the coordinates can be accessed via the `~ndcube.ExtraCoords.keys` method.
@@ -303,7 +303,7 @@ The values of dropped coordinates at the position where the `~ndcube.NDCube` was
 
   >>> my_2d_cube = my_cube[:, :, 0]
   >>> my_2d_cube.array_axis_physical_types  # Note the wavelength axis is now gone.
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
 
   >>> # The wavelength value at the slicing location is now in the GLobalCoords object.
