@@ -457,13 +457,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.misc.sanitise_wcs
     def crop(self, lower_corner, upper_corner, wcs=None):
-        # The docstring is defined in NDCubeBase
+        # The docstring is defined in NDCubeABC
         lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
         return self._crop(lower_corner, upper_corner, wcs, False)
 
     @utils.misc.sanitise_wcs
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
-        # The docstring is defined in NDCubeBase
+        # The docstring is defined in NDCubeABC
         # Sanitize inputs.
         lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
         n_coords = len(lower_corner)
