@@ -79,11 +79,11 @@ This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a si
   >>> from astropy.coordinates import SkyCoord
   >>> from ndcube.extra_coords import SkyCoordTableCoordinate
 
-  >>> icrs_table = SkyCoord(range(10)*u.deg, range(10)*u.deg)
+  >>> icrs_table = SkyCoord(range(10)*u.deg, range(10, 20)*u.deg)
   >>> icrs_table
   <SkyCoord (ICRS): (ra, dec) in deg
-      [(0., 0.), (1., 1.), (2., 2.), (3., 3.), (4., 4.), (5., 5.), (6., 6.),
-       (7., 7.), (8., 8.), (9., 9.)]>
+      [(0., 10.), (1., 11.), (2., 12.), (3., 13.), (4., 14.), (5., 15.),
+       (6., 16.), (7., 17.), (8., 18.), (9., 19.)]>
 
   >>> gwcs = (TimeTableCoordinate(time_axis) & SkyCoordTableCoordinate(icrs_table, mesh=True)).wcs
   >>> gwcs
@@ -97,7 +97,7 @@ This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a si
   <BLANKLINE>
       [1]: <Tabular1D(points=(<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>,), lookup_table=[0. 1. 2. 3. 4. 5. 6. 7. 8. 9.] deg)>
   <BLANKLINE>
-      [2]: <Tabular1D(points=(<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>,), lookup_table=[0. 1. 2. 3. 4. 5. 6. 7. 8. 9.] deg)>
+      [2]: <Tabular1D(points=(<Quantity [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.] pix>,), lookup_table=[10. 11. 12. 13. 14. 15. 16. 17. 18. 19.] deg)>
   Parameters:)>
 
 As you can see the coordinate information is stored in memory efficient one dimensional tables, and then converted to a two dimensional coordinate when needed.
