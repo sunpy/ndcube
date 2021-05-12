@@ -137,7 +137,16 @@ class NDCubeLinkedDescriptor:
         self._property_name = None
 
     def __set_name__(self, owner, name):
+        """
+        This function is called when the class the descriptor is attached to is initialized.
+
+        The *class* and not the instance.
+        """
+        # property name is the name of the attribute on the parent class
+        # pointing at an instance of this descriptor.
         self._property_name = name
+        # attribute name is the name of the attribute on the parent class where
+        # the data is stored.
         self._attribute_name = f"_{name}"
 
     def __get__(self, obj, objtype=None):
@@ -155,7 +164,9 @@ class NDCubeLinkedDescriptor:
         elif issubclass(value, self._default_type):
             value = value(obj)
         else:
-            raise ValueError("wat")
+            raise ValueError(
+                f"Unable to set value for {self._property_name} it should "
+                f"be an instance or subclass of {self._default_type}")
 
         setattr(obj, self._attribute_name, value)
 
@@ -206,6 +217,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Default is False.
 
     """
+    # Instances of Extra and Global coords are managed through descriptors
     _extra_coords = NDCubeLinkedDescriptor(ExtraCoords)
     _global_coords = NDCubeLinkedDescriptor(GlobalCoords)
 
