@@ -5,8 +5,8 @@ import pytest
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
-from ndcube.extra_coords.lookup_table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
-                                                    SkyCoordTableCoordinate, TimeTableCoordinate)
+from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
+                                             SkyCoordTableCoordinate, TimeTableCoordinate)
 
 
 @pytest.fixture
@@ -147,6 +147,7 @@ def test_3d_distance(lut_3d_distance_mesh):
     assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 10*u.km, 20*u.km), (0, 0, 0))
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_nout_1_no_mesh(lut_2d_distance_no_mesh):
     ltc = lut_2d_distance_no_mesh
     assert ltc.wcs.world_n_dim == 2
@@ -159,7 +160,7 @@ def test_2d_nout_1_no_mesh(lut_2d_distance_no_mesh):
                       (0, 9)*u.km)
 
     # TODO: this model is not invertable
-    # assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 9*u.km), (0, 0))
+    assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 9*u.km), (0, 0))
 
 
 def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
@@ -168,11 +169,21 @@ def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
     assert ltc.model.n_inputs == 1
     assert ltc.model.n_outputs == 2
 
+    pixel_coords = (0,)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
+
 
 def test_2d_skycoord_mesh(lut_2d_skycoord_mesh):
     ltc = lut_2d_skycoord_mesh
     assert ltc.model.n_inputs == 2
     assert ltc.model.n_outputs == 2
+
+    pixel_coords = (0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
 
 
 def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
@@ -183,6 +194,11 @@ def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
 
     # Known failure due to gwcs#120
 
+    # pixel_coords = (0, 0, 0)*u.pix
+    # sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    # pix = ltc.wcs.world_to_pixel(sc)
+    # assert u.allclose(pix, pixel_coords.value)
+
     # assert isinstance(ltc.wcs, gwcs.WCS)
     #
     # sub_ltc = ltc[0:4, 0:5, 0:6]
@@ -191,11 +207,17 @@ def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
     # assert sub_ltc.delayed_models[0].lookup_table[2].shape == (6, )
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
     ltc = lut_2d_skycoord_no_mesh
 
     assert ltc.model.n_inputs == 2
     assert ltc.model.n_outputs == 2
+
+    pixel_coords = (0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
 
 
 def test_1d_time(lut_1d_time):
@@ -232,10 +254,15 @@ def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
     assert isinstance(world[0], SkyCoord)
     assert u.allclose(world[1], 0 * u.nm)
 
-    # TODO: Investigate this, something about inverse model
-    # assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
+    pixel_coords = (0, 0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(*sc)
+    assert u.allclose(pix, pixel_coords.value)
+
+    assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_quantity():
     shape = (3, 3)
     data = np.arange(np.product(shape)).reshape(shape) * u.m / u.s
@@ -273,20 +300,6 @@ def test_slicing_quantity_table_coordinate():
     assert u.allclose(qtc[2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2].table[0], 2*u.m)
 
-    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m, mesh=False,
-                                  names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
-
-    assert u.allclose(qtc[2:8, 2:8].table[0], (np.mgrid[2:8, 2:8]*u.m)[0])
-    assert u.allclose(qtc[2:8, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
-    assert qtc.names == ['x', 'y']
-    assert qtc.physical_types == ['pos:x', 'pos:y']
-
-    assert qtc.frame.axes_names == ('x', 'y')
-    assert qtc.frame.axis_physical_types == ('custom:pos:x', 'custom:pos:y')
-
-    assert u.allclose(qtc[2, 2:8].table[0], 2*u.m)
-    assert u.allclose(qtc[2, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
-
     qtc = QuantityTableCoordinate(range(10)*u.m, range(10)*u.m, mesh=True,
                                   names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
     assert u.allclose(qtc[2:8, 2:8].table[0], range(2, 8)*u.m)
@@ -301,6 +314,23 @@ def test_slicing_quantity_table_coordinate():
 
     assert qtc.frame.axes_names == ('x', 'y')
     assert qtc.frame.axis_physical_types == ('custom:pos:x', 'custom:pos:y')
+
+
+@pytest.mark.xfail(reason=">1D Tables not supported")
+def test_slicing_quantity_table_coordinate_2d():
+    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m, mesh=False,
+                                  names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
+
+    assert u.allclose(qtc[2:8, 2:8].table[0], (np.mgrid[2:8, 2:8]*u.m)[0])
+    assert u.allclose(qtc[2:8, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
+    assert qtc.names == ['x', 'y']
+    assert qtc.physical_types == ['pos:x', 'pos:y']
+
+    assert qtc.frame.axes_names == ('x', 'y')
+    assert qtc.frame.axis_physical_types == ('custom:pos:x', 'custom:pos:y')
+
+    assert u.allclose(qtc[2, 2:8].table[0], 2*u.m)
+    assert u.allclose(qtc[2, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
 
 
 def _assert_skycoord_equal(sc1, sc2):
@@ -334,16 +364,6 @@ def test_slicing_skycoord_table_coordinate():
     _assert_skycoord_equal(stc[2:8, 2:8].table, sc[2:8, 2:8])
     _assert_skycoord_equal(stc[2, 2:8].table, sc[2, 2:8])
 
-    # 2D with mesh
-    # When mesh is True the constructor will run meshgrid
-    sc = SkyCoord(*u.Quantity(np.meshgrid(range(10), range(10)), u.deg))
-    stc = SkyCoordTableCoordinate(SkyCoord(range(10), range(10), unit=u.deg), mesh=True)
-
-    _assert_skycoord_equal(stc.table, sc)
-
-    _assert_skycoord_equal(stc[2:8, 2:8].table, sc[2:8, 2:8])
-    _assert_skycoord_equal(stc[2, 2:8].table, sc[2, 2:8])
-
 
 def test_slicing_time_table_coordinate():
     data = Time(["2011-01-01T00:00:00",
@@ -370,16 +390,12 @@ def test_3d_distance_slice(lut_3d_distance_mesh):
     assert len(sub_ltc.table[2]) == 7
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_nout_1_no_mesh_slice(lut_2d_distance_no_mesh):
     ltc = lut_2d_distance_no_mesh
     sub_ltc = ltc[0:2, 0:2]
     assert sub_ltc.table[0].shape == (2, 2)
     assert sub_ltc.table[1].shape == (2, 2)
-
-    # sub_ltc = ltc[0]
-
-    # assert ltc.wcs.world_n_dim == 2
-    # assert ltc.wcs.pixel_n_dim == 2
 
 
 def test_1d_skycoord_no_mesh_slice(lut_1d_skycoord_no_mesh):
@@ -388,11 +404,17 @@ def test_1d_skycoord_no_mesh_slice(lut_1d_skycoord_no_mesh):
     assert sub_ltc.table.shape == (4, )
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_mesh_slice(lut_2d_skycoord_mesh):
-    sub_ltc = lut_2d_skycoord_mesh[0:4, 0:5]
-    assert sub_ltc.table.shape == (4, 5)
+    sub_ltc = lut_2d_skycoord_mesh[4:10, 5:10]
+    assert sub_ltc.table.shape == (10,)
+    assert sub_ltc._slice == [slice(4, 10, None), slice(5, 10, None)]
+
+    assert sub_ltc.wcs.world_to_pixel(4*u.deg, 5*u.deg) == [0.0, 0.0]
+    assert sub_ltc[1:, 1:].wcs.world_to_pixel(5*u.deg, 6*u.deg) == [0.0, 0.0]
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_no_mesh_slice(lut_2d_skycoord_no_mesh):
     sub_ltc = lut_2d_skycoord_no_mesh[1:3, 1:2]
     assert sub_ltc.table.shape == (2, 1)
@@ -501,6 +523,7 @@ def test_mtc_dropped_table_skycoord_join(lut_1d_time, lut_2d_skycoord_mesh):
     assert dwd["value"] == [0*u.deg, 0*u.deg]
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
     mtc = MultipleTableCoordinate(lut_1d_time, lut_2d_distance_no_mesh)
     sub = mtc[:, 0, 0]
@@ -553,6 +576,7 @@ def test_mtc_dropped_quantity_inside_table(lut_3d_distance_mesh):
     assert all(len(value) == 2 for value in dwd.values())
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_mtc_dropped_quantity_inside_table_no_mesh(lut_2d_distance_no_mesh):
     """
     When not meshing, we don't drop a coord, as the coordinate for the sliced

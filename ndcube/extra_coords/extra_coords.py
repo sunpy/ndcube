@@ -12,8 +12,8 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_s
 
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 
-from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
-                                 SkyCoordTableCoordinate, TimeTableCoordinate)
+from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
+                          SkyCoordTableCoordinate, TimeTableCoordinate)
 
 __all__ = ['ExtraCoords']
 

@@ -187,6 +187,7 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     assert coords[0].shape == (5,)
 
 
+@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     ec_shape = cube.data.shape[1:3]

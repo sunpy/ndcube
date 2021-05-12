@@ -1,0 +1,1 @@
+`~ExtraCoords` is now explicitly limited to one dimensional tables because of a limitation in our use of `astropy.modeling`.
