@@ -19,39 +19,10 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
 
-        sliced_cube = super().__getitem__(item)
-        sliced_cube._global_coords._internal_coords = self._global_coords._internal_coords
-        return sliced_cube
-
-    def _slice(self, item):
-        """Construct a set of keyword arguments to initialise a new (sliced)
-        instance of the class. This method is called in
-        `astropy.nddata.mixins.NDSlicingMixin.__getitem__`.
-
-        This method extends the `~astropy.nddata.mixins.NDSlicingMixin` method
-        to add support for  ``extra_coords`` and overwrites the astropy
-        handling of wcs slicing.
-
-        Parameters
-        ----------
-        item : slice
-            The slice passed to ``__getitem__``. Note that the item parameter corresponds
-            to numpy ordering, keeping with the convention for NDCube.
-
-        Returns
-        -------
-        dict :
-            Containing all the attributes after slicing - ready to
-            use them to create ``self.__class__.__init__(**kwargs)`` in
-            ``__getitem__``.
-        """
-
         item = tuple(sanitize_slices(item, len(self.dimensions)))
-        kwargs = super()._slice(item)
+        sliced_cube = super().__getitem__(item)
 
-        # Store the original dimension of NDCube object before slicing
-        len(self.dimensions)
+        sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords
+        sliced_cube._extra_coords = self.extra_coords[item]
 
-        kwargs['extra_coords'] = self.extra_coords[item]
-
-        return kwargs
+        return sliced_cube

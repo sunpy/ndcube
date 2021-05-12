@@ -1,13 +1,16 @@
 import abc
 from typing import Any, Tuple, Union, Iterable
 from numbers import Integral
-from functools import reduce
+from functools import reduce, partial
 
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
+
+from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 
 from .lookup_table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                                  SkyCoordTableCoordinate, TimeTableCoordinate)
@@ -33,14 +36,6 @@ class ExtraCoordsABC(abc.ABC):
        of length equal to the number of pixel dimensions in the extra coords.
 
     """
-
-    @abc.abstractmethod
-    def __init__(self,
-                 *,
-                 wcs: BaseLowLevelWCS = None,
-                 mapping: Iterable[Tuple[int, int]] = None):
-        pass
-
     @abc.abstractmethod
     def add(self,
             name: str,
@@ -125,23 +120,20 @@ class ExtraCoords(ExtraCoordsABC):
        of length equal to the number of pixel dimensions in the extra coords.
 
     """
-    def __init__(self, *, wcs=None, mapping=None):
-        if (wcs is None and mapping is not None) or (wcs is not None and mapping is None):
-            raise ValueError("Either both WCS and mapping have to be specified together or neither.")
-
-        super().__init__(wcs=wcs, mapping=mapping)
+    def __init__(self, ndcube=None):
+        super().__init__()
 
         # Setup private attributes
         self._wcs = None
         self._mapping = None
+
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
         self._lookup_tables = list()
         self._dropped_tables = list()
 
-        # Set values using the setters for validation
-        self.wcs = wcs
-        self.mapping = mapping
+        # We need a reference to the parent NDCube
+        self._ndcube = ndcube
 
     @classmethod
     def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables):
@@ -234,8 +226,12 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return tuple()
 
+        # The mapping is from the array index (position in the list) to the
+        # pixel dimensions (numbers in the list)
         lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
-        return tuple(reduce(list.__add__, lts))
+        converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.dimensions))
+        pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
+        return tuple(reduce(list.__add__, pixel_indicies))
 
     @mapping.setter
     def mapping(self, mapping):
@@ -341,7 +337,10 @@ class ExtraCoords(ExtraCoordsABC):
 
         new_mapping = [self.mapping[i] for i, subitem in enumerate(item) if not isinstance(subitem, Integral)]
 
-        return type(self)(wcs=subwcs, mapping=new_mapping)
+        new_ec = type(self)()
+        new_ec.wcs = subwcs
+        new_ec.mapping = new_mapping
+        return new_ec
 
     def __getitem__(self, item):
         # docstring in ABC

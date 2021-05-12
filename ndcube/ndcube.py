@@ -128,6 +128,49 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=NDCubeMetaClass):
         """
 
 
+class NDCubeLinkedDescriptor:
+    """
+    A descriptor which gives the property a reference to the cube to which it is attached.
+    """
+    def __init__(self, default_type):
+        self._default_type = default_type
+        self._property_name = None
+
+    def __set_name__(self, owner, name):
+        """
+        This function is called when the class the descriptor is attached to is initialized.
+
+        The *class* and not the instance.
+        """
+        # property name is the name of the attribute on the parent class
+        # pointing at an instance of this descriptor.
+        self._property_name = name
+        # attribute name is the name of the attribute on the parent class where
+        # the data is stored.
+        self._attribute_name = f"_{name}"
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return
+
+        if getattr(obj, self._attribute_name, None) is None and self._default_type is not None:
+            self.__set__(obj, self._default_type)
+
+        return getattr(obj, self._attribute_name)
+
+    def __set__(self, obj, value):
+        if isinstance(value, self._default_type):
+            value._ndcube = obj
+        elif issubclass(value, self._default_type):
+            value = value(obj)
+        else:
+            raise ValueError(
+                f"Unable to set value for {self._property_name} it should "
+                f"be an instance or subclass of {self._default_type}")
+
+        setattr(obj, self._attribute_name, value)
+
+
 class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
@@ -174,9 +217,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Default is False.
 
     """
+    # Instances of Extra and Global coords are managed through descriptors
+    _extra_coords = NDCubeLinkedDescriptor(ExtraCoords)
+    _global_coords = NDCubeLinkedDescriptor(GlobalCoords)
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
-                 unit=None, extra_coords=None, copy=False, **kwargs):
+                 unit=None, copy=False, **kwargs):
 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
@@ -185,29 +231,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if self.wcs is None:
             raise TypeError("The WCS argument can not be None.")
 
-        # Format extra coords.
-        if not extra_coords:
-            # Get existing extra_coords if initializing from an NDCube
-            if hasattr(data, "extra_coords"):
-                extra_coords = data.extra_coords
-            else:
-                extra_coords = ExtraCoords()
-
-        if not isinstance(extra_coords, ExtraCoords):
-            raise TypeError("The extra_coords argument must be a ndcube.ExtraCoords object.")
+        # Get existing extra_coords if initializing from an NDCube
+        if hasattr(data, "extra_coords"):
+            extra_coords = data.extra_coords
+            if copy:
+                extra_coords = deepcopy(extra_coords)
+            self._extra_coords = extra_coords
 
         # Get existing global_coords if initializing from an NDCube
         if hasattr(data, "global_coords"):
             global_coords = data._global_coords
-        else:
-            global_coords = GlobalCoords(self)
-
-        if copy:
-            extra_coords = deepcopy(extra_coords)
-            global_coords = deepcopy(global_coords)
-
-        self._extra_coords = extra_coords
-        self._global_coords = global_coords
+            if copy:
+                global_coords = deepcopy(global_coords)
+            self._global_coords = global_coords
 
     @property
     def extra_coords(self):
