@@ -91,7 +91,7 @@ get the latest updates by regularly doing:
 
 .. code-block:: console
 
-		$ git pull origin master
+		$ git pull origin main
 
 .. _miniconda website: https://docs.conda.io/en/latest/miniconda.html
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube
