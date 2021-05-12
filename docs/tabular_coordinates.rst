@@ -4,20 +4,21 @@
 Tabular Coordinates
 ===================
 
-The documentation so far has assumed that you are constructing an NDCube object from a WCS object.
-Either one that you have read from a file or explicitly created.
-In this section we will discuss the functionality ndcube provides for constructing WCSes from tables of coordinate values.
+So far we have assumed that we are constructing an NDCube using a WCS that has been read from a file or explicitly created.
+However, in some cases we may have tables giving the coordinate values at each pixel and converting these into a WCS manually can be tedious.
+Therefore ndcube provides tools for constructing WCSes from such tables.
 
 Tabular coordinates are useful when there is no mathematical description of the axis, or when it's a natural fit for the data you have.
-It's worth considering that tabular coordinates are generally not as polished as a functional transform in a WCS, if you can build a functional WCS for your coordinate system then that is highly recommended.
+It's worth considering that tabular coordinates are generally not as polished as a functional transform in a WCS.
+Therefore, if possiible, building a functional WCS for your coordinate system is highly recommended.
 
 
 Tabular Coordinates and WCSes
 =============================
 
 All coordinate information in ndcube is represented as a WCS.
-Even the `.ExtraCoords` class which allows the user to add tabular data to axes generates a WCS which is then used by the coordinate functions and plotting in ndcube.
-This is done through the use of the `gwcs` library.
+Even the `.ExtraCoords` class, which allows the user to add tabular data to axes, uses the `gwcs` library to store this information as a WCS.
+This enables ndcube's coordinate transformation and plotting functions to leverage the same infrastructure, irrespective of whether the coordinates are functional or tabular.
 
 The FITS WCS standard also supports tabular axes with the ``-TAB`` CTYPE.
 Support for reading files using this convention has (reasonably) recently been added to Astropy, so if you have a FITS file using this convention you should be able to load it into a `~astropy.wcs.WCS` object.
