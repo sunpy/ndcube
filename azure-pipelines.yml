@@ -33,7 +33,7 @@ schedules:
     displayName: Daily midnight build
     branches:
       include:
-      - master
+      - main
       - 1.3
     always: false
 
@@ -59,15 +59,15 @@ jobs:
         name: codestyle
 
 
-# On branches which aren't master, and not Pull Requests, build the wheels but only upload them on tags
+# On branches which aren't main, and not Pull Requests, build the wheels but only upload them on tags
 - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
   - template: publish.yml@OpenAstronomy
     parameters:
       # Only Upload to PyPI on tags
       ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/') }}:
         pypi_connection_name : 'PyPI'
-      # Upload to artifacts on master only
-      ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+      # Upload to artifacts on main only
+      ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
         artifact_project : 'ndcube'
         artifact_feed : 'ndcube'
         remove_local_scheme: true

@@ -84,7 +84,7 @@ version::
 Then to ensure you stay up-to-date with the latest version of ndcube,
 regularly do::
 
-   $ git pull upstream master
+   $ git pull upstream main
 
 To push any changes you make to your github account by doing::
 

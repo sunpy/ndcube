@@ -134,9 +134,9 @@ you use a different `git branch`_ for each set of related new features
 and/or bug fixes. Git branches are a way of having different
 versions of the same code within the repo simultaneously. Assuming you
 have just installed the ndcube development version, you will only have
-one branch, called ``master``.  It is recommended you do not do any
-development on the ``master`` branch, but rather keep it as an clean copy
-of the latest ``origin master`` branch.  If you have more than one
+one branch, called ``main``.  It is recommended you do not do any
+development on the ``main`` branch, but rather keep it as an clean copy
+of the latest ``origin main`` branch.  If you have more than one
 branch, the ``*`` next to the branch name will indicate which branch you
 are currently on. To check what branches you have and which one you
 are on, type in the terminal:
@@ -145,22 +145,22 @@ are on, type in the terminal:
 
 		$ git branch
 
-If you are not on the ``master`` branch, let's start by changing to it
+If you are not on the ``main`` branch, let's start by changing to it
 (known as checking out the branch):
 
 .. code-block:: console
 
-		$ git checkout master
+		$ git checkout main
 
 Now, let's ensure we have the latest updates to the development
 version from the main repo.
 
 .. code-block:: console
 
-		$ git pull origin master
+		$ git pull origin main
 
-This updates the local branch you are on (in this case, ``master``) with
-the version of the ``master`` branch stored in the ``origin`` remote,
+This updates the local branch you are on (in this case, ``main``) with
+the version of the ``main`` branch stored in the ``origin`` remote,
 i.e. the original ndcube GitHub repo.
 
 Let's now create a new branch called ``my_fix`` on which to develop
@@ -172,8 +172,8 @@ our new feature of bugfix.  Type:
 
 This will not only create the new branch but also check it out. The
 new branch will now be an exact copy of the branch from which you
-created it, in this case, the ``master`` branch. But now you can edit
-files so that the ``my_fix`` branch diverges while keeping your ``master``
+created it, in this case, the ``main`` branch. But now you can edit
+files so that the ``my_fix`` branch diverges while keeping your ``main``
 branch intact.
 
 After a while, you've made some changes that partially or completely
@@ -240,7 +240,7 @@ Say it's the next day and you want to continue working on your bugfix.
 Open a terminal, activate your ``ndcube-dev`` conda environent, change
 into the ``ndcube-git`` directory and make sure you are on the correct
 branch.  Also make sure you pull any new updates from the ``origin``
-``master`` branch to your local ``my_fix`` branch:
+``main`` branch to your local ``my_fix`` branch:
 
 .. code-block:: console
 
@@ -248,7 +248,7 @@ branch.  Also make sure you pull any new updates from the ``origin``
 		$ cd ndcube-git
 		$ git branch
 		$ git checkout my_fix
-		$ git pull origin master
+		$ git pull origin main
 
 Assuming there are no updates that conflict with the changes you made
 the other day, you're ready to continue working.  If there are
@@ -277,7 +277,7 @@ a PR:
    Then click on the green "New Pull Request" button.  This will open
    a new page with four drop-down menus near the top.
 #. Set the "base fork" drop-down menu to "sunpy/ndcube" and the
-   "base" drop-down to "master".  This describes the repo and branch
+   "base" drop-down to "main".  This describes the repo and branch
    the changes are to be merged into.  Set the "head fork" drop-down
    menu to "my_github_handle/ndcube" and the "compare" drop-down to
    "my_fix". This sets the repo and branch in which you have made the
@@ -307,12 +307,12 @@ those with write permissions to the repo.  Congratulations!  You have
 just contributed to ndcube!
 
 Be sure to pull your the newly contributed changes to your local
-master branch by doing:
+main branch by doing:
 
 .. code-block:: console
 
-		$ git checkout master
-		$ git pull origin master
+		$ git checkout main
+		$ git pull origin main
 
 You are now ready to start using the newly improved development
 version of ndcube, including your changes!
