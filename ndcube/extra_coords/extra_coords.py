@@ -10,6 +10,8 @@ from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
+from ndcube.utils.wcs import convert_between_array_and_pixel_axes
+
 from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                           SkyCoordTableCoordinate, TimeTableCoordinate)
 
