@@ -188,8 +188,9 @@ class NDCubePlotMixin:
         try:
             from sunpy.visualization.animator import ArrayAnimatorWCS  # isort:skip
         except ImportError:
-            raise ImportError("Sunpy is required for animated "
-                              "cube plots.")
+            raise ImportError("Sunpy is required for animated cube plots. "
+                              "Either install sunpy or slice your cube down "
+                              "to 2D before calling plot.")
 
         # If data_unit set, convert data to that unit
         if data_unit is None:
