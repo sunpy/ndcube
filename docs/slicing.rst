@@ -3,6 +3,7 @@
 ==================
 Slicing ND Objects
 ==================
+
 Arguably the most useful feature ndcube provides is the slicing of its data classes.
 Users can apply the standard slicing notation to ND objects (or real world coordinates in the case of `ndcube.NDCube.crop`) which alter the data and WCS transformations consistently and simultaneously.
 This enables users to rapidly and reliably identify and extract regions of interest in their data, thereby allowing them to move closer to the speed of thought during their analysis.
@@ -11,7 +12,8 @@ This enables users to rapidly and reliably identify and extract regions of inter
 
 Slicing NDCubes
 ===============
-The `~ndcube.NDCube` slicing infrastructure returns a new `~ndcube.NDCube` with all relevant infomation consistently altered.
+
+The `~ndcube.NDCube` slicing infrastructure returns a new `~ndcube.NDCube` with all relevant information consistently altered.
 This includes the data, WCS transformations, `~ndcube.ExtraCoords`, uncertainty and mask.
 This is achieved by applying the standard slicing API to the `~ndcube.NDCube`.
 Because many of the inspection properties such `~ndcube.NDCube.dimensions` and `~ndcube.NDCube.array_axis_physical_types` are calculated on the fly, the information they return after slicing is also consistent with the sliced `~ndcube.NDCube`.
@@ -99,12 +101,13 @@ See the :ref:`global_coords` section for more.
 
 Cropping with Real World Coordinates
 ------------------------------------
+
 In addition to slicing by index, `~ndcube.NDCube` supports slicing by real world coordinates via the `~ndcube.NDCube.crop` method.
 This takes two iterables of high level coordinate objects, e.g. `~astropy.time.Time`, `~astropy.coordinates.SkyCoord`, `~astropy.coordinates.SpectralCoord`, `~astropy,units.Quantity` etc.
 Each iterable describes a single location in the data array in real world coordinates.
 The first iterable describes the lower corner of the region of interest and thus contains the lower limit of each real world coordinate.
 The second iterable represents the upper corner of the region of interest and thus contains the upper limit of each real world coordinate.
-The crop method indentifies the smallest rectangular region in the data array that contains both the lower and upper limits in all the real world coordinates, and crops the `~ndcube.NDCube` to that region.
+The crop method identifies the smallest rectangular region in the data array that contains both the lower and upper limits in all the real world coordinates, and crops the `~ndcube.NDCube` to that region.
 It does not rebin or interpolate the data.  The order of the high level coordinate objects in each iterable must be the same as that expected by `astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`, namely in world order.
 
 .. code-block:: python
@@ -123,11 +126,12 @@ It does not rebin or interpolate the data.  The order of the high level coordina
 
 Slicing NDCubeSequences
 =======================
-As with `~ndcube.NDCube`, `~ndcube.NDCubeSequence` is sliced by applying the standard slicing API.
-The `~ndcube.NDCubeSequence` slicing infrastrcuture determines which cubes should be kept based on the sequence axis input, then passes the rest of the slicing off to desired NDCubes.
-Thus the data arrays, WCS transformations, masks, uncertainty arrays, and extra coordinates are all altered accorindingly in each relevant sub-cube.
 
-Just as we did in the :ref:`ndcubesequence` section, let's represent this `~ndcube.NDCubeSequence` pictorally in the figure below.
+As with `~ndcube.NDCube`, `~ndcube.NDCubeSequence` is sliced by applying the standard slicing API.
+The `~ndcube.NDCubeSequence` slicing infrastructure determines which cubes should be kept based on the sequence axis input, then passes the rest of the slicing off to desired NDCubes.
+Thus the data arrays, WCS transformations, masks, uncertainty arrays, and extra coordinates are all altered accordingly in each relevant sub-cube.
+
+Just as we did in the :ref:`ndcubesequence` section, let's represent this `~ndcube.NDCubeSequence` pictorially in the figure below.
 Each `~ndcube.NDCube` is represented by a blue square inset with a smaller red one.
 The blue square represents its array-based data while the red square represents its coordinate and metadata.
 Panel a) shows the sequence in its default configuration, with the sequence axis acting as an axis perpendicular and in addition to the cube axes.
@@ -226,6 +230,7 @@ This sequence will still represent the same region of interest from the same sin
 
 Cube-like Slicing
 -----------------
+
 As explained in the :ref:`ndcubesequence` section, we can think of the cubes in an `~ndcube.NDCubeSequence` as being concatenated along one of the cubes' axes if we set a common axis.
 See panel b) of the above NDCubeSequence figures.
 Therefore it would be useful to be able to slice the sequence as though it were one large concatenated cube.
@@ -295,6 +300,7 @@ lengths of each cube individually.
 
 Slicing NDCollections
 =====================
+
 Recall from the :ref:`ndcollection` section that members of an `~ndcube.NDCollection` can be accessed by slicing it with a string giving the member's name.
 
 .. code-block:: python
@@ -311,7 +317,7 @@ This has the potential to drastically speed up analysis workflows.
 To demonstrate, let's instantiate an `~ndcube.NDCollection` with aligned axes, as we did in the :ref:`ndcollection` section.
 
 .. expanding-code-block:: python
-  :summary: Click to reveal/hide the instantiation of the 'linewidths' cube.  We'll use my_cube defined above for the 'observations' cube.
+  :summary: Click to reveal/hide the instantiation of the 'linewidths' cube.  We'll use "my_cube" defined above for the 'observations' cube.
 
   >>> # Define derived linewidth NDCube
   >>> linewidth_data = np.random.rand(4, 4) / 2 # dummy data

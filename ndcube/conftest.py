@@ -2,6 +2,8 @@
 This file contains a set of common fixtures to get a set of different but
 predicable NDCube objects.
 """
+import logging
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -10,6 +12,20 @@ from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
+
+# Force MPL to use non-gui backends for testing.
+try:
+    import matplotlib
+    import matplotlib.pyplot as plt
+except ImportError:
+    HAVE_MATPLOTLIB = False
+else:
+    HAVE_MATPLOTLIB = True
+    matplotlib.use('Agg')
+
+
+console_logger = logging.getLogger()
+console_logger.setLevel('INFO')
 
 ################################################################################
 # Helper Functions
@@ -460,3 +476,12 @@ def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
     cube3.data[:] *= 3
 
     return NDCubeSequence([cube1, cube2, cube3], common_axis=common_axis)
+
+
+def pytest_runtest_teardown(item):
+    # Clear the pyplot figure stack if it is not empty after the test
+    # You can see these log messages by passing "-o log_cli=true" to pytest on the command line
+    if HAVE_MATPLOTLIB and plt.get_fignums():
+        console_logger.info(f"Removing {len(plt.get_fignums())} pyplot figure(s) "
+                            f"left open by {item.name}")
+        plt.close('all')

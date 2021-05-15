@@ -8,9 +8,11 @@ Visualizing ND Objects
 
 Visualizing NDCubes
 ===================
+
 `~ndcube.NDCube` provides a simple-to-use, yet powerful visualization method, `~ndcube.NDCube.plot`, which produces sensible visualizations based on the dimensionality of the data and optional user inputs.
 It is intended to be a useful quicklook tool and not a replacement for high quality plots or animations, e.g. for publications.
-Let's define an `~ndcube.NDCube` as with a shape of ``(4, 4, 5)`` and physical axes of helioprojective longitude, latitude and wavelength.  (Click the "Source code" link immediately below to see this `~ndcube.NDCube` instantiated.)
+Let's define an `~ndcube.NDCube` as with a shape of ``(4, 4, 5)`` and physical axes of helioprojective longitude, latitude and wavelength.
+(Click the "Source code" link immediately below to see this `~ndcube.NDCube` instantiated.)
 
 .. plot::
   :context: reset
@@ -163,6 +165,7 @@ It also enables the coordinates along the plot axes to be updated between frames
 
 Adding Colorbars
 ----------------
+
 Working with the output of `ndcube.NDCube.plot` is the context of matplotlib figures and axes can be a great way of creating more complex plots.
 Here we will show two examples of home to add a colorbar.
 
@@ -204,8 +207,9 @@ This includes adding the output of `ndcube.NDCube.plot` to an existing axes obje
 
 Visualizing NDCubeSequences
 ===========================
+
 Since ndcube 2.0, the `~ndcube.NDCubeSequence` visualization support has been dropped.
-The rationale for this is outlined in `Issue #321 <https://github.com/sunpy/ndcube/issues/321>`_ on the ndcube GitHub repo.
+The rationale for this is outlined in `Issue #321 <https://github.com/sunpy/ndcube/issues/321>`__ on the ndcube GitHub repo.
 If you feel that `~ndcube.NDCubeSequence` visualization should be supported again, please let us know by commenting on that issue and telling us of your use case.
 Better still, if you would like to work on the infrastructure required to support `~ndcube.NDCubeSequence` visualization in a post ndcube 2.0 world let us know by commenting on the issue.
 
@@ -217,6 +221,7 @@ Below, we will outline these latter two options in a little more detail.
 
 Extracting and Plotting NDCubeSequence Data with Matplotlib
 -----------------------------------------------------------
+
 In order to produce plots (or perform other analysis) outside of the ``ndcube`` framework, it may be useful to extract the data from the `~ndcube.NDCubeSequence` into single `~numpy.ndarray` instances.
 Let's first define an `~ndcube.NDCubeSequence` with a common axis of 0 and time as an extra coord stretching across the cube along the common axis.
 Then we show how to extract and plot the data.

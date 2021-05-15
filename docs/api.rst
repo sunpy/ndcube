@@ -1,6 +1,6 @@
 .. _api:
 
-Reference/API
+API Reference
 =============
 
 .. automodapi:: ndcube

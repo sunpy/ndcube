@@ -1,0 +1,20 @@
+# Exclude specific files
+# All files which are tracked by git and not explicitly excluded here are included by setuptools_scm
+exclude .codecov.yaml
+exclude .mailmap
+exclude .editorconfig
+exclude .gitattributes
+exclude .gitignore
+exclude .pep8speaks.yml
+exclude .pre-commit-config.yaml
+exclude .test_package_pins.txt
+exclude azure-pipelines.yml
+exclude .readthedocs.yml
+
+# Prune folders
+prune .circleci
+prune .github
+prune changelog
+
+# This subpackage is only used in development checkouts and should not be included in built tarballs
+prune ndcube/_dev

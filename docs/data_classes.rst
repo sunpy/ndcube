@@ -3,6 +3,7 @@
 ==========
 ND Objects
 ==========
+
 ndcube provides its features via its data objects: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.
 This section describes the purpose of each and how they are structured and instantiated.
 To learn how to slice, visualize, and perform coordinate transformations with these classes, see the :ref:`slicing`, :ref:`plotting` and :ref:`coordinates` sections.
@@ -11,19 +12,19 @@ To learn how to slice, visualize, and perform coordinate transformations with th
 
 NDCube
 ======
+
 `~ndcube.NDCube` is the primary data class the ndcube package.
 It's designed to manage a single data array and set of WCS transformations.
 `~ndcube.NDCube` provides unified slicing, visualization, coordinate transformation and self-inspection APIs which are independent of the number and physical types of axes.
-It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the Astropy `WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
+It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the astropy `WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`__.
 This makes `~ndcube.NDCube` a powerful base class when developing tools for specific data types.
 
 Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can hold optional supplementary data in addition to its data array and primary WCS transformations.
 These include:
-general metadata (located at ``.meta``);
-the unit of the data (an `astropy.units.Unit` or unit `str` located at ``.unit``);
-the uncertainty of each data value (subclass of `astropy.nddata.NDUncertainty` located at ``.uncertainty``);
-and a mask marking unreliable data values (boolean array located at ``.mask``).
-Note that in keeping with the convention of `numpy.ma.masked_array`, ``True`` means that the corresponding data value is masked, i.e. it is bad data, while ``False`` signifies good data.
+1. general metadata (located at ``.meta``);
+2. the unit of the data (an `astropy.units.Unit` or unit `str` located at ``.unit``);
+3. the uncertainty of each data value (subclass of `astropy.nddata.NDUncertainty` located at ``.uncertainty``); and a mask marking unreliable data values (boolean array located at ``.mask``). Note that in keeping with the convention of `numpy.ma.masked_array`, ``True`` means that the corresponding data value is masked, i.e. it is bad data, while ``False`` signifies good data.
+
 `~ndcube.NDCube` also provides classes for representing additional coordinates not included in the primary WCS object.
 These are `~ndcube.ExtraCoords` (located at ``.extra_coords``) --- for additional coordinates associated with specific array axes --- and `~ndcube.GlobalCoords` (located at ``.global_coords``) for scalar coordinates associated with the `~ndcube.NDCube` as a whole.
 These are discussed in the section in this guide on :ref:`coordinates`.
@@ -36,9 +37,9 @@ Yellow ovals represent methods for inspecting, visualizing, and analyzing the `~
   :width: 800
   :alt: Components of an NDCube
 
-
 Initializing an NDCube
 ----------------------
+
 To initialize the most basic `~ndcube.NDCube` object, we need a `numpy.ndarray`-like array containing the data and a WCS object (e.g. `astropy.wcs.WCS`) describing the coordinate transformations to and from array-elements.
 Let's create a 3-D array of data with shape ``(4, 4, 5)`` and a WCS object with axes of wavelength, helioprojective longitude, and helioprojective latitude.
 This could represent images of the Sun taken at different wavelengths.
@@ -125,12 +126,13 @@ Dimensions and Physical Types
 The tuples are arranged in array axis order, while the physical types inside each tuple are returned in world order.
 As more than one physical type can be associated with an array axis, the length of each tuple can be greater than 1.
 This is the case for the 1st and 2nd array array axes which are associated with the coupled world axes of helioprojective latitude and longitude.
-The axis names are in generated in accordance with the International Virtual Observatory Alliance (IVOA) `UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_.
+The axis names are in generated in accordance with the International Virtual Observatory Alliance (IVOA) `UCD1+ controlled vocabulary <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`__.
 
 .. _explode_cube:
 
 Explode NDCube Along Axis
 -------------------------
+
 During analysis of some data --- say a of stack of images --- it may be necessary to make some different fine-pointing adjustments to each image that isn't accounted for the in the original WCS translations, e.g. due to satellite wobble.
 If these changes are not describable with a single WCS object, it may be desirable to break up the NDCube along a given axis into a sequence of (N-1)DCubes each with their own WCS.
 This would enable each WCS to be altered separately.
@@ -165,6 +167,7 @@ See the :ref:`cube_coordinates`, :ref:`cube_slicing` and :ref:`cube_plotting` se
 
 NDCubeSequence
 ==============
+
 `~ndcube.NDCubeSequence` is a class for handling multiple `~ndcube.NDCube` objects as if they were one contiguous data set.
 The `~ndcube.NDCube` objects within an `~ndcube.NDCubeSequence` must be have the same shape and physical types associated with each axis.
 They must also be arranged in some order.
@@ -203,6 +206,7 @@ This flexibility makes `~ndcube.NDCubeSequence` a powerful tool when handling co
 
 Initializing an NDCubeSequence
 ------------------------------
+
 To initialize the most basic `~ndcube.NDCubeSequence`, all you need is a list of `~ndcube.NDCube` instances.
 Let's say we have four 3-D NDCubes with shapes of ``(4, 4, 5)`` and physical types of helioprojective longitude, latitude and wavelength.
 
@@ -235,7 +239,6 @@ Let's say we have four 3-D NDCubes with shapes of ``(4, 4, 5)`` and physical typ
   >>> cube2 = NDCube(data2, wcs=wcs)
   >>> cube3 = NDCube(data3, wcs=wcs)
 
-
 To generate an `~ndcube.NDCubeSequence`, simply provide the list of `~ndcube.NDCube` objects to the `~ndcube.NDCubeSequence` class.
 
 .. code-block:: python
@@ -265,7 +268,7 @@ Let's reinstantiate the `~ndcube.NDCubeSequence` with the common axis as the fir
 Dimensions and Physical Types
 -----------------------------
 
-Analagous to `ndcube.NDCube.dimensions`, there is also a `ndcube.NDCubeSequence.dimensions` property for easily inspecting the shape of an `~ndcube.NDCubeSequence` instance.
+Analogous to `ndcube.NDCube.dimensions`, there is also a `ndcube.NDCubeSequence.dimensions` property for easily inspecting the shape of an `~ndcube.NDCubeSequence` instance.
 
 .. code-block:: python
 
@@ -281,7 +284,7 @@ To see the dimensionality of the sequence in the cube-like paradigm, i.e. taking
   <Quantity [16., 4., 5.] pix>
 
 Equivalent to `ndcube.NDCube.array_axis_physical_types`, `ndcube.NDCubeSequence.array_axis_physical_types` returns a list of tuples of physical axis types.
-The same `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_ are used for the cube axes.
+The same `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`__ are used for the cube axes.
 The sequence axis is given the label ``'meta.obs.sequence'`` as it is the IVOA UCD1+ controlled word that best describes it.
 To call, simply do:
 
@@ -305,6 +308,7 @@ Once again, we can see the physical types associated with each axis in the cube-
 
 Explode Along Axis
 ------------------
+
 Just like `~ndcube.NDCube`, `~ndcube.NDCubeSequence` has an `~ndcube.NDCubeSequence.explode_along_axis` method.
 Its purpose and API are exactly the same as `ndcube.NDCube.explode_along_axis` and we refer readers to the (:ref:`explode_cube`) section describing it.
 
@@ -338,6 +342,7 @@ See the :ref:`sequence_coordinates`, :ref:`sequence_slicing` and :ref:`sequence_
 
 NDCollection
 ============
+
 `~ndcube.NDCollection` is a container class for grouping `~ndcube.NDCube` or `~ndcube.NDCubeSequence` instances in an unordered way.
 `~ndcube.NDCollection` therefore differs from `~ndcube.NDCubeSequence` in that the objects contained are not considered to be in any order, are not assumed to represent measurements of the same physical property, and they can have different dimensionalities.
 However `~ndcube.NDCollection` is more powerful than a simple `dict` because it enables us to identify axes that are aligned between the objects and hence provides some limited slicing functionality.
@@ -389,7 +394,7 @@ Editing NDCollections
 ---------------------
 
 Because `~ndcube.NDCollection` inherits from `dict`, we can edit the collection using many of the same methods.
-These have the same or analagous APIs to the `dict` versions and include `del`, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
+These have the same or analogous APIs to the `dict` versions and include `del`, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
 Some `dict` methods may not be implemented on `~ndcube.NDCollection` if they are not consistent with its design.
 
 .. _aligned_axes:
@@ -397,7 +402,7 @@ Some `dict` methods may not be implemented on `~ndcube.NDCollection` if they are
 Aligned Axes
 ------------
 In the above example, the linewidth object's axes are aligned with the first two axes of the observations object.
-Designating these axes as aligned allows both members of the collection to be simultanouesly sliced, thus enabling users to quickly and accurately crop their entire data set to a region of interest.
+Designating these axes as aligned allows both members of the collection to be simultaneously sliced, thus enabling users to quickly and accurately crop their entire data set to a region of interest.
 (For more on this, see :ref:`collection_slicing`.)
 There are a few ways to designate aligned axes.
 If the members of the collection have the same axis ordering, as is the case in our example, we can provide a single `tuple` of `int`, designating the array axes that are aligned.
