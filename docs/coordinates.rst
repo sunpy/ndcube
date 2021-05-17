@@ -15,15 +15,17 @@ The most commonly used WCS implementation in Python is the `astropy.wcs.WCS` obj
 It also executes these transformations via methods like `~astropy.wcs.WCS.world_to_pixel` and `~astropy.wcs.WCS.pixel_to_world` which convert between pixel indices and world coordinate values.
 However, these methods are independent of the data array and the `~astropy.wcs.WCS` object carries little or no information about the data itself.
 That is why the ndcube package is needed.
-Nonetheless, Astropy's WCS implementation is a crucial pillar of ndcube, as is the more generalized offshoot, `gWCS <https://gwcs.readthedocs.io/en/stable/>`_, which provides greater generalization outside of the FITS data model.
-Crucially though for ndcube, both implementations adhere to the `Astropy WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`_.
+
+Nonetheless, astropy's WCS implementation is a crucial pillar of ndcube, as is the more generalized offshoot, `gWCS <https://gwcs.readthedocs.io/en/stable/>`__, which provides greater generalization outside of the FITS data model.
+Crucially though for ndcube, both implementations adhere to the `Astropy WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`__.
 A familiarity with WCS and the Astropy and gWCS Python implementations will be helpful (although hopefully not essential) in understanding this guide.
-We therefore encourage users to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`_ and the `gWCS documentation <https://gwcs.readthedocs.io/en/stable/>`_ to learn more.
+We therefore encourage users to read `Astropy's WCS guide <https://docs.astropy.org/en/stable/wcs/>`__ and the `gWCS documentation <https://gwcs.readthedocs.io/en/stable/>`__ to learn more.
 
 In this section we will discuss the features ndcube has built upon these implementations to support the integration of data and coordinates.
 
 NDCube Coordinates
 ==================
+
 Although WCS objects are a powerful and concise way of storing complex functional coordinate transformations, their API can be cumbersome when the coordinates along a whole axis are desired.
 Making this process easy and intuitive is the purpose of the `ndcube.NDCube.axis_world_coords` method.
 Using the attached WCS object, information on the data dimensions, and optional inputs from the user, this method returns high level coordinate objects --- e.g. `~astropy.coordinates.SkyCoord`, `~astropy.time.Time`, `~astropy.coordinates.SpectralCoord`, `~astropy.units.Quantity` --- containing the coordinates for each array element.
@@ -178,10 +180,12 @@ However for some use cases this level of completeness is not needed.
 
 ExtraCoords
 ===========
+
 So far we have seen how `~ndcube.NDCube` uses its WCS object (``NDCube.wcs``) to store and perform coordinates transformations.
 But what if we have alternative or additional coordinates that are not represented by the WCS?
 For example, say we have a raster scan from a scanning slit spectrograph whose x-axis is folded in with time.
 This occurs because the x-axis is built up over sequential exposures taken at different slit positions.
+
 Our ``NDCube.wcs`` might describe latitude and longitude, but omit time.
 So how can we represent time without having to construct a whole new custom WCS object?
 One way is to use the `ndcube.ExtraCoords` class located at ``NDCube.extra_coords``.
@@ -199,7 +203,7 @@ To demonstrate how to use `~ndcube.ExtraCoords`, let's start by creating a `~ast
 By default an `~ndcube.NDCube` is instantiated with an empty `~ndcube.ExtraCoords` object.
 So let's add a time coordinate to the `~ndcube.ExtraCoords` instance at ``my_cube.extra_coords``.
 To do this we need to supply the physical type of the coordinate, the array axis to which is corresponds, and the values of the coordinate.
-The number of values should equal the axis's length (or shape if it corresponds to more than one axis) and the physical type must be a valid `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_ word.
+The number of values should equal the axis's length (or shape if it corresponds to more than one axis) and the physical type must be a valid `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`__ word.
 If one does not exist for your coordinate, prepend the type with ``custom:``.
 
 .. code-block:: python
@@ -228,8 +232,9 @@ See :ref:`combined_wcs` below.
 
 Combined WCS
 ------------
+
 The `~ndcube.NDCube.combined_wcs` generates a WCS that combines the extra coords with those stored in the primary WCS.
-Unlike `ndcube.ExtraCoords.wcs`, `~ndcube.NDCube.combined_wcs` is a valid WCS for describing the `~ndcube.NDCube` data array and so can be used with the `~ndcube.NDCube` coordinate transformation and plotting features, e.g.
+Unlike `ndcube.ExtraCoords.wcs`, `~ndcube.NDCube.combined_wcs` is a valid WCS for describing the `~ndcube.NDCube` data array and so can be used with the `~ndcube.NDCube` coordinate transformation and plotting features, e.g:
 
 .. code-block:: python
 
@@ -251,12 +256,14 @@ Note that the extra coordinate of time is now also returned.
 
 GlobalCoords
 ============
+
 Sometimes coordinates are not associated with any axis.
 Take the case of a 2-D `~ndcube.NDCube` representing a single image.
 The time at which that image was taken is important piece of coordinate information.
 But because the data does not have a 3rd dimension, it cannot be stored in the WCS or `~ndcube.ExtraCoords` objects.
+
 Storing such coordinates is the role of the `ndcube.GlobalCoords` class.
-`~ndcube.NDCube` is instatiated with an empty `~ndcube.GlobalCoords` object already attached at `ndcube.NDCube.global_coords`.
+`~ndcube.NDCube` is instantiated with an empty `~ndcube.GlobalCoords` object already attached at `ndcube.NDCube.global_coords`.
 Coordinates can be added to this object if and when the user sees fit.
 Let's attach a scalar global coordinate to ``my_cube`` representing some kind of distance.
 We do this by supplying the coordinate's name, physical type and value via the `~ndcube.GlobalCoords.add` method.
@@ -267,7 +274,7 @@ We do this by supplying the coordinate's name, physical type and value via the `
   >>> my_cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
 
 Because `~ndcube.GlobalCoords` allows multiple coordinates of the same physical type, a unique coordinate name must be provided.
-Furthermore the physical type must be a valid `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`_ word.
+Furthermore the physical type must be a valid `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`__ word.
 If one does not exist for your coordinate, prepend the type with ``custom:``.
 
 The value of the coordinate can be accessed by indexing the `~ndcube.GlobalCoords` instance with the coordinate name.
@@ -324,6 +331,7 @@ NDCubeSequence Coordinates
 
 Sequence Axis Coordinates
 -------------------------
+
 As described in the :ref:`ndcubesequence` section, the sequence axis can be thought of as an additional array axis perpendicular to those of the cubes within an `~ndcube.NDCubeSequence`.
 In that model, the `~ndcube.GlobalCoords` on each `~ndcube.NDCube` represent coordinate values along the sequence axis.
 The `ndcube.NDCubeSequence.sequence_axis_coords` property collates a list for each global coordinate with each element giving the coordinate value from the corresponding `~ndcube.NDCube`.
@@ -382,6 +390,7 @@ As with any `dict`, the coordinate names can be seen via the ``.keys()`` method,
 
 Common Axis Coordinates
 -----------------------
+
 The :ref:`ndcubesequence` section also explains how a common axis can be defined for a `~ndcube.NDCubeSequence`, signifying that the sequence axis is parallel to one of the `~ndcube.NDCube` array axes.
 Take the example of an `~ndcube.NDCubeSequence` of four 3-D NDCubes with axes of space-space-wavelength.
 Suppose that each cube represents a different interval in the spectral dimension and that the cubes are arranged in ascending wavelength order within the `~ndcube.NDCubeSequence`, i.e. ``common_axis=2``.

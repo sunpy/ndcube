@@ -19,14 +19,13 @@ The people who have contributed to the code for this release are:
     David Stansby  *
     Nabil Freij
     P. L. Lim  *
-    Stuart Mumford
+    Stuart Mumford (boooooooo)
 
 Where a * indicates their first contribution to ndcube.
 
-For more information about ndcube see the `documentation <http://docs.sunpy.org/projects/ndcube/>`_.
+For more information about ndcube see the `documentation <http://docs.sunpy.org/projects/ndcube/>`__.
 
 ndcube can be installed from pip or conda using the following commands::
-
 
   $ conda install -c conda-forge ndcube
 

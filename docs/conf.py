@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information -----------------------------------------------------
 
 project = 'ndcube'
-copyright = '2020, The SunPy Community'
+copyright = '2021, The SunPy Community'
 author = 'The SunPy Community'
 
 # The full version, including alpha/beta/rc tags

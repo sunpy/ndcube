@@ -10,8 +10,7 @@ Therefore ndcube provides tools for constructing WCSes from such tables.
 
 Tabular coordinates are useful when there is no mathematical description of the axis, or when it's a natural fit for the data you have.
 It's worth considering that tabular coordinates are generally not as polished as a functional transform in a WCS.
-Therefore, if possiible, building a functional WCS for your coordinate system is highly recommended.
-
+Therefore, if possible, building a functional WCS for your coordinate system is highly recommended.
 
 Tabular Coordinates and WCSes
 =============================
@@ -26,7 +25,6 @@ If you wish to be able to serialise your NDCube object to FITS files you will ne
 
 The functionality provided by ndcube makes it easy to construct a `gwcs.WCS` object backed by lookup tables.
 At the time of writing there are some known issues with the support for generic lookup tables in gwcs.
-
 
 Constructing a WCS from Lookup Tables
 =====================================
@@ -65,7 +63,6 @@ A simple example of constructing a WCS from a lookup table is the following temp
     bounds_error: False)>
 
 This `gwcs.WCS` object can then be passed to the constructor of `.NDCube` alongside your array and other parameters.
-
 
 Combining Two Coordinates into a Single WCS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
