@@ -16,7 +16,7 @@ NDCube
 `~ndcube.NDCube` is the primary data class the ndcube package.
 It's designed to manage a single data array and set of WCS transformations.
 `~ndcube.NDCube` provides unified slicing, visualization, coordinate transformation and self-inspection APIs which are independent of the number and physical types of axes.
-It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the astropy `WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`__.
+It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the Astropy `WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`__.
 This makes `~ndcube.NDCube` a powerful base class when developing tools for specific data types.
 
 Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can hold optional supplementary data in addition to its data array and primary WCS transformations.

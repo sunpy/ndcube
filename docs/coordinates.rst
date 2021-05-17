@@ -7,7 +7,7 @@ Coordinate Transformations
 Introduction to WCS
 ===================
 
-To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework, specifically the tools written by astropy that implement this framework in Python.
+To describe the mapping between array elements/pixels and real world coordinates, ndcube heavily leverages the World Coordinate System (WCS) framework, specifically the tools written by Astropy that implement this framework in Python.
 WCS allows a wide variety of projections, rotations and transformations be stored and executed.
 Because it allows coordinates transformations to be stored functionally, rather than in memory-heavy lookup tables, and because it caters for both astronomy-specific coordinate systems (e.g. RA & Dec.) as well as simpler, more common ones (e.g. wavelength), WCS has become the most common coordinate transformation framework in astronomy.
 

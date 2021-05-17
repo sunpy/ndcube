@@ -6,14 +6,19 @@ ncdube
 
 .. |Latest Version| image:: https://img.shields.io/pypi/v/ndcube.svg
    :target: https://pypi.python.org/pypi/ndcube/
+   :alt: It is up to date, we promise
 .. |matrix| image:: https://img.shields.io/matrix/sunpy:openastronomy.org.svg?colorB=%23FE7900&label=Chat&logo=matrix&server_fqdn=openastronomy.modular.im
    :target: https://openastronomy.element.io/#/room/#sunpy:openastronomy.org
+   :alt: join us on #ndcube:openastronom.org on matrix
 .. |codecov| image:: https://codecov.io/gh/sunpy/sunpy/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/sunpy/sunpy
+   :alt: Best code cov this side of mars
 .. |Powered by NumFOCUS| image:: https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A
    :target: https://numfocus.org
-   .. |Powered by SunPy| image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
+   :alt: Go give them money
+.. |Powered by SunPy| image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
    :target: http://www.sunpy.org
+   :alt: SunPy
 
 ndcube is an open-source SunPy affiliated package for manipulating, inspecting and visualizing multi-dimensional contiguous and non-contiguous coordinate-aware data arrays.
 
@@ -35,7 +40,7 @@ For more information or to ask questions about ndcube, check out:
 -  `ndcube Documentation`_
 -  `ndcube Element Channel`_
 
-.. _ndcube Documentation: https://docs.sunpy.org/projects/ndcube/en/stable/
+.. _ndcube Documentation: https://docs.sunpy.org/projects/ndcube/
 .. _ndcube Element Channel: https://app.element.io/#/room/#sunpy:openastronomy.org
 
 Contributing

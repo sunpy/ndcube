@@ -40,7 +40,7 @@ We could always use more voices and opinions in the discussions about ndcube and
 There are a number of ways to make your voice heard.
 Whether it be constructive criticism, inquiries about current or future capabilities, or flattering praise, we would love to hear from you.
 
-.. _`matrix channel`: https://app.element.io/#/room/#ndcube:openastronomy.org
+.. _`matrix channel`: https://openastronomy.element.io/#/room/#ndcube:openastronomy.org
 
 Reporting Bugs
 --------------
@@ -66,4 +66,4 @@ We strive to be an open and welcoming community for developers of all experience
 Discussing your ideas before you start can give you new insights that will make your development easier, lead to a better end product, and reduce the chances of your work being regretfully rejected because of an issue you weren't aware of, e.g. the functionality already exists elsewhere.
 
 The best guide we provide comes from the `sunpy newcomers guide <https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html>`__.
-The only think you will need to change is sunpy to ndcube e.g., `https://github.com/<username>/sunpy.git sunpy-git` to `https://github.com/<username>/ndcube.git ndcube-git` where appropriate.
+The only think you will need to change is sunpy to ndcube e.g., ``https://github.com/<username>/sunpy.git sunpy-git`` to ``https://github.com/<username>/ndcube.git ndcube-git`` where appropriate.

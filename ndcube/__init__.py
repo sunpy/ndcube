@@ -5,7 +5,7 @@ ndcube
 A base package for multi-dimensional contiguous and non-contiguous coordinate-aware arrays.
 
 * Homepage: https://github.com/sunpy/ndcube
-* Documentation: https://docs.sunpy.org/projects/ndcube/en/stable/
+* Documentation: https://docs.sunpy.org/projects/ndcube/
 """
 import sys
 
