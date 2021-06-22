@@ -160,8 +160,7 @@ def test_array_indices_for_world_objects_2(wcs_4d_lt_t_l_ln):
 
 
 def test_compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln):
-    wcs_compatibility = utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_4d_t_l_lt_ln)
-    assert wcs_compatibility is True
+    assert utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_4d_t_l_lt_ln) is True
 
     wcs_compatibility = utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln)
     assert wcs_compatibility is False
