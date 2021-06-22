@@ -16,6 +16,7 @@ except ImportError:
     pass
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
+from reproject import reproject_interp
 
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
@@ -651,6 +652,51 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             result_cubes.append(sliced_cube)
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
+
+    def resample(self, target_wcs, shape_out, order='bilinear', output_array=None, return_footprint=True):
+        """
+        Separates slices of NDCubes along a given axis into an NDCubeSequence of (N-1)DCubes.
+
+        Parameters
+        ----------
+        target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+            The WCS object on which the NDCube is to be reprojected.
+
+        shape_out: `tuple`
+            The shape of the output data.
+
+        order: `int or str`
+            The order of the interpolation. This can be any of: 'nearest-neighbour', 'bilinear',
+            'biquadratic', or 'bicubic'.
+
+        output_array: `None or numpy.ndarray`
+            An array in which to store the reprojected data. This can be any numpy array
+            including a memory map, which may be helpful when dealing with extremely large files.
+
+        return_footprint: `bool`
+            Whether to return the footprint in addition to the output array.
+
+        Returns
+        -------
+        resampled_cube : `ndcube.NDCube`
+            A new resultant NDCube object.
+
+        footprint: `numpy.ndarray`
+            Footprint of the input array in the output array. Values of 0 indicate no coverage or
+            valid values in the input image, while values of 1 indicate valid values.
+        """
+
+        if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
+            raise('Given target_wcs is not compatible with this NDCube.')
+
+        resampled_data, footprint = reproject_interp(self, output_projection=target_wcs,
+                                          shape_out=shape_out, order=order,
+                                          output_array=output_array, return_footprint=return_footprint)
+
+        resampled_cube = NDCube(resampled_data, wcs=target_wcs, meta=deepcopy(self.meta))
+        resampled_cube._global_coords = deepcopy(self.global_coords)
+
+        return resampled_cube, footprint
 
 
 class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
