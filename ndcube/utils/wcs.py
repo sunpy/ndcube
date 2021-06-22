@@ -431,7 +431,7 @@ def array_indices_for_world_objects(wcs, axes=None):
     return tuple(ai for ai in array_indices if ai)
 
 
-def validate_wcs(source_wcs, target_wcs):
+def compare_wcs_physical_types(source_wcs, target_wcs):
     """
     Checks if two WCS objects are comptible with each other for reprojecting an NDCube on another.
 
@@ -440,9 +440,8 @@ def validate_wcs(source_wcs, target_wcs):
     source_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS which is currently in use, usually `self.wcs`.
 
-    target_wcs : `astropy.wcs.WCS` or any other object that implements
-                    `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
-        The WCS object on which the NDCube is to reprojected.
+    target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        The WCS object on which the NDCube is to be reprojected.
 
     Returns
     -------
