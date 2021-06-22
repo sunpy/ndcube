@@ -437,8 +437,7 @@ def validate_wcs(source_wcs, target_wcs):
 
     Parameters
     ----------
-    source_wcs : `astropy.wcs.WCS` or any other object that implements
-                    `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+    source_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS which is currently in use, usually `self.wcs`.
 
     target_wcs : `astropy.wcs.WCS` or any other object that implements
