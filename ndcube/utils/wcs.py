@@ -8,7 +8,7 @@ import numbers
 from collections import UserDict
 
 import numpy as np
-from astropy.wcs.wcsapi import low_level_api
+from astropy.wcs.wcsapi import low_level_api, BaseHighLevelWCS, BaseLowLevelWCS
 
 __all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
            'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
@@ -429,3 +429,36 @@ def array_indices_for_world_objects(wcs, axes=None):
         array_index = convert_between_array_and_pixel_axes(pixel_index, wcs.pixel_n_dim)
         array_indices[oinds] = tuple(array_index[::-1])  # Invert from pixel order to array order
     return tuple(ai for ai in array_indices if ai)
+
+
+def validate_wcs(source_wcs, target_wcs):
+    """
+    Checks if two WCS objects are comptible with each other for reprojecting an NDCube on another.
+
+    Parameters
+    ----------
+    source_wcs : `astropy.wcs.WCS` or any other object that implements
+                    `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        The WCS which is currently in use, usually `self.wcs`.
+
+    target_wcs : `astropy.wcs.WCS` or any other object that implements
+                    `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        The WCS object on which the NDCube is to reprojected.
+
+    Returns
+    -------
+    result : `bool`
+    """
+
+    def convert_to_low_level(wcs, name='wcs'):
+        if isinstance(wcs, BaseHighLevelWCS):
+            return wcs.low_level_wcs
+        elif isinstance(wcs, BaseLowLevelWCS):
+            return wcs
+        else:
+            raise(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
+
+    source_wcs = convert_to_low_level(source_wcs, 'source_wcs')
+    target_wcs = convert_to_low_level(target_wcs, 'target_wcs')
+
+    return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
