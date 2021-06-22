@@ -690,8 +690,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise('Given target_wcs is not compatible with this NDCube.')
 
         resampled_data, footprint = reproject_interp(self, output_projection=target_wcs,
-                                          shape_out=shape_out, order=order,
-                                          output_array=output_array, return_footprint=return_footprint)
+                                                     shape_out=shape_out, order=order,
+                                                     output_array=output_array,
+                                                     return_footprint=return_footprint)
 
         resampled_cube = NDCube(resampled_data, wcs=target_wcs, meta=deepcopy(self.meta))
         resampled_cube._global_coords = deepcopy(self.global_coords)
