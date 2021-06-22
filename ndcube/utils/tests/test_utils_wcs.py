@@ -157,3 +157,11 @@ def test_array_indices_for_world_objects_2(wcs_4d_lt_t_l_ln):
     array_indices = utils.wcs.array_indices_for_world_objects(wcs_4d_lt_t_l_ln, ('lon', 'time'))
     assert len(array_indices) == 2
     assert array_indices == ((0, 3), (2,))
+
+
+def test_compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln):
+    wcs_compatibility = utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_4d_t_l_lt_ln)
+    assert wcs_compatibility == True
+
+    wcs_compatibility = utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln)
+    assert wcs_compatibility == False
