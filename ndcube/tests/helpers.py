@@ -49,10 +49,10 @@ def figure_test(test_function):
     All such decorated tests are marked with `pytest.mark.mpl_image` for convenient filtering.
     """
     hash_library_name = get_hash_library_name()
-    hash_library_file = Path(__file__).parent / hash_library_name
+    hash_library_file = Path(__file__).parent / ".." / "visualization" / "tests"  / hash_library_name
 
     @pytest.mark.remote_data
-    @pytest.mark.mpl_image_compare(hash_library=hash_library_file,
+    @pytest.mark.mpl_image_compare(hash_library=hash_library_file.resolve(),
                                    savefig_kwargs={'metadata': {'Software': None}},
                                    style='default')
     @wraps(test_function)

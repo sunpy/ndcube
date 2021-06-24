@@ -7,13 +7,14 @@ from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
 
 from . import plotting_utils as utils
+from .base import BasePlotter
 
-__all__ = ['NDCubePlotMixin']
+__all__ = ['MatplotlibPlotter']
 
 
-class NDCubePlotMixin:
+class MatplotlibPlotter(BasePlotter):
     """
-    Add plotting functionality to a NDCube class.
+    Provide visualization methods for NDCube which use `matplotlib`.
     """
 
     def plot(self, axes=None, plot_axes=None, axes_coordinates=None,
@@ -58,19 +59,19 @@ class NDCubePlotMixin:
             - Static 2-D images: `matplotllib.pyplot.imshow`
             - Static 1-D line plots: `matplotllib.pyplot.plot`
         """
-        naxis = self.wcs.pixel_n_dim
+        naxis = self._ndcube.wcs.pixel_n_dim
 
         if not axes_coordinates:
             axes_coordinates = [...]
-            plot_wcs = self.wcs.low_level_wcs
+            plot_wcs = self._ndcube.wcs.low_level_wcs
         else:
-            plot_wcs = self.combined_wcs.low_level_wcs
+            plot_wcs = self._ndcube.combined_wcs.low_level_wcs
         if wcs is not None:
             plot_wcs = wcs.low_level_wcs
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
-            len(self.dimensions), plot_wcs, plot_axes, axes_coordinates, axes_units)
+            len(self._ndcube.dimensions), plot_wcs, plot_axes, axes_coordinates, axes_units)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', AstropyUserWarning)
@@ -113,29 +114,29 @@ class NDCubePlotMixin:
         default_ylabel = "Data"
 
         # Derive y-axis coordinates, uncertainty and unit from the NDCube's data.
-        yerror = self.uncertainty.array if (self.uncertainty is not None) else None
-        ydata = self.data
+        yerror = self._ndcube.uncertainty.array if (self._ndcube.uncertainty is not None) else None
+        ydata = self._ndcube.data
 
-        if self.unit is None:
+        if self._ndcube.unit is None:
             if data_unit is not None:
-                raise TypeError("Can only set y-axis unit if self.unit is set to a "
+                raise TypeError("Can only set y-axis unit if self._ndcube.unit is set to a "
                                 "compatible unit.")
         else:
             if data_unit is not None:
-                ydata = u.Quantity(ydata, unit=self.unit).to_value(data_unit)
+                ydata = u.Quantity(ydata, unit=self._ndcube.unit).to_value(data_unit)
                 if yerror is not None:
-                    yerror = u.Quantity(yerror, self.unit).to_value(data_unit)
+                    yerror = u.Quantity(yerror, self._ndcube.unit).to_value(data_unit)
             else:
-                data_unit = self.unit
+                data_unit = self._ndcube.unit
 
             default_ylabel += f" [{data_unit}]"
 
         # Combine data and uncertainty with mask.
-        if self.mask is not None:
-            ydata = np.ma.masked_array(ydata, self.mask)
+        if self._ndcube.mask is not None:
+            ydata = np.ma.masked_array(ydata, self._ndcube.mask)
 
             if yerror is not None:
-                yerror = np.ma.masked_array(yerror, self.mask)
+                yerror = np.ma.masked_array(yerror, self._ndcube.mask)
 
         if yerror is not None:
             # We plot against pixel coordinates
@@ -158,15 +159,15 @@ class NDCubePlotMixin:
 
         self._apply_axes_coordinates(axes, axes_coordinates)
 
-        data = self.data
+        data = self._ndcube.data
         if data_unit is not None:
-            # If user set data_unit, convert dat to desired unit if self.unit set.
-            if self.unit is None:
+            # If user set data_unit, convert dat to desired unit if self._ndcube.unit set.
+            if self._ndcube.unit is None:
                 raise TypeError("Can only set data_unit if NDCube.unit is set.")
-            data = u.Quantity(self.data, unit=self.unit).to_value(data_unit)
+            data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit).to_value(data_unit)
 
-        if self.mask is not None:
-            data = np.ma.masked_array(data, self.mask)
+        if self._ndcube.mask is not None:
+            data = np.ma.masked_array(data, self._ndcube.mask)
 
         if plot_axes.index('x') > plot_axes.index('y'):
             data = data.T
@@ -188,18 +189,19 @@ class NDCubePlotMixin:
         try:
             from sunpy.visualization.animator import ArrayAnimatorWCS  # isort:skip
         except ImportError:
-            raise ImportError("Sunpy is required for animated "
-                              "cube plots.")
+            raise ImportError("Sunpy is required for animated cube plots. "
+                              "Either install sunpy or slice your cube down "
+                              "to 2D before calling plot.")
 
         # If data_unit set, convert data to that unit
         if data_unit is None:
-            data = self.data
+            data = self._ndcube.data
         else:
-            data = u.Quantity(self.data, unit=self.unit).to_value(data_unit)
+            data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit).to_value(data_unit)
 
         # Combine data values with mask.
-        if self.mask is not None:
-            data = np.ma.masked_array(data, self.mask)
+        if self._ndcube.mask is not None:
+            data = np.ma.masked_array(data, self._ndcube.mask)
 
         coord_params = {}
         if axes_units is not None:
@@ -244,8 +246,8 @@ class NDCubePlotMixin:
         and this will generate a plot with the correct WCS coordinates on the
         axes. See https://wcsaxes.readthedocs.io for more information.
         """
-        kwargs = {'wcs': self.wcs}
-        n_dim = len(self.dimensions)
+        kwargs = {'wcs': self._ndcube.wcs}
+        n_dim = len(self._ndcube.dimensions)
         if n_dim > 2:
             kwargs['slices'] = ['x', 'y'] + [None] * (ndim - 2)
         return WCSAxes, kwargs

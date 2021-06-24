@@ -1,7 +1,7 @@
 import astropy.units as u
 import pytest
 
-import ndcube.mixins.plotting_utils as utils
+import ndcube.visualization.plotting_utils as utils
 
 
 @pytest.mark.parametrize("ndim, plist, output", (
