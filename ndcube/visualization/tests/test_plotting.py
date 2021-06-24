@@ -4,8 +4,11 @@ import numpy as np
 import pytest
 import sunpy.visualization.animator
 from astropy.visualization.wcsaxes import WCSAxes
+from astropy.wcs import WCS
 
+from ndcube.ndcube import NDCube
 from ndcube.tests.helpers import figure_test
+from ndcube.visualization import PlotterDescriptor
 
 
 @figure_test
@@ -117,3 +120,19 @@ def test_mpl_axes(ndcube_4d, cslice):
     ax = plt.subplot(projection=ndcube_2d)
     assert isinstance(ax, WCSAxes)
     plt.close()
+
+
+def test_plotter_is_None(ndcube_1d_l):
+    class NewCube(NDCube):
+        plotter = PlotterDescriptor(default_type=None)
+
+    cube = NewCube(np.zeros((1, 1)), wcs=WCS(naxis=2))
+    assert cube.plotter is None
+
+    with pytest.raises(NotImplementedError, match="no default plotting functionality is available"):
+        cube.plot()
+
+    # You can't (and shouldn't) set the plotter to None unless it's done at
+    # descriptor init time:
+    with pytest.raises(TypeError):
+        ndcube_1d_l.plotter = None

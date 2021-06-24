@@ -23,7 +23,6 @@ from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.visualization import PlotterDescriptor
-from ndcube.visualization.mpl_plotter import MatplotlibPlotter
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
@@ -677,7 +676,10 @@ class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
         Default is False.
 
     """
-    plotter = PlotterDescriptor(default_type=MatplotlibPlotter)
+    # We special case the default mpl plotter here so that we can only import
+    # matplotlib when `.plotter` is accessed and raise an ImportError at the
+    # last moment.
+    plotter = PlotterDescriptor(default_type="mpl_plotter")
 
     def _as_mpl_axes(self):
         if hasattr(self.plotter, "_as_mpl_axes"):
@@ -699,4 +701,9 @@ class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
         set to a different ``Plotter`` class.
 
         """
+        if self.plotter is None:
+            raise NotImplementedError(
+                "This NDCube object does not have a .plotter defined so "
+                "no default plotting functionality is available.")
+
         return self.plotter.plot(*args, **kwargs)
