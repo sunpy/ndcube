@@ -655,7 +655,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def reproject(self, target_wcs, shape_out, order='bilinear', output_array=None, return_footprint=True):
         """
-        Separates slices of NDCubes along a given axis into an NDCubeSequence of (N-1)DCubes.
+        Reprojects an NDCube on another WCS object to upsample or downsample the pixel resolution.
 
         Parameters
         ----------
@@ -684,6 +684,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         footprint: `numpy.ndarray`
             Footprint of the input array in the output array. Values of 0 indicate no coverage or
             valid values in the input image, while values of 1 indicate valid values.
+
+        Notes
+        -----
+        This method doesn't support handling of `mask`, `extra_coords`, and `uncertainty` yet.
+        However, `meta` and `global_coords` are retained.
         """
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
