@@ -653,7 +653,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def resample(self, target_wcs, shape_out, order='bilinear', output_array=None, return_footprint=True):
+    def reproject(self, target_wcs, shape_out, order='bilinear', output_array=None, return_footprint=True):
         """
         Separates slices of NDCubes along a given axis into an NDCubeSequence of (N-1)DCubes.
 
