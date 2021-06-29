@@ -653,7 +653,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def reproject(self, target_wcs, shape_out, order='bilinear', output_array=None, return_footprint=True):
+    def reproject(self, target_wcs, shape_out=None, order='bilinear', output_array=None, return_footprint=True):
         """
         Reprojects an NDCube on another WCS object to upsample or downsample the pixel resolution.
 
@@ -662,8 +662,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
             The WCS object on which the NDCube is to be reprojected.
 
-        shape_out: `tuple`
-            The shape of the output data.
+        shape_out: `tuple`, optional
+            The shape of the output data. Used when target_wcs's low level API doesn't have the
+            `pixel_shape` attribute.
 
         order: `int or str`
             The order of the interpolation. This can be any of: 'nearest-neighbour', 'bilinear',
@@ -694,11 +695,20 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise('Given target_wcs is not compatible with this NDCube.')
 
+        low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, 'target_wcs')
+
+        if hasattr(low_level_target_wcs, 'pixel_shape') and low_level_target_wcs.pixel_shape:
+            shape_out = low_level_target_wcs.pixel_shape
+
+        if not shape_out:
+            raise('shape_out must be specified if target_wcs\'s low level API does not have' \
+                  'the pixel_shape attribute.')
+
         data = reproject_interp(self, output_projection=target_wcs,
                                 shape_out=shape_out, order=order,
                                 output_array=output_array,
                                 return_footprint=return_footprint)
-                                                         
+
         if return_footprint:
             data, footprint = data
 
