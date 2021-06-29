@@ -431,6 +431,31 @@ def array_indices_for_world_objects(wcs, axes=None):
     return tuple(ai for ai in array_indices if ai)
 
 
+def get_low_level_wcs(wcs, name='wcs'):
+    """
+    Returns a low level WCS object from a low level or high level WCS.
+
+    Parameters
+    ----------
+    wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        The input WCS for getting the low level WCS object.
+
+    name: `str`, optional
+        Any name for the wcs to be used in the exception that could be raised.
+
+    Returns
+    -------
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
+    """
+
+    if isinstance(wcs, BaseHighLevelWCS):
+        return wcs.low_level_wcs
+    elif isinstance(wcs, BaseLowLevelWCS):
+        return wcs
+    else:
+        raise(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
+
+
 def compare_wcs_physical_types(source_wcs, target_wcs):
     """
     Checks if two WCS objects are comptible with each other for reprojecting an NDCube on another.
@@ -448,15 +473,7 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     result : `bool`
     """
 
-    def convert_to_low_level(wcs, name='wcs'):
-        if isinstance(wcs, BaseHighLevelWCS):
-            return wcs.low_level_wcs
-        elif isinstance(wcs, BaseLowLevelWCS):
-            return wcs
-        else:
-            raise(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
-
-    source_wcs = convert_to_low_level(source_wcs, 'source_wcs')
-    target_wcs = convert_to_low_level(target_wcs, 'target_wcs')
+    source_wcs = get_low_level_wcs(source_wcs, 'source_wcs')
+    target_wcs = get_low_level_wcs(target_wcs, 'target_wcs')
 
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
