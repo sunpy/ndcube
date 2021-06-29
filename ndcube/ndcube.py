@@ -694,16 +694,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise('Given target_wcs is not compatible with this NDCube.')
 
+        data = reproject_interp(self, output_projection=target_wcs,
+                                shape_out=shape_out, order=order,
+                                output_array=output_array,
+                                return_footprint=return_footprint)
+                                                         
         if return_footprint:
-            resampled_data, footprint = reproject_interp(self, output_projection=target_wcs,
-                                                         shape_out=shape_out, order=order,
-                                                         output_array=output_array,
-                                                         return_footprint=return_footprint)
-        else:
-            resampled_data = reproject_interp(self, output_projection=target_wcs,
-                                              shape_out=shape_out, order=order,
-                                              output_array=output_array,
-                                              return_footprint=return_footprint)
+            data, footprint = data
 
         resampled_cube = NDCube(resampled_data, wcs=target_wcs, meta=deepcopy(self.meta))
         resampled_cube._global_coords = deepcopy(self.global_coords)
