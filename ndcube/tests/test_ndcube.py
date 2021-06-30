@@ -528,7 +528,7 @@ def test_resampling(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube = ndcube_4d_ln_l_t_lt.resample(target_wcs, shape_out, return_footprint=False)
+    resampled_cube = ndcube_4d_ln_l_t_lt.reproject(target_wcs, shape_out, return_footprint=False)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
     assert resampled_cube.data.shape == (5, 20, 12, 8)
@@ -540,9 +540,25 @@ def test_resampling_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube, footprint = ndcube_4d_ln_l_t_lt.resample(target_wcs, shape_out,
+    resampled_cube, footprint = ndcube_4d_ln_l_t_lt.reproject(target_wcs, shape_out,
                                                              return_footprint=True)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
     assert resampled_cube.data.shape == (5, 20, 12, 8)
     assert footprint.shape == (5, 20, 12, 8)
+
+
+def test_resampling_shape_out(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
+    # should raise an exception when neither shape_out is specified nor
+    # target_wcs has the pixel_shape or array_shape attribute
+    wcs_4d_lt_t_l_ln.pixel_shape = None
+    with pytest.raises(Exception):
+        _ = ndcube_4d_ln_l_t_lt.reproject(wcs_4d_lt_t_l_ln)
+
+    # should not raise an exception when shape_out is specified
+    shape = (5, 10, 12, 8)
+    _ = ndcube_4d_ln_l_t_lt.reproject(wcs_4d_lt_t_l_ln, shape_out=shape)
+
+    # should not raise an exception when target_wcs has pixel_shape or array_shape attribute
+    wcs_4d_lt_t_l_ln.array_shape = shape
+    _ = ndcube_4d_ln_l_t_lt.reproject(wcs_4d_lt_t_l_ln, shape_out=shape)

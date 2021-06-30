@@ -693,7 +693,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
-            raise('Given target_wcs is not compatible with this NDCube.')
+            raise Exception('Given target_wcs is not compatible with this NDCube.')
 
         low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, 'target_wcs')
 
@@ -701,8 +701,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             shape_out = low_level_target_wcs.pixel_shape
 
         if not shape_out:
-            raise('shape_out must be specified if target_wcs\'s low level API does not have' \
-                  'the pixel_shape attribute.')
+            raise Exception('shape_out must be specified if target_wcs\'s low level API does not ' \
+                            'have the pixel_shape attribute.')
 
         data = reproject_interp(self, output_projection=target_wcs,
                                 shape_out=shape_out, order=order,
