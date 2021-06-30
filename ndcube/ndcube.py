@@ -701,7 +701,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             shape_out = low_level_target_wcs.pixel_shape
 
         if not shape_out:
-            raise Exception('shape_out must be specified if target_wcs\'s low level API does not ' \
+            raise Exception('shape_out must be specified if target_wcs\'s low level API does not '
                             'have the pixel_shape attribute.')
 
         data = reproject_interp(self, output_projection=target_wcs,

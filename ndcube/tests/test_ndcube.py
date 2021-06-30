@@ -545,7 +545,7 @@ def test_resampling_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     shape_out = (5, 20, 12, 8)
 
     resampled_cube, footprint = ndcube_4d_ln_l_t_lt.reproject(target_wcs, shape_out,
-                                                             return_footprint=True)
+                                                              return_footprint=True)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
     assert resampled_cube.data.shape == (5, 20, 12, 8)
