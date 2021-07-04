@@ -7,6 +7,8 @@ import numpy as np
 
 from ndcube import utils
 from ndcube.visualization import PlotterDescriptor
+from ndcube.extra_coords.table_coord import QuantityTableCoordinate
+from ndcube.wcs.wrappers.compound_wcs import CompoundLowLevelWCS
 
 __all__ = ['NDCubeSequence']
 
@@ -367,6 +369,46 @@ class NDCubeSequenceBase:
         stops = stops.max(axis=0)
         return tuple(
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
+
+    def combine_cubes(self, axis=0, common_wcs_index=0):
+        """
+        Reprojects all `~ndcube.NDCube` objects to a common WCS, and stacks the data together
+        to return a single (N+1)-dimensional `~ndcube.NDCube` with an associated Compound WCS
+        containing extra axes corresponding to the sequence axis.
+
+        Parameters
+        ----------
+        axis: `int`, optional
+            The axis along which the data is to be stacked.
+
+        common_wcs_index: `int`, optional
+            The index of the `~ndcube.NDCube` whose WCS is to be used as the base on which to
+            reproject all other `~ndcube.NDCube`s in the `~ndcube.NDCubeSequence`.
+
+        Returns
+        -------
+        `ndcube.NDCube`
+            A combined (N+1)D cube with stacked data of all cubes.
+        """
+        from ndcube import NDCube  # adding this here to prevent a circular import
+
+        # Reproject all cubes to a common WCS
+        target_wcs = self[common_wcs_index].wcs
+        shape_out = self[common_wcs_index].data.shape
+        reprojected_cubes = [cube.reproject(target_wcs, shape_out=shape_out,
+                                            return_footprint=False) for cube in self]
+
+        # Stack data of all cubes together
+        combined_data = np.stack([cube.data for cube in reprojected_cubes], axis=axis)
+
+        sequence_axis = list(self.sequence_axis_coords.values())[0]
+        sequence_axis_wcs = QuantityTableCoordinate(u.Quantity(sequence_axis)).wcs
+
+        # Create a Compound WCS object
+        compound_wcs = CompoundLowLevelWCS(target_wcs, sequence_axis_wcs,
+                                           mapping=[i for i in range(target_wcs.pixel_n_dim + 1)])
+
+        return NDCube(combined_data, wcs=compound_wcs)
 
     def __str__(self):
         return (textwrap.dedent(f"""\
