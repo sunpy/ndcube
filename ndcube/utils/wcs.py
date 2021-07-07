@@ -8,7 +8,7 @@ import numbers
 from collections import UserDict
 
 import numpy as np
-from astropy.wcs.wcsapi import low_level_api, BaseHighLevelWCS, BaseLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
 __all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
            'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
