@@ -458,7 +458,7 @@ def get_low_level_wcs(wcs, name='wcs'):
 
 def compare_wcs_physical_types(source_wcs, target_wcs):
     """
-    Checks if two WCS objects are comptible with each other for reprojecting an NDCube on another.
+    Checks to see if two WCS objects have the same physical types in the same order.
 
     Parameters
     ----------
