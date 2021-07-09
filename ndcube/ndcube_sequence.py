@@ -374,6 +374,10 @@ class NDCubeSequenceBase:
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
 
     def __get_sequence_axes_wcs(self):
+        """
+        Returns a WCS object corresponding to the sequence axis of this NDCubeSequence.
+        It can contain multiple pixel axes that map to the same world axis.
+        """
         table_coords = []
 
         for axis_name, axis_coords in self.sequence_axis_coords.items():
