@@ -427,7 +427,7 @@ class NDCubeSequenceBase:
 
         mapping = [i for i in range(target_wcs.pixel_n_dim)]
 
-        # All sequence axes map to one world axis
+        # Sequence axis can map to multiple world axes
         mapping.extend([target_wcs.pixel_n_dim] * sequence_axes_wcs.pixel_n_dim)
 
         compound_wcs = CompoundLowLevelWCS(target_wcs, sequence_axes_wcs, mapping=mapping)
