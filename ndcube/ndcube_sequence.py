@@ -378,13 +378,16 @@ class NDCubeSequenceBase:
 
         for axis_name, axis_coords in self.sequence_axis_coords.items():
             if isinstance(axis_coords[0], u.Quantity):
-                table_coords.append(QuantityTableCoordinate(u.Quantity(axis_coords)))
+                table_coords.append(QuantityTableCoordinate(u.Quantity(axis_coords),
+                                                            names=axis_name))
 
             elif isinstance(axis_coords[0], Time):
-                table_coords.append(TimeTableCoordinate(Time(axis_coords)))
+                table_coords.append(TimeTableCoordinate(Time(axis_coords),
+                                                        names=axis_name))
 
             elif isinstance(axis_coords[0], SkyCoordTableCoordinate):
-                table_coords.append(SkyCoordTableCoordinate(SkyCoord(axis_coords)))
+                table_coords.append(SkyCoordTableCoordinate(SkyCoord(axis_coords),
+                                                            names=axis_name))
 
         return MultipleTableCoordinate(*table_coords).wcs
 
