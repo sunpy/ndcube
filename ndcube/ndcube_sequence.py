@@ -4,12 +4,13 @@ import textwrap
 
 import astropy.units as u
 import numpy as np
-
 from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.time import Time
+
 from ndcube import utils
 from ndcube.visualization import PlotterDescriptor
-from ndcube.extra_coords.table_coord import QuantityTableCoordinate, SkyCoordTableCoordinate, TimeTableCoordinate
+from ndcube.extra_coords.table_coord import (QuantityTableCoordinate,
+                                             SkyCoordTableCoordinate, TimeTableCoordinate)
 from ndcube.wcs.wrappers.compound_wcs import CompoundLowLevelWCS
 
 __all__ = ['NDCubeSequence']
@@ -373,13 +374,9 @@ class NDCubeSequenceBase:
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
 
     def __get_sequence_axes_wcs(self):
-        sequence_axis_coords = self.sequence_axis_coords
-        sequence_axis_names = sequence_axis_coords.keys()
-
         combined_table_coord = None
 
-        for axis_name in sequence_axis_names:
-            axis_coords = sequence_axis_coords[axis_name]
+        for axis_name, axis_coords in self.sequence_axis_coords.items():
             table_coord = None
 
             if isinstance(axis_coords[0], u.Quantity):

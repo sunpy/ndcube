@@ -199,3 +199,34 @@ def test_crop(ndcubesequence_4c_ln_lt_l):
     expected = seq[:, 1:3, 0:2, 0:3]
     output = seq.crop(lower_corner, upper_corner)
     helpers.assert_cubesequences_equal(output, expected)
+
+
+def test_combine_cubes(wcs_3d_l_lt_ln):
+    data = np.random.rand(2, 3, 4)
+
+    # Construct 4 NDCubes with different values for global_coords
+    cube1 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube1.global_coords.add('distance', 'pos.distance', 1 * u.m)
+    cube1.global_coords.add('time', 'time', Time("2021-01-01T00:00:00"))
+
+    cube2 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube2.global_coords.add('distance', 'pos.distance', 2 * u.m)
+    cube2.global_coords.add('time', 'time', Time("2021-01-01T00:05:00"))
+
+    cube3 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube3.global_coords.add('distance', 'pos.distance', 3 * u.m)
+    cube3.global_coords.add('time', 'time', Time("2021-01-01T00:10:00"))
+
+    cube4 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube4.global_coords.add('distance', 'pos.distance', 4 * u.m)
+    cube4.global_coords.add('time', 'time', Time("2021-01-01T00:15:00"))
+
+    seq = NDCubeSequence([cube1, cube2, cube3, cube4])
+
+    combined_cube = seq.combine_cubes()
+
+    assert cube1.wcs.pixel_n_dim == 3
+    assert combined_cube.wcs.pixel_n_dim == 4
+    assert combined_cube.wcs.world_n_dim == 5
+
+    assert combined_cube.data.shape == (4, 2, 3, 4)
