@@ -663,8 +663,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             The WCS object on which the NDCube is to be reprojected.
 
         shape_out: `tuple`, optional
-            The shape of the output data. Used when target_wcs's low level API doesn't have the
-            `pixel_shape` attribute.
+            The shape of the output data. If not specified, `pixel_shape` attribute (if available)
+            from the low level API of the `target_wcs` is used.
 
         order: `int or str`
             The order of the interpolation. This can be any of: 'nearest-neighbour', 'bilinear',
@@ -697,12 +697,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, 'target_wcs')
 
-        if hasattr(low_level_target_wcs, 'pixel_shape') and low_level_target_wcs.pixel_shape:
-            shape_out = low_level_target_wcs.pixel_shape
-
+        # If shape_out is not specified explicity, try to extract it from the low level WCS
         if not shape_out:
-            raise Exception('shape_out must be specified if target_wcs\'s low level API does not '
-                            'have the pixel_shape attribute.')
+            if hasattr(low_level_target_wcs, 'pixel_shape') and low_level_target_wcs.pixel_shape:
+                shape_out = low_level_target_wcs.pixel_shape
+            else:
+                raise Exception('shape_out must be specified if target_wcs\'s low level API '
+                                'does not have the pixel_shape attribute.')
 
         data = reproject_interp(self, output_projection=target_wcs,
                                 shape_out=shape_out, order=order,
