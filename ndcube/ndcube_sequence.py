@@ -5,9 +5,11 @@ import textwrap
 import astropy.units as u
 import numpy as np
 
+from astropy.coordinates.sky_coordinate import SkyCoord
+from astropy.time import Time
 from ndcube import utils
 from ndcube.visualization import PlotterDescriptor
-from ndcube.extra_coords.table_coord import QuantityTableCoordinate
+from ndcube.extra_coords.table_coord import QuantityTableCoordinate, SkyCoordTableCoordinate, TimeTableCoordinate
 from ndcube.wcs.wrappers.compound_wcs import CompoundLowLevelWCS
 
 __all__ = ['NDCubeSequence']
@@ -370,6 +372,34 @@ class NDCubeSequenceBase:
         return tuple(
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
 
+    def __get_sequence_axes_wcs(self):
+        sequence_axis_coords = self.sequence_axis_coords
+        sequence_axis_names = sequence_axis_coords.keys()
+
+        combined_table_coord = None
+
+        for axis_name in sequence_axis_names:
+            axis_coords = sequence_axis_coords[axis_name]
+            table_coord = None
+
+            if isinstance(axis_coords[0], u.Quantity):
+                table_coord = QuantityTableCoordinate(u.Quantity(axis_coords))
+
+            elif isinstance(axis_coords[0], Time):
+                table_coord = TimeTableCoordinate(Time(axis_coords))
+
+            elif isinstance(axis_coords[0], SkyCoordTableCoordinate):
+                table_coord = SkyCoordTableCoordinate(SkyCoord(axis_coords))
+
+            if table_coord:
+                if not combined_table_coord:
+                    combined_table_coord = table_coord
+                else:
+                    combined_table_coord = combined_table_coord & table_coord
+
+        if combined_table_coord:
+            return combined_table_coord.wcs
+
     def combine_cubes(self, axis=0, common_wcs_index=0):
         """
         Reprojects all `~ndcube.NDCube` objects to a common WCS, and stacks the data together
@@ -401,11 +431,8 @@ class NDCubeSequenceBase:
         # Stack data of all cubes together
         combined_data = np.stack([cube.data for cube in reprojected_cubes], axis=axis)
 
-        sequence_axis = list(self.sequence_axis_coords.values())[0]
-        sequence_axis_wcs = QuantityTableCoordinate(u.Quantity(sequence_axis)).wcs
-
-        # Create a Compound WCS object
-        compound_wcs = CompoundLowLevelWCS(target_wcs, sequence_axis_wcs,
+        sequence_axes_wcs = self.__get_sequence_axes_wcs()
+        compound_wcs = CompoundLowLevelWCS(target_wcs, sequence_axes_wcs,
                                            mapping=[i for i in range(target_wcs.pixel_n_dim + 1)])
 
         return NDCube(combined_data, wcs=compound_wcs)
