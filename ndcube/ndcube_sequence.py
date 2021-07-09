@@ -408,9 +408,6 @@ class NDCubeSequenceBase:
 
         Parameters
         ----------
-        axis: `int`, optional
-            The axis along which the data is to be stacked.
-
         common_wcs_index: `int`, optional
             The index of the `~ndcube.NDCube` whose WCS is to be used as the base on which to
             reproject all other `~ndcube.NDCube`s in the `~ndcube.NDCubeSequence`.
