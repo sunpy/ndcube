@@ -400,7 +400,7 @@ class NDCubeSequenceBase:
         if combined_table_coord:
             return combined_table_coord.wcs
 
-    def combine_cubes(self, axis=0, common_wcs_index=0):
+    def combine_cubes(self, common_wcs_index=0):
         """
         Reprojects all `~ndcube.NDCube` objects to a common WCS, and stacks the data together
         to return a single (N+1)-dimensional `~ndcube.NDCube` with an associated Compound WCS
@@ -429,11 +429,16 @@ class NDCubeSequenceBase:
                                             return_footprint=False) for cube in self]
 
         # Stack data of all cubes together
-        combined_data = np.stack([cube.data for cube in reprojected_cubes], axis=axis)
+        combined_data = np.stack([cube.data for cube in reprojected_cubes], axis=0)
 
         sequence_axes_wcs = self.__get_sequence_axes_wcs()
-        compound_wcs = CompoundLowLevelWCS(target_wcs, sequence_axes_wcs,
-                                           mapping=[i for i in range(target_wcs.pixel_n_dim + 1)])
+
+        mapping = [i for i in range(target_wcs.pixel_n_dim)]
+
+        # All sequence axes map to one world axis
+        mapping.extend([target_wcs.pixel_n_dim] * sequence_axes_wcs.pixel_n_dim)
+
+        compound_wcs = CompoundLowLevelWCS(target_wcs, sequence_axes_wcs, mapping=mapping)
 
         return NDCube(combined_data, wcs=compound_wcs)
 
