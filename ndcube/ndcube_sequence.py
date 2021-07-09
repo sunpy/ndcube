@@ -9,7 +9,7 @@ from astropy.time import Time
 
 from ndcube import utils
 from ndcube.visualization import PlotterDescriptor
-from ndcube.extra_coords.table_coord import (QuantityTableCoordinate,
+from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
                                              SkyCoordTableCoordinate, TimeTableCoordinate)
 from ndcube.wcs.wrappers.compound_wcs import CompoundLowLevelWCS
 
@@ -374,28 +374,19 @@ class NDCubeSequenceBase:
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
 
     def __get_sequence_axes_wcs(self):
-        combined_table_coord = None
+        table_coords = []
 
         for axis_name, axis_coords in self.sequence_axis_coords.items():
-            table_coord = None
-
             if isinstance(axis_coords[0], u.Quantity):
-                table_coord = QuantityTableCoordinate(u.Quantity(axis_coords))
+                table_coords.append(QuantityTableCoordinate(u.Quantity(axis_coords)))
 
             elif isinstance(axis_coords[0], Time):
-                table_coord = TimeTableCoordinate(Time(axis_coords))
+                table_coords.append(TimeTableCoordinate(Time(axis_coords)))
 
             elif isinstance(axis_coords[0], SkyCoordTableCoordinate):
-                table_coord = SkyCoordTableCoordinate(SkyCoord(axis_coords))
+                table_coords.append(SkyCoordTableCoordinate(SkyCoord(axis_coords)))
 
-            if table_coord:
-                if not combined_table_coord:
-                    combined_table_coord = table_coord
-                else:
-                    combined_table_coord = combined_table_coord & table_coord
-
-        if combined_table_coord:
-            return combined_table_coord.wcs
+        return MultipleTableCoordinate(*table_coords).wcs
 
     def combine_cubes(self, common_wcs_index=0):
         """
