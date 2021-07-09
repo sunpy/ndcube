@@ -653,7 +653,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def reproject(self, target_wcs, shape_out=None, order='bilinear', output_array=None, return_footprint=True):
+    def reproject(self, target_wcs, shape_out=None, order='bilinear', output_array=None, return_footprint=False):
         """
         Reprojects an NDCube on another WCS object to upsample or downsample the pixel resolution.
 

@@ -528,14 +528,14 @@ def test_resampling(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln, wcs_3d_lt_ln_l):
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube = ndcube_4d_ln_l_t_lt.reproject(target_wcs, shape_out, return_footprint=False)
+    resampled_cube = ndcube_4d_ln_l_t_lt.reproject(target_wcs, shape_out)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
     assert resampled_cube.data.shape == (5, 20, 12, 8)
 
     # Raises an exception if given target_wcs is not compatible with the NDCube
     with pytest.raises(Exception):
-        _ = ndcube_4d_ln_l_t_lt.reproject(wcs_3d_lt_ln_l, shape_out, return_footprint=False)
+        _ = ndcube_4d_ln_l_t_lt.reproject(wcs_3d_lt_ln_l, shape_out)
 
 
 def test_resampling_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
