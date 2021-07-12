@@ -699,7 +699,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # If shape_out is not specified explicity, try to extract it from the low level WCS
         if not shape_out:
-            if hasattr(low_level_target_wcs, 'pixel_shape') and low_level_target_wcs.pixel_shape:
+            if hasattr(low_level_target_wcs, 'pixel_shape') and low_level_target_wcs.pixel_shape is not None:
                 shape_out = low_level_target_wcs.pixel_shape
             else:
                 raise Exception('shape_out must be specified if target_wcs\'s low level API '
