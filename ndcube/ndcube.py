@@ -688,8 +688,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Notes
         -----
-        This method doesn't support handling of `mask`, `extra_coords`, and `uncertainty` yet.
-        However, `meta` and `global_coords` are retained.
+        This method doesn't support handling of the ``mask``, ``extra_coords``, and ``uncertainty`` attributes yet.
+        However, ``meta`` and ``global_coords`` are copied to the output ``NDCube``.
         """
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
