@@ -680,7 +680,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Returns
         -------
         resampled_cube : `ndcube.NDCube`
-            A new resultant NDCube object.
+            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output ``NDCube``.
 
         footprint: `numpy.ndarray`
             Footprint of the input array in the output array. Values of 0 indicate no coverage or
