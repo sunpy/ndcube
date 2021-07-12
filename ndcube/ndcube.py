@@ -670,7 +670,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             The order of the interpolation. This can be any of: 'nearest-neighbour', 'bilinear',
             'biquadratic', or 'bicubic'.
 
-        output_array: `None or numpy.ndarray`
+        output_array: `numpy.ndarray`, optional
             An array in which to store the reprojected data. This can be any numpy array
             including a memory map, which may be helpful when dealing with extremely large files.
 
