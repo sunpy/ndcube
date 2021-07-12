@@ -666,7 +666,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             The shape of the output data. If not specified, `~astropy.wcs.wcsapi.BaseLowLevelWCS.pixel_shape` attribute (if available)
             from the low level API of the ``target_wcs`` is used.
 
-        order: `int or str`
+        order: `int` or `str`
             The order of the interpolation. This can be any of: 'nearest-neighbour', 'bilinear',
             'biquadratic', or 'bicubic'.
 
