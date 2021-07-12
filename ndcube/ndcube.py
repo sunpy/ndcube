@@ -693,7 +693,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
-            raise Exception('Given target_wcs is not compatible with this NDCube.')
+            raise Exception('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
 
         low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, 'target_wcs')
 
