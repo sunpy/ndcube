@@ -655,7 +655,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def reproject(self, target_wcs, shape_out=None, order='bilinear', output_array=None, return_footprint=False):
         """
-        Reprojects an NDCube on another WCS object to upsample or downsample the pixel resolution.
+        Reprojects this NDCube to the coordinates described by another WCS object.
 
         Parameters
         ----------
