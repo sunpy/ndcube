@@ -660,7 +660,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Parameters
         ----------
         target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS object on which the NDCube is to be reprojected.
+            The WCS object on which the ``NDCube`` is to be reprojected.
 
         shape_out: `tuple`, optional
             The shape of the output data. If not specified, `pixel_shape` attribute (if available)
