@@ -39,7 +39,15 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def crop(self, lower_corner, upper_corner, wcs=None):
         """
-        Crops an NDCube given real world coords of lower and upper corners of a region of interest.
+        Crop given world coordinate objects describing the lower and upper corners of a region.
+
+        The region of interest is defined in pixel space, by converting the world
+        coordinates of the corners to pixel coordinates and then cropping the
+        smallest pixel region which contains the corners specified.
+        This means that the edges of the world coordinate region specified by
+        the coordinates are not gaureented to be included in the cropped output.
+        This is normally noiticable when cropping a celestial coordinate in a
+        frame which differs from the native frame of the coordinates in the WCS.
 
         Parameters
         ----------
@@ -80,6 +88,14 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
         """
         Crops an NDCube given lower and upper real world bounds for each real world axis.
+
+        The region of interest is defined in pixel space, by converting the world
+        coordinates of the corners to pixel coordinates and then cropping the
+        smallest pixel region which contains the corners specified.
+        This means that the edges of the world coordinate region specified by
+        the coordinates are not gaureented to be included in the cropped output.
+        This is normally noiticable when cropping a celestial coordinate in a
+        frame which differs from the native frame of the coordinates in the WCS.
 
         Parameters
         ----------
