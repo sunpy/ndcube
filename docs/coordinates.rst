@@ -127,12 +127,12 @@ If the user wants the world coordinates for all the axes, the ``axes`` arg can s
         (6480.14182173, 3.59960344e+03), (6480.36116753, 5.39910830e+03)]]>)
 
 By default `~ndcube.NDCube.axis_world_coords` returns the coordinates at the center of each pixel.
-However, the coordinates at the edges of each pixel can be obtained by setting the ``edges`` kwarg to ``True``.
+However, the coordinates at the edges of each pixel can be obtained by setting the ``pixel_corners`` kwarg to ``True``.
 For example:
 
 .. code-block:: python
 
-  >>> my_cube.axis_world_coords(edges=True)
+  >>> my_cube.axis_world_coords(pixel_corners=True)
   (<SpectralCoord [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] m>, <SkyCoord (Helioprojective: obstime=None, rsun=695700.0 km, observer=None): (Tx, Ty) in arcsec
       [[(1440.24341188, -899.79647591), (1440.07895112,  899.95636786),
         (1439.91446531, 2699.84625127), (1439.74995445, 4499.59909505),
