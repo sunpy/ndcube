@@ -334,14 +334,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             axes=None implies all axes will be returned.
 
         pixel_corners: `bool`, optional
-            If `True` then instead of returning the coordinates of the pixel
-            centers the coordinates of the pixel corners will be returned, this
-            increases the size of the output by 1 as all corners are returned.
+            If `True` then instead of returning the coordinates at the centers of the pixels,
+            the coordinates at the pixel corners will be returned. This
+            increases the size of the output by 1 in all dimensions as all corners are returned.
 
         wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
             The WCS object to used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
-            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` which combines both
             the WCS and extra coords.
             Defaults to the ``.wcs`` property.
 
@@ -353,7 +353,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
             The types returned are determined by the WCS object.
             The dimensionality of these objects should match that of
-            their corresponding array dimensions.
+            their corresponding array dimensions, unless ``pixel_corners=True``
+            in which case the length along each axis will be 1 greater than the number of pixels.
 
         Example
         -------
@@ -420,14 +421,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         ----------
         axes: `int` or `str`, or multiple `int` or `str`, optional
             Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.world_axis_physical_types`
+            `~ndcube.NDCube.wcs.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
 
         pixel_corners: `bool`, optional
             If `True` then instead of returning the coordinates of the pixel
-            centers the coordinates of the pixel corners will be returned, this
-            increases the size of the output by 1 as all corners are returned.
+            centers the coordinates of the pixel corners will be returned.  This
+            increases the size of the output along each dimension by 1 as all corners are returned.
 
         wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
             The WCS object to used to calculate the world coordinates.
@@ -444,7 +445,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
             The types returned are determined by the WCS object.
             The dimensionality of these objects should match that of
-            their corresponding array dimensions.
+            their corresponding array dimensions, unless ``pixel_corners=True``
+            in which case the length along each axis will be 1 greater than the number of pixels.
 
         Example
         -------
