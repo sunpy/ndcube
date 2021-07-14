@@ -45,8 +45,8 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         coordinates of the corners to pixel coordinates and then cropping the
         smallest pixel region which contains the corners specified.
         This means that the edges of the world coordinate region specified by
-        the coordinates are not gaureented to be included in the cropped output.
-        This is normally noiticable when cropping a celestial coordinate in a
+        the coordinates are not guaranteed to be included in the cropped output.
+        This is normally noticeable when cropping a celestial coordinate in a
         frame which differs from the native frame of the coordinates in the WCS.
 
         Parameters
@@ -93,8 +93,8 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         coordinates of the corners to pixel coordinates and then cropping the
         smallest pixel region which contains the corners specified.
         This means that the edges of the world coordinate region specified by
-        the coordinates are not gaureented to be included in the cropped output.
-        This is normally noiticable when cropping a celestial coordinate in a
+        the coordinates are not guaranteed to be included in the cropped output.
+        This is normally noticeable when cropping a celestial coordinate in a
         frame which differs from the native frame of the coordinates in the WCS.
 
         Parameters
