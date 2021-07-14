@@ -14,7 +14,7 @@ try:
     import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
 except ImportError:
     pass
-from astropy.wcs.wcsapi import HighLevelWCSWrapper
+from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import utils
@@ -39,7 +39,15 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def crop(self, lower_corner, upper_corner, wcs=None):
         """
-        Crops an NDCube given real world coords of lower and upper corners of a region of interest.
+        Crop given world coordinate objects describing the lower and upper corners of a region.
+
+        The region of interest is defined in pixel space, by converting the world
+        coordinates of the corners to pixel coordinates and then cropping the
+        smallest pixel region which contains the corners specified.
+        This means that the edges of the world coordinate region specified by
+        the coordinates are not guaranteed to be included in the cropped output.
+        This is normally noticeable when cropping a celestial coordinate in a
+        frame which differs from the native frame of the coordinates in the WCS.
 
         Parameters
         ----------
@@ -80,6 +88,14 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
         """
         Crops an NDCube given lower and upper real world bounds for each real world axis.
+
+        The region of interest is defined in pixel space, by converting the world
+        coordinates of the corners to pixel coordinates and then cropping the
+        smallest pixel region which contains the corners specified.
+        This means that the edges of the world coordinate region specified by
+        the coordinates are not guaranteed to be included in the cropped output.
+        This is normally noticeable when cropping a celestial coordinate in a
+        frame which differs from the native frame of the coordinates in the WCS.
 
         Parameters
         ----------
@@ -291,12 +307,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
-    def _generate_pixel_grid(self, edges, wcs):
+    def _generate_pixel_grid(self, pixel_corners, wcs):
         # Create meshgrid of all pixel coordinates.
-        # If user, wants edges, set pixel values to pixel edges.
+        # If user, wants pixel_corners, set pixel values to pixel pixel_corners.
         # Else make pixel centers.
         wcs_shape = self.data.shape[::-1]
-        if edges:
+        if pixel_corners:
             wcs_shape = tuple(np.array(wcs_shape) + 1)
             ranges = [np.arange(i) - 0.5 for i in wcs_shape]
         else:
@@ -321,35 +337,40 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return np.meshgrid(*ranges, indexing='ij', sparse=sparse)
 
     @utils.misc.sanitise_wcs
-    def axis_world_coords(self, *axes, edges=False, wcs=None):
+    def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for all axes.
 
         Parameters
         ----------
-        axes: `int` or `str`, or multiple `int` or `str`
+        axes: `int` or `str`, or multiple `int` or `str`, optional
             Axis number in numpy ordering or unique substring of
             `~ndcube.NDCube.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
 
-        edges: `bool`
-            The edges argument helps in returning `pixel_edges`
-            instead of `pixel_values`. Default value is False,
-            which returns `pixel_values`. True return `pixel_edges`
+        pixel_corners: `bool`, optional
+            If `True` then instead of returning the coordinates at the centers of the pixels,
+            the coordinates at the pixel corners will be returned. This
+            increases the size of the output by 1 in all dimensions as all corners are returned.
 
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
-            The WCS object to used to convert the world values to array indices.
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+            The WCS object to used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
-            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` which combines both
             the WCS and extra coords.
-            Default=self.wcs
+            Defaults to the ``.wcs`` property.
 
         Returns
         -------
         axes_coords: `list`
-            High level object giving the real world coords for the axes requested by user.
-            For example, `~astropy.coordinates.SkyCoord` objects.
+            An iterable of "high level" objects giving the real world
+            coords for the axes requested by user.
+            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
+            The types returned are determined by the WCS object.
+            The dimensionality of these objects should match that of
+            their corresponding array dimensions, unless ``pixel_corners=True``
+            in which case the length along each axis will be 1 greater than the number of pixels.
 
         Example
         -------
@@ -357,7 +378,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        pixel_inputs = self._generate_pixel_grid(edges, wcs)
+        pixel_inputs = self._generate_pixel_grid(pixel_corners, wcs)
 
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
@@ -408,38 +429,40 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return tuple(axes_coords[i] for i in object_indices)
 
     @utils.misc.sanitise_wcs
-    def axis_world_coords_values(self, *axes, edges=False, wcs=None):
+    def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for desired axes.
 
         Parameters
         ----------
-        axes: `int` or `str`, or multiple `int` or `str`
+        axes: `int` or `str`, or multiple `int` or `str`, optional
             Axis number in numpy ordering or unique substring of
             `~ndcube.NDCube.wcs.world_axis_physical_types`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
 
-        edges: `bool`
-            If True, the coords at the edges of the pixels are returned
-            rather than the coords at the center of the pixels.
-            Note that there are n+1 edges for n pixels which is reflected
-            in the returned coords.
-            Default=False, i.e. pixel centers are returned.
+        pixel_corners: `bool`, optional
+            If `True` then instead of returning the coordinates of the pixel
+            centers the coordinates of the pixel corners will be returned.  This
+            increases the size of the output along each dimension by 1 as all corners are returned.
 
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
-            The WCS object to used to convert the world values to array indices.
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+            The WCS object to used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
-            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
             the WCS and extra coords.
-            Default=self.wcs
+            Defaults to the ``.wcs`` property.
 
         Returns
         -------
-        coord_values: `collections.namedtuple`
-            Real world coords labeled with their real world physical types
-            for the axes requested by the user.
-            Returned in same order as axis_names.
+        axes_coords: `list`
+            An iterable of "high level" objects giving the real world
+            coords for the axes requested by user.
+            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
+            The types returned are determined by the WCS object.
+            The dimensionality of these objects should match that of
+            their corresponding array dimensions, unless ``pixel_corners=True``
+            in which case the length along each axis will be 1 greater than the number of pixels.
 
         Example
         -------
@@ -447,7 +470,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
-        pixel_inputs = self._generate_pixel_grid(edges, wcs)
+        pixel_inputs = self._generate_pixel_grid(pixel_corners, wcs)
 
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
@@ -535,12 +558,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Define functions to be used in converting between array indices and world coords
         # based in input kwarg.
         if crop_by_values:
-            try:
-                world_to_array_index = wcs.world_to_array_index_values
-                array_index_to_world = wcs.array_index_to_world_values
-            except AttributeError:
+            if isinstance(wcs, BaseHighLevelWCS):
                 world_to_array_index = wcs.low_level_wcs.world_to_array_index_values
                 array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
+            else:
+                world_to_array_index = wcs.world_to_array_index_values
+                array_index_to_world = wcs.array_index_to_world_values
             # Convert coordinates to units used by WCS as WCS.world_to_array_index
             # does not handle quantities.
             lower_corner = utils.misc.convert_quantities_to_units(lower_corner,

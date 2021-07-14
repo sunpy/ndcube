@@ -1,0 +1,3 @@
+Change the ``edges=`` keyword to ``pixel_corners=`` in
+`NDCube.axis_world_coords` and `NDCube.axis_world_coords_values` to make its
+meaning clearer based on SEP feedback.

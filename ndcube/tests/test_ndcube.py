@@ -216,11 +216,11 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
 
 
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
-def test_axis_world_coords_single_edges(axes, ndcube_3d_ln_lt_l):
-    coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, edges=True)
+def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=True)
     assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
-    coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, edges=True)
+    coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, pixel_corners=True)
     assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
 
