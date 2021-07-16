@@ -1,9 +1,14 @@
+from textwrap import dedent
+
 import astropy.units as u
 import astropy.wcs
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
+from astropy.io import fits
 from astropy.time import Time
+from astropy.wcs import WCS
+from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
@@ -496,6 +501,49 @@ def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     expected = cube_1d[0:2]
     output = cube_1d.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_rotated_celestial():
+    # This is a regression test for a highly rotated image where all 4 corners
+    # of the spatial ROI have to be used.
+
+    header = dedent("""\
+        WCSAXES =                    2 / Number of coordinate axes
+        CRPIX1  =          2053.459961 / Pixel coordinate of reference point
+        CRPIX2  =          2047.880005 / Pixel coordinate of reference point
+        PC1_1   =     0.70734471922412 / Coordinate transformation matrix element
+        PC1_2   =     0.70686876305701 / Coordinate transformation matrix element
+        PC2_1   =    -0.70686876305701 / Coordinate transformation matrix element
+        PC2_2   =     0.70734471922412 / Coordinate transformation matrix element
+        CDELT1  =  0.00016652472222222 / [deg] Coordinate increment at reference point
+        CDELT2  =  0.00016652472222222 / [deg] Coordinate increment at reference point
+        CUNIT1  = 'deg'                / Units of coordinate increment and value
+        CUNIT2  = 'deg'                / Units of coordinate increment and value
+        CTYPE1  = 'HPLN-TAN'           / Coordinate type codegnomonic projection
+        CTYPE2  = 'HPLT-TAN'           / Coordinate type codegnomonic projection
+        CRVAL1  =                  0.0 / [deg] Coordinate value at reference point
+        CRVAL2  =                  0.0 / [deg] Coordinate value at reference point
+        LONPOLE =                180.0 / [deg] Native longitude of celestial pole
+        LATPOLE =                  0.0 / [deg] Native latitude of celestial pole
+        MJDREF  =                  0.0 / [d] MJD of fiducial time
+        DATE-OBS= '2014-04-09T06:00:12.970' / ISO-8601 time of observation
+        MJD-OBS =      56756.250150116 / [d] MJD of observation
+        RSUN_REF=          696000000.0 / [m] Solar radius
+        DSUN_OBS=      149860273889.04 / [m] Distance from centre of Sun to observer
+        HGLN_OBS=  -0.0058904803279347 / [deg] Stonyhurst heliographic lng of observer
+        HGLT_OBS=     -6.0489216362492 / [deg] Heliographic latitude of observer
+        """)
+    wcs = WCS(fits.Header.fromstring(header, sep="\n"))
+    data = np.zeros((4096, 4096))
+
+    cube = NDCube(data, wcs=wcs)
+
+    bottom_left = SkyCoord(-100, -100, unit=u.arcsec, frame=wcs_to_celestial_frame(wcs))
+    top_right = SkyCoord(600, 600, unit=u.arcsec, frame=wcs_to_celestial_frame(wcs))
+
+    small = cube.crop(bottom_left, top_right)
+
+    assert small.data.shape == (1652, 1652)
 
 
 def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
