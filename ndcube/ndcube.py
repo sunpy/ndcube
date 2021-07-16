@@ -1,6 +1,7 @@
 import abc
 import textwrap
 import warnings
+import itertools
 from copy import deepcopy
 from collections import namedtuple
 
@@ -618,7 +619,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Convert two corners of a bounding box to the points of all corners.
         """
-        return lower_corner_values, upper_corner_values
+        return tuple(itertools.product(*zip(lower_corner_values, upper_corner_values)))
 
     def _crop_from_points(self, *world_points_values, wcs):
         if isinstance(wcs, BaseHighLevelWCS):
