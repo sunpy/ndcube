@@ -471,23 +471,19 @@ def test_crop_by_values_all_nones(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, ndcube_4d_ln_lt_l_t)
 
 
-def test_crop_by_values_indexerror(ndcube_4d_ln_lt_l_t):
-    intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
-    units = [u.min, u.m, u.deg, u.deg]
-    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
-    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
-    lower_corner[1] *= -1
-    upper_corner[1] *= -1
-    with pytest.raises(IndexError):
-        ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
-
-
 def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
+    # Test units not being the same length as the inputs
+    lower_corner = [None] * 4
+    lower_corner[0] = 0.5
+    upper_corner = [None] * 4
+    upper_corner[0] = 1.1
+
     with pytest.raises(ValueError):
-        ndcube_4d_ln_lt_l_t.crop_by_values([None, None], [None, None], units=["m"])
+        ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=["m"])
 
 
 def test_crop_by_values_valueerror2(ndcube_4d_ln_lt_l_t):
+    # Test upper and lower coordinates not being the same length
     with pytest.raises(ValueError):
         ndcube_4d_ln_lt_l_t.crop_by_values([None], [None, None])
 
