@@ -713,7 +713,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if return_footprint:
             data, footprint = data
 
-        resampled_cube = NDCube(data, wcs=target_wcs, meta=deepcopy(self.meta))
+        resampled_cube = type(self)(data, wcs=target_wcs, meta=deepcopy(self.meta))
         resampled_cube._global_coords = deepcopy(self.global_coords)
 
         if return_footprint:
