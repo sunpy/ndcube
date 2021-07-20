@@ -393,6 +393,11 @@ class NDCubeSequenceBase:
                 table_coords.append(SkyCoordTableCoordinate(SkyCoord(axis_coords),
                                                             names=axis_name))
 
+            else:
+                raise Exception(f"Unable to convert global_coords '{axis_name}' into an axis. "
+                                 "global_coords must be either `astropy.units.Quantity`, "
+                                 "`astropy.time.Time`, or `astropy.coordinates.SkyCoord`.")
+
         return MultipleTableCoordinate(*table_coords).wcs
 
     def combine_cubes(self, common_wcs_index=0):
