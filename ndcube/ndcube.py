@@ -16,7 +16,6 @@ except ImportError:
     pass
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
-from reproject import reproject_interp
 
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
@@ -691,6 +690,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         This method doesn't support handling of the ``mask``, ``extra_coords``, and ``uncertainty`` attributes yet.
         However, ``meta`` and ``global_coords`` are copied to the output ``NDCube``.
         """
+        try:
+            from reproject import reproject_interp
+        except ModuleNotFoundError:
+            raise ImportError("This method requires the optional package `reproject`.")
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise Exception('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
