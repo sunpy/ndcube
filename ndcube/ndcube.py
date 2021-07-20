@@ -630,7 +630,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         world_points_values
             The world coordinates in wcsapi "values" form (i.e. arrays /
             floats), for however many world points should be contained in the
-            output cube. Each argument should be a tuple with number of 
+            output cube. Each argument should be a tuple with number of
             coordinates equal to the number of world axes.
 
         wcs : `~astropy.wcs.wcsapi.BaseHighLevelWCS`, `~astropy.wcs.wcsapi.BaseLowLevelWCS`
