@@ -623,14 +623,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def _crop_from_points(self, *world_points_values, wcs):
         """
-        Crop the cube such that all the specified world points fall within it.
+        Crop to the minimum cube in pixel-space that contains all the specified world points.
 
         Parameters
         ----------
         world_points_values
             The world coordinates in wcsapi "values" form (i.e. arrays /
             floats), for however many world points should be contained in the
-            output cube.
+            output cube. Each argument should be a tuple with number of 
+            coordinates equal to the number of world axes.
 
         wcs : `~astropy.wcs.wcsapi.BaseHighLevelWCS`, `~astropy.wcs.wcsapi.BaseLowLevelWCS`
             The WCS to use to convert the world coordinates to array indices.
