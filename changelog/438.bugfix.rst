@@ -1,0 +1,3 @@
+Change the implementation of `.NDCube.crop` so that it takes into account all
+the corners of the world region specified by the upper and lower corners, not
+just those two points.
