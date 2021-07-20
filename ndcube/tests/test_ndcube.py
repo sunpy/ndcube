@@ -522,7 +522,7 @@ def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
     assert ec is not ec3
 
 
-def test_reproject(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln, wcs_3d_lt_ln_l):
+def test_reproject(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
     target_wcs_header['CDELT3'] = 0.1   # original value = 0.2
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
@@ -539,6 +539,22 @@ def test_reproject_invalid_wcs(ndcube_4d_ln_l_t_lt, wcs_3d_lt_ln_l):
 
     with pytest.raises(Exception):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_3d_lt_ln_l, shape_out)
+
+
+def test_reproject_with_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
+    target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
+    shape_out = (5, 20, 12, 8)
+
+    _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out)
+
+
+def test_reproject_invalid_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
+    target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
+    target_wcs_header['CDELT3'] = None
+    shape_out = (5, 20, 12, 8)
+
+    with pytest.raises(Exception):
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out)
 
 
 def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):

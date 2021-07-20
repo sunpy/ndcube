@@ -3,6 +3,7 @@ import textwrap
 import warnings
 from copy import deepcopy
 from collections import namedtuple
+from collections.abc import Mapping
 
 import astropy.nddata
 import astropy.units as u
@@ -14,6 +15,7 @@ try:
     import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
 except ImportError:
     pass
+from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
@@ -658,7 +660,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Parameters
         ----------
-        target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`, `astropy.wcs.wcsapi.BaseLowLevelWCS`,
+            or `astropy.io.fits.Header`
             The WCS object on which the ``NDCube`` is to be reprojected.
 
         shape_out: `tuple`, optional
@@ -694,6 +697,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             from reproject import reproject_interp
         except ModuleNotFoundError:
             raise ImportError("This method requires the optional package `reproject`.")
+
+        if isinstance(target_wcs, Mapping):
+            try:
+                target_wcs = WCS(header=target_wcs)
+            except Exception:
+                raise Exception('Invalid header supplied; unable to create a WCS object.')
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise Exception('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
