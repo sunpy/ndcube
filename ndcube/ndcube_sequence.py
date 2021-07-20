@@ -423,9 +423,9 @@ class NDCubeSequenceBase:
         # Stack data of all cubes together
         combined_data = np.stack([cube.data for cube in reprojected_cubes], axis=0)
 
-        sequence_axes_wcs = self.__get_sequence_axes_wcs()
+        sequence_axes_wcs = self._get_sequence_axes_wcs()
 
-        mapping =list(range(target_wcs.pixel_n_dim))
+        mapping = list(range(target_wcs.pixel_n_dim))
 
         # Sequence axis can map to multiple world axes
         mapping.extend([target_wcs.pixel_n_dim] * sequence_axes_wcs.pixel_n_dim)
