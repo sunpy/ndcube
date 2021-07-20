@@ -395,8 +395,8 @@ class NDCubeSequenceBase:
 
             else:
                 raise Exception(f"Unable to convert global_coords '{axis_name}' into an axis. "
-                                 "global_coords must be either `astropy.units.Quantity`, "
-                                 "`astropy.time.Time`, or `astropy.coordinates.SkyCoord`.")
+                                "global_coords must be either `astropy.units.Quantity`, "
+                                "`astropy.time.Time`, or `astropy.coordinates.SkyCoord`.")
 
         return MultipleTableCoordinate(*table_coords).wcs
 
