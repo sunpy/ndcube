@@ -1,0 +1,1 @@
+Adds functionality to reproject an `~.NDCube` object to coordinates described by another WCS or FITS Header by calling the new `~.NDCube.reproject_to` method.
