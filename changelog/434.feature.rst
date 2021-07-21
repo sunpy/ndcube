@@ -1,1 +1,1 @@
-Adds functionality to reproject `NDCube` to use coordinates described by another WCS or FITS Header.
+Adds functionality to reproject `NDCube` to coordinates described by another WCS or FITS Header.
