@@ -665,8 +665,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             The WCS object to which the ``NDCube`` is to be reprojected.
 
         shape_out: `tuple`, optional
-            The shape of the output data. If not specified, `~astropy.wcs.wcsapi.BaseLowLevelWCS.pixel_shape` attribute (if available)
-            from the low level API of the ``target_wcs`` is used.
+            The shape of the output data array. The ordering of the dimensions must follow NumPy
+            ordering and not the WCS pixel shape.
+            If not specified, `~astropy.wcs.wcsapi.BaseLowLevelWCS.array_shape` attribute
+            (if available) from the low level API of the ``target_wcs`` is used.
 
         order: `int` or `str`
             The order of the interpolation. This can be any of: 'nearest-neighbor', 'bilinear',
