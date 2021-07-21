@@ -677,7 +677,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             including a memory map, which may be helpful when dealing with extremely large files.
 
         return_footprint: `bool`
-            Whether to return the footprint in addition to the output array.
+            Whether to return the footprint in addition to the output NDCube.
 
         Returns
         -------
