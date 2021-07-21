@@ -699,10 +699,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise ImportError("This method requires the optional package `reproject`.")
 
         if isinstance(target_wcs, Mapping):
-            try:
-                target_wcs = WCS(header=target_wcs)
-            except Exception:
-                raise Exception('Invalid header supplied; unable to create a WCS object.')
+            target_wcs = WCS(header=target_wcs)
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise Exception('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
