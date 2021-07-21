@@ -478,14 +478,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             wcs = wcs.low_level_wcs
 
         axes_coords = self._generate_world_coords(pixel_corners, wcs)
+        world_axis_physical_types = wcs.world_axis_physical_types
 
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
-        world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
         if axes:
+            world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
             axes_coords = np.array(axes_coords)[world_indices]
-
-        world_axis_physical_types = tuple(np.array(wcs.world_axis_physical_types)[world_indices])
+            world_axis_physical_types = tuple(np.array(wcs.world_axis_physical_types)[world_indices])
 
         # Return in array order.
         # First replace characters in physical types forbidden for namedtuple identifiers.
