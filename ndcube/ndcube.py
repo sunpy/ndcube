@@ -698,7 +698,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         try:
             from reproject import reproject_interp
         except ModuleNotFoundError:
-            raise ImportError("This method requires the optional package `reproject`.")
+            raise ImportError("The NDCube.reproject_to method requires the optional package `reproject`.")
 
         if isinstance(target_wcs, Mapping):
             target_wcs = WCS(header=target_wcs)
@@ -713,8 +713,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             if hasattr(low_level_target_wcs, 'array_shape') and low_level_target_wcs.array_shape is not None:
                 shape_out = low_level_target_wcs.array_shape
             else:
-                raise ValueError("shape_out must be specified if target_wcs's low level API "
-                                 "does not have the array_shape attribute.")
+                raise ValueError("shape_out must be specified if target_wcs does not have the array_shape attribute.")
 
         data = reproject_interp(self, output_projection=target_wcs,
                                 shape_out=shape_out, order=order,
