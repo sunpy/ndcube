@@ -331,6 +331,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Limit the pixel dimensions to the ones present in the ExtraCoords
         if isinstance(wcs, ExtraCoords):
             ranges = [ranges[i] for i in wcs.mapping]
+            wcs = wcs.wcs
 
         world_coords = []
         for (pixel_indices, world_indices) in _split_matrix(wcs.axis_correlation_matrix):
@@ -348,11 +349,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
             if wcs.world_n_dim == 1 and not isinstance(world, tuple):
                 world = [world]
-            # We now want to reduce the world coordinates to just the correlated axes
-            # with a shape matching just those coordinates.
-            # First generate a slice which removes length 0 non-correlated axes
-            world_slice = [0] * wcs.world_n_dim
-            for idx in world_indices:
+            # We now want to reduce the shape world coordinates to just the
+            # correlated pixel axes. So we generate a slice which only extracts
+            # the pixel axes correlated with these world coordinates
+            world_slice = [0] * wcs.pixel_n_dim
+            for idx in pixel_indices:
                 world_slice[idx] = slice(None)
             # Extract the world coordinates of interest and remove any non-correlated axes
             # Transpose the world coordinates so they match array ordering not pixel
@@ -410,6 +411,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             wcs = wcs.low_level_wcs
 
         axes_coords = self._generate_world_coords(pixel_corners, wcs)
+
+        if isinstance(wcs, ExtraCoords):
+            wcs = wcs.wcs
+
         axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
 
         if not axes:
@@ -478,6 +483,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             wcs = wcs.low_level_wcs
 
         axes_coords = self._generate_world_coords(pixel_corners, wcs)
+
+        if isinstance(wcs, ExtraCoords):
+            wcs = wcs.wcs
+
         world_axis_physical_types = wcs.world_axis_physical_types
 
         # If user has supplied axes, extract only the

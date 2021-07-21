@@ -1,7 +1,7 @@
 """
 This module provides helpers introduced in https://github.com/astropy/astropy/pull/11950.
 """
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from astropy.wcs.wcsapi.high_level_api import default_order, rec_getattr
 
