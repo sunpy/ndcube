@@ -422,8 +422,8 @@ class NDCubeSequenceBase:
         # Reproject all cubes to a common WCS
         target_wcs = self[common_wcs_index].wcs
         shape_out = self[common_wcs_index].data.shape
-        reprojected_cubes = [cube.reproject(target_wcs, shape_out=shape_out,
-                                            return_footprint=False) for cube in self]
+        reprojected_cubes = [cube.reproject_to(target_wcs, shape_out=shape_out,
+                                               return_footprint=False) for cube in self]
 
         # Stack data of all cubes together
         combined_data = np.stack([cube.data for cube in reprojected_cubes], axis=0)
