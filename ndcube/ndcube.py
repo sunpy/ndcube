@@ -669,7 +669,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             from the low level API of the ``target_wcs`` is used.
 
         order: `int` or `str`
-            The order of the interpolation. This can be any of: 'nearest-neighbour', 'bilinear',
+            The order of the interpolation. This can be any of: 'nearest-neighbor', 'bilinear',
             'biquadratic', or 'bicubic'.
 
         output_array: `numpy.ndarray`, optional
