@@ -336,7 +336,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         world_coords = [None] * wcs.world_n_dim
         for (pixel_indices, world_indices) in _split_matrix(wcs.axis_correlation_matrix):
             # First construct a range of pixel indices for this set of coupled dimensions
-            srange = [np.arange(pixel_shape[idx]) for idx in pixel_indices]
+            srange = [ranges[idx] for idx in pixel_indices]
             # Then get a set of non correlated dimensions
             non_corr_axes = set(list(range(wcs.pixel_n_dim))) - set(pixel_indices)
             # And inject 0s for those coordinates
@@ -349,16 +349,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
             if wcs.world_n_dim == 1 and not isinstance(world, tuple):
                 world = [world]
-            # We now want to reduce the shape world coordinates to just the
-            # correlated pixel axes. So we generate a slice which only extracts
-            # the pixel axes correlated with these world coordinates
-            world_slice = [0] * wcs.pixel_n_dim
-            for idx in pixel_indices:
-                world_slice[idx] = slice(None)
             # Extract the world coordinates of interest and remove any non-correlated axes
             # Transpose the world coordinates so they match array ordering not pixel
             for idx in world_indices:
-                tmp_world = world[idx][tuple(world_slice)].T
+                array_slice = np.zeros((wcs.pixel_n_dim,), dtype=object)
+                array_slice[wcs.axis_correlation_matrix[idx]] = slice(None)
+                tmp_world = world[idx][tuple(array_slice)].T
                 world_coords[idx] = tmp_world
 
         for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
