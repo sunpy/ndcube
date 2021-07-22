@@ -13,7 +13,8 @@ Reprojecting an NDCube
 ======================
 
 Reprojecting returns a new `~ndcube.NDCube` object that has been transformed to use the provided ``target_wcs``.
-The ``target_wcs`` must be compatible with the WCS that is already associated with your `~ndcube.NDCube`. This means that it should represent the same physical axes and in the same order.
+The ``target_wcs`` must be compatible with the WCS that is already associated with your `~ndcube.NDCube`. 
+This means that it should represent the same physical axes and in the same order.
 
 To reproject an `~ndcube.NDCube`, simply do:
 
