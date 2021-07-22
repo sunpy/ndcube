@@ -343,7 +343,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for idx in non_corr_axes:
                 srange.insert(idx, 0)
             # Generate a grid of broadcastable pixel indices for all pixel dimensions
-            grid = np.meshgrid(*srange, indexing='ij', sparse=True)
+            grid = np.meshgrid(*srange, indexing='ij')
             # Convert to world coordinates
             world = wcs.pixel_to_world_values(*grid)
             # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
