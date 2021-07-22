@@ -491,7 +491,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if axes:
             world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
             axes_coords = np.array(axes_coords)[world_indices]
-            world_axis_physical_types = tuple(np.array(wcs.world_axis_physical_types)[world_indices])
+            world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
         # Return in array order.
         # First replace characters in physical types forbidden for namedtuple identifiers.
@@ -502,7 +502,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             identifier = identifier.replace("-", "__")
             identifiers.append(identifier)
         CoordValues = namedtuple("CoordValues", identifiers)
-
         return CoordValues(*axes_coords[::-1])
 
     @utils.misc.sanitise_wcs
