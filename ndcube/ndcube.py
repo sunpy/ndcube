@@ -8,7 +8,6 @@ from collections.abc import Mapping
 
 import astropy.nddata
 import astropy.units as u
-import gwcs
 import numpy as np
 
 try:
@@ -17,15 +16,15 @@ try:
 except ImportError:
     pass
 from astropy.wcs import WCS
+from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
-from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values
+from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values, values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
@@ -311,34 +310,57 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
-    def _generate_pixel_grid(self, pixel_corners, wcs):
+    def _generate_world_coords(self, pixel_corners, wcs):
+        # TODO: We can improve this by not always generating all coordinates
+        # To make our lives easier here we generate all the coordinates for all
+        # pixels and then choose the ones we want to return to the user based
+        # on the axes argument. We could be smarter by integrating this logic
+        # into the main loop, this would potentially reduce the number of calls
+        # to pixel_to_world_values
+
         # Create meshgrid of all pixel coordinates.
         # If user, wants pixel_corners, set pixel values to pixel pixel_corners.
         # Else make pixel centers.
-        wcs_shape = self.data.shape[::-1]
+        pixel_shape = self.data.shape[::-1]
         if pixel_corners:
-            wcs_shape = tuple(np.array(wcs_shape) + 1)
-            ranges = [np.arange(i) - 0.5 for i in wcs_shape]
+            pixel_shape = tuple(np.array(pixel_shape) + 1)
+            ranges = [np.arange(i) - 0.5 for i in pixel_shape]
         else:
-            ranges = [np.arange(i) for i in wcs_shape]
+            ranges = [np.arange(i) for i in pixel_shape]
 
         # Limit the pixel dimensions to the ones present in the ExtraCoords
         if isinstance(wcs, ExtraCoords):
             ranges = [ranges[i] for i in wcs.mapping]
+            wcs = wcs.wcs
 
-        # Astropy modeling seems unable to handle the output with sparse=True,
-        # so we try and detect all possible uses of gwcs.
-        # https://github.com/astropy/astropy/issues/11060
-        sparse = True
-        if (isinstance(wcs, (ExtraCoords, gwcs.WCS)) or
-            isinstance(wcs.low_level_wcs, (CompoundLowLevelWCS, gwcs.WCS)) or
-            (isinstance(wcs.low_level_wcs, SlicedLowLevelWCS) and
-             isinstance(wcs.low_level_wcs._wcs, (CompoundLowLevelWCS, gwcs.WCS))
-             )
-        ):  # NOQA
-            sparse = False
+        world_coords = [None] * wcs.world_n_dim
+        for (pixel_axes_indices, world_axes_indices) in _split_matrix(wcs.axis_correlation_matrix):
+            # First construct a range of pixel indices for this set of coupled dimensions
+            sub_range = [ranges[idx] for idx in pixel_axes_indices]
+            # Then get a set of non correlated dimensions
+            non_corr_axes = set(list(range(wcs.pixel_n_dim))) - set(pixel_axes_indices)
+            # And inject 0s for those coordinates
+            for idx in non_corr_axes:
+                sub_range.insert(idx, 0)
+            # Generate a grid of broadcastable pixel indices for all pixel dimensions
+            grid = np.meshgrid(*sub_range, indexing='ij')
+            # Convert to world coordinates
+            world = wcs.pixel_to_world_values(*grid)
+            # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
+            if wcs.world_n_dim == 1 and not isinstance(world, tuple):
+                world = [world]
+            # Extract the world coordinates of interest and remove any non-correlated axes
+            # Transpose the world coordinates so they match array ordering not pixel
+            for idx in world_axes_indices:
+                array_slice = np.zeros((wcs.pixel_n_dim,), dtype=object)
+                array_slice[wcs.axis_correlation_matrix[idx]] = slice(None)
+                tmp_world = world[idx][tuple(array_slice)].T
+                world_coords[idx] = tmp_world
 
-        return np.meshgrid(*ranges, indexing='ij', sparse=sparse)
+        for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
+            world_coords[i] = coord << u.Unit(unit)
+
+        return world_coords
 
     @utils.misc.sanitise_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
@@ -382,42 +404,22 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords(2) # doctest: +SKIP
 
         """
-        pixel_inputs = self._generate_pixel_grid(pixel_corners, wcs)
+        if isinstance(wcs, BaseHighLevelWCS):
+            wcs = wcs.low_level_wcs
+
+        axes_coords = self._generate_world_coords(pixel_corners, wcs)
 
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
 
-        # Get world coords for all axes and all pixels.
-        axes_coords = wcs.pixel_to_world(*pixel_inputs)
-
-        # TODO: this isinstance check is to mitigate https://github.com/spacetelescope/gwcs/pull/332
-        if wcs.world_n_dim == 1 and not isinstance(axes_coords, tuple):
-            axes_coords = [axes_coords]
-        # Ensure it's a list, not a tuple or bare SkyCoords object
-        if not isinstance(axes_coords, list):
-            if isinstance(axes_coords, tuple):
-                axes_coords = list(axes_coords)
-            else:
-                axes_coords = [axes_coords]
-
-        object_names = np.array([wao_comp[0] for wao_comp in wcs.low_level_wcs.world_axis_object_components])
-        unique_obj_names = utils.misc.unique_sorted(object_names)
-        world_axes_for_obj = [np.where(object_names == name)[0] for name in unique_obj_names]
-
-        # Reduce duplication across independent dimensions for each coord
-        # and transpose to make dimensions mimic numpy array order rather than WCS order.
-        # This assumes all the high level objects are array-like, which seems
-        # to be the case for all the astropy ones, but it's not actually
-        # mandated by APE 14
-        for i, axis_coord in enumerate(axes_coords):
-            world_axes = world_axes_for_obj[i]
-            slices = np.array([slice(None)] * wcs.pixel_n_dim)
-            for k in world_axes:
-                slices[np.invert(wcs.axis_correlation_matrix[k])] = 0
-            axes_coords[i] = axis_coord[tuple(slices)].T
+        axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
 
         if not axes:
             return tuple(axes_coords)
+
+        object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
+        unique_obj_names = utils.misc.unique_sorted(object_names)
+        world_axes_for_obj = [np.where(object_names == name)[0] for name in unique_obj_names]
 
         # Create a mapping from world index in the WCS to object index in axes_coords
         world_index_to_object_index = {}
@@ -474,28 +476,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
 
         """
-        pixel_inputs = self._generate_pixel_grid(pixel_corners, wcs)
+        if isinstance(wcs, BaseHighLevelWCS):
+            wcs = wcs.low_level_wcs
+
+        axes_coords = self._generate_world_coords(pixel_corners, wcs)
 
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
 
-        wcs = wcs.low_level_wcs
-
-        # Get world coords for all axes and all pixels.
-        axes_coords = wcs.pixel_to_world_values(*pixel_inputs)
-        if wcs.world_n_dim == 1:
-            axes_coords = [axes_coords]
-        # Ensure it's a list not a tuple
-        axes_coords = list(axes_coords)
-
-        # Reduce duplication across independent dimensions for each coord
-        # and transpose to make dimensions mimic numpy array order rather than WCS order.
-        for i, axis_coord in enumerate(axes_coords):
-            slices = np.array([slice(None)] * wcs.pixel_n_dim)
-            slices[np.invert(wcs.axis_correlation_matrix[i])] = 0
-            axes_coords[i] = axis_coord[tuple(slices)].T * u.Unit(wcs.world_axis_units[i])
-
         world_axis_physical_types = wcs.world_axis_physical_types
+
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
         if axes:
