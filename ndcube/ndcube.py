@@ -333,7 +333,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             ranges = [ranges[i] for i in wcs.mapping]
             wcs = wcs.wcs
 
-        world_coords = []
+        world_coords = [None] * wcs.world_n_dim
         for (pixel_indices, world_indices) in _split_matrix(wcs.axis_correlation_matrix):
             # First construct a range of pixel indices for this set of coupled dimensions
             srange = [np.arange(pixel_shape[idx]) for idx in pixel_indices]
@@ -357,8 +357,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 world_slice[idx] = slice(None)
             # Extract the world coordinates of interest and remove any non-correlated axes
             # Transpose the world coordinates so they match array ordering not pixel
-            world = [world[idx][tuple(world_slice)].T for idx in world_indices]
-            world_coords += world
+            for idx in world_indices:
+                tmp_world = world[idx][tuple(world_slice)].T
+                world_coords[idx] = tmp_world
 
         for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
             world_coords[i] = coord << u.Unit(unit)
