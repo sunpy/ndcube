@@ -592,15 +592,6 @@ def test_reproject_with_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out)
 
 
-def test_reproject_invalid_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
-    target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
-    target_wcs_header['CDELT3'] = None
-    shape_out = (5, 20, 12, 8)
-
-    with pytest.raises(Exception):
-        _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out)
-
-
 def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
     target_wcs_header['CDELT3'] = 0.1   # original value = 0.2
