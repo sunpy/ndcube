@@ -55,7 +55,7 @@ To reproject an `~ndcube.NDCube`, simply do:
 In the above example, the ``CDELT1`` parameter of the ``target_wcs`` was modified to 0.1 (from 0.2).
 This allowed us to upsample the wavelength axis by a factor of 2.
 Accordingly, the shape of the data was updated to ``(4, 4, 10)`` from the initial shape ``(4, 4, 5)``.
-The wavelength axis goes last since the pixel shape and WCS shape are represented in opposite directions.
+The wavelength axis goes last since the aray shape and WCS shape are represented in opposite directions.
 
 Currently, this method does not handle the ``mask``, ``extra_coords``, and ``uncertainty`` attributes.
 These values are dropped from the returned `~ndcube.NDCube`.
