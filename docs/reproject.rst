@@ -6,7 +6,7 @@ Reprojecting ND Objects
 
 Reprojecting allows you to transform your ND Objects to use coordinates described by another WCS object.
 Using this feature it is possible to regrid ND Objects by providing an appropriate target WCS, for operations such as resampling or alignment.
-It also enables removing differences between similar `~ndcube.NDCube` objects to get them onto the same grid.
+It also enables putting similar `~ndcube.NDCube` objects onto the same grid for more direct comparison.
 
 .. _cube_reproject:
 
