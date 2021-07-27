@@ -477,3 +477,7 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     target_wcs = get_low_level_wcs(target_wcs, 'target_wcs')
 
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
+
+
+def is_wcs_2d_celestial(wcs):
+    pass
