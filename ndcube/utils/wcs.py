@@ -4,6 +4,7 @@
 Miscellaneous WCS utilities.
 """
 
+import re
 import numbers
 from collections import UserDict
 
@@ -480,4 +481,17 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
 
 
 def is_wcs_2d_celestial(wcs):
-    pass
+    wcs = get_low_level_wcs(wcs)
+
+    if wcs.world_n_dim > 2:
+        return False
+
+    celestial_axes_regexes = [
+        '(?:pos.).*(?:\.lat|\.lon)$',
+        '(?:\.ra|\.dec)$',
+    ]
+
+    for axis in wcs.low_level_wcs.world_axis_physical_types:
+        return any([bool(re.search(pattern, axis)) for pattern in celestial_axes_regexes])
+
+    return True
