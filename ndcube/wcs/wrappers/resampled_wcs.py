@@ -20,27 +20,34 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     def __init__(self, wcs, factor):
         self._wcs = wcs
         if np.isscalar(factor):
-            factor = [factor] * self.pixel_n_dim
+            factor = np.array([factor] * self.pixel_n_dim)
         self._factor = factor
 
+    def _top_to_underlying_pixels(top_pixels):
+        # Convert user-facing pixel indices to the pixel grid of underlying WCS.
+        # Additive factor makes sure the centre of the resampled pixel is being used.
+        return top_pixels * self._factor + (self._factor - 1) / 2
+
+    def _underlying_to_top_pixels(underlying_pixels):
+        # Convert pixel indices of underlying pixel grid to user-facing grid.
+        # Subtractive factor makes sure the correct sub-pixel location is returned.
+        return (underlying_pixels - (self._factor - 1) / 2) / self._factor
+
     def pixel_to_world_values(self, *pixel_arrays):
-        pixel_arrays = [np.asarray(pixel_arrays[i]) * self._factor[i]
-                        for i in range(self.pixel_n_dim)]
-        return self._wcs.pixel_to_world_values(*pixel_arrays)
+        underlying_pixel_arrays = self._top_to_underlying_pixels(np.asarray(pixel_arrays))
+        return self._wcs.pixel_to_world_values(*underlying_pixel_arrays)
 
     def world_to_pixel_values(self, *world_arrays):
-        pixel_arrays = self._wcs.world_to_pixel_values(*world_arrays)
-        pixel_arrays = [np.asarray(pixel_arrays[i]) / self._factor[i]
-                        for i in range(self.pixel_n_dim)]
-        return pixel_arrays
+        underlying_pixel_arrays = self._wcs.world_to_pixel(*world_arrays)
+        return self._underyling_to_top_pixels(np.asarray(underlying_pixel_arrays))
 
     @property
     def pixel_shape(self):
-        return tuple(self._wcs.pixel_shape[i] / self._factor[i]
-                     for i in range(self.pixel_n_dim))
+        return tuple(np.asarray(self._wcs.pixel_shape) / self._factor)
 
     @property
     def pixel_bounds(self):
-        return tuple((self._wcs.pixel_bounds[i][0] / self._factor[i],
-                      self._wcs.pixel_bounds[i][1] / self._factor[i])
-                     for i in range(self.pixel_n_dim))
+        if self._wcs.pixel_bounds is None:
+            return self._wcs.pixel_bounds
+        top_level_bounds = self._underlying_to_top_pixels(np.asarray(self._wcs.pixel_bounds))
+        return [tuple(bounds) for bounds in top_level_bounds]
