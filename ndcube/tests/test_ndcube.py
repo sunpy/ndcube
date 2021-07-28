@@ -620,3 +620,13 @@ def test_reproject_shape_out(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     # should not raise an exception when target_wcs has pixel_shape or array_shape attribute
     wcs_4d_lt_t_l_ln.array_shape = shape
     _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, shape_out=shape)
+
+
+def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
+    # Generate a low level WCS
+    slices = np.s_[:, :, 0]
+    low_level_wcs = SlicedLowLevelWCS(wcs_3d_l_lt_ln, slices)
+    # Generate an NDCube using the low level WCS
+    cube = NDCube(ndcube_3d_ln_lt_l.data[slices], low_level_wcs)
+    # Check the WCS has been converted to high level but NDCube init.
+    assert isinstance(cube.wcs, BaseHighLevelWCS)
