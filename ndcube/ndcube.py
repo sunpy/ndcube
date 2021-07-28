@@ -241,7 +241,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         super().__init__(data, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
-        self.wcs = wcs  # This line is required as a patch for an astropy bug.
+        if not self.wcs:
+            self.wcs = wcs  # This line is required as a patch for an astropy bug.
+        # Above line is in if statement to prevent WCS being overwritten with None
+        # if we are instantiating from an NDCube.
 
         # Enforce that the WCS object is not None
         if self.wcs is None:
