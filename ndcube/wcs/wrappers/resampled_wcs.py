@@ -1,4 +1,5 @@
 import numpy as np
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 __all__ = ['ResampledLowLevelWCS']
@@ -23,23 +24,29 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
             factor = np.array([factor] * self.pixel_n_dim)
         self._factor = factor
 
-    def _top_to_underlying_pixels(top_pixels):
+    def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
         # Additive factor makes sure the centre of the resampled pixel is being used.
-        return top_pixels * self._factor + (self._factor - 1) / 2
+        factor_shape = list(self._factor.shape) + [1] * (top_pixels.ndim - 1)
+        factor = self._factor.reshape(factor_shape)
+        return top_pixels * factor + (factor - 1) / 2
 
-    def _underlying_to_top_pixels(underlying_pixels):
+    def _underlying_to_top_pixels(self, underlying_pixels):
         # Convert pixel indices of underlying pixel grid to user-facing grid.
         # Subtractive factor makes sure the correct sub-pixel location is returned.
-        return (underlying_pixels - (self._factor - 1) / 2) / self._factor
+        factor_shape = list(self._factor.shape) + [1] * (underlying_pixels.ndim - 1)
+        factor = self._factor.reshape(factor_shape)
+        #factor = self._factor
+        return (underlying_pixels - (factor - 1) / 2) / factor
 
     def pixel_to_world_values(self, *pixel_arrays):
         underlying_pixel_arrays = self._top_to_underlying_pixels(np.asarray(pixel_arrays))
         return self._wcs.pixel_to_world_values(*underlying_pixel_arrays)
 
     def world_to_pixel_values(self, *world_arrays):
-        underlying_pixel_arrays = self._wcs.world_to_pixel(*world_arrays)
-        return self._underyling_to_top_pixels(np.asarray(underlying_pixel_arrays))
+        underlying_pixel_arrays = self._wcs.world_to_pixel_values(*world_arrays)
+        top_pixel_arrays = self._underlying_to_top_pixels(np.asarray(underlying_pixel_arrays))
+        return tuple(array for array in top_pixel_arrays)
 
     @property
     def pixel_shape(self):
