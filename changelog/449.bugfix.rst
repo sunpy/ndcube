@@ -1,1 +1,0 @@
-Ensure `~ndcube.wcs.wrappers.resampled_wcs.ResampledWCS` accounts for the fact that pixel indices represent pixel centers and so a shift is required when converted between pixel grids.
