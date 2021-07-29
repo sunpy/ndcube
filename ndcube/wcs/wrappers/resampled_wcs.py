@@ -21,8 +21,8 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     def __init__(self, wcs, factor):
         self._wcs = wcs
         if np.isscalar(factor):
-            factor = np.array([factor] * self.pixel_n_dim)
-        self._factor = factor
+            factor = [factor] * self.pixel_n_dim
+        self._factor = np.array(factor)
 
     def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
