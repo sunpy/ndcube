@@ -431,7 +431,7 @@ class ExtraCoords(ExtraCoordsABC):
                     pass
                 else:
                     new_coord = u.Quantity(new_table_values, unit=table.unit)
-            new_ec.add(key, aom, new_coord, physical_types=lut[1].physical_types)
+            new_ec.add(key, int(aom), new_coord, physical_types=lut[1].physical_types)
         return new_ec
 
 
