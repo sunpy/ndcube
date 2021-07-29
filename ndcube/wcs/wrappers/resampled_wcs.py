@@ -53,7 +53,6 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     @property
     def pixel_bounds(self):
-        if self._wcs.pixel_bounds is None:
-            return self._wcs.pixel_bounds
-        top_level_bounds = self._underlying_to_top_pixels(np.asarray(self._wcs.pixel_bounds))
-        return [tuple(bounds) for bounds in top_level_bounds]
+        return tuple((self._wcs.pixel_bounds[i][0] / self._factor[i],
+                      self._wcs.pixel_bounds[i][1] / self._factor[i])
+                     for i in range(self.pixel_n_dim))
