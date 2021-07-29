@@ -2,7 +2,6 @@ import abc
 import textwrap
 import warnings
 import itertools
-import warnings
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
@@ -10,6 +9,7 @@ from collections.abc import Mapping
 import astropy.nddata
 import astropy.units as u
 import numpy as np
+
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
     import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
