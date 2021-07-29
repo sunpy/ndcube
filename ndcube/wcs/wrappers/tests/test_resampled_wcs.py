@@ -60,10 +60,11 @@ def test_2d(celestial_wcs):
     # Shapes and bounds should be floating-point if needed
     assert_allclose(wcs.pixel_shape, (15, 7/3))
     assert_allclose(wcs.array_shape, (7/3, 15))
+    print(celestial_wcs.pixel_bounds, wcs.pixel_bounds, [0.4, 3])
     assert_allclose(wcs.pixel_bounds, ((-2.5, 12.5), (1/3, 7/3)))
 
     pixel_scalar = (2.3, 4.3)
-    world_scalar = (12.16, 13.8)
+    world_scalar = (12.76, 15.8)
     assert_allclose(wcs.pixel_to_world_values(*pixel_scalar), world_scalar)
     assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
@@ -71,8 +72,8 @@ def test_2d(celestial_wcs):
 
     pixel_array = (np.array([2.3, 2.4]),
                    np.array([4.3, 4.4]))
-    world_array = (np.array([12.16, 12.08]),
-                   np.array([13.8, 14.4]))
+    world_array = (np.array([12.76, 12.68]),
+                   np.array([15.8, 16.4]))
     assert_allclose(wcs.pixel_to_world_values(*pixel_array), world_array)
     assert_allclose(wcs.array_index_to_world_values(*pixel_array[::-1]), world_array)
     assert_allclose(wcs.world_to_pixel_values(*world_array), pixel_array)
@@ -103,7 +104,7 @@ def test_scalar_factor(celestial_wcs):
     wcs = ResampledLowLevelWCS(celestial_wcs, 2)
 
     pixel_scalar = (2.3, 4.3)
-    world_scalar = (4.8, 5.2)
+    world_scalar = (3.8, 6.2)
     assert_allclose(wcs.pixel_to_world_values(*pixel_scalar), world_scalar)
     assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)

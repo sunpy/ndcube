@@ -1,5 +1,4 @@
 import numpy as np
-from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 __all__ = ['ResampledLowLevelWCS']
@@ -14,6 +13,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     ----------
     wcs : `~astropy.wcs.wcsapi.BaseLowLevelWCS`
         The original WCS for which to reorder axes
+
     factor : int or float or iterable
         The factor by which to increase the pixel size for each pixel
         axis. If a scalar, the same factor is used for all axes.
@@ -21,8 +21,8 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     def __init__(self, wcs, factor):
         self._wcs = wcs
         if np.isscalar(factor):
-            factor = np.array([factor] * self.pixel_n_dim)
-        self._factor = factor
+            factor = [factor] * self.pixel_n_dim
+        self._factor = np.array(factor)
 
     def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
@@ -36,7 +36,6 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         # Subtractive factor makes sure the correct sub-pixel location is returned.
         factor_shape = list(self._factor.shape) + [1] * (underlying_pixels.ndim - 1)
         factor = self._factor.reshape(factor_shape)
-        #factor = self._factor
         return (underlying_pixels - (factor - 1) / 2) / factor
 
     def pixel_to_world_values(self, *pixel_arrays):
@@ -54,7 +53,6 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     @property
     def pixel_bounds(self):
-        if self._wcs.pixel_bounds is None:
-            return self._wcs.pixel_bounds
-        top_level_bounds = self._underlying_to_top_pixels(np.asarray(self._wcs.pixel_bounds))
-        return [tuple(bounds) for bounds in top_level_bounds]
+        return tuple((self._wcs.pixel_bounds[i][0] / self._factor[i],
+                      self._wcs.pixel_bounds[i][1] / self._factor[i])
+                     for i in range(self.pixel_n_dim))
