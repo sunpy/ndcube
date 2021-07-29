@@ -4,8 +4,8 @@
 Miscellaneous WCS utilities.
 """
 
-import re
 import numbers
+from astropy.coordinates.sky_coordinate import SkyCoord
 from collections import UserDict
 
 import numpy as np
@@ -486,12 +486,8 @@ def is_wcs_2d_celestial(wcs):
     if wcs.world_n_dim > 2:
         return False
 
-    celestial_axes_regexes = [
-        '(?:pos.).*(?:\.lat|\.lon)$',
-        '(?:\.ra|\.dec)$',
-    ]
-
-    for axis in wcs.low_level_wcs.world_axis_physical_types:
-        return any([bool(re.search(pattern, axis)) for pattern in celestial_axes_regexes])
+    for world_axis_class in wcs.world_axis_object_classes.values():
+        if not issubclass(world_axis_class[0], SkyCoord):
+            return False
 
     return True

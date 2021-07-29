@@ -572,7 +572,7 @@ def test_reproject(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out)
+    resampled_cube = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out=shape_out)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
     assert resampled_cube.data.shape == (5, 20, 12, 8)
@@ -582,14 +582,14 @@ def test_reproject_invalid_wcs(ndcube_4d_ln_l_t_lt, wcs_3d_lt_ln_l):
     shape_out = (5, 20, 12, 8)
 
     with pytest.raises(Exception):
-        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_3d_lt_ln_l, shape_out)
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_3d_lt_ln_l, shape_out=shape_out)
 
 
 def test_reproject_with_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
     shape_out = (5, 20, 12, 8)
 
-    _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out)
+    _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out=shape_out)
 
 
 def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
@@ -598,7 +598,7 @@ def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube, footprint = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out,
+    resampled_cube, footprint = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out=shape_out,
                                                                  return_footprint=True)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)

@@ -705,7 +705,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def reproject_to(self, target_wcs, algorithm='interpolate', shape_out=None, order='bilinear',
+    def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, order='bilinear',
                      output_array=None, parallel=False, return_footprint=False):
         """
         Reprojects this NDCube to the coordinates described by another WCS object.
