@@ -26,17 +26,18 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
-        # Additive factor makes sure the centre of the resampled pixel is being used.
-        factor_shape = list(self._factor.shape) + [1] * (top_pixels.ndim - 1)
-        factor = self._factor.reshape(factor_shape)
-        return top_pixels * factor + (factor - 1) / 2
+        return top_pixels * self._pad_dims(self._factor, top_pixels.ndim)
 
     def _underlying_to_top_pixels(self, underlying_pixels):
         # Convert pixel indices of underlying pixel grid to user-facing grid.
-        # Subtractive factor makes sure the correct sub-pixel location is returned.
-        factor_shape = list(self._factor.shape) + [1] * (underlying_pixels.ndim - 1)
-        factor = self._factor.reshape(factor_shape)
-        return (underlying_pixels - (factor - 1) / 2) / factor
+        return underlying_pixels / self._pad_dims(self._factor, underlying_pixels.ndim)
+
+    def _pad_dims(self, factor, ndim):
+        # Pad factor array with trailing degenerate dimensions.
+        # This make scaling with pixel arrays easier.
+        shape = np.ones(ndim, dtype=int)
+        shape[0] = len(factor)
+        return factor.reshape(tuple(shape))
 
     def pixel_to_world_values(self, *pixel_arrays):
         underlying_pixel_arrays = self._top_to_underlying_pixels(np.asarray(pixel_arrays))
@@ -53,6 +54,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     @property
     def pixel_bounds(self):
-        return tuple((self._wcs.pixel_bounds[i][0] / self._factor[i],
-                      self._wcs.pixel_bounds[i][1] / self._factor[i])
-                     for i in range(self.pixel_n_dim))
+        if self._wcs.pixel_bounds is None:
+            return self._wcs.pixel_bounds
+        top_level_bounds = self._underlying_to_top_pixels(np.asarray(self._wcs.pixel_bounds))
+        return [tuple(bounds) for bounds in top_level_bounds]
