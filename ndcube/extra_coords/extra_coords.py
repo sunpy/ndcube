@@ -199,7 +199,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
         self._lookup_tables = list(sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], int) else x[0][0]))
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0]))
 
     @property
     def _name_lut_map(self):
