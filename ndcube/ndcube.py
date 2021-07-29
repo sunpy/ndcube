@@ -705,6 +705,27 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
+    def _validate_algorithm_and_order(self, algorithm, order):
+        order_compatibility =  {
+            'interpolation': ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic'],
+            'adaptive': ['nearest-neighbor', 'bilinear'],
+            'exact': []
+        }
+
+        if algorithm in order_compatibility:
+            # To prevent raising the following exception, because 'exact' does not
+            # support the 'order' parameter itself.
+            if algorithm == 'exact':
+                return
+
+            if order not in order_compatibility[algorithm]:
+                raise ValueError(f"For '{algorithm}' algorithm, the 'order' argument must be "
+                                 f"one of {', '.join(order_compatibility[algorithm])}.")
+
+        else:
+            raise ValueError(f"The 'algorithm' argument must be one of "
+                             f"{', '.join(order_compatibility.keys())}.")
+
     def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, order='bilinear',
                      output_array=None, parallel=False, return_footprint=False):
         """
@@ -787,6 +808,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 shape_out = low_level_target_wcs.array_shape
             else:
                 raise ValueError("shape_out must be specified if target_wcs does not have the array_shape attribute.")
+
+        self._validate_algorithm_and_order(algorithm, order)
 
         if algorithm == 'interpolation':
             data = reproject_interp(self, output_projection=target_wcs, shape_out=shape_out,

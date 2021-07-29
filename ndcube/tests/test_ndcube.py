@@ -641,6 +641,35 @@ def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     assert resampled_cube.data.shape == (10, 12)
 
 
+def test_reproject_invalid_algorithm(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
+    with pytest.raises(ValueError):
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='my_algorithm',
+                                             shape_out=(5, 10, 12, 8))
+
+
+def test_reproject_invalid_order(ndcube_2d_ln_lt, wcs_2d_lt_ln):
+    shape_out = (10, 12)
+
+    # Supported for interpolation
+    for order in ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic']:
+        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='interpolation',
+                                         shape_out=shape_out, order=order)
+
+    # Supported for adaptive
+    for order in ['nearest-neighbor', 'bilinear']:
+        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
+                                         shape_out=shape_out, order=order)
+
+    # Not supported for adaptive
+    for order in ['biquadratic', 'bicubic', 'my_order']:
+        with pytest.raises(ValueError):
+            _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
+                                             shape_out=shape_out, order=order)
+
+    # 'exact' does not need 'order'
+    _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='exact', shape_out=shape_out)
+
+
 def test_reproject_adaptive_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     with pytest.raises(ValueError):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='adaptive',
