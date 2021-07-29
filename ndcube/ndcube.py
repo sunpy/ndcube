@@ -26,7 +26,7 @@ from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values, values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
-from ndcube.wcs.wrappers import CompoundLowLevelWCS
+from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
@@ -782,7 +782,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def superpixel(self, superpixel_size, func=np.sum, new_unit=self.unit):
+    def superpixel(self, superpixel_shape, func=np.sum, new_unit=False):
         """Downsample array by creating non-overlapping superpixels.
 
         Values in superpixels are determined applying a function to the pixel
@@ -804,17 +804,18 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Each element must be in int. If they are not they will be rounded
             to the nearest int.
 
-        func :
+        func : (optional)
             Function applied to the data to derive values of the superpixels.
             The function must take an array as its first argument and
             support the axis kwarg with the same meaning as a numpy axis
             kward (see the description of `~numpy.sum` for an example.)
             Default: `~numpy.sum`
 
-        new_unit : `str` or `astropy.units.Unit`
+        new_unit : `str` or `astropy.units.Unit` (optional)
             The unit of the new data. This might need to change based on how
             func alters the data.
-            Default: self.unit, i.e. no change.
+            Default: False, i.e. self.unit is used. (False is used as default
+            flag because None is a valid new_unit option.)
 
         Returns
         -------
@@ -865,6 +866,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise ValueError(
                 "superpixel shape must be an integer fraction of the data shape in each dimension. "
                 f"data shape: {data.shape};  superpixel shape: {superpixel_shape}")
+        if new_unit is False:
+            new_unit = self.unit
 
         # Reshape array and apply function over odd axes to generate array of superpixels.
         if self.mask is None:
@@ -883,12 +886,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             new_data = new_data.data
 
         # Resample WCS
-        new_wcs = ResampledLowLevelWCS(self.wcs, superpixel_size[::-1])
+        new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, superpixel_shape[::-1])
 
         # Reform NDCube.
         new_cube = type(self)(new_data, new_wcs, mask=new_mask, meta=self.meta, unit=new_unit)
 
-        return new_data
+        return new_cube
 
 
 class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
