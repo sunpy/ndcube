@@ -14,30 +14,45 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     wcs : `~astropy.wcs.wcsapi.BaseLowLevelWCS`
         The original WCS for which to reorder axes
 
-    factor : int or float or iterable
+    factor : `int` or `float` or iterable of the same
         The factor by which to increase the pixel size for each pixel
         axis. If a scalar, the same factor is used for all axes.
+
+    offset: `int` or `float` or iterable the same
+        The location on the underlying pixel grid which corresponds
+        to zero on the top level pixel grid.
     """
-    def __init__(self, wcs, factor):
+    def __init__(self, wcs, factor, offset=None):
         self._wcs = wcs
         if np.isscalar(factor):
             factor = [factor] * self.pixel_n_dim
         self._factor = np.array(factor)
+        if offset is None:
+            offset = 0
+        if np.isscalar(offset):
+            offset = [offset] * self.pixel_n_dim
+        self._offset = np.array(offset)
+        if len(self._offset) != len(self._factor):
+            raise ValueError("offset must have same len as factor.")
 
     def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
-        return top_pixels * self._pad_dims(self._factor, top_pixels.ndim)
+        factor = self._pad_dims(self._factor, top_pixels.ndim)
+        offset = self._pad_dims(self._offset, top_pixels.ndim)
+        return top_pixels * factor + offset
 
     def _underlying_to_top_pixels(self, underlying_pixels):
         # Convert pixel indices of underlying pixel grid to user-facing grid.
-        return underlying_pixels / self._pad_dims(self._factor, underlying_pixels.ndim)
+        factor = self._pad_dims(self._factor, top_pixels.ndim)
+        offset = self._pad_dims(self._offset, top_pixels.ndim)
+        return (underlying_pixels - offset) / factor
 
-    def _pad_dims(self, factor, ndim):
-        # Pad factor array with trailing degenerate dimensions.
+    def _pad_dims(self, arr, ndim):
+        # Pad array with trailing degenerate dimensions.
         # This make scaling with pixel arrays easier.
         shape = np.ones(ndim, dtype=int)
-        shape[0] = len(factor)
-        return factor.reshape(tuple(shape))
+        shape[0] = len(arr)
+        return arr.reshape(tuple(shape))
 
     def pixel_to_world_values(self, *pixel_arrays):
         underlying_pixel_arrays = self._top_to_underlying_pixels(np.asarray(pixel_arrays))
