@@ -706,7 +706,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return NDCubeSequence(result_cubes, meta=self.meta)
 
     def _validate_algorithm_and_order(self, algorithm, order):
-        order_compatibility =  {
+        order_compatibility = {
             'interpolation': ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic'],
             'adaptive': ['nearest-neighbor', 'bilinear'],
             'exact': []
