@@ -763,9 +763,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         However, ``meta`` and ``global_coords`` are copied to the output ``NDCube``.
         """
         try:
-            from reproject import reproject_interp
-            from reproject import reproject_adaptive
-            from reproject import reproject_exact
+            from reproject import reproject_adaptive, reproject_exact, reproject_interp
         except ModuleNotFoundError:
             raise ImportError("The NDCube.reproject_to method requires the optional package `reproject`.")
 

@@ -5,10 +5,10 @@ Miscellaneous WCS utilities.
 """
 
 import numbers
-from astropy.coordinates.sky_coordinate import SkyCoord
 from collections import UserDict
 
 import numpy as np
+from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
 __all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
