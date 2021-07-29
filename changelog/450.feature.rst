@@ -1,0 +1,1 @@
+Implement a new `ndcube.NDCube.superpixel` method to combine integer numbers of pixels along each axis into larger pixels.
