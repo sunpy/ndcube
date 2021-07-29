@@ -162,3 +162,10 @@ def test_array_indices_for_world_objects_2(wcs_4d_lt_t_l_ln):
 def test_compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln):
     assert utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_4d_t_l_lt_ln) is True
     assert utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln) is False
+
+
+def test_is_wcs_2d_celestial(wcs_1d_l, wcs_2d_lt_ln, wcs_3d_l_lt_ln, wcs_4d_t_l_lt_ln, ):
+    assert utils.wcs.is_wcs_2d_celestial(wcs_1d_l) is False
+    assert utils.wcs.is_wcs_2d_celestial(wcs_2d_lt_ln) is True
+    assert utils.wcs.is_wcs_2d_celestial(wcs_3d_l_lt_ln) is False
+    assert utils.wcs.is_wcs_2d_celestial(wcs_4d_t_l_lt_ln) is False
