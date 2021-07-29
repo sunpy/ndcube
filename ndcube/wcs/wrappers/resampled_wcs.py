@@ -14,6 +14,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     ----------
     wcs : `~astropy.wcs.wcsapi.BaseLowLevelWCS`
         The original WCS for which to reorder axes
+
     factor : int or float or iterable
         The factor by which to increase the pixel size for each pixel
         axis. If a scalar, the same factor is used for all axes.
@@ -36,7 +37,6 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         # Subtractive factor makes sure the correct sub-pixel location is returned.
         factor_shape = list(self._factor.shape) + [1] * (underlying_pixels.ndim - 1)
         factor = self._factor.reshape(factor_shape)
-        #factor = self._factor
         return (underlying_pixels - (factor - 1) / 2) / factor
 
     def pixel_to_world_values(self, *pixel_arrays):
