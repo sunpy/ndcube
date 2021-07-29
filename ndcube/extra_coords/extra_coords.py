@@ -5,6 +5,7 @@ from functools import reduce, partial
 
 import astropy.units as u
 import numpy as np
+import scipy.interpolate
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS
@@ -374,6 +375,65 @@ class ExtraCoords(ExtraCoordsABC):
             return mtc.dropped_world_dimensions
 
         return dict()
+
+    def interpolate(self, new_array_grids, ndcube=None, **kwargs):
+        """Interpolate all extra coords to new array index grids.
+
+        One new array index grid must be supplied for each pixel axis.
+
+        Parameters
+        ----------
+        new_array_grids: iterable of array-likes
+            The array index values at which the the new values of the coords are desired.
+            An array for each array axis must be given.
+            If None given for an axis, no interpolation is performed for coords
+            corresponding to that axis.
+
+        ndcube: `~ndcube.NDCube `
+            The NDCube instance with which the output ExtraCoords object is associated.
+
+        Returns
+        -------
+        new_ec: `~ndcube.extra_coords.ExtraCoords`
+            A new ExtraCoords object holding the interpolated coords.
+
+        """
+        cube_dims = self._ndcube.dimensions.value.astype(int)
+        naxes = len(cube_dims)
+        if len(new_array_grids) != naxes:
+            raise ValueError("new_array_grids must have an entry for each array index."
+                             f"num. array axes: {naxes}; "
+                             f"num. new array grids: {len(new_array_grids)}")
+        array_order_mapping = convert_between_array_and_pixel_axes(np.asarray(self.mapping), naxes)
+        old_array_grids = [None if new_grid is None else np.arange(dim)
+                           for new_grid, dim in zip(new_array_grids, cube_dims)]
+        new_ec = type(self)(ndcube)
+        for key, aom, lut in zip(self.keys(), array_order_mapping, self._lookup_tables):
+            if new_array_grids[aom] is None:
+                new_coord = lut[1]
+            else:
+                table = lut[1].table
+                if isinstance(table, tuple):
+                    table = table[0]
+                if isinstance(table, Time):
+                    table_values = table.mjd
+                elif isinstance(table, SkyCoord):
+                    pass
+                elif isinstance(table, u.Quantity):
+                    table_values = table.value
+                else:
+                    raise TypeError(f"Unrecognized lookup table type: {table}")
+                lut_interp = scipy.interpolate.interp1d(old_array_grids[aom], table_values)
+                new_table_values = lut_interp(new_array_grids[aom])
+                if isinstance(table, Time):
+                    new_coord = Time(new_table_values, scale=table.scale, format="mjd")
+                elif isinstance(table, SkyCoord):
+                    pass
+                else:
+                    new_coord = u.Quantity(new_table_values, unit=table.unit)
+            new_ec.add(key, aom, new_coord, physical_types=lut[1].physical_types)
+        return new_ec
+
 
     def __str__(self):
         elements = [f"{', '.join(table.names)} ({axes}): {table}" for axes, table in self._lookup_tables]

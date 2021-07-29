@@ -10,21 +10,17 @@ from collections.abc import Mapping
 import astropy.nddata
 import astropy.units as u
 import numpy as np
-import scipy.interpolate
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
     import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
 except ImportError:
     pass
-from astropy.time import Time
 from astropy.wcs import WCS
 from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
-import ndcube.utils.wcs as wcs_utils
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords
-from ndcube.extra_coords.table_coord import SkyCoordTableCoordinate
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -867,7 +863,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Ensure superpixel_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
         data_shape = self.dimensions.value.astype(int)
-        if len(superpixel_shape) != len(data_shape):
+        naxes = len(data_shape)
+        if len(superpixel_shape) != naxes:
             raise ValueError("superpixel_shape must have an entry for each data dimensions.")
         if (np.mod(data_shape, superpixel_shape) != 0).any():
             raise ValueError(
@@ -899,38 +896,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         new_cube = type(self)(new_data, new_wcs, mask=new_mask, meta=self.meta, unit=new_unit)
 
         # Reconstitute extra coords
-        old_pixel_grids = [np.arange(dim) for dim in self.dimensions.value.astype(int)]
-        new_pixel_grids = [np.arange(offset, dim + offset, factor) for dim, factor, offset in zip(
-            self.dimensions.value.astype(int), superpixel_shape, offsets)]
-        ec = self.extra_coords
-        array_order_mapping = wcs_utils.convert_between_array_and_pixel_axes(
-            np.asarray(ec.mapping), len(self.dimensions))
-        for i, (key, mapping) in enumerate(zip(ec.keys(), array_order_mapping)):
-            if isinstance(ec._lookup_tables[i][1], SkyCoordTableCoordinate):
-                warnings.warn("Superpixelling a SkyCoord extra coord not yet supported."
-                              "Dropping extra coord.")
-            else:
-                if superpixel_shape[mapping] == 1:
-                    new_coord = ec._lookup_tables[i][1]
-                else:
-                    tab = ec._lookup_tables[i][1].table
-                    if isinstance(tab, tuple):
-                        tab = tab[0]
-                    if isinstance(tab, Time):
-                        table = tab.mjd
-                    elif isinstance(tab, u.Quantity):
-                        table = tab.value
-                    else:
-                        raise TypeError(f"Unrecognized extra coord type: {ec[key]}")
-                    lut_generator = scipy.interpolate.interp1d(old_pixel_grids[mapping], table)
-                    new_lut = lut_generator(new_pixel_grids[mapping])
-                    print(type(tab))
-                    if isinstance(tab, Time):
-                        new_coord = Time(new_lut, scale=tab.scale, format="mjd")
-                    elif isinstance(tab, u.Quantity):
-                        new_coord = u.Quantity(new_lut, unit=tab.unit)
-                new_cube.extra_coords.add(key, mapping, new_coord,
-                                          physical_types=ec._lookup_tables[i][1].physical_types)
+        new_array_grids = [None if superpixel_shape[i] == 1 else
+                           np.arange(offsets[i], data_shape[i] + offsets[i], superpixel_shape[i])
+                           for i in range(naxes)]
+        new_cube._extra_coords = self.extra_coords.interpolate(new_array_grids, new_cube)
+
         return new_cube
 
 
