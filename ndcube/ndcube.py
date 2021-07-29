@@ -782,6 +782,114 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
+    def superpixel(self, superpixel_size, func=np.sum, new_unit=self.unit):
+        """Downsample array by creating non-overlapping superpixels.
+
+        Values in superpixels are determined applying a function to the pixel
+        values within it.  The number of pixels in each superpixel in each
+        dimension is given is given by the superpixel_shape input.
+        This must be an integer fraction of the cube's array size in each dimension.
+
+        This method currently does not handle uncertainty or extra_coords.
+        They are dropped from the output.
+
+        Parameters
+        ----------
+        data : array-like
+            The data array to be downsampled
+
+        superpixel_shape : array-like
+            The number of pixels in a superpixel in each dimension.
+            Must be the same length as number of dimensions in data.
+            Each element must be in int. If they are not they will be rounded
+            to the nearest int.
+
+        func :
+            Function applied to the data to derive values of the superpixels.
+            The function must take an array as its first argument and
+            support the axis kwarg with the same meaning as a numpy axis
+            kward (see the description of `~numpy.sum` for an example.)
+            Default: `~numpy.sum`
+
+        new_unit : `str` or `astropy.units.Unit`
+            The unit of the new data. This might need to change based on how
+            func alters the data.
+            Default: self.unit, i.e. no change.
+
+        Returns
+        -------
+        new_cube: `NDCube`
+            The resolution-degraded cube.
+
+        References
+        ----------
+        https://mail.scipy.org/pipermail/numpy-discussion/2010-July/051760.html
+
+        Notes
+        -----
+        Superpixels are created by reshaping the N-D array to a 2N-D array and
+        applying the function over the odd-numbered axes. An example of this
+        applied the data only is the following.  Let's say you have an array::
+
+             x = np.array([[0, 0, 0, 1, 1, 1],
+                           [0, 0, 1, 1, 0, 0],
+                           [1, 1, 0, 0, 1, 1],
+                           [0, 0, 0, 0, 1, 1],
+                           [1, 0, 1, 0, 1, 1],
+                           [0, 0, 1, 0, 0, 0]])
+
+        and you want to sum over 2x2 non-overlapping sub-arrays.  This summing can
+        be done by reshaping the array::
+
+             y = x.reshape(3,2,3,2)
+
+        and then summing over the 1st and third directions::
+
+             y2 = y.sum(axis=3).sum(axis=1)
+
+        which gives the expected array::
+
+             array([[0, 3, 2],
+                   [2, 0, 4],
+                   [1, 2, 2]])
+        """
+        # Sanitize input.
+        # Make sure the input superpixel dimensions are integers.
+        superpixel_shape = np.rint(superpixel_shape).astype(int)
+        # Ensure superpixel_size has right number of entries and each entry is an
+        # integer fraction of the array shape in each dimension.
+        data_shape = self.dimensions.value.astype(int)
+        if len(superpixel_shape) != len(data_shape):
+            raise ValueError("superpixel_shape must have an entry for each data dimensions.")
+        if (np.mod(data_shape, superpixel_shape) != 0).any():
+            raise ValueError(
+                "superpixel shape must be an integer fraction of the data shape in each dimension. "
+                f"data shape: {data.shape};  superpixel shape: {superpixel_shape}")
+
+        # Reshape array and apply function over odd axes to generate array of superpixels.
+        if self.mask is None:
+            data = self.data
+            new_mask = None
+        else:
+            data = np.ma.masked_array(self.data, self.mask)
+        reshape = np.empty(data_shape.size + superpixel_shape.size, dtype=int)
+        reshape[0::2] = data_shape / superpixel_shape
+        reshape[1::2] = superpixel_shape
+        new_data = data.reshape(tuple(reshape))
+        for i in range(len(reshape) - 1, 0, -2):
+            new_data = func(new_data, axis=i)
+        if self.mask is not None:
+            new_mask = new_data.mask
+            new_data = new_data.data
+
+        # Resample WCS
+        new_wcs = ResampledLowLevelWCS(self.wcs, superpixel_size[::-1])
+
+        # Reform NDCube.
+        new_cube = type(self)(new_data, new_wcs, mask=new_mask, meta=self.meta, unit=new_unit)
+
+        return new_data
+
 
 class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
     """
