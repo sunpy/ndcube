@@ -481,6 +481,18 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
 
 
 def is_wcs_2d_celestial(wcs):
+    '''
+    Checks to see if the WCS object is 2D and has celestial axes only.
+
+    Parameters
+    ----------
+    wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        The input WCS object.
+
+    Returns
+    -------
+    result: `bool`
+    '''
     wcs = get_low_level_wcs(wcs)
 
     if wcs.world_n_dim > 2:
