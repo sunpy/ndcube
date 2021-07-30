@@ -481,7 +481,7 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
 
 
 def is_wcs_2d_celestial(wcs):
-    '''
+    """
     Checks to see if the WCS object is 2D and has celestial axes only.
 
     Parameters
