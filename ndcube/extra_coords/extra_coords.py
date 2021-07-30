@@ -434,7 +434,6 @@ class ExtraCoords(ExtraCoordsABC):
             new_ec.add(key, int(aom), new_coord, physical_types=lut[1].physical_types)
         return new_ec
 
-
     def __str__(self):
         elements = [f"{', '.join(table.names)} ({axes}): {table}" for axes, table in self._lookup_tables]
         return f"ExtraCoords({', '.join(elements)})"
