@@ -492,7 +492,7 @@ def is_wcs_2d_celestial(wcs):
     Returns
     -------
     result: `bool`
-    '''
+    """
     wcs = get_low_level_wcs(wcs)
 
     if wcs.world_n_dim > 2:
