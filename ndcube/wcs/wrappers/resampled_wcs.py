@@ -65,7 +65,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     @property
     def pixel_shape(self):
-        return tuple(np.asarray(self._wcs.pixel_shape) / self._factor)
+        return tuple((np.asarray(self._wcs.pixel_shape) / self._factor).astype(int))
 
     @property
     def pixel_bounds(self):
