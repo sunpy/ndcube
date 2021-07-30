@@ -480,9 +480,9 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
 
 
-def is_wcs_2d_celestial(wcs):
+def is_wcs_celestial(wcs):
     """
-    Checks to see if the WCS object is 2D and has celestial axes only.
+    Checks to see if the WCS object has celestial axes only.
 
     Parameters
     ----------
@@ -494,9 +494,6 @@ def is_wcs_2d_celestial(wcs):
     result: `bool`
     """
     wcs = get_low_level_wcs(wcs)
-
-    if wcs.world_n_dim > 2:
-        return False
 
     for world_axis_class in wcs.world_axis_object_classes.values():
         if not issubclass(world_axis_class[0], SkyCoord):

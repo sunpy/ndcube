@@ -788,16 +788,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if isinstance(target_wcs, Mapping):
             target_wcs = WCS(header=target_wcs)
 
+        low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, 'target_wcs')
+
         # 'adaptive' and 'exact' algorithms work only on 2D celestial WCS.
         if algorithm == 'adaptive' or algorithm == 'exact':
-            if not utils.wcs.is_wcs_2d_celestial(target_wcs):
+            if low_level_target_wcs.world_n_dim > 2:
+                raise ValueError('For adaptive and exact algorithms, target_wcs must be 1D or 2D.')
+
+            if not utils.wcs.is_wcs_celestial(target_wcs):
                 raise ValueError('For adaptive and exact algorithms, '
-                                 'target_wcs must be 2D and only contain celestial axes.')
+                                 'target_wcs must contain celestial axes only.')
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise ValueError('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
-
-        low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, 'target_wcs')
 
         # If shape_out is not specified explicity, try to extract it from the low level WCS
         if not shape_out:
