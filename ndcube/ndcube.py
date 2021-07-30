@@ -869,7 +869,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if (np.mod(data_shape, superpixel_shape) != 0).any():
             raise ValueError(
                 "superpixel shape must be an integer fraction of the data shape in each dimension. "
-                f"data shape: {data.shape};  superpixel shape: {superpixel_shape}")
+                f"data shape: {data_shape};  superpixel shape: {superpixel_shape}")
         if new_unit is False:
             new_unit = self.unit
 

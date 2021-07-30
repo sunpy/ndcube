@@ -56,11 +56,15 @@ def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_co
     wcs_3d_lt_ln_l.array_shape = shape
     data_cube = data_nd(shape)
     mask = data_cube < 0
+    meta = {"message": "hello world"}
+    unit = u.ph
     extra_coords = time_extra_coords(shape, time_axis, time_base)
     cube = NDCube(data_cube,
                   wcs_3d_lt_ln_l,
                   mask=mask,
-                  uncertainty=data_cube)
+                  uncertainty=data_cube,
+                  meta=meta,
+                  unit=unit)
     cube._extra_coords = extra_coords
 
     if global_coords:

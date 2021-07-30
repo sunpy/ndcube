@@ -630,3 +630,44 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
     cube = NDCube(ndcube_3d_ln_lt_l.data[slices], low_level_wcs)
     # Check the WCS has been converted to high level but NDCube init.
     assert isinstance(cube.wcs, BaseHighLevelWCS)
+
+
+def test_superpixel(ndcube_3d_l_ln_lt_ectime):
+    # Execute superpixel.
+    cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
+    superpixel_shape = (10, 2, 1)
+    output = cube.superpixel(superpixel_shape, func=np.sum)
+    output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
+    output_time, = output.axis_world_coords(wcs=output.extra_coords)
+
+    # Build expected cube contents.
+    expected_data = np.array([[3840, 3860, 3880, 3900, 3920, 3940, 3960, 3980],
+                              [4160, 4180, 4200, 4220, 4240, 4260, 4280, 4300]])
+    expected_mask = np.zeros(expected_data.shape, dtype=bool)
+    expected_uncertainty = None
+    expected_unit = cube.unit
+    expected_meta = cube.meta
+    expected_Tx = np.array([[  9.99999999, 19.99999994, 29.99999979, 39.9999995,
+                              49.99999902, 59.99999831, 69.99999731, 79.99999599],
+                            [  9.99999999, 19.99999994, 29.99999979, 39.9999995,
+                              49.99999902, 59.99999831, 69.99999731, 79.99999599]]) * u.arcsec
+    expected_Ty = np.array([[-14.99999996, -14.9999999 , -14.99999981, -14.99999969,
+                             -14.99999953, -14.99999934, -14.99999911, -14.99999885],
+                            [ -4.99999999, -4.99999998,  -4.99999995,  -4.9999999 ,
+                              -4.99999985,  -4.99999979,  -4.99999971,  -4.99999962]]) * u.arcsec
+    expected_spec = SpectralCoord([1.02e-09], unit=u.m)
+    expected_time = Time([51544.00104167, 51544.00243056], format="mjd", scale="utc")
+
+    # Confirm output is as expected.
+    assert (output.dimensions.value == np.array([1, 2, 8])).all()
+    assert (output.data == expected_data).all()
+    assert (output.mask == expected_mask).all()
+    assert output.uncertainty == expected_uncertainty
+    assert output.unit == expected_unit
+    assert output.meta == expected_meta
+    assert u.allclose(output_sc.Tx, expected_Tx)
+    assert u.allclose(output_sc.Ty, expected_Ty)
+    assert u.allclose(output_spec, expected_spec)
+    assert output_time.scale == expected_time.scale
+    assert output_time.format == expected_time.format
+    assert np.allclose(output_time.value, expected_time.value)
