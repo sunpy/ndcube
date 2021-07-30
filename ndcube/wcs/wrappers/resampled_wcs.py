@@ -43,8 +43,8 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     def _underlying_to_top_pixels(self, underlying_pixels):
         # Convert pixel indices of underlying pixel grid to user-facing grid.
-        factor = self._pad_dims(self._factor, top_pixels.ndim)
-        offset = self._pad_dims(self._offset, top_pixels.ndim)
+        factor = self._pad_dims(self._factor, underlying_pixels.ndim)
+        offset = self._pad_dims(self._offset, underlying_pixels.ndim)
         return (underlying_pixels - offset) / factor
 
     def _pad_dims(self, arr, ndim):
@@ -65,7 +65,12 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     @property
     def pixel_shape(self):
-        return tuple((np.asarray(self._wcs.pixel_shape) / self._factor).astype(int))
+        # Return pixel shape of resampled grid.
+        # Where shape is an integer, return an int type as its required for some uses.
+        underlying_shape = np.asarray(self._wcs.pixel_shape)
+        int_elements = np.mod(underlying_shape, self._factor) == 0
+        pixel_shape = underlying_shape / self._factor
+        return tuple(int(i) if is_int else i for i, is_int in zip(pixel_shape, int_elements))
 
     @property
     def pixel_bounds(self):
