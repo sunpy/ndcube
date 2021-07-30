@@ -715,10 +715,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if algorithm in order_compatibility:
             # To prevent raising the following exception, because 'exact' does not
             # support the 'order' parameter itself.
-            if algorithm == 'exact':
-                return
-
-            if order not in order_compatibility[algorithm]:
+            if order_compatibility[algorithm] and order not in order_compatibility[algorithm]:
                 raise ValueError(f"For '{algorithm}' algorithm, the 'order' argument must be "
                                  f"one of {', '.join(order_compatibility[algorithm])}.")
 
