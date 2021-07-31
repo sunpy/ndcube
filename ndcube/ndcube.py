@@ -792,8 +792,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # 'adaptive' and 'exact' algorithms work only on 2D celestial WCS.
         if algorithm == 'adaptive' or algorithm == 'exact':
-            if low_level_target_wcs.world_n_dim > 2:
-                raise ValueError('For adaptive and exact algorithms, target_wcs must be 1D or 2D.')
+            if low_level_target_wcs.pixel_n_dim != 2 or low_level_target_wcs.world_n_dim != 2:
+                raise ValueError('For adaptive and exact algorithms, target_wcs must be 2D.')
 
             if not utils.wcs.is_wcs_celestial(target_wcs):
                 raise ValueError('For adaptive and exact algorithms, '
