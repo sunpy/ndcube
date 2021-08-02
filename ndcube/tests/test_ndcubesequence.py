@@ -232,7 +232,7 @@ def test_combine_cubes(wcs_3d_l_lt_ln):
     assert combined_cube.data.shape == (4, 2, 3, 4)
 
 
-def test_combine_cubes_invalid_global_coords(wcs_3d_l_lt_ln):
+def test_combine_cubes_unitless_global_coords(wcs_3d_l_lt_ln):
     data = np.random.rand(2, 3, 4)
 
     # Construct 2 NDCubes with unitless values for global_coords
@@ -243,6 +243,43 @@ def test_combine_cubes_invalid_global_coords(wcs_3d_l_lt_ln):
     cube1.global_coords.add('distance', 'pos.distance', 2)
 
     seq = NDCubeSequence([cube0, cube1])
+    cube = seq.combine_cubes()
 
-    with pytest.raises(Exception):
-        seq.combine_cubes()
+    assert cube.wcs.world_axis_names[-1] == 'distance'
+    assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
+    assert cube.wcs.world_axis_units[-1] == ''
+
+
+def test_combine_cubes_invalid_global_coords(wcs_3d_l_lt_ln):
+    data = np.random.rand(2, 3, 4)
+
+    # Construct 2 NDCubes with unitless values for global_coords
+    cube0 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube0.global_coords.add('distance', 'pos.distance', '1')
+
+    cube1 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube1.global_coords.add('distance', 'pos.distance', '2')
+
+    seq = NDCubeSequence([cube0, cube1])
+
+    with pytest.warns(UserWarning):
+        cube = seq.combine_cubes()
+
+    assert cube.wcs.world_axis_names[-1] == 'sequence'
+    assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
+    assert cube.wcs.world_axis_units[-1] == ''
+
+
+def test_combine_cubes_no_global_coords(wcs_3d_l_lt_ln):
+    data = np.random.rand(2, 3, 4)
+
+    # Construct 2 NDCubes with no global_coords
+    cube0 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+    cube1 = NDCube(data, wcs=wcs_3d_l_lt_ln)
+
+    seq = NDCubeSequence([cube0, cube1])
+    cube = seq.combine_cubes()
+
+    assert cube.wcs.world_axis_names[-1] == 'sequence'
+    assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
+    assert cube.wcs.world_axis_units[-1] == ''
