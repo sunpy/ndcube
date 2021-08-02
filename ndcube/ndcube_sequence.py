@@ -381,7 +381,7 @@ class NDCubeSequenceBase:
         table_coords = []
 
         for axis_name, axis_coords in self.sequence_axis_coords.items():
-            if isinstance(axis_coords[0], u.Quantity):
+            if isinstance(axis_coords[0], (u.Quantity, numbers.Number)):
                 table_coords.append(QuantityTableCoordinate(u.Quantity(axis_coords),
                                                             names=axis_name))
 
