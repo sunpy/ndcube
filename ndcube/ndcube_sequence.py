@@ -401,6 +401,7 @@ class NDCubeSequenceBase:
                               "`astropy.coordinates.SkyCoord`.",
                               UserWarning)
 
+        # If no global coords were found, use the cube index to form an axis.
         if not table_coords:
             table_coords.append(QuantityTableCoordinate(u.Quantity(np.arange(len(self.data))),
                                                         names='sequence'))
@@ -425,6 +426,12 @@ class NDCubeSequenceBase:
             A combined (N+1)D cube with stacked data of all cubes.
         """
         from ndcube import NDCube  # adding this here to prevent a circular import
+
+        # Verify if all cubes have the same shape.
+        cube_shape = self[0].data.shape
+        for cube in self:
+            if cube.data.shape != cube_shape:
+                raise ValueError('All cubes must have the same shape.')
 
         # Reproject all cubes to a common WCS
         target_wcs = self[common_wcs_index].wcs
