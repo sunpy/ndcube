@@ -6,6 +6,9 @@ API Reference
 .. automodapi:: ndcube
    :inherited-members:
 
+.. automodapi:: ndcube.extra_coords.table_coord
+   :headings: ^#
+
 .. automodapi:: ndcube.mixins
 
 .. automodapi:: ndcube.utils
