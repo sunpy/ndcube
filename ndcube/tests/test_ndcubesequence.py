@@ -283,3 +283,10 @@ def test_combine_cubes_no_global_coords(wcs_3d_l_lt_ln):
     assert cube.wcs.world_axis_names[-1] == 'sequence'
     assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
     assert cube.wcs.world_axis_units[-1] == ''
+
+
+def test_combine_cubes_varying_cube_shape(ndcube_3d_ln_lt_l, ndcube_4d_ln_lt_l_t):
+    seq = NDCubeSequence([ndcube_3d_ln_lt_l, ndcube_4d_ln_lt_l_t])
+
+    with pytest.raises(ValueError):
+        _ = seq.combine_cubes()
