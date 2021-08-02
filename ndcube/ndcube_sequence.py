@@ -4,7 +4,7 @@ import textwrap
 
 import astropy.units as u
 import numpy as np
-from astropy.coordinates.sky_coordinate import SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
 from ndcube import utils
