@@ -53,8 +53,8 @@ class ExtraCoordsABC(abc.ABC):
         array_dimension : `int` or `tuple` of `int`
             The pixel dimension(s), in the array, to which this lookup table corresponds.
         lookup_table : `object` or sequence of `object`
-            The lookup table. A `BaseTableCoordinate <.table_coord>` or anything that can
-            instantiate one of its subclasses, i.e. currently a `~astropy.time.Time`,
+            The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
+            that can instantiate one, i.e. currently a `~astropy.time.Time`,
             `~astropy.coordinates.SkyCoord`, or a (sequence of) `~astropy.units.Quantity`.
             Note, if this table is multi-dimensional it must (currently) be specified with
             its axes in world order, so transposed with respect to the data array.
@@ -157,13 +157,13 @@ class ExtraCoords(ExtraCoordsABC):
         pixel_dimensions : `tuple` of `int`
             The pixel dimensions (in the array) to which the ``lookup_tables``
             apply. Must be the same length as ``lookup_tables``.
-        lookup_tables : iterable of `object`, optional
+        lookup_tables : iterable of `object`
             The lookup tables which specify the world coordinates for the ``pixel_dimensions``.
-            Must be `BaseTableCoordinate <.table_coord>` or objects from which to
-            instantiate one of its subclasses.
-        physical_types: sequence of `str` or of sequences of `str`
+            Must be `BaseTableCoordinate <.table_coord>` subclass instances or objects from
+            which to instantiate them (see `.ExtraCoords.add`).
+        physical_types: sequence of `str` or of sequences of `str`, optional
             Descriptors of the `physical types <../data_classes.html#dimensions-and-physical-types>`_
-            associated with each axis in the tables. Must be the same length as ``lookup_tables``
+            associated with each axis in the tables. Must be the same length as ``lookup_tables``;
             and length of each element must match the number of dimensions in corresponding
             ``lookup_tables[i]``.
 
