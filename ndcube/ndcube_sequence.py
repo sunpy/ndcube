@@ -1,6 +1,7 @@
 import copy
 import numbers
 import textwrap
+import warnings
 
 import astropy.units as u
 import numpy as np
@@ -394,9 +395,15 @@ class NDCubeSequenceBase:
                                                             names=axis_name))
 
             else:
-                raise Exception(f"Unable to convert global_coords '{axis_name}' into an axis. "
-                                "global_coords must be either `astropy.units.Quantity`, "
-                                "`astropy.time.Time`, or `astropy.coordinates.SkyCoord`.")
+                warnings.warn(f"Skipping '{axis_name}'. Unable to convert global_coords "
+                              f"'{axis_name}' into an axis. global_coords must be either "
+                              "`astropy.units.Quantity`, `astropy.time.Time`, or "
+                              "`astropy.coordinates.SkyCoord`.",
+                              UserWarning)
+
+        if not table_coords:
+            table_coords.append(QuantityTableCoordinate(u.Quantity(np.arange(len(self.data))),
+                                                        names='sequence'))
 
         return MultipleTableCoordinate(*table_coords).wcs
 
