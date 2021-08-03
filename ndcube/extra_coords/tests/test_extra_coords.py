@@ -175,7 +175,9 @@ def test_two_1d_from_lut(time_lut):
 
 
 def test_two_1d_from_lookup_tables(time_lut):
-    """Add both ExtraCoords at once using `from_lookup_tables` with `physical_types`"""
+    """
+    Create ExtraCoords from both tables at once using `from_lookup_tables` with `physical_types`.
+    """
 
     exposure_lut = range(10) * u.s
 
@@ -187,6 +189,10 @@ def test_two_1d_from_lookup_tables(time_lut):
     pt.append("custom:time:duration")
     ec = ExtraCoords.from_lookup_tables(["time", "exposure_time"], (0, 0),
                                         [time_lut, exposure_lut], pt)
+
+    # This has created an "orphan" extra_coords with no NDCube connected.
+    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'dimensions'"):
+        assert ec.mapping == (0, 0)
 
     assert len(ec._lookup_tables) == 2
     assert isinstance(ec.wcs, gwcs.WCS)

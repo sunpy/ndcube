@@ -56,8 +56,6 @@ class ExtraCoordsABC(abc.ABC):
             The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
             that can instantiate one, i.e. currently a `~astropy.time.Time`,
             `~astropy.coordinates.SkyCoord`, or a (sequence of) `~astropy.units.Quantity`.
-            Note, if this table is multi-dimensional it must (currently) be specified with
-            its axes in world order, so transposed with respect to the data array.
         physical_types: `str` or iterable of `str`, optional
             Descriptor(s) of the `physical type <../data_classes.html#dimensions-and-physical-types>`_
             associated with each axis; length must match the number of dimensions in
@@ -145,7 +143,7 @@ class ExtraCoords(ExtraCoordsABC):
     @classmethod
     def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables, physical_types=None):
         """
-        Construct an ExtraCoords instance from lookup tables.
+        Construct a new ExtraCoords instance from lookup tables.
 
         This is a convience wrapper around `.add` which does not
         expose all the options available in that method.
