@@ -518,7 +518,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         lower_corner, upper_corner = self._fill_in_crop_nones(lower_corner, upper_corner, wcs, False)
 
-        return lower_corner, upper_corner, wcs
+        #return lower_corner, upper_corner, wcs
 
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
@@ -529,7 +529,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         upper_corner_values = [v << u.Unit(unit) for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
 
         points = self._bounding_box_to_points(lower_corner_values, upper_corner_values, wcs)
-        return points, wcs
+        #return points, wcs
         return self._crop_from_points(*points, wcs=wcs)
 
     @utils.misc.sanitise_wcs

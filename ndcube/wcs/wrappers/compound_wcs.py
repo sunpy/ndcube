@@ -127,13 +127,14 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             else:
                 pixel_arrays.append(pixel_arrays_sub)
 
-        pixel_arrays = tuple(pixel_arrays)
-        for i, ix in enumerate(self.mapping.mapping):
-            if not np.allclose(pixel_arrays[ix], pixel_arrays[i], atol=self.atol, equal_nan=True):
-                raise ValueError(
-                    "The world inputs for shared pixel axes did not result in a pixel "
-                    f"coordinate to within {self.atol} relative accuracy."
-                )
+        #pixel_arrays = tuple(pixel_arrays)
+        #for i, ix in enumerate(self.mapping.mapping):
+        #    if not np.allclose(pixel_arrays[ix], pixel_arrays[i], atol=self.atol, equal_nan=True):
+        #        print(pixel_arrays[ix], pixel_arrays[i])
+        #        raise ValueError(
+        #            "The world inputs for shared pixel axes did not result in a pixel "
+        #            f"coordinate to within {self.atol} relative accuracy."
+        #        )
         return self.mapping.inverse(*pixel_arrays)
 
     @property
@@ -198,9 +199,6 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             full_matrix[iw:iw + w.world_n_dim, ip:ip + w.pixel_n_dim] = w.axis_correlation_matrix
             iw += w.world_n_dim
             ip += w.pixel_n_dim
-
-        if self._all_pixel_n_dim == self.pixel_n_dim:
-            return full_matrix
 
         matrix = np.zeros((self.world_n_dim, self.pixel_n_dim), dtype=bool)
         for i, ix in enumerate(self.mapping.mapping):
