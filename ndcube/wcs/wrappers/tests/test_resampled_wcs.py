@@ -108,3 +108,21 @@ def test_scalar_factor(celestial_wcs):
     assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
     assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
+
+
+@pytest.mark.parametrize('celestial_wcs',
+                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+                         indirect=True)
+def test_offset(celestial_wcs):
+    offset = 1
+    factor = 2
+    wcs = ResampledLowLevelWCS(celestial_wcs, factor, offset=offset)
+
+    pixel_scalar = (2.3, 4.3)
+    world_scalar = celestial_wcs.pixel_to_world_values(*[p * factor + offset
+                                                         for p in pixel_scalar])
+
+    assert_allclose(wcs.pixel_to_world_values(*pixel_scalar), world_scalar)
+    assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
+    assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
+    assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
