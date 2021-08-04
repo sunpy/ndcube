@@ -91,24 +91,10 @@ def sanitize_crop_inputs(lower_corner, upper_corner, wcs):
             dummy_wcs.wcs.ctype = ["PIXEL", "PIXEL"]
             mapping = list(wcs.mapping) + list(dummy_axes)
             wcs = CompoundLowLevelWCS(wcs.wcs, dummy_wcs, mapping=mapping)
-            #mapping = list(dummy_axes) + list(wcs.mapping)
-            #wcs = CompoundLowLevelWCS(dummy_wcs, wcs.wcs, mapping=mapping)
         else:
             wcs = wcs.wcs
         # Add None inputs to upper and lower corners for new dummy axes.
         # Ensure they are arranged in pixel order relative to data array.
-        """
-        ec_lower_corner = np.array(lower_corner)
-        lower_corner = np.array([None] * len(mapping), dtype=object)
-        lower_corner[np.array(list(ec_axes))] = ec_lower_corner
-        lower_corner = list(lower_corner)
-        ec_upper_corner = np.array(upper_corner)
-        upper_corner = np.array([None] * len(mapping), dtype=object)
-        upper_corner[np.array(list(ec_axes))] = ec_upper_corner
-        upper_corner = list(upper_corner)
-        """
-        #lower_corner = [None] * len(dummy_axes) + lower_corner
-        #upper_corner = [None] * len(dummy_axes) + upper_corner
         lower_corner += [None] * len(dummy_axes)
         upper_corner += [None] * len(dummy_axes)
 
