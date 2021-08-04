@@ -67,6 +67,8 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     def pixel_shape(self):
         # Return pixel shape of resampled grid.
         # Where shape is an integer, return an int type as its required for some uses.
+        if self._wcs.pixel_shape is None:
+            return self._wcs.pixel_shape
         underlying_shape = np.asarray(self._wcs.pixel_shape)
         int_elements = np.mod(underlying_shape, self._factor) == 0
         pixel_shape = underlying_shape / self._factor

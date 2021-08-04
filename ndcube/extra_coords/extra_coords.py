@@ -39,23 +39,28 @@ class ExtraCoordsABC(abc.ABC):
     """
     @abc.abstractmethod
     def add(self,
-            name: str,
+            name: Union[str, Iterable[str]],
             array_dimension: Union[int, Iterable[int]],
             lookup_table: Any,
+            physical_types: Union[str, Iterable[str]] = None,
             **kwargs):
         """
         Add a coordinate to this ``ExtraCoords`` based on a lookup table.
 
         Parameters
         ----------
-        name
-            The name for these world coordinate(s).
-        array_dimension
+        name : `str` or sequence of `str`
+            The name(s) for these world coordinate(s).
+        array_dimension : `int` or `tuple` of `int`
             The pixel dimension(s), in the array, to which this lookup table corresponds.
-        lookup_table
-            The lookup table. Note, if this table is multi-dimensional it must
-            (currently) be specified with its axes in world order, so
-            transposed with respect to the data array.
+        lookup_table : `object` or sequence of `object`
+            The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
+            that can instantiate one, i.e. currently a `~astropy.time.Time`,
+            `~astropy.coordinates.SkyCoord`, or a (sequence of) `~astropy.units.Quantity`.
+        physical_types: `str` or iterable of `str`, optional
+            Descriptor(s) of the `physical type <../data_classes.html#dimensions-and-physical-types>`_
+            associated with each axis; length must match the number of dimensions in
+            ``lookup_table``.
         """
 
     @abc.abstractmethod
@@ -137,24 +142,29 @@ class ExtraCoords(ExtraCoordsABC):
         self._ndcube = ndcube
 
     @classmethod
-    def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables):
+    def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables, physical_types=None):
         """
-        Construct an ExtraCoords instance from lookup tables.
+        Construct a new ExtraCoords instance from lookup tables.
 
         This is a convience wrapper around `.add` which does not
         expose all the options available in that method.
 
         Parameters
         ----------
-        array_shape : `tuple` of `int`, optional
-            The shape of the array.
         names : `tuple` of `str`
             The names of the world coordinates.
         pixel_dimensions : `tuple` of `int`
             The pixel dimensions (in the array) to which the ``lookup_tables``
             apply. Must be the same length as ``lookup_tables``.
-        lookup_tables : `tuple` of `object`
+        lookup_tables : iterable of `object`
             The lookup tables which specify the world coordinates for the ``pixel_dimensions``.
+            Must be `BaseTableCoordinate <.table_coord>` subclass instances or objects from
+            which to instantiate them (see `.ExtraCoords.add`).
+        physical_types: sequence of `str` or of sequences of `str`, optional
+            Descriptors of the `physical types <../data_classes.html#dimensions-and-physical-types>`_
+            associated with each axis in the tables. Must be the same length as ``lookup_tables``;
+            and length of each element must match the number of dimensions in corresponding
+            ``lookup_tables[i]``.
 
         Returns
         -------
@@ -166,14 +176,20 @@ class ExtraCoords(ExtraCoordsABC):
                 "The length of pixel_dimensions and lookup_tables must match."
             )
 
+        if physical_types is None:
+            physical_types = len(lookup_tables) * [physical_types]
+        elif len(physical_types) != len(lookup_tables):
+            raise ValueError("The number of physical types and lookup_tables must match.")
+
         extra_coords = cls()
 
-        for name, pixel_dim, lookup_table in zip(names, pixel_dimensions, lookup_tables):
-            extra_coords.add(name, pixel_dim, lookup_table)
+        for name, pixel_dim, lookup_table, physical_type in zip(names, pixel_dimensions,
+                                                                lookup_tables, physical_types):
+            extra_coords.add(name, pixel_dim, lookup_table, physical_types=physical_type)
 
         return extra_coords
 
-    def add(self, name, array_dimension, lookup_table, **kwargs):
+    def add(self, name, array_dimension, lookup_table, physical_types=None, **kwargs):
         # docstring in ABC
 
         if self._wcs is not None:
@@ -186,13 +202,13 @@ class ExtraCoords(ExtraCoordsABC):
         if isinstance(lookup_table, BaseTableCoordinate):
             coord = lookup_table
         elif isinstance(lookup_table, Time):
-            coord = TimeTableCoordinate(lookup_table, **kwargs)
+            coord = TimeTableCoordinate(lookup_table, physical_types=physical_types, **kwargs)
         elif isinstance(lookup_table, SkyCoord):
-            coord = SkyCoordTableCoordinate(lookup_table, **kwargs)
+            coord = SkyCoordTableCoordinate(lookup_table, physical_types=physical_types, **kwargs)
         elif isinstance(lookup_table, (list, tuple)):
-            coord = QuantityTableCoordinate(*lookup_table, **kwargs)
+            coord = QuantityTableCoordinate(*lookup_table, physical_types=physical_types, **kwargs)
         elif isinstance(lookup_table, u.Quantity):
-            coord = QuantityTableCoordinate(lookup_table, **kwargs)
+            coord = QuantityTableCoordinate(lookup_table, physical_types=physical_types, **kwargs)
         else:
             raise TypeError(f"The input type {type(lookup_table)} isn't supported")
 
