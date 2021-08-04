@@ -84,11 +84,12 @@ def sanitize_crop_inputs(lower_corner, upper_corner, wcs):
         cube_axes = set(range(len(wcs._ndcube.dimensions)))
         dummy_axes = cube_axes - ec_axes
         if dummy_axes:
-            dummy_wcs = WCS(naxis=len(dummy_axes))
-            dummy_wcs.wcs.crpix = [1, 1]
-            dummy_wcs.wcs.cdelt = [1, 1]
-            dummy_wcs.wcs.crval = [0, 0]
-            dummy_wcs.wcs.ctype = ["PIXEL", "PIXEL"]
+            n_dummy_axes = len(dummy_axes)
+            dummy_wcs = WCS(naxis=n_dummy_axes)
+            dummy_wcs.wcs.crpix = [1] * n_dummy_axes
+            dummy_wcs.wcs.cdelt = [1] * n_dummy_axes
+            dummy_wcs.wcs.crval = [0] * n_dummy_axes
+            dummy_wcs.wcs.ctype = ["PIXEL"] * n_dummy_axes
             mapping = list(wcs.mapping) + list(dummy_axes)
             wcs = CompoundLowLevelWCS(wcs.wcs, dummy_wcs, mapping=mapping)
         else:

@@ -275,6 +275,16 @@ def simple_extra_coords_3d():
                                           )
 
 
+@pytest.fixture
+def time_and_simple_extra_coords_2d():
+    return ExtraCoords.from_lookup_tables(("time", "hello"),
+                                          (0, 1),
+                                          (Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"],
+                                                scale="utc", format="fits"),
+                                           list(range(3)) * u.pix)
+                                          )
+
+
 ################################################################################
 # NDCube Fixtures
 ################################################################################
@@ -355,6 +365,22 @@ def ndcube_3d_ln_lt_l(wcs_3d_l_lt_ln, simple_extra_coords_3d):
 
 
 @pytest.fixture
+def ndcube_3d_ln_lt_l_ec_time(wcs_3d_l_lt_ln, time_and_simple_extra_coords_2d):
+    shape = (2, 3, 4)
+    wcs_3d_l_lt_ln.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_l_lt_ln,
+        mask=mask,
+        uncertainty=data,
+    )
+    cube._extra_coords = time_and_simple_extra_coords_2d
+    return cube
+
+
+@pytest.fixture
 def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
     data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
                              [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]]])
@@ -374,6 +400,7 @@ def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l):
     return gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l,
                                         1,
                                         Time('2000-01-01', format='fits', scale='utc'))
+
 
 @pytest.fixture
 def ndcube_2d_ln_lt(wcs_2d_lt_ln):
