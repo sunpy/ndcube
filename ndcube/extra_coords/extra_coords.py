@@ -392,8 +392,16 @@ class ExtraCoords(ExtraCoordsABC):
         return dict()
 
     def __str__(self):
-        elements = [f"{', '.join(table.names)} ({axes}): {table}" for axes, table in self._lookup_tables]
-        return f"ExtraCoords({', '.join(elements)})"
+        classname = self.__class__.__name__
+        elements = [f"{', '.join(table.names)} ({axes}) {table.physical_types}: {table}"
+                    for axes, table in self._lookup_tables]
+        length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
+        if length > np.get_printoptions()['linewidth']:
+            joiner = ',\n ' + len(classname) * ' '
+        else:
+            joiner = ', '
+
+        return f"{classname}({joiner.join(elements)})"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
