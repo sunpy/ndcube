@@ -16,27 +16,29 @@ Tabular Coordinates and WCSes
 =============================
 
 All coordinate information in ndcube is represented as a WCS.
-Even the `.ExtraCoords` class, which allows the user to add tabular data to axes, uses the `gwcs` library to store this information as a WCS.
+Even the `.ExtraCoords` class, which allows the user to add tabular data to axes, uses the
+`gwcs <https://gwcs.readthedocs.io/en/stable/>`_ library to store this information as a WCS.
 This enables ndcube's coordinate transformation and plotting functions to leverage the same infrastructure, irrespective of whether the coordinates are functional or tabular.
 
 The FITS WCS standard also supports tabular axes with the ``-TAB`` CTYPE.
 Support for reading files using this convention has (reasonably) recently been added to Astropy, so if you have a FITS file using this convention you should be able to load it into a `~astropy.wcs.WCS` object.
 If you wish to be able to serialise your NDCube object to FITS files you will need to manually construct a WCS object using the ``-TAB`` convention.
 
-The functionality provided by ndcube makes it easy to construct a `gwcs.WCS` object backed by lookup tables.
+The functionality provided by ndcube makes it easy to construct a `gwcs.wcs.WCS` object backed by lookup tables.
 At the time of writing there are some known issues with the support for generic lookup tables in gwcs.
 
 Constructing a WCS from Lookup Tables
 =====================================
 
 ndcube supports constructing lookup tables from `~astropy.coordinates.SkyCoord`,  `~astropy.time.Time` and `~astropy.units.Quantity` objects.
-These objects are wrapped in `.BaseTableCoordinate` objects which can be composed together into a multi-dimensional WCS.
+These objects are wrapped in `BaseTableCoordinate <.table_coord>` objects which can be composed together into a multi-dimensional WCS.
 
 .. note::
 
    Only one dimensional tables are currently supported. It is possible to construct higher dimensional lookup tables by "meshing" the inputs, which is described below.
 
-A simple example of constructing a WCS from a lookup table is the following temporal axis::
+A simple example of constructing a WCS from a lookup table in a `.TimeTableCoordinate`
+is the following temporal axis::
 
   >>> from astropy.time import Time
   >>> import astropy.units as u
