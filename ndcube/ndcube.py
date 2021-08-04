@@ -513,6 +513,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # The docstring is defined in NDCubeABC
         no_op, lower_corner, upper_corner, wcs = utils.misc.sanitize_crop_inputs(lower_corner,
                                                                                  upper_corner, wcs)
+        # Quit out early if we are no-op
         if no_op:
             return self
 
@@ -535,7 +536,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Sanitize inputs.
         no_op, lower_corner, upper_corner, wcs = utils.misc.sanitize_crop_inputs(lower_corner,
                                                                                  upper_corner, wcs)
-
         # Quit out early if we are no-op
         if no_op:
             return self

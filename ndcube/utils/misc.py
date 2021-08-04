@@ -94,12 +94,10 @@ def sanitize_crop_inputs(lower_corner, upper_corner, wcs):
         else:
             wcs = wcs.wcs
         # Add None inputs to upper and lower corners for new dummy axes.
-        # Ensure they are arranged in pixel order relative to data array.
         lower_corner += [None] * len(dummy_axes)
         upper_corner += [None] * len(dummy_axes)
 
     return False, lower_corner, upper_corner, wcs
-
 
 
 def sanitize_corners(*corners):
