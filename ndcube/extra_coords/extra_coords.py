@@ -395,11 +395,11 @@ class ExtraCoords(ExtraCoordsABC):
     def interpolate(self, new_array_grids, ndcube=None, **kwargs):
         """Interpolate all extra coords to new array index grids.
 
-        One new array index grid must be supplied for each pixel axis.
+        One new array index grid must be supplied for each array axis in array-axis order.
 
         Parameters
         ----------
-        new_array_grids: iterable of array-likes
+        new_array_grids: iterable of array-likes or `None`
             The array index values at which the the new values of the coords are desired.
             An array for each array axis must be given.
             If None given for an axis, no interpolation is performed for coords
@@ -417,7 +417,7 @@ class ExtraCoords(ExtraCoordsABC):
         cube_dims = self._ndcube.dimensions.value.astype(int)
         naxes = len(cube_dims)
         if len(new_array_grids) != naxes:
-            raise ValueError("new_array_grids must have an entry for each array index."
+            raise ValueError("new_array_grids must have an entry for each array axis."
                              f"num. array axes: {naxes}; "
                              f"num. new array grids: {len(new_array_grids)}")
         array_order_mapping = convert_between_array_and_pixel_axes(np.asarray(self.mapping), naxes)

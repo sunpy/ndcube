@@ -865,7 +865,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         data_shape = self.dimensions.value.astype(int)
         naxes = len(data_shape)
         if len(superpixel_shape) != naxes:
-            raise ValueError("superpixel_shape must have an entry for each data dimensions.")
+            raise ValueError("superpixel_shape must have an entry for each array axis.")
         if (np.mod(data_shape, superpixel_shape) != 0).any():
             raise ValueError(
                 "superpixel shape must be an integer fraction of the data shape in each dimension. "
