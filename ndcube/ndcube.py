@@ -569,9 +569,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Convert coordinates to units used by WCS as WCS.world_to_array_index
         # does not handle quantities.
         lower_corner = utils.misc.convert_quantities_to_units(lower_corner,
-                                                              self.wcs.world_axis_units)
+                                                              wcs.world_axis_units)
         upper_corner = utils.misc.convert_quantities_to_units(upper_corner,
-                                                              self.wcs.world_axis_units)
+                                                              wcs.world_axis_units)
 
         points = self._bounding_box_to_points(lower_corner, upper_corner, wcs)
         return self._crop_from_points(*points, wcs=wcs)
