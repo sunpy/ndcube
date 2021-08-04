@@ -174,6 +174,35 @@ def test_two_1d_from_lut(time_lut):
     assert ec.wcs.world_axis_names == ("time", "exposure_time")
 
 
+def test_two_1d_from_lookup_tables(time_lut):
+    """
+    Create ExtraCoords from both tables at once using `from_lookup_tables` with `physical_types`.
+    """
+
+    exposure_lut = range(10) * u.s
+
+    pt = ["custom:time:creation"]
+    with pytest.raises(ValueError, match=r"The number of physical types and lookup_tables"):
+        ec = ExtraCoords.from_lookup_tables(["time", "exposure_time"], (0, 0),
+                                            [time_lut, exposure_lut], pt)
+
+    pt.append("custom:time:duration")
+    ec = ExtraCoords.from_lookup_tables(["time", "exposure_time"], (0, 0),
+                                        [time_lut, exposure_lut], pt)
+
+    # This has created an "orphan" extra_coords with no NDCube connected.
+    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'dimensions'"):
+        assert ec.mapping == (0, 0)
+
+    assert len(ec._lookup_tables) == 2
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 2
+    assert ec.wcs.world_n_dim == 2
+    assert ec.wcs.world_axis_names == ("time", "exposure_time")
+    for i, physical_types in enumerate(pt):
+        assert ec._lookup_tables[i][1].physical_types == [physical_types]
+
+
 def test_skycoord(skycoord_1d_lut):
     cube = MagicMock()
     cube.dimensions = [10, 10] * u.pix
