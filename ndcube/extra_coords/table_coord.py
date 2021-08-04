@@ -184,7 +184,7 @@ class BaseTableCoordinate(abc.ABC):
 
 class QuantityTableCoordinate(BaseTableCoordinate):
     """
-    A lookup table made up of N Quantity objects.
+    A lookup table made up of ``N`` `~astropy.units.Quantity` objects.
 
     This class can either be instantiated with N ND arrays (i.e. the output of
     `numpy.meshgrid`) or N 1D arrays (i.e. the input to `numpy.meshgrid`).
