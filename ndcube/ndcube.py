@@ -511,15 +511,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @utils.misc.sanitise_wcs
     def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeABC
-        lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
-
-        # Quit out early if we are no-op
-        lower_nones = np.array([lower is None for lower in lower_corner])
-        upper_nones = np.array([upper is None for upper in upper_corner])
-        if (lower_nones & upper_nones).all():
+        no_op, lower_corner, upper_corner, wcs = utils.misc.sanitize_crop_inputs(lower_corner,
+                                                                                 upper_corner, wcs)
+        if no_op:
             return self
 
         lower_corner, upper_corner = self._fill_in_crop_nones(lower_corner, upper_corner, wcs, False)
+
+        return lower_corner, upper_corner, wcs
 
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
@@ -530,18 +529,18 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         upper_corner_values = [v << u.Unit(unit) for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
 
         points = self._bounding_box_to_points(lower_corner_values, upper_corner_values, wcs)
+        return points, wcs
         return self._crop_from_points(*points, wcs=wcs)
 
     @utils.misc.sanitise_wcs
     def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
         # The docstring is defined in NDCubeABC
         # Sanitize inputs.
-        lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
+        no_op, lower_corner, upper_corner, wcs = utils.misc.sanitize_crop_inputs(lower_corner,
+                                                                                 upper_corner, wcs)
 
         # Quit out early if we are no-op
-        lower_nones = np.array([lower is None for lower in lower_corner])
-        upper_nones = np.array([upper is None for upper in upper_corner])
-        if (lower_nones & upper_nones).all():
+        if no_op:
             return self
 
         n_coords = len(lower_corner)
@@ -593,7 +592,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             else:
                 array_index_to_world = wcs.array_index_to_world_values
         else:
-            array_index_to_world = wcs.array_index_to_world
+            if isinstance(wcs, BaseHighLevelWCS):
+                array_index_to_world = wcs.array_index_to_world
+            else:
+                array_index_to_world = HighLevelWCSWrapper(wcs).array_index_to_world
 
         # If user did not provide all intervals,
         # calculate missing intervals based on whole cube range along those axes.

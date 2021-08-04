@@ -2,7 +2,11 @@ import inspect
 from functools import wraps
 
 import astropy.units as u
+import numpy as np
+from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+
+from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['sanitise_wcs', 'unique_sorted']
 
@@ -55,6 +59,53 @@ def sanitise_wcs(func):
         return func(*params.args, **params.kwargs)
 
     return wcs_wrapper
+
+
+def sanitize_crop_inputs(lower_corner, upper_corner, wcs):
+    """Sanitize inputs to NDCube crop methods.
+
+    First arg returned signifies whether the inputs imply that cropping
+    should be performed or not.
+    """
+    lower_corner, upper_corner = sanitize_corners(lower_corner, upper_corner)
+
+    # Quit out early if we are no-op
+    lower_nones = np.array([lower is None for lower in lower_corner])
+    upper_nones = np.array([upper is None for upper in upper_corner])
+    if (lower_nones & upper_nones).all():
+        return True, lower_corner, upper_corner, wcs
+
+    # This needs to be here to prevent a circular import
+    from ndcube.extra_coords import ExtraCoords
+    if isinstance(wcs, ExtraCoords):
+        # If wcs is ExtraCoords instance, generate new wcs from the
+        # ExtraCoords, inserting dummy axes for unrepresented pixel axes.
+        ec_axes = set(wcs.mapping)
+        cube_axes = set(range(len(wcs._ndcube.dimensions)))
+        dummy_axes = cube_axes - ec_axes
+        if dummy_axes:
+            dummy_wcs = WCS(naxis=len(dummy_axes))
+            dummy_wcs.wcs.crpix = [1, 1]
+            dummy_wcs.wcs.cdelt = [1, 1]
+            dummy_wcs.wcs.crval = [0, 0]
+            dummy_wcs.wcs.ctype = ["PIXEL", "PIXEL"]
+            mapping = list(wcs.mapping) + list(dummy_axes)
+            wcs = CompoundLowLevelWCS(wcs.wcs, dummy_wcs, mapping=mapping)
+        else:
+            wcs = wcs.wcs
+        # Add None inputs to upper and lower corners for new dummy axes.
+        # Ensure they are arranged in pixel order relative to data array.
+        ec_lower_corner = np.array(lower_corner)
+        lower_corner = np.array([None] * len(mapping), dtype=object)
+        lower_corner[np.array(list(ec_axes))] = ec_lower_corner
+        lower_corner = list(lower_corner)
+        ec_upper_corner = np.array(upper_corner)
+        upper_corner = np.array([None] * len(mapping), dtype=object)
+        upper_corner[np.array(list(ec_axes))] = ec_upper_corner
+        upper_corner = list(upper_corner)
+
+    return False, lower_corner, upper_corner, wcs
+
 
 
 def sanitize_corners(*corners):
