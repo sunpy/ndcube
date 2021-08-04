@@ -127,14 +127,18 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             else:
                 pixel_arrays.append(pixel_arrays_sub)
 
-        #pixel_arrays = tuple(pixel_arrays)
-        #for i, ix in enumerate(self.mapping.mapping):
-        #    if not np.allclose(pixel_arrays[ix], pixel_arrays[i], atol=self.atol, equal_nan=True):
-        #        print(pixel_arrays[ix], pixel_arrays[i])
-        #        raise ValueError(
-        #            "The world inputs for shared pixel axes did not result in a pixel "
-        #            f"coordinate to within {self.atol} relative accuracy."
-        #        )
+        mapped_axes = set(self.mapping.mapping)
+        for mapped_axis in mapped_axes:
+            idx, = np.where(self.mapping.mapping == mapped_axis)
+            if len(idx) > 1:
+                idx_0 = idx[0]
+                for idx_n in idx[1:]:
+                    if not np.allclose(pixel_arrays[idx_0], pixel_arrays[idx_n],
+                                       atol=self.atol, equal_nan=True):
+                        raise ValueError(
+                            "The world inputs for shared pixel axes did not result in a pixel "
+                            f"coordinate to within {self.atol} relative accuracy."
+                        )
         return self.mapping.inverse(*pixel_arrays)
 
     @property
