@@ -82,22 +82,22 @@ This method can be used as:
   >>> wcs0.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
   >>> wcs0.wcs.cunit = 'Angstrom', 'deg', 'deg'
   >>> wcs0.wcs.cdelt = 0.2, 0.5, 0.4
-  >>> wcs0.wcs.crpix = 0, 2, 2
-  >>> wcs0.wcs.crval = 10, 0.5, 1
+  >>> wcs0.wcs.crpix = 0, 1, 1.5
+  >>> wcs0.wcs.crval = 10, 0, 0
 
   >>> wcs1 = astropy.wcs.WCS(naxis=3)
   >>> wcs1.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
   >>> wcs1.wcs.cunit = 'Angstrom', 'deg', 'deg'
   >>> wcs1.wcs.cdelt = 0.2, 0.5, 0.4
-  >>> wcs1.wcs.crpix = 0, 2, 2
-  >>> wcs1.wcs.crval = 10, 0.5, 1
+  >>> wcs1.wcs.crpix = 0, 1.5, 2
+  >>> wcs1.wcs.crval = 10, 0, 0
 
   >>> wcs2 = astropy.wcs.WCS(naxis=3)
   >>> wcs2.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
   >>> wcs2.wcs.cunit = 'Angstrom', 'deg', 'deg'
   >>> wcs2.wcs.cdelt = 0.2, 0.5, 0.4
-  >>> wcs2.wcs.crpix = 0, 2, 2
-  >>> wcs2.wcs.crval = 10, 0.5, 1
+  >>> wcs2.wcs.crpix = 0, 2, 2.5
+  >>> wcs2.wcs.crval = 10, 0, 0
 
   >>> # Instantiate NDCubes with supporting data.
   >>> cube0 = NDCube(data0, wcs=wcs0)
