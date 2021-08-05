@@ -231,6 +231,13 @@ def test_combine_cubes(wcs_3d_l_lt_ln):
 
     assert combined_cube.data.shape == (4, 2, 3, 4)
 
+    # Sorting this because the order of sequence axis coordinates isn't guaranteed.
+    assert sorted(combined_cube.wcs.world_axis_physical_types) == ['custom:pos.helioprojective.lat',
+                                                                   'custom:pos.helioprojective.lon',
+                                                                   'em.wl',
+                                                                   'pos.distance',
+                                                                   'time']
+
 
 def test_combine_cubes_unitless_global_coords(wcs_3d_l_lt_ln):
     data = np.random.rand(2, 3, 4)
@@ -246,7 +253,7 @@ def test_combine_cubes_unitless_global_coords(wcs_3d_l_lt_ln):
     cube = seq.combine_cubes()
 
     assert cube.wcs.world_axis_names[-1] == 'distance'
-    assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
+    assert cube.wcs.world_axis_physical_types[-1] == 'pos.distance'
     assert cube.wcs.world_axis_units[-1] == ''
 
 
@@ -266,7 +273,7 @@ def test_combine_cubes_invalid_global_coords(wcs_3d_l_lt_ln):
         cube = seq.combine_cubes()
 
     assert cube.wcs.world_axis_names[-1] == 'sequence'
-    assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
+    assert cube.wcs.world_axis_physical_types[-1] == 'custom:meta.obs.sequence'
     assert cube.wcs.world_axis_units[-1] == ''
 
 
@@ -281,7 +288,7 @@ def test_combine_cubes_no_global_coords(wcs_3d_l_lt_ln):
     cube = seq.combine_cubes()
 
     assert cube.wcs.world_axis_names[-1] == 'sequence'
-    assert cube.wcs.world_axis_physical_types[-1] == 'custom:CUSTOM'
+    assert cube.wcs.world_axis_physical_types[-1] == 'custom:meta.obs.sequence'
     assert cube.wcs.world_axis_units[-1] == ''
 
 

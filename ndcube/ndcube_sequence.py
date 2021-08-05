@@ -382,17 +382,22 @@ class NDCubeSequenceBase:
         table_coords = []
 
         for axis_name, axis_coords in self.sequence_axis_coords.items():
+            physical_type = self[0].global_coords._internal_coords[axis_name][0]
+
             if isinstance(axis_coords[0], (u.Quantity, numbers.Number)):
                 table_coords.append(QuantityTableCoordinate(u.Quantity(axis_coords),
-                                                            names=axis_name))
+                                                            names=axis_name,
+                                                            physical_types=physical_type))
 
             elif isinstance(axis_coords[0], Time):
                 table_coords.append(TimeTableCoordinate(Time(axis_coords),
-                                                        names=axis_name))
+                                                        names=axis_name,
+                                                        physical_types=physical_type))
 
             elif isinstance(axis_coords[0], SkyCoordTableCoordinate):
                 table_coords.append(SkyCoordTableCoordinate(SkyCoord(axis_coords),
-                                                            names=axis_name))
+                                                            names=axis_name,
+                                                            physical_types=physical_type))
 
             else:
                 warnings.warn(f"Skipping '{axis_name}'. Unable to convert global_coords "
@@ -404,7 +409,8 @@ class NDCubeSequenceBase:
         # If no global coords were found, use the cube index to form an axis.
         if not table_coords:
             table_coords.append(QuantityTableCoordinate(u.Quantity(np.arange(len(self.data))),
-                                                        names='sequence'))
+                                                        names='sequence',
+                                                        physical_types='meta.obs.sequence'))
 
         return MultipleTableCoordinate(*table_coords).wcs
 
