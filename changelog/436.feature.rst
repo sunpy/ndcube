@@ -1,0 +1,1 @@
+Adds functionality to stack cubes of an `~.NDCubeSequence` object together by reprojecting them to a common WCS and adding an extra dimension corresponding to the sequence axis.
