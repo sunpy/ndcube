@@ -382,7 +382,7 @@ class NDCubeSequenceBase:
         table_coords = []
 
         for axis_name, axis_coords in self.sequence_axis_coords.items():
-            physical_type = self[0].global_coords._internal_coords[axis_name][0]
+            physical_type = self[0].global_coords.physical_types[axis_name]
 
             if isinstance(axis_coords[0], (u.Quantity, numbers.Number)):
                 table_coords.append(QuantityTableCoordinate(u.Quantity(axis_coords),
