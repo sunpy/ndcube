@@ -18,22 +18,23 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         The factor by which to increase the pixel size for each pixel
         axis. If a scalar, the same factor is used for all axes.
 
-    offset: `int` or `float` or iterable the same
+    offset: `int` or `float` or iterable of the same
         The location on the underlying pixel grid which corresponds
-        to zero on the top level pixel grid.
+        to zero on the top level pixel grid. If a scalar, the grid will be
+        shifted by the same amount in all dimensions.
     """
-    def __init__(self, wcs, factor, offset=None):
+    def __init__(self, wcs, factor, offset=0):
         self._wcs = wcs
         if np.isscalar(factor):
             factor = [factor] * self.pixel_n_dim
         self._factor = np.array(factor)
-        if offset is None:
-            offset = 0
+        if len(self._factor) !=  self.pixel_n_dim:
+            raise ValueError(f"Length of factor must equal number of dimensions {self.pixel_n_dim}.")
         if np.isscalar(offset):
             offset = [offset] * self.pixel_n_dim
         self._offset = np.array(offset)
-        if len(self._offset) != len(self._factor):
-            raise ValueError("offset must have same len as factor.")
+        if len(self._offset) != self.pixel_n_dim:
+            raise ValueError(f"Length of offset must equal number of dimensions {self.pixel_n_dim}.")
 
     def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
@@ -70,9 +71,11 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         if self._wcs.pixel_shape is None:
             return self._wcs.pixel_shape
         underlying_shape = np.asarray(self._wcs.pixel_shape)
-        int_elements = np.mod(underlying_shape, self._factor) == 0
+        int_elements = np.isclose(np.mod(underlying_shape, self._factor), 0,
+                                  atol=np.finfo(float).resolution)
         pixel_shape = underlying_shape / self._factor
-        return tuple(int(i) if is_int else i for i, is_int in zip(pixel_shape, int_elements))
+        return tuple(int(np.rint(i)) if is_int else i
+                     for i, is_int in zip(pixel_shape, int_elements))
 
     @property
     def pixel_bounds(self):

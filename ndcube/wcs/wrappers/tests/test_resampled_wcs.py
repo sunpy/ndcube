@@ -1,3 +1,5 @@
+import numbers
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -126,3 +128,32 @@ def test_offset(celestial_wcs):
     assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
     assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
+
+
+@pytest.mark.parametrize('celestial_wcs',
+                         ['celestial_2d_ape14_wcs'],
+                         indirect=True)
+def test_factor_wrong_length_error(celestial_wcs):
+    with pytest.raises(ValueError):
+        ResampledLowLevelWCS(celestial_wcs, [2] * 3)
+
+
+@pytest.mark.parametrize('celestial_wcs',
+                         ['celestial_2d_ape14_wcs'],
+                         indirect=True)
+def test_scalar_wrong_length_error(celestial_wcs):
+    with pytest.raises(ValueError):
+        wcs = ResampledLowLevelWCS(celestial_wcs, 2, offset=[1] * 3)
+
+
+@pytest.mark.parametrize('celestial_wcs',
+                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+                         indirect=True)
+def test_int_fraction_pixel_shape(celestial_wcs):
+    # Some fractional factors are not representable by exact floats, e.g. 1/3.
+    # However, it is still desirable for the pixel shape to return ints in these cases.
+    # This test checks that this is the case.
+    wcs = ResampledLowLevelWCS(celestial_wcs, 1/3)
+    assert wcs.pixel_shape == (18, 21)
+    for dim in wcs.pixel_shape:
+        assert isinstance(dim, numbers.Integral)
