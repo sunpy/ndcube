@@ -135,7 +135,7 @@ def test_offset(celestial_wcs):
                          indirect=True)
 def test_factor_wrong_length_error(celestial_wcs):
     with pytest.raises(ValueError):
-        wcs = ResampledLowLevelWCS(celestial_wcs, [2] * 3)
+        ResampledLowLevelWCS(celestial_wcs, [2] * 3)
 
 
 @pytest.mark.parametrize('celestial_wcs',
