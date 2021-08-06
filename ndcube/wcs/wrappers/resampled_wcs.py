@@ -30,8 +30,6 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         self._factor = np.array(factor)
         if len(self._factor) !=  self.pixel_n_dim:
             raise ValueError(f"Length of factor must equal number of dimensions {self.pixel_n_dim}.")
-        if offset is None:
-            offset = 0
         if np.isscalar(offset):
             offset = [offset] * self.pixel_n_dim
         self._offset = np.array(offset)
@@ -76,8 +74,8 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         int_elements = np.isclose(np.mod(underlying_shape, self._factor), 0,
                                   atol=np.finfo(float).resolution)
         pixel_shape = underlying_shape / self._factor
-        return tuple(int(np.rint(i)) if is_int else i for i, is_int
-                     in zip(pixel_shape, int_elements))
+        return tuple(int(np.rint(i)) if is_int else i
+                     for i, is_int in zip(pixel_shape, int_elements))
 
     @property
     def pixel_bounds(self):
