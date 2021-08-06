@@ -377,7 +377,7 @@ class NDCubeSequenceBase:
     def _get_sequence_axes_wcs(self):
         """
         Returns a WCS object corresponding to the sequence axis of this NDCubeSequence.
-        It can contain multiple pixel axes that map to the same world axis.
+        It can contain multiple world axes that map to the same pixel axis.
         """
         table_coords = []
 
