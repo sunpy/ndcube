@@ -3,10 +3,7 @@ from functools import wraps
 
 import astropy.units as u
 import numpy as np
-from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-
-from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['sanitise_wcs', 'unique_sorted']
 
@@ -78,25 +75,12 @@ def sanitize_crop_inputs(lower_corner, upper_corner, wcs):
     # This needs to be here to prevent a circular import
     from ndcube.extra_coords import ExtraCoords
     if isinstance(wcs, ExtraCoords):
-        # If wcs is ExtraCoords instance, generate new wcs from the
-        # ExtraCoords, inserting dummy axes for unrepresented pixel axes.
-        ec_axes = set(wcs.mapping)
-        cube_axes = set(range(len(wcs._ndcube.dimensions)))
-        dummy_axes = cube_axes - ec_axes
-        if dummy_axes:
-            n_dummy_axes = len(dummy_axes)
-            dummy_wcs = WCS(naxis=n_dummy_axes)
-            dummy_wcs.wcs.crpix = [1] * n_dummy_axes
-            dummy_wcs.wcs.cdelt = [1] * n_dummy_axes
-            dummy_wcs.wcs.crval = [0] * n_dummy_axes
-            dummy_wcs.wcs.ctype = ["PIXEL"] * n_dummy_axes
-            mapping = list(wcs.mapping) + list(dummy_axes)
-            wcs = CompoundLowLevelWCS(wcs.wcs, dummy_wcs, mapping=mapping)
-        else:
-            wcs = wcs.wcs
         # Add None inputs to upper and lower corners for new dummy axes.
-        lower_corner += [None] * len(dummy_axes)
-        upper_corner += [None] * len(dummy_axes)
+        n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)
+        lower_corner += [None] * n_dummy_axes
+        upper_corner += [None] * n_dummy_axes
+        # Convert extra coords to WCS describing whole cube.
+        wcs = wcs.cube_wcs
 
     return False, lower_corner, upper_corner, wcs
 
