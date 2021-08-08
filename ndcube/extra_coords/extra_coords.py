@@ -416,7 +416,7 @@ class ExtraCoords(ExtraCoordsABC):
 
     @property
     def _cube_array_axes_without_extra_coords(self):
-        return set(self.mapping) - set(range(len(self._ndcube.dimensions)))
+        return set(range(len(self._ndcube.dimensions))) - set(self.mapping)
 
     def __str__(self):
         elements = [f"{', '.join(table.names)} ({axes}): {table}" for axes, table in self._lookup_tables]
