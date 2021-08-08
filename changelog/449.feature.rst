@@ -1,0 +1,1 @@
+Introduce optional offset between old and new pixel grids in `~ndcube.wcs.wrappers.resampled_wcs.ResampledLowLevelWCS`.
