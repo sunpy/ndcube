@@ -449,7 +449,6 @@ def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
     upper_corner = (Time("2000-01-01T20:00:00", scale="utc", format="fits"), None)
     output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
     expected = cube[0:1]
-    return output, expected
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -459,7 +458,6 @@ def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
     upper_corner = (8 * 60 * 60 * u.s, None)
     output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
     expected = cube[0:1]
-    return output, expected
     helpers.assert_cubes_equal(output, expected)
 
 
