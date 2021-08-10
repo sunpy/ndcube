@@ -66,9 +66,26 @@ def figure_test(test_function):
 
 def assert_extra_coords_equal(test_input, extra_coords):
     assert set(test_input.keys()) == set(extra_coords.keys())
-    for key in list(test_input.keys()):
-        assert test_input[key]['axis'] == extra_coords[key]['axis']
-        assert (test_input[key]['value'] == extra_coords[key]['value']).all()
+    if extra_coords._lookup_tables is None:
+        assert test_input._lookup_tables is None
+    for ec_idx, key in enumerate(extra_coords.keys()):
+        test_idx = np.where(np.asarray(test_input.keys()) == key)[0][0]
+        assert test_input.mapping[test_idx] == extra_coords.mapping[ec_idx]
+        if extra_coords._lookup_tables is not None:
+            test_table = test_input._lookup_tables[test_idx][1].table
+            ec_table = extra_coords._lookup_tables[ec_idx][1].table
+            if not isinstance(ec_table, tuple):
+                test_table = (test_table,)
+                ec_table = (ec_table,)
+            for test_tab, ec_tab in zip(test_table, ec_table):
+                if ec_tab.isscalar:
+                    assert test_tab == ec_tab
+                else:
+                    assert all(test_tab == ec_tab)
+    if extra_coords._wcs is None:
+        assert test_input._wcs is None
+    else:
+        assert_wcs_are_equal(test_input._wcs, extra_coords._wcs)
 
 
 def assert_metas_equal(test_input, expected_output):

@@ -524,9 +524,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         lower_corner_values = high_level_objects_to_values(*lower_corner, low_level_wcs=wcs)
         upper_corner_values = high_level_objects_to_values(*upper_corner, low_level_wcs=wcs)
-        lower_corner_values = [v << u.Unit(unit)
+        #lower_corner_values = [v << u.Unit(unit)
+        #                       for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
+        #upper_corner_values = [v << u.Unit(unit)
+        #                       for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
+        lower_corner_values = [u.Quantity(v, unit=u.Unit(unit))
                                for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
-        upper_corner_values = [v << u.Unit(unit)
+        upper_corner_values = [u.Quantity(v, unit=u.Unit(unit))
                                for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
 
         points = self._bounding_box_to_points(lower_corner_values, upper_corner_values, wcs)

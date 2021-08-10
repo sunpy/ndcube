@@ -452,6 +452,19 @@ def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_by_extra_coords_all_axes_with_coord(ndcube_3d_ln_lt_l_ec_all_axes):
+    cube = ndcube_3d_ln_lt_l_ec_all_axes
+    interval0 = Time(["2000-01-01T15:00:00", "2000-01-01T20:00:00"], scale="utc", format="fits")
+    #interval1 = SkyCoord(ra=[10, 20], dec=[0, 1], unit=u.deg, frame="icrs")
+    interval1 = [0, 1] * u.pix
+    interval2 = [1, 3] * u.m
+    lower_corner = (interval0[0], interval1[0], interval2[0])
+    upper_corner = (interval0[1], interval1[1], interval2[1])
+    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[0:1, 0:2, 1:4]
+    helpers.assert_cubes_equal(output, expected)
+
+
 def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
     cube = ndcube_3d_ln_lt_l_ec_time
     lower_corner = (3 * 60 * 60 * u.s, None)
