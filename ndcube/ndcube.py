@@ -524,9 +524,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         lower_corner_values = high_level_objects_to_values(*lower_corner, low_level_wcs=wcs)
         upper_corner_values = high_level_objects_to_values(*upper_corner, low_level_wcs=wcs)
-        #lower_corner_values = [v << u.Unit(unit)
+        # lower_corner_values = [v << u.Unit(unit)
         #                       for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
-        #upper_corner_values = [v << u.Unit(unit)
+        # upper_corner_values = [v << u.Unit(unit)
         #                       for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
         lower_corner_values = [u.Quantity(v, unit=u.Unit(unit))
                                for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
@@ -620,7 +620,33 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         Convert two corners of a bounding box to the points of all corners.
         """
-        return tuple(itertools.product(*zip(lower_corner_values, upper_corner_values)))
+        corners = np.array(tuple(itertools.product(*zip(lower_corner_values, upper_corner_values))),
+                           dtype=object)
+        if hasattr(wcs, "mapping"):
+            # For world axes who share an array axis, their values cannot be separated
+            # into different corners.  Therefore, corners combining the lower and upper
+            # values of coords sharing an axes must be removed.
+            # The below implementation assumes all coords are 1-D.
+            mapping = wcs.mapping.mapping
+            # Find coords which have the same array axis.
+            sorted_axes, counts = np.unique(mapping, return_counts=True)
+            shared_axes = sorted_axes[counts > 1]
+            # Use itertools.product to map the corners to the min and max value
+            # of each world coord and the array axis to which is corresponds.
+            lower_corner_labels = [f"{axis}_min" for axis in mapping]
+            upper_corner_labels = [f"{axis}_max" for axis in mapping]
+            corner_labels = np.array(tuple(
+                itertools.product(*zip(lower_corner_labels, upper_corner_labels))),
+                dtype=object)
+            # Find corners including a min and max value from the same axis and remove them.
+            mask = np.zeros(len(corners), dtype=bool)
+            for axis in shared_axes:
+                invalid_corners = np.array([f"{axis}_min" in corner and f"{axis}_max" in corner
+                                            for corner in corner_labels])
+                mask |= invalid_corners
+            corners = corners[np.logical_not(mask)]
+
+        return corners
 
     def _crop_from_points(self, *world_points_values, wcs):
         """
