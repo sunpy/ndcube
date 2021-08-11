@@ -1,1 +1,1 @@
-from . import collection, misc, sequence, wcs
+from . import collection, cube, misc, sequence, wcs
