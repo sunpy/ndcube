@@ -2,6 +2,7 @@ import copy
 from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
 
+import numpy as np
 from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.wcs.wcsapi.high_level_api import default_order
 from astropy.wcs.wcsapi.utils import deserialize_class
@@ -195,8 +196,16 @@ class GlobalCoords(Mapping):
         return len(self._all_coords)
 
     def __str__(self):
-        elements = [f"{name}: {repr(coord)}" for name, coord in self.items()]
-        return f"GlobalCoords({', '.join(elements)})"
+        classname = self.__class__.__name__
+        elements = [f"{name} ['{ptype}']:\n{repr(coord)}" for (name, coord), ptype in
+                    zip(self.items(), self.physical_types.values())]
+        length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
+        if length > np.get_printoptions()['linewidth']:
+            joiner = ',\n ' + len(classname) * ' '
+        else:
+            joiner = ', '
+
+        return f"{classname}({joiner.join(elements)})"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
