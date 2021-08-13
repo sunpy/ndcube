@@ -309,7 +309,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         for names, lut in self._name_lut_map.items():
             if item in names:
-                new_ec = ExtraCoords()
+                new_ec = ExtraCoords(ndcube=self._ndcube)
                 new_ec._lookup_tables = [lut]
                 return new_ec
 
