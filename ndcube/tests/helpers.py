@@ -18,6 +18,7 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 from numpy.testing import assert_equal
 
 from ndcube import NDCube, NDCubeSequence
+from ndcube.meta import Meta
 
 __all__ = ['figure_test',
            'get_hash_library_name',
@@ -66,15 +67,31 @@ def figure_test(test_function):
 
 def assert_extra_coords_equal(test_input, extra_coords):
     assert test_input.keys() == extra_coords.keys()
-    for key in list(test_input.keys()):
+    for key in test_input:
         assert test_input[key]['axis'] == extra_coords[key]['axis']
         assert (test_input[key]['value'] == extra_coords[key]['value']).all()
 
 
 def assert_metas_equal(test_input, expected_output):
-    if not (test_input is None and expected_output is None):
+    if type(test_input) is not type(expected_output):
+        raise AssertionError(
+            "input and expected are of different type. "
+            f"Input: {type(test_input)}; Expected: {type(expected_output)}")
+    if isinstance(test_input, Meta) and isinstance(expected_output, Meta):
+        if test_input.shape is None or expected_output.shape is None:
+            assert test_input.shape == expected_output.shape
+        else:
+            assert all(test_input.shape == expected_output.shape)
+        for test_value, expected_value in zip(test_input.values(), expected_output.values()):
+            try:
+                assert test_value[0] == expected_value[0]
+            except ValueError as err:
+                if "more than one element is ambiguous" in err.args[0]:
+                    assert all(test_value[0] == expected_value[0])
+            assert all(test_value[2] == expected_value[2])
+    elif isinstance(test_input, dict) and isinstance(expected_output, dict):
         assert test_input.keys() == expected_output.keys()
-        for key in list(test_input.keys()):
+        for key in test_input:
             assert test_input[key] == expected_output[key]
 
 
