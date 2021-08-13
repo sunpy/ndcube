@@ -132,7 +132,7 @@ class BaseTableCoordinate(abc.ABC):
         return MultipleTableCoordinate(self, other)
 
     def __str__(self):
-        header = f"{self.__class__.__name__} [{self.physical_types}]:"
+        header = f"{self.__class__.__name__} {self.names or ''} {self.physical_types or '[None]'}:"
         content = str(self.table).lstrip('(').rstrip(',)')
         if len(header) + len(content) >= np.get_printoptions()['linewidth']:
             return '\n'.join((header, content))

@@ -197,7 +197,7 @@ class GlobalCoords(Mapping):
 
     def __str__(self):
         classname = self.__class__.__name__
-        elements = [f"{name} ['{ptype}']:\n{repr(coord)}" for (name, coord), ptype in
+        elements = [f"{name} {[ptype]}:\n{repr(coord)}" for (name, coord), ptype in
                     zip(self.items(), self.physical_types.values())]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
         if length > np.get_printoptions()['linewidth']:
