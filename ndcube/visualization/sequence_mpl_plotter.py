@@ -14,13 +14,21 @@ class MatplotlibSequencePlotter():
     """
     Provide visualization methods for NDCubeSequence which use `matplotlib`.
 
-    This plotter delegates much of the visualization to the plot method of the
-    `~ndcube.NDCube` instances in the `~ndcube.NDCubeSequence`
-    and assumes they employ the `~ndcube.visualization.mpl_plotter.MatplotlibPlotter`.
+    This plotter delegates much of the visualization to the `ndcube.NDCube.plot`
+    which is assumed to employ the `~ndcube.visualization.mpl_plotter.MatplotlibPlotter`.
     """
     def plot(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
         Visualize the `~ndcube.NDCubeSequence`.
+
+        Parameters
+        ----------
+        sequence_axis_coords: `str` or array-like (optional)
+            The real world value of each step along the sequene axis.
+            If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
+
+        sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
+            The unit in which to display the sequence_axis_coords.
         """
         if len(self._sequence.dimensions) == 2:
             return self._plot_2D_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
@@ -54,6 +62,27 @@ class MatplotlibSequencePlotter():
 
 
 class SequenceAnimator(ArrayAnimatorWCS):
+    """
+    Animate an NDCubeSequence of NDCubes with >1 dimension.
+
+    The sequence axis is always set as a sliders axis.
+    All kwargs are passed to `ndcube.NDCube.plot`.
+    The bulk of the plotting work is performed by `ndcube.NDCube.plot`
+    which is assumed to exist and to call a matplotlib-based animator.
+
+    Parameters
+    ----------
+    sequence: `~ndcube.NDCubeSequence`
+        The sequence to animate.
+
+    sequence_axis_coords: `str` or array-like (optional)
+        The real world value of each step along the sequene axis.
+        If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
+
+    sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
+        The unit in which to display the sequence_axis_coords.
+    """
+
     def __init__(self, sequence, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         if sequence_axis_coords is not None:
             raise NotImplementedError("Setting sequence_axis_coords not yet supported.")
