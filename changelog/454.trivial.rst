@@ -1,0 +1,1 @@
+Propagate reference to NDCube object through `~ndcube.extra_coords.ExtraCoords` string slicing.
