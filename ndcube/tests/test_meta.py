@@ -9,6 +9,7 @@ from .helpers import assert_metas_equal
 
 # Fixtures
 
+
 @pytest.fixture
 def basic_meta_values():
     return {"a": "hello",
@@ -31,7 +32,7 @@ def basic_axes():
     return {"b": 0,
             "c": (1, 2),
             "d": (2,),
-           }
+            }
 
 
 @pytest.fixture
@@ -132,12 +133,14 @@ def test_add2(basic_meta):
     assert meta.comments[name] is None
     assert meta.axes[name] == np.array([axis])
 
+
 def test_add_overwrite(basic_meta):
     meta = basic_meta
     name = "a"
     value = "goodbye"
     meta.add(name, value, None, None, overwrite=True)
     assert meta[name] == value
+
 
 def test_add_overwrite_error(basic_meta):
     meta = basic_meta

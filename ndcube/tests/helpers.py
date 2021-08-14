@@ -50,7 +50,7 @@ def figure_test(test_function):
     All such decorated tests are marked with `pytest.mark.mpl_image` for convenient filtering.
     """
     hash_library_name = get_hash_library_name()
-    hash_library_file = Path(__file__).parent / ".." / "visualization" / "tests"  / hash_library_name
+    hash_library_file = Path(__file__).parent / ".." / "visualization" / "tests" / hash_library_name
 
     @pytest.mark.remote_data
     @pytest.mark.mpl_image_compare(hash_library=hash_library_file.resolve(),
@@ -70,6 +70,7 @@ def assert_extra_coords_equal(test_input, extra_coords):
     for key in list(test_input.keys()):
         assert test_input[key]['axis'] == extra_coords[key]['axis']
         assert (test_input[key]['value'] == extra_coords[key]['value']).all()
+
 
 def assert_metas_equal(test_input, expected_output):
     if type(test_input) is not type(expected_output):

@@ -50,8 +50,8 @@ class Meta(dict):
         # Verify each entry in axes is an iterable of ints.
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
-        if not (isinstance(axis, collections.abc.Iterable) and
-                all([isinstance(i, numbers.Integral) for i in axis])):
+        if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
+                                                                    for i in axis])):
             raise TypeError("Values in axes must be an int or tuple of ints giving "
                             "the data axis/axes associated with the metadata.")
         axis = np.asarray(axis)
