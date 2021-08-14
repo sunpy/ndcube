@@ -1,6 +1,6 @@
-import collections.abc
 import copy
 import numbers
+import collections.abc
 
 import numpy as np
 
@@ -18,7 +18,7 @@ class Meta(dict):
             header = dict(header)
         super().__init__(header.items())
         header_keys = header.keys()
-        
+
         # Generate dictionary for comments.
         if comments is None:
             self._comments = dict(zip(header.keys(), [None] * len(header_keys)))
@@ -142,7 +142,6 @@ class Meta(dict):
             # Edit data shape and calculate which axis will be dropped.
             dropped_axes = np.zeros(len(self.shape), dtype=bool)
             new_shape = new_meta.shape
-            j = 0
             for i, axis_item in enumerate(item):
                 if isinstance(axis_item, numbers.Integral):
                     new_shape = np.delete(new_shape, i)

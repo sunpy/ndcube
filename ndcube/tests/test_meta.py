@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from ndcube.meta import Meta
-from .helpers import assert_metas_equal
 
+from .helpers import assert_metas_equal
 
 # Fixtures
 
@@ -37,7 +37,7 @@ def basic_axes():
 @pytest.fixture
 def basic_data_shape():
     return (2, 3, 4, 5)
-  
+
 
 @pytest.fixture
 def basic_meta(basic_meta_values, basic_comments, basic_axes, basic_data_shape):
@@ -66,7 +66,6 @@ def test_slice_axis_with_no_meta(basic_meta):
 def test_slice_away_independent_axis(basic_meta):
     meta = basic_meta
     # Get output
-    sliced_axis = 0
     item = 0
     output = meta[item]
     # Build expected result.
