@@ -1,11 +1,10 @@
 try:
-    from sunpy.visualization.animator import BaseFuncAnimator, ArrayAnimatorWCS
+    from sunpy.visualization.animator import ArrayAnimatorWCS
 except ImportError:
     raise ImportError(
         "Sunpy is required to animate NDCubeSequences. "
         "Either install sunpy or extract data from sequence and visualize manually.")
 
-from .base_sequence import BaseSequencePlotter
 from .plotting_utils import prep_plot_kwargs
 
 __all__ = ['MatplotlibSequencePlotter']
@@ -24,9 +23,9 @@ class MatplotlibSequencePlotter():
         Visualize the `~ndcube.NDCubeSequence`.
         """
         if len(self._sequence.dimensions) == 2:
-            ax = self._plot_2D_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
+            return self._plot_2D_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
         else:
-            ax = self._animate_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
+            return self._animate_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
 
     def _plot_2D_sequence(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
@@ -76,10 +75,8 @@ class SequenceAnimator(ArrayAnimatorWCS):
             n_cube_dims, init_wcs, plot_axes, axes_coordinates, axes_units)
 
         # Define sequence axis slider properties and add to kwargs.
-        base_kwargs = {
-            "slider_functions": [self._sequence_slider_function],
-            "slider_ranges": [[0, len(self._cubes)]]
-            }
+        base_kwargs = {"slider_functions": [self._sequence_slider_function],
+                       "slider_ranges": [[0, len(self._cubes)]]}
         base_kwargs.update(kwargs)
 
         # Calculate data and wcs for initial animation state and instantiate Animator.

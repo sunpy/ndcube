@@ -21,4 +21,3 @@ class BaseSequencePlotter(abc.ABC):
 
         The ``plot()`` method **should** accept ``**kwargs``.
         """
-
