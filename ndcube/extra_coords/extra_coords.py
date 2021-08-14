@@ -405,7 +405,7 @@ class ExtraCoords(ExtraCoordsABC):
             If None given for an axis, no interpolation is performed for coords
             corresponding to that axis.
 
-        ndcube: `~ndcube.NDCube `
+        ndcube: `~ndcube.NDCube`
             The NDCube instance with which the output ExtraCoords object is associated.
 
         Returns
