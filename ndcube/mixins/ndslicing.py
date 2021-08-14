@@ -25,4 +25,13 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords
         sliced_cube._extra_coords = self.extra_coords[item]
 
+        # Slice metadata if possible.
+        try:
+            sliced_cube.meta = self.meta[item]
+        except TypeError as err:
+            if "unhashable type" not in err.args[0]:
+                raise err
+        except KeyError:
+            pass
+
         return sliced_cube
