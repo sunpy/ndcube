@@ -8,7 +8,6 @@ import numbers
 from collections import UserDict
 
 import numpy as np
-from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
 __all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
@@ -478,25 +477,3 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     target_wcs = get_low_level_wcs(target_wcs, 'target_wcs')
 
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
-
-
-def is_wcs_celestial(wcs):
-    """
-    Checks to see if the WCS object has celestial axes only.
-
-    Parameters
-    ----------
-    wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
-        The input WCS object.
-
-    Returns
-    -------
-    result: `bool`
-    """
-    wcs = get_low_level_wcs(wcs)
-
-    for world_axis_class in wcs.world_axis_object_classes.values():
-        if not issubclass(world_axis_class[0], SkyCoord):
-            return False
-
-    return True

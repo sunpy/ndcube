@@ -780,6 +780,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         try:
             from reproject import reproject_adaptive, reproject_exact, reproject_interp
+            from reproject.wcs_utils import has_celestial
         except ModuleNotFoundError:
             raise ImportError("The NDCube.reproject_to method requires the optional package `reproject`.")
 
@@ -793,7 +794,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             if low_level_target_wcs.pixel_n_dim != 2 or low_level_target_wcs.world_n_dim != 2:
                 raise ValueError('For adaptive and exact algorithms, target_wcs must be 2D.')
 
-            if not utils.wcs.is_wcs_celestial(target_wcs):
+            if not has_celestial(target_wcs):
                 raise ValueError('For adaptive and exact algorithms, '
                                  'target_wcs must contain celestial axes only.')
 
