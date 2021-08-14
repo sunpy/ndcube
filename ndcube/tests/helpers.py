@@ -71,12 +71,11 @@ def assert_extra_coords_equal(test_input, extra_coords):
         assert test_input[key]['axis'] == extra_coords[key]['axis']
         assert (test_input[key]['value'] == extra_coords[key]['value']).all()
 
-
 def assert_metas_equal(test_input, expected_output):
     if type(test_input) is not type(expected_output):
         raise AssertionError(
             "input and expected are of different type. "
-            f"Input: {type(test_input)}; Expected: {type(expected_output)}")
+            f"input: {type(test_input)}; expected: {type(expected_output)}")
     multi_element_msg = "more than one element is ambiguous"
     if isinstance(test_input, Meta) and isinstance(expected_output, Meta):
         # Check keys are the same.
@@ -95,7 +94,6 @@ def assert_metas_equal(test_input, expected_output):
             except ValueError as err:
                 if multi_element_msg in err.args[0]:
                     assert np.allclose(test_value, expected_value)
-            
         # Check axes are the same.
         for test_axis, expected_axis in zip(test_input.axes.values(),
                                             expected_output.axes.values()):

@@ -115,7 +115,7 @@ def test_add1(basic_meta):
     name = "z"
     value = 100
     comment = "Comment E"
-    meta.add(name, value, comment=comment)
+    meta.add(name, value, comment, None)
     assert name in meta.keys()
     assert meta[name] == value
     assert meta.comments[name] == comment
@@ -127,17 +127,23 @@ def test_add2(basic_meta):
     name = "z"
     value = list(range(2))
     axis = 0
-    meta.add(name, value, axis=axis)
+    meta.add(name, value, None, axis)
     assert name in meta.keys()
     assert meta[name] == value
     assert meta.comments[name] is None
     assert meta.axes[name] == np.array([axis])
 
+def test_add_overwrite(basic_meta):
+    meta = basic_meta
+    name = "a"
+    value = "goodbye"
+    meta.add(name, value, None, None, overwrite=True)
+    assert meta[name] == value
 
 def test_add_overwrite_error(basic_meta):
     meta = basic_meta
     with pytest.raises(KeyError):
-        meta.add("a", "world")
+        meta.add("a", "world", None, None)
 
 
 def test_add_axis_without_shape(no_shape_meta):

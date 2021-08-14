@@ -21,14 +21,14 @@ class Meta(dict):
         
         # Generate dictionary for comments.
         if comments is None:
-            self.comments = dict(zip(header.keys(), [None] * len(header_keys)))
+            self._comments = dict(zip(header.keys(), [None] * len(header_keys)))
         else:
             comments = dict(comments)
-            self.comments = dict([(key, comments.get(key)) for key in header])
+            self._comments = dict([(key, comments.get(key)) for key in header])
 
         # Generate dictionary for axes.
         if axes is None:
-            self.axes = dict(zip(header.keys(), [None] * len(header_keys)))
+            self._axes = dict(zip(header.keys(), [None] * len(header_keys)))
             self._data_shape = None
         else:
             # Verify data_shape is set if axes is set.
@@ -38,8 +38,8 @@ class Meta(dict):
                                 "the length of each axis of the assocated cube.")
             self._data_shape = np.asarray(data_shape)
             axes = dict(axes)
-            self.axes = dict([(key, self._sanitize_axis_value(axes.get(key), header[key], key))
-                              for key in header_keys])
+            self._axes = dict([(key, self._sanitize_axis_value(axes.get(key), header[key], key))
+                               for key in header_keys])
 
     def _sanitize_axis_value(self, axis, value, key):
         if axis is None:
@@ -74,25 +74,48 @@ class Meta(dict):
         return axis
 
     @property
+    def comments(self):
+        return self._comments
+
+    @property
+    def axes(self):
+        return self._axes
+
+    @property
     def shape(self):
         return self._data_shape
 
-    def add(self, name, value, comment=None, axis=None):
+    def add(self, name, value, comment, axis, overwrite=False):
         """Need docstring!"""
-        if name in self.keys():
+        if name in self.keys() and overwrite is not True:
             raise KeyError(f"'{name}' already exists. "
-                           "To edit and existing entry, first delete and then re-add it "
-                           "with the update parameters.")
+                           "To update an existing metadata entry set overwrite=True.")
         if axis is not None:
             axis = self._sanitize_axis_value(axis, value, name)
-        self[name] = value
-        self.comments[name] = comment
-        self.axes[name] = axis
+        self._comments[name] = comment
+        self._axes[name] = axis
+        self.__setitem__(name, value)  # This must be done after updating self._axes otherwise it may error.
 
     def __del__(self, name):
+        del self._comments[name]
+        del self._axes[name]
         del self[name]
-        del self.comments[name]
-        del self.axes[name]
+
+    def __setitem__(self, key, val):
+        axis = self.axes[key]
+        if axis is not None:
+            recommendation = "We recommend using the 'add' method to set values."
+            if len(axis) == 1:
+                if not (hasattr(val, "__len__") and len(val) == self.shape[axis[0]]):
+                    raise TypeError(f"{key} must have same length as associated axis, "
+                                    f"i.e. axis {axis[0]}: {self.shape[axis[0]]}\n"
+                                    f"{recommendation}")
+            else:
+                if not (hasattr(val, "shape") and all(val.shape == self.shape[axis])):
+                    raise TypeError(f"{key} must have same shape as associated axes, "
+                                    f"i.e axes {axis}: {self.shape[axis]}\n"
+                                    f"{recommendation}")
+        super().__setitem__(key, val)
 
     def __getitem__(self, item):
         # There are two ways to slice:
@@ -160,7 +183,6 @@ class Meta(dict):
                     new_axis = new_axis[new_axis >= 0]
                     if len(new_axis) == 0:
                         new_axis = None
-                    del new_meta[key]
-                    new_meta.add(key, new_value, self.comments[key], new_axis)
+                    new_meta.add(key, new_value, self.comments[key], new_axis, overwrite=True)
 
             return new_meta
