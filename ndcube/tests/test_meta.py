@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pytest
 
@@ -47,30 +49,6 @@ def no_shape_meta():
     return Meta({"a": "hello"})
 
 
-def test_meta_values(basic_meta, basic_meta_values):
-    meta = basic_meta
-    expected_values = list(basic_meta_values.values())
-    assert meta.meta_values == expected_values 
-
-
-def test_comments(basic_meta, basic_comments):
-    meta = basic_meta
-    comments = basic_comments
-    assert list(meta.comments.keys()) == list(comments.keys())
-    assert list(meta.comments.values()) == list(comments.values())
-
-
-def test_axes(basic_meta, basic_axes):
-    meta = basic_meta
-    axes = basic_axes
-    axes["b"] = np.array([0])
-    axes["c"] = np.asarray(axes["c"])
-    axes["d"] = np.asarray(axes["d"])
-    assert list(meta.axes.keys()) == list(axes.keys())
-    for output_axis, expected_axis in zip(meta.axes.values(), axes.values()):
-        assert all(output_axis == expected_axis)
-
-
 def test_shape(basic_meta, basic_data_shape):
     meta = basic_meta
     shape = np.asarray(basic_data_shape)
@@ -80,7 +58,9 @@ def test_shape(basic_meta, basic_data_shape):
 def test_slice_axis_with_no_meta(basic_meta):
     meta = basic_meta
     output = meta[:, :, :, 0]
-    assert_metas_equal(output, meta)
+    expected = copy.deepcopy(meta)
+    expected._data_shape = meta._data_shape[:-1]
+    assert_metas_equal(output, expected)
 
 
 def test_slice_away_independent_axis(basic_meta):
@@ -90,7 +70,7 @@ def test_slice_away_independent_axis(basic_meta):
     item = 0
     output = meta[item]
     # Build expected result.
-    values = dict([(key, value[0]) for key, value in meta.items()])
+    values = dict([(key, value) for key, value in meta.items()])
     values["b"] = values["b"][0]
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
@@ -111,7 +91,7 @@ def test_slice_dependent_axes(basic_meta):
     output = meta[:, 1:3, 1]
     print(meta["a"])
     # Build expected result.
-    values = dict([(key, value[0]) for key, value in meta.items()])
+    values = dict([(key, value) for key, value in meta.items()])
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]
     comments = meta.comments
@@ -124,13 +104,7 @@ def test_slice_dependent_axes(basic_meta):
     assert_metas_equal(output, expected)
 
 
-@pytest.mark.parametrize("meta, item, expected",
-                         (
-                             ("basic_meta", "a", "hello"),
-                             ("basic_meta", "b", list(range(10, 25, 10))),
-                         ),
-                         indirect=("meta",))
-def test_slice_by_str(meta, item, expected):
+def test_slice_by_str(basic_meta):
     meta = basic_meta
     assert meta["a"] == "hello"
     assert meta["b"] == list(range(10, 25, 10))
@@ -145,7 +119,7 @@ def test_add1(basic_meta):
     assert name in meta.keys()
     assert meta[name] == value
     assert meta.comments[name] == comment
-    assert name not in meta.axes.keys()
+    assert meta.axes[name] is None
 
 
 def test_add2(basic_meta):
@@ -156,8 +130,8 @@ def test_add2(basic_meta):
     meta.add(name, value, axis=axis)
     assert name in meta.keys()
     assert meta[name] == value
+    assert meta.comments[name] is None
     assert meta.axes[name] == np.array([axis])
-    assert name not in meta.comments.keys()
 
 
 def test_add_overwrite_error(basic_meta):

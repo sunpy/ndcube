@@ -67,7 +67,7 @@ def figure_test(test_function):
 
 def assert_extra_coords_equal(test_input, extra_coords):
     assert test_input.keys() == extra_coords.keys()
-    for key in test_input:
+    for key in list(test_input.keys()):
         assert test_input[key]['axis'] == extra_coords[key]['axis']
         assert (test_input[key]['value'] == extra_coords[key]['value']).all()
 
@@ -77,22 +77,35 @@ def assert_metas_equal(test_input, expected_output):
         raise AssertionError(
             "input and expected are of different type. "
             f"Input: {type(test_input)}; Expected: {type(expected_output)}")
+    multi_element_msg = "more than one element is ambiguous"
     if isinstance(test_input, Meta) and isinstance(expected_output, Meta):
+        # Check keys are the same.
+        assert test_input.keys() == expected_output.keys()
+
+        # Check shapes are the same.
         if test_input.shape is None or expected_output.shape is None:
             assert test_input.shape == expected_output.shape
         else:
-            assert all(test_input.shape == expected_output.shape)
+            assert np.allclose(test_input.shape, expected_output.shape)
+
+        # Check values and axes are the same.
         for test_value, expected_value in zip(test_input.values(), expected_output.values()):
             try:
-                assert test_value[0] == expected_value[0]
+                assert test_value == expected_value
             except ValueError as err:
-                if "more than one element is ambiguous" in err.args[0]:
-                    assert all(test_value[0] == expected_value[0])
-            assert all(test_value[2] == expected_value[2])
-    elif isinstance(test_input, dict) and isinstance(expected_output, dict):
-        assert test_input.keys() == expected_output.keys()
-        for key in test_input:
-            assert test_input[key] == expected_output[key]
+                if multi_element_msg in err.args[0]:
+                    assert np.allclose(test_value, expected_value)
+            
+        # Check axes are the same.
+        for test_axis, expected_axis in zip(test_input.axes.values(),
+                                            expected_output.axes.values()):
+            assert ((test_axis is None and expected_axis is None) or
+                    all(test_axis == expected_axis))
+    else:
+        if not (test_input is None and expected_output is None):
+            assert test_input.keys() == expected_output.keys()
+            for key in list(test_input.keys()):
+                assert test_input[key] == expected_output[key]
 
 
 def assert_cubes_equal(test_input, expected_cube):

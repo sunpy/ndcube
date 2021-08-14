@@ -11,17 +11,24 @@ class Meta(dict):
     def __init__(self, header=None, comments=None, axes=None, data_shape=None):
         self.original_header = header
 
-        # Sanitize inputs
+        # Sanitize metadata values and instantiate class.
         if header is None:
             header = {}
         else:
             header = dict(header)
+        super().__init__(header.items())
+        header_keys = header.keys()
+        
+        # Generate dictionary for comments.
         if comments is None:
-            comments = {}
+            self.comments = dict(zip(header.keys(), [None] * len(header_keys)))
         else:
             comments = dict(comments)
+            self.comments = dict([(key, comments.get(key)) for key in header])
+
+        # Generate dictionary for axes.
         if axes is None:
-            axes = {}
+            self.axes = dict(zip(header.keys(), [None] * len(header_keys)))
             self._data_shape = None
         else:
             # Verify data_shape is set if axes is set.
@@ -30,16 +37,16 @@ class Meta(dict):
                 raise TypeError("If axes is set, data_shape must be an iterable giving "
                                 "the length of each axis of the assocated cube.")
             self._data_shape = np.asarray(data_shape)
-
             axes = dict(axes)
-            for key, axis in axes.items():
-                axes[key] = self._sanitize_entry_with_axis(key, header[key], axis)
+            self.axes = dict([(key, self._sanitize_axis_value(axes.get(key), header[key], key))
+                              for key in header_keys])
 
-        # Build meta entries and instantiate class.
-        entries = [(key, (header[key], comments.get(key), axes.get(key))) for key in header]
-        super().__init__(entries)
-
-    def _sanitize_entry_with_axis(self, key, value, axis):
+    def _sanitize_axis_value(self, axis, value, key):
+        if axis is None:
+            return None
+        if self.shape is None:
+            raise TypeError("Meta instance does not have a shape so new metadata "
+                            "cannot be assigned to an axis.")
         # Verify each entry in axes is an iterable of ints.
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
@@ -67,36 +74,25 @@ class Meta(dict):
         return axis
 
     @property
-    def meta_values(self):
-        return [value[0] for value in self.values()]
-
-    @property
-    def comments(self):
-        return dict([(key, value[1]) for key, value in self.items() if value[1] is not None])
-
-    @property
-    def axes(self):
-        return dict([(key, value[2]) for key, value in self.items() if value[2] is not None])
-
-    @property
     def shape(self):
         return self._data_shape
 
     def add(self, name, value, comment=None, axis=None):
+        """Need docstring!"""
         if name in self.keys():
             raise KeyError(f"'{name}' already exists. "
                            "To edit and existing entry, first delete and then re-add it "
                            "with the update parameters.")
-        self.__setitem__(name, value, comment, axis)
-
-    def __setitem__(self, name, value, **kwargs):
-        if
         if axis is not None:
-            if self.shape is None:
-                raise TypeError("Meta instance does not have a shape so new metadata "
-                                "cannot be assigned to an axis.")
-            axis = self._sanitize_entry_with_axis(name, value, axis)
-        super().__setitem__(name, (value, comment, axis))
+            axis = self._sanitize_axis_value(axis, value, name)
+        self[name] = value
+        self.comments[name] = comment
+        self.axes[name] = axis
+
+    def __del__(self, name):
+        del self[name]
+        del self.comments[name]
+        del self.axes[name]
 
     def __getitem__(self, item):
         # There are two ways to slice:
@@ -106,7 +102,7 @@ class Meta(dict):
 
         # If item is single string, slicing is simple.
         if isinstance(item, str):
-            return super().__getitem__(item)[0]
+            return super().__getitem__(item)
 
         # Else, the item is assumed to be a typical slicing item.
         elif self.shape is None:
@@ -147,15 +143,12 @@ class Meta(dict):
                                     "Must be an int, slice and tuple of the same.")
             new_meta._data_shape = new_shape
 
-            # Calculate the cumulative number of dropped axis.
+            # Calculate the cumulative number of dropped axes.
             cumul_dropped_axes = np.cumsum(dropped_axes)
 
             # Slice all metadata associated with axes.
-            for key, (value, comment, axis) in new_meta.items():
-                if axis is None:
-                    new_value, comment, new_axis = value
-                else:
-                    print(key, value, comment, axis)
+            for (key, value), axis in zip(self.items(), self.axes.values()):
+                if axis is not None:
                     new_item = tuple(item[axis])
                     if len(new_item) == 1:
                         new_value = value[new_item[0]]
@@ -167,6 +160,7 @@ class Meta(dict):
                     new_axis = new_axis[new_axis >= 0]
                     if len(new_axis) == 0:
                         new_axis = None
-                new_meta.__setitem__(key, new_value, comment=comment, axis=new_axis)
+                    del new_meta[key]
+                    new_meta.add(key, new_value, self.comments[key], new_axis)
 
             return new_meta
