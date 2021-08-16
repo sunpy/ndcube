@@ -152,3 +152,12 @@ def test_add_axis_without_shape(no_shape_meta):
     meta = no_shape_meta
     with pytest.raises(TypeError):
         meta.add("z", [100], axis=0)
+
+
+def test_remove(basic_meta):
+    meta = basic_meta
+    name = "b"
+    meta.remove(name)
+    assert name not in meta.keys()
+    assert name not in meta.comments.keys()
+    assert name not in meta.axes.keys()

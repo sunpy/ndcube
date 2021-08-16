@@ -143,7 +143,7 @@ class Meta(dict):
         self._axes[name] = axis
         self.__setitem__(name, value)  # This must be done after updating self._axes otherwise it may error.
 
-    def __del__(self, name):
+    def remove(self, name):
         del self._comments[name]
         del self._axes[name]
         del self[name]
