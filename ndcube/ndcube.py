@@ -833,6 +833,11 @@ class NDCube(NDCubeBase):
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
     plotter = PlotterDescriptor(default_type="mpl_plotter")
+    """
+    A `~.MatplotlibPlotter` instance providing visualization methods.
+
+    The type of this attribute can be changed to provide custom visualization functionality.
+    """
 
     def _as_mpl_axes(self):
         if hasattr(self.plotter, "_as_mpl_axes"):
