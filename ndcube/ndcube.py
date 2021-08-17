@@ -783,7 +783,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return resampled_cube
 
 
-class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
+class NDCube(NDCubeBase):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
