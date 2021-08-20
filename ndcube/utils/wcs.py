@@ -505,8 +505,5 @@ def identify_invariant_axes(source_wcs, target_wcs, input_shape):
 
     output_pixel_coords = pixel_to_pixel(source_wcs, target_wcs, *input_pixel_coords)
 
-    input_pixel_coords = np.around(input_pixel_coords, decimals=6)
-    output_pixel_coords = np.around(output_pixel_coords, decimals=6)
-
-    return [(input_coord == output_coord).all()
+   return [np.allclose(input_coord, output_coord, atol=1e-6)
             for input_coord, output_coord in zip(input_pixel_coords, output_pixel_coords)]
