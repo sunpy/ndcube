@@ -162,3 +162,16 @@ def test_array_indices_for_world_objects_2(wcs_4d_lt_t_l_ln):
 def test_compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln):
     assert utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_4d_t_l_lt_ln) is True
     assert utils.wcs.compare_wcs_physical_types(wcs_4d_t_l_lt_ln, wcs_3d_l_lt_ln) is False
+
+
+def test_identify_invariant_axes(wcs_3d_l_lt_ln):
+    source_wcs = wcs_3d_l_lt_ln
+
+    target_wcs_header = wcs_3d_l_lt_ln.low_level_wcs.to_header().copy()
+    target_wcs_header['CDELT2'] = 10
+    target_wcs_header['CDELT3'] = 20
+    target_wcs = WCS(header=target_wcs_header)
+
+    invariant_axes = utils.wcs.identify_invariant_axes(source_wcs, target_wcs, (4, 4, 4))
+
+    assert invariant_axes == [True, False, False]
