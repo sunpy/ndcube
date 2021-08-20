@@ -111,6 +111,8 @@ class SequenceAnimator(ArrayAnimatorWCS):
         # Calculate data and wcs for initial animation state and instantiate Animator.
         data, wcs, plot_axes, coord_params = self._cubes[0].plotter._prep_animate_args(
             self._cubes[0].wcs, self._plot_axes, self._axes_units, self._data_unit)
+        if not isinstance(wcs, BaseLowLevelWCS):
+            wcs = wcs.low_level_wcs
         super().__init__(data, wcs, plot_axes, coord_params=coord_params, **base_kwargs)
 
     def _sequence_slider_function(self, val, im, slider):
