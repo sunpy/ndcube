@@ -491,6 +491,9 @@ def identify_invariant_axes(source_wcs, target_wcs, input_shape):
 
     target_wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
 
+    input_shape: `tuple`
+        The array shape of the data.
+
     Returns
     -------
     result: `list`
