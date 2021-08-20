@@ -524,16 +524,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         lower_corner_values = high_level_objects_to_values(*lower_corner, low_level_wcs=wcs)
         upper_corner_values = high_level_objects_to_values(*upper_corner, low_level_wcs=wcs)
-        # lower_corner_values = [v << u.Unit(unit)
-        #                       for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
-        # upper_corner_values = [v << u.Unit(unit)
-        #                       for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
-        lower_corner_values = [u.Quantity(v, unit=u.Unit(unit))
+        lower_corner_values = [u.Quantity(v, unit=u.Unit(unit), copy=False)
                                for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
-        upper_corner_values = [u.Quantity(v, unit=u.Unit(unit))
+        upper_corner_values = [u.Quantity(v, unit=u.Unit(unit), copy=False)
                                for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
 
-        points = self._bounding_box_to_points(lower_corner_values, upper_corner_values, wcs)
+        points = self._bounding_box_to_points(lower_corner_values, upper_corner_values,
+                                              wcs.axis_correlation_matrix)
         return self._crop_from_points(*points, wcs=wcs)
 
     @utils.misc.sanitise_wcs
@@ -579,7 +576,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         upper_corner = utils.misc.convert_quantities_to_units(upper_corner,
                                                               wcs.world_axis_units)
 
-        points = self._bounding_box_to_points(lower_corner, upper_corner, wcs)
+        points = self._bounding_box_to_points(lower_corner, upper_corner,
+                                              wcs.axis_correlation_matrix)
         return self._crop_from_points(*points, wcs=wcs)
 
     def _fill_in_crop_nones(self, lower_corner, upper_corner, wcs, crop_by_values):
@@ -616,36 +614,98 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return lower_corner, upper_corner
 
-    def _bounding_box_to_points(self, lower_corner_values, upper_corner_values, wcs):
+    def _bounding_box_to_points(self, lower_corner_values, upper_corner_values,
+                                axis_correlation_matrix):
         """
         Convert two corners of a bounding box to the points of all corners.
         """
-        corners = np.array(tuple(itertools.product(*zip(lower_corner_values, upper_corner_values))),
-                           dtype=object)
-        if hasattr(wcs, "mapping"):
-            # For world axes who share an array axis, their values cannot be separated
-            # into different corners.  Therefore, corners combining the lower and upper
-            # values of coords sharing an axes must be removed.
-            # The below implementation assumes all coords are 1-D.
-            mapping = wcs.mapping.mapping
-            # Find coords which have the same array axis.
-            sorted_axes, counts = np.unique(mapping, return_counts=True)
-            shared_axes = sorted_axes[counts > 1]
-            # Use itertools.product to map the corners to the min and max value
-            # of each world coord and the array axis to which is corresponds.
-            lower_corner_labels = [f"{axis}_min" for axis in mapping]
-            upper_corner_labels = [f"{axis}_max" for axis in mapping]
-            corner_labels = np.array(tuple(
-                itertools.product(*zip(lower_corner_labels, upper_corner_labels))),
-                dtype=object)
-            # Find corners including a min and max value from the same axis and remove them.
-            mask = np.zeros(len(corners), dtype=bool)
-            for axis in shared_axes:
-                invalid_corners = np.array([f"{axis}_min" in corner and f"{axis}_max" in corner
-                                            for corner in corner_labels])
-                mask |= invalid_corners
-            corners = corners[np.logical_not(mask)]
+        # Calculate which world axes share multiple pixel axes.
+        world_n_dim, pixel_n_dim = axis_correlation_matrix.shape
+        world_axes = np.arange(world_n_dim)
+        world_n_dep_dim = axis_correlation_matrix.sum(axis=1)
+        # If all world coordinates are 1D, bounding box is simple.
+        max_dep_dim = world_n_dep_dim.max()
+        if max_dep_dim < 2:
+            return (lower_corner_values, upper_corner_values)
 
+        # Otherwise we need calculate the corners more carefully.
+        # This must be done based on correlation matrix as not all
+        # world axes are independent.
+        # Start by generating array of world corner values assuming
+        # all coordinates are 1D. Strip units and add them back on later.
+        corner_units = []
+        for i, (lcv, ucv) in zip(lower_corner_values, upper_corner_values):
+            corner_units.append(lcv.unit)
+            upper_corner_values[i] = ucv.to(corner_units[-1])
+        corners = np.stack([lower_corner_values.value, upper_corner_values.value])
+
+        # Next, calculate the sets of pixel axes upon which each world axis depends.
+        dep_pix_axes = np.array([set(np.arange(pixel_n_dim)[axis_correlation_matrix[j]])
+                                 for j in world_axes], dtype=object)
+
+        # Iterate through number of shared pixel axes, i, and create additional corners.
+        # Iterate from highest to lowest number of shared axes to reduce duplication.
+        # Do not include world axes sharing only 1 pixel axis, as we have already
+        # captured those in our initial definition of corners, above.
+        for i in range(max_dep_dim, 1, -1):
+            # Extract the world axes whose number of shared pixel axes is i.
+            world_axes_idx = np.where(world_n_dep_dim == i)[0]
+            world_axes_i = world_axes[world_axes_idx]
+            # Determine which specific pixel axes each world axis shares.
+            dep_pix_axes_i = dep_pix_axes[world_axes_idx]
+            # Iterate through world axes with same shared pixel axes
+            # and create required corners.
+            while len(world_axes_i) > 0:
+                wa = world_axes_i[0]
+                dpa = dep_pix_axes_i[0]
+                # To avoid duplication in future iterations of the top-level loop,
+                # remove world axes from top-level list that share the same (or a subset of)
+                # pixel axes as the current world axis.
+                # Iterate backwards to delete last items first so as not to change index
+                # of items yet to be deleted.
+                n = len(dep_pix_axes) - 1  # last element index for converting iterator to index.
+                for j, axes in enumerate(dep_pix_axes[::-1]):
+                    if axes.issubset(dpa):
+                        world_axes = np.delete(world_axes, n-j)
+                        world_n_dep_dim = np.delete(world_n_dep_dim, n-j)
+                        dep_pix_axes = np.delete(dep_pix_axes, n-j)
+                # Collect the world axes which share the same set of pixel axes.
+                # To avoid duplication in future iterations of this loop,
+                # remove those world axes from current-level list.
+                # Iterate backwards to delete last items first so as not to change index
+                # of items yet to be deleted.
+                dep_world_axes_i = []
+                n = len(dep_pix_axes_i) - 1  # last element index for converting iterator to index.
+                for j, axes in enumerate(dep_pix_axes_i[::-1]):
+                    if axes == dpa:
+                        dep_world_axes_i.append(world_axes_i[n-j])
+                        world_axes_i = np.delete(world_axes_i, n-j)
+                        dep_pix_axes_i = np.delete(dep_pix_axes_i, n-j)
+                # We started this function by defining the corners for 1D axes.
+                # This means that to fully describe the corners, the number of world axes
+                # we need is the number of shared pixel axes minus 1.
+                # If there are more, discard the excess.
+                ii = i - 1
+                dep_world_axes_i = np.array(dep_world_axes_i)[:ii]
+                # For i number of shared pixel coords, we need 2^i corners.
+                # Add the required number of corners by duplicating current one
+                # then edit them so they contain the correct world values.
+                # First double the number of corners.
+                corners = np.repeat(corners[np.newaxis], 2, axis=0)
+                # Then multiple the number of corners of ii (i-1) since we
+                # started off by defining two corners.
+                corners = np.repeat(corners[np.newaxis], ii, axis=0)
+                # Fill in the correct world values for the new corners.
+                for j in range(ii):
+                    corners[j, 0, :, dep_world_axes_i] = lower_corner_values[dep_world_axes_i]
+                    corners[j, 1, :, dep_world_axes_i] = upper_corner_values[dep_world_axes_i]
+                # Reshape corners array so it will be predictable for next iteration.
+                corners = corners.reshape((np.prod(corners.shape[:3]), corners.shape[-1]))
+
+        # Reattach units and return.
+        corners = tuple(tuple(corner * corner_unit
+                              for corner, corner_unit in zip(corners[i], corner_units))
+                        for i in range(corners.shape))
         return corners
 
     def _crop_from_points(self, *world_points_values, wcs):
