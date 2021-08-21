@@ -192,7 +192,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     Parameters
     ----------
-    data: `numpy.ndarray`
+    data: array-like or `astropy.nddata.NDData`
         The array holding the actual data in this object.
 
     wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
@@ -202,34 +202,30 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     uncertainty : any type, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
         that defines what kind of uncertainty is stored, for example "std"
-        for standard deviation or "var" for variance. A metaclass defining
-        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
-        has no such attribute the uncertainty is stored as UnknownUncertainty.
+        for standard deviation or "var" for variance. A metaclass defining such
+        an interface is `~astropy.nddata.NDUncertainty` - but isn’t mandatory.
+        If the uncertainty has no such attribute the uncertainty is stored as
+        `~astropy.nddata.UnknownUncertainty`.
         Defaults to None.
 
     mask : any type, optional
         Mask for the dataset. Masks should follow the numpy convention
-        that valid data points are marked by False and invalid ones with True.
-        Defaults to None.
+        that valid data points are marked by `False` and invalid ones with `True`.
+        Defaults to `None`.
 
     meta : dict-like object, optional
         Additional meta information about the dataset. If no meta is provided
-        an empty collections.OrderedDict is created. Default is None.
+        an empty dictionary is created.
 
-    unit : Unit-like or str, optional
-        Unit for the dataset. Strings that can be converted to a Unit are allowed.
-        Default is None.
-
-    extra_coords : iterable of `tuple`, each with three entries
-        (`str`, `int`, `astropy.units.quantity` or array-like)
-        Gives the name, axis of data, and values of coordinates of a data axis not
-        included in the WCS object.
+    unit : Unit-like or `str`, optional
+        Unit for the dataset. Strings that can be converted to a `~astropy.unit.Unit` are allowed.
+        Default is `None` which results in dimensionless units.
 
     copy : bool, optional
-        Indicates whether to save the arguments as copy. True copies every attribute
-        before saving it while False tries to save every parameter as reference.
+        Indicates whether to save the arguments as copy. `True` copies every attribute
+        before saving it while `False` tries to save every parameter as reference.
         Note however that it is not always possible to save the input as reference.
-        Default is False.
+        Default is `False`.
 
     """
     # Instances of Extra and Global coords are managed through descriptors
@@ -783,7 +779,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return resampled_cube
 
 
-class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
+class NDCube(NDCubeBase):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
@@ -833,6 +829,11 @@ class NDCube(NDCubeBase, astropy.nddata.NDArithmeticMixin):
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
     plotter = PlotterDescriptor(default_type="mpl_plotter")
+    """
+    A `~.MatplotlibPlotter` instance providing visualization methods.
+
+    The type of this attribute can be changed to provide custom visualization functionality.
+    """
 
     def _as_mpl_axes(self):
         if hasattr(self.plotter, "_as_mpl_axes"):

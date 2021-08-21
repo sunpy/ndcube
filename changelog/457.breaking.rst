@@ -1,0 +1,1 @@
+The `~.NDcube` object no longer inherits from `astropy.nddata.NDArithmeticMixin` as the methods were not coordinate aware.
