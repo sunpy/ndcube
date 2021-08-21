@@ -6,6 +6,7 @@ import astropy.units as u
 import numpy as np
 
 from ndcube import utils
+from ndcube.visualization import SequencePlotterDescriptor
 
 __all__ = ['NDCubeSequence']
 
@@ -280,10 +281,28 @@ class NDCubeSequence(NDCubeSequenceBase):
         `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
         were a single cube concatenated along the common axis.
     """
-    def plot(self, **kwargs):
-        raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
+    # We special case the default mpl plotter here so that we can only import
+    # matplotlib when `.plotter` is accessed and raise an ImportError at the
+    # last moment.
+    plotter = SequencePlotterDescriptor(default_type="mpl_sequence_plotter")
 
-    def plot_as_cube(self, **kwargs):
+    def plot(self, *args, **kwargs):
+        """
+        A convenience function for the plotters default ``plot()`` method.
+
+        Calling this method is the same as calling ``sequence.plotter.plot``, the
+        behaviour of this method can change if the `NDCubeSequence.plotter` class is
+        set to a different ``Plotter`` class.
+
+        """
+        if self.plotter is None:
+            raise NotImplementedError(
+                "This NDCubeSequence object does not have a .plotter defined so "
+                "no default plotting functionality is available.")
+
+        return self.plotter.plot(*args, **kwargs)
+
+    def plot_as_cube(self, *args, **kwargs):
         raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
 
 

@@ -6,12 +6,13 @@ except ImportError:
         "Sunpy is required to animate NDCubeSequences. "
         "Either install sunpy or extract data from sequence and visualize manually.")
 
+from .base import BasePlotter
 from .plotting_utils import prep_plot_kwargs
 
 __all__ = ['MatplotlibSequencePlotter']
 
 
-class MatplotlibSequencePlotter():
+class MatplotlibSequencePlotter(BasePlotter):
     """
     Provide visualization methods for NDCubeSequence which use `matplotlib`.
 
@@ -31,15 +32,18 @@ class MatplotlibSequencePlotter():
         sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
             The unit in which to display the sequence_axis_coords.
         """
-        if len(self._sequence.dimensions) == 2:
-            return self._plot_2D_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
+        sequence_dims = self._ndcube.dimensions
+        if len(sequence_dims) == 2:
+            return self._plot_image(sequence_axis_coords, sequence_axis_unit, **kwargs)
         else:
-            return self._animate_sequence(sequence_axis_coordinates, sequence_axis_unit, **kwargs)
+            return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
 
-    def _plot_2D_sequence(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def _plot_image(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+        if len(self._sequence.dimensions) != 2:
+            raise ValueError("NDCubeSequence must contain 1-D NDCubes to use this visualizer.")
         raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
 
-    def _animate_sequence(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
         Animate the `~ndcube.NDCubeSequence` with the sequence axis as a slider.
 
@@ -59,7 +63,7 @@ class MatplotlibSequencePlotter():
             The unit in which the sequence_axis_coordinates should be displayed.
             If None, the default unit will be used.
         """
-        return SequenceAnimator(sequence, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs)
+        return SequenceAnimator(self._ndcube, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs)
 
 
 class SequenceAnimator(ArrayAnimatorWCS):

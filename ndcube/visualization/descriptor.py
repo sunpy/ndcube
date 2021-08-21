@@ -44,5 +44,36 @@ class PlotterDescriptor:
 
     def __set__(self, obj, value):
         if not isinstance(value, type):
-            raise TypeError("NDCube.plotter can only be set with an uninitialised plotter object.")
+            raise TypeError(
+                "Plotter attribute can only be set with an uninitialised plotter object.")
         setattr(obj, self._attribute_name, value(obj))
+
+
+class SequencePlotterDescriptor(PlotterDescriptor):
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return
+
+        if getattr(obj, self._attribute_name, None) is None:
+
+            # We special case the default MatplotlibPlotter so that we can
+            # delay the import of matplotlib until the plotter is first
+            # accessed.
+            if self._default_type == "mpl_sequence_plotter":
+                try:
+                    from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
+                except ImportError as e:
+                    raise ImportError(
+                        "Matplotlib can not be imported, so the default plotting "
+                        "functionality is disabled. Please install matplotlib.") from e
+
+                self.__set__(obj, MatplotlibSequencePlotter)
+
+            elif self._default_type is not None:
+                self.__set__(obj, self._default_type)
+            else:
+                # If we have no default type then just return None
+                return
+
+        return getattr(obj, self._attribute_name)
