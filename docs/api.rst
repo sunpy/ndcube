@@ -11,6 +11,11 @@ API Reference
 
 .. automodapi:: ndcube.mixins
 
+.. automodapi:: ndcube.visualization
+
+.. automodapi:: ndcube.visualization.mpl_plotter
+   :headings: ^#
+
 .. automodapi:: ndcube.utils
 
 .. automodapi:: ndcube.utils.sequence

@@ -627,13 +627,13 @@ def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
     assert ec is not ec3
 
 
-def test_reproject(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
+def test_reproject_interpolation(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
     target_wcs_header['CDELT3'] = 0.1   # original value = 0.2
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out)
+    resampled_cube = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out=shape_out)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
     assert resampled_cube.data.shape == (5, 20, 12, 8)
@@ -643,14 +643,14 @@ def test_reproject_invalid_wcs(ndcube_4d_ln_l_t_lt, wcs_3d_lt_ln_l):
     shape_out = (5, 20, 12, 8)
 
     with pytest.raises(Exception):
-        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_3d_lt_ln_l, shape_out)
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_3d_lt_ln_l, shape_out=shape_out)
 
 
 def test_reproject_with_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
     shape_out = (5, 20, 12, 8)
 
-    _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out)
+    _ = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs_header, shape_out=shape_out)
 
 
 def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
@@ -659,7 +659,7 @@ def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
-    resampled_cube, footprint = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out,
+    resampled_cube, footprint = ndcube_4d_ln_l_t_lt.reproject_to(target_wcs, shape_out=shape_out,
                                                                  return_footprint=True)
 
     assert ndcube_4d_ln_l_t_lt.data.shape == (5, 10, 12, 8)
@@ -691,3 +691,72 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
     cube = NDCube(ndcube_3d_ln_lt_l.data[slices], low_level_wcs)
     # Check the WCS has been converted to high level but NDCube init.
     assert isinstance(cube.wcs, BaseHighLevelWCS)
+
+
+def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
+    shape_out = (10, 12)
+    resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
+                                                  shape_out=shape_out)
+
+    assert ndcube_2d_ln_lt.data.shape == (10, 12)
+    assert resampled_cube.data.shape == (10, 12)
+
+
+def test_reproject_exact(ndcube_2d_ln_lt, wcs_2d_lt_ln):
+    shape_out = (10, 12)
+    resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='exact',
+                                                  shape_out=shape_out)
+
+    assert ndcube_2d_ln_lt.data.shape == (10, 12)
+    assert resampled_cube.data.shape == (10, 12)
+
+
+def test_reproject_invalid_algorithm(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
+    with pytest.raises(ValueError):
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='my_algorithm',
+                                             shape_out=(5, 10, 12, 8))
+
+
+def test_reproject_invalid_order(ndcube_2d_ln_lt, wcs_2d_lt_ln):
+    shape_out = (10, 12)
+
+    # Supported for interpolation
+    for order in ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic']:
+        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='interpolation',
+                                         shape_out=shape_out, order=order)
+
+    # Supported for adaptive
+    for order in ['nearest-neighbor', 'bilinear']:
+        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
+                                         shape_out=shape_out, order=order)
+
+    # Not supported for adaptive
+    for order in ['biquadratic', 'bicubic', 'my_order']:
+        with pytest.raises(ValueError):
+            _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
+                                             shape_out=shape_out, order=order)
+
+    # 'exact' does not need 'order'
+    _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='exact', shape_out=shape_out)
+
+
+def test_reproject_adaptive_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
+                                             wcs_1d_l, ndcube_1d_l):
+    with pytest.raises(ValueError):
+        _ = ndcube_1d_l.reproject_to(wcs_1d_l, algorithm='adaptive',
+                                     shape_out=(10,))
+
+    with pytest.raises(ValueError):
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='adaptive',
+                                             shape_out=(5, 10, 12, 8))
+
+
+def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
+                                          wcs_1d_l, ndcube_1d_l):
+    with pytest.raises(ValueError):
+        _ = ndcube_1d_l.reproject_to(wcs_1d_l, algorithm='exact',
+                                     shape_out=(10,))
+
+    with pytest.raises(ValueError):
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='exact',
+                                             shape_out=(5, 10, 12, 8))
