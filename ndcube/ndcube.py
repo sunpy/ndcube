@@ -1,7 +1,6 @@
 import abc
 import textwrap
 import warnings
-import itertools
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
@@ -663,7 +662,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # Iterate through world axes with same shared pixel axes
             # and create required corners.
             while len(world_axes_i) > 0:
-                wa = world_axes_i[0]
                 dpa = dep_pix_axes_i[0]
                 # To avoid duplication in future iterations of the top-level loop,
                 # remove world axes from top-level list that share the same (or a subset of)
