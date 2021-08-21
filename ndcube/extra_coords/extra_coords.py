@@ -424,30 +424,72 @@ class ExtraCoords(ExtraCoordsABC):
         old_array_grids = [None if new_grid is None else np.arange(dim)
                            for new_grid, dim in zip(new_array_grids, cube_dims)]
         new_ec = type(self)(ndcube)
-        for key, aom, lut in zip(self.keys(), array_order_mapping, self._lookup_tables):
+        # For SkyCoords, two keys must be done at once.
+        # Define list for tracking which keys should be skipped for this reason.
+        skip = []
+        i = -1
+        for key in self.keys():
+            # If a key has already been handled because it is linked to a SkyCoord
+            # also linked to a previous key, skip it.
+            if key in skip:
+                continue
+            # Counter must be incremented here as there can be more keys than lookup tables.
+            # Skipped keys point to a table already handled by a previous iteration.
+            # So only move to next lookup table (i.e. increment i) if key is not skipped.
+            i += 1
+            aom = array_order_mapping[i]
+            lut = self._lookup_tables[i]
             if new_array_grids[aom] is None:
                 new_coord = lut[1]
             else:
                 table = lut[1].table
                 if isinstance(table, tuple):
                     table = table[0]
-                if isinstance(table, Time):
-                    table_values = table.mjd
-                elif isinstance(table, SkyCoord):
-                    pass
-                elif isinstance(table, u.Quantity):
-                    table_values = table.value
+                if isinstance(table, SkyCoord):
+                    # Special-case SkyCoord as even when 1-D it has 2 components, lon and lat.
+                    # Find other key corresponding to this SkyCoord.
+                    sky_key = None
+                    remaining_keys = list(self.keys())[i:]
+                    j = 0
+                    while not sky_key:
+                        j += 1
+                        next_key = remaining_keys[j]
+                        if isinstance(self[next_key]._lookup_tables[0][1],
+                                      SkyCoordTableCoordinate):
+                            sky_key = next_key
+                    # Interpolate lon and lat components separately then recombine into a SkyCoord.
+                    celestial_names = dict(
+                        [(item, key)
+                         for key, item in table.representation_component_names.items()])
+                    lon = getattr(table, celestial_names["lon"])
+                    lat = getattr(table, celestial_names["lat"]).to(lon.unit)
+                    lon_interp = scipy.interpolate.interp1d(old_array_grids[aom], lon.value)
+                    lat_interp = scipy.interpolate.interp1d(old_array_grids[aom], lat.value)
+                    new_lon = lon_interp(new_array_grids[aom])
+                    new_lat = lat_interp(new_array_grids[aom])
+                    new_coord = SkyCoord(new_lon, new_lat, unit=lon.unit,
+                                         frame=table.frame)
+                    # Set name to include sky_key as SKyCoords extra coords require two names.
+                    name = (key, sky_key)
+                    # Make sure to skip sky_key when it's turn in loop comes.
+                    # Otherwise the SkyCoord will be duplicated.
+                    skip.append(sky_key)
                 else:
-                    raise TypeError(f"Unrecognized lookup table type: {table}")
-                lut_interp = scipy.interpolate.interp1d(old_array_grids[aom], table_values)
-                new_table_values = lut_interp(new_array_grids[aom])
-                if isinstance(table, Time):
-                    new_coord = Time(new_table_values, scale=table.scale, format="mjd")
-                elif isinstance(table, SkyCoord):
-                    pass
-                else:
-                    new_coord = u.Quantity(new_table_values, unit=table.unit)
-            new_ec.add(key, int(aom), new_coord, physical_types=lut[1].physical_types)
+                    # Handle other coord types in a more standard way.
+                    if isinstance(table, Time):
+                        table_values = table.mjd
+                    elif isinstance(table, u.Quantity):
+                        table_values = table.value
+                    else:
+                        raise TypeError(f"Unrecognized lookup table type: {table}")
+                    lut_interp = scipy.interpolate.interp1d(old_array_grids[aom], table_values)
+                    new_table_values = lut_interp(new_array_grids[aom])
+                    if isinstance(table, Time):
+                        new_coord = Time(new_table_values, scale=table.scale, format="mjd")
+                    else:
+                        new_coord = u.Quantity(new_table_values, unit=table.unit)
+                    name = key
+            new_ec.add(name, int(aom), new_coord, physical_types=lut[1].physical_types)
         return new_ec
 
     def __str__(self):
