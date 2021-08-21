@@ -1,3 +1,4 @@
+from astropy.wcs.wcsapi import BaseLowLevelWCS
 try:
     from sunpy.visualization.animator import ArrayAnimatorWCS
 except ImportError:
@@ -119,4 +120,15 @@ class SequenceAnimator(ArrayAnimatorWCS):
         self._sequence_idx = int(val)
         self.data, self.wcs, plot_axes, coord_params = self._cubes[self._sequence_idx].plotter._prep_animate_args(
             self._cubes[self._sequence_idx].wcs, self._plot_axes, self._axes_units, self._data_unit)
-        return super().plot_start_image(self.axes)
+        return self._replot(im)
+
+    def _replot(self, im):
+        """
+        Replot the image without updating cube sliders.
+        """
+        self.axes.reset_wcs(wcs=self.wcs, slices=self.slices_wcsaxes)
+        im.set_array(self.data_transposed)
+
+        if self.clip_interval is not None:
+            vmin, vmax = super()._get_2d_plot_limits()
+            im.set_clim(vmin, vmax)
