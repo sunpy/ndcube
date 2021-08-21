@@ -237,7 +237,7 @@ class MatplotlibPlotter(BasePlotter):
         if data_unit is None:
             data = self._ndcube.data
         else:
-            data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit).to_value(data_unit)
+            data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit, copy=False).to_value(data_unit)
 
         # Combine data values with mask.
         if self._ndcube.mask is not None:
