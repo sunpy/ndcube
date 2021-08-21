@@ -1,4 +1,5 @@
 from astropy.wcs.wcsapi import BaseLowLevelWCS
+
 try:
     from sunpy.visualization.animator import ArrayAnimatorWCS
 except ImportError:
