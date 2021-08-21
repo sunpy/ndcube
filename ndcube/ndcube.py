@@ -626,18 +626,25 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # If all world coordinates are 1D, bounding box is simple.
         max_dep_dim = world_n_dep_dim.max()
         if max_dep_dim < 2:
-            return (lower_corner_values, upper_corner_values)
+            return (tuple(lower_corner_values), tuple(upper_corner_values))
 
         # Otherwise we need calculate the corners more carefully.
         # This must be done based on correlation matrix as not all
         # world axes are independent.
         # Start by generating array of world corner values assuming
         # all coordinates are 1D. Strip units and add them back on later.
-        corner_units = []
-        for i, (lcv, ucv) in zip(lower_corner_values, upper_corner_values):
-            corner_units.append(lcv.unit)
-            upper_corner_values[i] = ucv.to(corner_units[-1])
-        corners = np.stack([lower_corner_values.value, upper_corner_values.value])
+        corner_units = [None] * len(lower_corner_values)
+        for i, (lcv, ucv) in enumerate(zip(lower_corner_values, upper_corner_values)):
+            if not isinstance(ucv, type(lcv)):
+                raise TypeError("Corresponding entries in lower and upper corner values "
+                                "must be of same type.")
+            if isinstance(lcv, u.Quantity):
+                corner_units[i] = lcv.unit
+                lower_corner_values[i] = lower_corner_values[i].value
+                upper_corner_values[i] = ucv.to_value(corner_units[i])
+        lower_corner_values = np.asarray(lower_corner_values)
+        upper_corner_values = np.asarray(upper_corner_values)
+        corners = np.stack([lower_corner_values, upper_corner_values])
 
         # Next, calculate the sets of pixel axes upon which each world axis depends.
         dep_pix_axes = np.array([set(np.arange(pixel_n_dim)[axis_correlation_matrix[j]])
@@ -702,10 +709,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 # Reshape corners array so it will be predictable for next iteration.
                 corners = corners.reshape((np.prod(corners.shape[:3]), corners.shape[-1]))
 
-        # Reattach units and return.
-        corners = tuple(tuple(corner * corner_unit
+        # Reattach units if were present in input.
+        corners = tuple(tuple(corner * corner_unit if corner_unit else corner
                               for corner, corner_unit in zip(corners[i], corner_units))
-                        for i in range(corners.shape))
+                        for i in range(corners.shape[0]))
         return corners
 
     def _crop_from_points(self, *world_points_values, wcs):
