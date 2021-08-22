@@ -252,9 +252,9 @@ def test_combine_cubes_unitless_global_coords(wcs_3d_l_lt_ln):
     seq = NDCubeSequence([cube0, cube1])
     cube = seq.combine_cubes()
 
-    assert cube.wcs.world_axis_names[-1] == 'distance'
-    assert cube.wcs.world_axis_physical_types[-1] == 'pos.distance'
-    assert cube.wcs.world_axis_units[-1] == ''
+    assert cube.wcs.low_level_wcs.world_axis_names[-1] == 'distance'
+    assert cube.wcs.low_level_wcs.world_axis_physical_types[-1] == 'pos.distance'
+    assert cube.wcs.low_level_wcs.world_axis_units[-1] == ''
 
 
 def test_combine_cubes_invalid_global_coords(wcs_3d_l_lt_ln):
@@ -272,9 +272,9 @@ def test_combine_cubes_invalid_global_coords(wcs_3d_l_lt_ln):
     with pytest.warns(UserWarning):
         cube = seq.combine_cubes()
 
-    assert cube.wcs.world_axis_names[-1] == 'sequence'
-    assert cube.wcs.world_axis_physical_types[-1] == 'custom:meta.obs.sequence'
-    assert cube.wcs.world_axis_units[-1] == ''
+    assert cube.wcs.low_level_wcs.world_axis_names[-1] == 'sequence'
+    assert cube.wcs.low_level_wcs.world_axis_physical_types[-1] == 'custom:meta.obs.sequence'
+    assert cube.wcs.low_level_wcs.world_axis_units[-1] == ''
 
 
 def test_combine_cubes_no_global_coords(wcs_3d_l_lt_ln):
@@ -287,9 +287,9 @@ def test_combine_cubes_no_global_coords(wcs_3d_l_lt_ln):
     seq = NDCubeSequence([cube0, cube1])
     cube = seq.combine_cubes()
 
-    assert cube.wcs.world_axis_names[-1] == 'sequence'
-    assert cube.wcs.world_axis_physical_types[-1] == 'custom:meta.obs.sequence'
-    assert cube.wcs.world_axis_units[-1] == ''
+    assert cube.wcs.low_level_wcs.world_axis_names[-1] == 'sequence'
+    assert cube.wcs.low_level_wcs.world_axis_physical_types[-1] == 'custom:meta.obs.sequence'
+    assert cube.wcs.low_level_wcs.world_axis_units[-1] == ''
 
 
 def test_combine_cubes_varying_cube_shape(ndcube_3d_ln_lt_l, ndcube_4d_ln_lt_l_t):
