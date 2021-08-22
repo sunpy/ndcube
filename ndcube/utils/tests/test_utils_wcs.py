@@ -173,5 +173,8 @@ def test_identify_invariant_axes(wcs_3d_l_lt_ln):
     target_wcs = WCS(header=target_wcs_header)
 
     invariant_axes = utils.wcs.identify_invariant_axes(source_wcs, target_wcs, (4, 4, 4))
-
     assert invariant_axes == [True, False, False]
+
+    invariant_axes = utils.wcs.identify_invariant_axes(source_wcs, target_wcs, (4, 4, 4),
+                                                       atol=1e-20, rtol=1e-20)
+    assert invariant_axes == [False, False, False]
