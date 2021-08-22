@@ -1,3 +1,7 @@
+import warnings
+
+import numpy as np
+import matplotlib.pyplot as plt
 from astropy.wcs.wcsapi import BaseLowLevelWCS
 
 try:
@@ -12,6 +16,8 @@ from .plotting_utils import prep_plot_kwargs
 
 __all__ = ['MatplotlibSequencePlotter']
 
+BAD_DIMS_ERROR_MESSAGE = "NDCubeSequence must contain 1-D NDCubes to use this visualizer."
+
 
 class MatplotlibSequencePlotter(BasePlotter):
     """
@@ -20,6 +26,10 @@ class MatplotlibSequencePlotter(BasePlotter):
     This plotter delegates much of the visualization to the `ndcube.NDCube.plot`
     which is assumed to employ the `~ndcube.visualization.mpl_plotter.MatplotlibPlotter`.
     """
+    def __init__(self, sequence=None):
+        super().__init__(ndcube=sequence)
+        self._sequence = self._ndcube
+
     def plot(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
         Visualize the `~ndcube.NDCubeSequence`.
@@ -33,16 +43,11 @@ class MatplotlibSequencePlotter(BasePlotter):
         sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
             The unit in which to display the sequence_axis_coords.
         """
-        sequence_dims = self._ndcube.dimensions
-        if len(sequence_dims) == 2:
-            return self._plot_image(sequence_axis_coords, sequence_axis_unit, **kwargs)
+        seq_dims = self._sequence.dimensions
+        if len(seq_dims) == 2 and seq_dims[1] < 2:
+            return self._plot_line(sequence_axis_coords, sequence_axis_unit, **kwargs)
         else:
             return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
-
-    def _plot_image(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
-        if len(self._sequence.dimensions) != 2:
-            raise ValueError("NDCubeSequence must contain 1-D NDCubes to use this visualizer.")
-        raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
 
     def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
@@ -65,6 +70,101 @@ class MatplotlibSequencePlotter(BasePlotter):
             If None, the default unit will be used.
         """
         return SequenceAnimator(self._ndcube, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs)
+
+    def plot_line(self, axes=None, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+        try:
+            seq_dims = np.array([int(d.value) for d in self._sequence.dimensions])
+        except TypeError:
+            raise ValueError("All cubes in sequence must have same shape.")
+        if (seq_dims[1:] != 1).sum() > 1:
+            raise ValueError(BAD_DIMS_ERROR_MESSAGE)
+        if axes is None:
+            axes = plt.subplot()
+        # Define y values from data in sequence.
+        y, yunit, yerror = self._generate_array()
+        y = np.squeeze(y)
+        yerror = np.squeeze(yerror)
+        # Define x values.
+        if sequence_axis_coords:
+            raise NotImplementedError()
+            x = self._sequence.sequence_axis_coords[sequence_axis_coords]
+            if sequence_axis_unit:
+                x = x.to(sequence_axis_unit)
+            xunit = x.unit
+        else:
+            x = np.arange(len(y))
+            xunit = None
+        # Plot values.
+        if yerror is None:
+            axes.plot(x, y, **kwargs)
+        else:
+            axes.errorbar(x, y, yerror, **kwargs)
+        # Set default labels.
+        axes.set_ylabel(f"Data [{yunit}]")
+        axes.set_xlabel(f"{sequence_axis_coords} [{xunit}]")
+
+        return axes
+
+    def _generate_array(self):
+        """Generates a stacked array from a sequence of cubes."""
+        # Collect data from cubes in sequence.
+        dims = tuple(int(d.value) for d in self._sequence.dimensions)
+        data = np.zeros(dims)
+        uncerts = np.zeros(dims)
+        masks = np.zeros(dims, dtype=bool)
+        data_unit = None
+        uncert_unit = None
+        data_unit_present = False
+        data_unit_absent = False
+        uncert_unit_present = False
+        uncert_unit_absent = False
+        for i, cube in enumerate(self._sequence.data):
+            # Extract data values, converting to a consistent unit if the cube includes a unit.
+            if not data_unit and cube.unit:
+                data_unit = cube.unit
+            data[i] = cube.data
+            if cube.unit:
+                data[i] = (data[i] * cube.unit).to_value(data_unit)
+                data_unit_present = True
+            else:
+                data_unit_absent = True
+            # Extract uncertainty values, converting to appropriate unit if one is present.
+            if cube.uncertainty:
+                if not uncert_unit and cube.uncertainty.unit:
+                    uncert_unit = cube.uncertainty.unit
+                uncerts[i] = cube.uncertainty.array
+                if uncert_unit:
+                    uncerts[i] = (uncerts[i] * cube.uncertainty.unit).to_value(uncert_unit)
+                    uncert_unit_present = True
+                else:
+                    uncert_unit_absent = True
+            # Extract masks.
+            if isinstance(cube.mask, (bool, type(None))):
+                mask = np.zeros(dims[1:], dtype=bool)
+                mask[:] = cube.mask
+                masks[i] = mask
+            else:
+                masks[i] = cube.mask
+        # If some cubes contain units and others don't, raise a warning that values
+        # may not be correctly scaled.
+        if data_unit_present and data_unit_absent:
+            warnings.warn("Some cubes in sequence have units and others don't. "
+                          "Data values may not be correctly scaled.")
+        if uncert_unit_present and uncert_unit_absent:
+            warnings.warn("Some cubes in sequence have ucertainty units and others don't. "
+                          "Uncertainty values may not be correctly scaled.")
+        # Convert uncertainties to same unit as data.
+        if uncerts.max() == 0:
+            uncerts = None
+        elif data_unit and uncert_unit and data_unit != uncert_unit:
+            uncerts = (uncerts * uncert_unit).to_value(data_unit)
+        # If any values are masked, convert data to masked array.
+        # Otherwise leave as a numpy array as they are more efficient.
+        if masks.any():
+            data = np.ma.masked_array(data, mask)
+            uncerts = np.ma.masked_array(uncerts, mask)
+
+        return data, data_unit, uncerts
 
 
 class SequenceAnimator(ArrayAnimatorWCS):
