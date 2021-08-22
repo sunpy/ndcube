@@ -71,22 +71,31 @@ class MatplotlibSequencePlotter(BasePlotter):
         """
         return SequenceAnimator(self._ndcube, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs)
 
+    def imshow(self, axes=None, transpose=False, **kwargs):
+        seq_dims = self._get_sequence_shape()
+        if (seq_dims[1:] > 1).sum() > 1:
+            raise ValueError(BAD_DIMS_ERROR_MESSAGE)
+        if axes is None:
+            axes = plt.subplot()
+        data, data_unit, uncertainty = self._stack_data(transpose=transpose)
+        data = np.squeeze(data)
+        if transpose:
+            data = data.T
+        axes.imshow(data, **kwargs)
+        return axes
+
     def plot_line(self, axes=None, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
-        try:
-            seq_dims = np.array([int(d.value) for d in self._sequence.dimensions])
-        except TypeError:
-            raise ValueError("All cubes in sequence must have same shape.")
+        seq_dims = self._get_sequence_shape()
         if (seq_dims[1:] != 1).sum() > 1:
             raise ValueError(BAD_DIMS_ERROR_MESSAGE)
         if axes is None:
             axes = plt.subplot()
         # Define y values from data in sequence.
-        y, yunit, yerror = self._generate_array()
+        y, yunit, yerror = self._stack_data()
         y = np.squeeze(y)
         yerror = np.squeeze(yerror)
         # Define x values.
         if sequence_axis_coords:
-            raise NotImplementedError()
             x = self._sequence.sequence_axis_coords[sequence_axis_coords]
             if sequence_axis_unit:
                 x = x.to(sequence_axis_unit)
@@ -105,7 +114,14 @@ class MatplotlibSequencePlotter(BasePlotter):
 
         return axes
 
-    def _generate_array(self):
+    def _get_sequence_shape(self):
+        try:
+            seq_dims = np.array([int(d.value) for d in self._sequence.dimensions])
+        except TypeError:
+            raise ValueError("All cubes in sequence must have same shape.")
+        return seq_dims
+
+    def _stack_data(self):
         """Generates a stacked array from a sequence of cubes."""
         # Collect data from cubes in sequence.
         dims = tuple(int(d.value) for d in self._sequence.dimensions)
@@ -161,8 +177,8 @@ class MatplotlibSequencePlotter(BasePlotter):
         # If any values are masked, convert data to masked array.
         # Otherwise leave as a numpy array as they are more efficient.
         if masks.any():
-            data = np.ma.masked_array(data, mask)
-            uncerts = np.ma.masked_array(uncerts, mask)
+            data = np.ma.masked_array(data, masks)
+            uncerts = np.ma.masked_array(uncerts, masks)
 
         return data, data_unit, uncerts
 
