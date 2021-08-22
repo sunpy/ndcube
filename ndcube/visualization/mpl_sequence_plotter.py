@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.wcs.wcsapi import BaseLowLevelWCS
+from matplotlib.image import NonUniformImage
 
 try:
     from sunpy.visualization.animator import ArrayAnimatorWCS
@@ -30,26 +31,26 @@ class MatplotlibSequencePlotter(BasePlotter):
         super().__init__(ndcube=sequence)
         self._sequence = self._ndcube
 
-    def plot(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def plot(self, sequence_axis_coord=None, sequence_axis_unit=None, **kwargs):
         """
         Visualize the `~ndcube.NDCubeSequence`.
 
         Parameters
         ----------
-        sequence_axis_coords: `str` or array-like (optional)
+        sequence_axis_coord: `str` or array-like (optional)
             The real world value of each step along the sequene axis.
-            If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
+            If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coord`.
 
         sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
-            The unit in which to display the sequence_axis_coords.
+            The unit in which to display the sequence_axis_coord.
         """
         seq_dims = self._sequence.dimensions
         if len(seq_dims) == 2 and seq_dims[1] < 2:
-            return self._plot_line(sequence_axis_coords, sequence_axis_unit, **kwargs)
+            return self._plot_line(sequence_axis_coord, sequence_axis_unit, **kwargs)
         else:
-            return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
+            return self.animate(sequence_axis_coord, sequence_axis_unit, **kwargs)
 
-    def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def animate(self, sequence_axis_coord=None, sequence_axis_unit=None, **kwargs):
         """
         Animate the `~ndcube.NDCubeSequence` with the sequence axis as a slider.
 
@@ -60,8 +61,8 @@ class MatplotlibSequencePlotter(BasePlotter):
 
         Parameters
         ----------
-        sequence_axis_coords: `str` optional
-            The name of the coordinate in `~ndcube.NDCubeSequence.sequence_axis_coords`
+        sequence_axis_coord: `str` optional
+            The name of the coordinate in `~ndcube.NDCubeSequence.sequence_axis_coord`
             to be used as the slider pixel values.
             If None, array indices will be used.
 
@@ -69,22 +70,80 @@ class MatplotlibSequencePlotter(BasePlotter):
             The unit in which the sequence_axis_coordinates should be displayed.
             If None, the default unit will be used.
         """
-        return SequenceAnimator(self._ndcube, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs)
+        return SequenceAnimator(self._sequence, sequence_axis_coord=sequence_axis_coord,
+                                sequence_axis_unit=sequence_axis_unit, **kwargs)
 
-    def imshow(self, axes=None, transpose=False, **kwargs):
+    def imshow(self, axes=None, sequence_axis_coord=None, sequence_axis_unit=None,
+               cube_axis_coord=None, cube_axis_unit=None, data_unit=None,
+               transpose=False, **kwargs):
         seq_dims = self._get_sequence_shape()
         if (seq_dims[1:] > 1).sum() > 1:
             raise ValueError(BAD_DIMS_ERROR_MESSAGE)
         if axes is None:
             axes = plt.subplot()
-        data, data_unit, uncertainty = self._stack_data(transpose=transpose)
+        data, unit, uncertainty = self._stack_data()
         data = np.squeeze(data)
+        if data_unit:
+            if isinstance(data, np.ma.masked_array):
+                data = np.ma.masked_array((data.data * unit).to_value(data_unit), mask=data.mask)
+            else:
+                data = (data * unit).to_value(data_unit)
         if transpose:
             data = data.T
         axes.imshow(data, **kwargs)
+
+        rotation = 15
+        if sequence_axis_coord:
+            y, yunit = self._get_sequence_axis_values(sequence_axis_coord, sequence_axis_unit)
+            if sequence_axis_unit:
+                y = y.to(sequence_axis_unit)
+                yunit = sequence_axis_unit
+            else:
+                yunit = data_unit
+            default_ylabel = f"{sequence_axis_coord} [{yunit}]"
+            if transpose:
+                axes.set_xlabel(default_ylabel)
+                ticks = axes.get_xticks()
+            else:
+                axes.set_ylabel(default_ylabel)
+                tick = axes.get_yticks()
+            tick_idx = np.logical_and(ticks >= 0, ticks < len(y))
+            tick_idx = np.around(ticks[tick_idx]).astype(int)
+            if transpose:
+                axes.set_xticks(list(tick_idx))
+                axes.set_xticklabels(labels=y[tick_idx].value, rotation=rotation)
+            else:
+                axes.set_yticks(list(tick_idx))
+                axes.set_yticklabels(labels=y[tick_idx].value)
+
+        if cube_axis_coord:
+            x = self._sequence[0].axis_world_coords_values(cube_axis_coord)
+            xname = x._fields[0]
+            x = x[0]
+            if cube_axis_unit:
+                x = x.to(cube_axis_unit)
+                xunit = cube_axis_unit
+            else:
+                xunit = x.unit
+            default_xlabel = f"{xname} [{xunit}]"
+            if transpose:
+                axes.set_ylabel(default_xlabel)
+                ticks = axes.get_yticks()
+            else:
+                axes.set_xlabel(default_xlabel)
+                ticks = axes.get_xticks()
+            tick_idx = np.logical_and(ticks >= 0, ticks < len(x))
+            tick_idx = np.around(ticks[tick_idx]).astype(int)
+            if transpose:
+                axes.set_yticks(list(tick_idx))
+                axes.set_yticklabels(labels=x[tick_idx].value)
+            else:
+                axes.set_xticks(list(tick_idx))
+                axes.set_xticklabels(labels=x[tick_idx].value, rotation=rotation)
+
         return axes
 
-    def plot_line(self, axes=None, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def plot_line(self, axes=None, sequence_axis_coord=None, sequence_axis_unit=None, **kwargs):
         seq_dims = self._get_sequence_shape()
         if (seq_dims[1:] != 1).sum() > 1:
             raise ValueError(BAD_DIMS_ERROR_MESSAGE)
@@ -95,11 +154,8 @@ class MatplotlibSequencePlotter(BasePlotter):
         y = np.squeeze(y)
         yerror = np.squeeze(yerror)
         # Define x values.
-        if sequence_axis_coords:
-            x = self._sequence.sequence_axis_coords[sequence_axis_coords]
-            if sequence_axis_unit:
-                x = x.to(sequence_axis_unit)
-            xunit = x.unit
+        if sequence_axis_coord:
+            x, unit = self._get_sequence_axis_values(sequence_axis_coord, sequence_axis_unit)
         else:
             x = np.arange(len(y))
             xunit = None
@@ -110,7 +166,7 @@ class MatplotlibSequencePlotter(BasePlotter):
             axes.errorbar(x, y, yerror, **kwargs)
         # Set default labels.
         axes.set_ylabel(f"Data [{yunit}]")
-        axes.set_xlabel(f"{sequence_axis_coords} [{xunit}]")
+        axes.set_xlabel(f"{sequence_axis_coord} [{xunit}]")
 
         return axes
 
@@ -182,6 +238,13 @@ class MatplotlibSequencePlotter(BasePlotter):
 
         return data, data_unit, uncerts
 
+    def _get_sequence_axis_values(self, sequence_axis_coord, sequence_axis_unit):
+        x = self._sequence.sequence_axis_coord[sequence_axis_coord]
+        if sequence_axis_unit:
+            x = x.to(sequence_axis_unit)
+        xunit = x.unit
+        return x, xunit
+
 
 class SequenceAnimator(ArrayAnimatorWCS):
     """
@@ -197,17 +260,17 @@ class SequenceAnimator(ArrayAnimatorWCS):
     sequence: `~ndcube.NDCubeSequence`
         The sequence to animate.
 
-    sequence_axis_coords: `str` or array-like (optional)
+    sequence_axis_coord: `str` or array-like (optional)
         The real world value of each step along the sequene axis.
-        If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
+        If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coord`.
 
     sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
-        The unit in which to display the sequence_axis_coords.
+        The unit in which to display the sequence_axis_coord.
     """
 
-    def __init__(self, sequence, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
-        if sequence_axis_coords is not None:
-            raise NotImplementedError("Setting sequence_axis_coords not yet supported.")
+    def __init__(self, sequence, sequence_axis_coord=None, sequence_axis_unit=None, **kwargs):
+        if sequence_axis_coord is not None:
+            raise NotImplementedError("Setting sequence_axis_coord not yet supported.")
         if sequence_axis_unit is not None:
             raise NotImplementedError("Setting sequence_axis_unit not yet supported.")
 
