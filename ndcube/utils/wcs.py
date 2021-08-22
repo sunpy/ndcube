@@ -480,7 +480,7 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
 
 
-def identify_invariant_axes(source_wcs, target_wcs, input_shape):
+def identify_invariant_axes(source_wcs, target_wcs, input_shape, atol=1e-6, rtol=1e-6):
     """
     Performs a pixel to pixel transformation to identify if there are any invariant axes
     between the given source and target WCS objects.
@@ -494,6 +494,12 @@ def identify_invariant_axes(source_wcs, target_wcs, input_shape):
     input_shape: `tuple`
         The array shape of the data.
 
+    atol: `float`
+        The absolute tolerance parameter for comparison.
+
+    rtol: `float`
+        The relative tolerance parameter for comparison.
+
     Returns
     -------
     result: `list`
@@ -505,5 +511,5 @@ def identify_invariant_axes(source_wcs, target_wcs, input_shape):
 
     output_pixel_coords = pixel_to_pixel(source_wcs, target_wcs, *input_pixel_coords)
 
-   return [np.allclose(input_coord, output_coord, atol=1e-6)
+    return [np.allclose(input_coord, output_coord, atol=atol, rtol=rtol)
             for input_coord, output_coord in zip(input_pixel_coords, output_pixel_coords)]
