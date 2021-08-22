@@ -1,6 +1,7 @@
 import copy
 import numbers
 import textwrap
+import warnings
 
 import astropy.units as u
 import numpy as np
@@ -238,6 +239,67 @@ class NDCubeSequenceBase:
             new_common_axis = self._common_axis
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, common_axis=new_common_axis, meta=self.meta)
+
+    def stack_data(self):
+        """Generates a stacked array from a sequence of cubes."""
+        # Collect data from cubes in sequence.
+        dims = tuple(int(d.value) for d in self.dimensions)
+        data = np.zeros(dims)
+        uncerts = np.zeros(dims)
+        masks = np.zeros(dims, dtype=bool)
+        data_unit = None
+        uncert_unit = None
+        data_unit_present = False
+        data_unit_absent = False
+        uncert_unit_present = False
+        uncert_unit_absent = False
+        for i, cube in enumerate(self._sequence.data):
+            # Extract data values, converting to a consistent unit if the cube includes a unit.
+            if not data_unit and cube.unit:
+                data_unit = cube.unit
+            data[i] = cube.data
+            if cube.unit:
+                data[i] = (data[i] * cube.unit).to_value(data_unit)
+                data_unit_present = True
+            else:
+                data_unit_absent = True
+            # Extract uncertainty values, converting to appropriate unit if one is present.
+            if cube.uncertainty:
+                if not uncert_unit and cube.uncertainty.unit:
+                    uncert_unit = cube.uncertainty.unit
+                uncerts[i] = cube.uncertainty.array
+                if uncert_unit:
+                    uncerts[i] = (uncerts[i] * cube.uncertainty.unit).to_value(uncert_unit)
+                    uncert_unit_present = True
+                else:
+                    uncert_unit_absent = True
+            # Extract masks.
+            if isinstance(cube.mask, (bool, type(None))):
+                mask = np.zeros(dims[1:], dtype=bool)
+                mask[:] = cube.mask
+                masks[i] = mask
+            else:
+                masks[i] = cube.mask
+        # If some cubes contain units and others don't, raise a warning that values
+        # may not be correctly scaled.
+        if data_unit_present and data_unit_absent:
+            warnings.warn("Some cubes in sequence have units and others don't. "
+                          "Data values may not be correctly scaled.")
+        if uncert_unit_present and uncert_unit_absent:
+            warnings.warn("Some cubes in sequence have ucertainty units and others don't. "
+                          "Uncertainty values may not be correctly scaled.")
+        # Convert uncertainties to same unit as data.
+        if uncerts.max() == 0:
+            uncerts = None
+        elif data_unit and uncert_unit and data_unit != uncert_unit:
+            uncerts = (uncerts * uncert_unit).to_value(data_unit)
+        # If any values are masked, convert data to masked array.
+        # Otherwise leave as a numpy array as they are more efficient.
+        if masks.any():
+            data = np.ma.masked_array(data, masks)
+            uncerts = np.ma.masked_array(uncerts, masks)
+
+        return data, data_unit, uncerts
 
     def __str__(self):
         return (textwrap.dedent(f"""\
