@@ -1,7 +1,6 @@
 import abc
 import textwrap
 import warnings
-import itertools
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
@@ -621,10 +620,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         max_dep_dim = world_n_dep_dim.max()
         if max_dep_dim < 2:
             return (tuple(lower_corner_values), tuple(upper_corner_values))
-        # If the number of world and pixel dims is the same, bounding box is also simple.
-        world_n_dim, pixel_n_dim = axis_correlation_matrix.shape
-        if world_n_dim == pixel_n_dim:
-            return tuple(itertools.product(*zip(lower_corner_values, upper_corner_values)))
 
         # Otherwise we need calculate the corners more carefully.
         # This must be done based on correlation matrix as not all
@@ -645,6 +640,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         corners = np.stack([lower_corner_values, upper_corner_values])
 
         # Next, calculate the sets of pixel axes upon which each world axis depends.
+        world_n_dim, pixel_n_dim = axis_correlation_matrix.shape
         world_axes = np.arange(world_n_dim)
         dep_pix_axes = np.array([set(np.arange(pixel_n_dim)[axis_correlation_matrix[j]])
                                  for j in world_axes], dtype=object)
