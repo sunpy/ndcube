@@ -214,10 +214,14 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
 def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes)
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert len(coords) == 1
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
     coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes)
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert len(coords) == 1
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
 @pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
