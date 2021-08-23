@@ -1,7 +1,7 @@
 import abc
-import itertools
 import textwrap
 import warnings
+import itertools
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
