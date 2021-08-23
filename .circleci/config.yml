@@ -27,7 +27,6 @@ apt-run: &apt-install
     sudo apt install -y graphviz build-essential libopenjp2-7 python3-dev
 
 jobs:
-
   figure:
     parameters:
       jobname:
@@ -50,7 +49,6 @@ jobs:
       - run:
           name: "Image comparison page is available at: "
           command: echo "${CIRCLE_BUILD_URL}/artifacts/${CIRCLE_NODE_INDEX}/.tmp/${TOXENV}/figure_test_images/fig_comparison.html"
-
   deploy-reference-images:
     parameters:
       jobname:
@@ -78,7 +76,7 @@ jobs:
       - run: tox -- --mpl-generate-path=/home/circleci/sunpy-figure-tests/figures/$TOXENV | tee toxlog
       - run: |
           hashlib=$(grep "^figure_hashes.*\.json$" toxlog)
-          cp ./ndcube/tests/$hashlib /home/circleci/sunpy-figure-tests/figures/$TOXENV/
+          cp ./ndcube/visualization/tests/$hashlib /home/circleci/sunpy-figure-tests/figures/$TOXENV/
       - run: |
           cd ~/sunpy-figure-tests/
           git pull
@@ -89,7 +87,6 @@ jobs:
 
 workflows:
   version: 2
-
   figure-tests:
     jobs:
       - figure:
@@ -98,18 +95,17 @@ workflows:
             parameters:
               jobname:
                 - "py38-figure"
-                - "py37-figure-devdeps"
-
+                - "py39-figure-devdeps"
       - deploy-reference-images:
           name: baseline-<< matrix.jobname >>
           matrix:
             parameters:
               jobname:
                 - "py38-figure"
-                - "py37-figure-devdeps"
+                - "py39-figure-devdeps"
           requires:
             - "py38-figure"
-            - "py37-figure-devdeps"
+            - "py39-figure-devdeps"
           filters:
             branches:
               only:

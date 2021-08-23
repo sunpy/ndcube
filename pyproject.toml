@@ -1,8 +1,9 @@
 [build-system]
-requires = ["setuptools",
-            "setuptools_scm",
-            "wheel",
-           ]
+requires = [
+  "setuptools",
+  "setuptools_scm",
+  "wheel",
+]
 build-backend = 'setuptools.build_meta'
 
 [tool.towncrier]
@@ -57,8 +58,8 @@ build-backend = 'setuptools.build_meta'
     report_on_fail = true
 
   [ tool.gilesbot.circleci_artifacts.figure_report_devdeps ]
-    url = "py37-figure-devdeps/figure_test_images/fig_comparison.html"
-    message = "Click details to see the figure test comparisons for figure_astropydev."
+    url = "py39-figure-devdeps/figure_test_images/fig_comparison.html"
+    message = "Click details to see the figure test comparisons for figure-devdeps."
     report_on_fail = true
 
   [ tool.gilesbot.pull_requests ]
@@ -69,11 +70,8 @@ build-backend = 'setuptools.build_meta'
     verify_pr_number = true
     changelog_skip_label = "No Changelog Entry Needed"
     help_url = "https://github.com/sunpy/sunpy/blob/main/changelog/README.rst"
-
     changelog_missing_long = "There isn't a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/sunpy/blob/main/changelog/README.rst)."
-
     type_incorrect_long = "The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)"
-
     number_incorrect_long = "The number in the changelog file you added does not match the number of this pull request. Please rename the file."
 
   [ tool.gilesbot.milestones ]
