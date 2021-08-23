@@ -1,4 +1,5 @@
 import abc
+import itertools
 import textwrap
 import warnings
 from copy import deepcopy
@@ -615,13 +616,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         Convert two corners of a bounding box to the points of all corners.
         """
         # Calculate which world axes share multiple pixel axes.
-        world_n_dim, pixel_n_dim = axis_correlation_matrix.shape
-        world_axes = np.arange(world_n_dim)
         world_n_dep_dim = axis_correlation_matrix.sum(axis=1)
-        # If all world coordinates are 1D, bounding box is simple.
+        # If all world coordinates are independent, bounding box is simple.
         max_dep_dim = world_n_dep_dim.max()
         if max_dep_dim < 2:
             return (tuple(lower_corner_values), tuple(upper_corner_values))
+        # If the number of world and pixel dims is the same, bounding box is also simple.
+        world_n_dim, pixel_n_dim = axis_correlation_matrix.shape
+        if world_n_dim == pixel_n_dim:
+            return tuple(itertools.product(*zip(lower_corner_values, upper_corner_values)))
 
         # Otherwise we need calculate the corners more carefully.
         # This must be done based on correlation matrix as not all
@@ -642,6 +645,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         corners = np.stack([lower_corner_values, upper_corner_values])
 
         # Next, calculate the sets of pixel axes upon which each world axis depends.
+        world_axes = np.arange(world_n_dim)
         dep_pix_axes = np.array([set(np.arange(pixel_n_dim)[axis_correlation_matrix[j]])
                                  for j in world_axes], dtype=object)
 
