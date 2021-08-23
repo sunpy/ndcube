@@ -48,14 +48,17 @@ class Meta(dict):
 
         # Generate dictionary for comments.
         if comments is None:
-            self._comments = dict(zip(header.keys(), [None] * len(header_keys)))
+            self._comments = dict()
         else:
             comments = dict(comments)
-            self._comments = dict([(key, comments.get(key)) for key in header])
+            if not set(comments.keys()).issubset(set(header_keys)):
+                raise ValueError(
+                    "All comments must correspond to a value in header under the same key.")
+            self._comments = comments
 
         # Generate dictionary for axes.
         if axes is None:
-            self._axes = dict(zip(header.keys(), [None] * len(header_keys)))
+            self._axes = dict()
             self._data_shape = None
         else:
             # Verify data_shape is set if axes is set.
@@ -65,8 +68,11 @@ class Meta(dict):
                                 "the length of each axis of the assocated cube.")
             self._data_shape = np.asarray(data_shape)
             axes = dict(axes)
-            self._axes = dict([(key, self._sanitize_axis_value(axes.get(key), header[key], key))
-                               for key in header_keys])
+            if not set(axes.keys()).issubset(set(header_keys)):
+                raise ValueError(
+                    "All axes must correspond to a value in header under the same key.")
+            self._axes = dict([(key, self._sanitize_axis_value(axis, header[key], key))
+                               for key, axis in axes.items()])
 
     def _sanitize_axis_value(self, axis, value, key):
         if axis is None:
@@ -137,19 +143,24 @@ class Meta(dict):
         if name in self.keys() and overwrite is not True:
             raise KeyError(f"'{name}' already exists. "
                            "To update an existing metadata entry set overwrite=True.")
+        if comment is not None:
+            self._comments[name] = comment
         if axis is not None:
             axis = self._sanitize_axis_value(axis, value, name)
-        self._comments[name] = comment
-        self._axes[name] = axis
+            self._axes[name] = axis
+        elif name in self._axes:
+            del self._axes[name]
         self.__setitem__(name, value)  # This must be done after updating self._axes otherwise it may error.
 
     def remove(self, name):
-        del self._comments[name]
-        del self._axes[name]
+        if name in self._comments:
+            del self._comments[name]
+        if name in self._axes:
+            del self._axes[name]
         del self[name]
 
     def __setitem__(self, key, val):
-        axis = self.axes[key]
+        axis = self.axes.get(key, None)
         if axis is not None:
             recommendation = "We recommend using the 'add' method to set values."
             if len(axis) == 1:
@@ -216,7 +227,8 @@ class Meta(dict):
             cumul_dropped_axes = np.cumsum(dropped_axes)
 
             # Slice all metadata associated with axes.
-            for (key, value), axis in zip(self.items(), self.axes.values()):
+            for key, value in self.items():
+                axis = self.axes.get(key, None)
                 if axis is not None:
                     new_item = tuple(item[axis])
                     if len(new_item) == 1:
@@ -229,6 +241,7 @@ class Meta(dict):
                     new_axis = new_axis[new_axis >= 0]
                     if len(new_axis) == 0:
                         new_axis = None
-                    new_meta.add(key, new_value, self.comments[key], new_axis, overwrite=True)
+                    new_meta.add(key, new_value, self.comments.get(key, None), new_axis,
+                                 overwrite=True)
 
             return new_meta

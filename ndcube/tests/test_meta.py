@@ -119,7 +119,7 @@ def test_add1(basic_meta):
     assert name in meta.keys()
     assert meta[name] == value
     assert meta.comments[name] == comment
-    assert meta.axes[name] is None
+    assert meta.axes.get(name, None) is None
 
 
 def test_add2(basic_meta):
@@ -130,7 +130,7 @@ def test_add2(basic_meta):
     meta.add(name, value, None, axis)
     assert name in meta.keys()
     assert meta[name] == value
-    assert meta.comments[name] is None
+    assert meta.comments.get(name, None) is None
     assert meta.axes[name] == np.array([axis])
 
 
