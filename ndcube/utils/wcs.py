@@ -8,6 +8,7 @@ import numbers
 from collections import UserDict
 
 import numpy as np
+from astropy.wcs.utils import pixel_to_pixel
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
 __all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
@@ -477,3 +478,38 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     target_wcs = get_low_level_wcs(target_wcs, 'target_wcs')
 
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
+
+
+def identify_invariant_axes(source_wcs, target_wcs, input_shape, atol=1e-6, rtol=1e-6):
+    """
+    Performs a pixel to pixel transformation to identify if there are any invariant axes
+    between the given source and target WCS objects.
+
+    Parameters
+    ----------
+    source_wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+
+    target_wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
+
+    input_shape: `tuple`
+        The array shape of the data.
+
+    atol: `float`
+        The absolute tolerance parameter for comparison.
+
+    rtol: `float`
+        The relative tolerance parameter for comparison.
+
+    Returns
+    -------
+    result: `list`
+        A list of booleans denoting whether the axis is invariant or not.
+        Follows the WCS ordering.
+    """
+
+    input_pixel_coords = np.meshgrid(*[np.arange(n) for n in input_shape])
+
+    output_pixel_coords = pixel_to_pixel(source_wcs, target_wcs, *input_pixel_coords)
+
+    return [np.allclose(input_coord, output_coord, atol=atol, rtol=rtol)
+            for input_coord, output_coord in zip(input_pixel_coords, output_pixel_coords)]
