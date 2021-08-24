@@ -213,4 +213,4 @@ def get_sequence_crop_item(seq, lower_corner, upper_corner, wcses, crop_by_value
     # rangge of array indices determined above from all cubes.
     starts = starts.min(axis=0)
     stops = stops.max(axis=0)
-    return tuple([slice(None)] + [slice(start, stop) for start, stop in zip(starts, stops)])
+    return tuple([slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
