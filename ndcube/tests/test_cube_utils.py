@@ -2,6 +2,7 @@ import numpy as np
 
 from ndcube.utils import cube as cube_utils
 
+
 def test_bounding_box_to_corners():
     # Define inputs.
     # Note that there are two world axes that correspond to the same single pixel axis.
@@ -32,4 +33,3 @@ def test_bounding_box_to_corners():
     output_corners = cube_utils.bounding_box_to_corners(lower_corner_values, upper_corner_values,
                                                         axis_correlation_matrix)
     assert output_corners == expected_corners
-
