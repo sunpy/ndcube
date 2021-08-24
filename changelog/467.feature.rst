@@ -1,0 +1,1 @@
+Add `ndcube.NDCollection.crop` and `ndcube.NDCollection.crop_by_values` methods to crop member cubes/sequences.
