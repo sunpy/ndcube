@@ -8,6 +8,8 @@ from collections import namedtuple
 
 import numpy as np
 
+from ndcube.utils import cube as cube_utils
+
 __all__ = ['SequenceItem',
            'cube_like_index_to_sequence_and_common_axis_indices',
            'cube_like_tuple_item_to_sequence_items']
@@ -140,3 +142,75 @@ def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_length
         first_cube_item[common_axis] = slice(start_common_axis_index, None)
         sequence_items.insert(0, SequenceItem(start_sequence_index, first_cube_item))
     return sequence_items
+
+
+def get_sequence_crop_item(seq, lower_corner, upper_corner, wcses, crop_by_values, units=None):
+    """
+    Get the slice item with which to crop an NDCubeSequence given crop inputs.
+
+    Instead corner inputs are passed to the crop method of cubes in sequence.
+    Note, therefore, that the corner inputs do not include an entry for world
+    coords only associated with the sequence axis.
+    The region of interest is defined in pixel space, by converting the world
+    coordinates of the corners to pixel coordinates and then cropping the
+    smallest pixel region which contains the corners specified.
+    In cases where the cubes are not aligned, all cubes are cropped
+    to the same region in pixel space.  This region will be the smallest
+    that encompasses the input world ranges in all cubes while maintaining
+    consistent array shape between the cubes.
+
+    Parameters
+    ----------
+    seq: `ndcube.NDCubeSequence`
+        The sequence being cropped.
+
+    lower_corner:
+        Passed to `ndcube.NDCube.crop_by_values` as the ``lower_corner`` arg.
+
+    upper_corner:
+        Passed to `ndcube.NDCube.crop_by_values` as the ``upper_corner`` arg.
+
+    wcses: iterable of WCS objects or `str` (optional)
+        The WCS objects to be used to crop the cubes. There must by one WCS per cube.
+        Alternatively, can be a string giving the name of the cube wcs attribute to be used,
+        namely, 'wcs', 'combined_wcs', or 'extra_coords'.
+        Default=None is equivalent to 'wcs'.
+
+    crop_by_values: `bool`
+        Determines what function to use when determining slices of cubes.
+        If True, inputs are assumed to be low-level coordinate objects and
+        the crop_by_values util is used.
+        If False, inputs are assumined to be high-level coordinate objects and
+        the crop util is used.
+
+    units: (optiona)
+        Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+        Only used if crop_by_values is True.
+    """
+    n_cubes = len(seq.data)
+    cube_ndim = len(seq.dimensions[1:])
+    starts = np.zeros((n_cubes, cube_ndim), dtype=int)
+    stops = np.zeros((n_cubes, cube_ndim), dtype=int)
+    if wcses is None:
+        wcses = "wcs"
+    if isinstance(wcses, str):
+        wcses = [wcses] * n_cubes
+    for i, (cube, wcs) in enumerate(zip(seq.data, wcses)):
+        # For each cube, determine the range of array indices in each dimension
+        # corresponding to the input world corners.
+        if isinstance(wcs, str):
+            wcs = getattr(cube, wcs)
+        if crop_by_values:
+            item = cube_utils.get_crop_by_values_item(lower_corner, upper_corner, wcs=wcs,
+                                                      data_shape=cube.data.shape, units=units)
+        else:
+            item = cube_utils.get_crop_item(lower_corner, upper_corner, wcs=wcs,
+                                            data_shape=cube.data.shape)
+        for j, s in enumerate(item):
+            starts[i, j] = s.start
+            stops[i, j] = s.stop
+    # Construct the item with which to slice the sequence from the min and max
+    # rangge of array indices determined above from all cubes.
+    starts = starts.min(axis=0)
+    stops = stops.max(axis=0)
+    return tuple([slice(None)] + [slice(start, stop) for start, stop in zip(starts, stops)])

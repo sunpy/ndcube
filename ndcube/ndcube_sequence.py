@@ -239,6 +239,88 @@ class NDCubeSequenceBase:
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, common_axis=new_common_axis, meta=self.meta)
 
+    def crop(self, lower_corner, upper_corner, wcses=None):
+        """
+        Crop the cubes in the sequence given world coordinate ranges in high-level coord objects.
+
+        This method does not crop the sequence axis.  Instead corner inputs
+        are passed to the crop method of cubes in sequence.  Note, therefore,
+        that the corner inputs do not include an entry for world coords only
+        associated with the sequence axis.
+        The region of interest is defined in pixel space, by converting the world
+        coordinates of the corners to pixel coordinates and then cropping the
+        smallest pixel region which contains the corners specified.
+        In cases where the cubes are not aligned, all cubes are cropped
+        to the same region in pixel space.  This region will be the smallest
+        that encompasses the input world ranges in all cubes while maintaining
+        consistent array shape between the cubes.
+
+        Parameters
+        ----------
+        lower_corner:
+            Passed to `ndcube.NDCube.crop` as the ``lower_corner`` arg without checking.
+
+        upper_corner:
+            Passed to `ndcube.NDCube.crop` as the ``upper_corner`` arg without checking.
+
+        wcses: iterable of WCS objects or `str` (optional)
+            The WCS objects to be used to crop the cubes.
+            There must by one WCS per cube.
+            Alternatively, can be a string giving the name of the cube wcs attribute to be used,
+            namely, 'wcs', 'combined_wcs', or 'extra_coords'.
+            Default=None is equivalent to 'wcs'.
+
+        Returns
+        -------
+        : `~ndcube.NDCubeSequence`
+            The cropped sequence.
+        """
+        item = utils.sequence.get_sequence_crop_item(self, lower_corner, upper_corner,
+                                                     wcses, False)
+        return self[item]
+
+    def crop_by_values(self, lower_corner, upper_corner, units=None, wcses=None):
+        """
+        Crop the cubes in the sequence given world coordinate ranges in low-level coord objects.
+
+        This method does not crop the sequence axis.  Instead corner inputs
+        are passed to the crop method of cubes in sequence.  Note, therefore,
+        that the corner inputs do not include an entry for world coords only
+        associated with the sequence axis.
+        The region of interest is defined in pixel space, by converting the world
+        coordinates of the corners to pixel coordinates and then cropping the
+        smallest pixel region which contains the corners specified.
+        In cases where the cubes are not aligned, all cubes are cropped
+        to the same region in pixel space.  This region will be the smallest
+        that encompasses the input world ranges in all cubes while maintaining
+        consistent array shape between the cubes.
+
+        Parameters
+        ----------
+        lower_corner:
+            Passed to `ndcube.NDCube.crop_by_values` as the ``lower_corner`` arg.
+
+        upper_corner:
+            Passed to `ndcube.NDCube.crop_by_values` as the ``upper_corner`` arg.
+
+        units:
+            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+
+        wcses: iterable of WCS objects or `str` (optional)
+            The WCS objects to be used to crop the cubes. There must by one WCS per cube.
+            Alternatively, can be a string giving the name of the cube wcs attribute to be used,
+            namely, 'wcs', 'combined_wcs', or 'extra_coords'.
+            Default=None is equivalent to 'wcs'.
+
+        Returns
+        -------
+        : `~ndcube.NDCubeSequence`
+            The cropped sequence.
+        """
+        item = utils.sequence.get_sequence_crop_item(self, lower_corner, upper_corner,
+                                                     wcses, True, unit=units)
+        return self[item]
+
     def __str__(self):
         return (textwrap.dedent(f"""\
                 NDCubeSequence
