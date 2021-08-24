@@ -118,6 +118,139 @@ class NDCollection(dict):
         return [tuple(set.intersection(*[set(cube_types[i]) for cube_types in collection_types]))
                 for i in range(self.n_aligned_axes)]
 
+    def crop(self, lower_corners, upper_corners, wcses=None):
+        """
+        Crop member cubes/sequences given ranges of world coords in high-level coord objects.
+
+        Cropping is done in pixel-space. If aligned axes are set, but some members
+        pixel grids are not aligned in world-space, each member will be cropped to
+        smallest region of interest that still maintains the shape of the aligned
+        axes between members. This means that some members may not be tightly cropped.
+
+        Parameters
+        ----------
+        lower_corners: `dict` of `tuple`s or `tuple` of high-level coordinate objects
+            The world coords of the lower corner of the region of interest.
+            A `tuple` of high-level coordinate objects must be provided for each member
+            of the collection and must be a valid ``lower_corner`` arg for that member's
+            ``crop`` method. These tuples must be provided in a dictionary with
+            the same keys as the collection.
+            Alternatively, a single tuple can be provided which will be applied to all
+            members of the collection.
+
+        upper_corners: `dict` of `tuple`s or `tuple` of high-level coordinate objects
+            The world coords of the upper corner of the region of interest.
+            For more detail on format, see description of ``lower_corner`` input, above.
+
+        wcses: `dict` (optional)
+            The wcs arg to be given to each member's ``crop`` method.
+            If not a `dict`, this value will be used for all members of the
+            collection, as is.
+
+        Returns
+        -------
+        : `~ndcube.NDCollection`
+            A collection with all members cropped accordingly.
+        """
+        return self._crop(lower_corners, upper_corners, wcses, False)
+
+    def crop_by_values(self, lower_corners, upper_corners, wcses, crop_by_values, units=None):
+        """
+        Crop member cubes/sequences given ranges of world coords in low-level coord objects.
+
+        Cropping is done in pixel-space. If aligned axes are set, but some members
+        pixel grids are not aligned in world-space, each member will be cropped to
+        smallest region of interest that still maintains the shape of the aligned
+        axes between members. This means that some members may not be tightly cropped.
+
+        Parameters
+        ----------
+        lower_corners: `dict` of `tuple`s or `tuple` of low-level coordinate objects
+            The world coords of the lower corner of the region of interest.
+            A `tuple` of high-level coordinate objects must be provided for each member
+            of the collection and must be a valid ``lower_corner`` arg for that member's
+            ``crop`` method. These tuples must be provided in a dictionary with
+            the same keys as the collection.
+            Alternatively, a single tuple can be provided which will be applied to all
+            members of the collection.
+
+        upper_corners: `dict` of `tuple`s or `tuple` of high-level coordinate objects
+            The world coords of the upper corner of the region of interest.
+            For more detail on format, see description of ``lower_corner`` input, above.
+
+        wcses: `dict` (optional)
+            The wcs arg to be given to each member's ``crop`` method.
+            If not a `dict`, this value will be used for all members of the
+            collection, as is.
+
+        Returns
+        -------
+        : `~ndcube.NDCollection`
+            A collection with all members cropped accordingly.
+        """
+        return self._crop(lower_corners, upper_corners, wcses, True, units=units)
+
+    def _crop(self, lower_corners, upper_corners, wcses, crop_by_values, units=None):
+        # Sanitize inputs.
+        if not isinstance(lower_corners, dict):
+            lower_corners = dict((key, lower_corners) for key in self)
+        if not isinstance(upper_corners, dict):
+            upper_corners = dict((key, upper_corners) for key in self)
+        if not isinstance(wcses, dict):
+            wcses = dict((key, wcses) for key in self)
+        aligned_axes = self.aligned_axes
+        if aligned_axes is None:
+            aligned_axes = {}
+        crop_items = {}
+        aligned_starts = np.zeros((len(aligned_axes), self.n_aligned_axes), dtype=int)
+        aligned_stops = copy.deepcopy(aligned_starts)
+        # Determine the crop item for each cube.
+        for i, (key, cube) in enumerate(self.items()):
+            # NDCubes and NDCubeSequences must be handled slightly differently
+            # depending on whether we are cropping by values or high-level objects.
+            if isinstance(cube, NDCube):
+                if crop_by_values:
+                    crop_items[key] = utils.cube.get_crop_by_values_item(
+                        lower_corners[key], upper_corners[key],
+                        wcses[key], cube.dimensions.value.astype(int), units=units)
+                else:
+                    crop_items[key] = utils.cube.get_crop_item(
+                        lower_corners[key], upper_corners[key],
+                        wcses[key], cube.dimensions.value.astype(int))
+            elif isinstance(cube, NDCubeSequence):
+                crop_items[key] = utils.sequence.get_sequence_crop_by_values_item(
+                    cube, lower_corners[key], upper_corners[key],
+                    wcses[key], crop_by_values, units=units)
+            else:
+                raise TypeError(
+                    "Unrecognized member type. Must be a subclass of NDCube of NDCubeSequence."
+                    f"type: {type(cube)}")
+            # If there are aligned axes, record the lower and upper array indices
+            # for each cube. These will be used to ensure that the shape of
+            # aligned axes are maintained.
+            aligned_cube_axes = aligned_axes.get(key)
+            if aligned_cube_axes:
+                aligned_slices = np.array(crop_items[key], dtype=object)
+                aligned_slices = aligned_slices[np.asarray(aligned_cube_axes)]
+                for j, s in enumerate(aligned_slices):
+                    aligned_starts[i, j] = s.start
+                    aligned_stops[i, j] = s.stop
+        # Having calculated the array index ranges for all the members, crop them.
+        # If there are aligned axes, use the min and max array indices found above
+        # across all cubes. This will ensure the shape of aligned axes is maintained.
+        if aligned_axes:
+            aligned_item = np.array([slice(start, stop)
+                                     for start, stop in zip(aligned_starts.min(axis=0), aligned_stops.max(axis=0))],
+                                    dtype=object)
+            pairs = []
+            for key, crop_item in crop_items.items():
+                item = np.array(crop_item, dtype=object)
+                item[np.asarray(aligned_axes[key])] = aligned_item
+                pairs.append((key, self[key][tuple(item)]))
+        else:
+            pairs = [(key, cube[crop_item[key]]) for key, cube in self.items()]
+        return type(self)(pairs, aligned_axes=tuple(self.aligned_axes.values()), meta=self.meta)
+
     def __getitem__(self, item):
         # There are two ways to slice:
         # by key or sequence of keys, i.e. slice out given cubes in the collection, or
