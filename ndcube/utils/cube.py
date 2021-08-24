@@ -292,6 +292,7 @@ def bounding_box_to_corners(lower_corner_values, upper_corner_values, axis_corre
                     for i in range(corners.shape[0]))
     return corners
 
+
 def get_crop_item_from_points(*world_points_values, wcs, data_shape):
     """
     Find slice item that crops to minimum cube in array-space containing specified world points.
