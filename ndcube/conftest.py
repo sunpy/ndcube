@@ -11,7 +11,7 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
-from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
+from ndcube import ExtraCoords, GlobalCoords, NDCollection, NDCube, NDCubeSequence
 
 # Force MPL to use non-gui backends for testing.
 try:
@@ -165,6 +165,32 @@ def wcs_3d_l_lt_ln():
 
 @pytest.fixture
 def wcs_3d_lt_ln_l():
+    header = {
+
+        'CTYPE1': 'HPLN-TAN',
+        'CUNIT1': 'arcsec',
+        'CDELT1': 10,
+        'CRPIX1': 0,
+        'CRVAL1': 0,
+
+        'CTYPE2': 'HPLT-TAN',
+        'CUNIT2': 'arcsec',
+        'CDELT2': 5,
+        'CRPIX2': 5,
+        'CRVAL2': 0,
+
+        'CTYPE3': 'WAVE    ',
+        'CUNIT3': 'Angstrom',
+        'CDELT3': 0.2,
+        'CRPIX3': 0,
+        'CRVAL3': 10,
+    }
+
+    return WCS(header=header)
+
+
+@pytest.fixture
+def wcs_3d_ln_lt_l():
     header = {
 
         'CTYPE1': 'HPLN-TAN',
@@ -389,6 +415,21 @@ def ndcube_3d_ln_lt_l(wcs_3d_l_lt_ln, simple_extra_coords_3d):
 
 
 @pytest.fixture
+def ndcube_3d_l_lt_ln(wcs_3d_ln_lt_l):
+    shape = (4, 3, 2)
+    wcs_3d_l_lt_ln.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_ln_lt_l,
+        mask=mask,
+        uncertainty=data,
+    )
+    return cube
+
+
+@pytest.fixture
 def ndcube_3d_ln_lt_l_ec_all_axes(wcs_3d_l_lt_ln, extra_coords_3d):
     shape = (2, 3, 4)
     wcs_3d_l_lt_ln.array_shape = shape
@@ -563,6 +604,22 @@ def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
     cube3.data[:] *= 3
 
     return NDCubeSequence([cube1, cube2, cube3], common_axis=common_axis)
+
+
+###############################################################################
+# NDCollection Fixtures
+###############################################################################
+
+
+@pytest.fixture
+def ndcollection_1s_2c_irreg_align(ndcubesequence_4c_ln_lt_l,
+                                   ndcube_3d_ln_lt_l,
+                                   ndcube_3d_l_lt_ln):
+    data_pairs = [("seq", ndcubesequence_4c_ln_lt_l),
+                  ("cube", ndcube_3d_ln_lt_l),
+                  ("cube_permutated", ndcube_3d_l_lt_ln)]
+    aligned_axes = ((1, 2), (0, 1), (2, 1))
+    return NDCollection(data_pairs, aligned_axes)
 
 
 def pytest_runtest_teardown(item):

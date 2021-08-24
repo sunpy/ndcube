@@ -148,7 +148,28 @@ def test_aligned_dimensions(collection, expected_aligned_dimensions):
                       ('em.wl',)])])
 def test_aligned_axis_physical_types(collection, expected):
     output = collection.aligned_axis_physical_types
-    print(output)
     assert len(output) == len(expected)
     for output_axis_types, expect_axis_types in zip(output, expected):
         assert set(output_axis_types) == set(expect_axis_types)
+
+
+def test_crop(ndcollection_1s_2c_irreg_align):
+    collection = ndcollection_1s_2c_irreg_align
+    intervals = collection["cube"].wcs.array_index_to_world([1, 2], [0, 1], [0, 2])
+    lower_corner = [coord[0] for coord in intervals]
+    upper_corner = [coord[-1] for coord in intervals]
+    wave_idx = 0
+    lower_corner[wave_idx] = None
+    upper_corner[wave_idx] = None
+    lower_corners = {"seq": lower_corner,
+                     "cube": lower_corner,
+                     "cube_permutated": [lower_corner[1], lower_corner[0]]}
+    upper_corners = {"seq": upper_corner,
+                     "cube": upper_corner,
+                     "cube_permutated": [upper_corner[1], upper_corner[0]]}
+    expected_pairs = [("seq", collection["seq"][:, 1:3, 0:2]),
+                      ("cube", collection["cube"][1:3, 0:2]),
+                      ("cube_permutated", collection["cube_permutated"][:, 0:2, 1:3])]
+    expected = NDCollection(expected_pairs, tuple(collection.aligned_axes.values()))
+    output = collection.crop(lower_corners, upper_corners)
+    helpers.assert_collections_equal(output, expected)

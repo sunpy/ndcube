@@ -1,9 +1,10 @@
+import copy
 import textwrap
 import collections.abc
 
 import numpy as np
 
-import ndcube.utils.collection as collection_utils
+from ndcube import utils
 
 __all__ = ["NDCollection"]
 
@@ -56,7 +57,7 @@ class NDCollection(dict):
             keys, data = zip(*key_data_pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
             if sanitize_inputs:
-                aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)
+                aligned_axes = utils.collection._sanitize_aligned_axes(keys, data, aligned_axes)
             else:
                 aligned_axes = dict(zip(keys, aligned_axes))
         if kwargs:
@@ -205,20 +206,26 @@ class NDCollection(dict):
         aligned_starts = np.zeros((len(aligned_axes), self.n_aligned_axes), dtype=int)
         aligned_stops = copy.deepcopy(aligned_starts)
         # Determine the crop item for each cube.
+        from ndcube import NDCube, NDCubeSequence
         for i, (key, cube) in enumerate(self.items()):
             # NDCubes and NDCubeSequences must be handled slightly differently
             # depending on whether we are cropping by values or high-level objects.
             if isinstance(cube, NDCube):
+                cube_wcs = wcses[key]
+                if cube_wcs is None:
+                    cube_wcs = cube.wcs
+                elif isinstance(_wcs, str):
+                    cube_wcs = getattr(cube, _wcs)
                 if crop_by_values:
                     crop_items[key] = utils.cube.get_crop_by_values_item(
                         lower_corners[key], upper_corners[key],
-                        wcses[key], cube.dimensions.value.astype(int), units=units)
+                        cube_wcs, cube.dimensions.value.astype(int), units=units)
                 else:
                     crop_items[key] = utils.cube.get_crop_item(
                         lower_corners[key], upper_corners[key],
-                        wcses[key], cube.dimensions.value.astype(int))
+                        cube_wcs, cube.dimensions.value.astype(int))
             elif isinstance(cube, NDCubeSequence):
-                crop_items[key] = utils.sequence.get_sequence_crop_by_values_item(
+                crop_items[key] = utils.sequence.get_sequence_crop_item(
                     cube, lower_corners[key], upper_corners[key],
                     wcses[key], crop_by_values, units=units)
             else:
@@ -341,7 +348,7 @@ class NDCollection(dict):
         # Use indices of dropped axes determine above to update aligned_axes
         # by removing any that have been dropped.
         drop_aligned_axes_indices = np.array(drop_aligned_axes_indices)
-        new_aligned_axes = collection_utils._update_aligned_axes(
+        new_aligned_axes = utils.collection._update_aligned_axes(
             drop_aligned_axes_indices, self.aligned_axes, self._first_key)
 
         return collection_items, new_aligned_axes
@@ -384,7 +391,7 @@ class NDCollection(dict):
         if len(args) == 2:
             key_data_pairs = args[0]
             new_keys, new_data = zip(*key_data_pairs)
-            new_aligned_axes = collection_utils._sanitize_aligned_axes(new_keys, new_data, args[1])
+            new_aligned_axes = utils.collection._sanitize_aligned_axes(new_keys, new_data, args[1])
         else:  # If one arg given, input must be NDCollection.
             collection = args[0]
             new_keys = list(collection.keys())
@@ -393,7 +400,7 @@ class NDCollection(dict):
             new_aligned_axes = collection.aligned_axes
         # Check aligned axes of new inputs are compatible with those in self.
         # As they've already been sanitized, only one set of aligned axes need be checked.
-        collection_utils.assert_aligned_axes_compatible(
+        utils.collection.assert_aligned_axes_compatible(
             self[self._first_key].dimensions, new_data[0].dimensions,
             self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]]
         )
