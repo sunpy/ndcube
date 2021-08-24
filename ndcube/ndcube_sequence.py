@@ -250,6 +250,9 @@ class NDCubeSequenceBase:
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
 
+    def __len__(self):
+        return len(self.data)
+
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """
