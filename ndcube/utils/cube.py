@@ -1,12 +1,13 @@
 import inspect
-import itertools
 from functools import wraps
 
 import astropy.units as u
 import numpy as np
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
+from ndcube.utils import misc as misc_utils
 from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values
+
 
 def sanitise_wcs(func):
     """
@@ -70,7 +71,8 @@ def get_crop_item(lower_corner, upper_corner, wcs, data_shape):
     upper_corner_values = [u.Quantity(v, unit=u.Unit(unit), copy=False)
                            for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
 
-    points = bounding_box_to_corners(lower_corner_values, upper_corner_values, wcs)
+    points = bounding_box_to_corners(lower_corner_values, upper_corner_values,
+                                     wcs.axis_correlation_matrix)
     return get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
 
 
@@ -105,14 +107,15 @@ def get_crop_by_values_item(lower_corner, upper_corner, wcs, data_shape, units=N
         if lower_corner[i] is not None and upper_corner[i] is not None:
             upper_corner[i] = upper_corner[i].to(lower_corner[i].unit)
 
-    lower_corner, upper_corner = fill_in_crop_nones(lower_corner, upper_corner, wcs, True)
+    lower_corner, upper_corner = fill_in_crop_nones(lower_corner, upper_corner,
+                                                    wcs, data_shape, True)
 
     # Convert coordinates to units used by WCS as WCS.world_to_array_index
     # does not handle quantities.
-    lower_corner = utils.misc.convert_quantities_to_units(lower_corner, wcs.world_axis_units)
-    upper_corner = utils.misc.convert_quantities_to_units(upper_corner, wcs.world_axis_units)
+    lower_corner = misc_utils.convert_quantities_to_units(lower_corner, wcs.world_axis_units)
+    upper_corner = misc_utils.convert_quantities_to_units(upper_corner, wcs.world_axis_units)
 
-    points = bounding_box_to_corners(lower_corner, upper_corner, wcs)
+    points = bounding_box_to_corners(lower_corner, upper_corner, wcs.axis_correlation_matrix)
     return get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
 
 

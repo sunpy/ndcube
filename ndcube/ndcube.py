@@ -23,7 +23,7 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values, values_to_high_level_objects
+from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
