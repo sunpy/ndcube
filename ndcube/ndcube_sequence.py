@@ -253,6 +253,9 @@ class NDCubeSequenceBase:
     def __len__(self):
         return len(self.data)
 
+    def __iter__(self):
+        return iter(self.data)
+
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """
