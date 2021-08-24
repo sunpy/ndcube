@@ -250,6 +250,9 @@ class NDCubeSequenceBase:
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
 
+    def __len__(self):
+        return len(self.data)
+
     def __iter__(self):
         return iter(self.data)
 
