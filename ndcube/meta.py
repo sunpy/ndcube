@@ -56,17 +56,21 @@ class Meta(dict):
                     "All comments must correspond to a value in header under the same key.")
             self._comments = comments
 
+        # Define data shape.
+        if data_shape is None:
+            self._data_shape = data_shape
+        else:
+            self._data_shape = np.asarray(data_shape, dtype=int)
+
         # Generate dictionary for axes.
         if axes is None:
             self._axes = dict()
-            self._data_shape = None
         else:
             # Verify data_shape is set if axes is set.
             if not (isinstance(data_shape, collections.abc.Iterable) and
                     all([isinstance(i, numbers.Integral) for i in data_shape])):
                 raise TypeError("If axes is set, data_shape must be an iterable giving "
                                 "the length of each axis of the assocated cube.")
-            self._data_shape = np.asarray(data_shape)
             axes = dict(axes)
             if not set(axes.keys()).issubset(set(header_keys)):
                 raise ValueError(
