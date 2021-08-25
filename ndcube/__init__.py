@@ -26,9 +26,10 @@ if sys.version_info < tuple(int(val) for val in __minimum_python_version__.split
 
 from .extra_coords import ExtraCoords
 from .global_coords import GlobalCoords
+from .meta import Meta
 from .ndcollection import NDCollection
 from .ndcube import NDCube
 from .ndcube_sequence import NDCubeSequence
 from .version import version as __version__
 
-__all__ = ['NDCube', 'NDCubeSequence', "NDCollection", "ExtraCoords", "GlobalCoords"]
+__all__ = ["ExtraCoords", "GlobalCoords", "Meta", "NDCollection", "NDCube", "NDCubeSequence"]
