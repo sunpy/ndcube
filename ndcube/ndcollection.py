@@ -155,7 +155,7 @@ class NDCollection(dict):
         """
         return self._crop(lower_corners, upper_corners, wcses, False)
 
-    def crop_by_values(self, lower_corners, upper_corners, wcses, crop_by_values, units=None):
+    def crop_by_values(self, lower_corners, upper_corners, units=None, wcses=None):
         """
         Crop member cubes/sequences given ranges of world coords in low-level coord objects.
 
@@ -199,6 +199,9 @@ class NDCollection(dict):
             upper_corners = dict((key, upper_corners) for key in self)
         if not isinstance(wcses, dict):
             wcses = dict((key, wcses) for key in self)
+        if not (self.keys() == lower_corners.keys() == upper_corners.keys() == wcses.keys()):
+            raise ValueError(
+                "lower_corners, upper_corners and wcses inputs must have same keys as collection.")
         aligned_axes = self.aligned_axes
         if aligned_axes is None:
             aligned_axes = {}

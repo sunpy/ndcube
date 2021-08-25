@@ -156,6 +156,7 @@ def create_sliced_wcs(wcs, item, dim):
 def assert_collections_equal(collection1, collection2):
     assert collection1.keys() == collection2.keys()
     assert collection1.aligned_axes == collection2.aligned_axes
+    assert_metas_equal(collection1.meta, collection2.meta)
     for cube1, cube2 in zip(collection1.values(), collection2.values()):
         # Check cubes are same type.
         assert type(cube1) is type(cube2)

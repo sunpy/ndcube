@@ -173,3 +173,37 @@ def test_crop(ndcollection_1s_2c_irreg_align):
     expected = NDCollection(expected_pairs, tuple(collection.aligned_axes.values()))
     output = collection.crop(lower_corners, upper_corners)
     helpers.assert_collections_equal(output, expected)
+
+
+def test_crop_by_values(ndcollection_1s_2c_irreg_align):
+    collection = ndcollection_1s_2c_irreg_align
+    intervals = collection["cube"].wcs.array_index_to_world_values([1, 2], [0, 1], [0, 2])
+    # Add on units as array_index_to_world_values does not return Quantities
+    lower_corner = []
+    upper_corner = []
+    for coord, unit in zip(intervals, collection["cube"].wcs.world_axis_units):
+        lower_corner.append(coord[0] if coord[0] is None else u.Quantity(coord[0], unit=unit))
+        upper_corner.append(coord[-1] if coord[-1] is None else u.Quantity(coord[-1], unit=unit))
+    wave_idx = 0
+    lower_corner[wave_idx] = None
+    upper_corner[wave_idx] = None
+    lower_corners = {"seq": lower_corner,
+                     "cube": lower_corner,
+                     "cube_permutated": [lower_corner[2], lower_corner[1], lower_corner[0]]}
+    upper_corners = {"seq": upper_corner,
+                     "cube": upper_corner,
+                     "cube_permutated": [upper_corner[2], lower_corner[1], upper_corner[0]]}
+    expected_pairs = [("seq", collection["seq"][:, 1:3, 0:2]),
+                      ("cube", collection["cube"][1:3, 0:2]),
+                      ("cube_permutated", collection["cube_permutated"][:, 0:2, 1:3])]
+    expected = NDCollection(expected_pairs, tuple(collection.aligned_axes.values()))
+    output = collection.crop_by_values(lower_corners, upper_corners)
+    helpers.assert_collections_equal(output, expected)
+
+
+def test_crop_error(ndcollection_1s_2c_irreg_align):
+    collection = ndcollection_1s_2c_irreg_align
+    lower_corners = {"ss": 0}
+    upper_corners = {"seq": 0, "cube": 1, "cube_permutated": 2}
+    with pytest.raises(ValueError):
+        collection.crop(lower_corners, upper_corners)
