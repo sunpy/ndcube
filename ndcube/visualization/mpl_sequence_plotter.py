@@ -121,19 +121,11 @@ class SequenceAnimator(ArrayAnimatorWCS):
             wcs = wcs.low_level_wcs
         super().__init__(data, wcs, plot_axes, coord_params=coord_params, **base_kwargs)
 
-    def _sequence_slider_function(self, val, im, slider):
+    def _sequence_slider_function(self, val, artist, slider):
         self._sequence_idx = int(val)
         self.data, self.wcs, plot_axes, coord_params = self._cubes[self._sequence_idx].plotter._prep_animate_args(
             self._cubes[self._sequence_idx].wcs, self._plot_axes, self._axes_units, self._data_unit)
-        return self._replot(im)
-
-    def _replot(self, im):
-        """
-        Replot the image without updating cube sliders.
-        """
-        self.axes.reset_wcs(wcs=self.wcs, slices=self.slices_wcsaxes)
-        im.set_array(self.data_transposed)
-
-        if self.clip_interval is not None:
-            vmin, vmax = super()._get_2d_plot_limits()
-            im.set_clim(vmin, vmax)
+        if self.plot_dimensionality == 1:
+            self.update_plot_1d(val, artist, slider)
+        elif self.plot_dimensionality == 2:
+            self.update_plot_2d(val, artist, slider)
