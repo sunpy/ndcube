@@ -35,14 +35,9 @@ class MatplotlibSequencePlotter(BasePlotter):
         """
         sequence_dims = self._ndcube.dimensions
         if len(sequence_dims) == 2:
-            return self._plot_image(sequence_axis_coords, sequence_axis_unit, **kwargs)
+            raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
         else:
             return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
-
-    def _plot_image(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
-        if len(self._sequence.dimensions) != 2:
-            raise ValueError("NDCubeSequence must contain 1-D NDCubes to use this visualizer.")
-        raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
 
     def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
