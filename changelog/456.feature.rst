@@ -1,0 +1,1 @@
+Create new plotter class for animating `~ndcube.NDCubeSequence` is the 2.0 framework. This class always sets the sequence axis as a slider and leverages `ndcube.NDCube.plot`.
