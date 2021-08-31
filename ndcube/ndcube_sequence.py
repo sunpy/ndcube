@@ -6,11 +6,11 @@ import astropy.units as u
 import numpy as np
 
 from ndcube import utils
-from ndcube.visualization import SequencePlotterDescriptor
+from ndcube.visualization import PlotterDescriptor
 
 __all__ = ['NDCubeSequence']
 
-PLOTTING_NOT_SUPPORTED_ERROR = """NDCubeSequence plotting is no longer supported.
+PLOT_AS_CUBE_NOT_SUPPORTED_ERROR = """NDCubeSequence plot_as_cube is no longer supported.
 To learn why or to tell us why it should be re-instated, read and comment on issue #315:
 
     https://github.com/sunpy/ndcube/issues/315
@@ -284,7 +284,7 @@ class NDCubeSequence(NDCubeSequenceBase):
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
-    plotter = SequencePlotterDescriptor(default_type="mpl_sequence_plotter")
+    plotter = PlotterDescriptor(default_type="mpl_sequence_plotter")
 
     def plot(self, *args, **kwargs):
         """
@@ -303,7 +303,7 @@ class NDCubeSequence(NDCubeSequenceBase):
         return self.plotter.plot(*args, **kwargs)
 
     def plot_as_cube(self, *args, **kwargs):
-        raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
+        raise NotImplementedError(PLOT_AS_CUBE_NOT_SUPPORTED_ERROR)
 
 
 """

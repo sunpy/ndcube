@@ -123,7 +123,7 @@ class SequenceAnimator(ArrayAnimatorWCS):
 
     def _sequence_slider_function(self, val, artist, slider):
         self._sequence_idx = int(val)
-        self.data, self.wcs, plot_axes, coord_params = self._cubes[self._sequence_idx].plotter._prep_animate_args(
+        self.data, self.wcs, _plot_axes, _coord_params = self._cubes[self._sequence_idx].plotter._prep_animate_args(
             self._cubes[self._sequence_idx].wcs, self._plot_axes, self._axes_units, self._data_unit)
         if self.plot_dimensionality == 1:
             self.update_plot_1d(val, artist, slider)
