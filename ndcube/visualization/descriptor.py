@@ -28,27 +28,20 @@ class PlotterDescriptor:
             # We special case the default MatplotlibPlotter so that we can
             # delay the import of matplotlib until the plotter is first
             # accessed.
-            if self._default_type == "mpl_plotter":
-                try:
+            try:
+                if self._default_type == "mpl_plotter":
                     from ndcube.visualization.mpl_plotter import MatplotlibPlotter
-                except ImportError as e:
-                    raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
-
-                self.__set__(obj, MatplotlibPlotter)
-
-            elif self._default_type == "mpl_sequence_plotter":
-                try:
+                    self.__set__(obj, MatplotlibPlotter)
+                elif self._default_type == "mpl_sequence_plotter":
                     from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
-                except ImportError as e:
-                    raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
-
-                self.__set__(obj, MatplotlibSequencePlotter)
-
-            elif self._default_type is not None:
-                self.__set__(obj, self._default_type)
-            else:
-                # If we have no default type then just return None
-                return
+                    self.__set__(obj, MatplotlibSequencePlotter)
+                elif self._default_type is not None:
+                    self.__set__(obj, self._default_type)
+                else:
+                    # If we have no default type then just return None
+                    return
+            except ImportError as e:
+                raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
 
         return getattr(obj, self._attribute_name)
 

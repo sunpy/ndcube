@@ -10,15 +10,6 @@ from ndcube.visualization import PlotterDescriptor
 
 __all__ = ['NDCubeSequence']
 
-PLOT_AS_CUBE_NOT_SUPPORTED_ERROR = """NDCubeSequence plot_as_cube is no longer supported.
-To learn why or to tell us why it should be re-instated, read and comment on issue #315:
-
-    https://github.com/sunpy/ndcube/issues/315
-
-To see a introductory guide on how to make your own NDCubeSequence plots, see the docs:
-
-    https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting"""
-
 
 class NDCubeSequenceBase:
     """
@@ -309,7 +300,13 @@ class NDCubeSequence(NDCubeSequenceBase):
         return self.plotter.plot(*args, **kwargs)
 
     def plot_as_cube(self, *args, **kwargs):
-        raise NotImplementedError(PLOT_AS_CUBE_NOT_SUPPORTED_ERROR)
+        raise NotImplementedError(
+            "NDCubeSequence plot_as_cube is no longer supported.\n"
+            "To learn why or to tell us why it should be re-instated, "
+            "read and comment on issue #315:\n\nhttps://github.com/sunpy/ndcube/issues/315\n\n"
+            "To see a introductory guide on how to make your own NDCubeSequence plots, "
+            "see the docs:\n\n"
+            "https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting")
 
 
 """
