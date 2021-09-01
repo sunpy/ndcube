@@ -441,6 +441,7 @@ class ExtraCoords(ExtraCoordsABC):
             lut = self._lookup_tables[i]
             if new_array_grids[aom] is None:
                 new_coord = lut[1]
+                name = key
             else:
                 table = lut[1].table
                 if isinstance(table, tuple):
