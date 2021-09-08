@@ -6,17 +6,9 @@ import astropy.units as u
 import numpy as np
 
 from ndcube import utils
+from ndcube.visualization import PlotterDescriptor
 
 __all__ = ['NDCubeSequence']
-
-PLOTTING_NOT_SUPPORTED_ERROR = """NDCubeSequence plotting is no longer supported.
-To learn why or to tell us why it should be re-instated, read and comment on issue #315:
-
-    https://github.com/sunpy/ndcube/issues/315
-
-To see a introductory guide on how to make your own NDCubeSequence plots, see the docs:
-
-    https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting"""
 
 
 class NDCubeSequenceBase:
@@ -250,6 +242,12 @@ class NDCubeSequenceBase:
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"
 
+    def __len__(self):
+        return len(self.data)
+
+    def __iter__(self):
+        return iter(self.data)
+
     @classmethod
     def _new_instance(cls, data_list, meta=None, common_axis=None):
         """
@@ -280,11 +278,35 @@ class NDCubeSequence(NDCubeSequenceBase):
         `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
         were a single cube concatenated along the common axis.
     """
-    def plot(self, **kwargs):
-        raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
+    # We special case the default mpl plotter here so that we can only import
+    # matplotlib when `.plotter` is accessed and raise an ImportError at the
+    # last moment.
+    plotter = PlotterDescriptor(default_type="mpl_sequence_plotter")
 
-    def plot_as_cube(self, **kwargs):
-        raise NotImplementedError(PLOTTING_NOT_SUPPORTED_ERROR)
+    def plot(self, *args, **kwargs):
+        """
+        A convenience function for the plotters default ``plot()`` method.
+
+        Calling this method is the same as calling ``sequence.plotter.plot``, the
+        behaviour of this method can change if the `NDCubeSequence.plotter` class is
+        set to a different ``Plotter`` class.
+
+        """
+        if self.plotter is None:
+            raise NotImplementedError(
+                "This NDCubeSequence object does not have a .plotter defined so "
+                "no default plotting functionality is available.")
+
+        return self.plotter.plot(*args, **kwargs)
+
+    def plot_as_cube(self, *args, **kwargs):
+        raise NotImplementedError(
+            "NDCubeSequence plot_as_cube is no longer supported.\n"
+            "To learn why or to tell us why it should be re-instated, "
+            "read and comment on issue #315:\n\nhttps://github.com/sunpy/ndcube/issues/315\n\n"
+            "To see a introductory guide on how to make your own NDCubeSequence plots, "
+            "see the docs:\n\n"
+            "https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting")
 
 
 """

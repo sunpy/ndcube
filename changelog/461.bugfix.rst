@@ -1,0 +1,1 @@
+Fix bug in `~ndcube.NDCube.axis_world_coords_values` which caused the units to be stripped when an ``axes`` input was given.
