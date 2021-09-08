@@ -944,10 +944,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         new_cube = type(self)(new_data, new_wcs, mask=new_mask, meta=self.meta, unit=new_unit)
 
         # Reconstitute extra coords
-        new_array_grids = [None if superpixel_shape[i] == 1 else
-                           np.arange(offsets[i], data_shape[i] + offsets[i], superpixel_shape[i])
-                           for i in range(naxes)]
-        new_cube._extra_coords = self.extra_coords.interpolate(new_array_grids, new_cube)
+        if not self.extra_coords.is_empty:
+            new_array_grids = [None if superpixel_shape[i] == 1 else
+                               np.arange(offsets[i], data_shape[i] + offsets[i], superpixel_shape[i])
+                               for i in range(naxes)]
+            new_cube._extra_coords = self.extra_coords.interpolate(new_array_grids, new_cube)
 
         return new_cube
 

@@ -677,6 +677,15 @@ def test_superpixel(ndcube_3d_l_ln_lt_ectime):
     assert np.allclose(output_time.value, expected_time.value)
 
 
+def test_superpixel_no_ec(ndcube_3d_l_ln_lt_ectime):
+    # Confirm superpixel does not try to handle extra coords when there aren't any.
+    cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
+    cube._extra_coords = ExtraCoords(cube)
+    superpixel_shape = (10, 2, 1)
+    output = cube.superpixel(superpixel_shape, func=np.sum)
+    assert output.extra_coords.is_empty
+
+
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
     resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',

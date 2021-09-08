@@ -95,6 +95,11 @@ class ExtraCoordsABC(abc.ABC):
 
         """
 
+    @property
+    @abc.abstractproperty
+    def is_empty(self):
+        """Return True if no extra coords present, else return False."""
+
     @abc.abstractmethod
     def __getitem__(self, item: Union[str, int, slice, Iterable[Union[str, int, slice]]]) -> "ExtraCoordsABC":
         """
@@ -303,6 +308,14 @@ class ExtraCoords(ExtraCoordsABC):
 
         self._wcs = wcs
 
+    @property
+    def is_empty(self):
+        # docstring in ABC
+        if not self._wcs and not self._lookup_tables:
+            return True
+        else:
+            return False
+
     def _getitem_string(self, item):
         """
         Slice the Extracoords based on axis names.
@@ -414,6 +427,9 @@ class ExtraCoords(ExtraCoordsABC):
             A new ExtraCoords object holding the interpolated coords.
 
         """
+        new_ec = type(self)(ndcube)
+        if self.is_empty:
+            return new_ec
         cube_dims = self._ndcube.dimensions.value.astype(int)
         naxes = len(cube_dims)
         if len(new_array_grids) != naxes:
@@ -423,7 +439,6 @@ class ExtraCoords(ExtraCoordsABC):
         array_order_mapping = convert_between_array_and_pixel_axes(np.asarray(self.mapping), naxes)
         old_array_grids = [None if new_grid is None else np.arange(dim)
                            for new_grid, dim in zip(new_array_grids, cube_dims)]
-        new_ec = type(self)(ndcube)
         # For SkyCoords, two keys must be done at once.
         # Define list for tracking which keys should be skipped for this reason.
         skip = []
