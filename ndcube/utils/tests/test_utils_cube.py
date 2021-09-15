@@ -8,6 +8,8 @@ def test_bounding_box_to_corners():
     # Note that there are two world axes that correspond to the same single pixel axis.
     # These are dependent and therefore their values must always point to the same
     # pixel index as each other.
+    # The axis correlation matrix is (world_index, pixel_index) so this matrix
+    # has 4 world and 3 pixel dims
     axis_correlation_matrix = np.array([[1, 0, 1],
                                         [0, 1, 1],
                                         [0, 0, 1],

@@ -196,6 +196,15 @@ def fill_in_crop_nones(lower_corner, upper_corner, wcs, data_shape, crop_by_valu
 def bounding_box_to_corners(lower_corner_values, upper_corner_values, axis_correlation_matrix):
     """
     Convert two corners of a bounding box to the points of all corners.
+
+
+    This function takes the upper and lower corners of a bounding box and
+    generates all the world coordinates which correspond to a valid pixel
+    coordinate.
+
+    An example of an invalid pixel coordinate would be where along a single
+    pixel axis two coordinates change together, so a world coordinate
+    (a_min, b_max) can never be valid.
     """
     # Calculate which world axes share multiple pixel axes.
     world_n_dep_dim = axis_correlation_matrix.sum(axis=1)
