@@ -361,7 +361,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return world_coords
 
-    @utils.cube.sanitise_wcs
+    @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for all axes.
@@ -433,7 +433,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return tuple(axes_coords[i] for i in object_indices)
 
-    @utils.cube.sanitise_wcs
+    @utils.cube.sanitize_wcs
     def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for desired axes.
@@ -503,20 +503,56 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    @utils.cube.sanitise_wcs
+    @utils.cube.sanitize_wcs
     def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = utils.cube.get_crop_item(lower_corner, upper_corner, wcs, self.data.shape)
         return self[tuple(item)]
 
-    @utils.cube.sanitise_wcs
-    def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
+    def crop_by_values(self, *points, units=None, wcs=None):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
-        item = utils.cube.get_crop_by_values_item(lower_corner, upper_corner,
-                                                  wcs, self.data.shape, units=units)
+        item = self._get_crop_by_values_item(*points, units=units, wcs=wcs)
         return self[tuple(item)]
+
+    @utils.cube.sanitize_wcs
+    def _get_crop_by_values_item(self, *points, units=None, wcs=None):
+        # Sanitize inputs.
+        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        # Quit out early if we are no-op
+        data_shape = self.data.shape
+        if no_op:
+            return tuple([slice(None)] * len(data_shape))
+
+        n_coords = len(points[0])
+        if units is None:
+            units = [None] * n_coords
+        elif len(units) != n_coords:
+            raise ValueError("units must be None or have same length as corner inputs.")
+
+        # Convert float inputs to quantities using units.
+        types_with_units = (u.Quantity, type(None))
+        for i, point in enumerate(points):
+            for j, (value, unit) in enumerate(zip(point, units)):
+                value_is_float = not isinstance(value, types_with_units)
+                if value_is_float:
+                    if unit is None:
+                        raise TypeError(
+                            "If an element of a point is not a Quantity or None, "
+                            "the corresponding unit must be a valid astropy Unit or unit string."
+                            f"index: {i}; lower type: {type(lower)}; "
+                            f"upper type: {type(upper)}; unit: {unit}")
+                    points[i][j] = u.Quantity(value, unit=unit)
+
+        #points = fill_in_crop_nones(points, wcs, data_shape, True)
+
+        # Convert coordinates to units used by WCS as WCS.world_to_array_index
+        # does not handle quantities.
+        points = [utils.misc.convert_quantities_to_units(point, wcs.world_axis_units)
+                  for point in points]
+
+        return utils.cube.get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
 
     def __str__(self):
         return textwrap.dedent(f"""\

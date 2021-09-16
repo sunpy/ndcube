@@ -8,8 +8,10 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from ndcube.utils import misc as misc_utils
 from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values
 
+__all__ = ["sanitize_wcs", "sanitize_crop_inputs", "get_crop_item_from_points"]
 
-def sanitise_wcs(func):
+
+def sanitize_wcs(func):
     """
     A wrapper for NDCube methods to sanitise the wcs argument.
 
@@ -71,19 +73,17 @@ def get_crop_item(lower_corner, upper_corner, wcs, data_shape):
     upper_corner_values = [u.Quantity(v, unit=u.Unit(unit), copy=False)
                            for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
 
-    points = bounding_box_to_corners(lower_corner_values, upper_corner_values,
-                                     wcs.axis_correlation_matrix)
     return get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
 
 
-def get_crop_by_values_item(lower_corner, upper_corner, wcs, data_shape, units=None):
+def get_crop_by_values_item(*points, wcs, data_shape, units=None):
     # Sanitize inputs.
-    no_op, lower_corner, upper_corner, wcs = sanitize_crop_inputs(lower_corner, upper_corner, wcs)
+    no_op, points, wcs = sanitize_crop_inputs(points, wcs)
     # Quit out early if we are no-op
     if no_op:
         return tuple([slice(None)] * len(data_shape))
 
-    n_coords = len(lower_corner)
+    n_coords = len(points[0])
     if units is None:
         units = [None] * n_coords
     elif len(units) != n_coords:
@@ -91,79 +91,77 @@ def get_crop_by_values_item(lower_corner, upper_corner, wcs, data_shape, units=N
 
     # Convert float inputs to quantities using units.
     types_with_units = (u.Quantity, type(None))
-    for i, (lower, upper, unit) in enumerate(zip(lower_corner, upper_corner, units)):
-        lower_is_float = not isinstance(lower, types_with_units)
-        upper_is_float = not isinstance(upper, types_with_units)
-        if unit is None and (lower_is_float or upper_is_float):
-            raise TypeError("If corner value is not a Quantity or None, "
-                            "unit must be a valid astropy Unit or unit string."
-                            f"index: {i}; lower type: {type(lower)}; "
-                            f"upper type: {type(upper)}; unit: {unit}")
-        if lower_is_float:
-            lower_corner[i] = u.Quantity(lower, unit=unit)
-        if upper_is_float:
-            upper_corner[i] = u.Quantity(upper, unit=unit)
-        # Convert each corner value to the same unit.
-        if lower_corner[i] is not None and upper_corner[i] is not None:
-            upper_corner[i] = upper_corner[i].to(lower_corner[i].unit)
+    for i, point in enumerate(points):
+        for j, (value, unit) in enumerate(zip(point, units)):
+            value_is_float = not isinstance(value, types_with_units)
+            if value_is_float:
+                if unit is None:
+                    raise TypeError(
+                        "If an element of a point is not a Quantity or None, "
+                        "the corresponding unit must be a valid astropy Unit or unit string."
+                        f"index: {i}; lower type: {type(lower)}; "
+                        f"upper type: {type(upper)}; unit: {unit}")
+                points[i][j] = u.Quantity(value, unit=unit)
 
-    lower_corner, upper_corner = fill_in_crop_nones(lower_corner, upper_corner,
-                                                    wcs, data_shape, True)
+    #points = fill_in_crop_nones(points, wcs, data_shape, True)
 
     # Convert coordinates to units used by WCS as WCS.world_to_array_index
     # does not handle quantities.
-    lower_corner = misc_utils.convert_quantities_to_units(lower_corner, wcs.world_axis_units)
-    upper_corner = misc_utils.convert_quantities_to_units(upper_corner, wcs.world_axis_units)
+    points = [misc_utils.convert_quantities_to_units(point, wcs.world_axis_units)
+              for point in points]
 
-    points = bounding_box_to_corners(lower_corner, upper_corner, wcs.axis_correlation_matrix)
     return get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
 
 
-def sanitize_crop_inputs(lower_corner, upper_corner, wcs):
+def sanitize_crop_inputs(points, wcs):
     """Sanitize inputs to NDCube crop methods.
 
     First arg returned signifies whether the inputs imply that cropping
     should be performed or not.
     """
-    lower_corner, upper_corner = sanitize_corners(lower_corner, upper_corner)
-
+    points = list(points)
+    n_points = len(points)
+    n_coords = [None] * n_points
+    values_are_none = [None] * n_points
+    for i, point in enumerate(points):
+        # Ensure each point is a list
+        if isinstance(point, (tuple, list)):
+            points[i] = list(point)
+        else:
+            points[i] = [point]
+        # Record number of objects in each point.
+        # Later we will ensure all points have same number of objects.
+        n_coords[i] = len(points[i])
+        # Check which values in point are None.
+        # Later we will use this to determine whether no operation is needed.
+        # (Boolean arrays are compiled here in a list and then stacked later because
+        # at thisstage we have not confirmed all points are of same length.
+        # If they aren't then generating a stacked array here will cause an error
+        # with a less helpful traceback.)
+        values_are_none[i] = np.array([value is None for value in points[i]])
+    # Not not all points are of same length, error.
+    if len(set(n_coords)) != 1:
+        raise ValueError("All points must have same number of coordinate objects."
+                         f"Number of objects in each point: {n_coords}")
     # Quit out early if we are no-op
-    lower_nones = np.array([lower is None for lower in lower_corner])
-    upper_nones = np.array([upper is None for upper in upper_corner])
-    if (lower_nones & upper_nones).all():
+    if np.stack(values_are_none).all():
         return True, lower_corner, upper_corner, wcs
-
     # Import must be here to avoid circular import.
     from ndcube.extra_coords import ExtraCoords
     if isinstance(wcs, ExtraCoords):
         # Add None inputs to upper and lower corners for new dummy axes.
         n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)
-        lower_corner += [None] * n_dummy_axes
-        upper_corner += [None] * n_dummy_axes
+        points = [point + [None] * n_dummy_axes for point in points]
         # Convert extra coords to WCS describing whole cube.
         wcs = wcs.cube_wcs
-
-    return False, lower_corner, upper_corner, wcs
-
-
-def sanitize_corners(*corners):
-    """Sanitize corner inputs to NDCube crop methods."""
-    corners = [list(corner) if isinstance(corner, (tuple, list)) else [corner]
-               for corner in corners]
-    n_coords = [len(corner) for corner in corners]
-    if len(set(n_coords)) != 1:
-        raise ValueError("All corner inputs must have same number of coordinate objects. "
-                         f"Lengths of corner objects: {n_coords}")
-    return corners
+    return False, points, wcs
 
 
 def fill_in_crop_nones(lower_corner, upper_corner, wcs, data_shape, crop_by_values):
     """
     Replace any instance of None in the inputs with the bounds for that axis.
     """
-    lower_nones = np.array([lower is None for lower in lower_corner])
-    upper_nones = np.array([upper is None for upper in upper_corner])
-
+    # Determine which algorithm to use to convert array indices to world coords.
     if crop_by_values:
         if isinstance(wcs, BaseHighLevelWCS):
             array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
@@ -178,6 +176,8 @@ def fill_in_crop_nones(lower_corner, upper_corner, wcs, data_shape, crop_by_valu
 
     # If user did not provide all intervals,
     # calculate missing intervals based on whole cube range along those axes.
+    lower_nones = np.array([lower is None for lower in lower_corner])
+    upper_nones = np.array([upper is None for upper in upper_corner])
     if lower_nones.any() or upper_nones.any():
         # Calculate real world coords for first and last index for all axes.
         array_intervals = [[0, np.round(d - 1).astype(int)] for d in data_shape]
@@ -191,115 +191,6 @@ def fill_in_crop_nones(lower_corner, upper_corner, wcs, data_shape, crop_by_valu
                 upper_corner[i] = interval[-1]
 
     return lower_corner, upper_corner
-
-
-def bounding_box_to_corners(lower_corner_values, upper_corner_values, axis_correlation_matrix):
-    """
-    Convert two corners of a bounding box to the points of all corners.
-
-
-    This function takes the upper and lower corners of a bounding box and
-    generates all the world coordinates which correspond to a valid pixel
-    coordinate.
-
-    An example of an invalid pixel coordinate would be where along a single
-    pixel axis two coordinates change together, so a world coordinate
-    (a_min, b_max) can never be valid.
-    """
-    # Calculate which world axes share multiple pixel axes.
-    world_n_dep_dim = axis_correlation_matrix.sum(axis=1)
-    # If all world coordinates are independent, bounding box is simple.
-    max_dep_dim = world_n_dep_dim.max()
-    if max_dep_dim < 2:
-        return (tuple(lower_corner_values), tuple(upper_corner_values))
-
-    # Otherwise we need calculate the corners more carefully.
-    # This must be done based on correlation matrix as not all
-    # world axes are independent.
-    # Start by generating array of world corner values assuming
-    # all coordinates are 1D. Strip units and add them back on later.
-    corner_units = [None] * len(lower_corner_values)
-    for i, (lcv, ucv) in enumerate(zip(lower_corner_values, upper_corner_values)):
-        if not isinstance(ucv, type(lcv)):
-            raise TypeError("Corresponding entries in lower and upper corner values "
-                            "must be of same type.")
-        if isinstance(lcv, u.Quantity):
-            corner_units[i] = lcv.unit
-            lower_corner_values[i] = lower_corner_values[i].value
-            upper_corner_values[i] = ucv.to_value(corner_units[i])
-    lower_corner_values = np.asarray(lower_corner_values)
-    upper_corner_values = np.asarray(upper_corner_values)
-    corners = np.stack([lower_corner_values, upper_corner_values])
-
-    # Next, calculate the sets of pixel axes upon which each world axis depends.
-    world_n_dim, pixel_n_dim = axis_correlation_matrix.shape
-    world_axes = np.arange(world_n_dim)
-    dep_pix_axes = np.array([set(np.arange(pixel_n_dim)[axis_correlation_matrix[j]])
-                             for j in world_axes], dtype=object)
-
-    # Iterate through number of shared pixel axes, i, and create additional corners.
-    # Iterate from highest to lowest number of shared axes to reduce duplication.
-    # Do not include world axes sharing only 1 pixel axis, as we have already
-    # captured those in our initial definition of corners, above.
-    for i in range(max_dep_dim, 1, -1):
-        # Extract the world axes whose number of shared pixel axes is i.
-        world_axes_idx = np.where(world_n_dep_dim == i)[0]
-        world_axes_i = world_axes[world_axes_idx]
-        # Determine which specific pixel axes each world axis shares.
-        dep_pix_axes_i = dep_pix_axes[world_axes_idx]
-        # Iterate through world axes with same shared pixel axes
-        # and create required corners.
-        while len(world_axes_i) > 0:
-            dpa = dep_pix_axes_i[0]
-            # To avoid duplication in future iterations of the top-level loop,
-            # remove world axes from top-level list that share the same (or a subset of)
-            # pixel axes as the current world axis.
-            # Iterate backwards to delete last items first so as not to change index
-            # of items yet to be deleted.
-            n = len(dep_pix_axes) - 1  # last element index for converting iterator to index.
-            for j, axes in enumerate(dep_pix_axes[::-1]):
-                if axes.issubset(dpa):
-                    world_axes = np.delete(world_axes, n-j)
-                    world_n_dep_dim = np.delete(world_n_dep_dim, n-j)
-                    dep_pix_axes = np.delete(dep_pix_axes, n-j)
-            # Collect the world axes which share the same set of pixel axes.
-            # To avoid duplication in future iterations of this loop,
-            # remove those world axes from current-level list.
-            # Iterate backwards to delete last items first so as not to change index
-            # of items yet to be deleted.
-            dep_world_axes_i = []
-            n = len(dep_pix_axes_i) - 1  # last element index for converting iterator to index.
-            for j, axes in enumerate(dep_pix_axes_i[::-1]):
-                if axes == dpa:
-                    dep_world_axes_i.append(world_axes_i[n-j])
-                    world_axes_i = np.delete(world_axes_i, n-j)
-                    dep_pix_axes_i = np.delete(dep_pix_axes_i, n-j)
-            # We started this function by defining the corners for 1D axes.
-            # This means that to fully describe the corners, the number of world axes
-            # we need is the number of shared pixel axes minus 1.
-            # If there are more, discard the excess.
-            ii = i - 1
-            dep_world_axes_i = np.array(dep_world_axes_i)[:ii]
-            # For i number of shared pixel coords, we need 2^i corners.
-            # Add the required number of corners by duplicating current one
-            # then edit them so they contain the correct world values.
-            # First double the number of corners.
-            corners = np.repeat(corners[np.newaxis], 2, axis=0)
-            # Then multiple the number of corners of ii (i-1) since we
-            # started off by defining two corners.
-            corners = np.repeat(corners[np.newaxis], ii, axis=0)
-            # Fill in the correct world values for the new corners.
-            for j in range(ii):
-                corners[j, 0, :, dep_world_axes_i] = lower_corner_values[dep_world_axes_i]
-                corners[j, 1, :, dep_world_axes_i] = upper_corner_values[dep_world_axes_i]
-            # Reshape corners array so it will be predictable for next iteration.
-            corners = corners.reshape((np.prod(corners.shape[:3]), corners.shape[-1]))
-
-    # Reattach units if were present in input.
-    corners = tuple(tuple(corner * corner_unit if corner_unit else corner
-                          for corner, corner_unit in zip(corners[i], corner_units))
-                    for i in range(corners.shape[0]))
-    return corners
 
 
 def get_crop_item_from_points(*world_points_values, wcs, data_shape):
