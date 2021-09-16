@@ -66,7 +66,7 @@ Remember that due to convention, the order of WCS axes is reversed relative to t
   >>> # Now instantiate the NDCube
   >>> my_cube = NDCube(data, wcs=wcs)
 
-The data array is stored in ``mycube.data`` while the WCS object is stored in ``my_cube.wcs``.
+The data array is stored in ``my_cube.data`` while the WCS object is stored in ``my_cube.wcs``.
 The ``.data`` attribute should only be used to access specific raw data values.
 When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` instance as a whole so as to ensure that supporting data --- e.g. coordinates, uncertainties, mask --- remain consistent.
 (See :ref:`cube_slicing`.)
