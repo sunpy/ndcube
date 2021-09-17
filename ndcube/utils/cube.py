@@ -7,8 +7,10 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube.utils import misc as misc_utils
 from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values
+from ndcube.utils.wcs import get_dependent_world_axes
 
-__all__ = ["sanitize_wcs", "sanitize_crop_inputs", "get_crop_item_from_points"]
+__all__ = ["sanitize_wcs", "sanitize_crop_inputs", "sanitize_missing_crop_coords",
+           "get_crop_item_from_points"]
 
 
 def sanitize_wcs(func):
@@ -132,31 +134,75 @@ def sanitize_crop_inputs(points, wcs):
         # Record number of objects in each point.
         # Later we will ensure all points have same number of objects.
         n_coords[i] = len(points[i])
-        # Check which values in point are None.
-        # Later we will use this to determine whether no operation is needed.
-        # (Boolean arrays are compiled here in a list and then stacked later because
-        # at thisstage we have not confirmed all points are of same length.
-        # If they aren't then generating a stacked array here will cause an error
-        # with a less helpful traceback.)
-        values_are_none[i] = np.array([value is None for value in points[i]])
     # Not not all points are of same length, error.
     if len(set(n_coords)) != 1:
         raise ValueError("All points must have same number of coordinate objects."
                          f"Number of objects in each point: {n_coords}")
-    # Quit out early if we are no-op
-    if np.stack(values_are_none).all():
-        return True, lower_corner, upper_corner, wcs
     # Import must be here to avoid circular import.
     from ndcube.extra_coords import ExtraCoords
     if isinstance(wcs, ExtraCoords):
-        # Add None inputs to upper and lower corners for new dummy axes.
+        # Determine how many dummy axes are needed
         n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)
-        points = [point + [None] * n_dummy_axes for point in points]
+        if n_dummy_axes > 0:
+            points = [point + [None] * n_dummy_axes for point in points]
         # Convert extra coords to WCS describing whole cube.
         wcs = wcs.cube_wcs
     return False, points, wcs
 
 
+def sanitize_missing_crop_coords(points, wcs, data_shape, crop_by_values):
+    # Determine which world axes are assigned None in each point.
+    # Currently, if coordinates provided for a world axis in one point, 
+    # coordinates must be provided for that world axis in all points.
+    n_points = len(points)
+    coord_is_none = np.array([[value is None for value in point] for point in points], dtype=bool)
+    coord_check = coord_is_none.sum(axis=0)
+    if not set(coord_check).issubset({0, n_points}):
+        raise TypeError("If any world coordinate point includes a None, "
+                        "all points must have None for the same world axis.")
+    none_axes = set(np.where(coord_check == n_points)[0])
+    # Confirm that for any axes marked None, axes dependent on that axis is also None.
+    for axis in none_axes:
+        dep_axes = set(get_dependent_world_axes(axis, wcs.axis_correlation_matrix))
+        if not dep_axes.issubset(none_axes):
+            raise TypeError(f"Coordinates not provided for world axis {axis}, "
+                            f"but coordinates provided for one of dependent axes {dep_axes}. "
+                            "If coordinates are provided for a world axis, "
+                            "they must also be provided for its dependent axes.")
+
+    # Determine which algorithm to use to convert array indices to world coords.
+    if crop_by_values:
+        if isinstance(wcs, BaseHighLevelWCS):
+            array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
+        else:
+            array_index_to_world = wcs.array_index_to_world_values
+    else:
+        if isinstance(wcs, BaseHighLevelWCS):
+            array_index_to_world = wcs.array_index_to_world
+        else:
+            array_index_to_world = HighLevelWCSWrapper(wcs).array_index_to_world
+
+    # Calculate real world coords for first and last index for all axes.
+    array_intervals = [[0, np.round(d - 1).astype(int)] for d in data_shape]
+    intervals = array_index_to_world(*array_intervals)
+
+    # If there is only one point, create another to represent the full axis range.
+    if len(points) == 1:
+        points *= 2
+
+    # For all but last the point, replace coord objects for selected axes
+    # with the lower bound of the axis.
+    for i, point in enumerate(points[:-1]):
+        for j in none_axes:
+            points[i][j] = intervals[j][0]
+    # For the last point, replace coord objects for selected axes
+    # with the upper bound of the axis.
+    for j in none_axes:
+        points[-1][j] = intervals[j][-1]
+
+    return points
+
+    
 def fill_in_crop_nones(lower_corner, upper_corner, wcs, data_shape, crop_by_values):
     """
     Replace any instance of None in the inputs with the bounds for that axis.
@@ -171,7 +217,6 @@ def fill_in_crop_nones(lower_corner, upper_corner, wcs, data_shape, crop_by_valu
         if isinstance(wcs, BaseHighLevelWCS):
             array_index_to_world = wcs.array_index_to_world
         else:
-            print(type(wcs))
             array_index_to_world = HighLevelWCSWrapper(wcs).array_index_to_world
 
     # If user did not provide all intervals,

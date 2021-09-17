@@ -518,10 +518,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def _get_crop_by_values_item(self, *points, units=None, wcs=None):
+        data_shape = self.data.shape
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
-        data_shape = self.data.shape
         if no_op:
             return tuple([slice(None)] * len(data_shape))
 
@@ -541,11 +541,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                         raise TypeError(
                             "If an element of a point is not a Quantity or None, "
                             "the corresponding unit must be a valid astropy Unit or unit string."
-                            f"index: {i}; lower type: {type(lower)}; "
-                            f"upper type: {type(upper)}; unit: {unit}")
+                            f"index: {i}; coord type: {type(value)}; unit: {unit}")
                     points[i][j] = u.Quantity(value, unit=unit)
 
-        #points = fill_in_crop_nones(points, wcs, data_shape, True)
+        points = utils.cube.sanitize_missing_crop_coords(points, wcs, data_shape, True)
 
         # Convert coordinates to units used by WCS as WCS.world_to_array_index
         # does not handle quantities.
