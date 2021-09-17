@@ -1,7 +1,7 @@
-Extending ndcube in other packages
+Extending ndcube in Other Packages
 ==================================
 
-This section of the documentation is aimed at people developing packages which extend the functionality in ndcube in other packages.
+This section is aimed at people developing packages which extend the functionality of ndcube data classes.
 
 Requiring ndcube in your package
 --------------------------------
@@ -16,40 +16,41 @@ When including ndcube in your package requirements you should include either of 
 If you wish for all extra requirements to be installed you can use ``ndcube[all]``.
 
 
-Subclassing an ndcube object
+Subclassing an ndcube Data Class
 ----------------------------
 
 
-Before you subclass
+Before You Subclass
 ###################
 
 The data classes in ndcube have been designed to be subclassed and extended.
-One word of warning before you go ahead and write ``myclass(NDCube)``: think about if the functionality you are writing is more generally applicable.
+One word of warning before you write ``myclass(NDCube)`` though: think about if the functionality you are writing is more generally applicable.
 Imagine for a moment that you are writing a class which is specifically for a cube with space, space, wavelength axes so that you can do some operations like fitting along the wavelength axis.
-Your subclass of ``NDCube`` may provide great functionality for the users who have data which meets your assumptions.
+Your subclass of ``NDCube`` may provide great functionality for the users who have data which meet your assumptions.
 However, if I come along with a space, space, wavelength, time 4D cube I may want to make use of your fitting functions along the wavelength axis.
 
-**Can you write your functionality in a way which takes any ``NDCube`` object which has any specific combination of physical types?**
+**Can you write your functionality in a way that takes any ndcube object with any specific combination of physical types?**
 
 
 Subclassing
 ###########
 
 When you are subclassing, try to use as much of the upstream object properties as possible.
-Doing this will make your life easier, by being able to reuse functionality designed for all different types of ndcube classes.
-For instance if your class has a special property ``.info`` it would not automatically be carried through operations such as slicing and reprojecting, you would need to customise all these operations.
+Doing this will enable you to reuse functionality designed for all ndcube classes and hence make your life easier.
+For instance if your class has a special property ``.info`` it would not automatically be carried through operations such as slicing and reprojecting.
+You would need to customize all these operations.
 If instead you put an ``info`` key in the ``meta`` dictionary it would automatically be copied through the appropriate operations.
 
 If your subclass does have custom attributes you need to propagate through methods and functions, you will probably need to overload these methods in your subclass.
 On `.NDCube` the only method which returns another instance of your subclass is currently `~.NDCube.reproject_to`.
 
 
-Customising the visualisation
+Customizing the Visualization
 #############################
 
-The ``.plotter`` attribute of the ``NDCube`` class is configurable and allows you to customise the visualization functionality.
+The ``.plotter`` attribute of the ``NDCube`` class is configurable and allows you to customize the visualization functionality.
 This can be as minor as changing the defaults or as complete as using an alternative visualization library.
-To customise the default type for your subclass first you need to implement a custom class inheriting from `ndcube.visualization.BasePlotter`.
+To customize the default type for your subclass, you first need to implement a custom class inheriting from `ndcube.visualization.BasePlotter`.
 This class should implement a default ``.plot`` method which will be called by the ``NDCube.plot`` method.
 As many other methods as you wish can be implemented on the plotter, to be called using the ``.plotter.mymethod()`` API.
 
