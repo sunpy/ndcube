@@ -112,14 +112,15 @@ def test_get_dependent_array_axes(axis_correlation_matrix):
 
 def test_get_dependent_world_axes(axis_correlation_matrix):
     output = utils.wcs.get_dependent_world_axes(3, axis_correlation_matrix)
-    expected = np.array([0, 3])
+    expected = np.array([0, 1, 3])
     print(output, expected)
     assert all(output == expected)
 
 
 def test_get_dependent_physical_types(test_wcs):
     output = utils.wcs.get_dependent_physical_types("time", test_wcs)
-    expected = np.array(['custom:pos.helioprojective.lon', 'time'])
+    expected = np.array(['custom:pos.helioprojective.lon',
+                         'custom:pos.helioprojective.lat', 'time'])
     assert all(output == expected)
 
 
