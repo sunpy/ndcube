@@ -386,7 +386,6 @@ def test_array_axis_physical_types(ndcube_3d_ln_lt_l):
         assert all([physical_type in expected[i] for physical_type in output[i]])
 
 
-"""
 def test_crop(ndcube_4d_ln_lt_l_t):
     intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])
     lower_corner = [coord[0] for coord in intervals]
@@ -396,6 +395,7 @@ def test_crop(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+"""
 def test_crop_tuple_non_tuple_input(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
@@ -524,7 +524,7 @@ def test_crop_by_values_with_units(ndcube_4d_ln_lt_l_t):
     output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=units)
     helpers.assert_cubes_equal(output, expected)
 
-"""
+
 def test_crop_by_values_with_nones(ndcube_4d_ln_lt_l_t):
     lower_corner = [None] * 4
     lower_corner[0] = 0.5 * u.min
@@ -540,7 +540,7 @@ def test_crop_by_values_all_nones(ndcube_4d_ln_lt_l_t):
     upper_corner = [None] * 4
     output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, ndcube_4d_ln_lt_l_t)
-"""
+
 
 def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
     # Test units not being the same length as the inputs
