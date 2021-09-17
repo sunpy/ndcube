@@ -34,14 +34,10 @@ def axis_correlation_matrix():
 
 
 def _axis_correlation_matrix():
-    shape = (4, 4)
-    acm = np.zeros(shape, dtype=bool)
-    for i in range(min(shape)):
-        acm[i, i] = True
-    acm[0, 1] = True
-    acm[1, 0] = True
-    acm[-1, 0] = True
-    return acm
+    return np.array([[True, True, False, False],
+                     [True, True, False, False],
+                     [False, False, True, False],
+                     [True, False, False, True]], dtype=bool)
 
 
 @pytest.fixture
