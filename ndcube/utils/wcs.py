@@ -308,7 +308,7 @@ def get_dependent_world_axes(world_axis, axis_correlation_matrix):
     # which world coordinates are linked to which other world coordinates.
     # To do this we take a row from the matrix and find if there are
     # any entries in common with all other rows in the matrix.
-    pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1].T
+    pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1]
     dependent_world_axes = np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
     return dependent_world_axes
 
