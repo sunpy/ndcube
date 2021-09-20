@@ -24,6 +24,7 @@ from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
+from ndcube.utils.wcs import get_dependent_world_axes
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
@@ -309,17 +310,37 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
-    def _generate_world_coords(self, pixel_corners, wcs):
+    def _generate_world_coords(self, pixel_corners, wcs, get_sizes=False):
         # TODO: We can improve this by not always generating all coordinates
         # To make our lives easier here we generate all the coordinates for all
         # pixels and then choose the ones we want to return to the user based
         # on the axes argument. We could be smarter by integrating this logic
         # into the main loop, this would potentially reduce the number of calls
         # to pixel_to_world_values
+        """
+        Create meshgrid of all pixels transformed to world coordinates.
 
-        # Create meshgrid of all pixel coordinates.
-        # If user, wants pixel_corners, set pixel values to pixel pixel_corners.
-        # Else make pixel centers.
+        Parameters
+        ----------
+        pixel_corners: `bool`
+            If `True` then instead of returning the coordinates at the centers of the
+            pixels, the coordinates at the pixel corners will be returned. This increases
+            the size of the output by 1 in all dimensions as all corners are returned.
+
+        wcs : `~astropy.wcs.wcsapi.BaseHighLevelWCS`, `~astropy.wcs.wcsapi.BaseLowLevelWCS`
+            The WCS to use to convert pixel values to world coordinates.
+
+        get_sizes: `bool`, optional
+            Only calculate sizes of all separate coordinate arrays without creating and
+            transforming them.
+
+        Returns
+        -------
+        world_coords: `list`
+            An iterable of `Quantity` objects representing the real world coordinates in
+            all axes; or, for `get_sizes=True`, of sizes of all separate coordinate arrays.
+        """
+
         pixel_shape = self.data.shape[::-1]
         if pixel_corners:
             pixel_shape = tuple(np.array(pixel_shape) + 1)
@@ -334,6 +355,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             if wcs is None:
                 return []
 
+        if get_sizes:
+            world_sizes = []
         world_coords = [None] * wcs.world_n_dim
         for (pixel_axes_indices, world_axes_indices) in _split_matrix(wcs.axis_correlation_matrix):
             # First construct a range of pixel indices for this set of coupled dimensions
@@ -343,6 +366,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # And inject 0s for those coordinates
             for idx in non_corr_axes:
                 sub_range.insert(idx, 0)
+            # If requested, only calculate and return sizes
+            if get_sizes:
+                world_sizes.append(np.prod([np.array([r]).size for r in sub_range]))
+                continue
             # Generate a grid of broadcastable pixel indices for all pixel dimensions
             grid = np.meshgrid(*sub_range, indexing='ij')
             # Convert to world coordinates
@@ -357,6 +384,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 array_slice[wcs.axis_correlation_matrix[idx]] = slice(None)
                 tmp_world = world[idx][tuple(array_slice)].T
                 world_coords[idx] = tmp_world
+
+        if get_sizes:
+            return world_sizes
 
         for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
             world_coords[i] = coord << u.Unit(unit)
@@ -507,7 +537,127 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    def crop(self, *points, wcs=None):
+    @utils.misc.sanitise_wcs
+    def axis_world_coords_limits(self, *axes, pixel_corners=False, wcs=None, max_size=None):
+        """
+        Returns (estimated) extrema of the WCS coordinate values for all axes.
+
+        Parameters
+        ----------
+        axes: `int` or `str`, or multiple `int` or `str`, optional
+            Axis number in numpy ordering or unique substring of
+            `~ndcube.NDCube.world_axis_physical_types`
+            of axes for which real world coordinates are desired.
+            axes=None implies all axes will be returned.
+
+        pixel_corners: `bool`, optional
+            If `True` then instead of returning the limits for the centers of the pixels,
+            the limits for the pixel corners will be returned. This increases the resulting
+            size over the limits in all dimensions as all corner positions are included.
+
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+            The WCS object used to calculate the world coordinates.
+            Although technically this can be any valid WCS, it will typically be
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` which combines both
+            the WCS and extra coords.
+            Defaults to the ``.wcs`` property.
+
+        max_size: `int`, optional
+            Sets the maximum size of the pixel grid for which world coordinates will be
+            calculated in full to determine the extrema. If this size is exceeded, for
+            faster evaluation only the corners in pixel space, plus if possible, the axes
+            at the reference pixel values as given by ``wcs.wcs.crpix``, are considered.
+
+        Returns
+        -------
+        axes_coords: `list`
+            An iterable of "high level" objects containing the minima and maxima in
+            real world coordinates for the axes requested by user.
+            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
+            The types returned are determined by the WCS object.
+            These objects will have length 2 along each axis.
+
+        Example
+        -------
+        >>> NDCube.axis_world_coords_limits('lat', 'lon', max_size=100000)  # doctest: +SKIP
+        >>> NDCube.axis_world_coords_limits(2)  # doctest: +SKIP
+
+        """
+        if isinstance(wcs, BaseHighLevelWCS):
+            wcs = wcs.low_level_wcs
+
+        if max_size is not None:
+            full_size = np.sum(self._generate_world_coords(pixel_corners, wcs, get_sizes=True))
+
+        # Check if we only probe pixel bounding box to speed up computation
+        if max_size is None or full_size <= max_size:
+            axes_coords = self._generate_world_coords(pixel_corners, wcs)
+        else:
+            if pixel_corners:
+                lower = np.ones(wcs.naxis) * -0.5
+                upper = np.array(wcs.array_shape[::-1]) - 0.5
+            else:
+                lower = np.zeros(wcs.naxis)
+                upper = np.array(wcs.array_shape[::-1]) - 1
+            bbox = np.array(self._bounding_box_to_points(lower, upper, wcs)).T
+            # If wcs has a FITS-type Wcsprm, try to include CRPIX axes
+            try:
+                bbox_l = [bbox]
+                for ax, pix in enumerate(wcs.wcs.crpix):
+                    sub_range = np.maximum(wcs.wcs.crpix - 1, 0).tolist()
+                    for dwa in get_dependent_world_axes(ax, wcs.axis_correlation_matrix):
+                        if dwa != ax:
+                            sub_range[ax] = np.arange(lower[ax], upper[ax])
+                    # Generate a grid of broadcastable pixel indices for dependent axes
+                    grid = np.meshgrid(*sub_range, indexing='ij')
+                    # Check if size of the subgrid now exceeds limit; in that case cut all
+                    # dependent axes to edge values (perhaps should undersample range instead?)
+                    if grid[0].size > max_size:
+                        for i, r in enumerate(sub_range):
+                            if np.size(r) > 2:
+                                sub_range[i] = r[[0, -1]]
+                        grid = np.meshgrid(*sub_range, indexing='ij')
+                    grid = np.array(grid).squeeze()
+                    if grid.ndim == bbox.ndim:
+                        bbox_l.append(grid)
+                bbox = np.concatenate(bbox_l, axis=1)
+            except AttributeError:
+                pass
+            # axes_coords = [None] * wcs.world_n_dim
+            # Convert to world coordinates
+            axes_coords = list(wcs.pixel_to_world_values(*bbox))
+            for i, (coord, unit) in enumerate(zip(axes_coords, wcs.world_axis_units)):
+                axes_coords[i] = coord << u.Unit(unit)
+
+        axes_coords = [u.Quantity([ac.min(), ac.max()]) for ac in axes_coords]
+
+        if isinstance(wcs, ExtraCoords):
+            wcs = wcs.wcs
+
+        axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
+
+        if not axes:
+            return tuple(axes_coords)
+
+        object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
+        unique_obj_names = utils.misc.unique_sorted(object_names)
+        world_axes_for_obj = [np.where(object_names == name)[0] for name in unique_obj_names]
+
+        # Create a mapping from world index in the WCS to object index in axes_coords
+        world_index_to_object_index = {}
+        for object_index, world_axes in enumerate(world_axes_for_obj):
+            for world_index in world_axes:
+                world_index_to_object_index[world_index] = object_index
+
+        world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
+        object_indices = utils.misc.unique_sorted(
+            [world_index_to_object_index[world_index] for world_index in world_indices]
+        )
+
+        return tuple(axes_coords[i] for i in object_indices)
+
+    @utils.misc.sanitise_wcs
+    def crop(self, lower_corner, upper_corner, wcs=None):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_item(*points, wcs=wcs)
