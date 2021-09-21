@@ -190,6 +190,56 @@ def wcs_3d_lt_ln_l():
 
 
 @pytest.fixture
+def wcs_3d_l_ra_dec():
+    header = {
+        'CTYPE1': 'WAVE    ',
+        'CUNIT1': 'Angstrom',
+        'CDELT1': 0.2,
+        'CRPIX1': 0,
+        'CRVAL1': 10,
+
+        'CTYPE2': 'RA---TAN',
+        'CUNIT2': 'deg',
+        'CDELT2': 0.1,
+        'CRPIX2': 200,
+        'CRVAL2': 90.5,
+
+        'CTYPE3': 'DEC--TAN',
+        'CUNIT3': 'deg',
+        'CDELT3': 0.08,
+        'CRPIX3': 150,
+        'CRVAL3': 30.4,
+    }
+
+    return WCS(header=header)
+
+
+@pytest.fixture
+def wcs_3d_l_ra_pol():
+    header = {
+        'CTYPE1': 'WAVE    ',
+        'CUNIT1': 'Angstrom',
+        'CDELT1': 0.2,
+        'CRPIX1': 0,
+        'CRVAL1': 10,
+
+        'CTYPE2': 'RA---TAN',
+        'CUNIT2': 'deg',
+        'CDELT2': 0.1,
+        'CRPIX2': 200,
+        'CRVAL2': 90.5,
+
+        'CTYPE3': 'DEC--TAN',
+        'CUNIT3': 'deg',
+        'CDELT3': 0.08,
+        'CRPIX3': 150,
+        'CRVAL3': 80.4,
+    }
+
+    return WCS(header=header)
+
+
+@pytest.fixture
 def wcs_2d_lt_ln():
     spatial = {
         'CTYPE1': 'HPLT-TAN',
@@ -434,6 +484,38 @@ def ndcube_3d_ln_lt_l_ec_time(wcs_3d_l_lt_ln, time_and_simple_extra_coords_2d):
     )
     cube._extra_coords = time_and_simple_extra_coords_2d
     cube._extra_coords._ndcube = cube
+    return cube
+
+
+@pytest.fixture
+def ndcube_3d_l_ra_dec(wcs_3d_l_ra_dec, simple_extra_coords_3d):
+    shape = (400, 300, 10)
+    wcs_3d_l_ra_dec.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_l_ra_dec,
+        mask=mask,
+        uncertainty=data,
+    )
+    cube._extra_coords = simple_extra_coords_3d
+    return cube
+
+
+@pytest.fixture
+def ndcube_3d_l_ra_pol(wcs_3d_l_ra_pol, simple_extra_coords_3d):
+    shape = (400, 300, 10)
+    wcs_3d_l_ra_pol.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_l_ra_pol,
+        mask=mask,
+        uncertainty=data,
+    )
+    cube._extra_coords = simple_extra_coords_3d
     return cube
 
 
