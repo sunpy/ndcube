@@ -17,7 +17,7 @@ If you wish for all extra requirements to be installed you can use ``ndcube[all]
 
 
 Subclassing an ndcube Data Class
-----------------------------
+--------------------------------
 
 
 Before You Subclass
