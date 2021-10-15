@@ -23,7 +23,8 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
+from ndcube.utils.wcs_high_level_conversion import (high_level_objects_to_values,
+                                                    values_to_high_level_objects)
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
@@ -503,12 +504,35 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    @utils.cube.sanitize_wcs
-    def crop(self, lower_corner, upper_corner, wcs=None):
+    def crop(self, *points, wcs=None):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
-        item = utils.cube.get_crop_item(lower_corner, upper_corner, wcs, self.data.shape)
+        item = self._get_crop_item(*points, wcs=wcs)
         return self[tuple(item)]
+
+    @utils.cube.sanitize_wcs
+    def _get_crop_item(self, *points, wcs=None):
+        data_shape = self.data.shape
+        # Sanitize inputs.
+        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        # Quit out early if we are no-op
+        if no_op:
+            return tuple([slice(None)] * len(data_shape))
+
+        points = utils.cube.sanitize_missing_crop_coords(points, wcs, data_shape, False)
+
+        if isinstance(wcs, BaseHighLevelWCS):
+            wcs = wcs.low_level_wcs
+
+        point_values = []
+        for point in points:
+            pv = high_level_objects_to_values(*point, low_level_wcs=wcs)
+            pv = [u.Quantity(v, unit=u.Unit(unit), copy=False)
+                  for v, unit in zip(pv, wcs.world_axis_units)]
+            point_values.append(pv)
+
+        return utils.cube.get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
+
 
     def crop_by_values(self, *points, units=None, wcs=None):
         # The docstring is defined in NDCubeABC
