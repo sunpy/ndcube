@@ -1,13 +1,14 @@
 import inspect
 from functools import wraps
+from itertools import chain
 
 import astropy.units as u
 import numpy as np
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube.utils import misc as misc_utils
+from ndcube.utils import wcs as wcs_utils
 from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values
-from ndcube.utils.wcs import get_dependent_world_axes
 
 __all__ = ["sanitize_wcs", "sanitize_crop_inputs", "sanitize_missing_crop_coords",
            "get_crop_item_from_points"]
@@ -124,7 +125,7 @@ def sanitize_crop_inputs(points, wcs):
     points = list(points)
     n_points = len(points)
     n_coords = [None] * n_points
-    values_are_none = [None] * n_points
+    values_are_none = [False] * n_points
     for i, point in enumerate(points):
         # Ensure each point is a list
         if isinstance(point, (tuple, list)):
@@ -134,6 +135,13 @@ def sanitize_crop_inputs(points, wcs):
         # Record number of objects in each point.
         # Later we will ensure all points have same number of objects.
         n_coords[i] = len(points[i])
+        # Confirm whether point contains at least one None entry.
+        if all([coord is None for coord in points[i]]):
+            values_are_none[i] = True
+    # If no points contain a coord, i.e. if all entries in all points are None,
+    # set no-op flag to True and exit.
+    if all(values_are_none):
+        return True, points, wcs
     # Not not all points are of same length, error.
     if len(set(n_coords)) != 1:
         raise ValueError("All points must have same number of coordinate objects."
@@ -163,7 +171,7 @@ def sanitize_missing_crop_coords(points, wcs, data_shape, crop_by_values):
     none_axes = set(np.where(coord_check == n_points)[0])
     # Confirm that for any axes marked None, axes dependent on that axis is also None.
     for axis in none_axes:
-        dep_axes = set(get_dependent_world_axes(axis, wcs.axis_correlation_matrix))
+        dep_axes = set(wcs_utils.get_dependent_world_axes(axis, wcs.axis_correlation_matrix))
         if not dep_axes.issubset(none_axes):
             raise TypeError(f"Coordinates not provided for world axis {axis}, "
                             f"but coordinates provided for one of dependent axes {dep_axes}. "
@@ -285,3 +293,62 @@ def get_crop_item_from_points(*world_points_values, wcs, data_shape):
     upper = [int(np.clip(index, 0, data_shape[i])) for i, index in enumerate(upper)]
 
     return tuple(slice(start, stop) for start, stop in zip(lower, upper))
+
+
+def _get_crop_item_from_points(points, wcs, crop_by_values):
+    # Define a list of lists to hold the array indices of the points
+    # where each inner list gives the index of all points for that array axis.
+    combined_points_array_idx = [[]] * wcs.pixel_n_dim
+    # For each point compute the corresponding array indices.
+    for point in points:
+        # Get the arrays axes associated with each element in point.
+        if crop_by_values:
+            point_inputs_array_axes = []
+            for i in range(wcs.world_n_dim):
+                pix_axes = np.array(
+                    wcs_utils.world_axis_to_pixel_axes(i, wcs.axis_correlation_matrix))
+                point_inputs_array_axes.append(tuple(
+                    wcs_utils.convert_between_array_and_pixel_axes(pix_axes, wcs.pixel_n_dim)))
+            point_inputs_array_axes = tuple(point_inputs_array_axes)
+        else:
+            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(wcs)
+        # Get indices of array axes which correspond to only None inputs in point
+        # as well as those that correspond to a coord.
+        point_indices_with_inputs = []
+        array_axes_with_input = []
+        for i, coord in enumerate(point):
+            if coord is not None:
+                point_indices_with_inputs.append(i)
+                array_axes_with_input.append(point_inputs_array_axes[i])
+        array_axes_with_input = set(chain.from_iterable(array_axes_with_input))
+        array_axes_without_input = set(range(wcs.pixel_n_dim)) - array_axes_with_input
+        # Slice out the axes that do not correspond to a coord
+        # from the WCS and the input point.
+        wcs_slice = np.array([slice(None)] * wcs.pixel_n_dim)
+        if len(array_axes_without_input):
+            wcs_slice[np.array(list(array_axes_without_input))] = 0
+        sliced_wcs = wcs[tuple(wcs_slice)]
+        sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
+        # Derive the array indices of the input point and place each index
+        # in the list corresponding to its axis.
+        if crop_by_values:
+            point_array_indices = sliced_wcs.world_to_array_index_values(*sliced_point)
+            # If returned value is a 0-d array, convert to a length-1 tuple.
+            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
+                point_array_indices = (point_array_indices.item(),)
+            else:
+                # Convert from scalar arrays to scalars
+                point_array_indices = tuple(a.item() for a in point_array_indices)
+        else:
+            point_array_indices = sliced_wcs.world_to_array_index(*sliced_point)
+            # If returned value is a 0-d array, convert to a length-1 tuple.
+            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
+                point_array_indices = (point_array_indices.item(),)
+        for i, axis in zip(point_array_indices, array_axes_with_input):
+            combined_points_array_idx[axis] = combined_points_array_idx[axis] + [i]
+    # Define slice item with which to slice cube.
+    item = tuple([slice(None) if axis_indices == []
+                  else slice(min(axis_indices), max(axis_indices) + 1)
+                  for axis_indices in combined_points_array_idx])
+    return item
+

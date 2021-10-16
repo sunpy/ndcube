@@ -513,7 +513,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def _get_crop_item(self, *points, wcs=None):
-        return utils.cube._get_crop_item_from_points(points, wcs, False)
+        # Sanitize inputs.
+        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        # Quit out early if we are no-op
+        if no_op:
+            return tuple([slice(None)] * wcs.pixel_n_dim)
+        else:
+            return utils.cube._get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
         # The docstring is defined in NDCubeABC
@@ -523,6 +529,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def _get_crop_by_values_item(self, *points, units=None, wcs=None):
+        """
         data_shape = self.data.shape
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
@@ -557,6 +564,31 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                   for point in points]
 
         return utils.cube.get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
+        """
+        # Sanitize inputs.
+        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        # Quit out early if we are no-op
+        if no_op:
+            return tuple([slice(None)] * wcs.pixel_n_dim)
+        # Convert float inputs to quantities using units.
+        n_coords = len(points[0])
+        if units is None:
+            units = [None] * n_coords
+        elif len(units) != n_coords:
+            raise ValueError("units must be None or have same length as corner inputs.")
+        types_with_units = (u.Quantity, type(None))
+        for i, point in enumerate(points):
+            for j, (value, unit) in enumerate(zip(point, units)):
+                value_is_float = not isinstance(value, types_with_units)
+                if value_is_float:
+                    if unit is None:
+                        raise TypeError(
+                            "If an element of a point is not a Quantity or None, "
+                            "the corresponding unit must be a valid astropy Unit or unit string."
+                            f"index: {i}; coord type: {type(value)}; unit: {unit}")
+                    points[i][j] = u.Quantity(value, unit=unit)
+        
+        return utils.cube._get_crop_item_from_points(points, wcs, True)
 
     def __str__(self):
         return textwrap.dedent(f"""\

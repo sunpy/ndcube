@@ -416,6 +416,7 @@ class ExtraCoords(ExtraCoordsABC):
 
     @property
     def _cube_array_axes_without_extra_coords(self):
+        """Return the array axes not associated with any extra coord."""
         return set(range(len(self._ndcube.dimensions))) - set(self.mapping)
 
     def __str__(self):
