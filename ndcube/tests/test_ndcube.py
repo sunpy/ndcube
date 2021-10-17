@@ -426,14 +426,13 @@ def test_crop_1d_independent(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
-"""
 def test_crop_1d_dependent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, :, 0, 0]
     sky_range = cube_1d.wcs.array_index_to_world([0, 1])
     expected = cube_1d[0:2]
     output = cube_1d.crop([sky_range[0]], [sky_range[-1]])
     helpers.assert_cubes_equal(output, expected)
-"""
+
 
 def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
@@ -450,7 +449,7 @@ def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     output = cube.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
-"""
+
 def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
     cube = ndcube_3d_ln_lt_l_ec_time
     lower_corner = (Time("2000-01-01T15:00:00", scale="utc", format="fits"), None)
@@ -526,7 +525,7 @@ def test_crop_by_values_with_units(ndcube_4d_ln_lt_l_t):
     expected = ndcube_4d_ln_lt_l_t[1:3, 0:2, 0:2, 0:3]
     output = ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=units)
     helpers.assert_cubes_equal(output, expected)
-"""
+
 
 def test_crop_by_values_with_nones(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t

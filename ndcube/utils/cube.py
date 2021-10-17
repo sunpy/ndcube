@@ -4,7 +4,7 @@ from itertools import chain
 
 import astropy.units as u
 import numpy as np
-from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
+from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import misc as misc_utils
 from ndcube.utils import wcs as wcs_utils
@@ -155,6 +155,9 @@ def sanitize_crop_inputs(points, wcs):
             points = [point + [None] * n_dummy_axes for point in points]
         # Convert extra coords to WCS describing whole cube.
         wcs = wcs.cube_wcs
+    # Ensure WCS is low level.
+    if isinstance(wcs, BaseHighLevelWCS):
+        wcs = wcs.low_level_wcs
     return False, points, wcs
 
 
@@ -311,7 +314,8 @@ def _get_crop_item_from_points(points, wcs, crop_by_values):
                     wcs_utils.convert_between_array_and_pixel_axes(pix_axes, wcs.pixel_n_dim)))
             point_inputs_array_axes = tuple(point_inputs_array_axes)
         else:
-            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(wcs)
+            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(
+                HighLevelWCSWrapper(wcs))
         # Get indices of array axes which correspond to only None inputs in point
         # as well as those that correspond to a coord.
         point_indices_with_inputs = []
@@ -327,7 +331,7 @@ def _get_crop_item_from_points(points, wcs, crop_by_values):
         wcs_slice = np.array([slice(None)] * wcs.pixel_n_dim)
         if len(array_axes_without_input):
             wcs_slice[np.array(list(array_axes_without_input))] = 0
-        sliced_wcs = wcs[tuple(wcs_slice)]
+        sliced_wcs = SlicedLowLevelWCS(wcs, slices=tuple(wcs_slice))
         sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
         # Derive the array indices of the input point and place each index
         # in the list corresponding to its axis.
@@ -340,7 +344,8 @@ def _get_crop_item_from_points(points, wcs, crop_by_values):
                 # Convert from scalar arrays to scalars
                 point_array_indices = tuple(a.item() for a in point_array_indices)
         else:
-            point_array_indices = sliced_wcs.world_to_array_index(*sliced_point)
+            point_array_indices = HighLevelWCSWrapper(sliced_wcs).world_to_array_index(
+                *sliced_point)
             # If returned value is a 0-d array, convert to a length-1 tuple.
             if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
                 point_array_indices = (point_array_indices.item(),)
