@@ -4,7 +4,6 @@ import warnings
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
-from itertools import chain
 
 import astropy.nddata
 import astropy.units as u
@@ -24,8 +23,7 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs_high_level_conversion import (high_level_objects_to_values,
-                                                    values_to_high_level_objects)
+from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
@@ -519,52 +517,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
         else:
-            return utils.cube._get_crop_item_from_points(points, wcs, False)
+            return utils.cube.get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_by_values_item(*points, units=units, wcs=wcs)
-        return self[tuple(item)]
+        return self[item]
 
     @utils.cube.sanitize_wcs
     def _get_crop_by_values_item(self, *points, units=None, wcs=None):
-        """
-        data_shape = self.data.shape
-        # Sanitize inputs.
-        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
-        # Quit out early if we are no-op
-        if no_op:
-            return tuple([slice(None)] * len(data_shape))
-
-        n_coords = len(points[0])
-        if units is None:
-            units = [None] * n_coords
-        elif len(units) != n_coords:
-            raise ValueError("units must be None or have same length as corner inputs.")
-
-        # Convert float inputs to quantities using units.
-        types_with_units = (u.Quantity, type(None))
-        for i, point in enumerate(points):
-            for j, (value, unit) in enumerate(zip(point, units)):
-                value_is_float = not isinstance(value, types_with_units)
-                if value_is_float:
-                    if unit is None:
-                        raise TypeError(
-                            "If an element of a point is not a Quantity or None, "
-                            "the corresponding unit must be a valid astropy Unit or unit string."
-                            f"index: {i}; coord type: {type(value)}; unit: {unit}")
-                    points[i][j] = u.Quantity(value, unit=unit)
-
-        points = utils.cube.sanitize_missing_crop_coords(points, wcs, data_shape, True)
-
-        # Convert coordinates to units used by WCS as WCS.world_to_array_index
-        # does not handle quantities.
-        points = [utils.misc.convert_quantities_to_units(point, wcs.world_axis_units)
-                  for point in points]
-
-        return utils.cube.get_crop_item_from_points(*points, wcs=wcs, data_shape=data_shape)
-        """
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
@@ -587,8 +549,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                             "the corresponding unit must be a valid astropy Unit or unit string."
                             f"index: {i}; coord type: {type(value)}; unit: {unit}")
                     points[i][j] = u.Quantity(value, unit=unit)
-        
-        return utils.cube._get_crop_item_from_points(points, wcs, True)
+
+        return utils.cube.get_crop_item_from_points(points, wcs, True)
 
     def __str__(self):
         return textwrap.dedent(f"""\

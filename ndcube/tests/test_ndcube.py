@@ -1,14 +1,10 @@
-from textwrap import dedent
 
 import astropy.units as u
 import astropy.wcs
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
-from astropy.io import fits
 from astropy.time import Time
-from astropy.wcs import WCS
-from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
@@ -561,7 +557,7 @@ def test_crop_by_values_valueerror2(ndcube_4d_ln_lt_l_t):
     with pytest.raises(ValueError):
         ndcube_4d_ln_lt_l_t.crop_by_values([0], [1, None])
 
-"""
+
 def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, :, 0, 0]
     lat_range, lon_range = cube_1d.wcs.low_level_wcs.array_index_to_world_values([0, 1])
@@ -570,8 +566,6 @@ def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     expected = cube_1d[0:2]
     output = cube_1d.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
-
-"""
 
 
 def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
