@@ -414,6 +414,23 @@ def test_slice_extra_1d_drop(time_lut, wave_lut):
     assert dwd["world_axis_units"] == ["nm"]
 
 
+def test_slice_extra_1d_drop_alter_mapping(time_lut, wave_lut):
+    ec = ExtraCoords()
+    ec.add("time", 0, time_lut)
+    ec.add("wavey", 1, wave_lut)
+
+    sec = ec[0, :]
+    assert len(sec._lookup_tables) == 1
+    assert sec._lookup_tables[0][0] == (0,)
+    assert u.allclose(sec['wavey'].wcs.pixel_to_world_values(list(range(10))),
+                      ec['wavey'].wcs.pixel_to_world_values(list(range(10))))
+
+    dwd = sec.dropped_world_dimensions
+    dwd.pop("world_axis_object_classes")
+    assert dwd
+    assert dwd["world_axis_units"] == ["s"]
+
+
 def test_dropped_dimension_reordering():
     data = np.ones((3, 4, 5))
     wcs_input_dict = {
