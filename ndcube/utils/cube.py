@@ -178,7 +178,22 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
         for i, axis in zip(point_array_indices, array_axes_with_input):
             combined_points_array_idx[axis] = combined_points_array_idx[axis] + [i]
     # Define slice item with which to slice cube.
-    item = tuple([slice(None) if axis_indices == []
-                  else slice(min(axis_indices), max(axis_indices) + 1)
-                  for axis_indices in combined_points_array_idx])
-    return item
+    item = []
+    result_is_scalar = True
+    for axis_indices in combined_points_array_idx:
+        if axis_indices == []:
+            result_is_scalar = False
+            item.append(slice(None))
+        else:
+            min_idx = min(axis_indices)
+            max_idx = max(axis_indices) + 1
+            if max_idx - min_idx == 1:
+                item.append(min_idx)
+            else:
+                item.append(slice(min_idx, max_idx))
+                result_is_scalar = False
+    # If item will result in a scalar cube, raise an error as this is not currently supported.
+    if result_is_scalar:
+        raise ValueError("Input points causes cube to be cropped to a single pixel. "
+                         "This is not supported.")
+    return tuple(item)

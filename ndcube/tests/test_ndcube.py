@@ -430,6 +430,22 @@ def test_crop_1d_dependent(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    point = (None, SpectralCoord([3e-11], unit=u.m), None)
+    expected = cube[:, :, 0, :]
+    output = cube.crop(point)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
+    cube = ndcube_2d_ln_lt
+    frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
+    point = SkyCoord(Tx=359.99667, Ty=-0.0011111111, unit="deg", frame=frame)
+    with pytest.raises(ValueError):
+        cube.crop(point)
+
+
 def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     intervals = cube.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
@@ -443,67 +459,6 @@ def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     upper_corner[-1] = upper_corner[-1].to(units[-1])
     expected = cube[1:3, 0:2, 0:2, 0:3]
     output = cube.crop_by_values(lower_corner, upper_corner)
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
-    cube = ndcube_3d_ln_lt_l_ec_time
-    lower_corner = (Time("2000-01-01T15:00:00", scale="utc", format="fits"), None)
-    upper_corner = (Time("2000-01-01T20:00:00", scale="utc", format="fits"), None)
-    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
-    expected = cube[0:1]
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_extra_coords_all_axes_with_coord(ndcube_3d_ln_lt_l_ec_all_axes):
-    cube = ndcube_3d_ln_lt_l_ec_all_axes
-    interval0 = Time(["2000-01-01T15:00:00", "2000-01-01T20:00:00"], scale="utc", format="fits")
-    # interval1 = SkyCoord(ra=[10, 20], dec=[0, 1], unit=u.deg, frame="icrs")
-    interval1 = [0, 1] * u.pix
-    interval2 = [1, 3] * u.m
-    lower_corner = (interval0[0], interval1[0], interval2[0])
-    upper_corner = (interval0[1], interval1[1], interval2[1])
-    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
-    expected = cube[0:1, 0:2, 1:4]
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_extra_coords_values_all_axes_with_coord(ndcube_3d_ln_lt_l_ec_all_axes):
-    cube = ndcube_3d_ln_lt_l_ec_all_axes
-    interval0 = [3 * 60 * 60, 8 * 60 * 60] * u.s
-    interval1 = [0, 1] * u.pix
-    interval2 = [1, 3] * u.m
-    lower_corner = (interval0[0], interval1[0], interval2[0])
-    upper_corner = (interval0[1], interval1[1], interval2[1])
-    output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
-    expected = cube[0:1, 0:2, 1:4]
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_extra_coords_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
-    cube = ndcube_3d_ln_lt_l_ec_sharing_axis
-    lower_corner = (1 * u.m, 1 * u.keV)
-    upper_corner = (2 * u.m, 2 * u.keV)
-    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
-    expected = cube[:, 1:3]
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_extra_coords_values_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
-    cube = ndcube_3d_ln_lt_l_ec_sharing_axis
-    lower_corner = (1 * u.m, 1 * u.keV)
-    upper_corner = (2 * u.m, 2 * u.keV)
-    output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
-    expected = cube[:, 1:3]
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
-    cube = ndcube_3d_ln_lt_l_ec_time
-    lower_corner = (3 * 60 * 60 * u.s, 0 * u.pix)
-    upper_corner = (8 * 60 * 60 * u.s, 2 * u.pix)
-    output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
-    expected = cube[0:1]
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -565,6 +520,66 @@ def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     upper_corner = [lat_range[-1] * u.deg, lon_range[-1] * u.deg]
     expected = cube_1d[0:2]
     output = cube_1d.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
+    cube = ndcube_3d_ln_lt_l_ec_time
+    lower_corner = (Time("2000-01-01T15:00:00", scale="utc", format="fits"), None)
+    upper_corner = (Time("2000-01-01T20:00:00", scale="utc", format="fits"), None)
+    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[0]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
+    cube = ndcube_3d_ln_lt_l_ec_time
+    lower_corner = (3 * 60 * 60 * u.s, 0 * u.pix)
+    upper_corner = (8 * 60 * 60 * u.s, 2 * u.pix)
+    output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[0]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_all_axes_with_coord(ndcube_3d_ln_lt_l_ec_all_axes):
+    cube = ndcube_3d_ln_lt_l_ec_all_axes
+    interval0 = Time(["2000-01-01T15:00:00", "2000-01-01T20:00:00"], scale="utc", format="fits")
+    interval1 = [0, 1] * u.pix
+    interval2 = [1, 3] * u.m
+    lower_corner = (interval0[0], interval1[0], interval2[0])
+    upper_corner = (interval0[1], interval1[1], interval2[1])
+    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[0, 0:2, 1:4]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_values_all_axes_with_coord(ndcube_3d_ln_lt_l_ec_all_axes):
+    cube = ndcube_3d_ln_lt_l_ec_all_axes
+    interval0 = [3 * 60 * 60, 8 * 60 * 60] * u.s
+    interval1 = [0, 1] * u.pix
+    interval2 = [1, 3] * u.m
+    lower_corner = (interval0[0], interval1[0], interval2[0])
+    upper_corner = (interval0[1], interval1[1], interval2[1])
+    output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[0, 0:2, 1:4]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
+    cube = ndcube_3d_ln_lt_l_ec_sharing_axis
+    lower_corner = (1 * u.m, 1 * u.keV)
+    upper_corner = (2 * u.m, 2 * u.keV)
+    output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[:, 1:3]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_values_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
+    cube = ndcube_3d_ln_lt_l_ec_sharing_axis
+    lower_corner = (1 * u.m, 1 * u.keV)
+    upper_corner = (2 * u.m, 2 * u.keV)
+    output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[:, 1:3]
     helpers.assert_cubes_equal(output, expected)
 
 
