@@ -112,7 +112,7 @@ def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
 
 def world_axis_to_pixel_axes(world_axis, axis_correlation_matrix):
     """
-    Gets the pixel axis indices corresponding to the index of a world axis physical type.
+    Gets the pixel axis indices corresponding to the index of a world axis.
 
     Parameters
     ----------
