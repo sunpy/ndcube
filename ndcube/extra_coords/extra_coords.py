@@ -323,9 +323,22 @@ class ExtraCoords(ExtraCoordsABC):
         """
         dropped_tables = set()
         new_lookup_tables = set()
+        ndims = max([lut[0] if isinstance(lut[0], Integral) else max(lut[0])
+                     for lut in self._lookup_tables]) + 1
+        # Determine how many dimensions will be dropped by slicing below each dimension.
+        if isinstance(item, Integral):
+            n_dropped_dims = np.ones(ndims, dtype=int)
+            item = tuple([item] + [slice(None)] * (ndims - 1))
+        elif isinstance(item, slice):
+            n_dropped_dims = np.zeros(ndims, dtype=int)
+            item = tuple([item] + [slice(None)] * (ndims - 1))
+        else:
+            item = list(item) + [slice(None)] * (ndims - len(item))
+            n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            lut_slice = tuple(item[i] for i in lut_axes) if isinstance(item, tuple) else item
+            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
+            lut_slice = tuple(item[i] for i in lut_axes)
             if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
 
@@ -334,8 +347,7 @@ class ExtraCoords(ExtraCoordsABC):
             if sliced_lut.is_scalar():
                 dropped_tables.add(sliced_lut)
             else:
-                new_lookup_tables.add((lut_axis, sliced_lut))
-
+                new_lookup_tables.add((new_lut_axes, sliced_lut))
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = list(new_lookup_tables)
         new_extra_coords._dropped_tables = list(dropped_tables)
