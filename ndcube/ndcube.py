@@ -1,7 +1,6 @@
 import abc
 import textwrap
 import warnings
-import itertools
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
@@ -24,7 +23,7 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs_high_level_conversion import high_level_objects_to_values, values_to_high_level_objects
+from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
@@ -362,7 +361,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return world_coords
 
-    @utils.misc.sanitise_wcs
+    @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for all axes.
@@ -434,7 +433,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return tuple(axes_coords[i] for i in object_indices)
 
-    @utils.misc.sanitise_wcs
+    @utils.cube.sanitize_wcs
     def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
         """
         Returns WCS coordinate values of all pixels for desired axes.
@@ -504,159 +503,54 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    @utils.misc.sanitise_wcs
-    def crop(self, lower_corner, upper_corner, wcs=None):
+    def crop(self, *points, wcs=None):
         # The docstring is defined in NDCubeABC
-        lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
+        # Calculate the array slice item corresponding to bounding box and return sliced cube.
+        item = self._get_crop_item(*points, wcs=wcs)
+        return self[item]
 
-        # Quit out early if we are no-op
-        lower_nones = np.array([lower is None for lower in lower_corner])
-        upper_nones = np.array([upper is None for upper in upper_corner])
-        if (lower_nones & upper_nones).all():
-            return self
-
-        lower_corner, upper_corner = self._fill_in_crop_nones(lower_corner, upper_corner, wcs, False)
-
-        if isinstance(wcs, BaseHighLevelWCS):
-            wcs = wcs.low_level_wcs
-
-        lower_corner_values = high_level_objects_to_values(*lower_corner, low_level_wcs=wcs)
-        upper_corner_values = high_level_objects_to_values(*upper_corner, low_level_wcs=wcs)
-        lower_corner_values = [v << u.Unit(unit) for v, unit in zip(lower_corner_values, wcs.world_axis_units)]
-        upper_corner_values = [v << u.Unit(unit) for v, unit in zip(upper_corner_values, wcs.world_axis_units)]
-
-        points = self._bounding_box_to_points(lower_corner_values, upper_corner_values, wcs)
-        return self._crop_from_points(*points, wcs=wcs)
-
-    @utils.misc.sanitise_wcs
-    def crop_by_values(self, lower_corner, upper_corner, units=None, wcs=None):
-        # The docstring is defined in NDCubeABC
+    @utils.cube.sanitize_wcs
+    def _get_crop_item(self, *points, wcs=None):
         # Sanitize inputs.
-        lower_corner, upper_corner = utils.misc.sanitize_corners(lower_corner, upper_corner)
-
+        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
-        lower_nones = np.array([lower is None for lower in lower_corner])
-        upper_nones = np.array([upper is None for upper in upper_corner])
-        if (lower_nones & upper_nones).all():
-            return self
+        if no_op:
+            return tuple([slice(None)] * wcs.pixel_n_dim)
+        else:
+            return utils.cube.get_crop_item_from_points(points, wcs, False)
 
-        n_coords = len(lower_corner)
+    def crop_by_values(self, *points, units=None, wcs=None):
+        # The docstring is defined in NDCubeABC
+        # Calculate the array slice item corresponding to bounding box and return sliced cube.
+        item = self._get_crop_by_values_item(*points, units=units, wcs=wcs)
+        return self[item]
+
+    @utils.cube.sanitize_wcs
+    def _get_crop_by_values_item(self, *points, units=None, wcs=None):
+        # Sanitize inputs.
+        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        # Quit out early if we are no-op
+        if no_op:
+            return tuple([slice(None)] * wcs.pixel_n_dim)
+        # Convert float inputs to quantities using units.
+        n_coords = len(points[0])
         if units is None:
             units = [None] * n_coords
         elif len(units) != n_coords:
             raise ValueError("units must be None or have same length as corner inputs.")
-
-        # Convert float inputs to quantities using units.
         types_with_units = (u.Quantity, type(None))
-        for i, (lower, upper, unit) in enumerate(zip(lower_corner, upper_corner, units)):
-            lower_is_float = not isinstance(lower, types_with_units)
-            upper_is_float = not isinstance(upper, types_with_units)
-            if unit is None and (lower_is_float or upper_is_float):
-                raise TypeError("If corner value is not a Quantity or None, "
-                                "unit must be a valid astropy Unit or unit string."
-                                f"index: {i}; lower type: {type(lower)}; "
-                                f"upper type: {type(upper)}; unit: {unit}")
-            if lower_is_float:
-                lower_corner[i] = u.Quantity(lower, unit=unit)
-            if upper_is_float:
-                upper_corner[i] = u.Quantity(upper, unit=unit)
-            # Convert each corner value to the same unit.
-            if lower_corner[i] is not None and upper_corner[i] is not None:
-                upper_corner[i] = upper_corner[i].to(lower_corner[i].unit)
+        for i, point in enumerate(points):
+            for j, (value, unit) in enumerate(zip(point, units)):
+                value_is_float = not isinstance(value, types_with_units)
+                if value_is_float:
+                    if unit is None:
+                        raise TypeError(
+                            "If an element of a point is not a Quantity or None, "
+                            "the corresponding unit must be a valid astropy Unit or unit string."
+                            f"index: {i}; coord type: {type(value)}; unit: {unit}")
+                    points[i][j] = u.Quantity(value, unit=unit)
 
-        lower_corner, upper_corner = self._fill_in_crop_nones(lower_corner, upper_corner, wcs, True)
-
-        # Convert coordinates to units used by WCS as WCS.world_to_array_index
-        # does not handle quantities.
-        lower_corner = utils.misc.convert_quantities_to_units(lower_corner,
-                                                              self.wcs.world_axis_units)
-        upper_corner = utils.misc.convert_quantities_to_units(upper_corner,
-                                                              self.wcs.world_axis_units)
-
-        points = self._bounding_box_to_points(lower_corner, upper_corner, wcs)
-        return self._crop_from_points(*points, wcs=wcs)
-
-    def _fill_in_crop_nones(self, lower_corner, upper_corner, wcs, crop_by_values):
-        """
-        Replace any instance of None in the inputs with the bounds for that axis.
-        """
-        lower_nones = np.array([lower is None for lower in lower_corner])
-        upper_nones = np.array([upper is None for upper in upper_corner])
-
-        if crop_by_values:
-            if isinstance(wcs, BaseHighLevelWCS):
-                array_index_to_world = wcs.low_level_wcs.array_index_to_world_values
-            else:
-                array_index_to_world = wcs.array_index_to_world_values
-        else:
-            array_index_to_world = wcs.array_index_to_world
-
-        # If user did not provide all intervals,
-        # calculate missing intervals based on whole cube range along those axes.
-        if lower_nones.any() or upper_nones.any():
-            # Calculate real world coords for first and last index for all axes.
-            array_intervals = [[0, np.round(d.value - 1).astype(int)] for d in self.dimensions]
-            intervals = array_index_to_world(*array_intervals)
-            # Overwrite None corner values with world coords of first or last index.
-            iterable = zip(lower_nones, upper_nones, intervals)
-            for i, (lower_is_none, upper_is_none, interval) in enumerate(iterable):
-                if lower_is_none:
-                    lower_corner[i] = interval[0]
-                if upper_is_none:
-                    upper_corner[i] = interval[-1]
-
-        return lower_corner, upper_corner
-
-    def _bounding_box_to_points(self, lower_corner_values, upper_corner_values, wcs):
-        """
-        Convert two corners of a bounding box to the points of all corners.
-        """
-        return tuple(itertools.product(*zip(lower_corner_values, upper_corner_values)))
-
-    def _crop_from_points(self, *world_points_values, wcs):
-        """
-        Crop to the minimum cube in pixel-space that contains all the specified world points.
-
-        Parameters
-        ----------
-        world_points_values
-            The world coordinates in wcsapi "values" form (i.e. arrays /
-            floats), for however many world points should be contained in the
-            output cube. Each argument should be a tuple with number of
-            coordinates equal to the number of world axes.
-
-        wcs : `~astropy.wcs.wcsapi.BaseHighLevelWCS`, `~astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS to use to convert the world coordinates to array indices.
-
-        Returns
-        -------
-        new_cube
-            A new ``NDCube`` instance.
-        """
-        if isinstance(wcs, BaseHighLevelWCS):
-            wcs = wcs.low_level_wcs
-
-        # Convert all points to array indices.
-        point_indices = []
-        for point in world_points_values:
-            indices = wcs.world_to_array_index_values(*point)
-
-            if not isinstance(indices, tuple):
-                indices = (indices,)
-
-            point_indices.append(indices)
-
-        point_indices = np.array(point_indices)
-        lower = np.min(point_indices, axis=0)
-        upper = np.max(point_indices, axis=0) + 1
-
-        # Wrap the limits to the size of the array
-        lower = [int(np.clip(index, 0, self.data.shape[i])) for i, index in enumerate(lower)]
-        upper = [int(np.clip(index, 0, self.data.shape[i])) for i, index in enumerate(upper)]
-
-        item = tuple(slice(l, u) for l, u in zip(lower, upper))
-
-        return self[tuple(item)]
+        return utils.cube.get_crop_item_from_points(points, wcs, True)
 
     def __str__(self):
         return textwrap.dedent(f"""\
