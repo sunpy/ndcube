@@ -175,8 +175,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
             # If returned value is a 0-d array, convert to a length-1 tuple.
             if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
                 point_array_indices = (point_array_indices.item(),)
-        for i, axis in zip(point_array_indices, array_axes_with_input):
-            combined_points_array_idx[axis] = combined_points_array_idx[axis] + [i]
+        for axis, index in zip(array_axes_with_input, point_array_indices):
+            combined_points_array_idx[axis] = combined_points_array_idx[axis] + [index]
     # Define slice item with which to slice cube.
     item = []
     result_is_scalar = True
