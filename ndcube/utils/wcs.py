@@ -193,7 +193,7 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
         The world axis index of the physical type.
     """
     # Find world axis index described by physical type.
-    widx = np.where(world_axis_physical_types == physical_type)[0]
+    widx, = np.atleast_1d(world_axis_physical_types == physical_type).nonzero()
     # If physical type does not correspond to entry in world_axis_physical_types,
     # check if it is a substring of any physical types.
     if len(widx) == 0:
