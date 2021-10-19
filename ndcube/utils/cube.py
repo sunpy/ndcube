@@ -164,7 +164,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
         if crop_by_values:
             point_array_indices = sliced_wcs.world_to_array_index_values(*sliced_point)
             # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
+            if np.isscalar(point_array_indices):
                 point_array_indices = (point_array_indices.item(),)
             else:
                 # Convert from scalar arrays to scalars
