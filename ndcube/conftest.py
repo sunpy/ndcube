@@ -288,8 +288,6 @@ def time_and_simple_extra_coords_2d():
 @pytest.fixture
 def extra_coords_3d():
     coord0 = Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"], scale="utc", format="fits")
-    # coord1 = SkyCoord(ra=list(range(10, 40, 10)) * u.deg,
-    #                  dec=list(range(3)) * u.deg, frame="icrs")
     coord1 = list(range(3)) * u.pix
     coord2 = list(range(4)) * u.m
     return ExtraCoords.from_lookup_tables(('time', 'bye', 'hello'),
@@ -451,7 +449,6 @@ def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
         uncertainty=data_rotated,
     )
     cube._extra_coords = simple_extra_coords_3d
-    cube._extra_coords._ndcube = cube
     return cube
 
 

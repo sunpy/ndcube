@@ -409,7 +409,7 @@ class ExtraCoords(ExtraCoordsABC):
     def cube_wcs(self):
         """Produce a WCS that describes the associated NDCube with just the extra coords.
 
-        For NDCube axes without an extra coord, dummy axes are inserted.
+        For NDCube pixel axes without any extra coord, dummy axes are inserted.
         """
         wcses = [self.wcs]
         mapping = list(self.mapping)
