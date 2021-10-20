@@ -192,6 +192,17 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     assert coords[0].shape == (5,)
 
 
+def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime
+    sub_cube = cube[:, 0]
+
+    # slice the cube so extra_coords is empty, and then try and run axis_world_coords
+    awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
+    assert awc == tuple()
+    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords)
+    assert awc == tuple()
+
+
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t

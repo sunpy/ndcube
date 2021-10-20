@@ -331,6 +331,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if isinstance(wcs, ExtraCoords):
             ranges = [ranges[i] for i in wcs.mapping]
             wcs = wcs.wcs
+            if wcs is None:
+                return []
 
         world_coords = [None] * wcs.world_n_dim
         for (pixel_axes_indices, world_axes_indices) in _split_matrix(wcs.axis_correlation_matrix):
@@ -410,6 +412,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
+            if not wcs:
+                return tuple()
 
         axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
 
