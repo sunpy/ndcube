@@ -9,7 +9,7 @@ Requiring ndcube in your package
 ndcube has required dependencies on `astropy`, `gwcs` and `numpy`.
 In addition to this it has two sets of optional dependencies:
 
-* ``plotting``, which requires `matplotlib` and `mpl_animators`, if you are using any of the `ndcube` objects directly with the default plotting implementation you probably want to include this extra in your requirements.
+* ``plotting``, which requires `matplotlib` and `mpl_animators`. If you are using any of the `ndcube` objects directly with the default plotting implementation you probably want to include this extra in your requirements.
 * ``reproject``, which requires the `reproject` package. This is required to use the `NDCube.reproject_to` method.
 
 When including ndcube in your package requirements you should include either of these extras using the ``ndcube[plotting]`` type syntax.
