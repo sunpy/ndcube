@@ -331,24 +331,24 @@ For this we can use `~ndcube.visualization.animator.ImageAnimator`.
 This class is not well suited to displaying the complex relationship between coordinates that we are used to with `~astropy.visualization.wcsaxes.WCSAxes`.
 For example, non-linear and  non-independent coordinates.
 The difficulty and complexity in correctly representing this in a generalized way when dealing with a sequence of WCS objects is one reason plotting is currently no longer supported by `~ndcube.NDCubeSequence`.
-Nontheless, `~sunpy.visualization.animator.ImageAnimator` can still give us an idea of how the data is changing.
+Nontheless, `~mpl_animators.ImageAnimator` can still give us an idea of how the data is changing.
 In ``my_sequence``, the sequence axis represents time, the 0th and 1st cube axes represent latittude and longitude, while the final axis represents wavelength.
 Therefore, we could do the following.
 
 .. code-block:: python
 
-    >>> from sunpy.visualization.animator import ImageAnimator  # doctest: +SKIP
+    >>> from mpl_animators import ImageAnimator  # doctest: +SKIP
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
     >>> # Assume that the field of view or wavelength grid is not changing over time.
     >>> # Also assume the coordinates are independent and linear with the pixel grid.
     >>> animation = ImageAnimator(data, image_axes=[2, 1])  # doctest: +SKIP
     >>> plt.show()  # doctest: +SKIP
 
-Alternatively we can animate how the one 1-D spectrum changes by using `~sunpy.visualization.animator.LineAnimator`.
+Alternatively we can animate how the one 1-D spectrum changes by using `~mpl_animators.LineAnimator`.
 
 .. code-block:: python
 
-    >>> from sunpy.visualization.animator import LineAnimator  # doctest: +SKIP
+    >>> from mpl_animators import LineAnimator  # doctest: +SKIP
     >>> data = np.stack([cube.data for cube in my_sequence.data], axis=0)
     >>> animation = LineAnimator(data, plot_axis_index=-1)  # doctest: +SKIP
     >>> plt.show()  # doctest: +SKIP
