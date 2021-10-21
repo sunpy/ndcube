@@ -3,6 +3,18 @@ Extending ndcube in other packages
 
 This section of the documentation is aimed at people developing packages which extend the functionality in ndcube in other packages.
 
+Requiring ndcube in your package
+--------------------------------
+
+ndcube has required dependencies on `astropy`, `gwcs` and `numpy`.
+In addition to this it has two sets of optional dependencies:
+
+  * ``plotting``, which requires `matplotlib` and `mpl_animators`, if you are using any of the `ndcube` objects directly with the default plotting implementation you probably want to include this extra in your requirements.
+  * ``reproject``, which requires the `reproject` package. This is required to use the `NDCube.reproject_to` method.
+
+When including ndcube in your package requirements you should include either of these extras using the ``ndcube[plotting]`` type syntax.
+If you wish for all extra requirements to be installed you can use ``ndcube[all]``.
+
 
 Subclassing an ndcube object
 ----------------------------
@@ -27,6 +39,9 @@ When you are subclassing, try to use as much of the upstream object properties a
 Doing this will make your life easier, by being able to reuse functionality designed for all different types of ndcube classes.
 For instance if your class has a special property ``.info`` it would not automatically be carried through operations such as slicing and reprojecting, you would need to customise all these operations.
 If instead you put an ``info`` key in the ``meta`` dictionary it would automatically be copied through the appropriate operations.
+
+If your subclass does have custom attributes you need to propagate through methods and functions, you will probably need to overload these methods in your subclass.
+On `.NDCube` the only method which returns another instance of your subclass is currently `~.NDCube.reproject_to`.
 
 
 Customising the visualisation
