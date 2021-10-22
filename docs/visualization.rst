@@ -327,7 +327,7 @@ Alternatively, we could produce a 2D dynamic spectrum showing how the spectrum i
     >>> plt.show()  # doctest: +SKIP
 
 Now let's say we want to animate our data, for example, to show how the intensity changes over wavelength and time.
-For this we can use `~ndcube.visualization.animator.ImageAnimator`.
+For this we can use `~mpl_animators.ImageAnimator`.
 This class is not well suited to displaying the complex relationship between coordinates that we are used to with `~astropy.visualization.wcsaxes.WCSAxes`.
 For example, non-linear and  non-independent coordinates.
 The difficulty and complexity in correctly representing this in a generalized way when dealing with a sequence of WCS objects is one reason plotting is currently no longer supported by `~ndcube.NDCubeSequence`.
