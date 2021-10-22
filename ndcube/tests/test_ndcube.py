@@ -375,6 +375,21 @@ def test_axis_world_coords_radec(ndcube_3d_l_ra_dec):
     assert u.allclose(coords[1].ra, [63.64277, 104.777] * u.deg)
     assert u.allclose(coords[1].dec, [17.6213, 49.5710] * u.deg)  # [17.6213, 48.7533] at corners
 
+    coords = ndcube_3d_l_ra_dec.axis_world_coords_limits(wcs=ndcube_3d_l_ra_dec.combined_wcs)
+    assert isinstance(coords[1], SkyCoord)
+    assert u.allclose(coords[0], [1.02e-09, 1.20e-09] * u.m)
+    assert u.allclose(coords[2], [0, 3] * u.pix)
+
+    coords = ndcube_3d_l_ra_dec.axis_world_coords_limits(wcs=ndcube_3d_l_ra_dec.extra_coords)
+    assert len(coords) == 1
+    assert u.allclose(coords[0], [0, 3] * u.pix)
+
+    # pytest.xfail("NaNs in ExtraCoords(?)")
+    # this returns an array of len 10 filled up with NaN, does not seem right...
+    coords = ndcube_3d_l_ra_dec.axis_world_coords(wcs=ndcube_3d_l_ra_dec.extra_coords)
+    assert len(coords) == 1
+    assert u.allclose(coords[0][:4], [0, 1, 2, 3] * u.pix)
+
 
 def test_axis_world_coords_rapol(ndcube_3d_l_ra_pol):
     coords = ndcube_3d_l_ra_pol.axis_world_coords()
@@ -434,6 +449,19 @@ def test_axes_world_coords_sky_only(ndcube_2d_ln_lt):
                                            12, 16, 20] * u.arcsec, atol=1e-5 * u.arcsec)
     assert u.allclose(coords[0].Ty[0, :], [-8, -6, -4, -2, 0, 2, 4, 6, 8, 10,
                                            12, 14] * u.arcsec, atol=1e-5 * u.arcsec)
+
+    coords = ndcube_2d_ln_lt.axis_world_coords_limits()
+
+    assert len(coords) == 1
+    assert isinstance(coords[0], SkyCoord)
+    # coords_values are wrapping around 360 deg in lon, yielding bad limits!
+    assert u.allclose(coords[0].Tx, [0, -4] * u.arcsec, atol=1e-5 * u.arcsec)
+    assert u.allclose(coords[0].Ty, [-8, 14] * u.arcsec, atol=1e-5 * u.arcsec)
+
+    coords = ndcube_2d_ln_lt.axis_world_coords_limits(max_size=5)
+
+    assert u.allclose(coords[0].Tx, [0, -4] * u.arcsec, atol=1e-5 * u.arcsec)
+    assert u.allclose(coords[0].Ty, [-8, 14] * u.arcsec, atol=1e-5 * u.arcsec)
 
 
 def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):

@@ -2,6 +2,7 @@ import abc
 import textwrap
 import warnings
 from copy import deepcopy
+from itertools import product as iterprod
 from collections import namedtuple
 from collections.abc import Mapping
 
@@ -23,8 +24,8 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.utils.wcs import get_dependent_world_axes
+from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
@@ -537,7 +538,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    @utils.misc.sanitise_wcs
+    @utils.cube.sanitize_wcs
     def axis_world_coords_limits(self, *axes, pixel_corners=False, wcs=None, max_size=None):
         """
         Returns (estimated) extrema of the WCS coordinate values for all axes.
@@ -583,13 +584,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         >>> NDCube.axis_world_coords_limits(2)  # doctest: +SKIP
 
         """
+        # Cannot use naxis and array_shape to construct bounding box for
+        # extra_coords or combined_wcs, so for now force using the full wcs for those.
+        if isinstance(wcs, (ExtraCoords, HighLevelWCSWrapper)) or wcs.array_shape is None:
+            max_size = None
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
         if max_size is not None:
             full_size = np.sum(self._generate_world_coords(pixel_corners, wcs, get_sizes=True))
 
-        # Check if we only probe pixel bounding box to speed up computation
+        # Check if we only probe pixel bounding box to speed up computation.
         if max_size is None or full_size <= max_size:
             axes_coords = self._generate_world_coords(pixel_corners, wcs)
         else:
@@ -629,12 +634,15 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for i, (coord, unit) in enumerate(zip(axes_coords, wcs.world_axis_units)):
                 axes_coords[i] = coord << u.Unit(unit)
 
-        axes_coords = [u.Quantity([ac.min(), ac.max()]) for ac in axes_coords]
+        axes_limits = []
+        for ac in axes_coords:
+            ac = ac[np.isfinite(ac)]
+            axes_limits.append(u.Quantity([ac.min(), ac.max()]))
 
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
 
-        axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
+        axes_coords = values_to_high_level_objects(*axes_limits, low_level_wcs=wcs)
 
         if not axes:
             return tuple(axes_coords)
@@ -656,8 +664,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return tuple(axes_coords[i] for i in object_indices)
 
-    @utils.misc.sanitise_wcs
-    def crop(self, lower_corner, upper_corner, wcs=None):
+    def crop(self, *points, wcs=None):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_item(*points, wcs=wcs)
@@ -705,6 +712,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     points[i][j] = u.Quantity(value, unit=unit)
 
         return utils.cube.get_crop_item_from_points(points, wcs, True)
+
+    def _bounding_box_to_points(self, lower_corner_values, upper_corner_values, wcs):
+        """
+        Convert two corners of a bounding box to the points of all corners.
+        """
+        return tuple(iterprod(*zip(lower_corner_values, upper_corner_values)))
 
     def __str__(self):
         return textwrap.dedent(f"""\

@@ -537,8 +537,8 @@ def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
 @pytest.fixture
 def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l):
     return gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l,
-                                        1,
-                                        Time('2000-01-01', format='fits', scale='utc'))
+                                        1, Time('2000-01-01', format='fits', scale='utc'))
+
 
 
 @pytest.fixture
