@@ -39,46 +39,30 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def crop(self, lower_corner, upper_corner, wcs=None):
+    def crop(self, *points, wcs=None):
         """
-        Crop given world coordinate objects describing the lower and upper corners of a region.
-
-        The region of interest is defined in pixel space, by converting the world
-        coordinates of the corners to pixel coordinates and then cropping the
-        smallest pixel region which contains the corners specified.
-        This means that the edges of the world coordinate region specified by
-        the coordinates are not guaranteed to be included in the cropped output.
-        This is normally noticeable when cropping a celestial coordinate in a
-        frame which differs from the native frame of the coordinates in the WCS.
+        Crop to the smallest cube in pixel space containing the world coordinate points.
 
         Parameters
         ----------
-        lower_corner: iterable whose elements are None or high level astropy objects
-            An iterable of length-1 astropy higher level objects, e.g. SkyCoord,
-            representing the real world coordinates of the lower corner of
-            the region of interest.
-            These are input to `astropy.wcs.WCS.world_to_array_index`
-            so their number and order must be compatible with the API of that method.
-            Alternatively, None, can be provided instead of a higher level object.
-            In this case, the corresponding array axes will be cropped starting from
-            0th array index.
+        points
+            Tuples of high level coordinate objects e.g.
+            `~astropy.coordinates.SkyCoord`. The coordinates of the points
+            **must be specified in Cartesian (WCS) order** as they are passed
+            to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index` so
+            their number and order must be compatible with the API of that
+            method.
 
-        upper_corner: iterable whose elements are None or high level astropy objects
-            An iterable of length-1 astropy higher level objects, e.g. SkyCoord,
-            representing the real world coordinates of the upper corner of
-            the region of interest.
-            These are input to `astropy.wcs.WCS.world_to_array_index`
-            so their number and order must be compatible with the API of that method.
-            Alternatively, None, can be provided instead of a higher level object.
-            In this case, the corresponding array axes will be cropped to include
-            the final array index.
+            It is possible to not specify a coordinate for an axis by
+            replacing any object with `None`, any coordinate replaced by `None`
+            will not be used to calculate pixel coordinates, and therefore not
+            affect the calculation of the final bounding box.
 
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`
-            The WCS object to used to convert the world values to array indices.
-            Although technically this can be any valid WCS, it will typically be
-            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
-            the WCS and extra coords.
-            Default=self.wcs
+        wcs
+            The WCS to use to calculate the pixel coordinates based on the input.
+            Will default to the ``.wcs`` property if not given. While any valid WCS
+            could be used it is expected that either the ``.wcs`` or
+            ``.extra_coords`` properties will be used.
 
         Returns
         -------
