@@ -1,11 +1,5 @@
 from astropy.wcs.wcsapi import BaseLowLevelWCS
-
-try:
-    from sunpy.visualization.animator import ArrayAnimatorWCS
-except ImportError:
-    raise ImportError(
-        "Sunpy is required to animate NDCubeSequences. "
-        "Either install sunpy or extract data from sequence and visualize manually.")
+from mpl_animators import ArrayAnimatorWCS
 
 from .base import BasePlotter
 from .plotting_utils import prep_plot_kwargs
