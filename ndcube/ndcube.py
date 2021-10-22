@@ -91,12 +91,12 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
             not be used to calculate pixel coordinates, and therefore not
             affect the calculation of the final bounding box. Note that you
             must specify either none or all coordinates for any correlated
-            axes, i.e. both spatial coordinates.
+            axes, e.g. both spatial coordinates.
 
         units: iterable of `astropy.units.Unit`
             The unit of the corresponding entries in each point.
             Must therefore be the same length as the number of world axes.
-            Only used if the corresponding type is not a `astropy.units.Quantity`.
+            Only used if the corresponding type is not a `astropy.units.Quantity` or `None`.
 
         wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
             The WCS to use to calculate the pixel coordinates based on the
