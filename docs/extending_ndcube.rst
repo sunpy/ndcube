@@ -41,7 +41,7 @@ For instance if your class has a special property ``.info`` it would not automat
 You would need to customize all these operations.
 If instead you put an ``info`` key in the ``meta`` dictionary it would automatically be copied through the appropriate operations.
 
-If your subclass does have custom attributes you need to propagate through methods and functions, you will probably need to overload these methods in your subclass.
+If your subclass does have custom attributes you need to propagate through methods and functions, you will in most cases need to overload these methods in your subclass.
 On `.NDCube` the only method which returns another instance of your subclass is currently `~.NDCube.reproject_to`.
 
 
