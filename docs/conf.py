@@ -71,6 +71,7 @@ intersphinx_mapping = {
                    (None, 'http://data.astropy.org/intersphinx/matplotlib.inv')),
     'astropy': ('http://docs.astropy.org/en/stable/', None),
     'sunpy': ('https://docs.sunpy.org/en/stable/', None),
+    'mpl_animators': ('https://docs.sunpy.org/projects/mpl-animators/en/stable/', None),
     'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None)}
 
 # -- Options for HTML output -------------------------------------------------
@@ -89,7 +90,7 @@ except ImportError:
 # html_static_path = ['_static']
 
 # Render inheritance diagrams in SVG
-graphviz_output_format = "svg"
+graphviz_output_format = 'svg'
 
 graphviz_dot_args = [
     '-Nfontsize=10',
