@@ -561,7 +561,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 NDCube
                 ------
                 Dimensions: {self.dimensions}
-                Physical Types of Axes: {self.array_axis_physical_types}""")
+                Physical Types of Axes: {self.array_axis_physical_types}
+                Unit: {self.unit}
+                Data Type: {self.data.dtype}""")
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{str(self)}"

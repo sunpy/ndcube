@@ -132,7 +132,12 @@ class BaseTableCoordinate(abc.ABC):
         return MultipleTableCoordinate(self, other)
 
     def __str__(self):
-        return str(self.table)
+        header = f"{self.__class__.__name__} {self.names or ''} {self.physical_types or '[None]'}:"
+        content = str(self.table).lstrip('(').rstrip(',)')
+        if len(header) + len(content) >= np.get_printoptions()['linewidth']:
+            return '\n'.join((header, content))
+        else:
+            return ' '.join((header, content))
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
@@ -477,7 +482,14 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         self._dropped_coords = list()
 
     def __str__(self):
-        return f"MultipleTableCoordinate(tables=[{', '.join([str(t) for t in self._table_coords])}])"
+        classname = self.__class__.__name__
+        length = len(classname) + sum(len(str(t)) for t in self._table_coords) + 10
+        if length > np.get_printoptions()['linewidth']:
+            joiner = ',\n ' + (len(classname) + 8) * ' '
+        else:
+            joiner = ', '
+
+        return f"{classname}(tables=[{joiner.join([str(t) for t in self._table_coords])}])"
 
     def __and__(self, other):
         if not isinstance(other, BaseTableCoordinate):
