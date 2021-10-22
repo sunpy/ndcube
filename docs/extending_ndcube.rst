@@ -1,3 +1,5 @@
+.. _extending_ndcube:
+
 Extending ndcube in Other Packages
 ==================================
 

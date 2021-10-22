@@ -54,6 +54,14 @@ Ideally, we would like a short code example so we can run into the bug on our ow
 
 .. _issue tracker: https://github.com/sunpy/ndcube/issues
 
+
+Using ndcube in your project
+----------------------------
+
+The ndcube package has been built to be used directly, or where needed extended in your own package.
+Read more about :ref:`extending_ndcube`.
+Please come tell us about what you build with ndcube to help make it better for everyone.
+
 .. _contributing:
 
 Contributing to ndcube
