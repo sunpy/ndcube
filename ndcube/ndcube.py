@@ -46,10 +46,10 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         Parameters
         ----------
         points: iterable of iterables
-            Tuples of high level coordinate objects e.g.
-            `~astropy.coordinates.SkyCoord`. The coordinates of the points
+            Tuples of high level coordinate objects
+            e.g. `~astropy.coordinates.SkyCoord`. The coordinates of the points
             **must be specified in Cartesian (WCS) order** as they are passed
-             to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
+            to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
             Therefore their number and order must be compatible with the API
             of that method.
 
