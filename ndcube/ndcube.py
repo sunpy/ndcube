@@ -49,12 +49,12 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
             Tuples of high level coordinate objects e.g.
             `~astropy.coordinates.SkyCoord`. The coordinates of the points
             **must be specified in Cartesian (WCS) order** as they are passed
-            to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index` so
-            their number and order must be compatible with the API of that
-            method.
+             to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
+            Therefore their number and order must be compatible with the API
+            of that
 
             It is possible to not specify a coordinate for an axis by
-            replacing any object with `None`, any coordinate replaced by `None`
+            replacing any object with `None`. Any coordinate replaced by `None`
             will not be used to calculate pixel coordinates, and therefore not
             affect the calculation of the final bounding box.
 
