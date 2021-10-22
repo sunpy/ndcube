@@ -59,10 +59,11 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
             affect the calculation of the final bounding box.
 
         wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS to use to calculate the pixel coordinates based on the input.
-            Will default to the ``.wcs`` property if not given. While any valid WCS
-            could be used it is expected that either the ``.wcs`` or
-            ``.extra_coords`` properties will be used.
+            The WCS to use to calculate the pixel coordinates based on the
+            input. Will default to the ``.wcs`` property if not given. While
+            any valid WCS could be used it is expected that either the
+            ``.wcs``, ``.combined_wcs``, or ``.extra_coords`` properties will
+            be used.
 
         Returns
         -------
@@ -89,20 +90,20 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
             any coordinate with `None`. Any coordinate replaced by `None` will
             not be used to calculate pixel coordinates, and therefore not
             affect the calculation of the final bounding box. Note that you
-            must specify all coordinates for any correlated axes, i.e. both
-            spatial coordinates.
+            must specify either none or all coordinates for any correlated
+            axes, i.e. both spatial coordinates.
 
         units: iterable of `astropy.units.Unit`
-            The unit of the corresponding entries in lower_corner and upper_corner.
-            Must therefore be the same length as lower_corner and upper_corner.
+            The unit of the corresponding entries in each point.
+            Must therefore be the same length as the number of world axes.
             Only used if the corresponding type is not a `astropy.units.Quantity`.
 
         wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS object to used to convert the world values to array indices.
-            Although technically this can be any valid WCS, it will typically be
-            self.wcs, self.extra_coords.wcs, or self.combined_wcs, combing both
-            the WCS and extra coords.
-            Default=self.wcs
+            The WCS to use to calculate the pixel coordinates based on the
+            input. Will default to the ``.wcs`` property if not given. While
+            any valid WCS could be used it is expected that either the
+            ``.wcs``, ``.combined_wcs``, or ``.extra_coords`` properties will
+            be used.
 
         Returns
         -------
