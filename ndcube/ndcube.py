@@ -51,7 +51,7 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
             **must be specified in Cartesian (WCS) order** as they are passed
              to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
             Therefore their number and order must be compatible with the API
-            of that
+            of that method.
 
             It is possible to not specify a coordinate for an axis by
             replacing any object with `None`. Any coordinate replaced by `None`
@@ -78,17 +78,19 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         Parameters
         ----------
         points: iterable of iterables
-            Tuples of high level coordinate objects e.g.
-            `~astropy.coordinates.SkyCoord`. The coordinates of the points
-            **must be specified in Cartesian (WCS) order** as they are passed
-             to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
-            Therefore their number and order must be compatible with the API
-            of that
+            Tuples of coordinates as `~astropy.units.Quantity` objects. The
+            coordinates of the points **must be specified in Cartesian (WCS)
+            order** as they are passed to
+            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index_values`.
+            Therefore their number and order must be compatible with the API of
+            that method.
 
-            It is possible to not specify a coordinate for an axis by
-            replacing any object with `None`. Any coordinate replaced by `None`
-            will not be used to calculate pixel coordinates, and therefore not
-            affect the calculation of the final bounding box.
+            It is possible to not specify a coordinate for an axis by replacing
+            any coordinate with `None`. Any coordinate replaced by `None` will
+            not be used to calculate pixel coordinates, and therefore not
+            affect the calculation of the final bounding box. Note that you
+            must specify all coordinates for any correlated axes, i.e. both
+            spatial coordinates.
 
         units: iterable of `astropy.units.Unit`
             The unit of the corresponding entries in lower_corner and upper_corner.
