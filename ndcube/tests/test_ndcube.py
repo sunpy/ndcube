@@ -209,6 +209,44 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     assert awc == tuple()
 
 
+def test_axis_world_coords_with_ec(ndcube_3d_ln_lt_l_ec_all_axes):
+    cube = ndcube_3d_ln_lt_l_ec_all_axes
+    t0 = Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"], scale="utc", format="fits")
+
+    coords = cube.axis_world_coords(wcs=cube.extra_coords)
+    assert len(coords) == 3
+    assert isinstance(coords[0], Time)
+    assert isinstance(coords[1], u.Quantity)
+    assert isinstance(coords[2], u.Quantity)
+    assert u.allclose(coords[0].mjd, t0.mjd, rtol=1e-12)
+    assert u.allclose(coords[1], list(range(3)) * u.pix)
+    assert u.allclose(coords[2], list(range(4)) * u.m)
+
+    coords = cube.axis_world_coords(wcs=cube.combined_wcs)
+    assert len(coords) == 5
+    assert u.allclose(coords[2].mjd, t0.mjd, rtol=1e-12)
+    assert u.allclose(coords[3], list(range(3)) * u.pix)
+    assert u.allclose(coords[4], list(range(4)) * u.m)
+
+
+def test_axis_world_coords_simple_ec(ndcube_3d_ln_lt_l):
+    cube = ndcube_3d_ln_lt_l
+
+    coords = cube.axis_world_coords(wcs=cube.extra_coords)
+    if len(coords) == 1:
+        assert u.allclose(coords[0][:4], list(range(4)) * u.pix)
+        pytest.xfail("gwcs < 0.17 strips ExtraCoords axes with repetitive units/physical_type")
+
+    assert len(coords) == 3
+    for i in range(3):
+        assert u.allclose(coords[i][:i+2], list(range(i+2)) * u.pix)
+
+    coords = cube.axis_world_coords(wcs=cube.combined_wcs)
+    assert len(coords) == 5
+    for i in range(2, 5):
+        assert u.allclose(coords[i][:i], list(range(i)) * u.pix)
+
+
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
@@ -356,9 +394,31 @@ def test_axis_world_coords_radec(ndcube_3d_l_ra_dec):
     assert len(coords) == 2
     assert isinstance(coords[0], u.Quantity)
     assert u.allclose(coords[0], np.arange(1.02e-09, 1.22e-09, 2.0e-11) * u.m)
-
     assert isinstance(coords[1], SkyCoord)
     assert coords[1].shape == (400, 300)
+
+    # Need to update this to `extra_coords` covering the full data array.
+    coords = ndcube_3d_l_ra_dec.axis_world_coords(wcs=ndcube_3d_l_ra_dec.extra_coords)
+    if len(coords) == 1:
+        assert u.allclose(coords[0][:4], list(range(4)) * u.pix)
+        pytest.xfail("gwcs < 0.17 strips ExtraCoords axes with repetitive units/physical_type")
+
+    assert len(coords) == 3
+    for i in range(3):
+        assert u.allclose(coords[i][:i+2], list(range(i+2)) * u.pix)
+
+    coords = ndcube_3d_l_ra_dec.axis_world_coords(wcs=ndcube_3d_l_ra_dec.combined_wcs)
+    assert len(coords) == 5
+    assert isinstance(coords[0], u.Quantity)
+    assert u.allclose(coords[0], np.arange(1.02e-09, 1.22e-09, 2.0e-11) * u.m)
+    assert isinstance(coords[1], SkyCoord)
+    assert coords[1].shape == (400, 300)
+
+    for i in range(2, 5):
+        assert u.allclose(coords[i][:i], list(range(i)) * u.pix)
+
+
+def test_axis_world_coords_limits_radec(ndcube_3d_l_ra_dec):
 
     coords = ndcube_3d_l_ra_dec.axis_world_coords_limits()
     assert u.allclose(coords[0], [1.02e-09, 1.20e-09] * u.m)
@@ -375,20 +435,21 @@ def test_axis_world_coords_radec(ndcube_3d_l_ra_dec):
     assert u.allclose(coords[1].ra, [63.64277, 104.777] * u.deg)
     assert u.allclose(coords[1].dec, [17.6213, 49.5710] * u.deg)  # [17.6213, 48.7533] at corners
 
+    coords = ndcube_3d_l_ra_dec.axis_world_coords_limits(wcs=ndcube_3d_l_ra_dec.extra_coords)
+    if len(coords) == 1:
+        assert u.allclose(coords[0], [0, 3] * u.pix)
+        pytest.xfail("gwcs < 0.17 strips ExtraCoords axes with repetitive units/physical_type")
+
+    assert len(coords) == 3
+    for i in range(3):
+        assert u.allclose(coords[i], [0, i+1] * u.pix)
+
     coords = ndcube_3d_l_ra_dec.axis_world_coords_limits(wcs=ndcube_3d_l_ra_dec.combined_wcs)
+    assert len(coords) == 5
     assert isinstance(coords[1], SkyCoord)
     assert u.allclose(coords[0], [1.02e-09, 1.20e-09] * u.m)
-    assert u.allclose(coords[2], [0, 3] * u.pix)
-
-    coords = ndcube_3d_l_ra_dec.axis_world_coords_limits(wcs=ndcube_3d_l_ra_dec.extra_coords)
-    assert len(coords) == 1
-    assert u.allclose(coords[0], [0, 3] * u.pix)
-
-    # pytest.xfail("NaNs in ExtraCoords(?)")
-    # this returns an array of len 10 filled up with NaN, does not seem right...
-    coords = ndcube_3d_l_ra_dec.axis_world_coords(wcs=ndcube_3d_l_ra_dec.extra_coords)
-    assert len(coords) == 1
-    assert u.allclose(coords[0][:4], [0, 1, 2, 3] * u.pix)
+    for i in range(2, 5):
+        assert u.allclose(coords[i], [0, i-1] * u.pix)
 
 
 def test_axis_world_coords_rapol(ndcube_3d_l_ra_pol):
