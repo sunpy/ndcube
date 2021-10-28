@@ -47,6 +47,8 @@ If your subclass does have custom attributes you need to propagate through metho
 On `.NDCube` the only method which returns another instance of your subclass is currently `~.NDCube.reproject_to`.
 
 
+.. _customizing_plotter:
+
 Customizing the Visualization
 #############################
 

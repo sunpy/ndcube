@@ -164,14 +164,35 @@ However, there are various technical reasons why this hasn't been done in the in
 ``crop_by_coords`` is now ``crop`` and ``crop_by_values``
 ---------------------------------------------------------
 
+The old ``NDCube.crop_by_coords`` method has been replaced with two new methods `.NDCube.crop` and `.NDCube.crop_by_values`.
+The new methods accept high-level (e.g. `~astropy.coordinates.SkyCoord`) objects or quantities respectively.
+The new methods also use a different algorithm to ``crop_by_coords``, which has been selected to work with data of all dimensionality and coordinates.
+Both the crop methods take N points as positional arguments, each of these points must have an entry for each world axis, and the smallest pixel box containing all these world coordinates will be returned.
+For more information see :ref:`ndcube_crop`.
+
 
 ``.world_to_pixel`` and ``.pixel_to_world`` removed
 ---------------------------------------------------
+
+As part of the transition to relying on APE 14 compliant WCS objects ``NDCube.world_to_pixel`` and ``pixel_to_world`` are now redundant as the APE 14 WCS API specifies that the WCS object must provide these methods with equivalent functionality.
+Therefore you should now use ``NDCube.wcs.pixel_to_world`` and ``NDCube.wcs.world_to_pixel``; in addition to this you can also make use of the ``_values`` or ``array_index`` variants of these methods (see `~astropy.wcs.wcsapi.BaseLowLevelWCS`).
 
 
 Removed Arithmetic Operations
 -----------------------------
 
+During the rewrite the decision was taken to for ``NDCube`` not inherit the `astropy.nddata.NDArithmeticMixin` class.
+The primary reason for this is that the operations supported by this mixin are not coordinate aware, in the future of ``NDCube`` we would like to see operations such as add and subtract first check for aligned pixel grids.
+
 
 Visualization Changes
 =====================
+
+The final major change in 2.0 is a rework of the built in visualization tooling in ndcube.
+While the visualization code in 1.x was very powerful, that power came with a very high level of complexity, which made maintaining that functionality difficult.
+When we were migrating ndcube to use the new WCS APIs we needed to modify large amounts of the existing visualization code, which just became untenable with the amount of time available.
+We therefore took the decision to significantly reduce the scope of the built in visualization functionality.
+
+The visualization code included in 2.0 only uses `~astropy.visualization.wcsaxes`, which means that **all plots are made in pixel space** with ticks and gridlines overplotted to show world coordinates.
+This has dramatically simplified the code in ndcube, as almost all the complexity is now delegated to ``wcsaxes``.
+In addition to this we have made it easier for users and developers to replace (or even disable) the built in functionality by use of the ``.plotter`` attribute, which you can read about in :ref:`customizing_plotter`.
