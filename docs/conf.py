@@ -65,8 +65,6 @@ intersphinx_mapping = {
                (None, 'http://data.astropy.org/intersphinx/python3.inv')),
     'numpy': ('https://docs.scipy.org/doc/numpy/',
               (None, 'http://data.astropy.org/intersphinx/numpy.inv')),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference/',
-              (None, 'http://data.astropy.org/intersphinx/scipy.inv')),
     'matplotlib': ('https://matplotlib.org/',
                    (None, 'http://data.astropy.org/intersphinx/matplotlib.inv')),
     'astropy': ('http://docs.astropy.org/en/stable/', None),
@@ -84,10 +82,7 @@ try:
 except ImportError:
     html_theme = 'default'
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_logo = 'logo/ndcube.png'
 
 # Render inheritance diagrams in SVG
 graphviz_output_format = 'svg'
