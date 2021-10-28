@@ -127,10 +127,11 @@ As a corollary to the above, there is no longer a ``.missing_axes`` property on 
 Dropped dimensions moved from ``.wcs`` to ``.global_coords``
 ------------------------------------------------------------
 
-As another consequence of the slicing of the WCS object moving into the ``.wcs`` property, when dimensions are dropped those world coordinates are no longer accessible through the ``.wcs``.
+As another consequence of the WCS slicing, when dimensions are dropped those world coordinates are no longer accessible through the ``.wcs``.
 To overcome this, and also to provide a structured place for future, or custom, cube-wide coordinates the ``.global_coords`` property was added.
 
-``.global_coords`` will automatically be populated by any dimensions dropped via slicing the ``NDCube``, via functionality in `~astropy.wcs.wcsapi.SlicedLowLevelWCS`, or coordinates can be added to the object explicitly.
+``.global_coords`` will automatically be populated by any dimensions dropped via slicing the ``NDCube``, via functionality in `~astropy.wcs.wcsapi.SlicedLowLevelWCS`.
+Scalar coordinates can also be added to the ``.global_coords`` object explicitly.
 
 
 The Saga of ``extra_coords``
@@ -138,6 +139,7 @@ The Saga of ``extra_coords``
 
 As part of the transition to using APE 14 compliant WCS objects everywhere we have transitioned ``.extra_coords`` to use `gWCS` underneath to provide a APE-14 compliant API to the extra coords lookup tables.
 Due to the extra functionality and therefore complexity of the `.ExtraCoords` object (over the previous `dict` implementation) the ``extra_coords=`` keyword argument has been removed from the `.NDCube` constructor.
+Extra coordinates can be added individually using the `~.ExtraCoords.add` method on the ``.extra_coords`` property.
 
 If you wish to build a `.NDCube` object from lookup tables without a WCS object you might find the extra coords infrastructure useful, this is documented in :ref:`tabular_coordinates`.
 
