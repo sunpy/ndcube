@@ -113,7 +113,8 @@ In ``ndcube`` 1.x the ``NDCube.wcs`` property was always an instance of `astropy
 This is no longer true **even if you pass such an instance to NDCube**.
 The reason for this is that operations like slicing may change the type of the ``.wcs`` object to represent different views into the original WCS.
 
-The ``.wcs`` property will always be an object which is an instance of `astropy.wcs.wcsapi.BaseHighLevelWCS`, you should adjust any code which needs to work with any ``NDCube`` object to only use this (and associated `~astropy.wcs.wcsapi.BaseLowLevelWCS`) APIs.
+The ``.wcs`` property will always be an object which is an instance of `astropy.wcs.wcsapi.BaseHighLevelWCS`.
+You should therefore adjust any code which needs to work with any ``NDCube`` object to only use this (and associated `~astropy.wcs.wcsapi.BaseLowLevelWCS`) APIs.
 
 Future work in astropy or ndcube may increase the chances the type of the original WCS will be preserved, but it is highly unlikely that it will ever be possible to always carry the type of the WCS through all slicing operations.
 
@@ -128,10 +129,10 @@ Dropped dimensions moved from ``.wcs`` to ``.global_coords``
 ------------------------------------------------------------
 
 As another consequence of the WCS slicing, when dimensions are dropped those world coordinates are no longer accessible through the ``.wcs``.
-To overcome this, and also to provide a structured place for future, or custom, cube-wide coordinates the ``.global_coords`` property was added.
+To overcome this, and also to provide a structured place for future, or custom, cube-wide scalar coordinates the ``.global_coords`` property was added.
 
 ``.global_coords`` will automatically be populated by any dimensions dropped via slicing the ``NDCube``, via functionality in `~astropy.wcs.wcsapi.SlicedLowLevelWCS`.
-Scalar coordinates can also be added to the ``.global_coords`` object explicitly.
+Scalar coordinates can also be added to the ``.global_coords`` object explicitly using the `~ndcube.GlobalCoords.add` method.
 
 
 The Saga of ``extra_coords``
@@ -141,7 +142,8 @@ As part of the transition to using APE 14 compliant WCS objects everywhere we ha
 Due to the extra functionality and therefore complexity of the `.ExtraCoords` object (over the previous `dict` implementation) the ``extra_coords=`` keyword argument has been removed from the `.NDCube` constructor.
 Extra coordinates can be added individually using the `~.ExtraCoords.add` method on the ``.extra_coords`` property.
 
-If you wish to build a `.NDCube` object from lookup tables without a WCS object you might find the extra coords infrastructure useful, this is documented in :ref:`tabular_coordinates`.
+If you wish to build a `.NDCube` object from lookup tables without a WCS object you might find the extra coords infrastructure useful.
+This is documented in :ref:`tabular_coordinates`.
 
 
 ``.wcs``, ``.extra_coords`` and ``.combined_wcs``
@@ -165,9 +167,11 @@ However, there are various technical reasons why this hasn't been done in the in
 ---------------------------------------------------------
 
 The old ``NDCube.crop_by_coords`` method has been replaced with two new methods `.NDCube.crop` and `.NDCube.crop_by_values`.
-The new methods accept high-level (e.g. `~astropy.coordinates.SkyCoord`) objects or quantities respectively.
+The new methods accept high-level (e.g. `~astropy.coordinates.SkyCoord`) objects and quantities respectively.
 The new methods also use a different algorithm to ``crop_by_coords``, which has been selected to work with data of all dimensionality and coordinates.
-Both the crop methods take N points as positional arguments, each of these points must have an entry for each world axis, and the smallest pixel box containing all these world coordinates will be returned.
+Both the crop methods take N points as positional arguments where each point must have an entry for each world axis.
+The cube will then be cropped to the smallest pixel box containing the input points.
+Note that in this algorithm the input points are not interpreted as corners of a bounding box, although is some cases the result will be equivalent to that interpretation.
 For more information see :ref:`ndcube_crop`.
 
 
@@ -182,7 +186,8 @@ Removed Arithmetic Operations
 -----------------------------
 
 During the rewrite the decision was taken to for ``NDCube`` not inherit the `astropy.nddata.NDArithmeticMixin` class.
-The primary reason for this is that the operations supported by this mixin are not coordinate aware, in the future of ``NDCube`` we would like to see operations such as add and subtract first check for aligned pixel grids.
+The primary reason for this is that the operations supported by this mixin are not coordinate aware.
+It is intended that in the future, ``NDCube`` will support operations such as add and subtract by first checking for aligned pixel grids.
 
 
 Visualization Changes
@@ -195,4 +200,5 @@ We therefore took the decision to significantly reduce the scope of the built in
 
 The visualization code included in 2.0 only uses `~astropy.visualization.wcsaxes`, which means that **all plots are made in pixel space** with ticks and gridlines overplotted to show world coordinates.
 This has dramatically simplified the code in ndcube, as almost all the complexity is now delegated to ``wcsaxes``.
-In addition to this we have made it easier for users and developers to replace (or even disable) the built in functionality by use of the ``.plotter`` attribute, which you can read about in :ref:`customizing_plotter`.
+In addition to this we have made it easier for users and developers to replace, customize, or disable the built in functionality by use of the ``.plotter`` attribute.
+Learn more in :ref:`customizing_plotter`.

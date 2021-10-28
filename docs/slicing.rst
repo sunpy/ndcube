@@ -111,7 +111,8 @@ It does not rebin or interpolate the data.  The order of the high level coordina
 In the following example we are working with a three dimensional (spectral, spatial, spatial) cube, and we wish to crop a smaller region of the spectral dimension and a smaller square in the spatial dimensions.
 To crop a rectangular region in the spatial axes, which correctly accounts for any rotation, we need to specify all four corners of the rectangle.
 However, along the one dimensional spectral dimension (which is not correlated to the spatial dimensions) we only need to specify two points.
-We achieve this by replacing the spectral coordinate with `None` in the last two points, this means that these world points are not used in calculating the pixel coordinates to crop the cube to.
+We achieve this by replacing the spectral coordinate with `None` in the last two points.
+This means that these world points are not used in calculating the pixel range to which the spectral axis will be cropped.
 
 .. code-block:: python
 
