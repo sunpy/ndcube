@@ -105,10 +105,13 @@ Cropping with Real World Coordinates
 In addition to slicing by index, `~ndcube.NDCube` supports slicing by real world coordinates via the `~ndcube.NDCube.crop` method.
 This takes two iterables of high level coordinate objects, e.g. `~astropy.time.Time`, `~astropy.coordinates.SkyCoord`, `~astropy.coordinates.SpectralCoord`, `~astropy,units.Quantity` etc.
 Each iterable describes a single location in the data array in real world coordinates.
-The first iterable describes the lower corner of the region of interest and thus contains the lower limit of each real world coordinate.
-The second iterable represents the upper corner of the region of interest and thus contains the upper limit of each real world coordinate.
-The crop method identifies the smallest rectangular region in the data array that contains both the lower and upper limits in all the real world coordinates, and crops the `~ndcube.NDCube` to that region.
+The crop method identifies the smallest rectangular region in the data array that contains all the specified coordinates, and crops the `~ndcube.NDCube` to that region.
 It does not rebin or interpolate the data.  The order of the high level coordinate objects in each iterable must be the same as that expected by `astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`, namely in world order.
+
+In the following example we are working with a three dimensional (spectral, spatial, spatial) cube, and we wish to crop a smaller region of the spectral dimension and a smaller square in the spatial dimensions.
+To crop a rectangular region in the spatial axes, which correctly accounts for any rotation, we need to specify all four corners of the rectangle.
+However, along the one dimensional spectral dimension (which is not correlated to the spatial dimensions) we only need to specify two points.
+We achieve this by replacing the spectral coordinate with `None` in the last two points, this means that these world points are not used in calculating the pixel coordinates to crop the cube to.
 
 .. code-block:: python
 
@@ -116,11 +119,13 @@ It does not rebin or interpolate the data.  The order of the high level coordina
   >>> from astropy.coordinates import SkyCoord, SpectralCoord
   >>> from sunpy.coordinates.frames import Helioprojective
   >>> # Use coordinate objects to mark the lower limit of the region of interest.
-  >>> lower_corner = [SpectralCoord(1.04e-9, unit=u.m),
-  ...                 SkyCoord(Tx=1, Ty=0.5, unit=u.deg, frame=Helioprojective)]
-  >>> upper_corner = [SpectralCoord(1.08e-9, unit=u.m),
-  ...                 SkyCoord(Tx=1.5, Ty=1.5, unit=u.deg, frame=Helioprojective)]
-  >>> my_cube_roi = my_cube.crop(lower_corner, upper_corner)
+  >>> lower_left = [SpectralCoord(1.04e-9, unit=u.m),
+  ...               SkyCoord(Tx=1, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_right = [SpectralCoord(1.08e-9, unit=u.m),
+  ...                SkyCoord(Tx=1.5, Ty=1.5, unit=u.deg, frame=Helioprojective)]
+  >>> lower_right = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_left = [None, SkyCoord(Tx=1, Ty=1.5, unit=u.deg, frame=Helioprojective)]
+  >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
 
 .. _sequence_slicing:
 
