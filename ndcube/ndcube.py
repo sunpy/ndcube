@@ -491,6 +491,22 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
         else:
+            comp = [c[0] for c in wcs.world_axis_object_components]
+            for k, c in enumerate(comp):
+                if comp.count(c) > 1:
+                    comp.pop(k)
+            for i, point in enumerate(points):
+                if len(point) != len(comp):
+                    raise ValueError(f"{len(point)} components in point {i} do not match "
+                                     f"WCS with {len(comp)} components.")
+                for j, value in enumerate(point):
+                    if not (value is None or
+                            isinstance(value, wcs.world_axis_object_classes[comp[j]][0])):
+                        raise TypeError(f"Type {type(value)} of component {j} in point {i} is "
+                                        f"incompatible with WCS component {comp[j]} class "
+                                        f"{wcs.world_axis_object_components} "
+                                        f"{wcs.world_axis_object_classes} "
+                                        f"{type(wcs.world_axis_object_classes[comp[j]][0])}")
             return utils.cube.get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
@@ -514,6 +530,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise ValueError("units must be None or have same length as corner inputs.")
         types_with_units = (u.Quantity, type(None))
         for i, point in enumerate(points):
+            if len(point) != wcs.world_n_dim:
+                raise ValueError(f"{len(point)} dimensions in point {i} do not match "
+                                 f"WCS with {wcs.world_n_dim} dimensions.")
             for j, (value, unit) in enumerate(zip(point, units)):
                 value_is_float = not isinstance(value, types_with_units)
                 if value_is_float:
@@ -523,6 +542,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                             "the corresponding unit must be a valid astropy Unit or unit string."
                             f"index: {i}; coord type: {type(value)}; unit: {unit}")
                     points[i][j] = u.Quantity(value, unit=unit)
+                elif value is not None:
+                    unit = value.unit
+                if not (value is None or unit.is_equivalent(wcs.world_axis_units[j])):
+                    raise ValueError(f"Unit '{unit}' of coordinate object {j} in point {i} is "
+                                     f"incompatible with WCS unit '{wcs.world_axis_units[j]}'")
 
         return utils.cube.get_crop_item_from_points(points, wcs, True)
 
