@@ -1,3 +1,0 @@
-Ensure `NDCube` init forces WCS to become high level.
-
-This patches a bug in astropy.

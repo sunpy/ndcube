@@ -1,1 +1,0 @@
-Replace NDCube.crop_by_coords and NDCube.crop_by_extra_coords with new method, NDCube.crop

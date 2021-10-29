@@ -1,1 +1,0 @@
-Improved information and formatting of ``__str__`` methods.

@@ -1,1 +1,0 @@
-Remove NDCollection.aligned_world_axis_physical_types.  It will be replaced by `~ndcube.NDCollection.aligned_axis_physical_types`.

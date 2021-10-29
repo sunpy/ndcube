@@ -1,1 +1,0 @@
-Add properties to NDCubeSequence giving the world physical types for each array axis.

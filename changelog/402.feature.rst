@@ -1,1 +1,0 @@
-Preserve sliced-out coordinates from WCS in the GlobalCoords instance.
