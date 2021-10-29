@@ -1,3 +1,5 @@
+.. _ndcube_introduction:
+
 =========================
 An Introduction to ndcube
 =========================
@@ -94,6 +96,8 @@ This enables users to easily include the extra coordinates when visualizing the 
 Finally, a new `~ndcube.GlobalCoords` class can hold coordinates that do not refer to any axis.
 This is particularly useful when the dimensionality of an `~ndcube.NDCube` is reduced by slicing.
 The value of a coordinate at the location along the dropped axis at which the `~ndcube.NDCube` was sliced can be retained.
+
+.. _ndcube_20_migration:
 
 ================================
 Upgrading from ndcube 1.x to 2.x
