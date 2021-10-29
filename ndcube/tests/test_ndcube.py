@@ -449,8 +449,30 @@ def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
     point = SkyCoord(Tx=359.99667, Ty=-0.0011111111, unit="deg", frame=frame)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r'Input points causes cube to be cropped to a single pix'):
         cube.crop(point)
+
+
+def test_crop_missing_dimensions(ndcube_4d_ln_lt_l_t):
+    """Test bbox coordinates not being the same length as cube WCS"""
+    cube = ndcube_4d_ln_lt_l_t
+    interval0 = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
+    lower_corner = [interval0[0], None]
+    upper_corner = [interval0[-1], None]
+    with pytest.raises(ValueError, match=r'2 components in point 0 do not match WCS with 3'):
+        cube.crop(lower_corner, upper_corner)
+
+
+def test_crop_mismatch_class(ndcube_4d_ln_lt_l_t):
+    """Test bbox coordinates not being the same length as cube WCS"""
+    cube = ndcube_4d_ln_lt_l_t
+    intervals = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])
+    intervals[0] = SpectralCoord([3e-11, 4.5e-11], unit=u.m)
+    lower_corner = [coord[0] for coord in intervals]
+    upper_corner = [coord[-1] for coord in intervals]
+    with pytest.raises(TypeError, match=r"<class .*.SpectralCoord'> of component 0 in point 0 is "
+                                        r"incompatible with WCS component time"):
+        cube.crop(lower_corner, upper_corner)
 
 
 def test_crop_by_values(ndcube_4d_ln_lt_l_t):
@@ -510,19 +532,19 @@ def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
     lower_corner[0] = 0.5
     upper_corner = [None] * 4
     upper_corner[0] = 1.1
-    with pytest.raises(ValueError, match='units must be None or have same length as corner inputs'):
+    with pytest.raises(ValueError, match=r'Units must be None or have same length 4 as corner inp'):
         ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=["m"])
 
 
 def test_crop_by_values_valueerror2(ndcube_4d_ln_lt_l_t):
     """Test upper and lower coordinates not being the same length"""
-    with pytest.raises(ValueError, match='All points must have same number of coordinate objects'):
+    with pytest.raises(ValueError, match=r'All points must have same number of coordinate objects'):
         ndcube_4d_ln_lt_l_t.crop_by_values([0], [1, None])
 
 
 def test_crop_by_values_missing_dimensions(ndcube_4d_ln_lt_l_t):
     """Test bbox coordinates not being the same length as cube WCS"""
-    with pytest.raises(ValueError, match='3 dimensions in point 0 do not match WCS with 4'):
+    with pytest.raises(ValueError, match=r'3 dimensions in point 0 do not match WCS with 4'):
         ndcube_4d_ln_lt_l_t.crop_by_values([0, None, None], [1, None, None])
 
 
@@ -536,19 +558,9 @@ def test_crop_by_values_with_wrong_units(ndcube_4d_ln_lt_l_t):
     lower_corner[1] *= u.m
     upper_corner[1] *= u.m
     lower_corner[2] *= u.km
-    with pytest.raises(ValueError, match="Unit 'km' of coordinate object 2 in point 0 is "
-                                         "incompatible with WCS unit 'deg'"):
+    with pytest.raises(ValueError, match=r"Unit 'km' of coordinate object 2 in point 0 is "
+                                         r"incompatible with WCS unit 'deg'"):
         ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=units)
-
-
-def test_crop_missing_dimensions(ndcube_4d_ln_lt_l_t):
-    """Test bbox coordinates not being the same length as cube WCS"""
-    cube = ndcube_4d_ln_lt_l_t
-    interval0 = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
-    lower_corner = [interval0[0], None]
-    upper_corner = [interval0[-1], None]
-    with pytest.raises(ValueError, match='2 components in point 0 do not match WCS with 3'):
-        cube.crop(lower_corner, upper_corner)
 
 
 def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):

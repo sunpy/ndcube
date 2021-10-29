@@ -492,21 +492,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             return tuple([slice(None)] * wcs.pixel_n_dim)
         else:
             comp = [c[0] for c in wcs.world_axis_object_components]
+            # Trim to unique component names - `np.unique(..., return_index=True)
+            # keeps sorting alphabetically, set() seems just nondeterministic.
             for k, c in enumerate(comp):
                 if comp.count(c) > 1:
                     comp.pop(k)
+            classes = [wcs.world_axis_object_classes[c][0] for c in comp]
             for i, point in enumerate(points):
                 if len(point) != len(comp):
                     raise ValueError(f"{len(point)} components in point {i} do not match "
                                      f"WCS with {len(comp)} components.")
                 for j, value in enumerate(point):
-                    if not (value is None or
-                            isinstance(value, wcs.world_axis_object_classes[comp[j]][0])):
-                        raise TypeError(f"Type {type(value)} of component {j} in point {i} is "
-                                        f"incompatible with WCS component {comp[j]} class "
-                                        f"{wcs.world_axis_object_components} "
-                                        f"{wcs.world_axis_object_classes} "
-                                        f"{type(wcs.world_axis_object_classes[comp[j]][0])}")
+                    if not (value is None or isinstance(value, classes[j])):
+                        raise TypeError(f"{type(value)} of component {j} in point {i} is "
+                                        f"incompatible with WCS component {comp[j]} "
+                                        f"{type(classes[j])}.")
             return utils.cube.get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
@@ -527,12 +527,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if units is None:
             units = [None] * n_coords
         elif len(units) != n_coords:
-            raise ValueError("units must be None or have same length as corner inputs.")
+            raise ValueError(f"Units must be None or have same length {n_coords} as corner inputs.")
         types_with_units = (u.Quantity, type(None))
         for i, point in enumerate(points):
             if len(point) != wcs.world_n_dim:
                 raise ValueError(f"{len(point)} dimensions in point {i} do not match "
-                                 f"WCS with {wcs.world_n_dim} dimensions.")
+                                 f"WCS with {wcs.world_n_dim} world dimensions.")
             for j, (value, unit) in enumerate(zip(point, units)):
                 value_is_float = not isinstance(value, types_with_units)
                 if value_is_float:
