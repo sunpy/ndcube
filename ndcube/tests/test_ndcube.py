@@ -445,6 +445,14 @@ def test_crop_1d_dependent(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    point = (None, SpectralCoord([3e-11], unit=u.m), None)
+    expected = cube[:, :, 0, :]
+    output = cube.crop(point)
+    helpers.assert_cubes_equal(output, expected)
+
+
 def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
