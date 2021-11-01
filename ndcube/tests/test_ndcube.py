@@ -454,6 +454,7 @@ def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
 
 
 def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
+    """Test exception for single-valued bbox"""
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
     point = SkyCoord(Tx=359.99667, Ty=-0.0011111111, unit="deg", frame=frame)
@@ -462,7 +463,7 @@ def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
 
 
 def test_crop_missing_dimensions(ndcube_4d_ln_lt_l_t):
-    """Test bbox coordinates not being the same length as cube WCS"""
+    """Test exception for bbox coordinates not being the same length as cube WCS"""
     cube = ndcube_4d_ln_lt_l_t
     interval0 = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
     lower_corner = [interval0[0], None]
@@ -472,7 +473,7 @@ def test_crop_missing_dimensions(ndcube_4d_ln_lt_l_t):
 
 
 def test_crop_mismatch_class(ndcube_4d_ln_lt_l_t):
-    """Test bbox coordinates not being the same length as cube WCS"""
+    """Test exception for bbox coordinates not not matching classes of cube WCS"""
     cube = ndcube_4d_ln_lt_l_t
     intervals = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])
     intervals[0] = SpectralCoord([3e-11, 4.5e-11], unit=u.m)
@@ -480,6 +481,16 @@ def test_crop_mismatch_class(ndcube_4d_ln_lt_l_t):
     upper_corner = [coord[-1] for coord in intervals]
     with pytest.raises(TypeError, match=r"<class .*.SpectralCoord'> of component 0 in point 0 is "
                                         r"incompatible with WCS component time"):
+        cube.crop(lower_corner, upper_corner)
+
+
+@pytest.mark.parametrize("frame", ("icrs", "galactic", "geocentricsolarecliptic"))
+def test_crop_mismatch_celestial_class(ndcube_2d_ln_lt, frame):
+    cube = ndcube_2d_ln_lt
+    lower_corner = SkyCoord(359.99667, -0.0011111111, unit="deg", frame=frame)
+    upper_corner = SkyCoord(0.0044444444, 0.0011111111, unit="deg", frame=frame)
+    with pytest.raises(TypeError, match=r"SkyCoord.* of component 0 in point 0 is not in equivalent"
+                                        r" frame to WCS SkyCoord 0 celestial '<Helioprojective "):
         cube.crop(lower_corner, upper_corner)
 
 
@@ -535,7 +546,7 @@ def test_crop_by_values_all_nones(ndcube_4d_ln_lt_l_t):
 
 
 def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
-    """Test units not being the same length as the inputs"""
+    """Test exception for units not being the same length as the inputs"""
     lower_corner = [None] * 4
     lower_corner[0] = 0.5
     upper_corner = [None] * 4
@@ -545,18 +556,19 @@ def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
 
 
 def test_crop_by_values_valueerror2(ndcube_4d_ln_lt_l_t):
-    """Test upper and lower coordinates not being the same length"""
+    """Test exception for coordinates not having consistent length in all points"""
     with pytest.raises(ValueError, match=r'All points must have same number of coordinate objects'):
         ndcube_4d_ln_lt_l_t.crop_by_values([0], [1, None])
 
 
 def test_crop_by_values_missing_dimensions(ndcube_4d_ln_lt_l_t):
-    """Test bbox coordinates not being the same length as cube WCS"""
+    """Test exception for bbox coordinates not being the same lengths as cube WCS"""
     with pytest.raises(ValueError, match=r'3 dimensions in point 0 do not match WCS with 4'):
         ndcube_4d_ln_lt_l_t.crop_by_values([0, None, None], [1, None, None])
 
 
 def test_crop_by_values_with_wrong_units(ndcube_4d_ln_lt_l_t):
+    """Test exception for bbox coordinates not not matching units of cube WCS"""
     intervals = ndcube_4d_ln_lt_l_t.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
     units = [None, u.m, u.km, u.km]
     lower_corner = [coord[0] for coord in intervals]

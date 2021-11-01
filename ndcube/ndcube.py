@@ -14,6 +14,7 @@ try:
     import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
 except ImportError:
     pass
+from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
@@ -497,16 +498,22 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             for k, c in enumerate(comp):
                 if comp.count(c) > 1:
                     comp.pop(k)
-            classes = [wcs.world_axis_object_classes[c][0] for c in comp]
+            classes = [wcs.world_axis_object_classes[c] for c in comp]
             for i, point in enumerate(points):
                 if len(point) != len(comp):
                     raise ValueError(f"{len(point)} components in point {i} do not match "
                                      f"WCS with {len(comp)} components.")
                 for j, value in enumerate(point):
-                    if not (value is None or isinstance(value, classes[j])):
+                    if not (value is None or isinstance(value, classes[j][0])):
                         raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                         f"incompatible with WCS component {comp[j]} "
-                                        f"{type(classes[j])}.")
+                                        f"{type(classes[j][0])}.")
+                    elif isinstance(value, SkyCoord):
+                        frame = classes[j][2]['frame']
+                        if not value.is_equivalent_frame(frame):
+                            raise TypeError(f"SkyCoord '{value.name}' of component {j} in point "
+                                            f"{i} is not in equivalent frame to WCS SkyCoord {j} "
+                                            f"{comp[j]} '{classes[j][2]['frame']}'.")
             return utils.cube.get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
