@@ -129,7 +129,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
 
         mapped_axes = set(self.mapping.mapping)
         for mapped_axis in mapped_axes:
-            idx, = np.where(self.mapping.mapping == mapped_axis)
+            idx, = np.atleast_1d(self.mapping.mapping == mapped_axis).nonzero()
             if len(idx) > 1:
                 idx_0 = idx[0]
                 for idx_n in idx[1:]:

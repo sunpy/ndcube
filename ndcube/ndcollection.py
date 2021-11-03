@@ -112,9 +112,9 @@ class NDCollection(dict):
         if self.aligned_axes is None:
             raise ValueError("aligned_axes must be set to use this property.")
         # Get array axis physical types for each aligned axis for all members of collection.
-        collection_types = [
-            np.array(cube.array_axis_physical_types)[np.array(self.aligned_axes[name])]
-            for name, cube in self.items()]
+        collection_types = [np.array(cube.array_axis_physical_types,
+                                     dtype=object)[np.array(self.aligned_axes[name])]
+                            for name, cube in self.items()]
         # Return physical types common to all members of collection for each axis.
         return [tuple(set.intersection(*[set(cube_types[i]) for cube_types in collection_types]))
                 for i in range(self.n_aligned_axes)]

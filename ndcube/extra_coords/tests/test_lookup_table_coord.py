@@ -274,11 +274,14 @@ def test_2d_quantity():
 def test_repr_str(lut_1d_time, lut_1d_wave):
     assert str(lut_1d_time.table) in str(lut_1d_time)
     assert "TimeTableCoordinate" in repr(lut_1d_time)
+    assert str(lut_1d_wave.table)[1:-2] in str(lut_1d_wave)
+    assert "QuantityTableCoordinate" in repr(lut_1d_wave)
 
     join = lut_1d_time & lut_1d_wave
     assert str(lut_1d_time.table) in str(join)
-    assert str(lut_1d_wave.table) in str(join)
-    assert "TimeTableCoordinate" not in repr(join)
+    assert str(lut_1d_wave.table)[1:-2] in str(join)
+    assert "TimeTableCoordinate" in repr(join)
+    assert "QuantityTableCoordinate" in repr(join)
     assert "MultipleTableCoordinate" in repr(join)
 
 

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
+from mpl_animators import ArrayAnimatorWCS
 
 from . import plotting_utils as utils
 from .base import BasePlotter
@@ -55,7 +56,7 @@ class MatplotlibPlotter(BasePlotter):
             Additional keyword arguments are given to the underlying plotting infrastructure
             which depends on the dimensionality of the data and whether 1 or 2 plot_axes are
             defined:
-            - Animations: `sunpy.visualization.animator.ArrayAnimatorWCS`
+            - Animations: `mpl_animators.ArrayAnimatorWCS`
             - Static 2-D images: `matplotllib.pyplot.imshow`
             - Static 1-D line plots: `matplotllib.pyplot.plot`
         """
@@ -185,37 +186,9 @@ class MatplotlibPlotter(BasePlotter):
 
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
-
-        try:
-            from sunpy.visualization.animator import ArrayAnimatorWCS  # isort:skip
-        except ImportError:
-            raise ImportError("Sunpy is required for animated cube plots. "
-                              "Either install sunpy or slice your cube down "
-                              "to 2D before calling plot.")
-
-        # If data_unit set, convert data to that unit
-        if data_unit is None:
-            data = self._ndcube.data
-        else:
-            data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit).to_value(data_unit)
-
-        # Combine data values with mask.
-        if self._ndcube.mask is not None:
-            data = np.ma.masked_array(data, self._ndcube.mask)
-
-        coord_params = {}
-        if axes_units is not None:
-            for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types):
-                coord_params[coord_name] = {'format_unit': axis_unit}
-
-        # TODO: Add support for transposing the array.
-        if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
-            warnings.warn(
-                "Animating a NDCube does not support transposing the array. The world axes "
-                "may not display as expected because the array will not be transposed.",
-                UserWarning
-            )
-        plot_axes = [p if p is not None else 0 for p in plot_axes]
+        # Derive inputs for animation object and instantiate.
+        data, wcs, plot_axes, coord_params = self._prep_animate_args(wcs, plot_axes,
+                                                                     axes_units, data_unit)
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         # We need to modify the visible axes after the axes object has been created.
@@ -251,3 +224,30 @@ class MatplotlibPlotter(BasePlotter):
         if n_dim > 2:
             kwargs['slices'] = ['x', 'y'] + [None] * (ndim - 2)
         return WCSAxes, kwargs
+
+    def _prep_animate_args(self, wcs, plot_axes, axes_units, data_unit):
+        # If data_unit set, convert data to that unit
+        if data_unit is None:
+            data = self._ndcube.data
+        else:
+            data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit, copy=False).to_value(data_unit)
+
+        # Combine data values with mask.
+        if self._ndcube.mask is not None:
+            data = np.ma.masked_array(data, self._ndcube.mask)
+
+        coord_params = {}
+        if axes_units is not None:
+            for axis_unit, coord_name in zip(axes_units, world_axis_physical_types):
+                coord_params[coord_name] = {'format_unit': axis_unit}
+
+        # TODO: Add support for transposing the array.
+        if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
+            warnings.warn(
+                "Animating a NDCube does not support transposing the array. The world axes "
+                "may not display as expected because the array will not be transposed.",
+                UserWarning
+            )
+        plot_axes = [p if p is not None else 0 for p in plot_axes]
+
+        return data, wcs, plot_axes, coord_params
