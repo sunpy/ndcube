@@ -9,9 +9,9 @@ from functools import wraps
 import astropy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import mpl_animators
 import numpy as np
 import pytest
-import sunpy
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
@@ -34,10 +34,10 @@ def get_hash_library_name():
     Generate the hash library name for this env.
     """
     ft2_version = f"{mpl.ft2font.__freetype_version__.replace('.', '')}"
-    sunpy_version = "dev" if "dev" in sunpy.__version__ else sunpy.__version__.replace('.', '')
+    animators_version = "dev" if "dev" in mpl_animators.__version__ else mpl_animators.__version__.replace('.', '')
     mpl_version = "dev" if "+" in mpl.__version__ else mpl.__version__.replace('.', '')
     astropy_version = "dev" if "dev" in astropy.__version__ else astropy.__version__.replace('.', '')
-    return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}_astropy_{astropy_version}_sunpy_{sunpy_version}.json"
+    return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}_astropy_{astropy_version}_animators_{animators_version}.json"
 
 
 def figure_test(test_function):
@@ -66,10 +66,27 @@ def figure_test(test_function):
 
 
 def assert_extra_coords_equal(test_input, extra_coords):
-    assert test_input.keys() == extra_coords.keys()
-    for key in list(test_input.keys()):
-        assert test_input[key]['axis'] == extra_coords[key]['axis']
-        assert (test_input[key]['value'] == extra_coords[key]['value']).all()
+    assert set(test_input.keys()) == set(extra_coords.keys())
+    if extra_coords._lookup_tables is None:
+        assert test_input._lookup_tables is None
+    for ec_idx, key in enumerate(extra_coords.keys()):
+        test_idx = np.where(np.asarray(test_input.keys()) == key)[0][0]
+        assert test_input.mapping[test_idx] == extra_coords.mapping[ec_idx]
+        if extra_coords._lookup_tables is not None:
+            test_table = test_input._lookup_tables[test_idx][1].table
+            ec_table = extra_coords._lookup_tables[ec_idx][1].table
+            if not isinstance(ec_table, tuple):
+                test_table = (test_table,)
+                ec_table = (ec_table,)
+            for test_tab, ec_tab in zip(test_table, ec_table):
+                if ec_tab.isscalar:
+                    assert test_tab == ec_tab
+                else:
+                    assert all(test_tab == ec_tab)
+    if extra_coords._wcs is None:
+        assert test_input._wcs is None
+    else:
+        assert_wcs_are_equal(test_input._wcs, extra_coords._wcs)
 
 
 def assert_metas_equal(test_input, expected_output):

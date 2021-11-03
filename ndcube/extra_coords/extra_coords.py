@@ -7,10 +7,12 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
+from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                           SkyCoordTableCoordinate, TimeTableCoordinate)
@@ -323,9 +325,22 @@ class ExtraCoords(ExtraCoordsABC):
         """
         dropped_tables = set()
         new_lookup_tables = set()
+        ndims = max([lut[0] if isinstance(lut[0], Integral) else max(lut[0])
+                     for lut in self._lookup_tables]) + 1
+        # Determine how many dimensions will be dropped by slicing below each dimension.
+        if isinstance(item, Integral):
+            n_dropped_dims = np.ones(ndims, dtype=int)
+            item = tuple([item] + [slice(None)] * (ndims - 1))
+        elif isinstance(item, slice):
+            n_dropped_dims = np.zeros(ndims, dtype=int)
+            item = tuple([item] + [slice(None)] * (ndims - 1))
+        else:
+            item = list(item) + [slice(None)] * (ndims - len(item))
+            n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            lut_slice = tuple(item[i] for i in lut_axes) if isinstance(item, tuple) else item
+            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
+            lut_slice = tuple(item[i] for i in lut_axes)
             if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
 
@@ -334,8 +349,7 @@ class ExtraCoords(ExtraCoordsABC):
             if sliced_lut.is_scalar():
                 dropped_tables.add(sliced_lut)
             else:
-                new_lookup_tables.add((lut_axis, sliced_lut))
-
+                new_lookup_tables.add((new_lut_axes, sliced_lut))
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = list(new_lookup_tables)
         new_extra_coords._dropped_tables = list(dropped_tables)
@@ -391,9 +405,43 @@ class ExtraCoords(ExtraCoordsABC):
 
         return dict()
 
+    @property
+    def cube_wcs(self):
+        """Produce a WCS that describes the associated NDCube with just the extra coords.
+
+        For NDCube pixel axes without any extra coord, dummy axes are inserted.
+        """
+        wcses = [self.wcs]
+        mapping = list(self.mapping)
+        dummy_axes = self._cube_array_axes_without_extra_coords
+        n_dummy_axes = len(dummy_axes)
+        if n_dummy_axes > 0:
+            dummy_wcs = WCS(naxis=n_dummy_axes)
+            dummy_wcs.wcs.crpix = [1] * n_dummy_axes
+            dummy_wcs.wcs.cdelt = [1] * n_dummy_axes
+            dummy_wcs.wcs.crval = [0] * n_dummy_axes
+            dummy_wcs.wcs.ctype = ["PIXEL"] * n_dummy_axes
+            dummy_wcs.wcs.cunit = ["pix"] * n_dummy_axes
+            wcses.append(dummy_wcs)
+            mapping += list(dummy_axes)
+        return CompoundLowLevelWCS(*wcses, mapping=mapping)
+
+    @property
+    def _cube_array_axes_without_extra_coords(self):
+        """Return the array axes not associated with any extra coord."""
+        return set(range(len(self._ndcube.dimensions))) - set(self.mapping)
+
     def __str__(self):
-        elements = [f"{', '.join(table.names)} ({axes}): {table}" for axes, table in self._lookup_tables]
-        return f"ExtraCoords({', '.join(elements)})"
+        classname = self.__class__.__name__
+        elements = [f"{', '.join(table.names)} ({axes}) {table.physical_types}: {table}"
+                    for axes, table in self._lookup_tables]
+        length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
+        if length > np.get_printoptions()['linewidth']:
+            joiner = ',\n ' + len(classname) * ' '
+        else:
+            joiner = ', '
+
+        return f"{classname}({joiner.join(elements)})"
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
