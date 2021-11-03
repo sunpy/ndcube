@@ -1,0 +1,1 @@
+Add property to `~ndcube.extra_coords.ExtraCoords` that returns a WCS of extra coords that describes all axes of associated cube.

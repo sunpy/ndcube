@@ -279,6 +279,37 @@ def simple_extra_coords_3d():
                                           )
 
 
+@pytest.fixture
+def time_and_simple_extra_coords_2d():
+    return ExtraCoords.from_lookup_tables(("time", "hello"),
+                                          (0, 1),
+                                          (Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"],
+                                                scale="utc", format="fits"),
+                                           list(range(3)) * u.pix)
+                                          )
+
+
+@pytest.fixture
+def extra_coords_3d():
+    coord0 = Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"], scale="utc", format="fits")
+    coord1 = list(range(3)) * u.pix
+    coord2 = list(range(4)) * u.m
+    return ExtraCoords.from_lookup_tables(('time', 'bye', 'hello'),
+                                          (0, 1, 2),
+                                          (coord0, coord1, coord2)
+                                          )
+
+
+@pytest.fixture
+def extra_coords_sharing_axis():
+    return ExtraCoords.from_lookup_tables(('hello', 'bye'),
+                                          (1, 1),
+                                          (list(range(3)) * u.m,
+                                           list(range(3)) * u.keV,
+                                           )
+                                          )
+
+
 ################################################################################
 # NDCube Fixtures
 ################################################################################
@@ -355,6 +386,58 @@ def ndcube_3d_ln_lt_l(wcs_3d_l_lt_ln, simple_extra_coords_3d):
         uncertainty=data,
     )
     cube._extra_coords = simple_extra_coords_3d
+    cube._extra_coords._ndcube = cube
+    return cube
+
+
+@pytest.fixture
+def ndcube_3d_ln_lt_l_ec_all_axes(wcs_3d_l_lt_ln, extra_coords_3d):
+    shape = (2, 3, 4)
+    wcs_3d_l_lt_ln.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_l_lt_ln,
+        mask=mask,
+        uncertainty=data,
+    )
+    cube._extra_coords = extra_coords_3d
+    cube._extra_coords._ndcube = cube
+    return cube
+
+
+@pytest.fixture
+def ndcube_3d_ln_lt_l_ec_sharing_axis(wcs_3d_l_lt_ln, extra_coords_sharing_axis):
+    shape = (2, 3, 4)
+    wcs_3d_l_lt_ln.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_l_lt_ln,
+        mask=mask,
+        uncertainty=data,
+    )
+    cube._extra_coords = extra_coords_sharing_axis
+    cube._extra_coords._ndcube = cube
+    return cube
+
+
+@pytest.fixture
+def ndcube_3d_ln_lt_l_ec_time(wcs_3d_l_lt_ln, time_and_simple_extra_coords_2d):
+    shape = (2, 3, 4)
+    wcs_3d_l_lt_ln.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    cube = NDCube(
+        data,
+        wcs_3d_l_lt_ln,
+        mask=mask,
+        uncertainty=data,
+    )
+    cube._extra_coords = time_and_simple_extra_coords_2d
+    cube._extra_coords._ndcube = cube
     return cube
 
 

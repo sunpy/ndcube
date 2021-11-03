@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
+from mpl_animators import ArrayAnimatorWCS
 
 from . import plotting_utils as utils
 from .base import BasePlotter
@@ -55,7 +56,7 @@ class MatplotlibPlotter(BasePlotter):
             Additional keyword arguments are given to the underlying plotting infrastructure
             which depends on the dimensionality of the data and whether 1 or 2 plot_axes are
             defined:
-            - Animations: `sunpy.visualization.animator.ArrayAnimatorWCS`
+            - Animations: `mpl_animators.ArrayAnimatorWCS`
             - Static 2-D images: `matplotllib.pyplot.imshow`
             - Static 1-D line plots: `matplotllib.pyplot.plot`
         """
@@ -185,14 +186,6 @@ class MatplotlibPlotter(BasePlotter):
 
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
-
-        try:
-            from sunpy.visualization.animator import ArrayAnimatorWCS  # isort:skip
-        except ImportError:
-            raise ImportError("Sunpy is required for animated cube plots. "
-                              "Either install sunpy or slice your cube down "
-                              "to 2D before calling plot.")
-
         # Derive inputs for animation object and instantiate.
         data, wcs, plot_axes, coord_params = self._prep_animate_args(wcs, plot_axes,
                                                                      axes_units, data_unit)

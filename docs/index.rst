@@ -19,6 +19,7 @@ ndcube is a SunPy-affiliated package designed for handling n-dimensional datacub
    reproject
    tabular_coordinates
    api
+   extending_ndcube
    whatsnew/index
 
 
@@ -52,6 +53,14 @@ If you are not sure if your problem is a bug, you can either send a message to t
 Ideally, we would like a short code example so we can run into the bug on our own machines.
 
 .. _issue tracker: https://github.com/sunpy/ndcube/issues
+
+
+Using ndcube in your project
+----------------------------
+
+The ndcube package has been built to be used directly, or where needed extended in your own package.
+Read more about :ref:`extending_ndcube`.
+Please come tell us about what you build with ndcube to help make it better for everyone.
 
 .. _contributing:
 
