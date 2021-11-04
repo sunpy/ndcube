@@ -206,7 +206,6 @@ class Meta(dict):
             new_shape = new_meta.shape
             for i, axis_item in enumerate(item):
                 if isinstance(axis_item, numbers.Integral):
-                    new_shape = np.delete(new_shape, i)
                     dropped_axes[i] = True
                 elif isinstance(axis_item, slice):
                     start = axis_item.start
@@ -217,15 +216,13 @@ class Meta(dict):
                     stop = axis_item.stop
                     if stop is None:
                         stop = self.shape[i]
-                        # Mustn't use new_shape here as indexing will be misaligned
-                        # if an axis was deleted above.
                     if stop < 0:
                         stop = self.shape[i] - stop
-                    new_shape[i - dropped_axes[:i].sum()] = stop - start
+                    new_shape[i] = stop - start
                 else:
                     raise TypeError("Unrecognized slice type. "
                                     "Must be an int, slice and tuple of the same.")
-            new_meta._data_shape = new_shape
+            new_meta._data_shape = new_shape[np.invert(dropped_axes)]
 
             # Calculate the cumulative number of dropped axes.
             cumul_dropped_axes = np.cumsum(dropped_axes)
