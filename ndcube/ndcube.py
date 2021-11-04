@@ -729,7 +729,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Values in superpixels are determined applying a function to the pixel
         values within it.  The number of pixels in each superpixel in each
-        dimension is given is given by the superpixel_shape input.
+        dimension is given by the superpixel_shape input.
         This must be an integer fraction of the cube's array size in each dimension.
 
         This method currently does not handle uncertainty or extra_coords.
