@@ -42,12 +42,12 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     else:
         cube0_dims = data[0].dimensions[np.array(aligned_axes[0])]
     # If user entered a single int or string, convert to length 1 tuple of int.
-    if isinstance(aligned_axes, int):
+    if isinstance(aligned_axes, numbers.Integral):
         aligned_axes = (aligned_axes,)
     if not isinstance(aligned_axes, tuple):
         raise ValueError(aligned_axes_error_message)
     # Check type of each element.
-    axes_all_ints = all([isinstance(axis, int) for axis in aligned_axes])
+    axes_all_ints = all([isinstance(axis, numbers.Integral) for axis in aligned_axes])
     axes_all_tuples = all([isinstance(axis, tuple) for axis in aligned_axes])
     # If all elements are int, duplicate tuple so there is one for each cube.
     n_cubes = len(data)

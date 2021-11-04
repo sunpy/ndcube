@@ -1,0 +1,1 @@
+Enable `~ndcube.NDCollection` to accept aligned axes inputs in any integer type.
