@@ -423,6 +423,7 @@ class ExtraCoords(ExtraCoordsABC):
         """Interpolate all extra coords to new array index grids.
 
         One new array index grid must be supplied for each array axis in array-axis order.
+        This method assumes there is at most one SkyCoord extra coord.
 
         Parameters
         ----------
@@ -460,6 +461,7 @@ class ExtraCoords(ExtraCoordsABC):
         for key in self.keys():
             # If a key has already been handled because it is linked to a SkyCoord
             # also linked to a previous key, skip it.
+            # This implementation assumes there is only one SkyCoord extra coord.
             if key in skip:
                 continue
             # Counter must be incremented here as there can be more keys than lookup tables.
@@ -499,7 +501,7 @@ class ExtraCoords(ExtraCoordsABC):
                     new_lat = lat_interp(new_array_grids[aom])
                     new_coord = SkyCoord(new_lon, new_lat, unit=lon.unit,
                                          frame=table.frame)
-                    # Set name to include sky_key as SKyCoords extra coords require two names.
+                    # Set name to include sky_key as SkyCoords extra coords require two names.
                     name = (key, sky_key)
                     # Make sure to skip sky_key when it's turn in loop comes.
                     # Otherwise the SkyCoord will be duplicated.
