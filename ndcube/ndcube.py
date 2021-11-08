@@ -548,6 +548,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     raise ValueError(f"Unit '{unit}' of coordinate object {j} in point {i} is "
                                      f"incompatible with WCS unit '{wcs.world_axis_units[j]}'")
 
+                if value is not None:
+                    points[i][j] = points[i][j].to(wcs.world_axis_units[j])
+                    
         return utils.cube.get_crop_item_from_points(points, wcs, True)
 
     def __str__(self):
