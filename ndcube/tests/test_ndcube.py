@@ -515,6 +515,15 @@ def test_crop_by_values_with_units(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_by_values_with_equivalent_units(ndcube_2d_ln_lt):
+    # test cropping when passed units that are not identical to the cube wcs.world_axis_units 
+    intervals = ndcube_2d_ln_lt.wcs.array_index_to_world_values([0, 3], [1, 6])
+    lower_corner = [(coord[0]*u.deg).to(u.arcsec) for coord in intervals]
+    upper_corner = [(coord[-1]*u.deg).to(u.arcsec) for coord in intervals]
+    expected = ndcube_2d_ln_lt[0:4, 1:7]
+    output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
 def test_crop_by_values_with_nones(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     lower_corner = [None] * 4
