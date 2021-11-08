@@ -7,6 +7,7 @@ from collections.abc import Mapping
 
 import astropy.nddata
 import astropy.units as u
+from astropy.units import UnitsError
 import numpy as np
 
 try:
@@ -543,13 +544,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                             f"index: {i}; coord type: {type(value)}; unit: {unit}")
                     points[i][j] = u.Quantity(value, unit=unit)
                 elif value is not None:
-                    unit = value.unit
-                if not (value is None or unit.is_equivalent(wcs.world_axis_units[j])):
-                    raise ValueError(f"Unit '{unit}' of coordinate object {j} in point {i} is "
-                                     f"incompatible with WCS unit '{wcs.world_axis_units[j]}'")
-
-                if value is not None:
-                    points[i][j] = points[i][j].to(wcs.world_axis_units[j])
+                    try:
+                        points[i][j] = points[i][j].to(wcs.world_axis_units[j])
+                    except UnitsError:
+                        raise UnitsError(f"Unit '{unit}' of coordinate object {j} in point {i} is "
+                                         f"incompatible with WCS unit '{wcs.world_axis_units[j]}'")
                     
         return utils.cube.get_crop_item_from_points(points, wcs, True)
 
