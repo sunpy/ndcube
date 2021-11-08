@@ -524,7 +524,7 @@ def test_crop_by_values_with_equivalent_units(ndcube_2d_ln_lt):
     output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
-    
+
 def test_crop_by_values_with_nones(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     lower_corner = [None] * 4
