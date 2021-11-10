@@ -7,6 +7,7 @@ import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.time import Time
+from astropy.units import UnitsError
 from astropy.wcs import WCS
 from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
@@ -515,6 +516,16 @@ def test_crop_by_values_with_units(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_by_values_with_equivalent_units(ndcube_2d_ln_lt):
+    # test cropping when passed units that are not identical to the cube wcs.world_axis_units
+    intervals = ndcube_2d_ln_lt.wcs.array_index_to_world_values([0, 3], [1, 6])
+    lower_corner = [(coord[0]*u.deg).to(u.arcsec) for coord in intervals]
+    upper_corner = [(coord[-1]*u.deg).to(u.arcsec) for coord in intervals]
+    expected = ndcube_2d_ln_lt[0:4, 1:7]
+    output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
+
 def test_crop_by_values_with_nones(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     lower_corner = [None] * 4
@@ -566,7 +577,7 @@ def test_crop_by_values_with_wrong_units(ndcube_4d_ln_lt_l_t):
     lower_corner[1] *= u.m
     upper_corner[1] *= u.m
     lower_corner[2] *= u.km
-    with pytest.raises(ValueError, match=r"Unit 'km' of coordinate object 2 in point 0 is "
+    with pytest.raises(UnitsError, match=r"Unit 'km' of coordinate object 2 in point 0 is "
                                          r"incompatible with WCS unit 'deg'"):
         ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=units)
 

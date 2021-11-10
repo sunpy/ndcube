@@ -113,8 +113,8 @@ class NDCubeSequenceBase:
             # Determine common axis after slicing.
             if self._common_axis is not None:
                 drop_cube_axes = [isinstance(i, numbers.Integral) for i in item[1:]]
-                if (len(drop_cube_axes) > self._common_axis and
-                        drop_cube_axes[self._common_axis] is True):
+                if (len(drop_cube_axes) > self._common_axis
+                        and drop_cube_axes[self._common_axis] is True):
                     result._common_axis = None
                 else:
                     result._common_axis = \
@@ -230,6 +230,143 @@ class NDCubeSequenceBase:
             new_common_axis = self._common_axis
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, common_axis=new_common_axis, meta=self.meta)
+
+    def crop(self, *points, wcses=None):
+        """
+        Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
+
+        Each input point is given as a tuple of high-level world coordinate objects.
+        This method does not crop the sequence axis.  Instead input points
+        are passed to the crop method of cubes in sequence.  Note, therefore,
+        that the input points do not include an entry for world coords only
+        associated with the sequence axis.
+        For a description of how the bounding box is defined, see the docstring
+        of the `ndcube.NDCube.crop` method.
+        In cases where the cubes are not aligned, all cubes are cropped
+        to the same region in pixel space.  This region will be the smallest
+        that encompasses the input points in all cubes while maintaining
+        consistent array shape between the cubes.
+
+        Parameters
+        ----------
+        points:
+            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+
+        wcses: iterable of WCS objects or `str` (optional)
+            The WCS objects to be used to crop the cubes.
+            There must by one WCS per cube.
+            Alternatively, can be a string giving the name of the cube wcs attribute to be used,
+            namely, 'wcs', 'combined_wcs', or 'extra_coords'.
+            Default=None is equivalent to 'wcs'.
+
+        Returns
+        -------
+        `~ndcube.NDCubeSequence`
+            The cropped sequence.
+        """
+        item = self._get_sequence_crop_item(*points, wcses=wcses)
+        return self[item]
+
+    def crop_by_values(self, lower_corner, upper_corner, units=None, wcses=None):
+        """
+        Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
+
+        Each input point is given as a tuple of low-level world coordinate objects.
+        This method does not crop the sequence axis.  Instead input points
+        are passed to the `ndcube.NDCube.crop_by_values` method of cubes in sequence.  Note, therefore,
+        that the input points do not include an entry for world coords only
+        associated with the sequence axis.
+        For a description of how the bounding box is defined, see the docstring
+        of the NDCube.crop_by_values method.
+        In cases where the cubes are not aligned, all cubes are cropped
+        to the same region in pixel space.  This region will be the smallest
+        that encompasses the input points in all cubes while maintaining
+        consistent array shape between the cubes.
+
+        Parameters
+        ----------
+        points:
+            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+
+        units:
+            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+
+        wcses: iterable of WCS objects or `str` (optional)
+            The WCS objects to be used to crop the cubes. There must by one WCS per cube.
+            Alternatively, can be a string giving the name of the cube wcs attribute to be used,
+            namely, 'wcs', 'combined_wcs', or 'extra_coords'.
+            Default=None is equivalent to 'wcs'.
+
+        Returns
+        -------
+        : `~ndcube.NDCubeSequence`
+            The cropped sequence.
+        """
+        item = self._get_sequence_crop_item(*points, wcses=wcses, crop_by_values=True, unit=units)
+        return self[item]
+
+    def _get_sequence_crop_item(self, *points, wcses=None, crop_by_values=False, units=None):
+        """
+        Get the slice item with which to crop an NDCubeSequence given crop inputs.
+
+        Input points are passed to the crop method of cubes in sequence.
+        Note, therefore, that the input points do not include an entry for world
+        coords only associated with the sequence axis.
+        To learn how the bounding box is defined, see the docstrings of NDCube's
+        `~ndcube.NDCube.crop` and `~ndcube.NDCube.crop_by_values` methods.
+        In cases where the cubes are not aligned, all cubes are cropped
+        to the same region in pixel space.  This region will be the smallest
+        that encompasses the input world ranges in all cubes while maintaining
+        consistent array shape between the cubes.
+
+        Parameters
+        ----------
+        points:
+            Passed to `ndcube.NDCube.crop_by_values` as the ``points`` arg.
+
+        wcses: iterable of WCS objects or `str` (optional)
+            The WCS objects to be used to crop the cubes. There must by one WCS per cube.
+            Alternatively, can be a string giving the name of the cube wcs attribute to be used,
+            namely, 'wcs', 'combined_wcs', or 'extra_coords'.
+            Default=None is equivalent to 'wcs'.
+
+        crop_by_values: `bool`
+            Determines what function to use when determining slices of cubes.
+            If True, inputs are assumed to be low-level coordinate objects and
+            the crop_by_values util is used.
+            If False, inputs are assumined to be high-level coordinate objects and
+            the crop util is used.
+
+        units: (optiona)
+            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+            Only used if crop_by_values is True.
+        """
+        n_cubes = len(self.data)
+        cube_ndim = len(self.dimensions[1:])
+        starts = np.zeros((n_cubes, cube_ndim), dtype=int)
+        stops = np.zeros((n_cubes, cube_ndim), dtype=int)
+        if wcses is None:
+            wcses = "wcs"
+        if isinstance(wcses, str):
+            wcses = [wcses] * n_cubes
+        for i, (cube, wcs) in enumerate(zip(self.data, wcses)):
+            # For each cube, determine the range of array indices in each dimension
+            # corresponding to the input world corners.
+            if isinstance(wcs, str):
+                wcs = getattr(cube, wcs)
+            if crop_by_values:
+                item = cube._get_crop_by_values_item(*points, units=units, wcs=wcs)
+            else:
+                item = cube._get_crop_item(*points, wcs=wcs)
+            for j, s in enumerate(item):
+                starts[i, j] = s.start
+                stops[i, j] = s.stop
+        # Construct the item with which to slice the sequence from the min and max
+        # rangge of array indices determined above from all cubes.
+        starts = starts.min(axis=0)
+        stops = stops.max(axis=0)
+        return tuple(
+            [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
 
     def __str__(self):
         return (textwrap.dedent(f"""\
