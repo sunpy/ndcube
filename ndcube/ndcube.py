@@ -7,8 +7,8 @@ from collections.abc import Mapping
 
 import astropy.nddata
 import astropy.units as u
-from astropy.units import UnitsError
 import numpy as np
+from astropy.units import UnitsError
 
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
