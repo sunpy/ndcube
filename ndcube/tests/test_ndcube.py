@@ -7,11 +7,11 @@ import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.time import Time
+from astropy.units import UnitsError
 from astropy.wcs import WCS
 from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
-from astropy.units import UnitsError
 
 from ndcube import ExtraCoords, NDCube
 from ndcube.tests import helpers
