@@ -261,7 +261,7 @@ class NDCubeSequenceBase:
 
         Returns
         -------
-        : `~ndcube.NDCubeSequence`
+        `~ndcube.NDCubeSequence`
             The cropped sequence.
         """
         item = self._get_sequence_crop_item(*points, wcses=wcses)
@@ -312,7 +312,7 @@ class NDCubeSequenceBase:
         Input points are passed to the crop method of cubes in sequence.
         Note, therefore, that the input points do not include an entry for world
         coords only associated with the sequence axis.
-        TO learn how the bounding box is defined, see the docstrings of NDCube's
+        To learn how the bounding box is defined, see the docstrings of NDCube's
         crop and crop_by_values methods.
         In cases where the cubes are not aligned, all cubes are cropped
         to the same region in pixel space.  This region will be the smallest
