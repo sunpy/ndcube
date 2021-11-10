@@ -6,6 +6,7 @@ import pytest
 from astropy.time import Time, TimeDelta
 
 from ndcube import NDCube, NDCubeSequence
+from ndcube.tests import helpers
 
 
 def derive_sliced_cube_dims(orig_cube_dims, tuple_item):
@@ -188,3 +189,13 @@ def test_sequence_axis_coords(ndc):
     expected = {'distance': [1*u.m, 2*u.m, 3*u.m]}
     output = ndc.sequence_axis_coords
     assert output == expected
+
+
+def test_crop(ndcubesequence_4c_ln_lt_l):
+    seq = ndcubesequence_4c_ln_lt_l
+    intervals = seq[0].wcs.array_index_to_world([1, 2], [0, 1], [0, 2])
+    lower_corner = [coord[0] for coord in intervals]
+    upper_corner = [coord[-1] for coord in intervals]
+    expected = seq[:, 1:3, 0:2, 0:3]
+    output = seq.crop(lower_corner, upper_corner)
+    helpers.assert_cubesequences_equal(output, expected)
