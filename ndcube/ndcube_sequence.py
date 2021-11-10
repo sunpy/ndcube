@@ -113,8 +113,8 @@ class NDCubeSequenceBase:
             # Determine common axis after slicing.
             if self._common_axis is not None:
                 drop_cube_axes = [isinstance(i, numbers.Integral) for i in item[1:]]
-                if (len(drop_cube_axes) > self._common_axis and
-                        drop_cube_axes[self._common_axis] is True):
+                if (len(drop_cube_axes) > self._common_axis
+                        and drop_cube_axes[self._common_axis] is True):
                     result._common_axis = None
                 else:
                     result._common_axis = \
@@ -241,7 +241,7 @@ class NDCubeSequenceBase:
         that the input points do not include an entry for world coords only
         associated with the sequence axis.
         For a description of how the bounding box is defined, see the docstring
-        of the NDCube.crop method.
+        of the `ndcube.NDCube.crop` method.
         In cases where the cubes are not aligned, all cubes are cropped
         to the same region in pixel space.  This region will be the smallest
         that encompasses the input points in all cubes while maintaining
@@ -261,7 +261,7 @@ class NDCubeSequenceBase:
 
         Returns
         -------
-        : `~ndcube.NDCubeSequence`
+        `~ndcube.NDCubeSequence`
             The cropped sequence.
         """
         item = self._get_sequence_crop_item(*points, wcses=wcses)
@@ -273,7 +273,7 @@ class NDCubeSequenceBase:
 
         Each input point is given as a tuple of low-level world coordinate objects.
         This method does not crop the sequence axis.  Instead input points
-        are passed to the crop_by_values method of cubes in sequence.  Note, therefore,
+        are passed to the `ndcube.NDCube.crop_by_values` method of cubes in sequence.  Note, therefore,
         that the input points do not include an entry for world coords only
         associated with the sequence axis.
         For a description of how the bounding box is defined, see the docstring
@@ -312,8 +312,8 @@ class NDCubeSequenceBase:
         Input points are passed to the crop method of cubes in sequence.
         Note, therefore, that the input points do not include an entry for world
         coords only associated with the sequence axis.
-        TO learn how the bounding box is defined, see the docstrings of NDCube's
-        crop and crop_by_values methods.
+        To learn how the bounding box is defined, see the docstrings of NDCube's
+        `~ndcube.NDCube.crop` and `~ndcube.NDCube.crop_by_values` methods.
         In cases where the cubes are not aligned, all cubes are cropped
         to the same region in pixel space.  This region will be the smallest
         that encompasses the input world ranges in all cubes while maintaining
@@ -367,7 +367,6 @@ class NDCubeSequenceBase:
         stops = stops.max(axis=0)
         return tuple(
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
-
 
     def __str__(self):
         return (textwrap.dedent(f"""\
