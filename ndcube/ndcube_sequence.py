@@ -113,8 +113,8 @@ class NDCubeSequenceBase:
             # Determine common axis after slicing.
             if self._common_axis is not None:
                 drop_cube_axes = [isinstance(i, numbers.Integral) for i in item[1:]]
-                if (len(drop_cube_axes) > self._common_axis and
-                        drop_cube_axes[self._common_axis] is True):
+                if (len(drop_cube_axes) > self._common_axis
+                        and drop_cube_axes[self._common_axis] is True):
                     result._common_axis = None
                 else:
                     result._common_axis = \
@@ -367,7 +367,6 @@ class NDCubeSequenceBase:
         stops = stops.max(axis=0)
         return tuple(
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
-
 
     def __str__(self):
         return (textwrap.dedent(f"""\
