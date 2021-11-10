@@ -16,6 +16,14 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slic
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
 
 
+@models.custom_model
+def length1_lookup_table(x, lookup_table, fill_value=np.nan):
+    if x.to_value(u.pix) == 0:
+        return lookup_table[0]
+    else:
+        return fill_value
+
+
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
     """
     Generate a simple frame, where all axes have the same type and unit.
@@ -56,18 +64,21 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
     if len(points) == 1:
         points = points[0]
 
-    kwargs = {
-        'bounds_error': False,
-        'fill_value': np.nan,
-        'method': interpolation,
-        **kwargs
-    }
+    if len(lookup_table) == 1:
+        t = length1_lookup_table(lookup_table, fill_value=kwargs.get("fill_value", np.nan))
+    else:
+        kwargs = {
+            'bounds_error': False,
+            'fill_value': np.nan,
+            'method': interpolation,
+            **kwargs
+        }
 
-    t = TabularND(points, lookup_table, **kwargs)
+        t = TabularND(points, lookup_table, **kwargs)
 
-    # TODO: Remove this when there is a new gWCS release
-    # Work around https://github.com/spacetelescope/gwcs/pull/331
-    t.bounding_box = None
+        # TODO: Remove this when there is a new gWCS release
+        # Work around https://github.com/spacetelescope/gwcs/pull/331
+        t.bounding_box = None
 
     return t
 
