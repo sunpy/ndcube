@@ -11,6 +11,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
+from astropy.units import UnitsError
 
 from ndcube import ExtraCoords, NDCube
 from ndcube.tests import helpers
@@ -576,7 +577,7 @@ def test_crop_by_values_with_wrong_units(ndcube_4d_ln_lt_l_t):
     lower_corner[1] *= u.m
     upper_corner[1] *= u.m
     lower_corner[2] *= u.km
-    with pytest.raises(ValueError, match=r"Unit 'km' of coordinate object 2 in point 0 is "
+    with pytest.raises(UnitsError, match=r"Unit 'km' of coordinate object 2 in point 0 is "
                                          r"incompatible with WCS unit 'deg'"):
         ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=units)
 

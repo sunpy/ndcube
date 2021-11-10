@@ -543,12 +543,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                             "the corresponding unit must be a valid astropy Unit or unit string."
                             f"index: {i}; coord type: {type(value)}; unit: {unit}")
                     points[i][j] = u.Quantity(value, unit=unit)
-                elif value is not None:
+                if value is not None:
                     try:
                         points[i][j] = points[i][j].to(wcs.world_axis_units[j])
-                    except UnitsError:
-                        raise UnitsError(f"Unit '{unit}' of coordinate object {j} in point {i} is "
-                                         f"incompatible with WCS unit '{wcs.world_axis_units[j]}'")
+                    except UnitsError as err:
+                        raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
+                                         f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
         return utils.cube.get_crop_item_from_points(points, wcs, True)
 
