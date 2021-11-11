@@ -703,7 +703,7 @@ def test_length1_lookup_table():
 
 def test_length1_lookup_table_errors():
     with pytest.raises(TypeError):
-        output = length1_lookup_table(0*u.pix, [2, 3]*u.m)
+        length1_lookup_table(0*u.pix, [2, 3]*u.m)
 
     with pytest.raises(TypeError):
-        output = length1_lookup_table(0, [2]*u.m)
+        length1_lookup_table(0, [2]*u.m)
