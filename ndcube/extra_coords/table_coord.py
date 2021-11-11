@@ -17,7 +17,7 @@ __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoord
 
 
 @models.custom_model
-def length1_lookup_table(x, lookup_table, fill_value=np.nan):
+def length1_lookup_table(x, lookup_table=[0]*u.pix, fill_value=np.nan):
     """Generate a length-1 lookup table model.
 
     If the requested pixel coordinate corresponds to the 0th pixel,
@@ -39,12 +39,12 @@ def length1_lookup_table(x, lookup_table, fill_value=np.nan):
     if not (isinstance(lookup_table, u.Quantity) and lookup_table.shape == (1,)):
         raise TypeError("lookup_table must be a length-1 astropy Quantity.")
     x_is_scalar = False
-    if x.isscalar():
+    if x.isscalar:
         x_is_scalar = True
         x.reshape((1,))
     output = np.full(x.shape, fill_value)
     x_value = x.to_value(u.pix)
-    output[np.logical_or(x_value >= -0.5, x_value < 0.5)] = lookup_table[0].value
+    output[np.logical_and(x_value >= -0.5, x_value < 0.5)] = lookup_table[0].value
     output *= lookup_table.unit
     if x_is_scalar:
         return output[0]
@@ -92,7 +92,8 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
         points = points[0]
 
     if len(lookup_table) == 1:
-        t = length1_lookup_table(lookup_table, fill_value=kwargs.get("fill_value", np.nan))
+        t = length1_lookup_table(lookup_table=lookup_table,
+                                 fill_value=kwargs.get("fill_value", np.nan))
     else:
         kwargs = {
             'bounds_error': False,
