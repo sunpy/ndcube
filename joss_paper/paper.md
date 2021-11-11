@@ -25,7 +25,7 @@ bibliography: paper.bib
 
 ndcube is a free, open-source, community-developed Python package whose purpose
 is to faciliate the manipulation and visualization of astronomical data.
-It does this by linking the data and its coordinates in single data objects.
+It does this by linking the data and coordinates in single data objects.
 These objects can be manipulated via array-like slicing operations which modify
 the data and coordinates simultaneously.
 They also allow coordinate transformations to be performed with reference to the
@@ -34,18 +34,26 @@ described by the coordinates.
 This data-coordinate coupling allows users to analyze their data more
 quickly and accurately, thus helping to boost their scientific output.
 
-ndcube aims to be highly generalized.
-It is agnostic to specifics of the data and the physical types
-of coordinates that describe it.
-This makes it a powerful base upon which to build tools for more specific types of data.
+ndcube is agnostic to specifics of the data and the physical types
+of the coordinates that describe it.
+This makes it a powerful base upon which to build tools for specific types of data.
 This might be a specific number and/or combination of physical types
 (images, spectrograms, etc.), or data from specific instruments or simulations.
 Thus, in addition to enhancing the productivity of scientists, ndcube can enhance
 the productivity of developers by centralizing the development and maintenance
 of the most useful and general functionalities.
-This leaves more time for a greater range of tools to be developed for
-the community and/or enables part-time developers to devote more effort to other
-aspects of their jobs, e.g. scientific analysis.
+This leaves more time for developing a greater range of tools for the community
+and/or enables part-time developers to devote more effort to other aspects of their jobs,
+e.g. scientific analysis.
+
+It is already used both by scientists in their data analysis and as
+a dependency by other packages including sunraster, irispy, DKIST user tools, and specutils.
+Further adoptions are expected, including by sunpy.
+A network benefit of ndcube is that it standardizes the APIs for handling N-D data.
+Broad adoption throughout astronomy and heliophysics can help scientists to more easily
+work with data from different sub-fields.
+This can help facilitate of synergies between new combinations of data,
+foster inter-field collaborations, and promote scientific innovation.
 
 # Statement of Need
 
@@ -61,10 +69,10 @@ make it a succinct, standardized and powerful way to relate array axes to the ph
 properties they represent.
 
 Due of the prevalence of N-D data and the importance of coordinate transformations,
-there exist mature Python packages that handle them.
+there exist mature Python packages for handling them.
 For example, arrays can be handled by numpy and dask and coordinates by astropy’s WCS
 and coordinates modules.
-If you want to treat these components separately, then these existing tools work well.
+If you want to treat these components separately, the existing tools work well.
 However, they are not suited to treating data and coordinates in a combined way.
 This is the purpose of ndcube.
 
@@ -178,25 +186,6 @@ we can slice the NDCollection rather than the slicing the observations and doppl
 separately.
 As with NDCube and NDCubeSequence, NDCollection thus enables easier and more reliable
 manipulation of N-D astronomical data sets.
-
-# Community Use
-
-Stable releases of ndcube are available through pip and conda-forge.
-It is already used both byscientists in their data analysis and as
-a dependency by other packages.
-At time of writing packages depending on ndcube include: sunraster (a package for
-handling data from solar slit spectrometer instruments); irispy (a package for
-handling data from NASA's IRIS Small Explorer mission); user tools for the DKIST telescope;
-specutils (an astropy-affiliated package for analyzing spectral data).
-Further adoptions are expected, including by sunpy.
-
-An added benefit of broad adoption of the ndcube APIs by other packages is that
-scientists from sub-fields of astronomy and heliophysics will be able
-to more easily work with data from other sub-fields.
-This can help scientists combine observations from scientifically related, but
-traditionally distinct disciplines.
-This can help foster new collaborations and syngeries and promote scientific
-innovation.
 
 # Citations
 
