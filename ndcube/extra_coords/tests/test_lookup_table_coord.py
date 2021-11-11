@@ -694,16 +694,18 @@ def test_and_errors():
 
 
 def test_length1_lookup_table():
-    fill_value = np.nan
-    model = length1_lookup_table([2] * u.m, fill_value=fill_value)
+    fill_value = -1
+    lookup_table = [2] * u.m
+    model = length1_lookup_table(lookup_table=lookup_table, fill_value=fill_value)
 
-    assert model(0 * u.pix) == lookup_table[0]
+    assert (model(0 * u.pix) == lookup_table[0])
     assert (model([0, 1] * u.pix) == [lookup_table[0].value, fill_value] * lookup_table.unit).all()
 
 
 def test_length1_lookup_table_errors():
+    # Check error is raised if lookup table is not length-1.
     with pytest.raises(TypeError):
-        length1_lookup_table(0*u.pix, [2, 3]*u.m)
-
+        length1_lookup_table(0*u.pix, lookup_table=[2, 3]*u.m)
+    # Check erro is raised in input is not a Quantity.
     with pytest.raises(TypeError):
-        length1_lookup_table(0, [2]*u.m)
+        length1_lookup_table(0, lookup_table=[2]*u.m)
