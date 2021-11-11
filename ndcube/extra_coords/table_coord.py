@@ -18,10 +18,37 @@ __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoord
 
 @models.custom_model
 def length1_lookup_table(x, lookup_table, fill_value=np.nan):
-    if x.to_value(u.pix) == 0:
-        return lookup_table[0]
-    else:
-        return fill_value
+    """Generate a length-1 lookup table model.
+
+    If the requested pixel coordinate corresponds to the 0th pixel,
+    the 0th element of the table is returned. Otherwise the fill value
+    is returned.
+
+    Parameters
+    ----------
+    x: `astropy.units.Quantity` in pixel units.
+        The pixel coordinate(s) for which the value of the lookup is desired.
+    lookup_table: `astropy.units.Quantity`
+        The world value corresponding to the 0th pixel.
+        Must be length-1, not scalar.
+    fill_value: `float`
+        The value returned for pixel indices outside the 0th pixel
+    """
+    if not isinstance(x, u.Quantity):
+        raise TypeError("x must be an astropy Quantity with pixel units.")
+    if not (isinstance(lookup_table, u.Quantity) and lookup_table.shape == (1,)):
+        raise TypeError("lookup_table must be a length-1 astropy Quantity.")
+    x_is_scalar = False
+    if x.isscalar():
+        x_is_scalar = True
+        x.reshape((1,))
+    output = np.full(x.shape, fill_value)
+    x_value = x.to_value(u.pix)
+    output[np.logical_or(x_value >= -0.5, x_value < 0.5)] = lookup_table[0].value
+    output *= lookup_table.unit
+    if x_is_scalar:
+        return output[0]
+    return output
 
 
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
