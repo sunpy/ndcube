@@ -14,7 +14,7 @@ authors:
 affiliations:
  - name: University of Applied Sciences Northwest Switzerland
    index: 1
- - name: University of Sheffield
+ - name: Aperio Software Ltd
    index: 2
 date: 11 December 2021
 bibliography: paper.bib
@@ -77,7 +77,7 @@ common file format in astronomy, FITS.
 # Data Objects: The Pillars of ndcube
 
 At the time of writing (ndcube v2.0), ndcube provides three primary data objects for
-manipulating astronomical data: NDCube, NDCubeSequence, and NDCollection.
+manipulating astronomical data: `NDCube`, `NDCubeSequence`, and `NDCollection`.
 Each provide unified slicing, visualization, coordinate transformation and
 self-inspection APIs which are independent of the number and physical types of axes.
 
@@ -92,7 +92,7 @@ NDCube also provides support for tabular coordinates in addition to those stored
 the primary WCS object via its ExtraCoords class.
 Scalar coordinates that apply to the whole cube and not associated with specific axis/axes,
 e.g. the timestamp of a 2-D image, can be represented via the GlobalCoords class.
-Instances of both these classes can be attached to an NDCube instance and self-consistently
+Instances of both these classes are coupled to an `NDCube` instance and self-consistently
 handled by the slicing and visualization infrastructures.
 
 ![Components of an NDCube.\label{fig:ndcube}](ndcube_diagram.png)
