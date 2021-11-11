@@ -23,15 +23,18 @@ bibliography: paper.bib
 
 # Summary
 
-ndcube is a free, open-source, community-developed Python package whose purpose
-is to faciliate the manipulation and visualization of astronomical data.
-It does this by linking the data and coordinates in single data objects.
+ndcube is a free, open-source, community-developed Python package for inspecting,
+manipulating, and visualizing n-dimensional astronomical data.
+It links data and the coordinates describing its axes in unified data objects.
 These objects can be manipulated via array-like slicing operations which modify
 the data and coordinates simultaneously.
 They also allow coordinate transformations to be performed with reference to the
 shape of the data and enable coordinate-aware visualizations.
-This data-coordinate coupling allows users to analyze their data more
-easily and accurately, thus helping to boost their scientific output.
+ndcube leverages Astropy's WCS (World Coordinate System) API (APE 14) to enforce
+a generalized, standardized, and widely used framework for performing astronomical
+coordinate transformations.
+The data-coordinate coupling provided by ndcube allows users to analyze their data
+more easily and accurately, thus helping to boost their scientific output.
 
 ndcube is agnostic to the physical properties represented by the data values and axes.
 This makes it a powerful base upon which to build tools for specific types of data.
@@ -40,13 +43,13 @@ This might be a specific number and/or combination of physical types
 Thus, ndcube can also enhance the productivity of developers by centralizing the
 development and maintenance of the most useful and general functionalities.
 This leaves more time for developing a greater range of tools for the community
-and/or enables part-time developers to devote more effort to other aspects of their jobs,
-e.g. scientific analysis.
+and/or enables part-time developers to devote more effort to other aspects of their
+jobs, e.g. scientific analysis.
 
 A network benefit of ndcube is that it standardizes the APIs for handling N-D data.
-Broad adoption throughout astronomy and heliophysics would help scientists to more easily
-work with data from different sub-fields.
-This can help facilitate synergies between new combinations of data,
+Broad adoption throughout astronomy and heliophysics would help scientists to more
+easily work with data from different sub-fields.
+This can help facilitate synergies of new combinations of data,
 foster inter-field collaborations, and promote scientific innovation.
 
 # Statement of Need
@@ -55,24 +58,27 @@ N-dimensional data sets are common in all areas of science and beyond.
 For example, a series of images taken sequentially with a CCD camera can be stored
 as a single 3-D array with two spatial axes and one temporal axis.
 The value in each array-element can represent the reading in a pixel at a given time.
-In astronomy, the relationship between the array element and the location and time
-in the Universe being observed is often represented by the World Coordinate System (WCS) framework.
+In astronomy, the most commonly used framework for translating between array element
+indices and the location and time in the Universe being observed is the
+World Coordinate System (WCS).
 WCS’s ability to handle many different physical types (e.g. spatial, temporal, spectral, etc.)
 and projections (e.g. RA and Dec., helioprojective latitude and longitude, etc.)
 make it a succinct, standardized and powerful way to relate array axes to the physical
 properties they represent.
-Due of the prevalence of N-D data and the importance of coordinate transformations,
-there exist mature Python packages for handling them.
-However, they are not suited to treating data and coordinates in a combined way.
+
+Due of the prevalence of N-D data and the importance of astronomical coordinate
+transformations, there exist mature Python packages for handling them.
+However, none are well-suited to treating data and coordinates in a combined way.
 This is the purpose of ndcube.
 
-The fundamental reason to opt for ndcube over its most similar package, xarray,
-is to harness the astronomy-specific World Coordinate System (WCS).
-The data model of xarray centers on the requirements and conventions of the geosciences.
-Although similar to those of astronomy in conception, they are sufficiently different
-in construction to cause significant friction.
-Moreover, utilizing the astropy WCS infrastructure enables us to directly read the most
-common file format in astronomy, FITS.
+Perhaps ndcube's most defining feature is its support for WCS via the Astropy WCS API
+(APE 14).
+WCS is a "functional" framework.
+Its transformations are parameterized and only evaluated on demand.
+It therefore requires more specialized tools than lookup-table-based frameworks
+supported by other Python packages.
+Thus ndcube fulfills a unique and important role in facilitating astronomical
+data analysis in Python.
 
 # Data Objects: The Pillars of ndcube
 
