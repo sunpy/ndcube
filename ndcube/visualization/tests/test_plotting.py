@@ -95,7 +95,7 @@ def test_animate_2D_cube(ndcube_2d_ln_lt):
                              ("ln_lt_l_t", np.s_[:, :, 0, :], {}),
                              ("ln_lt_l_t", np.s_[:, :, 0, :], {'plot_axes': [..., 'x']}),
                              ("ln_lt_l_t", None, {}),
-                             ("ln_lt_l_t", None, {"plot_axes": [0, 0, 'x', 'y']}),
+                             ("ln_lt_l_t", None, {"plot_axes": [0, 0, 'x', 'y'], "axes_units": [None, None, u.pm, None]}),
                              ("ln_lt_l_t", None, {"plot_axes": [0, 'x', 0, 'y']}),
                              ("ln_lt_l_t", np.s_[0, :, :, :], {}),
                              ("ln_lt_l_t", np.s_[:, :, :, :], {}),
