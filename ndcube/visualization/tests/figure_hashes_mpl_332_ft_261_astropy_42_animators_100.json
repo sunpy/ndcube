@@ -18,7 +18,7 @@
   "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-cslice0-kwargs0]": "eeaf0f6ba120d5dd730f66953a6b15f91533e8378b83608936eb5588f157574d",
   "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-cslice1-kwargs1]": "97683e58de61e6f15cc6efd6a84837d0bfada56aa2e274e1dcd39d71399372f4",
   "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-None-kwargs2]": "5966170e7eed2dbadc950a4ef23bda8b9bf435a0ad6f44e2936c8f4b14fd1114",
-  "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-None-kwargs3]": "9ef2663fad5255ca299bd8cc32962dfbe7bad4b8cff338c6119c61497ece9ed4",
+  "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-None-kwargs3]": "a3478d495d89e5bc0ae72462a6d5d14a7350df599b22314a01ca923afc9ec80b",
   "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-None-kwargs4]": "cb14f5dd8a7b4541e5fb2ac488305fad6c3a96460d9b7a36c840d050b8ae64a7",
   "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-cslice5-kwargs5]": "602f4243edd203744a5ce8a5a6f3323cb2427fce7312aeea4537a3f68f457492",
   "test_plotting.test_animate_cube_from_slice[ln_lt_l_t-cslice6-kwargs6]": "5966170e7eed2dbadc950a4ef23bda8b9bf435a0ad6f44e2936c8f4b14fd1114",
