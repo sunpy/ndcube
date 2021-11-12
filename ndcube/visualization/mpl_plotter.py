@@ -238,7 +238,7 @@ class MatplotlibPlotter(BasePlotter):
 
         coord_params = {}
         if axes_units is not None:
-            for axis_unit, coord_name in zip(axes_units, world_axis_physical_types):
+            for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types):
                 coord_params[coord_name] = {'format_unit': axis_unit}
 
         # TODO: Add support for transposing the array.
