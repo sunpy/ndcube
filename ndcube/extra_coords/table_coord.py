@@ -10,45 +10,83 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model
+from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
 
 
-@models.custom_model
-def length1_lookup_table(x, lookup_table=[0]*u.pix, fill_value=np.nan):
-    """Generate a length-1 lookup table model.
+class _Length1Tabular(_Tabular):
+    def __init__(self, points=None, lookup_table=None, pixel_width=None,
+                 method='linear', bounds_error=True, fill_value=np.nan, **kwargs):
+        if len(lookup_table) != 1:
+            raise ValueError("lookup_table must have length 1.")
+        super().__init__(points=points, lookup_table=lookup_table, method=method,
+                         bounds_error=bounds_error, fill_value=fill_value, **kwargs)
+        self._pixel_width = pixel_width  # Width of pixel in world units.
 
-    If the requested pixel coordinate corresponds to the 0th pixel,
-    the 0th element of the table is returned. Otherwise the fill value
-    is returned.
+    def evaluate(self, x):
+        output = np.full(x.shape, self.fill_value)
+        output[np.logical_and(x >= -0.5, x < 0.5)] = self.lookup_table[0].value
+        return output * self.lookup_table.unit
 
-    Parameters
-    ----------
-    x: `astropy.units.Quantity` in pixel units.
-        The pixel coordinate(s) for which the value of the lookup is desired.
-    lookup_table: `astropy.units.Quantity`
-        The world value corresponding to the 0th pixel.
-        Must be length-1, not scalar.
-    fill_value: `float`
-        The value returned for pixel indices outside the 0th pixel
-    """
-    if not isinstance(x, u.Quantity):
-        raise TypeError("x must be an astropy Quantity with pixel units.")
-    if not (isinstance(lookup_table, u.Quantity) and lookup_table.shape == (1,)):
-        raise TypeError("lookup_table must be a length-1 astropy Quantity.")
-    x_is_scalar = False
-    if x.isscalar:
-        x_is_scalar = True
-        x.reshape((1,))
-    output = np.full(x.shape, fill_value)
-    x_value = x.to_value(u.pix)
-    output[np.logical_and(x_value >= -0.5, x_value < 0.5)] = lookup_table[0].value
-    output *= lookup_table.unit
-    if x_is_scalar:
-        return output[0]
-    return output
+    @property
+    def inverse(self):
+        return InverseLength1Tabular(points=self.points[0], lookup_table=self.lookup_table,
+                                     pixel_width=self._pixel_width, method=self.method,
+                                     bounds_error=self.bounds_error, fill_value=self.fill_value)
+
+
+class _InverseLength1Tabular(_Length1Tabular):
+    def __init__(self, **kwargs):
+        points = kwargs.pop("points", None)
+        lookup_table = kwargs.pop("lookup_table", None)
+        super().__init__(points=lookup_table, lookup_table=points, **kwargs)
+        if self._pixel_width is None:
+            self._pixel_width = 0 * lookup_table.unit
+
+    def evaluate(self, x):
+        output = np.full(x.shape, self.fill_value)
+        diff = abs(x - self.points[0])
+        margin = self._pixel_width / 2
+        if margin.value == 0:
+            idx = diff == margin
+        else:
+            idx = np.logical_and(diff >= -1 * margin, diff < margin)
+        output[idx] = 0
+        return output * self.lookup_table.unit
+
+    @property
+    def inverse(self):
+        pass
+
+
+def length1_tabular_model(name=None, inverse=False):
+    # Adapted from astropy.modeling.tabular.tabular_model
+    dim = 1
+    table = np.zeros([2] * dim)
+    members = {'lookup_table': table, 'n_inputs': dim, 'n_outputs': 1, '_separable': True}
+
+    if inverse:
+        name_root = "InverseLength1Tabular"
+        model = _InverseLength1Tabular
+    else:
+        name_root = "Length1Tabular"
+        model = _Length1Tabular
+
+    if name is None:
+        model_id = _Tabular._id
+        _Tabular._id += 1
+        name = f'{name_root}{model_id}'
+
+    model_class = type(str(name), (model,), members)
+    model_class.__module__ = 'ndcube.extra_coords.table_coord'
+    return model_class
+
+
+Length1Tablular = length1_tabular_model(name="Length1Tabular")
+InverseLength1Tabular = length1_tabular_model(name="InverseLength1Tabular", inverse=True)
 
 
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
@@ -91,17 +129,14 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
     if len(points) == 1:
         points = points[0]
 
-    if len(lookup_table) == 1:
-        t = length1_lookup_table(lookup_table=lookup_table,
-                                 fill_value=kwargs.get("fill_value", np.nan))
-    else:
-        kwargs = {
-            'bounds_error': False,
-            'fill_value': np.nan,
-            'method': interpolation,
-            **kwargs
-        }
+    kwargs = {'bounds_error': False,
+              'fill_value': np.nan,
+              'method': interpolation,
+              **kwargs}
 
+    if len(lookup_table) == 1:
+        t = Length1Tablular(points, lookup_table, **kwargs)
+    else:
         t = TabularND(points, lookup_table, **kwargs)
 
         # TODO: Remove this when there is a new gWCS release

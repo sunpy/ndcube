@@ -6,8 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
 from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
-                                             SkyCoordTableCoordinate, TimeTableCoordinate,
-                                             length1_lookup_table)
+                                             SkyCoordTableCoordinate, TimeTableCoordinate)
 
 
 @pytest.fixture
@@ -691,21 +690,3 @@ def test_and_errors():
     with pytest.raises(TypeError) as ei:
         5 & join
     assert "unsupported operand type(s) for &: 'int' and 'MultipleTableCoordinate'" in str(ei)
-
-
-def test_length1_lookup_table():
-    fill_value = -1
-    lookup_table = [2] * u.m
-    model = length1_lookup_table(lookup_table=lookup_table, fill_value=fill_value)
-
-    assert (model(0 * u.pix) == lookup_table[0])
-    assert (model([0, 1] * u.pix) == [lookup_table[0].value, fill_value] * lookup_table.unit).all()
-
-
-def test_length1_lookup_table_errors():
-    # Check error is raised if lookup table is not length-1.
-    with pytest.raises(TypeError):
-        length1_lookup_table(0*u.pix, lookup_table=[2, 3]*u.m)
-    # Check error is raised in input is not a Quantity.
-    with pytest.raises(TypeError):
-        length1_lookup_table(0, lookup_table=[2]*u.m)
