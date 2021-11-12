@@ -706,6 +706,6 @@ def test_length1_lookup_table_errors():
     # Check error is raised if lookup table is not length-1.
     with pytest.raises(TypeError):
         length1_lookup_table(0*u.pix, lookup_table=[2, 3]*u.m)
-    # Check erro is raised in input is not a Quantity.
+    # Check error is raised in input is not a Quantity.
     with pytest.raises(TypeError):
         length1_lookup_table(0, lookup_table=[2]*u.m)
