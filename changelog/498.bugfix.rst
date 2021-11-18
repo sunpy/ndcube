@@ -1,0 +1,2 @@
+Fix a bug which prevented the ``axes_units=`` kwarg from working when using the
+matplotlib animators.
