@@ -17,7 +17,17 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slic
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
 
 
-class _Length1Tabular(_Tabular):
+class Length1Tabular(_Tabular):
+    _input_units_allow_dimensionless = True
+    _has_inverse_bounding_box = True
+    _separable = True
+
+    n_inputs = 1
+    n_outputs = 1
+
+    lookup_table = np.zeros([1])
+    points = np.zeros([1])
+
     def __init__(self, points=None, lookup_table=None, pixel_width=None,
                  method='linear', bounds_error=True, fill_value=np.nan, **kwargs):
         if len(lookup_table) != 1:
@@ -28,7 +38,8 @@ class _Length1Tabular(_Tabular):
 
     def evaluate(self, x):
         output = np.full(x.shape, self.fill_value)
-        output[np.logical_and(x >= -0.5, x < 0.5)] = self.lookup_table[0].value
+        x_unit = self.input_units['x']
+        output[np.logical_and(x >= -0.5*x_unit, x < 0.5*x_unit)] = self.lookup_table[0].value
         return output * self.lookup_table.unit
 
     @property
@@ -38,7 +49,7 @@ class _Length1Tabular(_Tabular):
                                      bounds_error=self.bounds_error, fill_value=self.fill_value)
 
 
-class _InverseLength1Tabular(_Length1Tabular):
+class InverseLength1Tabular(Length1Tabular):
     def __init__(self, **kwargs):
         points = kwargs.pop("points", None)
         lookup_table = kwargs.pop("lookup_table", None)
@@ -47,6 +58,8 @@ class _InverseLength1Tabular(_Length1Tabular):
             self._pixel_width = 0 * lookup_table.unit
 
     def evaluate(self, x):
+        # When calling evaluate with a bounding box, astropy strips the units.
+        x = u.Quantity(x, unit=self.input_units['x'], copy=False)
         output = np.full(x.shape, self.fill_value)
         diff = abs(x - self.points[0])
         margin = self._pixel_width / 2
@@ -60,33 +73,6 @@ class _InverseLength1Tabular(_Length1Tabular):
     @property
     def inverse(self):
         pass
-
-
-def length1_tabular_model(name=None, inverse=False):
-    # Adapted from astropy.modeling.tabular.tabular_model
-    dim = 1
-    table = np.zeros([2] * dim)
-    members = {'lookup_table': table, 'n_inputs': dim, 'n_outputs': 1, '_separable': True}
-
-    if inverse:
-        name_root = "InverseLength1Tabular"
-        model = _InverseLength1Tabular
-    else:
-        name_root = "Length1Tabular"
-        model = _Length1Tabular
-
-    if name is None:
-        model_id = _Tabular._id
-        _Tabular._id += 1
-        name = f'{name_root}{model_id}'
-
-    model_class = type(str(name), (model,), members)
-    model_class.__module__ = 'ndcube.extra_coords.table_coord'
-    return model_class
-
-
-Length1Tablular = length1_tabular_model(name="Length1Tabular")
-InverseLength1Tabular = length1_tabular_model(name="InverseLength1Tabular", inverse=True)
 
 
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
@@ -135,7 +121,7 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
               **kwargs}
 
     if len(lookup_table) == 1:
-        t = Length1Tablular(points, lookup_table, **kwargs)
+        t = Length1Tabular(points, lookup_table, **kwargs)
     else:
         t = TabularND(points, lookup_table, **kwargs)
 
