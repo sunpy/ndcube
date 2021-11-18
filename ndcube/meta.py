@@ -36,6 +36,7 @@ class Meta(dict):
         Must be set if axes input is set.
     """
     def __init__(self, header=None, comments=None, axes=None, data_shape=None):
+        self.__ndcube_can_slice__ = True
         self.original_header = header
 
         # Sanitize metadata values and instantiate class.
