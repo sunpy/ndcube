@@ -1,3 +1,18 @@
+2.0.1 (2021-11-19)
+==================
+
+Bug Fixes
+---------
+
+- Enable `~ndcube.NDCollection` to accept aligned axes inputs in any integer type. (`#495 <https://github.com/sunpy/ndcube/pull/495>`__)
+- Patch to convert quantity objects passed to ``crop_by_coords`` to the units given in the ``wcs.world_axis_units``. (`#497 <https://github.com/sunpy/ndcube/pull/497>`__)
+- Fix a bug which prevented the ``axes_units=`` kwarg from working when using the
+  matplotlib animators. (`#498 <https://github.com/sunpy/ndcube/pull/498>`__)
+- Add support for length-1 lookup table coords within extra coords. (`#499 <https://github.com/sunpy/ndcube/pull/499>`__)
+- Bump the minimum version of astropy to 4.2 to correctly support capturing
+  dropped world dimensions into global coords when slicing the WCS. (`#500 <https://github.com/sunpy/ndcube/pull/500>`__)
+
+
 2.0.0 (2021-10-29)
 ==================
 
