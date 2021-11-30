@@ -222,7 +222,7 @@ class MatplotlibPlotter(BasePlotter):
         kwargs = {'wcs': self._ndcube.wcs}
         n_dim = len(self._ndcube.dimensions)
         if n_dim > 2:
-            kwargs['slices'] = ['x', 'y'] + [None] * (ndim - 2)
+            kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
 
     def _prep_animate_args(self, wcs, plot_axes, axes_units, data_unit):
