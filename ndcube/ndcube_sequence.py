@@ -416,7 +416,7 @@ class NDCubeSequenceBase:
 
     def combine_cubes(self, common_wcs_index=0):
         """
-        Reprojects all `~ndcube.NDCube` objects to a common WCS, and stacks the data together
+        Reprojects all `~ndcube.NDCube` objects in the `~ndcube.NDCubeSequence` to a common WCS, and stacks the data together
         to return a single (N+1)-dimensional `~ndcube.NDCube` with an associated Compound WCS
         containing extra axes corresponding to the sequence axis.
 
