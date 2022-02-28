@@ -9,9 +9,9 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
 from ndcube import utils
-from ndcube.visualization import PlotterDescriptor
 from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
                                              SkyCoordTableCoordinate, TimeTableCoordinate)
+from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers.compound_wcs import CompoundLowLevelWCS
 
 __all__ = ['NDCubeSequence']
