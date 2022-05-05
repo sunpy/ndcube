@@ -14,6 +14,11 @@ on:
   # Allow manual runs through the web UI
   workflow_dispatch:
 
+# Automatically cancel old builds
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   core:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
@@ -21,7 +26,6 @@ jobs:
       submodules: false
       coverage: codecov
       toxdeps: tox-pypi-filter
-      posargs: -n auto
       envs: |
         - linux: py310
 
@@ -32,7 +36,6 @@ jobs:
       submodules: false
       coverage: codecov
       toxdeps: tox-pypi-filter
-      posargs: -n auto
       envs: |
         - macos: py38
         - windows: py39
@@ -53,7 +56,6 @@ jobs:
       submodules: false
       coverage: codecov
       toxdeps: tox-pypi-filter
-      posargs: -n auto
       envs: |
         - linux: py39-devdeps
         - linux: py39-conda
@@ -77,11 +79,11 @@ jobs:
 
   notify_pass:
     if: github.event_name == 'workflow_dispatch'
-    needs: [publish, online, cron]
+    needs: [publish, cron]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sunpy/sunpy/.github/actions/matrix
+      - uses: sunpy/sunpy/.github/actions/matrix@main
         with:
           status: 'Succeeded'
           token: ${{ secrets.matrix_access_token }}
@@ -90,11 +92,11 @@ jobs:
 
   notify_fail:
     if: failure() && github.event_name == 'workflow_dispatch'
-    needs: [publish, online, cron]
+    needs: [publish, cron]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sunpy/sunpy/.github/actions/matrix
+      - uses: sunpy/sunpy/.github/actions/matrix@main
         with:
           status: 'Failed'
           token: ${{ secrets.matrix_access_token }}
