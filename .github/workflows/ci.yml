@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sunpy/sunpy/.github/actions/matrix
+      - uses: sunpy/sunpy/.github/actions/matrix@main
         with:
           status: 'Succeeded'
           token: ${{ secrets.matrix_access_token }}
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sunpy/sunpy/.github/actions/matrix
+      - uses: sunpy/sunpy/.github/actions/matrix@main
         with:
           status: 'Failed'
           token: ${{ secrets.matrix_access_token }}
