@@ -88,3 +88,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           homeserver: ${{ secrets.matrix_homeserver }}
           roomid: '!TWSJXVpyflnZOzmSQz:matrix.org'
+          ignore_pattern: '.*Load tox.*'
