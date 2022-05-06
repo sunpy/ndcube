@@ -86,5 +86,5 @@ jobs:
         with:
           matrix_token: ${{ secrets.matrix_access_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          homeserver: ${({ secrets.matrix_homeserver })}
+          homeserver: ${{ secrets.matrix_homeserver }}
           roomid: '!TWSJXVpyflnZOzmSQz:matrix.org'
