@@ -73,16 +73,12 @@ intersphinx_mapping = {
     'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None)}
 
 # -- Options for HTML output -------------------------------------------------
+# Load the theme config from the theme package
+from sunpy_sphinx_theme.conf import *
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-
-try:
-    from sunpy_sphinx_theme.conf import *
-except ImportError:
-    html_theme = 'default'
-
-html_logo = 'logo/ndcube.png'
+# Use the ndcube logo rather than the sunpy one
+html_logo = png_icon = 'logo/ndcube.png'
+html_favicon = 'logo/favicon.ico'
 
 # Render inheritance diagrams in SVG
 graphviz_output_format = 'svg'
