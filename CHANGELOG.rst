@@ -1,3 +1,20 @@
+v2.0.2 (2022-05-10)
+===================
+
+Bug Fixes
+---------
+
+- Fix a bug in the ``NDCube._as_mpl_axes`` implementation, allowing cubes with
+  compatible dimensions to be passed as the ``projection=`` keyword argument to
+  certain matplotlib functions again. (`#509 <https://github.com/sunpy/ndcube/pull/509>`__)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Remove use of deprecated ``distutils`` module. (`#520 <https://github.com/sunpy/ndcube/pull/520>`__)
+
+
 2.0.1 (2021-11-19)
 ==================
 
