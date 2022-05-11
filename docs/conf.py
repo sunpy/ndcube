@@ -78,7 +78,7 @@ from sunpy_sphinx_theme.conf import *
 
 # Use the ndcube logo rather than the sunpy one
 html_logo = png_icon = 'logo/ndcube.png'
-html_favicon = 'logo/favicon.ico'
+html_favicon = 'logo/favicon.png'
 
 # Render inheritance diagrams in SVG
 graphviz_output_format = 'svg'
