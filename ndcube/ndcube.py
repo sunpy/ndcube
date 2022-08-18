@@ -1,4 +1,6 @@
 import abc
+import functools
+
 import textwrap
 import warnings
 from copy import deepcopy
@@ -230,6 +232,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             if copy:
                 global_coords = deepcopy(global_coords)
             self._global_coords = global_coords
+
+        functools.update_wrapper(NDCube.plot, self.plotter.plot)
 
     @property
     def extra_coords(self):
