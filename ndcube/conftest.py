@@ -10,6 +10,7 @@ import pytest
 from astropy.coordinates import SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
+import dask.array as da
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
 
@@ -38,10 +39,13 @@ def skycoord_2d_lut(shape):
             np.arange(total_len, total_len * 2).reshape(shape))
     return SkyCoord(*data, unit=u.deg)
 
-
-def data_nd(shape):
+def data_nd(shape, data_type='numpy'):
     nelem = np.product(shape)
-    return np.arange(nelem).reshape(shape)
+    data = np.arange(nelem).reshape(shape)
+    if data_type == 'numpy':
+        return data
+    elif data_type == 'dask':
+        return da.array(data)
 
 
 def time_extra_coords(shape, axis, base):
@@ -310,19 +314,19 @@ def extra_coords_sharing_axis():
 # NDCube Fixtures
 ################################################################################
 
-@pytest.fixture
-def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
+@pytest.fixture(params=['numpy', 'dask'])
+def ndcube_4d_ln_l_t_lt(request, wcs_4d_lt_t_l_ln):
     shape = (5, 10, 12, 8)
     wcs_4d_lt_t_l_ln.array_shape = shape
-    data_cube = data_nd(shape)
+    data_cube = data_nd(shape, data_type=request.param)
     return NDCube(data_cube, wcs=wcs_4d_lt_t_l_ln)
 
 
-@pytest.fixture
-def ndcube_4d_ln_lt_l_t(wcs_4d_t_l_lt_ln):
+@pytest.fixture(params=['numpy', 'dask'])
+def ndcube_4d_ln_lt_l_t(request, wcs_4d_t_l_lt_ln):
     shape = (5, 8, 10, 12)
     wcs_4d_t_l_lt_ln.array_shape = shape
-    data_cube = data_nd(shape)
+    data_cube = data_nd(shape, data_type=request.param)
     return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln)
 
 
