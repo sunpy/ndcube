@@ -454,7 +454,7 @@ def get_low_level_wcs(wcs, name='wcs'):
     elif isinstance(wcs, BaseLowLevelWCS):
         return wcs
     else:
-        raise (f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
+        raise f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS'
 
 
 def compare_wcs_physical_types(source_wcs, target_wcs):
