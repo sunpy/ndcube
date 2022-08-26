@@ -65,7 +65,8 @@ default_role = 'obj'
 napoleon_use_rtype = False
 napoleon_google_docstring = False
 napoleon_use_param = False
-nitpicky = True
+# TODO: Enable this in future.
+nitpicky = False
 # This is not used. See docs/nitpick-exceptions file for the actual listing.
 nitpick_ignore = []
 for line in open('nitpick-exceptions'):
