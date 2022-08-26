@@ -1,13 +1,13 @@
 """
-================
+=================
 <Verbing> a thing
-================
+=================
 
 How to <verb> <active tense> <does something>.
 
 The example uses <packages> to <do something> and <other package> to <do other
 thing>. Include links to referenced packages like this: `sunpy.map` to
-show the sunpy.map or like this `~sunpy.map`to show just 'map'.
+show the sunpy.map or like this `~sunpy.map` to show just 'map'.
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,9 +50,7 @@ plt.imshow(z, cmap=plt.cm.get_cmap('Spectral'), interpolation='none')
 
 ##########################################################################
 # There's some subtle differences between rendered html rendered comment
-# strings and code comment strings which I'll demonstrate below. (Some of this
-# only makes sense if you look at the
-# :download:`raw Python script <plot_notebook.py>`)
+# strings and code comment strings which I'll demonstrate below.
 #
 # Comments in comment blocks remain nested in the text.
 
