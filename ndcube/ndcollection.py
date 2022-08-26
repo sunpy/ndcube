@@ -107,10 +107,10 @@ class NDCollection(dict):
         One tuple is retured for each axis as there can be more than one physical type
         associated with an aligned axis.  If there are no physical types associated
         with an aligned that is common to all collection members, an empty tuple is
-        returned for that axis.  If there are no aligned axes, raises a ValueError.
+        returned for that axis.
         """
         if self.aligned_axes is None:
-            raise ValueError("aligned_axes must be set to use this property.")
+            return None
         # Get array axis physical types for each aligned axis for all members of collection.
         collection_types = [np.array(cube.array_axis_physical_types,
                                      dtype=object)[np.array(self.aligned_axes[name])]
