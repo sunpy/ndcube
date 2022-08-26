@@ -507,7 +507,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     if not (value is None or isinstance(value, classes[j])):
                         raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                         f"incompatible with WCS component {comp[j]} "
-                                        f"{type(classes[j])}.")
+                                        f"{classes[j]}.")
             return utils.cube.get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
