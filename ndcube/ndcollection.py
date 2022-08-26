@@ -259,15 +259,19 @@ class NDCollection(dict):
             new_data = list(collection.values())
             key_data_pairs = zip(new_keys, new_data)
             new_aligned_axes = collection.aligned_axes
+
         # Check aligned axes of new inputs are compatible with those in self.
         # As they've already been sanitized, only one set of aligned axes need be checked.
+        first_old_aligned_axes = self.aligned_axes[self._first_key] if self.aligned_axes is not None else None
+        first_new_aligned_axes = new_aligned_axes[new_keys[0]] if new_aligned_axes is not None else None
         collection_utils.assert_aligned_axes_compatible(
             self[self._first_key].dimensions, new_data[0].dimensions,
-            self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]]
+            first_old_aligned_axes, first_new_aligned_axes
         )
         # Update collection
         super().update(key_data_pairs)
-        self.aligned_axes.update(new_aligned_axes)
+        if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
+            self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):
         super().__delitem__(key)
