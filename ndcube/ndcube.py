@@ -24,6 +24,7 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.utils.decorators import check_arithmetic_compatibility
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization.descriptor import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
@@ -792,3 +793,57 @@ class NDCube(NDCubeBase):
                 "no default plotting functionality is available.")
 
         return self.plotter.plot(*args, **kwargs)
+
+    def _new_instance_from_op(self, new_data, new_unit):
+        # This implicitly assumes that the arithmetic operation does not alter
+        # the WCS, mask, or uncertainty
+        return type(self)(new_data, 
+                          unit=new_unit,
+                          wcs=self.wcs,
+                          mask=self.mask,
+                          meta=self.meta,
+                          uncertainty=self.uncertainty,
+                          extra_coords=self.extra_coords,)
+
+    def __neg__(self):
+        return self._new_instance_from_op(-self.data, self.unit)
+
+    @check_arithmetic_compatibility
+    def __pow__(self, value):
+        new_data = self.data ** value
+        new_unit = self.unit ** value
+        return self._new_instance_from_op(new_data, new_unit)
+
+    @check_arithmetic_compatibility
+    def __add__(self, value):
+        new_data = self.data + value.to_value(self.unit)
+        return self._new_instance_from_op(new_data, self.unit)
+
+    def __radd__(self, value):
+        return self.__add__(value)
+
+    def __sub__(self, value):
+        return self.__add__(-value)
+
+    def __rsub__(self, value):
+        return self.__neg__().__add__(value)
+
+    @check_arithmetic_compatibility
+    def __mul__(self, value):
+        value = u.Quantity(value)
+        new_unit = self.unit * value.unit
+        new_data = self.data * value.to_value()
+        return self._new_instance_from_op(new_data, new_unit)
+
+    def __rmul__(self, value):
+        return self.__mul__(value)
+
+    def __truediv__(self, value):
+        return self.__mul__(1/value)
+
+    @check_arithmetic_compatibility
+    def __rtruediv__(self, value):
+        value = u.Quantity(value)
+        new_unit = value.unit / self.unit
+        new_data = value.to_value() / self.data
+        return self._new_instance_from_op(new_data, new_unit)
