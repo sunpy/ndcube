@@ -150,7 +150,7 @@ def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes
         The aligned axes of data cube 2.
 
     """
-    # there is a mismatch where one collection uses aligned_axes and the other does not
+    # If one set of aligned axes is None and the other isn't, they are defined as not compatible.
     if (data_axes1 is None and data_axes2 is not None) or (data_axes1 is not None and data_axes2 is None):
         raise ValueError("Both collections must use aligned_axes or both axes must not use aligned_axes."
                          f"Currently {data_axes1} != {data_axes2}")
