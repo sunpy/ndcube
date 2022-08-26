@@ -25,6 +25,7 @@ class Mapping:
         :ref:`compound-model-mappings` for more details.
 
     """
+
     def __init__(self, mapping):
         self.mapping = mapping
         self.n_inputs = max(mapping) + 1
@@ -66,6 +67,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         A tolerance used to check that the resulting pixel coordinates from
         ``world_to_pixel`` are the same from all WCSes.
     """
+
     def __init__(self, *wcs, mapping=None, pixel_atol=1e-8):
         self._wcs = wcs
 

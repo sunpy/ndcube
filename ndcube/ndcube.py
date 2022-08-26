@@ -12,7 +12,7 @@ from astropy.units import UnitsError
 
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
-    import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+    import sunpy.coordinates  # NOQA
 except ImportError:
     pass
 from astropy.wcs import WCS
@@ -117,6 +117,7 @@ class NDCubeLinkedDescriptor:
     """
     A descriptor which gives the property a reference to the cube to which it is attached.
     """
+
     def __init__(self, default_type):
         self._default_type = default_type
         self._property_name = None

@@ -45,6 +45,7 @@ class NDCollection(dict):
     This is interpretted as axis 0 of cube0 is aligned with axis 2 of cube1 while
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
+
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
         # Enter data and metadata into object.
         super().__init__(key_data_pairs)
