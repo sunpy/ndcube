@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from inspect import signature
+=======
+import contextlib
+>>>>>>> b5c014d (add tests for math)
 from textwrap import dedent
 
 import astropy.units as u
@@ -835,3 +839,86 @@ def test_plot_docstring():
 
     assert cube.plot.__doc__ == cube.plotter.plot.__doc__
     assert signature(cube.plot) == signature(cube.plotter.plot)
+# This function is used in the arithmetic tests below
+def check_arithmetic_value_and_units(cube_new, data_expected):
+    cube_quantity = u.Quantity(cube_new.data, cube_new.unit)
+    assert u.allclose(cube_quantity, data_expected)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(10), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_map_arithmetic_addition_subtraction(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    # Add
+    new_cube = ndcube_2d_ln_lt_units + value
+    check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+    # rAdd
+    new_cube = value + ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value + cube_quantity)
+    # Subtract
+    new_cube = ndcube_2d_ln_lt_units - value
+    check_arithmetic_value_and_units(new_cube, cube_quantity - value)
+    # rSubtract
+    new_cube = value - ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value - cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(10), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(10),
+    np.random.rand(10, 12),
+])
+def test_map_arithmetic_multiplication_division(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    # Multiply
+    new_cube = ndcube_2d_ln_lt_units * value
+    check_arithmetic_value_and_units(new_cube, cube_quantity * value)
+    # rMultiply
+    new_cube = value * ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value * cube_quantity)
+    # Divide
+    new_cube = ndcube_2d_ln_lt_units / value
+    check_arithmetic_value_and_units(new_cube, cube_quantity / value)
+    # rDivide
+    new_cube = value / ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value / cube_quantity)
+
+
+def test_map_arithmetic_pow(ndcube_2d_ln_lt_units):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units ** 2
+    check_arithmetic_value_and_units(new_cube, cube_quantity ** 2)
+
+
+def test_map_arithmetic_neg(ndcube_2d_ln_lt_units):
+    check_arithmetic_value_and_units(
+        -ndcube_2d_ln_lt_units,
+        u.Quantity(-ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit),
+    )
+
+
+@pytest.mark.parametrize('value,warn_context', [
+    ('map', pytest.warns(RuntimeWarning)),
+    ('foobar', contextlib.nullcontext()),
+    (None, contextlib.nullcontext()),
+    (['foo', 'bar'], contextlib.nullcontext()),
+])
+def test_map_arithmetic_operations_raise_exceptions(aia171_test_map, value, warn_context):
+    value = aia171_test_map if value == 'map' else value
+    with pytest.raises(TypeError):
+        _ = aia171_test_map + value
+    with pytest.raises(TypeError):
+        _ = aia171_test_map * value
+    with pytest.raises(TypeError):
+        # A runtime warning is thrown when dividing by zero in the case of
+        # the map test
+        with warn_context:
+            _ = value / aia171_test_map
