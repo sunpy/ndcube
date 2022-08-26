@@ -269,7 +269,7 @@ class NDCollection(dict):
         )
         # Update collection
         super().update(key_data_pairs)
-        if first_old_aligned_axes is not None:  # since the above assertion passed, both are aligned_axes are not None
+        if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
             self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):
