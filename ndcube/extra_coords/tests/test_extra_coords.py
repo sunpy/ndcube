@@ -506,3 +506,12 @@ def test_interpolate(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
                        expected_sky.dec.value)
     assert np.allclose(output._lookup_tables[3][1].table[0].to_value(energy_lut.unit),
                        energy_lut.value)
+
+
+def test_length1_extra_coord(wave_lut):
+    ec = ExtraCoords()
+    ec.add("wavey", 0, wave_lut)
+    item = slice(1, 2)
+    sec = ec[item]
+    assert (sec.wcs.pixel_to_world(0)[0] == wave_lut[item]).all()
+    assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()

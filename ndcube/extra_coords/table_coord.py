@@ -10,10 +10,90 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model
+from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
+
+
+class Length1Tabular(_Tabular):
+    _input_units_allow_dimensionless = True
+    _has_inverse_bounding_box = True
+    _separable = True
+
+    n_inputs = 1
+    n_outputs = 1
+
+    lookup_table = np.zeros([1])
+    points = np.zeros([1])
+
+    def __init__(self, points=None, lookup_table=None, point_width=None, value_width=None,
+                 method='linear', bounds_error=True, fill_value=np.nan, **kwargs):
+        """Create a Length-1 1-D Tabular model.
+
+        Parameters
+        ----------
+        points: `astropy.units.Quantity`
+            The point/index of the lookup table.
+        lookup_table: `astropy.units.Quantity`
+            The real world value at the point in the lookup table.
+        point_width: `astropy.units.Quantity`
+            The width of the point in point units.
+        value_width: `astropy.units.Quantity`
+            The width of the point in world units.
+            Equivalent of CDELT in FITS-WCS.
+
+        Other parameters are defined by the parent class.
+        """
+        if len(lookup_table) != 1:
+            raise ValueError("lookup_table must have length 1.")
+        super().__init__(points=points, lookup_table=lookup_table, method=method,
+                         bounds_error=bounds_error, fill_value=fill_value, **kwargs)
+        self._value_width = value_width  # Width of point in world units.
+        if self._value_width is None:
+            self._value_width = 0 * self.lookup_table.unit
+        self._point_width = point_width  # Width of point in point units.
+        if self._point_width is None:
+            self._point_width = 1 * self.points[0].unit
+
+    def evaluate(self, x):
+        output = np.full(x.shape, self.fill_value)
+        diff = abs(x - self.points[0])
+        margin = self._point_width / 2
+        if margin.value == 0:
+            idx = diff == margin
+        else:
+            idx = np.logical_and(diff >= -1 * margin, diff < margin)
+        output[idx] = self.lookup_table[0].value
+        return output * self.lookup_table.unit
+
+    @property
+    def inverse(self):
+        return InverseLength1Tabular(points=self.points[0], lookup_table=self.lookup_table,
+                                     point_width=self._point_width, value_width=self._value_width,
+                                     method=self.method, bounds_error=self.bounds_error,
+                                     fill_value=self.fill_value)
+
+
+class InverseLength1Tabular(Length1Tabular):
+    """A Length1Tabular class whose forward transform goes from lookup table value to point.
+
+    This is the opposite direction to Length1Tabular.
+    """
+    def __init__(self, **kwargs):
+        # Same inputs as Length1Tabular
+        points = kwargs.pop("points", None)
+        lookup_table = kwargs.pop("lookup_table", None)
+        point_width = kwargs.pop("point_width", None)
+        value_width = kwargs.pop("value_width", None)
+        super().__init__(points=lookup_table, lookup_table=points,
+                         point_width=value_width, value_width=point_width, **kwargs)
+
+    def evaluate(self, x):
+        # When calling evaluate with a bounding box, astropy strips the units.
+        x = u.Quantity(x, unit=self.input_units['x'], copy=False)
+        return super().evaluate(x)
 
 
 def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
@@ -56,18 +136,19 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
     if len(points) == 1:
         points = points[0]
 
-    kwargs = {
-        'bounds_error': False,
-        'fill_value': np.nan,
-        'method': interpolation,
-        **kwargs
-    }
+    kwargs = {'bounds_error': False,
+              'fill_value': np.nan,
+              'method': interpolation,
+              **kwargs}
 
-    t = TabularND(points, lookup_table, **kwargs)
+    if len(lookup_table) == 1:
+        t = Length1Tabular(points, lookup_table, **kwargs)
+    else:
+        t = TabularND(points, lookup_table, **kwargs)
 
-    # TODO: Remove this when there is a new gWCS release
-    # Work around https://github.com/spacetelescope/gwcs/pull/331
-    t.bounding_box = None
+        # TODO: Remove this when there is a new gWCS release
+        # Work around https://github.com/spacetelescope/gwcs/pull/331
+        t.bounding_box = None
 
     return t
 
