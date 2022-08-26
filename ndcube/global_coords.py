@@ -23,6 +23,7 @@ class GlobalCoords(Mapping):
         from the wcs and extra coords of the ndcube. If not specified only
         coordinates explicitly added will be shown.
     """
+
     def __init__(self, ndcube=None):
         super().__init__()
         self._ndcube = ndcube

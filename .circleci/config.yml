@@ -12,7 +12,7 @@ skip-check: &skip-check
   command: bash .circleci/early_exit.sh
 
 merge-check: &merge-check
-  name: Check if we need to merge upstream master
+  name: Check if we need to merge upstream main
   command: |
     if [[ -n "${CIRCLE_PR_NUMBER}" ]]; then
       git fetch origin --tags
@@ -24,7 +24,7 @@ apt-run: &apt-install
   name: Install apt packages
   command: |
     sudo apt update
-    sudo apt install -y graphviz build-essential libopenjp2-7 python3-dev
+    sudo apt install -y libopenjp2-7
 
 jobs:
   figure:
@@ -32,7 +32,7 @@ jobs:
       jobname:
         type: string
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     environment:
       TOXENV=<< parameters.jobname >>
     steps:
@@ -42,19 +42,22 @@ jobs:
       - run: *merge-check
       - run: *apt-install
       - run: pip install --user -U tox tox-pypi-filter
-      - run: tox
-      - run: curl -s https://codecov.io/bash | bash
+      - run: tox -v
+      - run:
+          name: Running codecov
+          command: bash -e .circleci/codecov_upload.sh -f ".tmp/${TOXENV}/coverage.xml"
       - store_artifacts:
           path: .tmp/<< parameters.jobname >>/figure_test_images
       - run:
           name: "Image comparison page is available at: "
           command: echo "${CIRCLE_BUILD_URL}/artifacts/${CIRCLE_NODE_INDEX}/.tmp/${TOXENV}/figure_test_images/fig_comparison.html"
+
   deploy-reference-images:
     parameters:
       jobname:
         type: string
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     environment:
       TOXENV: << parameters.jobname >>
       GIT_SSH_COMMAND: ssh -i ~/.ssh/id_rsa_b1c8b094a8ec67162b0f18a949a6b1db
@@ -72,8 +75,9 @@ jobs:
       - run: git config --global user.email "ndcube@circleci" && git config --global user.name "ndcube Circle CI"
       - run: git clone git@github.com:sunpy/sunpy-figure-tests.git --depth 1 -b ndcube-${CIRCLE_BRANCH} ~/sunpy-figure-tests/
       # Generate Reference images
-      - run: pip install --user -U tox codecov tox-pypi-filter
-      - run: tox -- --mpl-generate-path=/home/circleci/sunpy-figure-tests/figures/$TOXENV | tee toxlog
+      - run: pip install --user -U tox tox-pypi-filter
+      - run: rm -rf /home/circleci/sunpy-figure-tests/figures/$TOXENV/*
+      - run: tox -v -- --mpl-generate-path=/home/circleci/sunpy-figure-tests/figures/$TOXENV | tee toxlog
       - run: |
           hashlib=$(grep "^figure_hashes.*\.json$" toxlog)
           cp ./ndcube/visualization/tests/$hashlib /home/circleci/sunpy-figure-tests/figures/$TOXENV/
@@ -87,6 +91,7 @@ jobs:
 
 workflows:
   version: 2
+
   figure-tests:
     jobs:
       - figure:
@@ -94,18 +99,18 @@ workflows:
           matrix:
             parameters:
               jobname:
-                - "py38-figure"
-                - "py39-figure-devdeps"
+                - "py310-figure"
+                - "py310-figure-devdeps"
+
       - deploy-reference-images:
           name: baseline-<< matrix.jobname >>
           matrix:
             parameters:
               jobname:
-                - "py38-figure"
-                - "py39-figure-devdeps"
+                - "py310-figure"
+                - "py310-figure-devdeps"
           requires:
-            - "py38-figure"
-            - "py39-figure-devdeps"
+            - << matrix.jobname >>
           filters:
             branches:
               only:
