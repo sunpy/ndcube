@@ -54,7 +54,8 @@ crpix2 = 513*u.pix
 
 ##########################################################################
 # We now need a model to convert from a given pixel (x, y)
-# at a given time sample (z) to the relevant world coordinate (lat, lon, time).
+# at a given time sample (z) to the relevant 
+# world coordinate (lat, lon, time).
 # This requires `dkist.wcs.models.VaryingCelestialTransform` to create
 # a wcs object for the changing reference coordinates/rotation matrices
 # and also `astropy.modeling.models.Linear1D` to map from z to time.
@@ -91,23 +92,29 @@ timepix_frame = cf.CoordinateFrame(naxes=1,
 
 # something funny here if unit = (u.pix, u.pix)
 # coordinate is returned as pix^2
-detector_frame = cf.Frame2D(name="detector", axes_names=("x", "y"),
-                            unit=(u.dimensionless_unscaled, u.dimensionless_unscaled))
+detector_frame = cf.Frame2D(name="detector",
+                            axes_names=("x", "y"),
+                            unit=(u.pix, u.pix))
 
-detector_time_frame = cf.CompositeFrame([detector_frame, timepix_frame], name="detector_time_frame")
+detector_time_frame = cf.CompositeFrame([detector_frame, timepix_frame],
+                                        name="detector_time_frame")
 
-time_frame = cf.TemporalFrame(time_array[0], axes_names=('time'), axes_order=(2,), unit=(u.s))
+time_frame = cf.TemporalFrame(time_array[0],
+                              axes_names=('time'),
+                              axes_order=(2,),
+                              unit=(u.s))
 
-sky_frame = cf.CelestialFrame(reference_frame=Helioprojective, name='helioprojective',
-                              axes_names=['pos.helioprojective.lat', 'pos.helioprojective.lon'],
+sky_frame = cf.CelestialFrame(reference_frame=Helioprojective,
+                              name='helioprojective',
+                              axes_names=['pos.helioprojective.lat',
+                                          'pos.helioprojective.lon'],
                               unit=(u.arcsec, u.arcsec))
 
-sky_time_frame = cf.CompositeFrame([sky_frame, time_frame], name="sky_time_frame")
+sky_time_frame = cf.CompositeFrame([sky_frame, time_frame],
+                                    name="sky_time_frame")
 
 pipeline = [(detector_time_frame, ccm),
-
             (sky_time_frame, None)
-
             ]
 
 wcsobj = wcs.WCS(pipeline)
