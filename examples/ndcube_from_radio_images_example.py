@@ -13,16 +13,15 @@ The following example uses data from the NenuFAR radio telescope
 https://nenufar.obs-nancay.fr/en/homepage-en/
 """
 import numpy as np
-
-from astropy.modeling import models
 from astropy import units as u
+from astropy.modeling import models
 from astropy.time import Time, TimeDelta
-from gwcs import wcs
-from gwcs import coordinate_frames as cf
-from sunpy.coordinates.frames import Helioprojective
 from dkist.wcs.models import CoupledCompoundModel, VaryingCelestialTransform
-from ndcube import NDCube
+from gwcs import coordinate_frames as cf
+from gwcs import wcs
+from sunpy.coordinates.frames import Helioprojective
 
+from ndcube import NDCube
 
 ##############################################################################
 # We first need to load some data. We'll create some fake data for this
