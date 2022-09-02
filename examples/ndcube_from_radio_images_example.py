@@ -5,148 +5,117 @@ Creating an NDCube from solar radio interferometric images.
 
 How to make an NDCube from solar radio interferometric images.
 
-The example uses `dkist` https://docs.dkist.nso.edu/projects/python-tools/en/latest/ and `gwcs`
-to create a single wcs object that takes into account the changing crval of 
-solar radio images using `~dkist.wcs.models.VaryingCelestialTransform`. 
+The example uses `dkist`
+https://docs.dkist.nso.edu/projects/python-tools/en/latest/ and `gwcs`
+to create a single wcs object that takes into account the changing crval of
+solar radio images using `~dkist.wcs.models.VaryingCelestialTransform`.
 The following example uses data from the NenuFAR radio telescope
 https://nenufar.obs-nancay.fr/en/homepage-en/
 """
-import glob
-
 import numpy as np
 
-from multiprocessing import Pool
-
 from astropy.modeling import models
-from astropy import coordinates as coord
-from astropy.coordinates import SkyCoord, EarthLocation
 from astropy import units as u
-from astropy.io import fits
 from astropy.time import Time, TimeDelta
 from gwcs import wcs
 from gwcs import coordinate_frames as cf
-from ndcube import NDCube
 from sunpy.coordinates.frames import Helioprojective
-from sunpy.coordinates import sun
+from dkist.wcs.models import CoupledCompoundModel, VaryingCelestialTransform
+from ndcube import NDCube
 
-from dkist.wcs.models import VaryingCelestialTransform
 
 ##############################################################################
-# We first need to load some data. These exist on a machine somewhere and 
-# I don't know how to share them. 
-# Here we take every image at a single frequency
+# We first need to load some data. We'll create some fake data for this
+# example of shape TIME, SPACE, SPACE.
+# We will also need the corresponding time array.
 
-ims = glob.glob("/data/mpearse/radio_images/SB158/*image.fits")
-ims.sort()
-
-def get_data(file):
-    with fits.open(file) as hdu:
-        header = hdu[0].header
-        data = np.squeeze(hdu[0].data)
-    
-    obstime = Time(header['date-obs']) # observational time
-    freq = header['crval3']*u.Hz # frequency of observation
-    wavelength = freq.to(u.m, equivalencies=u.spectral())
-    #data from Jy/beam to T_b
-    beam_semi_major_axis = 0.5*header['BMAJ']*u.deg #nothing in fits to suggest degrees, you just have to know
-    beam_semi_minor_axis = 0.5*header['BMIN']*u.deg
-    beam_area = ((np.pi*beam_semi_major_axis*beam_semi_minor_axis)/(4*np.log(2)))
-    data = data *(u.Jy/beam_area)
-    equiv = u.brightness_temperature(freq)
-    data = data.to(u.K, equivalencies=equiv)
-    
-    return data, obstime
-
-with Pool() as pool:
-    datatime = pool.map(get_data, ims)
-
-data = np.array([d[0] for d in datatime])
-time = Time(np.array([t[1] for t in datatime]))
+data = np.random.rand(1440, 1024, 1024)
+t_arr = np.arange(1440)
+time_array = Time("2022-09-01T12:00:00") + TimeDelta(t_arr, format='sec')
 ###########################################################################
 # The reference coordinate for radio observations typically changes as the
 # telescope pointing is updated to stay somewhat centred on the sun.
-# Thus, we will need create look up tables for the different reference 
-# coordinates and corresponding rotation matrices. We will also need the
-# location of the NenuFAR array.
+# Thus, we will need create look up tables for the different reference
+# coordinates and corresponding rotation matrices.
+# Here we generate these randomly to have shape TIME, 2 for the reference
+# coordinates and TIME, 2, 2 for the rotation matrices.
 
-nenufar_ITRF = np.array((4323915,165533.67,4670321.7))
-array_loc = EarthLocation.from_geocentric(*nenufar_ITRF, u.m)
-
-def get_lookup_tables(file):
-    with fits.open(file) as hdu:
-        header = hdu[0].header
-    obstime = Time(header['DATE-OBS'])
-
-    array_gcrs = SkyCoord(array_loc.get_gcrs(obstime))
-
-    # reference coordinate from FITS file
-    reference_coord = SkyCoord(header['CRVAL1']*u.deg, header['CRVAL2']*u.deg,
-                           frame='gcrs',
-                           obstime=obstime,
-                           obsgeoloc=array_gcrs.cartesian,
-                           obsgeovel=array_gcrs.velocity.to_cartesian(),
-                           distance=array_gcrs.hcrs.distance,
-                           equinox='J2000')
-
-    reference_coord_arcsec = reference_coord.transform_to(Helioprojective(observer=array_gcrs))
-    crval = [reference_coord_arcsec.Tx.arcsec, reference_coord_arcsec.Ty.arcsec]
-    P = sun.P(obstime)
-    pc = np.array([[np.cos(-P), -np.sin(-P)],
-                   [np.sin(-P), np.cos(P)]])
-    
-    return crval, pc
-
-with Pool() as pool:
-    lookup_tables = pool.map(get_lookup_tables, ims)
-    
-crval_table = np.array([lt[0] for lt in lookup_tables])
+crval_table = np.random.rand(1440, 2)
 crval_table = crval_table*u.arcsec
 
-pc_table = np.array([lt[1] for lt in lookup_tables])
+pc_table = np.random.rand(1440, 2, 2)
 pc_table = pc_table*u.deg
 ##########################################################################
-# We now define the `~dkist.wcs.models.VaryingCelestialTransform` to create
-# our wcs object. WARNING this is very finnicky and will likely change in the
-# future. It's convenient here to get some meta data from the first image
-
-with fits.open(ims[0]) as hdu:
-    header = hdu[0].header
-cdelt1 = (np.abs(header['CDELT1'])*u.deg).to(u.arcsec)/u.pix
-cdelt2 = (np.abs(header['CDELT2'])*u.deg).to(u.arcsec)/u.pix
-
-vct = VaryingCelestialTransform(crval_table = crval_table,
-                                pc_table = pc_table,
-                                crpix = [header['CRPIX1']*u.pix, header['CRPIX2']*u.pix],
-                                cdelt = [cdelt1, cdelt2],
-                                lon_pole=180*u.deg,
-                               )
+# Let's also define the reference pixel and the pixel scale
+cdelt1 = 88.8*(u.arcsec/u.pix)
+cdelt2 = 88.8*(u.arcsec/u.pix)
+crpix1 = 513*u.pix
+crpix2 = 513*u.pix
 
 ##########################################################################
-# We now follow from 
+# We now need a model to convert from a given pixel (x, y)
+# at a given time sample (z) to the relevant world coordinate (lat, lon, time).
+# This requires `dkist.wcs.models.VaryingCelestialTransform` to create
+# a wcs object for the changing reference coordinates/rotation matrices
+# and also `astropy.modeling.models.Linear1D` to map from z to time.
+# These are combined using `dkist.wcs.models.CoupledCompoundModel`.
+# WARNING `~dkist.wcs.models.VaryingCelestialTransform`
+# and `~dkist.wcs.models.CoupledCompoundModel`
+# are likely change in the future and thus this method may need to be updated.
+
+
+vct = VaryingCelestialTransform(crval_table=crval_table,
+                                pc_table=pc_table,
+                                crpix=[crpix1, crpix2],
+                                cdelt=[cdelt1, cdelt2],
+                                lon_pole=180*u.deg,
+                                )
+dt = time_array[-1] - time_array[0]
+m = dt.sec/len(time_array)
+
+tmodel = models.Linear1D(slope=m*u.s/u.pix, intercept=0*u.s)
+
+ccm = CoupledCompoundModel('&', vct, tmodel)
+##########################################################################
+# We now follow from
 # https://gwcs.readthedocs.io/en/latest/#a-step-by-step-example-of-constructing-an-imaging-gwcs-object
 # to construct our wcs object that will be used by `NDCube`
 
+timepix_frame = cf.CoordinateFrame(naxes=1,
+                                   axes_type="TIME",
+                                   axes_order=(2,),
+                                   name="detector_time",
+                                   axes_names="z",
+                                   unit=(u.pix))
+
+
+# something funny here if unit = (u.pix, u.pix)
+# coordinate is returned as pix^2
 detector_frame = cf.Frame2D(name="detector", axes_names=("x", "y"),
-                            unit=(u.pix, u.pix))
+                            unit=(u.dimensionless_unscaled, u.dimensionless_unscaled))
 
-time_frame = cf.TemporalFrame(time, axes_names=('time'), axes_order=(2,))
+detector_time_frame = cf.CompositeFrame([detector_frame, timepix_frame], name="detector_time_frame")
 
-detector_time_frame = cf.CompositeFrame([time_frame, detector_frame])
+time_frame = cf.TemporalFrame(time_array[0], axes_names=('time'), axes_order=(2,), unit=(u.s))
 
 sky_frame = cf.CelestialFrame(reference_frame=Helioprojective, name='helioprojective',
                               axes_names=['pos.helioprojective.lat', 'pos.helioprojective.lon'],
                               unit=(u.arcsec, u.arcsec))
 
+sky_time_frame = cf.CompositeFrame([sky_frame, time_frame], name="sky_time_frame")
 
-pipeline = [(detector_time_frame, vct),
-            (sky_frame, None)
-           ]
+pipeline = [(detector_time_frame, ccm),
+
+            (sky_time_frame, None)
+
+            ]
 
 wcsobj = wcs.WCS(pipeline)
 
 ##########################################################################
 # Finally we create our 'NDCube' object
-cube = NDCube(data, wcsobj, unit=u.K)
 
+cube = NDCube(data, wcsobj, unit=u.K)
+print(cube)
 ##########################################################################
 # Hooray!

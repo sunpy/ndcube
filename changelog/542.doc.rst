@@ -1,0 +1,1 @@
+Add example for creating `NDCube` object with a wcs that depends on time.
