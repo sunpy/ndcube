@@ -54,7 +54,7 @@ crpix2 = 513*u.pix
 
 ##########################################################################
 # We now need a model to convert from a given pixel (x, y)
-# at a given time sample (z) to the relevant 
+# at a given time sample (z) to the relevant
 # world coordinate (lat, lon, time).
 # This requires `dkist.wcs.models.VaryingCelestialTransform` to create
 # a wcs object for the changing reference coordinates/rotation matrices
@@ -111,7 +111,7 @@ sky_frame = cf.CelestialFrame(reference_frame=Helioprojective,
                               unit=(u.arcsec, u.arcsec))
 
 sky_time_frame = cf.CompositeFrame([sky_frame, time_frame],
-                                    name="sky_time_frame")
+                                   name="sky_time_frame")
 
 pipeline = [(detector_time_frame, ccm),
             (sky_time_frame, None)
@@ -124,5 +124,6 @@ wcsobj = wcs.WCS(pipeline)
 
 cube = NDCube(data, wcsobj, unit=u.K)
 print(cube)
+
 ##########################################################################
 # Hooray!
