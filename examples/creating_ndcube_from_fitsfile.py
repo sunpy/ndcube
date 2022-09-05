@@ -8,10 +8,10 @@ Here we will use an example of a single image.
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 from astropy.wcs import WCS
+
 from ndcube import NDCube
 
 ##############################################################################
@@ -48,7 +48,7 @@ example_ndcube.wcs
 example_ndcube.dimensions
 
 ##########################################################################
-# We can also quickly visualize the data using the `~ndcube.NDCube.plot` method
+# We can also quickly visualize the data using the `~ndcube.NDCube.plot()` method
 
 example_ndcube.plot()
 plt.show()
