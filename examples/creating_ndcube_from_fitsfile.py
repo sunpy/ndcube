@@ -23,7 +23,7 @@ image_file = get_pkg_data_filename('tutorials/FITS-images/HorseHead.fits')
 
 ###########################################################################
 # Lets extract the image data and the header information from the FITS file.
-# This can be achived by using the functionality within `~astropy.io`
+# This can be achived by using the functionality within `~astropy.io`.
 # In this file the image information is located in the Primary HDU (extension 0).
 image_data = fits.getdata(image_file)
 image_header = fits.getheader(image_file)
