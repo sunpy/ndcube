@@ -786,7 +786,9 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
     resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
-                                                  shape_out=shape_out)
+                                                  shape_out=shape_out,
+                                                  kernel='gaussian',
+                                                  boundary_mode="strict")
 
     assert ndcube_2d_ln_lt.data.shape == (10, 12)
     assert resampled_cube.data.shape == (10, 12)
@@ -815,7 +817,9 @@ def test_reproject_adaptive_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_
 
     with pytest.raises(ValueError):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='adaptive',
-                                             shape_out=(5, 10, 12, 8))
+                                             shape_out=(5, 10, 12, 8),
+                                             kernel='gaussian',
+                                             boundary_mode="strict")
 
 
 def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
