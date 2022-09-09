@@ -610,9 +610,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         algorithm: `str` {'interpolation', 'adaptive', 'exact'}
             The algorithm to use for reprojecting.
-            When set to 'interpolation' ~`reproject.reproject_interp` is used,
-            when set to 'adaptive' ~`reproject.reproject_adaptive` is used and
-            when set to 'exact' ~`reproject.reproject_exact` is used.
+            When set to `'interpolation'` `~reproject.reproject_interp` is used,
+            when set to `'adaptive'` `~reproject.reproject_adaptive` is used and
+            when set to `'exact'` `~reproject.reproject_exact` is used.
 
         shape_out: `tuple`, optional
             The shape of the output data array. The ordering of the dimensions must follow NumPy
