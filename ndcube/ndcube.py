@@ -598,23 +598,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def _validate_algorithm_and_order(self, algorithm, order):
-        order_compatibility = {
-            'interpolation': ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic'],
-            'adaptive': ['nearest-neighbor', 'bilinear'],
-            'exact': []
-        }
-
-        if algorithm in order_compatibility:
-            if order_compatibility[algorithm] and order not in order_compatibility[algorithm]:
-                raise ValueError(f"For '{algorithm}' algorithm, the 'order' argument must be "
-                                 f"one of {', '.join(order_compatibility[algorithm])}.")
-
-        else:
-            raise ValueError(f"The 'algorithm' argument must be one of "
-                             f"{', '.join(order_compatibility.keys())}.")
-
-    def reproject_to(self, target_wcs, algorithm='interpolation', return_footprint=False, **reproject_args):
+    def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, return_footprint=False, **reproject_args):
         """
         Reprojects this `~nducbe.NDCube` to the coordinates described by another WCS object.
 
@@ -624,75 +608,26 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             or `astropy.io.fits.Header`
             The WCS object to which the ``NDCube`` is to be reprojected.
 
-        algorithm: `str`
+        algorithm: `str` {'interpolation', 'adaptive', 'exact'}
             The algorithm to use for reprojecting.
-            This can be any of: 'interpolation', 'adaptive', and 'exact'.
+            When set to 'interpolation' ~`reproject.reproject_interp` is used,
+            when set to 'adaptive' ~`reproject.reproject_adaptive` is used and
+            when set to 'exact' ~`reproject.reproject_exact` is used.
+
+        shape_out: `tuple`, optional
+            The shape of the output data array. The ordering of the dimensions must follow NumPy
+            ordering and not the WCS pixel shape.
+            If not specified, `~astropy.wcs.wcsapi.BaseLowLevelWCS.array_shape` attribute
+            (if available) from the low level API of the ``target_wcs`` is used.
 
         return_footprint : `bool`
             If `True`` the footprint is returned in addition to the new `~ndcube.NDCube`.
             Defaults to `False`.
 
-        shape_out: `tuple`, optional
-            The shape of the output data array.
-            The ordering of the dimensions must follow NumPy ordering and not
-            the WCS pixel shape.
-            If not specified, `~astropy.wcs.wcsapi.BaseLowLevelWCS.array_shape` attribute
-            (if available) from the low level API of the ``target_wcs`` is used.
-
-        order: `int` or `str`
-            The order of the interpolation (used only when the 'interpolation' or 'adaptive' (``reproject`` < 0.9 only)
-            algorithm is selected).
-            For 'interpolation' algorithm, this can be any of: 'nearest-neighbor', 'bilinear',
-            'biquadratic', and 'bicubic'.
-            For 'adaptive' algorithm, this can be either 'nearest-neighbor' or 'bilinear' (``reproject`` < 0.9 only).
-            For newer versions of  ``reproject`` this will have no effect.
-
-        output_array: `numpy.ndarray`, optional
-            An array in which to store the reprojected data.
-            This can be any numpy array including a memory map, which may be
-            helpful when dealing with extremely large files.
-
-        parallel: `bool` or `int`
-            Flag for parallel implementation (used only when the 'exact' algorithm is selected).
-            If `True`, a parallel implementation is chosen and the number of processes is
-            selected automatically as the number of logical CPUs detected on the machine.
-            If `False`, a serial implementation is chosen.
-            If the flag is a positive integer n greater than one, a parallel implementation
-            using n processes is chosen.
-
-        kernel : `str`
-            This only applies to 'adaptive'.
-            The averaging kernel to use.
-            Allowed values are 'Hann' and 'Gaussian' and is case-insensitive.
-            The Gaussian kernel produces better photometric accuracy and
-            stronger anti-aliasing at the cost of some blurring (on the scale
-            of a few pixels). Default is the Gaussian kernel.
-
-        boundary_mode : `str`
-            This only applies to 'adaptive'.
-            How to handle when the sampling region includes regions outside the
-            bounds of the input image. The default is ``ignore``, but this will
-            change to ``strict`` in a future release. Allowed values are:
-
-                * ``strict`` --- Output pixels will be NaN if any input sample
-                  falls outside the input image.
-                * ``constant`` --- Samples outside the input image are replaced by
-                  a constant value, set with the ``boundary_fill_value`` argument.
-                  Output values become NaN if there are no valid input samples.
-                * ``grid-constant`` --- Samples outside the input image are
-                  replaced by a constant value, set with the
-                  ``boundary_fill_value`` argument. Output values will be
-                  ``boundary_fill_value`` if there are no valid input samples.
-                * ``ignore`` --- Samples outside the input image are simply
-                  ignored, contributing neither to the output value nor the
-                  sum-of-weights normalization.
-                * ``ignore_threshold`` --- Acts as ``ignore``, unless the total
-                  weight of the ignored samples exceeds a set fraction of the total
-                  weight across the entire sampling region, set by the
-                  ``boundary_ignore_threshold`` argument. In that case, acts as
-                  ``strict``.
-                * ``nearest`` --- Samples outside the input image are replaced by
-                  the nearest in-bounds input pixel.
+        **reproject_args
+            All other arguments are passed through to the reproject function
+            being called. The function being called depends on the
+            ``algorithm=`` keyword argument, see that for more details.
 
         Returns
         -------
@@ -704,17 +639,32 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Values of 0 indicate no coverage or valid values in the input
             image, while values of 1 indicate valid values.
 
+        See Also
+        --------
+
+        * `reproject.reproject_interp`
+        * `reproject.reproject_adaptive`
+        * `reproject.reproject_exact`
+
         Notes
         -----
         This method doesn't support handling of the ``mask``, ``extra_coords``, and ``uncertainty`` attributes yet.
         However, ``meta`` and ``global_coords`` are copied to the output `ndcube.NDCube`.
         """
         try:
-            from reproject import __version__ as reproject_version
             from reproject import reproject_adaptive, reproject_exact, reproject_interp
             from reproject.wcs_utils import has_celestial
         except ModuleNotFoundError:
             raise ImportError("The NDCube.reproject_to method requires the optional package `reproject`.")
+
+        algorithms = {
+            "interpolation": reproject_interp,
+            "adaptive": reproject_adaptive,
+            "exact": reproject_exact,
+        }
+
+        if algorithm not in algorithms.keys():
+            raise ValueError(f"{algorithm=} is not valid, it must be one of {', '.join(algorithms.keys())}.")
 
         if isinstance(target_wcs, Mapping):
             target_wcs = WCS(header=target_wcs)
@@ -733,14 +683,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise ValueError('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
 
-        # LOL AT THIS
-        shape_out = reproject_args.get("shape_out", None)
-        order = reproject_args.get("order", 'bilinear')
-        output_array = reproject_args.get("output_array", None)
-        parallel = reproject_args.get("parallel", False)
-        kernel = reproject_args.get("kernel", "Gaussian")
-        boundary_mode = reproject_args.get("boundary_mode", "ignore")
-
+        # TODO: Upstream this check into reproject
         # If shape_out is not specified explicitly,
         # try to extract it from the low level WCS
         if not shape_out:
@@ -749,34 +692,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             else:
                 raise ValueError("shape_out must be specified if target_wcs does not have the array_shape attribute.")
 
-        self._validate_algorithm_and_order(algorithm, order)
-
-        if algorithm == 'interpolation':
-            data = reproject_interp(self, output_projection=target_wcs, shape_out=shape_out,
-                                    order=order, output_array=output_array,
-                                    return_footprint=return_footprint)
-
-        elif algorithm == 'adaptive':
-            if reproject_version >= "0.9":
-                if order:
-                    warnings.warn(
-                        "Order is ignored for the adaptive algorithm",
-                        UserWarning
-                    )
-                data = reproject_adaptive(self, output_projection=target_wcs,
-                                          shape_out=shape_out,
-                                          return_footprint=return_footprint,
-                                          kernel=kernel,
-                                          boundary_mode=boundary_mode)
-            else:
-                data = reproject_adaptive(self, output_projection=target_wcs,
-                                          shape_out=shape_out,
-                                          return_footprint=return_footprint,
-                                          order=order)
-
-        elif algorithm == 'exact':
-            data = reproject_exact(self, output_projection=target_wcs, shape_out=shape_out,
-                                   parallel=parallel, return_footprint=return_footprint)
+        data = algorithms[algorithm](self,
+                                     output_projection=target_wcs,
+                                     shape_out=shape_out,
+                                     return_footprint=return_footprint,
+                                     **reproject_args)
 
         if return_footprint:
             data, footprint = data
