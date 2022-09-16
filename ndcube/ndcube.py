@@ -727,7 +727,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def superpixel(self, superpixel_shape, func=np.sum, new_unit=False):
+    def superpixel(self, superpixel_shape, func_name="sum"):
         """Downsample array by creating non-overlapping superpixels.
 
         Values in superpixels are determined applying a function to the pixel
@@ -735,32 +735,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         dimension is given by the superpixel_shape input.
         This must be an integer fraction of the cube's array size in each dimension.
 
-        This method currently does not handle uncertainty or extra_coords.
-        They are dropped from the output.
-
         Parameters
         ----------
-        data : array-like
-            The data array to be downsampled
-
         superpixel_shape : array-like
             The number of pixels in a superpixel in each dimension.
             Must be the same length as number of dimensions in data.
             Each element must be in int. If they are not they will be rounded
             to the nearest int.
 
-        func : (optional)
+        func_name : `str`
             Function applied to the data to derive values of the superpixels.
-            The function must take an array as its first argument and
-            support the axis kwarg with the same meaning as a numpy axis
-            kward (see the description of `~numpy.sum` for an example.)
-            Default: `~numpy.sum`
-
-        new_unit : `str` or `astropy.units.Unit` (optional)
-            The unit of the new data. This might need to change based on how
-            func alters the data.
-            Default: False, i.e. self.unit is used. (False is used as default
-            flag because None is a valid new_unit option.)
+            Supported values are 'sum', 'mean', 'median', 'min', 'max'.
+            Note that uncertainties are dropped for 'median', 'min', and 'max'.
+            Default='sum'
 
         Returns
         -------
@@ -796,13 +783,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         which gives the expected array::
 
              array([[0, 3, 2],
-                   [2, 0, 4],
-                   [1, 2, 2]])
+                    [2, 0, 4],
+                    [1, 2, 2]])
         """
         # Sanitize input.
         # Make sure the input superpixel dimensions are integers.
         superpixel_shape = np.rint(superpixel_shape).astype(int)
         offsets = (superpixel_shape - 1) / 2
+        supported_funcs = {"sum", "mean", "median", "min", "max"}
+        if func_name not in supported_funcs:
+            raise ValueError(f"Invalid func_name provided: {func_name}. "
+                             f"Must be one of {supported_funcs}")
         if all(superpixel_shape == 1):
             return deepcopy(self)
         # Ensure superpixel_size has right number of entries and each entry is an
@@ -829,10 +820,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         reshape[1::2] = superpixel_shape
         new_data = data.reshape(tuple(reshape))
         for i in range(len(reshape) - 1, 0, -2):
-            new_data = func(new_data, axis=i)
+            func = getattr(new_data, func_name)
+            new_data = func(axis=i)
         if self.mask is not None:
             new_mask = new_data.mask
             new_data = new_data.data
+
+        if self.uncertainty is not None and func_name in {"sum", "mean"}:
+            pass  # TODO: Implement error propagation for 'sum' and 'mean'.
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, superpixel_shape[::-1])
