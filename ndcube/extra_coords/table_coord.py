@@ -81,6 +81,7 @@ class InverseLength1Tabular(Length1Tabular):
 
     This is the opposite direction to Length1Tabular.
     """
+
     def __init__(self, **kwargs):
         # Same inputs as Length1Tabular
         points = kwargs.pop("points", None)
@@ -188,6 +189,7 @@ class BaseTableCoordinate(abc.ABC):
     The contrasts with LookupTableCoord which can contain multiple physical
     coordinates, meaning it can have multiple gWCS frames.
     """
+
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         self.table = tables
         self.mesh = mesh
@@ -281,6 +283,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
     meshgrid isn't called when ``mesh=True``, the "meshing" is done in the gWCS
     layer.
     """
+
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not all([isinstance(t, u.Quantity) for t in tables]):
             raise TypeError("All tables must be astropy Quantity objects")
@@ -321,7 +324,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         # can be dropped.
         if isinstance(item, Integral) and (
                 isinstance(whole_slice, tuple) and
-                not(all(isinstance(k, Integral) for k in whole_slice))):
+                not (all(isinstance(k, Integral) for k in whole_slice))):
             dwd = new_components["dropped_world_dimensions"]
             dwd["value"].append(table[item])
             dwd["world_axis_names"].append(self.names[i] if self.names else None)
@@ -390,6 +393,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     class is constructed, this is to allow slicing operations on the tables
     which make the length of the dimensions different.
     """
+
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise ValueError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
@@ -480,6 +484,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
     """
     A lookup table based on a `~astropy.time.Time`, will always be one dimensional.
     """
+
     def __init__(self, *tables, names=None, physical_types=None, reference_time=None):
         if not len(tables) == 1 and isinstance(tables[0], Time):
             raise ValueError("TimeLookupTable can only be constructed from a single Time object.")
@@ -554,9 +559,10 @@ class MultipleTableCoordinate(BaseTableCoordinate):
     combine multiple instances of `.BaseTableCoordinate` with the ``&``
     operator.
     """
+
     def __init__(self, *table_coordinates):
         if not all(isinstance(lt, BaseTableCoordinate) and
-                   not(isinstance(lt, MultipleTableCoordinate)) for lt in table_coordinates):
+                   not (isinstance(lt, MultipleTableCoordinate)) for lt in table_coordinates):
             raise TypeError("All arguments must be BaseTableCoordinate instances, such as QuantityTableCoordinate, "
                             "and not instances of MultipleTableCoordinate.")
         self._table_coords = list(table_coordinates)

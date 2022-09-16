@@ -45,6 +45,7 @@ class NDCollection(dict):
     This is interpretted as axis 0 of cube0 is aligned with axis 2 of cube1 while
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
+
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
         # Enter data and metadata into object.
         super().__init__(key_data_pairs)
@@ -106,10 +107,10 @@ class NDCollection(dict):
         One tuple is retured for each axis as there can be more than one physical type
         associated with an aligned axis.  If there are no physical types associated
         with an aligned that is common to all collection members, an empty tuple is
-        returned for that axis.  If there are no aligned axes, raises a ValueError.
+        returned for that axis.
         """
         if self.aligned_axes is None:
-            raise ValueError("aligned_axes must be set to use this property.")
+            return None
         # Get array axis physical types for each aligned axis for all members of collection.
         collection_types = [np.array(cube.array_axis_physical_types,
                                      dtype=object)[np.array(self.aligned_axes[name])]
@@ -258,15 +259,19 @@ class NDCollection(dict):
             new_data = list(collection.values())
             key_data_pairs = zip(new_keys, new_data)
             new_aligned_axes = collection.aligned_axes
+
         # Check aligned axes of new inputs are compatible with those in self.
         # As they've already been sanitized, only one set of aligned axes need be checked.
+        first_old_aligned_axes = self.aligned_axes[self._first_key] if self.aligned_axes is not None else None
+        first_new_aligned_axes = new_aligned_axes[new_keys[0]] if new_aligned_axes is not None else None
         collection_utils.assert_aligned_axes_compatible(
             self[self._first_key].dimensions, new_data[0].dimensions,
-            self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]]
+            first_old_aligned_axes, first_new_aligned_axes
         )
         # Update collection
         super().update(key_data_pairs)
-        self.aligned_axes.update(new_aligned_axes)
+        if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
+            self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):
         super().__delitem__(key)

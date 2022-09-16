@@ -7,7 +7,7 @@ default_context:
   license: BSD 2-Clause
   project_url: http://docs.sunpy.org/projects/ndcube/
   github_repo: sunpy/ndcube
-  minimum_python_version: 3.7
+  minimum_python_version: 3.8
   use_compiled_extensions: n
   include_example_code: n
   _provide_setuppy_fallback: y
