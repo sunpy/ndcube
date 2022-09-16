@@ -491,17 +491,12 @@ class ExtraCoords(ExtraCoordsABC):
                                       SkyCoordTableCoordinate):
                             sky_key = next_key
                     # Interpolate lon and lat components separately then recombine into a SkyCoord.
-                    celestial_names = dict(
-                        [(item, key)
-                         for key, item in table.representation_component_names.items()])
-                    lon = getattr(table, celestial_names["lon"])
-                    lat = getattr(table, celestial_names["lat"]).to(lon.unit)
-                    lon_interp = scipy.interpolate.interp1d(old_array_grids[aom], lon.value)
-                    lat_interp = scipy.interpolate.interp1d(old_array_grids[aom], lat.value)
-                    new_lon = lon_interp(new_array_grids[aom])
-                    new_lat = lat_interp(new_array_grids[aom])
-                    new_coord = SkyCoord(new_lon, new_lat, unit=lon.unit,
-                                         frame=table.frame)
+                    new_components = []
+                    for name in table.representation_component_names.keys():
+                        component = getattr(table, name).value
+                        comp_interp = scipy.interpolate.interp1d(old_array_grids[aom], component)
+                        new_components.append(comp_interp(new_array_grids[aom]))
+                    new_coord = SkyCoord(*new_components, unit=table.representation_component_units.values(),
                     # Set name to include sky_key as SkyCoords extra coords require two names.
                     name = (key, sky_key)
                     # Make sure to skip sky_key when it's turn in loop comes.
