@@ -727,7 +727,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def superpixel(self, superpixel_shape, func_name="sum"):
+    def superpixel(self, superpixel_shape, func_name="sum", correlation=0):
         """Downsample array by creating non-overlapping superpixels.
 
         Values in superpixels are determined applying a function to the pixel
@@ -748,6 +748,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Supported values are 'sum', 'mean', 'median', 'min', 'max'.
             Note that uncertainties are dropped for 'median', 'min', and 'max'.
             Default='sum'
+
+        correlation:
+            Passed to `astropy.nddata.NDUncertainty.propagate`. See docstring of that method.
 
         Returns
         -------
@@ -816,7 +819,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         else:
             data = np.ma.masked_array(self.data, self.mask)
         reshape = np.empty(data_shape.size + superpixel_shape.size, dtype=int)
-        reshape[0::2] = data_shape / superpixel_shape
+        new_shape = (data_shape / superpixel_shape).astype(int)
+        reshape[0::2] = new_shape
         reshape[1::2] = superpixel_shape
         new_data = data.reshape(tuple(reshape))
         for i in range(len(reshape) - 1, 0, -2):
@@ -826,8 +830,34 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             new_mask = new_data.mask
             new_data = new_data.data
 
+        # Propagate uncertainties.
         if self.uncertainty is not None and func_name in {"sum", "mean"}:
-            pass  # TODO: Implement error propagation for 'sum' and 'mean'.
+            # Reshape data, mask and uncertainty so that extra dimensions
+            # representing the superpixels are flattened into a single dimension.
+            # Then iterate through that dimension to propagate uncertainties.
+            superpixel_size = superpixel_shape.sum()
+            flat_shape = [superpixel_size] + list(new_shape)
+            flat_data = data.reshape(flat_shape)
+            flat_uncertainty = self.uncertainty.reshape(flat_shape)
+            new_uncertainty = flat_uncertainty[0]
+            cumul_data = flat_data.cumsum(axis=0)
+            # As mask can be None, build generator to slice flat_mask or return None as needed.
+            if self.mask is None:
+                flat_mask = (None for i in range(1, flat_shape[0]))
+            elif self.mask is True:
+                flat_mask = (np.ones(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
+            else:
+                flat_mask = (m for m in mask.reshape(flat_shape)[1:])
+            # Propagate uncertainties.
+            for i, mask_slice in enumerate(flat_mask):
+                data_slice = astropy.nddata.NDData(data=flat_data[i], mask=mask_slice,
+                                                   uncertainty=flat_uncertainty[i])
+                new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
+                                                            cumul_data[i], correlation)
+            # If aggregation function is mean, uncertainties must be divided by
+            # number of pixels in each superpixel.
+            if func_name == "mean":
+                new_uncertainty.array /= superpixel_size
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, superpixel_shape[::-1])
