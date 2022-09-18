@@ -727,7 +727,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def superpixel(self, superpixel_shape, func_name="sum", correlation=0):
+    def superpixel(self, superpixel_shape, method="sum", correlation=0):
         """Downsample array by creating non-overlapping superpixels.
 
         Values in superpixels are determined applying a function to the pixel
@@ -743,7 +743,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Each element must be in int. If they are not they will be rounded
             to the nearest int.
 
-        func_name : `str`
+        method : `str`
             Function applied to the data to derive values of the superpixels.
             Supported values are 'sum', 'mean', 'median', 'min', 'max'.
             Note that uncertainties are dropped for 'median', 'min', and 'max'.
@@ -794,8 +794,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         superpixel_shape = np.rint(superpixel_shape).astype(int)
         offsets = (superpixel_shape - 1) / 2
         supported_funcs = {"sum", "mean", "median", "min", "max"}
-        if func_name not in supported_funcs:
-            raise ValueError(f"Invalid func_name provided: {func_name}. "
+        if method not in supported_funcs:
+            raise ValueError(f"Invalid method provided: {method}. "
                              f"Must be one of {supported_funcs}")
         if all(superpixel_shape == 1):
             return deepcopy(self)
@@ -824,14 +824,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         reshape[1::2] = superpixel_shape
         new_data = data.reshape(tuple(reshape))
         for i in range(len(reshape) - 1, 0, -2):
-            func = getattr(new_data, func_name)
+            func = getattr(new_data, method)
             new_data = func(axis=i)
         if self.mask is not None:
             new_mask = new_data.mask
             new_data = new_data.data
 
         # Propagate uncertainties.
-        if self.uncertainty is not None and func_name in {"sum", "mean"}:
+        if self.uncertainty is not None and method in {"sum", "mean"}:
             # Reshape data, mask and uncertainty so that extra dimensions
             # representing the superpixels are flattened into a single dimension.
             # Then iterate through that dimension to propagate uncertainties.
@@ -856,7 +856,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                                                             cumul_data[i], correlation)
             # If aggregation function is mean, uncertainties must be divided by
             # number of pixels in each superpixel.
-            if func_name == "mean":
+            if method == "mean":
                 new_uncertainty.array /= superpixel_size
 
         # Resample WCS
