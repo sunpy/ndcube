@@ -88,7 +88,8 @@ intersphinx_mapping = {
     'astropy': ('http://docs.astropy.org/en/stable/', None),
     'sunpy': ('https://docs.sunpy.org/en/stable/', None),
     'mpl_animators': ('https://docs.sunpy.org/projects/mpl-animators/en/stable/', None),
-    'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None)}
+    'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None),
+    'reproject': ("https://reproject.readthedocs.io/en/stable/", None)}
 
 # -- Options for HTML output
 from sunpy_sphinx_theme.conf import *  # NOQA
