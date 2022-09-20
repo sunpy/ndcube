@@ -58,6 +58,11 @@ The plot method can be called very simply.
   >>> ax = my_cube.plot()
   >>> plt.show()
 
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+
 Note how no arguments are required.
 The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
 The axis labels are taken from the WCS axis names defined in ``my_cube.wcs.wcs.cname``.
@@ -78,6 +83,11 @@ For for data with two array axes, an image is produced similar to that of `matpl
   >>> ax = my_cube[0].plot()
   >>> plt.show()
 
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
 .. plot::
@@ -86,6 +96,11 @@ For data with one array axis, a line plot is produced, similar to `matplotlib.py
 
   >>> ax = my_cube[1, 1].plot()
   >>> plt.show()
+
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
 
 Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
 
