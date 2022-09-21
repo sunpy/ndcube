@@ -156,6 +156,9 @@ class MatplotlibPlotter(BasePlotter):
         if axes is None:
             axes = plt.subplot(projection=wcs, slices=plot_axes)
 
+        if axes and plot_axes:
+            axes.reset_wcs(wcs=wcs, slices=plot_axes)
+
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
         self._apply_axes_coordinates(axes, axes_coordinates)
