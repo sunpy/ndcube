@@ -73,7 +73,7 @@ def test_plot_2D_cube_custom_axis(ndcube_2d_ln_lt):
 def test_plot_2D_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
-    ndcube_2d_ln_lt.plot(axes=ax, plot_axes=('x','y'))
+    ndcube_2d_ln_lt.plot(axes=ax, plot_axes=('x', 'y'))
     return fig
 
 
