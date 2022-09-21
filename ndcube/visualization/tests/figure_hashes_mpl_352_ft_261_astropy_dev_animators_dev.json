@@ -9,6 +9,8 @@
   "test_plotting.test_plot_1D_cube_from_slice[mask-cslice6-kwargs6]": "b888887d05f9f7654968bd59a33fd86a12111503222904bfd369475210da7abb",
   "test_plotting.test_plot_2D_cube": "cc6ff47be658bdcc2e8dd226f50ab04da89cc23dc834fa5b0ce2a5a724414ada",
   "test_plotting.test_plot_2D_cube_colorbar": "2cdc18629da36f96ddeb24631f70387bc3090c128ad994914816b1be7864af79",
+  "test_plotting.test_plot_2D_cube_custom_axis": "cc6ff47be658bdcc2e8dd226f50ab04da89cc23dc834fa5b0ce2a5a724414ada",
+  "test_plotting.test_plot_2D_cube_custom_axis_plot_axes": "c61173e4904ffd7c6a88a9a18e68014ee258d5d59fb226c021f49a57230dfefc",
   "test_plotting.test_plot_2D_cube_from_slice[ln_lt_l_t-cslice0-kwargs0]": "77b0b9a0067897786777a78974cff240a3268ed38937047c3945473e82bc4cf0",
   "test_plotting.test_plot_2D_cube_from_slice[ln_lt_l_t-cslice1-kwargs1]": "2af86ad3672ef70d51b3637325c5e7860cad26f70032b51877d45d0a9b647a44",
   "test_plotting.test_plot_2D_cube_from_slice[ln_lt_l_t-cslice2-kwargs2]": "b00ec9344620cd9f640bbb3410e1fc508b5a86d02826d378147b33b999606d05",
