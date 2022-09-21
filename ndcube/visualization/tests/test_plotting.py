@@ -62,6 +62,22 @@ def test_plot_2D_cube_colorbar(ndcube_2d_ln_lt):
 
 
 @figure_test
+def test_plot_2D_cube_custom_axis(ndcube_2d_ln_lt):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
+    ndcube_2d_ln_lt.plot(axes=ax)
+    return fig
+
+
+@figure_test
+def test_plot_2D_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
+    ndcube_2d_ln_lt.plot(axes=ax, plot_axes=('x','y'))
+    return fig
+
+
+@figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
                          (
                              ("ln_lt_l_t", np.s_[0, 0, :, :], {}),
