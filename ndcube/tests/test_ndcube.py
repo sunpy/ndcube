@@ -827,3 +827,9 @@ def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
     with pytest.raises(ValueError):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='exact',
                                              shape_out=(5, 10, 12, 8))
+
+
+def test_plot_docstring():
+    cube = NDCube([], astropy.wcs.WCS())
+
+    assert cube.plot.__doc__ == cube.plotter.plot.__doc__
