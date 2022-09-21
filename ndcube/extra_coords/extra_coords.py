@@ -496,7 +496,7 @@ class ExtraCoords(ExtraCoordsABC):
                         component = getattr(table, name).value
                         comp_interp = scipy.interpolate.interp1d(old_array_grids[aom], component)
                         new_components.append(comp_interp(new_array_grids[aom]))
-                    new_coord = SkyCoord(*new_components, unit=table.representation_component_units.values(),
+                    new_coord = SkyCoord(*new_components, unit=table.representation_component_units.values(), frame=table.frame)
                     # Set name to include sky_key as SkyCoords extra coords require two names.
                     name = (key, sky_key)
                     # Make sure to skip sky_key when it's turn in loop comes.
