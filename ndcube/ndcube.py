@@ -232,11 +232,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 global_coords = deepcopy(global_coords)
             self._global_coords = global_coords
 
-        # Docstrings of methods aren't writeable so we copy to the underlying
-        # function object instead
-        if self.plotter:
-            functools.update_wrapper(self.plot.__func__, self.plotter.plot)
-
     @property
     def extra_coords(self):
         """
