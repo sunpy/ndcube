@@ -833,6 +833,8 @@ class NDCube(NDCubeBase):
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 new_data = self.data + value.to_value(cube_unit)
             else:
+                # NOTE: This explicitly excludes other NDCube objects and NDData objects
+                # which could carry a different WCS than the NDCube
                 return NotImplemented
         else:
             new_data = self.data + value
