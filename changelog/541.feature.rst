@@ -1,0 +1,3 @@
+Add basic arithmetic methods between `~ndcube.NDCube` objects and broadcastable arrays
+and `~astropy.unit.Quantity` objects. Operations between two `~ndcube.NDCube` objects
+are not supported.
