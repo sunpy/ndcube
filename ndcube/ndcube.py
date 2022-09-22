@@ -25,7 +25,7 @@ from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
-from ndcube.visualization import PlotterDescriptor
+from ndcube.visualization.descriptor import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']

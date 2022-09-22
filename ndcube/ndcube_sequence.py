@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 
 from ndcube import utils
-from ndcube.visualization import PlotterDescriptor
+from ndcube.visualization.descriptor import PlotterDescriptor
 
 __all__ = ['NDCubeSequence']
 
