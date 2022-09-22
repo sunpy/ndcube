@@ -1,4 +1,5 @@
 from textwrap import dedent
+from inspect import signature
 
 import astropy.units as u
 import astropy.wcs
@@ -833,3 +834,4 @@ def test_plot_docstring():
     cube = NDCube([], astropy.wcs.WCS())
 
     assert cube.plot.__doc__ == cube.plotter.plot.__doc__
+    assert signature(cube.plot) == signature(cube.plotter.plot)
