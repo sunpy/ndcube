@@ -24,7 +24,6 @@ from ndcube.extra_coords import ExtraCoords
 from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.decorators import check_arithmetic_compatibility
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization.descriptor import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
@@ -757,6 +756,15 @@ class NDCube(NDCubeBase):
         Default is False.
 
     """
+    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
+    # reflected operator will be used only if the Quantity non-reflected operator
+    # returns NotImplemented.  The Quantity operator strips the unit from the
+    # Quantity and tries to combine the value with the GenericMap using NumPy's
+    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
+    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
+    # call, and consequently the Quantity operator, will return NotImplemented.
+    __array_ufunc__ = None
+
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
@@ -797,26 +805,37 @@ class NDCube(NDCubeBase):
     def _new_instance_from_op(self, new_data, new_unit):
         # This implicitly assumes that the arithmetic operation does not alter
         # the WCS, mask, or uncertainty
-        return type(self)(new_data, 
-                          unit=new_unit,
-                          wcs=self.wcs,
-                          mask=self.mask,
-                          meta=self.meta,
-                          uncertainty=self.uncertainty,
-                          extra_coords=self.extra_coords,)
+        new_cube = type(self)(new_data,
+                              unit=new_unit,
+                              wcs=self.wcs,
+                              mask=self.mask,
+                              meta=self.meta,
+                              uncertainty=self.uncertainty)
+        if self.extra_coords is not None:
+            new_cube._extra_coords = deepcopy(self.extra_coords)
+        return new_cube
 
     def __neg__(self):
         return self._new_instance_from_op(-self.data, self.unit)
 
-    @check_arithmetic_compatibility
     def __pow__(self, value):
         new_data = self.data ** value
         new_unit = self.unit ** value
         return self._new_instance_from_op(new_data, new_unit)
 
-    @check_arithmetic_compatibility
     def __add__(self, value):
-        new_data = self.data + value.to_value(self.unit)
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, we cannot
+                # perform arithmetic between a unitful quantity.
+                # This forces a conversion to a dimensionless quantity
+                # so that an error is thrown if value is not dimensionless
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                new_data = self.data + value.to_value(cube_unit)
+            else:
+                return NotImplemented
+        else:
+            new_data = self.data + value
         return self._new_instance_from_op(new_data, self.unit)
 
     def __radd__(self, value):
@@ -828,11 +847,20 @@ class NDCube(NDCubeBase):
     def __rsub__(self, value):
         return self.__neg__().__add__(value)
 
-    @check_arithmetic_compatibility
     def __mul__(self, value):
-        value = u.Quantity(value)
-        new_unit = self.unit * value.unit
-        new_data = self.data * value.to_value()
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, set the unit
+                # to dimensionless such that we can perform arithmetic
+                # between the two.
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                new_data = self.data * value.to_value()
+                new_unit = cube_unit * value.unit
+            else:
+                return NotImplemented
+        else:
+            new_data = self.data * value
+            new_unit = self.unit
         return self._new_instance_from_op(new_data, new_unit)
 
     def __rmul__(self, value):
@@ -841,9 +869,20 @@ class NDCube(NDCubeBase):
     def __truediv__(self, value):
         return self.__mul__(1/value)
 
-    @check_arithmetic_compatibility
     def __rtruediv__(self, value):
-        value = u.Quantity(value)
-        new_unit = value.unit / self.unit
-        new_data = value.to_value() / self.data
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, we cannot
+                # perform arithmetic between a unitful quantity.
+                # This forces a conversion to a dimensionless quantity
+                # so that an error is thrown if value is not dimensionless
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                new_data = value.to_value(cube_unit) / self.data
+                new_unit = value.unit / cube_unit
+            else:
+                return NotImplemented
+        else:
+            new_data = value / self.data
+            new_unit = 1 / self.unit
+
         return self._new_instance_from_op(new_data, new_unit)
