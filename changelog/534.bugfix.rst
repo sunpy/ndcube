@@ -1,0 +1,1 @@
+Dynamically copy docstring and function signature from `NDCube.plotter.plot()` to `NDCube.plot()`.
