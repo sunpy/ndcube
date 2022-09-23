@@ -55,7 +55,11 @@ class PlotterDescriptor:
             return
 
         if getattr(obj, self._attribute_name, None) is None:
-            self.__set__(obj, self._resolve_default_type())
+            plotter_type = self._resolve_default_type()
+            if plotter_type is None:
+                return
+
+            self.__set__(obj, plotter_type)
 
         return getattr(obj, self._attribute_name)
 
