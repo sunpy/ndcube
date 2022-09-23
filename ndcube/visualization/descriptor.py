@@ -1,4 +1,5 @@
 import functools
+import warnings
 
 MISSING_MATPLOTLIB_ERROR_MSG = ("Matplotlib can not be imported, so the default plotting "
                                 "functionality is disabled. Please install matplotlib.")
@@ -20,11 +21,11 @@ class PlotterDescriptor:
         # attribute name is the name of the attribute on the parent class where
         # the data is stored.
         self._attribute_name = f"_{name}"
-        plotter = self._resolve_default_type()
+        plotter = self._resolve_default_type(raise_error=False)
         if plotter is not None and hasattr(plotter, "plot"):
             functools.update_wrapper(owner.plot, plotter.plot)
 
-    def _resolve_default_type(self):
+    def _resolve_default_type(self, raise_error=True):
         # We special case the default MatplotlibPlotter so that we can
         # delay the import of matplotlib until the plotter is first
         # accessed.
@@ -37,7 +38,10 @@ class PlotterDescriptor:
                     from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
                     return MatplotlibSequencePlotter
             except ImportError as e:
-                raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
+                if raise_error:
+                    raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
+                else:
+                    warnings.warn(MISSING_MATPLOTLIB_ERROR_MSG)
 
         elif self._default_type is not None:
             return self._default_type
