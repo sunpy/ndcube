@@ -40,8 +40,6 @@ class PlotterDescriptor:
             except ImportError as e:
                 if raise_error:
                     raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
-                else:
-                    warnings.warn(MISSING_MATPLOTLIB_ERROR_MSG)
 
         elif self._default_type is not None:
             return self._default_type
