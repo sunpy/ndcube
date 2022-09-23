@@ -20,34 +20,11 @@ class PlotterDescriptor:
         # attribute name is the name of the attribute on the parent class where
         # the data is stored.
         self._attribute_name = f"_{name}"
-        plotter = self._resolve_type()
+        plotter = self._resolve_default_type()
         if plotter is not None and hasattr(plotter, "plot"):
             functools.update_wrapper(owner.plot, plotter.plot)
 
-
-    def _resolve_default_type(self, obj):
-        # We special case the default MatplotlibPlotter so that we can
-        # delay the import of matplotlib until the plotter is first
-        # accessed.
-        if self._default_type in ("mpl_plotter", "mpl_sequence_plotter"):
-            try:
-                if self._default_type == "mpl_plotter":
-                    from ndcube.visualization.mpl_plotter import MatplotlibPlotter
-                    self.__set__(obj, MatplotlibPlotter)
-                elif self._default_type == "mpl_sequence_plotter":
-                    from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
-                    self.__set__(obj, MatplotlibSequencePlotter)
-            except ImportError as e:
-                raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
-
-        elif self._default_type is not None:
-            self.__set__(obj, self._default_type)
-
-        # If we have no default type then just return None
-        else:
-            return
-
-    def _resolve_type(self):
+    def _resolve_default_type(self):
         # We special case the default MatplotlibPlotter so that we can
         # delay the import of matplotlib until the plotter is first
         # accessed.
@@ -74,7 +51,7 @@ class PlotterDescriptor:
             return
 
         if getattr(obj, self._attribute_name, None) is None:
-            self._resolve_default_type(obj)
+            self.__set__(obj, self._resolve_default_type())
 
         return getattr(obj, self._attribute_name)
 
