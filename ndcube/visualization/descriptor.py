@@ -21,7 +21,7 @@ class PlotterDescriptor:
         # the data is stored.
         self._attribute_name = f"_{name}"
         plotter = self._resolve_type()
-        if hasattr(plotter, "plot"):
+        if plotter is not None and hasattr(plotter, "plot"):
             functools.update_wrapper(owner.plot, plotter.plot)
 
 
