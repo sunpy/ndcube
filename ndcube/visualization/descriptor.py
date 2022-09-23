@@ -1,5 +1,4 @@
 import functools
-import warnings
 
 MISSING_MATPLOTLIB_ERROR_MSG = ("Matplotlib can not be imported, so the default plotting "
                                 "functionality is disabled. Please install matplotlib.")
