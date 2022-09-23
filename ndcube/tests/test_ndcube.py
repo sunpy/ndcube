@@ -1,5 +1,5 @@
-from textwrap import dedent
 from inspect import signature
+from textwrap import dedent
 
 import astropy.units as u
 import astropy.wcs

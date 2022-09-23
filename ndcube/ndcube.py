@@ -1,7 +1,6 @@
 import abc
 import textwrap
 import warnings
-import functools
 from copy import deepcopy
 from collections import namedtuple
 from collections.abc import Mapping
