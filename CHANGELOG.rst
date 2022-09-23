@@ -1,3 +1,16 @@
+v2.0.3 (2022-09-23)
+===================
+
+Bug Fixes
+---------
+
+- Dynamically copy docstring and function signature from `NDCube.plotter.plot()` to `NDCube.plot()`. (`#534 <https://github.com/sunpy/ndcube/pull/534>`__)
+- Fixed a bug where the `plot_axes` key was not respected when passing `axes` to `plot`
+  for 2D cubes. (`#551 <https://github.com/sunpy/ndcube/pull/551>`__)
+- Limit maximum reproject version to 0.9 due to API changes. ndcube 2.1 will support the
+  new reproject keyword arguments. (`#564 <https://github.com/sunpy/ndcube/pull/564>`__)
+
+
 v2.0.2 (2022-05-10)
 ===================
 

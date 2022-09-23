@@ -1,2 +1,0 @@
-Limit maximum reproject version due to API changes. ndcube 2.1 will support the
-new reproject keyword arguments.
