@@ -829,9 +829,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             elif self.mask is True:
                 flat_mask = (np.ones(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
             else:
-                flat_mask = (m for m in mask.reshape(flat_shape)[1:])
+                flat_mask = (m for m in mask.reshape(flat_shape))
+                # Set masked uncertainties in first mask to 0
+                # as they shouldn't count towards final uncertainty.
+                new_uncertainty.array[next(flat_mask)] = 0
             # Propagate uncertainties.
-            for i, mask_slice in enumerate(flat_mask):
+            for j, mask_slice in enumerate(flat_mask):
+                i = j + 1
                 data_slice = astropy.nddata.NDData(data=flat_data[i], mask=mask_slice,
                                                    uncertainty=flat_uncertainty[i])
                 new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
@@ -846,6 +850,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Reform NDCube.
         new_cube = type(self)(new_data, new_wcs, mask=new_mask, meta=self.meta, unit=new_unit)
+        new_cube._global_coords = self._global_coords
 
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
