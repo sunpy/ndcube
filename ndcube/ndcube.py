@@ -813,6 +813,8 @@ class NDCube(NDCubeBase):
                               uncertainty=self.uncertainty)
         if self.extra_coords is not None:
             new_cube._extra_coords = deepcopy(self.extra_coords)
+        if self.global_coords is not None:
+            new_cube._global_coords = deepcopy(self.global_coords)
         return new_cube
 
     def __neg__(self):
@@ -872,19 +874,4 @@ class NDCube(NDCubeBase):
         return self.__mul__(1/value)
 
     def __rtruediv__(self, value):
-        if hasattr(value, 'unit'):
-            if isinstance(value, u.Quantity):
-                # NOTE: if the cube does not have units, we cannot
-                # perform arithmetic between a unitful quantity.
-                # This forces a conversion to a dimensionless quantity
-                # so that an error is thrown if value is not dimensionless
-                cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = value.to_value(cube_unit) / self.data
-                new_unit = value.unit / cube_unit
-            else:
-                return NotImplemented
-        else:
-            new_data = value / self.data
-            new_unit = 1 / self.unit
-
-        return self._new_instance_from_op(new_data, new_unit)
+        return self.__pow__(-1).__mul__(value)

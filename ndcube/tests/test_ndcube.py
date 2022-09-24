@@ -953,10 +953,17 @@ def test_map_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
         check_arithmetic_value_and_units(new_cube, value / cube_quantity)
 
 
-def test_map_arithmetic_pow(ndcube_2d_ln_lt_units):
+@pytest.mark.parametrize('powers,warn_context', [
+    (1, contextlib.nullcontext()),
+    (1.5, contextlib.nullcontext()),
+    (0, contextlib.nullcontext()),
+    (-1, pytest.warns(RuntimeWarning, match='divide by zero encountered in')),
+])
+def test_map_arithmetic_pow(ndcube_2d_ln_lt_units, powers, warn_context):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
-    new_cube = ndcube_2d_ln_lt_units ** 2
-    check_arithmetic_value_and_units(new_cube, cube_quantity ** 2)
+    with warn_context:
+        new_cube = ndcube_2d_ln_lt_units ** powers
+        check_arithmetic_value_and_units(new_cube, cube_quantity ** powers)
 
 
 def test_map_arithmetic_neg(ndcube_2d_ln_lt_units):
