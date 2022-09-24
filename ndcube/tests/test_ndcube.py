@@ -787,7 +787,7 @@ def test_superpixel(ndcube_3d_l_ln_lt_ectime):
     # Execute superpixel.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     superpixel_shape = (10, 2, 1)
-    output = cube.superpixel(superpixel_shape, func=np.sum)
+    output = cube.superpixel(superpixel_shape, method="sum")
     output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
     output_time, = output.axis_world_coords(wcs=output.extra_coords)
 
