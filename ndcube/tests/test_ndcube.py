@@ -1,5 +1,5 @@
-from inspect import signature
 import contextlib
+from inspect import signature
 from textwrap import dedent
 
 import astropy.units as u
@@ -837,6 +837,8 @@ def test_plot_docstring():
     assert cube.plot.__doc__ == cube.plotter.plot.__doc__
     assert signature(cube.plot) == signature(cube.plotter.plot)
 # This function is used in the arithmetic tests below
+
+
 def check_arithmetic_value_and_units(cube_new, data_expected):
     cube_quantity = u.Quantity(cube_new.data, cube_new.unit)
     assert u.allclose(cube_quantity, data_expected)
