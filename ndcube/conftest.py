@@ -4,6 +4,7 @@ predicable NDCube objects.
 """
 import logging
 
+import astropy.nddata
 import astropy.units as u
 import numpy as np
 import pytest
@@ -468,6 +469,18 @@ def ndcube_2d_ln_lt(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
     return NDCube(data_cube, wcs=wcs_2d_lt_ln)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_uncert_ec(wcs_2d_lt_ln):
+    shape = (4, 9)
+    data_cube = data_nd(shape)
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    cube = NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
+    cube.extra_coords.add(
+        "time", 0,
+        Time("2000-01-01 00:00", scale="utc") + Timedelta(np.arange(shape[0])*60, format="sec"))
+    return cube
 
 
 @pytest.fixture

@@ -813,7 +813,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             new_data = new_data.data
 
         # Propagate uncertainties.
-        if self.uncertainty is not None and method in {"sum", "mean"}:
+        if (not isinstance(self.uncertainty, (None, astropy.nddata.UnknownUncertainty))
+            and method in {"sum", "mean"}):
             # Reshape data, mask and uncertainty so that extra dimensions
             # representing the superpixels are flattened into a single dimension.
             # Then iterate through that dimension to propagate uncertainties.
@@ -844,14 +845,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             # number of pixels in each superpixel.
             if method == "mean":
                 new_uncertainty.array /= superpixel_size
+        else:
+            new_uncertainty = None
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, superpixel_shape[::-1])
 
         # Reform NDCube.
-        new_cube = type(self)(new_data, new_wcs, mask=new_mask, meta=self.meta, unit=new_unit)
+        new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
+                              meta=self.meta, unit=new_unit)
         new_cube._global_coords = self._global_coords
-
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
             new_array_grids = [None if superpixel_shape[i] == 1 else
