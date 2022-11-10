@@ -50,7 +50,11 @@ jobs:
               - graphviz
 
   cron:
-    if: github.event_name == 'workflow_dispatch'
+    if: |
+      github.event_name == 'workflow_dispatch' || (
+        github.event_name == 'pull_request' &&
+        contains(github.event.pull_request.labels.*.name, 'Run cron CI')
+      )
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       default_python: '3.8'
@@ -58,7 +62,7 @@ jobs:
       coverage: codecov
       toxdeps: tox-pypi-filter
       envs: |
-        - linux: py39-devdeps
+        - linux: py311-devdeps
         - linux: py39-conda
           libraries: ''
 
