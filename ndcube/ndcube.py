@@ -282,14 +282,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
     def _generate_world_coords(self, pixel_corners, wcs):
-        # TODO: We can improve this by not always generating all coordinates
-        # To make our lives easier here we generate all the coordinates for all
-        # pixels and then choose the ones we want to return to the user based
-        # on the axes argument. We could be smarter by integrating this logic
-        # into the main loop, this would potentially reduce the number of calls
-        # to pixel_to_world_values
-
-        # Create meshgrid of all pixel coordinates.
         # If user, wants pixel_corners, set pixel values to pixel pixel_corners.
         # Else make pixel centers.
         pixel_shape = self.data.shape[::-1]
