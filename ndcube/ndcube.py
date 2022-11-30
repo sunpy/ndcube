@@ -820,11 +820,6 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance_from_op(-self.data, self.unit)
 
-    def __pow__(self, value):
-        new_data = self.data ** value
-        new_unit = self.unit ** value
-        return self._new_instance_from_op(new_data, new_unit)
-
     def __add__(self, value):
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
@@ -837,7 +832,7 @@ class NDCube(NDCubeBase):
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
-                return NotImplemented
+                return NotImplementedError('Addition between NDCube objects and non-quantity objects is not supported.')
         else:
             new_data = self.data + value
         return self._new_instance_from_op(new_data, self.unit)
@@ -861,7 +856,7 @@ class NDCube(NDCubeBase):
                 new_data = self.data * value.to_value()
                 new_unit = cube_unit * value.unit
             else:
-                return NotImplemented
+                return NotImplementedError('Multiplication is not supported between unitful non-quantity objects.')
         else:
             new_data = self.data * value
             new_unit = self.unit
@@ -872,6 +867,3 @@ class NDCube(NDCubeBase):
 
     def __truediv__(self, value):
         return self.__mul__(1/value)
-
-    def __rtruediv__(self, value):
-        return self.__pow__(-1).__mul__(value)
