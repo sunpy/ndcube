@@ -850,7 +850,7 @@ def check_arithmetic_value_and_units(cube_new, data_expected):
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
 ])
-def test_map_arithmetic_add(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     # Add
     new_cube = ndcube_2d_ln_lt_units + value
@@ -863,7 +863,7 @@ def test_map_arithmetic_add(ndcube_2d_ln_lt_units, value):
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
 ])
-def test_map_arithmetic_radd(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_radd(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = value + ndcube_2d_ln_lt_units
     check_arithmetic_value_and_units(new_cube, value + cube_quantity)
@@ -875,7 +875,7 @@ def test_map_arithmetic_radd(ndcube_2d_ln_lt_units, value):
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
 ])
-def test_map_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = ndcube_2d_ln_lt_units - value
     check_arithmetic_value_and_units(new_cube, cube_quantity - value)
@@ -887,7 +887,7 @@ def test_map_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
 ])
-def test_map_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = value - ndcube_2d_ln_lt_units
     check_arithmetic_value_and_units(new_cube, value - cube_quantity)
@@ -902,10 +902,11 @@ def test_map_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
     np.random.rand(12),
     np.random.rand(10, 12),
 ])
-def test_map_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = ndcube_2d_ln_lt_units * value
     check_arithmetic_value_and_units(new_cube, cube_quantity * value)
+    #TODO: test that uncertainties scale correctly
 
 
 @pytest.mark.parametrize('value', [
@@ -917,7 +918,7 @@ def test_map_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     np.random.rand(12),
     np.random.rand(10, 12),
 ])
-def test_map_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = value * ndcube_2d_ln_lt_units
     check_arithmetic_value_and_units(new_cube, value * cube_quantity)
@@ -933,43 +934,24 @@ def test_map_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
     np.random.rand(12),
     np.random.rand(10, 12),
 ])
-def test_map_arithmetic_divide(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_divide(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = ndcube_2d_ln_lt_units / value
     check_arithmetic_value_and_units(new_cube, cube_quantity / value)
 
 
-@pytest.mark.parametrize('value', [
-    10 * u.ct,
-    u.Quantity([10], u.ct),
-    u.Quantity(np.random.rand(12), u.ct),
-    u.Quantity(np.random.rand(10, 12), u.ct),
-    10.0,
-    np.random.rand(12),
-    np.random.rand(10, 12),
-])
-def test_map_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
-    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
-    with pytest.warns(RuntimeWarning, match='divide by zero encountered in'):
-        new_cube = value / ndcube_2d_ln_lt_units
-        check_arithmetic_value_and_units(new_cube, value / cube_quantity)
-
-
-@pytest.mark.parametrize('powers,warn_context', [
-    (1, contextlib.nullcontext()),
-    (1.5, contextlib.nullcontext()),
-    (0, contextlib.nullcontext()),
-    (-1, pytest.warns(RuntimeWarning, match='divide by zero encountered in')),
-])
-def test_map_arithmetic_pow(ndcube_2d_ln_lt_units, powers, warn_context):
-    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
-    with warn_context:
-        new_cube = ndcube_2d_ln_lt_units ** powers
-        check_arithmetic_value_and_units(new_cube, cube_quantity ** powers)
-
-
-def test_map_arithmetic_neg(ndcube_2d_ln_lt_units):
+def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
     check_arithmetic_value_and_units(
         -ndcube_2d_ln_lt_units,
         u.Quantity(-ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit),
     )
+
+
+def test_cube_arithmetic_add_notimplementederror(ndcube_2d_ln_lt_units):
+    with pytest.raises(NotImplementedError):
+        _ = ndcube_2d_ln_lt_units + ndcube_2d_ln_lt_units
+
+
+def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
+    with pytest.raises(NotImplementedError):
+        _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units

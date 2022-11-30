@@ -832,7 +832,7 @@ class NDCube(NDCubeBase):
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
-                return NotImplementedError('Addition between NDCube objects and non-quantity objects is not supported.')
+                raise NotImplementedError('Addition between NDCube objects and non-quantity objects is not currently supported.')
         else:
             new_data = self.data + value
         return self._new_instance_from_op(new_data, self.unit)
@@ -853,14 +853,19 @@ class NDCube(NDCubeBase):
                 # to dimensionless such that we can perform arithmetic
                 # between the two.
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data * value.to_value()
-                new_unit = cube_unit * value.unit
+                value_unit = value.unit
+                value = value.to_value()
+                new_data = self.data * value
+                new_unit = cube_unit * value_unit
             else:
-                return NotImplementedError('Multiplication is not supported between unitful non-quantity objects.')
+                raise NotImplementedError('Multiplication is not currently supported between unitful non-quantity objects.')
         else:
             new_data = self.data * value
             new_unit = self.unit
-        return self._new_instance_from_op(new_data, new_unit)
+        new_cube = self._new_instance_from_op(new_data, new_unit)
+        if new_cube.uncertainty is not None:
+            new_cube.uncertainty.array *= value
+        return new_cube
 
     def __rmul__(self, value):
         return self.__mul__(value)
