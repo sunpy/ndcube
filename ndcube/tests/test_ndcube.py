@@ -1,4 +1,3 @@
-import contextlib
 from inspect import signature
 from textwrap import dedent
 
@@ -906,7 +905,7 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = ndcube_2d_ln_lt_units * value
     check_arithmetic_value_and_units(new_cube, cube_quantity * value)
-    #TODO: test that uncertainties scale correctly
+    # TODO: test that uncertainties scale correctly
 
 
 @pytest.mark.parametrize('value', [
