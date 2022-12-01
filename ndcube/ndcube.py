@@ -832,7 +832,9 @@ class NDCube(NDCubeBase):
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
-                raise NotImplementedError('Addition between NDCube objects and non-quantity objects is not currently supported.')
+                return NotImplemented
+        elif self.unit not in (None, u.Unit("")):
+            raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
             new_data = self.data + value
         return self._new_instance_from_op(new_data, self.unit)
@@ -858,7 +860,7 @@ class NDCube(NDCubeBase):
                 new_data = self.data * value
                 new_unit = cube_unit * value_unit
             else:
-                raise NotImplementedError('Multiplication is not currently supported between unitful non-quantity objects.')
+                return NotImplemented
         else:
             new_data = self.data * value
             new_unit = self.unit

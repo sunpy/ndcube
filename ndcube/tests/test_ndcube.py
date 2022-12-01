@@ -946,11 +946,16 @@ def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
     )
 
 
+def test_add_unitless_cube_typeerror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units + 10.0
+
+
 def test_cube_arithmetic_add_notimplementederror(ndcube_2d_ln_lt_units):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         _ = ndcube_2d_ln_lt_units + ndcube_2d_ln_lt_units
 
 
 def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
