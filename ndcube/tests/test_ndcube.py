@@ -784,11 +784,11 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
     assert isinstance(cube.wcs, BaseHighLevelWCS)
 
 
-def test_superpixel(ndcube_3d_l_ln_lt_ectime):
-    # Execute superpixel.
+def test_rebin(ndcube_3d_l_ln_lt_ectime):
+    # Execute rebin.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
-    superpixel_shape = (10, 2, 1)
-    output = cube.superpixel(superpixel_shape, method="sum")
+    bin_shape = (10, 2, 1)
+    output = cube.rebin(bin_shape, method="sum")
     output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
     output_time, = output.axis_world_coords(wcs=output.extra_coords)
 
@@ -825,32 +825,32 @@ def test_superpixel(ndcube_3d_l_ln_lt_ectime):
     assert np.allclose(output_time.value, expected_time.value)
 
 
-def test_superpixel_no_ec(ndcube_3d_l_ln_lt_ectime):
-    # Confirm superpixel does not try to handle extra coords when there aren't any.
+def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
+    # Confirm rebin does not try to handle extra coords when there aren't any.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     cube._extra_coords = ExtraCoords(cube)
-    superpixel_shape = (10, 2, 1)
-    output = cube.superpixel(superpixel_shape, method="sum")
+    bin_shape = (10, 2, 1)
+    output = cube.rebin(bin_shape, method="sum")
     assert output.extra_coords.is_empty
 
 
-def test_superpixel_uncerts(ndcube_2d_ln_lt_uncert):
+def test_rebin_uncerts(ndcube_2d_ln_lt_uncert):
     cube = ndcube_2d_ln_lt_uncert
-    superpixel_shape = (2, 4)
-    output = cube.superpixel(superpixel_shape, method="mean")
+    bin_shape = (2, 4)
+    output = cube.rebin(bin_shape, method="mean")
     output_uncert = output.uncertainty.array
     expected_uncert = (np.array([[2.73495887,  3.68239053,  4.7116876],
                                  [9.07524104, 10.1882285, 11.30486621],
                                  [15.79240324, 16.91744662, 18.0432813],
                                  [22.55216176, 23.68037162, 24.80886938],
                                  [29.32507459, 30.45455631, 31.58417325]])
-                       / np.array(superpixel_shape).prod())
+                       / np.array(bin_shape).prod())
     assert np.allclose(output_uncert, expected_uncert)
 
 
-def test_superpixel_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
+def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     cube = ndcube_2d_ln_lt_mask_uncert
-    superpixel_shape = (2, 4)
+    bin_shape = (2, 4)
     expected_data = np.array([[6.71428571,  11.5,  15.5],
                               [33.83333333,  35.5,  39.5],
                               [0.,  59.5,  63.5],
@@ -864,7 +864,7 @@ def test_superpixel_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     expected_mask = np.zeros((5, 3), dtype=bool)
     expected_mask[2, 0] = True
     # Execute function and assert result is as expected.
-    output = cube.superpixel(superpixel_shape, method="mean")
+    output = cube.rebin(bin_shape, method="mean")
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array, expected_uncert)
     assert (output.mask == expected_mask).all()

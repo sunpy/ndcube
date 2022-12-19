@@ -709,24 +709,24 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def superpixel(self, superpixel_shape, method="sum", correlation=0):
-        """Downsample array by creating non-overlapping superpixels.
+    def rebin(self, bin_shape, method="sum", correlation=0):
+        """Downsample array by creating non-overlapping bins.
 
-        Values in superpixels are determined applying a function to the pixel
-        values within it.  The number of pixels in each superpixel in each
-        dimension is given by the superpixel_shape input.
+        Values in bins are determined applying a function to the pixel
+        values within it.  The number of pixels in each bin in each
+        dimension is given by the bin_shape input.
         This must be an integer fraction of the cube's array size in each dimension.
 
         Parameters
         ----------
-        superpixel_shape : array-like
-            The number of pixels in a superpixel in each dimension.
+        bin_shape : array-like
+            The number of pixels in a bin in each dimension.
             Must be the same length as number of dimensions in data.
             Each element must be in int. If they are not they will be rounded
             to the nearest int.
 
         method : `str`
-            Function applied to the data to derive values of the superpixels.
+            Function applied to the data to derive values of the bins.
             Supported values are 'sum', 'mean', 'median', 'min', 'max'.
             Note that uncertainties are dropped for 'median', 'min', and 'max'.
             Default='sum'
@@ -772,36 +772,36 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     [1, 2, 2]])
         """
         # Sanitize input.
-        # Make sure the input superpixel dimensions are integers.
-        superpixel_shape = np.rint(superpixel_shape).astype(int)
-        offsets = (superpixel_shape - 1) / 2
+        # Make sure the input bin dimensions are integers.
+        bin_shape = np.rint(bin_shape).astype(int)
+        offsets = (bin_shape - 1) / 2
         supported_funcs = {"sum", "mean", "median", "min", "max"}
         if method not in supported_funcs:
             raise ValueError(f"Invalid method provided: {method}. "
                              f"Must be one of {supported_funcs}")
-        if all(superpixel_shape == 1):
+        if all(bin_shape == 1):
             return deepcopy(self)
-        # Ensure superpixel_size has right number of entries and each entry is an
+        # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
         data_shape = self.dimensions.value.astype(int)
         naxes = len(data_shape)
-        if len(superpixel_shape) != naxes:
-            raise ValueError("superpixel_shape must have an entry for each array axis.")
-        if (np.mod(data_shape, superpixel_shape) != 0).any():
+        if len(bin_shape) != naxes:
+            raise ValueError("bin_shape must have an entry for each array axis.")
+        if (np.mod(data_shape, bin_shape) != 0).any():
             raise ValueError(
-                "superpixel shape must be an integer fraction of the data shape in each dimension. "
-                f"data shape: {data_shape};  superpixel shape: {superpixel_shape}")
+                "bin shape must be an integer fraction of the data shape in each dimension. "
+                f"data shape: {data_shape};  bin shape: {bin_shape}")
 
-        # Reshape array and apply function over odd axes to generate array of superpixels.
+        # Reshape array and apply function over odd axes to generate array of bins.
         if self.mask is None:
             data = self.data
             new_mask = None
         else:
             data = np.ma.masked_array(self.data, self.mask)
-        reshape = np.empty(data_shape.size + superpixel_shape.size, dtype=int)
-        new_shape = (data_shape / superpixel_shape).astype(int)
+        reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
+        new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
-        reshape[1::2] = superpixel_shape
+        reshape[1::2] = bin_shape
         reshaped_data = data.reshape(tuple(reshape))
         func = getattr(reshaped_data, method)
         new_data = func(axis=tuple(range(len(reshape) - 1, 0, -2)))
@@ -816,10 +816,10 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             new_uncertainty = None
         else:
             # Reshape data, mask and uncertainty so that extra dimensions
-            # representing the superpixels are flattened into a single dimension.
+            # representing the bins are flattened into a single dimension.
             # Then iterate through that dimension to propagate uncertainties.
-            superpixel_size = superpixel_shape.prod()
-            flat_shape = [superpixel_size] + list(new_shape)
+            bin_size = bin_shape.prod()
+            flat_shape = [bin_size] + list(new_shape)
             dummy_axes = tuple(range(1, len(reshape), 2))
             flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
             flat_data = flat_data.reshape(flat_shape)
@@ -849,12 +849,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
                                                             cumul_data[i], correlation)
             # If aggregation function is mean, uncertainties must be divided by
-            # number of pixels in each superpixel.
+            # number of pixels in each bin.
             if method == "mean":
-                new_uncertainty.array /= superpixel_size
+                new_uncertainty.array /= bin_size
 
         # Resample WCS
-        new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, superpixel_shape[::-1])
+        new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
 
         # Reform NDCube.
         new_mask = self.mask if isinstance(self.mask, (type(None), bool)) else new_mask
@@ -863,8 +863,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
-            new_array_grids = [None if superpixel_shape[i] == 1 else
-                               np.arange(offsets[i], data_shape[i] + offsets[i], superpixel_shape[i])
+            new_array_grids = [None if bin_shape[i] == 1 else
+                               np.arange(offsets[i], data_shape[i] + offsets[i], bin_shape[i])
                                for i in range(naxes)]
             new_cube._extra_coords = self.extra_coords.interpolate(new_array_grids, new_cube)
 
