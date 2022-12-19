@@ -483,6 +483,12 @@ def ndcube_2d_ln_lt_uncert_ec(wcs_2d_lt_ln):
     return cube
 
 
+def ndcube_2d_ln_lt_units(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, unit=u.ct)
+
+
 @pytest.fixture
 def ndcube_2d(request):
     """
