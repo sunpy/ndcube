@@ -811,47 +811,68 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Propagate uncertainties.
         if (isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
-            or method not in {"sum", "mean"}
+            or method not in {"sum", "mean", "min", "max"}
                 or self.mask is True or (self.mask is not None and self.mask.all())):
             new_uncertainty = None
         else:
             # Reshape data, mask and uncertainty so that extra dimensions
             # representing the bins are flattened into a single dimension.
             # Then iterate through that dimension to propagate uncertainties.
-            bin_size = bin_shape.prod()
-            flat_shape = [bin_size] + list(new_shape)
-            dummy_axes = tuple(range(1, len(reshape), 2))
-            flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
-            flat_data = flat_data.reshape(flat_shape)
-            reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
-            flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
-            flat_uncertainty = type(self.uncertainty)(flat_uncertainty.reshape(flat_shape))
-            new_uncertainty = flat_uncertainty[0]
-            cumul_data = flat_data.cumsum(axis=0)
-            # As mask can be None, build generator to slice flat_mask or return None as needed.
-            if self.mask is None or self.mask is False:
-                flat_mask = (np.zeros(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
+            if method in {"min", "max"}:
+                # For min/max methods, take the uncertainty associated with the
+                # min/max values. If there are multiple appearances of the min/max
+                # value in a single bin, take the largest associate uncertainty.
+                bin_axes = tuple(range(0, len(reshape), 2))
+                new_size = new_data.size
+                flat_shape = [new_size] + list(bin_size)
+                flat_data = np.moveaxis(reshaped_data,
+                                        bin_axes, tuple(range(naxes))).reshape(flat_shape)
+                reshaped_uncertainty = self.uncertainty.array.reshape(reshape)
+                flat_uncertainty = np.moveaxis(reshaped_uncertainty,
+                                               bin_axes, tuple(range(naxes))).reshape(flat_shape)
+                idx_max = ((np.where(a == a.max()) for a in flat_data) if method == "max"
+                           else (np.where(a == a.min()) for a in flat_data))
+                new_uncertainty = np.array([flat_uncertainty[i].max()
+                                            for i, idx in enumerate(idx_max)])
+                new_uncertainty = type(self.ucnertainty)(new_uncertainty.reshape(new_shape)
             else:
-                reshaped_mask = self.mask.reshape(tuple(reshape))
-                flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
-                flat_mask = flat_mask.reshape(flat_shape)
-                # Set masked uncertainties in first mask to 0
-                # as they shouldn't count towards final uncertainty.
-                new_uncertainty.array[flat_mask[0]] = 0
-                flat_mask = flat_mask[1:]
-            # Propagate uncertainties.
-            for j, mask_slice in enumerate(flat_mask):
-                i = j + 1
-                fu = flat_uncertainty[i]
-                fu.array[mask_slice] = 0  # Do not propagate masked uncertainties
-                data_slice = astropy.nddata.NDData(data=flat_data[i], mask=mask_slice,
-                                                   uncertainty=fu)
-                new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
-                                                            cumul_data[i], correlation)
-            # If aggregation function is mean, uncertainties must be divided by
-            # number of pixels in each bin.
-            if method == "mean":
-                new_uncertainty.array /= bin_size
+                # For sum and mean methods, propagate uncertainties in the normal way.
+                bin_size = bin_shape.prod()
+                flat_shape = [bin_size] + list(new_shape)
+                dummy_axes = tuple(range(1, len(reshape), 2))
+                flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
+                flat_data = flat_data.reshape(flat_shape)
+                reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
+                flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
+                flat_uncertainty = flat_uncertainty.reshape(flat_shape)
+                new_uncertainty = type(self.uncertainty)([
+                flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
+                new_uncertainty = flat_uncertainty[0]
+                cumul_data = flat_data.cumsum(axis=0)
+                # As mask can be None, build generator to slice flat_mask or return None as needed.
+                if self.mask is None or self.mask is False:
+                    flat_mask = (np.zeros(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
+                else:
+                    reshaped_mask = self.mask.reshape(tuple(reshape))
+                    flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
+                    flat_mask = flat_mask.reshape(flat_shape)
+                    # Set masked uncertainties in first mask to 0
+                    # as they shouldn't count towards final uncertainty.
+                    new_uncertainty.array[flat_mask[0]] = 0
+                    flat_mask = flat_mask[1:]
+                # Propagate uncertainties.
+                for j, mask_slice in enumerate(flat_mask):
+                    i = j + 1
+                    fu = flat_uncertainty[i]
+                    fu.array[mask_slice] = 0  # Do not propagate masked uncertainties
+                    data_slice = astropy.nddata.NDData(data=flat_data[i], mask=mask_slice,
+                                                       uncertainty=fu)
+                    new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
+                                                                cumul_data[i], correlation)
+                # If aggregation function is mean, uncertainties must be divided by
+                # number of pixels in each bin.
+                if method == "mean":
+                    new_uncertainty.array /= bin_size
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
