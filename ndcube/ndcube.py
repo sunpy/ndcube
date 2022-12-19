@@ -759,7 +759,7 @@ class NDCube(NDCubeBase):
     # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
     # reflected operator will be used only if the Quantity non-reflected operator
     # returns NotImplemented.  The Quantity operator strips the unit from the
-    # Quantity and tries to combine the value with the GenericMap using NumPy's
+    # Quantity and tries to combine the value with the NDCube using NumPy's
     # __array_ufunc__().  If NumPy believes that it can proceed, this will result
     # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
     # call, and consequently the Quantity operator, will return NotImplemented.
