@@ -802,53 +802,62 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         new_shape = (data_shape / superpixel_shape).astype(int)
         reshape[0::2] = new_shape
         reshape[1::2] = superpixel_shape
-        new_data = data.reshape(tuple(reshape))
-        func = getattr(new_data, method)
+        reshaped_data = data.reshape(tuple(reshape))
+        func = getattr(reshaped_data, method)
         new_data = func(axis=tuple(range(len(reshape) - 1, 0, -2)))
         if self.mask is not None:
             new_mask = new_data.mask
             new_data = new_data.data
 
         # Propagate uncertainties.
-        if (not isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
-            and method in {"sum", "mean"}):
+        if (isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
+            or method not in {"sum", "mean"}
+            or self.mask is True or (self.mask is not None and self.mask.all())):
+            new_uncertainty = None
+        else:
             # Reshape data, mask and uncertainty so that extra dimensions
             # representing the superpixels are flattened into a single dimension.
             # Then iterate through that dimension to propagate uncertainties.
-            superpixel_size = superpixel_shape.sum()
+            superpixel_size = superpixel_shape.prod()
             flat_shape = [superpixel_size] + list(new_shape)
-            flat_data = data.reshape(flat_shape)
-            flat_uncertainty = self.uncertainty.reshape(flat_shape)
+            dummy_axes = tuple(range(1, len(reshape), 2))
+            flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
+            flat_data = flat_data.reshape(flat_shape)
+            reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
+            flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
+            flat_uncertainty = type(self.uncertainty)(flat_uncertainty.reshape(flat_shape))
             new_uncertainty = flat_uncertainty[0]
             cumul_data = flat_data.cumsum(axis=0)
             # As mask can be None, build generator to slice flat_mask or return None as needed.
-            if self.mask is None:
-                flat_mask = (None for i in range(1, flat_shape[0]))
-            elif self.mask is True:
-                flat_mask = (np.ones(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
+            if self.mask is None or self.mask is False:
+                flat_mask = (np.zeros(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
             else:
-                flat_mask = (m for m in mask.reshape(flat_shape))
+                reshaped_mask = self.mask.reshape(tuple(reshape))
+                flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
+                flat_mask = flat_mask.reshape(flat_shape)
                 # Set masked uncertainties in first mask to 0
                 # as they shouldn't count towards final uncertainty.
-                new_uncertainty.array[next(flat_mask)] = 0
+                new_uncertainty.array[flat_mask[0]] = 0
+                flat_mask = flat_mask[1:]
             # Propagate uncertainties.
             for j, mask_slice in enumerate(flat_mask):
                 i = j + 1
+                fu = flat_uncertainty[i]
+                fu.array[mask_slice] = 0  # Do not propagate masked uncertainties
                 data_slice = astropy.nddata.NDData(data=flat_data[i], mask=mask_slice,
-                                                   uncertainty=flat_uncertainty[i])
+                                                   uncertainty=fu)
                 new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
                                                             cumul_data[i], correlation)
             # If aggregation function is mean, uncertainties must be divided by
             # number of pixels in each superpixel.
             if method == "mean":
                 new_uncertainty.array /= superpixel_size
-        else:
-            new_uncertainty = None
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, superpixel_shape[::-1])
 
         # Reform NDCube.
+        new_mask = self.mask if isinstance(self.mask, (type(None), bool)) else new_mask
         new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
                               meta=self.meta, unit=self.unit)
         new_cube._global_coords = self._global_coords
