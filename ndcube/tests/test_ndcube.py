@@ -834,6 +834,9 @@ def test_superpixel_no_ec(ndcube_3d_l_ln_lt_ectime):
     assert output.extra_coords.is_empty
 
 
+def test_superpixel_with_uncert(
+
+
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
     resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
