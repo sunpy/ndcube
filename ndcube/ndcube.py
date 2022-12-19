@@ -791,8 +791,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             raise ValueError(
                 "superpixel shape must be an integer fraction of the data shape in each dimension. "
                 f"data shape: {data_shape};  superpixel shape: {superpixel_shape}")
-        if new_unit is False:
-            new_unit = self.unit
 
         # Reshape array and apply function over odd axes to generate array of superpixels.
         if self.mask is None:
@@ -805,15 +803,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         reshape[0::2] = new_shape
         reshape[1::2] = superpixel_shape
         new_data = data.reshape(tuple(reshape))
-        for i in range(len(reshape) - 1, 0, -2):
-            func = getattr(new_data, method)
-            new_data = func(axis=i)
+        func = getattr(new_data, method)
+        new_data = func(axis=tuple(range(len(reshape) - 1, 0, -2)))
         if self.mask is not None:
             new_mask = new_data.mask
             new_data = new_data.data
 
         # Propagate uncertainties.
-        if (not isinstance(self.uncertainty, (None, astropy.nddata.UnknownUncertainty))
+        if (not isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
             and method in {"sum", "mean"}):
             # Reshape data, mask and uncertainty so that extra dimensions
             # representing the superpixels are flattened into a single dimension.
@@ -853,7 +850,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Reform NDCube.
         new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
-                              meta=self.meta, unit=new_unit)
+                              meta=self.meta, unit=self.unit)
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:

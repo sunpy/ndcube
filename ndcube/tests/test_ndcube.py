@@ -830,7 +830,7 @@ def test_superpixel_no_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     cube._extra_coords = ExtraCoords(cube)
     superpixel_shape = (10, 2, 1)
-    output = cube.superpixel(superpixel_shape, func=np.sum)
+    output = cube.superpixel(superpixel_shape, method="sum")
     assert output.extra_coords.is_empty
 
 
