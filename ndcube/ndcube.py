@@ -756,6 +756,15 @@ class NDCube(NDCubeBase):
         Default is False.
 
     """
+    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
+    # reflected operator will be used only if the Quantity non-reflected operator
+    # returns NotImplemented.  The Quantity operator strips the unit from the
+    # Quantity and tries to combine the value with the NDCube using NumPy's
+    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
+    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
+    # call, and consequently the Quantity operator, will return NotImplemented.
+    __array_ufunc__ = None
+
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
@@ -792,3 +801,76 @@ class NDCube(NDCubeBase):
                 "no default plotting functionality is available.")
 
         return self.plotter.plot(*args, **kwargs)
+
+    def _new_instance_from_op(self, new_data, new_unit):
+        # This implicitly assumes that the arithmetic operation does not alter
+        # the WCS, mask, or uncertainty
+        new_cube = type(self)(new_data,
+                              unit=new_unit,
+                              wcs=self.wcs,
+                              mask=self.mask,
+                              meta=self.meta,
+                              uncertainty=self.uncertainty)
+        if self.extra_coords is not None:
+            new_cube._extra_coords = deepcopy(self.extra_coords)
+        if self.global_coords is not None:
+            new_cube._global_coords = deepcopy(self.global_coords)
+        return new_cube
+
+    def __neg__(self):
+        return self._new_instance_from_op(-self.data, self.unit)
+
+    def __add__(self, value):
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, we cannot
+                # perform arithmetic between a unitful quantity.
+                # This forces a conversion to a dimensionless quantity
+                # so that an error is thrown if value is not dimensionless
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                new_data = self.data + value.to_value(cube_unit)
+            else:
+                # NOTE: This explicitly excludes other NDCube objects and NDData objects
+                # which could carry a different WCS than the NDCube
+                return NotImplemented
+        elif self.unit not in (None, u.Unit("")):
+            raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
+        else:
+            new_data = self.data + value
+        return self._new_instance_from_op(new_data, self.unit)
+
+    def __radd__(self, value):
+        return self.__add__(value)
+
+    def __sub__(self, value):
+        return self.__add__(-value)
+
+    def __rsub__(self, value):
+        return self.__neg__().__add__(value)
+
+    def __mul__(self, value):
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, set the unit
+                # to dimensionless such that we can perform arithmetic
+                # between the two.
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                value_unit = value.unit
+                value = value.to_value()
+                new_data = self.data * value
+                new_unit = cube_unit * value_unit
+            else:
+                return NotImplemented
+        else:
+            new_data = self.data * value
+            new_unit = self.unit
+        new_cube = self._new_instance_from_op(new_data, new_unit)
+        if new_cube.uncertainty is not None:
+            new_cube.uncertainty.array *= value
+        return new_cube
+
+    def __rmul__(self, value):
+        return self.__mul__(value)
+
+    def __truediv__(self, value):
+        return self.__mul__(1/value)
