@@ -728,7 +728,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         method : `str`
             Function applied to the data to derive values of the bins.
             Supported values are 'sum', 'mean', 'median', 'min', 'max'.
-            Note that uncertainties are dropped for 'median', 'min', and 'max'.
+            Note that uncertainties are dropped for 'median', 'std' (standard deviation).
             Default='sum'
 
         correlation:
@@ -775,7 +775,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2
-        supported_funcs = {"sum", "mean", "median", "min", "max"}
+        supported_funcs = {"sum", "mean", "median", "min", "max", "std"}
         if method not in supported_funcs:
             raise ValueError(f"Invalid method provided: {method}. "
                              f"Must be one of {supported_funcs}")
@@ -834,7 +834,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                            else (np.where(a == a.min()) for a in flat_data))
                 new_uncertainty = np.array([flat_uncertainty[i].max()
                                             for i, idx in enumerate(idx_max)])
-                new_uncertainty = type(self.ucnertainty)(new_uncertainty.reshape(new_shape)
+                new_uncertainty = type(self.ucnertainty)(new_uncertainty.reshape(new_shape))
             else:
                 # For sum and mean methods, propagate uncertainties in the normal way.
                 bin_size = bin_shape.prod()
@@ -845,7 +845,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
                 flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
                 flat_uncertainty = flat_uncertainty.reshape(flat_shape)
-                new_uncertainty = type(self.uncertainty)([
                 flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
                 new_uncertainty = flat_uncertainty[0]
                 cumul_data = flat_data.cumsum(axis=0)
