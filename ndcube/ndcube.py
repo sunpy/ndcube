@@ -812,7 +812,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Propagate uncertainties.
         if (isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
             or method not in {"sum", "mean"}
-            or self.mask is True or (self.mask is not None and self.mask.all())):
+                or self.mask is True or (self.mask is not None and self.mask.all())):
             new_uncertainty = None
         else:
             # Reshape data, mask and uncertainty so that extra dimensions

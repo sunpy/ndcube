@@ -839,9 +839,9 @@ def test_superpixel_uncerts(ndcube_2d_ln_lt_uncert):
     superpixel_shape = (2, 4)
     output = cube.superpixel(superpixel_shape, method="mean")
     output_uncert = output.uncertainty.array
-    expected_uncert = (np.array([[ 2.73495887,  3.68239053,  4.7116876 ],
-                                 [ 9.07524104, 10.1882285 , 11.30486621],
-                                 [15.79240324, 16.91744662, 18.0432813 ],
+    expected_uncert = (np.array([[2.73495887,  3.68239053,  4.7116876],
+                                 [9.07524104, 10.1882285, 11.30486621],
+                                 [15.79240324, 16.91744662, 18.0432813],
                                  [22.55216176, 23.68037162, 24.80886938],
                                  [29.32507459, 30.45455631, 31.58417325]])
                        / np.array(superpixel_shape).prod())
@@ -851,14 +851,14 @@ def test_superpixel_uncerts(ndcube_2d_ln_lt_uncert):
 def test_superpixel_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     cube = ndcube_2d_ln_lt_mask_uncert
     superpixel_shape = (2, 4)
-    expected_data = np.array([[  6.71428571,  11.5,  15.5],
-                              [ 33.83333333,  35.5,  39.5],
-                              [  0.        ,  59.5,  63.5],
-                              [ 79.5       ,  83.5,  87.5],
-                              [103.5       , 107.5, 111.5]])
+    expected_data = np.array([[6.71428571,  11.5,  15.5],
+                              [33.83333333,  35.5,  39.5],
+                              [0.,  59.5,  63.5],
+                              [79.5,  83.5,  87.5],
+                              [103.5, 107.5, 111.5]])
     expected_uncert = np.array([[0.30078024, 0.46029882, 0.58896095],
                                 [1.04843634, 1.27352856, 1.41310828],
-                                [0.        , 2.11468083, 2.25541016],
+                                [0., 2.11468083, 2.25541016],
                                 [2.81902022, 2.96004645, 3.10110867],
                                 [3.66563432, 3.80681954, 3.94802166]])
     expected_mask = np.zeros((5, 3), dtype=bool)
