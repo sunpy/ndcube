@@ -494,8 +494,7 @@ class ExtraCoords(ExtraCoordsABC):
                     new_components = []
                     for name in table.representation_component_names.keys():
                         component = getattr(table, name).value
-                        comp_interp = scipy.interpolate.interp1d(old_array_grids[aom], component)
-                        new_components.append(comp_interp(new_array_grids[aom]))
+                        new_components.append(np.interp(new_array_grids[aom], old_array_grids[aom], component))
                     new_coord = SkyCoord(*new_components, unit=table.representation_component_units.values(), frame=table.frame)
                     # Set name to include sky_key as SkyCoords extra coords require two names.
                     name = (key, sky_key)
