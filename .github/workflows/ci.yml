@@ -26,7 +26,7 @@ jobs:
     with:
       submodules: false
       coverage: codecov
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4' tox-pypi-filter"
       envs: |
         - linux: py310
 
@@ -36,7 +36,7 @@ jobs:
     with:
       submodules: false
       coverage: codecov
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4' tox-pypi-filter"
       envs: |
         - macos: py38
         - windows: py39
@@ -60,7 +60,7 @@ jobs:
       default_python: '3.8'
       submodules: false
       coverage: codecov
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4' tox-pypi-filter"
       envs: |
         - linux: py311-devdeps
         - linux: py39-conda
