@@ -5,7 +5,6 @@ from functools import reduce, partial
 
 import astropy.units as u
 import numpy as np
-import scipy.interpolate
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
@@ -509,8 +508,8 @@ class ExtraCoords(ExtraCoordsABC):
                         table_values = table.value
                     else:
                         raise TypeError(f"Unrecognized lookup table type: {table}")
-                    lut_interp = scipy.interpolate.interp1d(old_array_grids[aom], table_values)
-                    new_table_values = lut_interp(new_array_grids[aom])
+                    new_table_values = np.interp(new_array_grids[aom],
+                                                 old_array_grids[aom], table_values)
                     if isinstance(table, Time):
                         new_coord = Time(new_table_values, scale=table.scale, format="mjd")
                     else:
