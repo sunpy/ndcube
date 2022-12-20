@@ -710,12 +710,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         return resampled_cube
 
     def rebin(self, bin_shape, method="sum", correlation=0):
-        """Downsample array by creating non-overlapping bins.
+        """Downsample array by combining pixels into contiguous bins.
 
-        Values in bins are determined applying a function to the pixel
-        values within it.  The number of pixels in each bin in each
-        dimension is given by the bin_shape input.
+        Values in bins are determined applying a function to the pixel values within it.
+        The number of pixels in each bin in each dimension is given by the bin_shape input.
         This must be an integer fraction of the cube's array size in each dimension.
+        If the NDCube instance has uncertainties attached they are propagated
+        depending on binning method chosen.  See explanation of the method kwarg.
 
         Parameters
         ----------
@@ -729,6 +730,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Function applied to the data to derive values of the bins.
             Supported values are 'sum', 'mean', 'median', 'min', 'max'.
             Note that uncertainties are dropped for 'median', 'std' (standard deviation).
+            For 'min' and 'max', the uncertainty associated with the min/max value in
+            each bin is preserved. If there are multiple occurences of the min/max
+            value in the bin, the largest associated uncertainty is preserved.
+            For 'sum' and 'mean', uncertainties are propagated using the propagate
+            method on the NDCube.uncertainty property.
             Default='sum'
 
         correlation:
@@ -824,17 +830,19 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 # value in a single bin, take the largest associate uncertainty.
                 bin_axes = tuple(range(0, len(reshape), 2))
                 new_size = new_data.size
-                flat_shape = [new_size] + list(bin_size)
+                flat_shape = [new_size] + list(bin_shape)
                 flat_data = np.moveaxis(reshaped_data,
                                         bin_axes, tuple(range(naxes))).reshape(flat_shape)
                 reshaped_uncertainty = self.uncertainty.array.reshape(reshape)
                 flat_uncertainty = np.moveaxis(reshaped_uncertainty,
                                                bin_axes, tuple(range(naxes))).reshape(flat_shape)
-                idx_max = ((np.where(a == a.max()) for a in flat_data) if method == "max"
-                           else (np.where(a == a.min()) for a in flat_data))
-                new_uncertainty = np.array([flat_uncertainty[i].max()
+                if method == "max":
+                    idx_max = (np.where(a == a.max()) for a in flat_data)
+                else:
+                    idx_max = (np.where(a == a.min()) for a in flat_data)
+                new_uncertainty = np.array([flat_uncertainty[i][idx].max()
                                             for i, idx in enumerate(idx_max)])
-                new_uncertainty = type(self.ucnertainty)(new_uncertainty.reshape(new_shape))
+                new_uncertainty = type(self.uncertainty)(new_uncertainty.reshape(new_shape))
             else:
                 # For sum and mean methods, propagate uncertainties in the normal way.
                 bin_size = bin_shape.prod()

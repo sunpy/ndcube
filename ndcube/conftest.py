@@ -487,7 +487,8 @@ def ndcube_2d_ln_lt_mask_uncert(wcs_2d_lt_ln):
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = np.zeros(shape, dtype=bool)
     mask[1, 1] = True
-    mask[2, :2] = True
+    mask[2, 0] = True
+    mask[3, 3] = True
     mask[4:6, :4] = True
     cube = NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask)
     return cube

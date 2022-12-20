@@ -852,12 +852,12 @@ def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     cube = ndcube_2d_ln_lt_mask_uncert
     bin_shape = (2, 4)
     expected_data = np.array([[6.71428571,  11.5,  15.5],
-                              [33.83333333,  35.5,  39.5],
+                              [31.5,  35.5,  39.5],
                               [0.,  59.5,  63.5],
                               [79.5,  83.5,  87.5],
                               [103.5, 107.5, 111.5]])
     expected_uncert = np.array([[0.30078024, 0.46029882, 0.58896095],
-                                [1.04843634, 1.27352856, 1.41310828],
+                                [0.97939714, 1.27352856, 1.41310828],
                                 [0., 2.11468083, 2.25541016],
                                 [2.81902022, 2.96004645, 3.10110867],
                                 [3.66563432, 3.80681954, 3.94802166]])
@@ -868,6 +868,25 @@ def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array, expected_uncert)
     assert (output.mask == expected_mask).all()
+
+
+def test_rebin_max(ndcube_2d_ln_lt_mask_uncert):
+    cube = ndcube_2d_ln_lt_mask_uncert
+    bin_shape = (2, 4)
+    expected_data = np.array([[15,     19,     23],
+                              [38,     43,     47],
+                              [999999,     67,     71],
+                              [87,     91,     95],
+                              [111,    115,    119]])
+    expected_uncert = expected_data * 0.1
+    expected_mask = np.zeros((5, 3), dtype=bool)
+    expected_mask[2, 0] = True
+    expected_idx = np.logical_not(expected_mask)
+    output = cube.rebin(bin_shape, method="max")
+    output_idx = np.logical_not(expected_mask)
+    assert (output.mask == expected_mask).all()
+    assert np.allclose(output.data[output_idx], expected_data[expected_idx])
+    assert np.allclose(output.uncertainty.array[output_idx], expected_uncert[expected_idx])
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
