@@ -86,7 +86,7 @@ class MatplotlibPlotter(BasePlotter):
             else:
                 ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
                                         axes_coordinates=axes_coordinates,
-                                        axes_units=axes_units, **kwargs)
+                                        axes_units=axes_units, data_unit=data_unit, **kwargs)
 
         return ax
 
