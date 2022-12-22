@@ -872,17 +872,40 @@ def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
 
 def test_rebin_max(ndcube_2d_ln_lt_mask_uncert):
     cube = ndcube_2d_ln_lt_mask_uncert
+    cube.uncertainty.array[8, 1] = 100
     bin_shape = (2, 4)
     expected_data = np.array([[15,     19,     23],
                               [38,     43,     47],
-                              [999999,     67,     71],
+                              [999999, 67,     71],
                               [87,     91,     95],
                               [111,    115,    119]])
     expected_uncert = expected_data * 0.1
+    expected_uncert[4, 0] = 86
     expected_mask = np.zeros((5, 3), dtype=bool)
     expected_mask[2, 0] = True
     expected_idx = np.logical_not(expected_mask)
     output = cube.rebin(bin_shape, method="max")
+    output_idx = np.logical_not(expected_mask)
+    assert (output.mask == expected_mask).all()
+    assert np.allclose(output.data[output_idx], expected_data[expected_idx])
+    assert np.allclose(output.uncertainty.array[output_idx], expected_uncert[expected_idx])
+
+
+def test_rebin_min(ndcube_2d_ln_lt_mask_uncert):
+    cube = ndcube_2d_ln_lt_mask_uncert
+    cube.uncertainty.array[8, 1] = 100
+    bin_shape = (2, 4)
+    expected_data = np.array([[0,      4,      8],
+                              [25,     28,     32],
+                              [999999,     52,     56],
+                              [72,     76,     80],
+                              [96,    100,    104]])
+    expected_uncert = expected_data * 0.1
+    expected_uncert[4, 0] = 99
+    expected_mask = np.zeros((5, 3), dtype=bool)
+    expected_mask[2, 0] = True
+    expected_idx = np.logical_not(expected_mask)
+    output = cube.rebin(bin_shape, method="min")
     output_idx = np.logical_not(expected_mask)
     assert (output.mask == expected_mask).all()
     assert np.allclose(output.data[output_idx], expected_data[expected_idx])
