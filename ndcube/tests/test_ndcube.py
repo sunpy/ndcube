@@ -978,3 +978,11 @@ def test_to_dask(ndcube_2d_dask):
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
+
+
+def test_two_cubes_equal(ndcube_2d_ln_lt_units):
+    cube1 = ndcube_2d_ln_lt_units
+    assert cube1 == cube1
+
+    cube_arr = np.array([cube1, cube1], dtype=object)
+    assert cube1 in cube_arr
