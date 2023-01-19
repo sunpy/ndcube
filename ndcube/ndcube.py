@@ -709,13 +709,13 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def rebin(self, bin_shape, method="sum", propagate_uncertainties=True, correlation=0):
-        """Downsample array by combining pixels into contiguous bins.
+    def rebin(self, bin_shape, operation=np.sum, propagate_uncertainty=False, **kwargs):
+        """Downsample array by combining contiguous pixels into bins.
 
         Values in bins are determined applying a function to the pixel values within it.
         The number of pixels in each bin in each dimension is given by the bin_shape input.
         This must be an integer fraction of the cube's array size in each dimension.
-        If the NDCube instance has uncertainties attached they are propagated
+        If the NDCube instance has uncertainties attached, they are propagated
         depending on binning method chosen.  See explanation of the method kwarg.
 
         Parameters
@@ -726,24 +726,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Each element must be in int. If they are not they will be rounded
             to the nearest int.
 
-        method : `str`
+        operation : function
             Function applied to the data to derive values of the bins.
-            Supported values are 'sum', 'mean', 'median', 'min', 'max'.
-            Note that uncertainties are dropped for 'median', 'std' (standard deviation).
-            For 'min' and 'max', the uncertainty associated with the min/max value in
-            each bin is preserved. If there are multiple occurences of the min/max
-            value in the bin, the largest associated uncertainty is preserved.
-            For 'sum' and 'mean', uncertainties are propagated using the propagate
-            method on the NDCube.uncertainty property.
-            Default='sum'
+            Default=`numpy.sum`
 
-        propagate_uncertainties: `bool`
-            If True, uncertainties are propagated if supported for chosen method kwarg.
-
-        correlation:
-            Passed to `astropy.nddata.NDUncertainty.propagate` when method = 'sum' or
-            'mean' and propagate_uncertainties is True.
-            See docstring of `astropy.nddata.NDUncertainty.propagate` for more.
+        propagate_uncertainty: `bool` or function.
+            If False, uncertainties are dropped.
+            If True, default algorithm is used (`~ndcube._propagate_rebin_uncertainty`)
+            Can also be set to a function which performs custom uncertainty propagation.
+            Additional kwargs provided to this method are passed onto this function.
+            See Notes section on how to write a custom propagate_uncertainty function.
 
         Returns
         -------
@@ -756,9 +748,11 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Notes
         -----
-        Superpixels are created by reshaping the N-D array to a 2N-D array and
-        applying the function over the odd-numbered axes. An example of this
-        applied the data only is the following.  Let's say you have an array::
+        Rebining Algorithm
+        ******************
+        Rebinning is achieved by reshaping the N-D array to a 2N-D array and
+        applying the function over the odd-numbered axes. To demonstrate,
+        consider the following example.  Let's say you have an array::
 
              x = np.array([[0, 0, 0, 1, 1, 1],
                            [0, 0, 1, 1, 0, 0],
@@ -781,17 +775,53 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
              array([[0, 3, 2],
                     [2, 0, 4],
                     [1, 2, 2]])
+
+        Defining Custom Error Propagation
+        *********************************
+        To perform custom uncertainty propagation, a function must be provided via the
+        propgate_uncertainty kwarg. This function must accept, although doesn't have to
+        use, the following args:
+        operation: function
+            The operation defining the error propagation, e.g. `numpy.sum`
+        uncertainty: `astropy.nddata.NDUncertainty` but not `astropy.nddata.UnknownUncertainty`
+            The uncertainties associated with the data.
+        data: array-like
+            The data associated with the above uncertainties.
+            Must have same shape as uncertainty.
+        mask: array-like of `bool` or `None`
+            Indicates whether any uncertainty elements should be ignored in propagation.
+            True elements cause corresponding uncertainty elements to be ignored.
+            False elements cause corresponding uncertainty elements to be propagated.
+            Must have same shape as above.
+            If None, no uncertainties are ignored.
+        Additional inputs can be included as kwargs and provided via the kwargs of
+        `ndcube.NDCube.rebin`.
+
+        The shape of the uncertainty, data and mask inputs are such that the first
+        dimension represents the pixels in a given bin whose data and uncertainties
+        are aggregated by the rebin process.  The shape of the remaining dimensions
+        must be the same as the final rebinned data.  A silly but informative
+        example of a custom propagation function might be::
+
+             def my_propagate(operation, uncertainty, data, mask, **kwargs):
+                 # As a silly example, propagate uncertainties by summing those in same bin.
+                 # Note not all args are used, but function must accept them.
+                 n_pixels_per_bin = data.shape[0]  # 1st dimension of inputs gives pixels in bin.
+                 final_shape = data.shape[1:]  # Trailing dims give shape of put rebinned data.
+                 # Propagate uncerts by adding them.
+                 new_uncert = numpy.zeros(final_shape)
+                 for i in range(n_pixels_per_bin):
+                     new_uncert += uncertainty.array[i]
+                 # Alternatively: new_uncerts = uncertainty.array.sum(axis=0)
+                 return type(uncertainty)(new_uncert)  # Convert to original uncert type and return.
         """
+
         # Sanitize input.
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2
-        supported_funcs = {"sum", "mean", "median", "min", "max", "std"}
-        if method not in supported_funcs:
-            raise ValueError(f"Invalid method provided: {method}. "
-                             f"Must be one of {supported_funcs}")
         if all(bin_shape == 1):
-            return deepcopy(self)
+            deepcopy(self)
         # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
         data_shape = self.dimensions.value.astype(int)
@@ -814,34 +844,23 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
         reshape[1::2] = bin_shape
-        reshaped_data = data.reshape(tuple(reshape))
-        func = getattr(reshaped_data, method)
-        new_data = func(axis=tuple(range(len(reshape) - 1, 0, -2)))
+        reshape = tuple(reshape)
+        reshaped_data = data.reshape(reshape)
+        new_data = operation(reshaped_data, axis=tuple(range(len(reshape) - 1, 0, -2)))
 
         # Propagate uncertainties.
-        if (not propagate_uncertainties
-                or self.uncertainty is None
+        if (propagate_uncertainty is False
+                or isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
                 or self.mask is True
                 or (self.mask is not None and self.mask is not False and self.mask.all())):
             new_uncertainty = None
-        elif method in {"min", "max"}:
-            # For min/max methods, the uncertainty is the difference between the min/max
-            # value in the data and the min/max of the data -/+ uncertainty.
-            # This captures the minimum/maximum possible value given the distribution
-            # of the data and uncertainties in the bin.
-            reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
-            x_dx = (reshaped_data + reshaped_uncertainty if method == "max"
-                    else reshaped_data - reshaped_uncertainty)
-            if self.mask is not None and self.mask is not False:
-                x_dx = np.ma.masked_array(x_dx, self.mask)
-            func = getattr(x_dx, method)
-            new_x_dx = func(axis=tuple(range(len(reshape) - 1, 0, -2)))
-            new_uncertainty = new_x_dx - new_data if method == "max" else new_data - new_x_dx
-            new_uncertainty = type(self.uncertainty)(new_uncertainty)
-        elif method in {"sum", "mean"} and not isinstance(self.uncertainty,
-                                                          astropy.nddata.UnknownUncertainty):
-            # For sum and mean methods, propagate uncertainties using astropy's
-            # infrastructure. For this the data and uncertainty must be reshaped
+            if propagate_uncertainty is True:
+                #TODO: raise warning saying uncertainties will not be propagated
+                # "Uncertainties cannot be propagated because their are no uncertainties, type of uncertainty is unknown, or all data is masked."
+                pass
+        else:
+            # If propagate_uncertainty, use astropy's infrastructure.
+            # For this the data and uncertainty must be reshaped
             # so the first dimension represents the flattened size of a single bin
             # while the rest represent the shape of the new data. Then the elements
             # in each bin can be iterated (all bins being treated in parallel) and
@@ -855,34 +874,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
             flat_uncertainty = flat_uncertainty.reshape(flat_shape)
             flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
-            new_uncertainty = flat_uncertainty[0]
-            cumul_data = flat_data.cumsum(axis=0)
-            # As mask can be None, build generator to slice flat_mask.
+            # Reshape mask in same way as data and uncertainty above.
             if self.mask is None or self.mask is False:
-                flat_mask = (np.zeros(new_shape, dtype=bool) for i in range(1, flat_shape[0]))
+                flat_mask = None
             else:
-                reshaped_mask = self.mask.reshape(tuple(reshape))
+                reshaped_mask = self.mask.reshape(reshape)
                 flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
                 flat_mask = flat_mask.reshape(flat_shape)
-                # Set masked uncertainties in first mask to 0
-                # as they shouldn't count towards final uncertainty.
-                new_uncertainty.array[flat_mask[0]] = 0
-                flat_mask = flat_mask[1:]
+            if propagate_uncertainty is True:
+                # Set propagate uncertainty to default algorithm.
+                propagate_uncertainty = propagate_rebin_uncertainties
+                # Add operation to kwargs which is required by default propagation algorithm.
+                if "propagation_operation" not in kwargs:
+                    kwargs["propagation_operation"] = operation
             # Propagate uncertainties.
-            for j, mask_slice in enumerate(flat_mask):
-                i = j + 1
-                fu = flat_uncertainty[i]
-                fu.array[mask_slice] = 0  # Do not propagate masked uncertainties
-                data_slice = astropy.nddata.NDData(data=flat_data[i], mask=mask_slice,
-                                                   uncertainty=fu)
-                new_uncertainty = new_uncertainty.propagate(np.add, data_slice,
-                                                            cumul_data[i], correlation)
-            # If aggregation function is mean, uncertainties must be divided by
-            # number of pixels in each bin.
-            if method == "mean":
-                new_uncertainty.array /= bin_size
-        else:
-            new_uncertainty = None
+            new_uncertainty = propagate_uncertainty(flat_uncertainty, flat_data, flat_mask, **kwargs)
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
@@ -1070,3 +1076,100 @@ class NDCube(NDCubeBase):
 
     def __truediv__(self, value):
         return self.__mul__(1/value)
+
+
+def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
+    """Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
+
+    First dimension of uncertainty, data and mask inputs represent the pixels
+    in the bin being aggregated by the rebin process while the latter dimensions
+    must have the same shape as the rebinned data.  The operation input is the
+    function used to aggregate elements in the first dimension, e.g. `numpy.sum`.
+
+    Parameters
+    ----------
+    uncertainty: `astropy.nddata.NDUncertainty`
+        Cannot be instance of `astropy.nddata.UnknownUncertainty`.
+        The uncertainties associated with the data. The first dimension represents
+        pixels in each bin being aggregated while trailing dimensions must have
+        the same shape as the rebinned data.
+    data: array-like or `None`
+        The data associated with the above uncertainties.
+        Must have same shape as above.
+    mask: array-like of `bool` or `None`
+        Indicates whether any uncertainty elements should be ignored in propagation.
+        If True, corresponding uncertainty element is ignored. If False, it is used.
+        Must have same shape as above.
+    propagation_operation: function
+        The operation which defines how the uncertainties are propagated.
+        Must be one of `numpy.sum`, `numpy.mean`, `numpy.prod`, `numpy.nansum`,
+        `numpy.nanmean`, `numpy.nanprod` or any operation directly supported by
+        `astropy.nddata.NDUncertainty.propagate`, e.g. `numpy.add`.
+
+    Returns
+    -------
+    new_uncertainty: same type as uncertainty input.
+        The propagated uncertainty. Same shape as input uncertainty without its
+        first dimension.
+
+    Notes
+    -----
+    Note that the correlation input to `astropy.nddata.NDUncertainty.propagate`
+    can be entered as a kwarg. Default=0.
+    """
+    flat_axis = 0
+    # Extract inputs from kwargs.
+    correlation = kwargs.pop("correlation", 0)
+    if "propagation_operation" not in kwargs:
+        raise ValueError("propagation_operation kwarg must be set.")
+    propagation_operation = kwargs.pop("propagation_operation")
+    operation_is_mean = True if propagation_operation in {np.mean, np.nanmean} else False
+    operation_is_nantype = (True if propagation_operation in {np.nansum, np.nanmean, np.nanprod}
+                            else False)
+    # Convert supported operations to corresponding propagation operations
+    # supported by astropy.nddata.NDUncertainty.propagate
+    if propagation_operation in {np.sum, np.nansum, np.mean, np.nanmean}:
+        propagation_operation = np.add
+    elif propagation_operation in {np.prod, np.nanprod}:
+        propagation_operation = np.multiply
+    new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
+    # Build mask if not provided.
+    if operation_is_nantype:
+        nan_mask = np.isnan(data)
+    no_mask = False
+    if mask is None:
+        if operation_is_nantype and nan_mask.any():
+            mask = nan_mask
+        else:
+            # If there is no mask and operation is not nan-type, build generator
+            # so non-mask can still be iterated.
+            no_mask = True
+            n_pix_per_bin = data.shape[flat_axis]
+            new_shape = data.shape[1:]
+            empty_mask = np.zeros(new_shape, dtype=bool)
+            mask = (empty_mask for i in range(1, n_pix_per_bin))
+    else:
+        # Mask uncertainties corresponding to nan data if operation is nantype.
+        if operation_is_nantype:
+            mask[nan_mask] = True
+        # Set masked uncertainties in first mask to 0
+        # as they shouldn't count towards final uncertainty.
+        new_uncertainty.array[mask[0]] = 0
+        mask = mask[1:]
+    # Propagate uncertainties.
+    cumul_data = data.cumsum(axis=flat_axis)
+    for j, mask_slice in enumerate(mask):
+        i = j + 1
+        fu = uncertainty[i]
+        fu.array[mask_slice] = 0  # Do not propagate masked uncertainties
+        data_slice = astropy.nddata.NDData(data=data[i], mask=mask_slice, uncertainty=fu)
+        new_uncertainty = new_uncertainty.propagate(propagation_operation, data_slice,
+                                                    cumul_data[i], correlation)
+    # If aggregation operation is mean, uncertainties must be divided by
+    # number of unmasked pixels in each bin.
+    if operation_is_mean:
+        unmasked_pix_per_bin = (n_pix_per_bin if no_mask
+                                else np.logical_not(mask).astype(int).sum(axis=flat_axis))
+        # Divide uncertainties by number of number of unmasked pixels in each bin.
+        new_uncertainty.array /= unmasked_pix_per_bin
+    return new_uncertainty
