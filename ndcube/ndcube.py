@@ -709,7 +709,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def rebin(self, bin_shape, operation=np.sum, propagate_uncertainty=False, **kwargs):
+    def rebin(self, bin_shape, operation=np.sum, exclude_masked_values=True,
+              propagate_uncertainty=False, new_unit=None, **kwargs):
         """Downsample array by combining contiguous pixels into bins.
 
         Values in bins are determined applying a function to the pixel values within it.
@@ -725,17 +726,26 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             Must be the same length as number of dimensions in data.
             Each element must be in int. If they are not they will be rounded
             to the nearest int.
-
         operation : function
             Function applied to the data to derive values of the bins.
             Default=`numpy.sum`
-
+        exclude_masked_values: `bool` (optional)
+            Determines how masked values are handled.
+            If True (default), masked values are excluded when calculating rebinned value
+            and rebinned pixel is only masked if all constituent pixels are masked.
+            If False, masked values are used in calculating rebinned value but
+            rebinned pixel is masked if any constituent pixels are masked.
+            If False and propagate_uncertainty is not False, causes None to be passed
+            to propagate_uncertainty function as the mask input.
         propagate_uncertainty: `bool` or function.
             If False, uncertainties are dropped.
             If True, default algorithm is used (`~ndcube._propagate_rebin_uncertainty`)
             Can also be set to a function which performs custom uncertainty propagation.
             Additional kwargs provided to this method are passed onto this function.
             See Notes section on how to write a custom propagate_uncertainty function.
+        new_unit: `astropy.units.Unit` (optional)
+            If the rebinning operation alters the data unit, the new unit can be
+            provided here.
 
         Returns
         -------
@@ -815,8 +825,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                  # Alternatively: new_uncerts = uncertainty.array.sum(axis=0)
                  return type(uncertainty)(new_uncert)  # Convert to original uncert type and return.
         """
-
         # Sanitize input.
+        if new_unit is None:
+            new_unit = self.unit
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2
@@ -846,7 +857,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         reshape[1::2] = bin_shape
         reshape = tuple(reshape)
         reshaped_data = data.reshape(reshape)
-        new_data = operation(reshaped_data, axis=tuple(range(len(reshape) - 1, 0, -2)))
+        operation_axes = tuple(range(len(reshape) - 1, 0, -2))
+        if not exclude_masked_values and self.mask is not None:
+            new_data = operation(reshaped.data, axis=operation_axes)
+            new_mask = (self.mask if isinstance(self.mask, bool)
+                        else np.sum(reshaped.mask, axis=operation_axes) > 0)
+            new_data = np.ma.masked_array(new_data, new_mask)
+        else:
+            new_data = operation(reshaped_data, axis=operation_axes)
 
         # Propagate uncertainties.
         if (propagate_uncertainty is False
@@ -855,9 +873,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 or (self.mask is not None and self.mask is not False and self.mask.all())):
             new_uncertainty = None
             if propagate_uncertainty is True:
-                #TODO: raise warning saying uncertainties will not be propagated
-                # "Uncertainties cannot be propagated because their are no uncertainties, type of uncertainty is unknown, or all data is masked."
-                pass
+                warnings.warn(
+                    "Uncertainties cannot be propagated because there are no uncertainties, "
+                    "type of uncertainty is unknown, or all data is masked.")
         else:
             # If propagate_uncertainty, use astropy's infrastructure.
             # For this the data and uncertainty must be reshaped
@@ -888,7 +906,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                 if "propagation_operation" not in kwargs:
                     kwargs["propagation_operation"] = operation
             # Propagate uncertainties.
-            new_uncertainty = propagate_uncertainty(flat_uncertainty, flat_data, flat_mask, **kwargs)
+            uncertainty_mask = flat_mask if exclude_masked_values else None
+            new_uncertainty = propagate_uncertainty(flat_uncertainty, flat_data,
+                                                    uncertainty_mask, **kwargs)
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
@@ -900,7 +920,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             new_data = new_data.data
         new_mask = self.mask if isinstance(self.mask, (type(None), bool)) else new_mask
         new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
-                              meta=self.meta, unit=self.unit)
+                              meta=self.meta, unit=new_unit)
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
@@ -1168,8 +1188,10 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
     # If aggregation operation is mean, uncertainties must be divided by
     # number of unmasked pixels in each bin.
     if operation_is_mean:
-        unmasked_pix_per_bin = (n_pix_per_bin if no_mask
-                                else np.logical_not(mask).astype(int).sum(axis=flat_axis))
-        # Divide uncertainties by number of number of unmasked pixels in each bin.
-        new_uncertainty.array /= unmasked_pix_per_bin
+        if no_mask:
+            new_uncertainty.array /= n_pix_per_bin
+        else:
+            unmasked_pix_per_bin = np.logical_not(mask).astype(int).sum(axis=flat_axis)
+            idx = unmasked_pix_per_bin > 0
+            new_uncertainty.array[idx] /= unmasked_pix_per_bin[idx]
     return new_uncertainty
