@@ -790,8 +790,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         To perform custom uncertainty propagation, a function must be provided via the
         propgate_uncertainty kwarg. This function must accept, although doesn't have to
         use, the following args:
-        operation: function
-            The operation defining the error propagation, e.g. `numpy.sum`
         uncertainty: `astropy.nddata.NDUncertainty` but not `astropy.nddata.UnknownUncertainty`
             The uncertainties associated with the data.
         data: array-like
@@ -803,9 +801,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             False elements cause corresponding uncertainty elements to be propagated.
             Must have same shape as above.
             If None, no uncertainties are ignored.
-        All kwargs inputs to the rebin method are passed on transparently to the
-        propagation function. Hence additional inputs can be included as kwargs to
-        `ndcube.NDCube.rebin`.
+        All kwarg inputs to the rebin method are also passed on transparently to the
+        propagation function. Hence additional inputs to the propagation function can be
+        included as kwargs to `ndcube.NDCube.rebin`.
 
         The shape of the uncertainty, data and mask inputs are such that the first
         dimension represents the pixels in a given bin whose data and uncertainties
@@ -813,7 +811,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         must be the same as the final rebinned data.  A silly but informative
         example of a custom propagation function might be::
 
-             def my_propagate(operation, uncertainty, data, mask, **kwargs):
+             def my_propagate(uncertainty, data, mask, **kwargs):
                  # As a silly example, propagate uncertainties by summing those in same bin.
                  # Note not all args are used, but function must accept them.
                  n_pixels_per_bin = data.shape[0]  # 1st dimension of inputs gives pixels in bin.
