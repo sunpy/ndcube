@@ -876,7 +876,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             or (self.mask is True and exclude_masked_values)
             or (not isinstance(self.mask, (type(None), bool)) and self.mask.all()
                 and exclude_masked_values)
-            )
+        )
         if cannot_propagate:
             new_uncertainty = None
             if propagate_uncertainty is True:
@@ -905,7 +905,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             else:
                 flat_mask = False
             # Propagate uncertainties.
-            new_uncertainty = propagate_uncertainty(flat_uncertainty, flat_data, 
+            new_uncertainty = propagate_uncertainty(flat_uncertainty, flat_data,
                                                     flat_mask, **kwargs)
 
         # Resample WCS

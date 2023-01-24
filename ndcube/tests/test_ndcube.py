@@ -851,14 +851,14 @@ def test_rebin_uncerts(ndcube_2d_ln_lt_uncert):
 def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     cube = ndcube_2d_ln_lt_mask_uncert
     bin_shape = (2, 4)
-    expected_data = np.array([[  7.5,  11.5,  15.5],
-                              [ 31.5,  35.5,  39.5],
-                              [ 55.5,  59.5,  63.5],
-                              [ 79.5,  83.5,  87.5],
+    expected_data = np.array([[7.5,  11.5,  15.5],
+                              [31.5,  35.5,  39.5],
+                              [55.5,  59.5,  63.5],
+                              [79.5,  83.5,  87.5],
                               [103.5, 107.5, 111.5]])
     expected_uncert = np.array([[0.34186986, 0.46029882, 0.58896095],
                                 [1.13440513, 1.27352856, 1.41310828],
-                                [1.9740504 , 2.11468083, 2.25541016],
+                                [1.9740504, 2.11468083, 2.25541016],
                                 [2.81902022, 2.96004645, 3.10110867],
                                 [3.66563432, 3.80681954, 3.94802166]])
     expected_mask = np.zeros((5, 3), dtype=bool)
