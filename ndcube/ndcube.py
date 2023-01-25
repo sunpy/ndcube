@@ -1147,10 +1147,11 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
     if not exclude_masked_values or mask is None:
         mask = False
     if mask is False:
-        nan_mask = np.isnan(data)
-        if operation_is_nantype and nan_mask.any():
-            mask = nan_mask
-            mask1 = mask[1:]
+        if operation_is_nantype:
+            nan_mask = np.isnan(data)
+            if nan_mask.any():
+                mask = nan_mask
+                mask1 = mask[1:]
         else:
             # If there is no mask and operation is not nan-type, build generator
             # so non-mask can still be iterated.
@@ -1164,14 +1165,11 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
             mask[np.isnan(data)] = True
         # Set masked uncertainties in first mask to 0
         # as they shouldn't count towards final uncertainty.
-        if not isinstance(mask, bool):
-            if exclude_masked_values:
-                new_uncertainty.array[mask[0]] = 0
-            mask1 = mask[1:]
-    # Propagate uncertainties.
-    if mask is not False:
+        mask1 = mask[1:]
         idx = np.logical_not(mask)
         uncertainty.array[mask] = 0
+        new_uncertainty.array[mask[0]] = 0
+    # Propagate uncertainties.
     for j, mask_slice in enumerate(mask1):
         i = j + 1
         cumul_data = operation(data[:i+1]) if mask is False else operation(data[:i+1][idx[:i+1]])
