@@ -790,6 +790,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         To perform custom uncertainty propagation, a function must be provided via the
         propgate_uncertainty kwarg. This function must accept, although doesn't have to
         use, the following args:
+
         uncertainty: `astropy.nddata.NDUncertainty` but not `astropy.nddata.UnknownUncertainty`
             The uncertainties associated with the data.
         data: array-like
@@ -828,7 +829,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         exclude_masked_values = kwargs.get("exclude_masked_values", True)
         propagate_uncertainty = kwargs.get("propagate_uncertainty", False)
         if propagate_uncertainty is True:
-            propagate_uncertainty = propagate_rebin_uncertainties
+            propagate_uncertainty = utils.cube.propagate_rebin_uncertainties
         new_unit = kwargs.get("new_unit", self.unit)
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
@@ -1087,103 +1088,3 @@ class NDCube(NDCubeBase):
 
     def __truediv__(self, value):
         return self.__mul__(1/value)
-
-
-def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
-    """Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
-
-    First dimension of uncertainty, data and mask inputs represent the pixels
-    in the bin being aggregated by the rebin process while the latter dimensions
-    must have the same shape as the rebinned data.  The operation input is the
-    function used to aggregate elements in the first dimension, e.g. `numpy.sum`.
-
-    Parameters
-    ----------
-    uncertainty: `astropy.nddata.NDUncertainty`
-        Cannot be instance of `astropy.nddata.UnknownUncertainty`.
-        The uncertainties associated with the data. The first dimension represents
-        pixels in each bin being aggregated while trailing dimensions must have
-        the same shape as the rebinned data.
-    data: array-like or `None`
-        The data associated with the above uncertainties.
-        Must have same shape as above.
-    mask: array-like of `bool` or `None`
-        Indicates whether any uncertainty elements should be ignored in propagation.
-        If True, corresponding uncertainty element is ignored. If False, it is used.
-        Must have same shape as above.
-    propagation_operation: function
-        The operation which defines how the uncertainties are propagated.
-    correlation: `int`
-        Passed to `astropy.nddata.NDUncertainty.propagate`. See that method's docstring.
-        Default=0.
-
-    Returns
-    -------
-    new_uncertainty: same type as uncertainty input.
-        The propagated uncertainty. Same shape as input uncertainty without its
-        first dimension.
-
-    Notes
-    -----
-    """
-    flat_axis = 0
-    # Extract inputs from kwargs.
-    operation = kwargs.get("operation", None)
-    exclude_masked_values = kwargs.get("exclude_masked_values", True)
-    propagation_operation = kwargs.get("propagation_operation", None)
-    correlation = kwargs.pop("correlation", 0)
-    operation_is_mean = True if operation in {np.mean, np.nanmean} else False
-    operation_is_nantype = True if operation in {np.nansum, np.nanmean, np.nanprod} else False
-    # If propagation_operation kwarg not set manually, try to set it based on operation kwarg.
-    if not propagation_operation:
-        if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
-            propagation_operation = np.add
-        elif operation in {np.prod, np.nanprod}:
-            propagation_operation = np.multiply
-        else:
-            propagation_operation = operation
-    # Build mask if not provided.
-    new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
-    if not exclude_masked_values or mask is None:
-        mask = False
-    if mask is False:
-        if operation_is_nantype:
-            nan_mask = np.isnan(data)
-            if nan_mask.any():
-                mask = nan_mask
-                mask1 = mask[1:]
-        else:
-            # If there is no mask and operation is not nan-type, build generator
-            # so non-mask can still be iterated.
-            n_pix_per_bin = data.shape[flat_axis]
-            new_shape = data.shape[1:]
-            empty_mask = np.zeros(new_shape, dtype=bool)
-            mask1 = (empty_mask for i in range(1, n_pix_per_bin))
-    else:
-        # Mask uncertainties corresponding to nan data if operation is nantype.
-        if operation_is_nantype:
-            mask[np.isnan(data)] = True
-        # Set masked uncertainties in first mask to 0
-        # as they shouldn't count towards final uncertainty.
-        mask1 = mask[1:]
-        idx = np.logical_not(mask)
-        uncertainty.array[mask] = 0
-        new_uncertainty.array[mask[0]] = 0
-    # Propagate uncertainties.
-    for j, mask_slice in enumerate(mask1):
-        i = j + 1
-        cumul_data = operation(data[:i+1]) if mask is False else operation(data[:i+1][idx[:i+1]])
-        data_slice = astropy.nddata.NDData(data=data[i], mask=mask_slice,
-                                           uncertainty=uncertainty[i])
-        new_uncertainty = new_uncertainty.propagate(propagation_operation, data_slice,
-                                                    cumul_data, correlation)
-    # If aggregation operation is mean, uncertainties must be divided by
-    # number of unmasked pixels in each bin.
-    if operation_is_mean and propagation_operation is np.add:
-        if mask is False:
-            new_uncertainty.array /= n_pix_per_bin
-        else:
-            unmasked_per_bin = np.logical_not(mask).astype(int).sum(axis=flat_axis)
-            idx = unmasked_per_bin > 0
-            new_uncertainty.array[idx] /= unmasked_per_bin[idx]
-    return new_uncertainty
