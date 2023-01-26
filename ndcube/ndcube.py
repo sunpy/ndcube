@@ -738,7 +738,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             to propagate_uncertainty function as the mask input.
         propagate_uncertainty: `bool` or function.
             If False, uncertainties are dropped.
-            If True, default algorithm is used (`~ndcube._propagate_rebin_uncertainty`)
+            If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainty`)
             Can also be set to a function which performs custom uncertainty propagation.
             Additional kwargs provided to this method are passed onto this function.
             See Notes section on how to write a custom propagate_uncertainty function.
@@ -802,6 +802,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             False elements cause corresponding uncertainty elements to be propagated.
             Must have same shape as above.
             If None, no uncertainties are ignored.
+
         All kwarg inputs to the rebin method are also passed on transparently to the
         propagation function. Hence additional inputs to the propagation function can be
         included as kwargs to `ndcube.NDCube.rebin`.

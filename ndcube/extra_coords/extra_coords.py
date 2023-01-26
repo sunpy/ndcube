@@ -424,6 +424,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         One new array index grid must be supplied for each array axis in array-axis order.
         This method assumes there is at most one SkyCoord extra coord.
+        Kwargs are passed to `numpy.interp`.
 
         Parameters
         ----------
@@ -493,8 +494,11 @@ class ExtraCoords(ExtraCoordsABC):
                     new_components = []
                     for name in table.representation_component_names.keys():
                         component = getattr(table, name).value
-                        new_components.append(np.interp(new_array_grids[aom], old_array_grids[aom], component))
-                    new_coord = SkyCoord(*new_components, unit=table.representation_component_units.values(), frame=table.frame)
+                        new_components.append(np.interp(new_array_grids[aom], old_array_grids[aom],
+                                                        component, **kwargs))
+                    new_coord = SkyCoord(*new_components,
+                                         unit=table.representation_component_units.values(),
+                                         frame=table.frame)
                     # Set name to include sky_key as SkyCoords extra coords require two names.
                     name = (key, sky_key)
                     # Make sure to skip sky_key when it's turn in loop comes.
