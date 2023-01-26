@@ -727,7 +727,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             to the nearest int.
         operation : function
             Function applied to the data to derive values of the bins.
-            Default=`numpy.mean`
+            Default is `numpy.mean`
         exclude_masked_values: `bool`
             Determines how masked values are handled.
             If True (default), masked values are excluded when calculating rebinned value
