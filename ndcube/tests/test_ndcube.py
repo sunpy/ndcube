@@ -830,6 +830,16 @@ def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
                                              shape_out=(5, 10, 12, 8))
 
 
+def test_to(ndcube_1d_l):
+    cube = ndcube_1d_l
+    new_unit = u.mJ
+    expected_factor = 1000
+    output = cube.to(new_unit)
+    assert np.allclose(output.data, cube.data * expected_factor)
+    assert np.allclose(output.uncertainty.array, cube.uncertainty.array * expected_factor)
+    assert output.unit == new_unit
+
+
 def test_plot_docstring():
     cube = NDCube([], astropy.wcs.WCS())
 

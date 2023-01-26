@@ -8,6 +8,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord
+from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
@@ -485,7 +486,8 @@ def ndcube_2d(request):
 def ndcube_1d_l(wcs_1d_l):
     shape = (10,)
     data_cube = data_nd(shape)
-    return NDCube(data_cube, wcs=wcs_1d_l)
+    return NDCube(data_cube, wcs=wcs_1d_l,
+                  uncertainty=StdDevUncertainty(data_cube*0.1), unit=u.J)
 
 
 @pytest.fixture(params=[

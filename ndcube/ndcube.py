@@ -709,6 +709,26 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
+    def to(self, new_unit, **kwargs):
+        """Convert instance to another unit.
+
+        Converts the data, uncertainty and unit and returns a new instance
+        with other attributes unchanged.
+
+        Parameters
+        ----------
+        new_unit: `astropy.unit.Unit`
+            The unit to convert to.
+        kwargs:
+            Passed to the unit conversion method, self.unit.to.
+
+        Returns
+        -------
+        : `ǸDCube`
+            A new instance with the new unit and data and uncertainties scales accordingly.
+        """
+        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
+
 
 class NDCube(NDCubeBase):
     """
@@ -802,15 +822,17 @@ class NDCube(NDCubeBase):
 
         return self.plotter.plot(*args, **kwargs)
 
-    def _new_instance_from_op(self, new_data, new_unit):
+    def _new_instance_from_op(self, new_data, new_unit, new_uncertainty=None):
         # This implicitly assumes that the arithmetic operation does not alter
-        # the WCS, mask, or uncertainty
+        # the WCS, mask, or metadata.
+        if new_uncertainty is None:
+            new_uncertainty = deepcopy(self.uncertainty)
         new_cube = type(self)(new_data,
                               unit=new_unit,
                               wcs=self.wcs,
-                              mask=self.mask,
-                              meta=self.meta,
-                              uncertainty=self.uncertainty)
+                              mask=deepcopy(self.mask),
+                              meta=deepcopy(self.meta),
+                              uncertainty=new_uncertainty)
         if self.extra_coords is not None:
             new_cube._extra_coords = deepcopy(self.extra_coords)
         if self.global_coords is not None:
@@ -857,16 +879,15 @@ class NDCube(NDCubeBase):
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 value_unit = value.unit
                 value = value.to_value()
-                new_data = self.data * value
                 new_unit = cube_unit * value_unit
             else:
                 return NotImplemented
         else:
-            new_data = self.data * value
             new_unit = self.unit
-        new_cube = self._new_instance_from_op(new_data, new_unit)
-        if new_cube.uncertainty is not None:
-            new_cube.uncertainty.array *= value
+        new_data = self.data * value
+        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
+                           if self.uncertainty is not None else None)
+        new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
         return new_cube
 
     def __rmul__(self, value):
