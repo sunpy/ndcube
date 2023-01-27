@@ -709,26 +709,6 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
-    def to(self, new_unit, **kwargs):
-        """Convert instance to another unit.
-
-        Converts the data, uncertainty and unit and returns a new instance
-        with other attributes unchanged.
-
-        Parameters
-        ----------
-        new_unit: `astropy.unit.Unit`
-            The unit to convert to.
-        kwargs:
-            Passed to the unit conversion method, self.unit.to.
-
-        Returns
-        -------
-        : `ǸDCube`
-            A new instance with the new unit and data and uncertainties scales accordingly.
-        """
-        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
-
 
 class NDCube(NDCubeBase):
     """
@@ -895,3 +875,23 @@ class NDCube(NDCubeBase):
 
     def __truediv__(self, value):
         return self.__mul__(1/value)
+
+    def to(self, new_unit, **kwargs):
+        """Convert instance to another unit.
+
+        Converts the data, uncertainty and unit and returns a new instance
+        with other attributes unchanged.
+
+        Parameters
+        ----------
+        new_unit: `astropy.unit.Unit`
+            The unit to convert to.
+        kwargs:
+            Passed to the unit conversion method, self.unit.to.
+
+        Returns
+        -------
+        : `ǸDCube`
+            A new instance with the new unit and data and uncertainties scales accordingly.
+        """
+        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
