@@ -802,11 +802,10 @@ class NDCube(NDCubeBase):
 
         return self.plotter.plot(*args, **kwargs)
 
-    def _new_instance_from_op(self, new_data, new_unit, new_uncertainty=None):
+    def _new_instance_from_op(self, new_data, new_unit, new_uncertainty):
         # This implicitly assumes that the arithmetic operation does not alter
         # the WCS, mask, or metadata.
-        if new_uncertainty is None:
-            new_uncertainty = deepcopy(self.uncertainty)
+        new_uncertainty = deepcopy(self.uncertainty)
         new_cube = type(self)(new_data,
                               unit=new_unit,
                               wcs=self.wcs,
@@ -820,7 +819,8 @@ class NDCube(NDCubeBase):
         return new_cube
 
     def __neg__(self):
-        return self._new_instance_from_op(-self.data, self.unit)
+        return self._new_instance_from_op(-self.data, deepcopy(self.unit),
+                                          deepcopy(self.uncertainty))
 
     def __add__(self, value):
         if hasattr(value, 'unit'):
@@ -839,7 +839,7 @@ class NDCube(NDCubeBase):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
             new_data = self.data + value
-        return self._new_instance_from_op(new_data, self.unit)
+        return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
 
     def __radd__(self, value):
         return self.__add__(value)
