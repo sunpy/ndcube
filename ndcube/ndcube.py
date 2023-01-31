@@ -805,7 +805,6 @@ class NDCube(NDCubeBase):
     def _new_instance_from_op(self, new_data, new_unit, new_uncertainty):
         # This implicitly assumes that the arithmetic operation does not alter
         # the WCS, mask, or metadata.
-        new_uncertainty = deepcopy(self.uncertainty)
         new_cube = type(self)(new_data,
                               unit=new_unit,
                               wcs=self.wcs,
