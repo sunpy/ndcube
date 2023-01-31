@@ -3,6 +3,7 @@ from textwrap import dedent
 
 import astropy.units as u
 import astropy.wcs
+import dask.array
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
@@ -959,3 +960,21 @@ def test_cube_arithmetic_add_notimplementederror(ndcube_2d_ln_lt_units):
 def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
     with pytest.raises(TypeError):
         _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
+
+
+def test_to(ndcube_1d_l):
+    cube = ndcube_1d_l
+    new_unit = u.mJ
+    expected_factor = 1000
+    output = cube.to(new_unit)
+    assert np.allclose(output.data, cube.data * expected_factor)
+    assert np.allclose(output.uncertainty.array, cube.uncertainty.array * expected_factor)
+    assert output.unit == new_unit
+
+
+def test_to_dask(ndcube_2d_dask):
+    output = ndcube_2d_dask.to(u.mJ)
+    dask_type = dask.array.core.Array
+    assert isinstance(output.data, dask_type)
+    assert isinstance(output.uncertainty.array, dask_type)
+    assert isinstance(output.mask, dask_type)
