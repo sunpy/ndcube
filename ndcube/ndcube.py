@@ -338,7 +338,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
         """
-        Returns WCS coordinate values of all pixels for all axes.
+        Returns high-level WCS coordinates of all pixels for all axes.
 
         Parameters
         ----------
@@ -362,7 +362,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Returns
         -------
-        axes_coords: `list`
+        axes_coords: `tuple`
             An iterable of "high level" objects giving the real world
             coords for the axes requested by user.
             For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
@@ -373,8 +373,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Example
         -------
-        >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
-        >>> NDCube.all_world_coords(2) # doctest: +SKIP
+        >>> NDCube.axis_world_coords('lat', 'lon') # doctest: +SKIP
+        >>> NDCube.axis_world_coords(2) # doctest: +SKIP
 
         """
         if isinstance(wcs, BaseHighLevelWCS):
@@ -412,7 +412,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @utils.cube.sanitize_wcs
     def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
         """
-        Returns WCS coordinate values of all pixels for desired axes.
+        Returns the WCS coordinate values of all pixels for desired axes.
+        In comparison to `axis_world_coords()`, this method returns the unit values
+        of the cooridnates rather the full information provided by a SkyCoord (e.g. coordinate frame etc).
 
         Parameters
         ----------
@@ -428,7 +430,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             increases the size of the output along each dimension by 1 as all corners are returned.
 
         wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
-            The WCS object to used to calculate the world coordinates.
+            The WCS object to be used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
             ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
             the WCS and extra coords.
@@ -436,10 +438,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Returns
         -------
-        axes_coords: `list`
-            An iterable of "high level" objects giving the real world
-            coords for the axes requested by user.
-            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
+        axes_coords: `tuple`
+            An iterable of raw values of the coordinates for the axes requested by user.
+            For example, a tuple of `~astropy.units.quantity.Quantity` objects.
             The types returned are determined by the WCS object.
             The dimensionality of these objects should match that of
             their corresponding array dimensions, unless ``pixel_corners=True``
@@ -447,8 +448,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Example
         -------
-        >>> NDCube.all_world_coords_values(('lat', 'lon')) # doctest: +SKIP
-        >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
+        >>> NDCube.axis_world_coords_values('lat', 'lon') # doctest: +SKIP
+        >>> NDCube.axis_world_coords_values(2) # doctest: +SKIP
 
         """
         if isinstance(wcs, BaseHighLevelWCS):
@@ -631,7 +632,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Returns
         -------
-        resampled_cube : `ndcube.NDCube`
+        reprojected_cube : `ndcube.NDCube`
             A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output ``NDCube``.
 
         footprint: `numpy.ndarray`
