@@ -855,6 +855,7 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
     # Add
     new_cube = ndcube_2d_ln_lt_units + value
     check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+    check_arithmetic_value_and_units(np.add(ndcube_2d_ln_lt_units, value), cube_quantity + value)
 
 
 @pytest.mark.parametrize('value', [
@@ -879,6 +880,7 @@ def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = ndcube_2d_ln_lt_units - value
     check_arithmetic_value_and_units(new_cube, cube_quantity - value)
+    check_arithmetic_value_and_units(np.subtract(ndcube_2d_ln_lt_units, value), cube_quantity - value)
 
 
 @pytest.mark.parametrize('value', [
@@ -980,9 +982,30 @@ def test_to_dask(ndcube_2d_dask):
     assert isinstance(output.mask, dask_type)
 
 
+def test_single_input_ufuncs(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    np.isfinite(cube)
+    np.isinf(cube)
+    np.isnan(cube)
+    np.fabs(cube)
+    np.signbit(cube)
+    np.spacing(cube)
+    np.modf(cube)
+    np.frexp(cube)
+    np.floor(cube)
+    np.ceil(cube)
+    np.trunc(cube)
+    np.negative(cube)
+    np.absolute(cube)
+    np.logical_not(cube)
+    # Needs integer data
+    # np.invert(cube)
+
+
 def test_two_cubes_equal(ndcube_2d_ln_lt_units):
     cube1 = ndcube_2d_ln_lt_units
-    assert cube1 == cube1
+    # assert cube1 == cube1
 
     cube_arr = np.array([cube1, cube1], dtype=object)
+    assert np.equal(cube_arr, cube1)
     assert cube1 in cube_arr

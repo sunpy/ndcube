@@ -756,15 +756,6 @@ class NDCube(NDCubeBase):
         Default is False.
 
     """
-    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
-    # reflected operator will be used only if the Quantity non-reflected operator
-    # returns NotImplemented.  The Quantity operator strips the unit from the
-    # Quantity and tries to combine the value with the NDCube using NumPy's
-    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
-    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
-    # call, and consequently the Quantity operator, will return NotImplemented.
-    __array_ufunc__ = None
-
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
@@ -817,19 +808,57 @@ class NDCube(NDCubeBase):
             new_cube._global_coords = deepcopy(self.global_coords)
         return new_cube
 
-    def __neg__(self):
-        return self._new_instance_from_op(-self.data, deepcopy(self.unit),
-                                          deepcopy(self.uncertainty))
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        print(f"{ufunc=} {inputs=}")
+        # unary operators we can dispatch to the data
+        if len(inputs) == 1:
+            cube = inputs[0]
+            new_data = ufunc(cube.data)
+            return self._new_instance_from_op(new_data, deepcopy(cube.unit),
+                                              deepcopy(cube.uncertainty))
 
-    def __add__(self, value):
+        if len(inputs) == 2:
+            if ufunc is np.add:
+                if inputs[0] is self:
+                    cube, value = inputs
+                elif inputs[1] is self:
+                    value, cube = inputs
+                else:
+                    return NotImplemented
+                return self._ufunc_add(cube, value)
+
+            if ufunc is np.subtract:
+                if inputs[0] is self:
+                    cube, value = inputs
+                    value = np.negative(value)
+                elif inputs[1] is self:
+                    value, cube = inputs
+                    cube = np.negative(cube)
+                else:
+                    return NotImplemented
+                return self._ufunc_add(cube, value)
+
+            if ufunc is np.multiply:
+                if inputs[0] is self:
+                    cube, value = inputs
+                elif inputs[1] is self:
+                    value, cube = inputs
+                else:
+                    return NotImplemented
+                return self._ufunc_multiply(cube, value)
+
+        # Nope out on anything else
+        return NotImplemented
+
+    def _ufunc_add(self, cube, value):
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
                 # perform arithmetic between a unitful quantity.
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
-                cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data + value.to_value(cube_unit)
+                cube_unit = u.Unit('') if cube.unit is None else cube.unit
+                new_data = cube.data + value.to_value(cube_unit)
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -837,25 +866,16 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            new_data = self.data + value
-        return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
+            new_data = cube.data + value
+        return self._new_instance_from_op(new_data, deepcopy(cube.unit), deepcopy(cube.uncertainty))
 
-    def __radd__(self, value):
-        return self.__add__(value)
-
-    def __sub__(self, value):
-        return self.__add__(-value)
-
-    def __rsub__(self, value):
-        return self.__neg__().__add__(value)
-
-    def __mul__(self, value):
+    def _ufunc_multiply(self, cube, value):
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, set the unit
                 # to dimensionless such that we can perform arithmetic
                 # between the two.
-                cube_unit = u.Unit('') if self.unit is None else self.unit
+                cube_unit = u.Unit('') if cube.unit is None else cube.unit
                 value_unit = value.unit
                 value = value.to_value()
                 new_unit = cube_unit * value_unit
@@ -863,17 +883,34 @@ class NDCube(NDCubeBase):
                 return NotImplemented
         else:
             new_unit = self.unit
-        new_data = self.data * value
-        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
-                           if self.uncertainty is not None else None)
-        new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
-        return new_cube
+        new_data = cube.data * value
+        new_uncertainty = (type(cube.uncertainty)(cube.uncertainty.array * value)
+                           if cube.uncertainty is not None else None)
+        return self._new_instance_from_op(new_data, new_unit, new_uncertainty)
+
+    def __neg__(self):
+        return np.negative(self)
+
+    def __add__(self, value):
+        return np.add(self, value)
+
+    def __radd__(self, value):
+        return np.add(value, self)
+
+    def __sub__(self, value):
+        return np.subtract(self, value)
+
+    def __rsub__(self, value):
+        return np.subtract(value, self)
+
+    def __mul__(self, value):
+        return np.multiply(self, value)
 
     def __rmul__(self, value):
-        return self.__mul__(value)
+        return np.multiply(value, self)
 
     def __truediv__(self, value):
-        return self.__mul__(1/value)
+        return np.multiply(self, 1/value)
 
     def to(self, new_unit, **kwargs):
         """Convert instance to another unit.
