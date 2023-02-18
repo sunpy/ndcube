@@ -17,7 +17,7 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS
 from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                           SkyCoordTableCoordinate, TimeTableCoordinate)
 
-__all__ = ['ExtraCoords']
+__all__ = ['ExtraCoordsABC', 'ExtraCoords']
 
 
 class ExtraCoordsABC(abc.ABC):
@@ -70,8 +70,7 @@ class ExtraCoordsABC(abc.ABC):
         The world axis names for all the coordinates in the extra coords.
         """
 
-    @property
-    @abc.abstractmethod
+    @abc.abstractproperty
     def mapping(self) -> Iterable[Tuple[int, int]]:
         """
         The mapping between the array dimensions and pixel dimensions.
@@ -80,19 +79,18 @@ class ExtraCoordsABC(abc.ABC):
         of length equal to the number of pixel dimensions in the extra coords.
         """
 
-    @property
-    @abc.abstractmethod
+    @abc.abstractproperty
     def wcs(self) -> BaseHighLevelWCS:
         """
         A WCS object representing the world coordinates described by this ``ExtraCoords``.
 
         .. note::
-            This WCS object does not map to the pixel dimensions of the array
-            associated with the `.NDCube` object. It has the number of
-            pixel dimensions equal to the number of inputs to the transforms to
-            get the world coordinates (normally equal to the number of world
-            coordinates). Therefore using this WCS directly might lead to some
-            confusing results.
+            This WCS object does not map to the pixel dimensions of the data array
+            in the `.NDCube` object. It only includes pixel dimensions associated
+            with the extra coordinates.  For example, if there is only one extra coordinate
+            associated with a single pixel dimension, this WCS will only have 1 pixel dimension,
+            even if the `.NDCube` object has a data array of 2-D or greater.
+            Therefore using this WCS directly might lead to some confusing results.
 
         """
 
