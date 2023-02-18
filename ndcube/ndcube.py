@@ -2,16 +2,15 @@ import abc
 import textwrap
 import warnings
 from copy import deepcopy
+from typing import Any, Tuple, Union, Iterable, Optional
 from collections import namedtuple
 from collections.abc import Mapping
-from typing import Any, Iterable, Optional, Tuple, Union
 
 import astropy.nddata
 import astropy.units as u
 import numpy as np
 import numpy.typing
 from astropy.units import UnitsError
-from astropy.units import Quantity
 
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy

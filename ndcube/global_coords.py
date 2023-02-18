@@ -1,8 +1,8 @@
 import abc
 import copy
+from typing import Any
 from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
-from typing import Any
 
 import numpy as np
 from astropy.coordinates.sky_coordinate import SkyCoord
