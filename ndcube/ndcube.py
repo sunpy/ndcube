@@ -35,55 +35,6 @@ __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 class NDCubeABC(astropy.nddata.NDDataBase, metaclass=abc.ABCMeta):
 
-    @abc.abstractmethod
-    def __init__(self,
-                 data: numpy.typing.ArrayLike,
-                 wcs: Union[BaseLowLevelWCS, BaseHighLevelWCS],
-                 uncertainty: Any = None,
-                 mask: numpy.typing.ArrayLike = None,
-                 meta: Mapping = None,
-                 unit: Union[str, u.Unit] = None,
-                 copy: bool = False):
-        """
-        This signature is inherited from NDData.
-
-        The only difference is that the wcs argument should be considered mandatory.
-        """
-
-    @abc.abstractmethod
-    def __getitem__(self, item: Union[int, slice, Iterable[Union[slice, int]]]) -> "NDCubeABC":
-        """
-        Slice the NDCube object by array index.
-
-        An ndcube object must be sliceable in a similar way to a numpy array,
-        however, support for a `step` is not required and no "fancy indexing" is allowed.
-
-        A step is prohibited due to the ambiguity inherent in applying a step to the WCS
-        object; does the step mean a sampling so the coordinate axis becomes discontinuious
-        or does it mean that the size of the pixels should be increased by a factor of the step.
-
-        Fancy indexing, or
-        `advanced indexing <https://numpy.org/doc/stable/reference/arrays.indexing.html#advanced-indexing>`__
-        is not supported both due to similar issues with applying it to the WCS, as
-        well as it being poorly supported outside of numpy arrays.
-
-        When a slice is applied to a NDCube object it must be applied to the following attributes:
-
-          * data
-          * wcs
-          * uncertainty
-          * mask
-          * extra_coords
-
-        the following attributes must be copied unaltered to the returned NDCube:
-
-          * unit
-      The following attribute should be sliced if they have a magic attribute, ``.__ndcube_can_slice__``, that evaluates to ``True``.
-      Otherwise they should be copied unaltered:
-          * meta
-
-        """
-
     @property
     @abc.abstractmethod
     def extra_coords(self) -> ExtraCoordsABC:
@@ -176,8 +127,8 @@ class NDCubeABC(astropy.nddata.NDDataBase, metaclass=abc.ABCMeta):
 
         Example
         -------
-        >>> NDCube.all_world_coords(('lat', 'lon'))
-        >>> NDCube.all_world_coords(2)
+        >>> NDCube.axis_world_coords(('lat', 'lon'))  # doctest: +SKIP
+        >>> NDCube.axis_world_coords(2)  # doctest: +SKIP
 
         """
 
@@ -219,8 +170,8 @@ class NDCubeABC(astropy.nddata.NDDataBase, metaclass=abc.ABCMeta):
 
         Example
         -------
-        >>> NDCube.all_world_coords_values(('lat', 'lon'))
-        >>> NDCube.all_world_coords_values(2)
+        >>> NDCube.axis_world_coords_values(('lat', 'lon'))  # doctest: +SKIP
+        >>> NDCube.axis_world_coords_values(2)  # doctest: +SKIP
 
         """
 
