@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 
 from ndcube import utils
-from ndcube.visualization import PlotterDescriptor
+from ndcube.visualization.descriptor import PlotterDescriptor
 
 __all__ = ['NDCubeSequence']
 
@@ -33,6 +33,7 @@ class NDCubeSequenceBase:
         `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
         were a single cube concatenated along the common axis.
     """
+
     def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
         self.data = data_list
         self.meta = meta

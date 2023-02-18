@@ -127,6 +127,7 @@ class ExtraCoords(ExtraCoordsABC):
        of length equal to the number of pixel dimensions in the extra coords.
 
     """
+
     def __init__(self, ndcube=None):
         super().__init__()
 

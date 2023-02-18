@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'main'
+      - '*.*'
+      - '!*backport*'
+    tags:
+      - 'v*'
+      - '!*dev*'
+      - '!*pre*'
+      - '!*post*'
+  pull_request:
+  # Allow manual runs through the web UI
+  workflow_dispatch:
+
+# Automatically cancel old builds
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      submodules: false
+      coverage: codecov
+      toxdeps: "'tox<4' tox-pypi-filter"
+      envs: |
+        - linux: py310
+
+  test:
+    needs: [core]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      submodules: false
+      coverage: codecov
+      toxdeps: "'tox<4' tox-pypi-filter"
+      envs: |
+        - macos: py38
+        - windows: py39
+        - linux: py38-oldestdeps
+        - linux: build_docs
+          posargs: ''
+          pytest: false
+          libraries:
+            apt:
+              - libopenjp2-7
+              - graphviz
+
+  cron:
+    if: |
+      github.event_name == 'workflow_dispatch' || (
+        github.event_name == 'pull_request' &&
+        contains(github.event.pull_request.labels.*.name, 'Run cron CI')
+      )
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      default_python: '3.8'
+      submodules: false
+      coverage: codecov
+      toxdeps: "'tox<4' tox-pypi-filter"
+      envs: |
+        - linux: py311-devdeps
+        - linux: py39-conda
+          libraries: ''
+
+  publish:
+    # Build wheels when pushing to any branch except main
+    # publish.yml will only publish if tagged ^v.*
+    if: |
+      github.event_name != 'pull_request' && (
+        github.ref_name != 'main' ||
+        github.event_name == 'workflow_dispatch' )
+    needs: [test]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
+    with:
+      test_extras: 'dev'
+      test_command: 'pytest -p no:warnings --doctest-rst -m "not mpl_image_compare" --pyargs ndcube'
+      submodules: false
+    secrets:
+      pypi_token: ${{ secrets.pypi_token }}
+
+  notify:
+    if: always() && github.event_name == 'workflow_dispatch'
+    needs: [publish, cron]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Cadair/matrix-notify-action@main
+        with:
+          matrix_token: ${{ secrets.matrix_access_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          homeserver: ${{ secrets.matrix_homeserver }}
+          roomid: '!TWSJXVpyflnZOzmSQz:matrix.org'
+          ignore_pattern: '.*Load tox.*'

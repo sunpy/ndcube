@@ -1,7 +1,9 @@
+from inspect import signature
 from textwrap import dedent
 
 import astropy.units as u
 import astropy.wcs
+import dask.array
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
@@ -807,29 +809,6 @@ def test_reproject_invalid_algorithm(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
                                              shape_out=(5, 10, 12, 8))
 
 
-def test_reproject_invalid_order(ndcube_2d_ln_lt, wcs_2d_lt_ln):
-    shape_out = (10, 12)
-
-    # Supported for interpolation
-    for order in ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic']:
-        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='interpolation',
-                                         shape_out=shape_out, order=order)
-
-    # Supported for adaptive
-    for order in ['nearest-neighbor', 'bilinear']:
-        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
-                                         shape_out=shape_out, order=order)
-
-    # Not supported for adaptive
-    for order in ['biquadratic', 'bicubic', 'my_order']:
-        with pytest.raises(ValueError):
-            _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
-                                             shape_out=shape_out, order=order)
-
-    # 'exact' does not need 'order'
-    _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='exact', shape_out=shape_out)
-
-
 def test_reproject_adaptive_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
                                              wcs_1d_l, ndcube_1d_l):
     with pytest.raises(ValueError):
@@ -850,3 +829,152 @@ def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
     with pytest.raises(ValueError):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='exact',
                                              shape_out=(5, 10, 12, 8))
+
+
+def test_plot_docstring():
+    cube = NDCube([], astropy.wcs.WCS())
+
+    assert cube.plot.__doc__ == cube.plotter.plot.__doc__
+    assert signature(cube.plot) == signature(cube.plotter.plot)
+# This function is used in the arithmetic tests below
+
+
+def check_arithmetic_value_and_units(cube_new, data_expected):
+    cube_quantity = u.Quantity(cube_new.data, cube_new.unit)
+    assert u.allclose(cube_quantity, data_expected)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    # Add
+    new_cube = ndcube_2d_ln_lt_units + value
+    check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_radd(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = value + ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value + cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units - value
+    check_arithmetic_value_and_units(new_cube, cube_quantity - value)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = value - ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value - cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(12),
+    np.random.rand(10, 12),
+])
+def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units * value
+    check_arithmetic_value_and_units(new_cube, cube_quantity * value)
+    # TODO: test that uncertainties scale correctly
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(12),
+    np.random.rand(10, 12),
+])
+def test_cube_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = value * ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value * cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity([2], u.s),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(12),
+    np.random.rand(10, 12),
+])
+def test_cube_arithmetic_divide(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units / value
+    check_arithmetic_value_and_units(new_cube, cube_quantity / value)
+
+
+def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
+    check_arithmetic_value_and_units(
+        -ndcube_2d_ln_lt_units,
+        u.Quantity(-ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit),
+    )
+
+
+def test_add_unitless_cube_typeerror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units + 10.0
+
+
+def test_cube_arithmetic_add_notimplementederror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units + ndcube_2d_ln_lt_units
+
+
+def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
+
+
+def test_to(ndcube_1d_l):
+    cube = ndcube_1d_l
+    new_unit = u.mJ
+    expected_factor = 1000
+    output = cube.to(new_unit)
+    assert np.allclose(output.data, cube.data * expected_factor)
+    assert np.allclose(output.uncertainty.array, cube.uncertainty.array * expected_factor)
+    assert output.unit == new_unit
+
+
+def test_to_dask(ndcube_2d_dask):
+    output = ndcube_2d_dask.to(u.mJ)
+    dask_type = dask.array.core.Array
+    assert isinstance(output.data, dask_type)
+    assert isinstance(output.uncertainty.array, dask_type)
+    assert isinstance(output.mask, dask_type)

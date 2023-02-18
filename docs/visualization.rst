@@ -58,6 +58,11 @@ The plot method can be called very simply.
   >>> ax = my_cube.plot()
   >>> plt.show()
 
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+
 Note how no arguments are required.
 The necessary information to generate the plot is derived from the data and metadata in the `~ndcube.NDCube`.
 The axis labels are taken from the WCS axis names defined in ``my_cube.wcs.wcs.cname``.
@@ -78,6 +83,11 @@ For for data with two array axes, an image is produced similar to that of `matpl
   >>> ax = my_cube[0].plot()
   >>> plt.show()
 
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
+
 For data with one array axis, a line plot is produced, similar to `matplotlib.pyplot.plot`.
 
 .. plot::
@@ -86,6 +96,11 @@ For data with one array axis, a line plot is produced, similar to `matplotlib.py
 
   >>> ax = my_cube[1, 1].plot()
   >>> plt.show()
+
+.. plot::
+  :nofigs:
+
+  >>> plt.clf()
 
 Setting the x and y ranges of the plot can be done simply by indexing the `~ndcube.NDCube` object to the desired region of interest and then calling the plot method, e.g.
 
@@ -208,13 +223,15 @@ This includes adding the output of `ndcube.NDCube.plot` to an existing axes obje
 Visualizing NDCubeSequences
 ===========================
 
-Since ndcube 2.0, the `~ndcube.NDCubeSequence` visualization support has been dropped.
+Since ndcube 2.0, the `~ndcube.NDCubeSequence` visualization support has been significantly simplified.
+The sequence axis can only be an animated axis and cannot be represented as a plot axis.
+This enables the visualization to passed off to the `~ndcube.NDCube` infrastructure.
 The rationale for this is outlined in `Issue #321 <https://github.com/sunpy/ndcube/issues/321>`__ on the ndcube GitHub repo.
-If you feel that `~ndcube.NDCubeSequence` visualization should be supported again, please let us know by commenting on that issue and telling us of your use case.
-Better still, if you would like to work on the infrastructure required to support `~ndcube.NDCubeSequence` visualization in a post ndcube 2.0 world let us know by commenting on the issue.
+For many users this simplified support will be sufficient and they may not even notice the change.
+However if you feel that `~ndcube.NDCubeSequence` should provide more complex visualization support, please let us know by commenting on that issue and telling us of your use case.
 
-Despite this the lack of `~ndcube.NDCubeSequence` visualization support, you can still visualize the data in `~ndcube.NDCubeSequence` in a number of ways.
-You can slice out a single `~ndcube.NDCube` and use its `~ndcube.NDCube.plot` method.
+If you would like to visualize your `~ndcube.NDCubeSequence` in a more complex or customized way, there are still several options.
+For example, you can slice out a single `~ndcube.NDCube` and use its `~ndcube.NDCube.plot` method.
 You can extract the data and use the myriad of plotting packages available in the Python ecosystem.
 Finally, if you want to be advanced, you can write your own mixin class to define the plotting methods.
 Below, we will outline these latter two options in a little more detail.
@@ -224,7 +241,7 @@ Extracting and Plotting NDCubeSequence Data with Matplotlib
 
 In order to produce plots (or perform other analysis) outside of the ``ndcube`` framework, it may be useful to extract the data from the `~ndcube.NDCubeSequence` into single `~numpy.ndarray` instances.
 Let's first define an `~ndcube.NDCubeSequence` with a common axis of 0 and time as an extra coord stretching across the cube along the common axis.
-Then we show how to extract and plot the data.
+To extract and plot the data.
 
 .. code-block:: python
 
@@ -328,10 +345,6 @@ Alternatively, we could produce a 2D dynamic spectrum showing how the spectrum i
 
 Now let's say we want to animate our data, for example, to show how the intensity changes over wavelength and time.
 For this we can use `~mpl_animators.ImageAnimator`.
-This class is not well suited to displaying the complex relationship between coordinates that we are used to with `~astropy.visualization.wcsaxes.WCSAxes`.
-For example, non-linear and  non-independent coordinates.
-The difficulty and complexity in correctly representing this in a generalized way when dealing with a sequence of WCS objects is one reason plotting is currently no longer supported by `~ndcube.NDCubeSequence`.
-Nontheless, `~mpl_animators.ImageAnimator` can still give us an idea of how the data is changing.
 In ``my_sequence``, the sequence axis represents time, the 0th and 1st cube axes represent latittude and longitude, while the final axis represents wavelength.
 Therefore, we could do the following.
 
@@ -355,7 +368,7 @@ Alternatively we can animate how the one 1-D spectrum changes by using `~mpl_ani
 
 Writing Your Own NDCubeSequence Plot Mixin
 ------------------------------------------
-Just because ndcube no longer provides plotting support doesn't mean you can't write your own plotting functionality for `~ndcube.NDCubeSequence`.
+ncube allows you to write your own plotting functionality for `~ndcube.NDCubeSequence` if the current support doesn't meet your needs.
 In many cases, this might be simpler as you may be able to make some assumptions about the data you will be analyzing and therefore won't have to write as generalized a tool.
 The best way to do this is to write your own mixin class defining the plot methods, e.g.
 
@@ -377,5 +390,4 @@ Then you can create your own ``NDCubeSequence`` by combining your mixin with `~n
 This will create a new class, ``MySequence``, which contains all the functionality of `~ndcube.NDCubeSequence` plus the plot methods you've defined in ``MySequencePlotMixin``.
 
 There are many other ways you could visualize the data in your `~ndcube.NDCubeSequence` and many other visualization packages in the Python ecosystem that you could use.
-These examples show just a few simple ways.
-But hopefully this has shown you that it's still possible to visualize the data in your `~ndcube.NDCubeSequence`, whether by creating your own mixin, following the above examples, or by using some other infrastructure.
+These examples show just a few simple ways which can get help you reach of visualization goals.

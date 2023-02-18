@@ -468,3 +468,14 @@ def test_dropped_dimension_reordering():
 
     # When we slice out the dimension with the extra coord in it should go away.
     assert "time" not in my_cube[0].array_axis_physical_types[0]
+
+
+def test_length1_extra_coord(wave_lut):
+    # This test hits a bug that existed in gwcs less than 0.16.1
+    pytest.importorskip("gwcs", minversion="0.16.1")
+    ec = ExtraCoords()
+    ec.add("wavey", 0, wave_lut)
+    item = slice(1, 2)
+    sec = ec[item]
+    assert (sec.wcs.pixel_to_world(0) == wave_lut[item]).all()
+    assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()

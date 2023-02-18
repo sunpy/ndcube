@@ -23,12 +23,13 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         to zero on the top level pixel grid. If a scalar, the grid will be
         shifted by the same amount in all dimensions.
     """
+
     def __init__(self, wcs, factor, offset=0):
         self._wcs = wcs
         if np.isscalar(factor):
             factor = [factor] * self.pixel_n_dim
         self._factor = np.array(factor)
-        if len(self._factor) !=  self.pixel_n_dim:
+        if len(self._factor) != self.pixel_n_dim:
             raise ValueError(f"Length of factor must equal number of dimensions {self.pixel_n_dim}.")
         if np.isscalar(offset):
             offset = [offset] * self.pixel_n_dim

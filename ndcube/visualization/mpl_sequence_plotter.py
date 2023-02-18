@@ -14,6 +14,7 @@ class MatplotlibSequencePlotter(BasePlotter):
     This plotter delegates much of the visualization to the `ndcube.NDCube.plot`
     which is assumed to employ the `~ndcube.visualization.mpl_plotter.MatplotlibPlotter`.
     """
+
     def plot(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
         Visualize the `~ndcube.NDCubeSequence`.

@@ -12,7 +12,7 @@ from astropy.units import UnitsError
 
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
-    import sunpy.coordinates  # pylint: disable=unused-import  # NOQA
+    import sunpy.coordinates  # NOQA
 except ImportError:
     pass
 from astropy.wcs import WCS
@@ -25,7 +25,7 @@ from ndcube.global_coords import GlobalCoords
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
-from ndcube.visualization import PlotterDescriptor
+from ndcube.visualization.descriptor import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
@@ -117,6 +117,7 @@ class NDCubeLinkedDescriptor:
     """
     A descriptor which gives the property a reference to the cube to which it is attached.
     """
+
     def __init__(self, default_type):
         self._default_type = default_type
         self._property_name = None
@@ -507,7 +508,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
                     if not (value is None or isinstance(value, classes[j])):
                         raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                         f"incompatible with WCS component {comp[j]} "
-                                        f"{type(classes[j])}.")
+                                        f"{classes[j]}.")
             return utils.cube.get_crop_item_from_points(points, wcs, False)
 
     def crop_by_values(self, *points, units=None, wcs=None):
@@ -597,36 +598,21 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def _validate_algorithm_and_order(self, algorithm, order):
-        order_compatibility = {
-            'interpolation': ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic'],
-            'adaptive': ['nearest-neighbor', 'bilinear'],
-            'exact': []
-        }
-
-        if algorithm in order_compatibility:
-            if order_compatibility[algorithm] and order not in order_compatibility[algorithm]:
-                raise ValueError(f"For '{algorithm}' algorithm, the 'order' argument must be "
-                                 f"one of {', '.join(order_compatibility[algorithm])}.")
-
-        else:
-            raise ValueError(f"The 'algorithm' argument must be one of "
-                             f"{', '.join(order_compatibility.keys())}.")
-
-    def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, order='bilinear',
-                     output_array=None, parallel=False, return_footprint=False):
+    def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, return_footprint=False, **reproject_args):
         """
-        Reprojects this NDCube to the coordinates described by another WCS object.
+        Reprojects this `~nducbe.NDCube` to the coordinates described by another WCS object.
 
         Parameters
         ----------
-        algorithm: `str`
-            The algorithm to use for reprojecting. This can be any of: 'interpolation', 'adaptive',
-            and 'exact'.
-
         target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`, `astropy.wcs.wcsapi.BaseLowLevelWCS`,
             or `astropy.io.fits.Header`
             The WCS object to which the ``NDCube`` is to be reprojected.
+
+        algorithm: `str` {'interpolation', 'adaptive', 'exact'}
+            The algorithm to use for reprojecting.
+            When set to `'interpolation'` `~reproject.reproject_interp` is used,
+            when set to `'adaptive'` `~reproject.reproject_adaptive` is used and
+            when set to `'exact'` `~reproject.reproject_exact` is used.
 
         shape_out: `tuple`, optional
             The shape of the output data array. The ordering of the dimensions must follow NumPy
@@ -634,27 +620,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             If not specified, `~astropy.wcs.wcsapi.BaseLowLevelWCS.array_shape` attribute
             (if available) from the low level API of the ``target_wcs`` is used.
 
-        order: `int` or `str`
-            The order of the interpolation (used only when the 'interpolation' or 'adaptive'
-            algorithm is selected).
-            For 'interpolation' algorithm, this can be any of: 'nearest-neighbor', 'bilinear',
-            'biquadratic', and 'bicubic'.
-            For 'adaptive' algorithm, this can be either 'nearest-neighbor' or 'bilinear'.
+        return_footprint : `bool`
+            If `True`` the footprint is returned in addition to the new `~ndcube.NDCube`.
+            Defaults to `False`.
 
-        output_array: `numpy.ndarray`, optional
-            An array in which to store the reprojected data. This can be any numpy array
-            including a memory map, which may be helpful when dealing with extremely large files.
-
-        parallel: `bool` or `int`
-            Flag for parallel implementation (used only when the 'exact' algorithm is selected).
-            If ``True``, a parallel implementation is chosen and the number of processes is
-            selected automatically as the number of logical CPUs detected on the machine.
-            If ``False``, a serial implementation is chosen.
-            If the flag is a positive integer n greater than one, a parallel implementation
-            using n processes is chosen.
-
-        return_footprint: `bool`
-            Whether to return the footprint in addition to the output NDCube.
+        **reproject_args
+            All other arguments are passed through to the reproject function
+            being called. The function being called depends on the
+            ``algorithm=`` keyword argument, see that for more details.
 
         Returns
         -------
@@ -662,19 +635,36 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output ``NDCube``.
 
         footprint: `numpy.ndarray`
-            Footprint of the input array in the output array. Values of 0 indicate no coverage or
-            valid values in the input image, while values of 1 indicate valid values.
+            Footprint of the input array in the output array.
+            Values of 0 indicate no coverage or valid values in the input
+            image, while values of 1 indicate valid values.
+
+        See Also
+        --------
+
+        * `reproject.reproject_interp`
+        * `reproject.reproject_adaptive`
+        * `reproject.reproject_exact`
 
         Notes
         -----
         This method doesn't support handling of the ``mask``, ``extra_coords``, and ``uncertainty`` attributes yet.
-        However, ``meta`` and ``global_coords`` are copied to the output ``NDCube``.
+        However, ``meta`` and ``global_coords`` are copied to the output `ndcube.NDCube`.
         """
         try:
             from reproject import reproject_adaptive, reproject_exact, reproject_interp
             from reproject.wcs_utils import has_celestial
         except ModuleNotFoundError:
             raise ImportError("The NDCube.reproject_to method requires the optional package `reproject`.")
+
+        algorithms = {
+            "interpolation": reproject_interp,
+            "adaptive": reproject_adaptive,
+            "exact": reproject_exact,
+        }
+
+        if algorithm not in algorithms.keys():
+            raise ValueError(f"{algorithm=} is not valid, it must be one of {', '.join(algorithms.keys())}.")
 
         if isinstance(target_wcs, Mapping):
             target_wcs = WCS(header=target_wcs)
@@ -693,27 +683,20 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
             raise ValueError('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
 
-        # If shape_out is not specified explicity, try to extract it from the low level WCS
+        # TODO: Upstream this check into reproject
+        # If shape_out is not specified explicitly,
+        # try to extract it from the low level WCS
         if not shape_out:
             if hasattr(low_level_target_wcs, 'array_shape') and low_level_target_wcs.array_shape is not None:
                 shape_out = low_level_target_wcs.array_shape
             else:
                 raise ValueError("shape_out must be specified if target_wcs does not have the array_shape attribute.")
 
-        self._validate_algorithm_and_order(algorithm, order)
-
-        if algorithm == 'interpolation':
-            data = reproject_interp(self, output_projection=target_wcs, shape_out=shape_out,
-                                    order=order, output_array=output_array,
-                                    return_footprint=return_footprint)
-
-        elif algorithm == 'adaptive':
-            data = reproject_adaptive(self, output_projection=target_wcs, shape_out=shape_out,
-                                      order=order, return_footprint=return_footprint)
-
-        elif algorithm == 'exact':
-            data = reproject_exact(self, output_projection=target_wcs, shape_out=shape_out,
-                                   parallel=parallel, return_footprint=return_footprint)
+        data = algorithms[algorithm](self,
+                                     output_projection=target_wcs,
+                                     shape_out=shape_out,
+                                     return_footprint=return_footprint,
+                                     **reproject_args)
 
         if return_footprint:
             data, footprint = data
@@ -773,6 +756,15 @@ class NDCube(NDCubeBase):
         Default is False.
 
     """
+    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
+    # reflected operator will be used only if the Quantity non-reflected operator
+    # returns NotImplemented.  The Quantity operator strips the unit from the
+    # Quantity and tries to combine the value with the NDCube using NumPy's
+    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
+    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
+    # call, and consequently the Quantity operator, will return NotImplemented.
+    __array_ufunc__ = None
+
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
     # last moment.
@@ -809,3 +801,96 @@ class NDCube(NDCubeBase):
                 "no default plotting functionality is available.")
 
         return self.plotter.plot(*args, **kwargs)
+
+    def _new_instance_from_op(self, new_data, new_unit, new_uncertainty):
+        # This implicitly assumes that the arithmetic operation does not alter
+        # the WCS, mask, or metadata.
+        new_cube = type(self)(new_data,
+                              unit=new_unit,
+                              wcs=self.wcs,
+                              mask=deepcopy(self.mask),
+                              meta=deepcopy(self.meta),
+                              uncertainty=new_uncertainty)
+        if self.extra_coords is not None:
+            new_cube._extra_coords = deepcopy(self.extra_coords)
+        if self.global_coords is not None:
+            new_cube._global_coords = deepcopy(self.global_coords)
+        return new_cube
+
+    def __neg__(self):
+        return self._new_instance_from_op(-self.data, deepcopy(self.unit),
+                                          deepcopy(self.uncertainty))
+
+    def __add__(self, value):
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, we cannot
+                # perform arithmetic between a unitful quantity.
+                # This forces a conversion to a dimensionless quantity
+                # so that an error is thrown if value is not dimensionless
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                new_data = self.data + value.to_value(cube_unit)
+            else:
+                # NOTE: This explicitly excludes other NDCube objects and NDData objects
+                # which could carry a different WCS than the NDCube
+                return NotImplemented
+        elif self.unit not in (None, u.Unit("")):
+            raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
+        else:
+            new_data = self.data + value
+        return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
+
+    def __radd__(self, value):
+        return self.__add__(value)
+
+    def __sub__(self, value):
+        return self.__add__(-value)
+
+    def __rsub__(self, value):
+        return self.__neg__().__add__(value)
+
+    def __mul__(self, value):
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, set the unit
+                # to dimensionless such that we can perform arithmetic
+                # between the two.
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                value_unit = value.unit
+                value = value.to_value()
+                new_unit = cube_unit * value_unit
+            else:
+                return NotImplemented
+        else:
+            new_unit = self.unit
+        new_data = self.data * value
+        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
+                           if self.uncertainty is not None else None)
+        new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
+        return new_cube
+
+    def __rmul__(self, value):
+        return self.__mul__(value)
+
+    def __truediv__(self, value):
+        return self.__mul__(1/value)
+
+    def to(self, new_unit, **kwargs):
+        """Convert instance to another unit.
+
+        Converts the data, uncertainty and unit and returns a new instance
+        with other attributes unchanged.
+
+        Parameters
+        ----------
+        new_unit: `astropy.unit.Unit`
+            The unit to convert to.
+        kwargs:
+            Passed to the unit conversion method, self.unit.to.
+
+        Returns
+        -------
+        : `ǸDCube`
+            A new instance with the new unit and data and uncertainties scales accordingly.
+        """
+        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)

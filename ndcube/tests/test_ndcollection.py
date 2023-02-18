@@ -132,6 +132,15 @@ def test_collection_update_collecton_input():
     helpers.assert_collections_equal(orig_collection, expected)
 
 
+def test_collection_update_without_aligned_axes():
+    orig_collection = NDCollection([("cube0", cube0), ("cube1", cube1)])
+    new_collection = NDCollection([("cube2", cube2)])
+    orig_collection.update(new_collection)
+
+    expected = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)])
+    helpers.assert_collections_equal(orig_collection, expected)
+
+
 @pytest.mark.parametrize("collection, expected_aligned_dimensions", [
     (cube_collection, [4, 5]*u.pix),
     (seq_collection, np.array([2*u.pix, 3*u.pix, 4*u.pix, 5*u.pix], dtype=object))])

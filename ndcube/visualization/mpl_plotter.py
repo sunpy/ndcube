@@ -86,7 +86,7 @@ class MatplotlibPlotter(BasePlotter):
             else:
                 ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
                                         axes_coordinates=axes_coordinates,
-                                        axes_units=axes_units, **kwargs)
+                                        axes_units=axes_units, data_unit=data_unit, **kwargs)
 
         return ax
 
@@ -156,6 +156,9 @@ class MatplotlibPlotter(BasePlotter):
         if axes is None:
             axes = plt.subplot(projection=wcs, slices=plot_axes)
 
+        if axes and plot_axes:
+            axes.reset_wcs(wcs=wcs, slices=plot_axes)
+
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
         self._apply_axes_coordinates(axes, axes_coordinates)
@@ -222,7 +225,7 @@ class MatplotlibPlotter(BasePlotter):
         kwargs = {'wcs': self._ndcube.wcs}
         n_dim = len(self._ndcube.dimensions)
         if n_dim > 2:
-            kwargs['slices'] = ['x', 'y'] + [None] * (ndim - 2)
+            kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
 
     def _prep_animate_args(self, wcs, plot_axes, axes_units, data_unit):

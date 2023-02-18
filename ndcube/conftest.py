@@ -5,9 +5,11 @@ predicable NDCube objects.
 import logging
 
 import astropy.units as u
+import dask.array
 import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord
+from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
@@ -467,6 +469,26 @@ def ndcube_2d_ln_lt(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_units(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, unit=u.ct)
+
+
+@pytest.fixture
+def ndcube_2d_dask(wcs_2d_lt_ln):
+    shape = (8, 4)
+    chunks = 2
+    data = data_nd(shape).astype(float)
+    da = dask.array.from_array(data, chunks=chunks)
+    mask = np.zeros(shape, dtype=bool)
+    da_mask = dask.array.from_array(mask, chunks=chunks)
+    uncert = data * 0.1
+    da_uncert = StdDevUncertainty(dask.array.from_array(uncert, chunks=chunks))
+    return NDCube(da, wcs=wcs_2d_lt_ln, uncertainty=da_uncert, mask=da_mask, unit=u.J)
+
+
+@pytest.fixture
 def ndcube_2d(request):
     """
     This is a meta fixture for parametrizing all the 2D ndcubes.
@@ -478,7 +500,8 @@ def ndcube_2d(request):
 def ndcube_1d_l(wcs_1d_l):
     shape = (10,)
     data_cube = data_nd(shape)
-    return NDCube(data_cube, wcs=wcs_1d_l)
+    return NDCube(data_cube, wcs=wcs_1d_l,
+                  uncertainty=StdDevUncertainty(data_cube*0.1), unit=u.J)
 
 
 @pytest.fixture(params=[
@@ -490,6 +513,8 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_3d_ln_lt_l",
     "ndcube_3d_rotated",
     "ndcube_2d_ln_lt",
+    "ndcube_2d_ln_lt_units",
+    "ndcube_2d_dask",
     "ndcube_1d_l",
 ])
 def all_ndcubes(request):

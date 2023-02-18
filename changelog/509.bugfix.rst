@@ -1,0 +1,3 @@
+Fix a bug in the ``NDCube._as_mpl_axes`` implementation, allowing cubes with
+compatible dimensions to be passed as the ``projection=`` keyword argument to
+certain matplotlib functions again.
