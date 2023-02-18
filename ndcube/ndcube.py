@@ -33,14 +33,14 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 
-class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
+class NDCubeABC(astropy.nddata.NDDataBase, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __init__(self,
                  data: numpy.typing.ArrayLike,
+                 wcs: Union[BaseLowLevelWCS, BaseHighLevelWCS],
                  uncertainty: Any = None,
                  mask: numpy.typing.ArrayLike = None,
-                 wcs: Union[BaseLowLevelWCS, BaseHighLevelWCS] = None,
                  meta: Mapping = None,
                  unit: Union[str, u.Unit] = None,
                  copy: bool = False):
@@ -84,27 +84,22 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
 
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def extra_coords(self) -> ExtraCoordsABC:
         """
         Coordinates not described by ``NDCubeABC.wcs`` which vary along one or more axes.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def global_coords(self) -> GlobalCoordsABC:
         """
         Coordinate metadata which applies to the whole cube.
         """
 
-    def wcs(self) -> BaseHighLevelWCS:
-        """
-        The WCS transform for the NDCube.
-
-        If a `BaseLowLevelWCS` is provided to the constructor it should be
-        "upgraded" to a high level object.
-        """
-
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def combined_wcs(self) -> BaseHighLevelWCS:
         """
         The WCS transform for the NDCube, including the coordinates specified in ``.extra_coords``.
@@ -115,13 +110,15 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         number of world dimensions in ``self.wcs`` and in ``self.extra_coords`` combined.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def dimensions(self) -> u.Quantity:
         """
         The array dimensions of the cube.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
         """
         Returns the WCS physical types that vary along each array axis.
@@ -332,7 +329,7 @@ class NDCubeLinkedDescriptor:
         setattr(obj, self._attribute_name, value)
 
 
-class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
+class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
