@@ -789,7 +789,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     # Execute rebin.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     bin_shape = (10, 2, 1)
-    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainty=True)
+    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
     output_time, = output.axis_world_coords(wcs=output.extra_coords)
 
@@ -831,14 +831,14 @@ def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     cube._extra_coords = ExtraCoords(cube)
     bin_shape = (10, 2, 1)
-    output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainty=True)
+    output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
     assert output.extra_coords.is_empty
 
 
 def test_rebin_uncerts(ndcube_2d_ln_lt_uncert):
     cube = ndcube_2d_ln_lt_uncert
     bin_shape = (2, 4)
-    output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainty=True)
+    output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
     output_uncert = output.uncertainty.array
     expected_uncert = (np.array([[2.73495887,  3.68239053,  4.7116876],
                                  [9.07524104, 10.1882285, 11.30486621],
@@ -866,7 +866,7 @@ def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     expected_mask[:3, 0] = True
     # Execute function and assert result is as expected.
     output = cube.rebin(bin_shape, operation=np.mean,
-                        exclude_masked_values=False, propagate_uncertainty=True)
+                        exclude_masked_values=False, propagate_uncertainties=True)
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
                        expected_uncert[np.logical_not(expected_mask)])
@@ -890,7 +890,7 @@ def test_rebin_some_masked_uncerts_exclude_masked_values(ndcube_2d_ln_lt_mask_un
     expected_mask[2, 0] = True
     # Execute function and assert result is as expected.
     output = cube.rebin(bin_shape, operation=np.mean,
-                        exclude_masked_values=True, propagate_uncertainty=True)
+                        exclude_masked_values=True, propagate_uncertainties=True)
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
                        expected_uncert[np.logical_not(expected_mask)])

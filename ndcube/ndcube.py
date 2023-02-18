@@ -734,14 +734,14 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             and rebinned pixel is only masked if all constituent pixels are masked.
             If False, masked values are used in calculating rebinned value but
             rebinned pixel is masked if any constituent pixels are masked.
-            If False and propagate_uncertainty is not False, causes None to be passed
-            to propagate_uncertainty function as the mask input.
-        propagate_uncertainty: `bool` or function.
+            If False and propagate_uncertainties is not False, causes None to be passed
+            to propagate_uncertainties function as the mask input.
+        propagate_uncertainties: `bool` or function.
             If False, uncertainties are dropped.
             If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainty`)
             Can also be set to a function which performs custom uncertainty propagation.
             Additional kwargs provided to this method are passed onto this function.
-            See Notes section on how to write a custom propagate_uncertainty function.
+            See Notes section on how to write a custom propagate_uncertainties function.
         new_unit: `astropy.units.Unit` (optional)
             If the rebinning operation alters the data unit, the new unit can be
             provided here.
@@ -828,9 +828,9 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         # Sanitize input.
         operation = kwargs.get("operation", np.mean)
         exclude_masked_values = kwargs.get("exclude_masked_values", True)
-        propagate_uncertainty = kwargs.get("propagate_uncertainty", False)
-        if propagate_uncertainty is True:
-            propagate_uncertainty = utils.cube.propagate_rebin_uncertainties
+        propagate_uncertainties = kwargs.get("propagate_uncertainties", False)
+        if propagate_uncertainties is True:
+            propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
         new_unit = kwargs.get("new_unit", self.unit)
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
@@ -871,7 +871,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Propagate uncertainties.
         cannot_propagate = (
-            propagate_uncertainty is False
+            propagate_uncertainties is False
             or isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
             or (self.mask is True and exclude_masked_values)
             or (not isinstance(self.mask, (type(None), bool)) and self.mask.all()
@@ -879,12 +879,12 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         )
         if cannot_propagate:
             new_uncertainty = None
-            if propagate_uncertainty is True:
+            if propagate_uncertainties is True:
                 warnings.warn(
                     "Uncertainties cannot be propagated because there are no uncertainties, "
                     "type of uncertainty is unknown, or all data is masked.")
         else:
-            # If propagate_uncertainty, use astropy's infrastructure.
+            # If propagate_uncertainties, use astropy's infrastructure.
             # For this the data and uncertainty must be reshaped
             # so the first dimension represents the flattened size of a single bin
             # while the rest represent the shape of the new data. Then the elements
@@ -905,8 +905,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             else:
                 flat_mask = False
             # Propagate uncertainties.
-            new_uncertainty = propagate_uncertainty(flat_uncertainty, flat_data,
-                                                    flat_mask, **kwargs)
+            new_uncertainty = propagate_uncertainties(flat_uncertainty, flat_data,
+                                                      flat_mask, **kwargs)
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
