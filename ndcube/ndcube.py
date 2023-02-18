@@ -709,6 +709,192 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         return resampled_cube
 
+
+class NDCube(NDCubeBase):
+    """
+    Class representing N-D data described by a single array and set of WCS transformations.
+
+    Parameters
+    ----------
+    data: `numpy.ndarray`
+        The array holding the actual data in this object.
+
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+        The WCS object containing the axes' information, optional only if
+        ``data`` is an `astropy.nddata.NDData` object.
+
+    uncertainty : any type, optional
+        Uncertainty in the dataset. Should have an attribute uncertainty_type
+        that defines what kind of uncertainty is stored, for example "std"
+        for standard deviation or "var" for variance. A metaclass defining
+        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
+        has no such attribute the uncertainty is stored as UnknownUncertainty.
+        Defaults to None.
+
+    mask : any type, optional
+        Mask for the dataset. Masks should follow the numpy convention
+        that valid data points are marked by False and invalid ones with True.
+        Defaults to None.
+
+    meta : dict-like object, optional
+        Additional meta information about the dataset. If no meta is provided
+        an empty collections.OrderedDict is created. Default is None.
+
+    unit : Unit-like or str, optional
+        Unit for the dataset. Strings that can be converted to a Unit are allowed.
+        Default is None.
+
+    extra_coords : iterable of `tuple`, each with three entries
+        (`str`, `int`, `astropy.units.quantity` or array-like)
+        Gives the name, axis of data, and values of coordinates of a data axis not
+        included in the WCS object.
+
+    copy : bool, optional
+        Indicates whether to save the arguments as copy. True copies every attribute
+        before saving it while False tries to save every parameter as reference.
+        Note however that it is not always possible to save the input as reference.
+        Default is False.
+
+    """
+    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
+    # reflected operator will be used only if the Quantity non-reflected operator
+    # returns NotImplemented.  The Quantity operator strips the unit from the
+    # Quantity and tries to combine the value with the NDCube using NumPy's
+    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
+    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
+    # call, and consequently the Quantity operator, will return NotImplemented.
+    __array_ufunc__ = None
+
+    # We special case the default mpl plotter here so that we can only import
+    # matplotlib when `.plotter` is accessed and raise an ImportError at the
+    # last moment.
+    plotter = PlotterDescriptor(default_type="mpl_plotter")
+    """
+    A `~.MatplotlibPlotter` instance providing visualization methods.
+
+    The type of this attribute can be changed to provide custom visualization functionality.
+    """
+
+    def _as_mpl_axes(self):
+        if hasattr(self.plotter, "_as_mpl_axes"):
+            return self.plotter._as_mpl_axes()
+        else:
+            warnings.warn(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
+                          "The default MatplotlibPlotter._as_mpl_axes method will be used instead.",
+                          UserWarning)
+
+            plotter = MatplotlibPlotter(self)
+            return plotter._as_mpl_axes()
+
+    def plot(self, *args, **kwargs):
+        """
+        A convenience function for the plotters default ``plot()`` method.
+
+        Calling this method is the same as calling ``cube.plotter.plot``, the
+        behaviour of this method can change if the `NDCube.plotter` class is
+        set to a different ``Plotter`` class.
+
+        """
+        if self.plotter is None:
+            raise NotImplementedError(
+                "This NDCube object does not have a .plotter defined so "
+                "no default plotting functionality is available.")
+
+        return self.plotter.plot(*args, **kwargs)
+
+    def _new_instance_from_op(self, new_data, new_unit, new_uncertainty):
+        # This implicitly assumes that the arithmetic operation does not alter
+        # the WCS, mask, or metadata.
+        new_cube = type(self)(new_data,
+                              unit=new_unit,
+                              wcs=self.wcs,
+                              mask=deepcopy(self.mask),
+                              meta=deepcopy(self.meta),
+                              uncertainty=new_uncertainty)
+        if self.extra_coords is not None:
+            new_cube._extra_coords = deepcopy(self.extra_coords)
+        if self.global_coords is not None:
+            new_cube._global_coords = deepcopy(self.global_coords)
+        return new_cube
+
+    def __neg__(self):
+        return self._new_instance_from_op(-self.data, deepcopy(self.unit),
+                                          deepcopy(self.uncertainty))
+
+    def __add__(self, value):
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, we cannot
+                # perform arithmetic between a unitful quantity.
+                # This forces a conversion to a dimensionless quantity
+                # so that an error is thrown if value is not dimensionless
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                new_data = self.data + value.to_value(cube_unit)
+            else:
+                # NOTE: This explicitly excludes other NDCube objects and NDData objects
+                # which could carry a different WCS than the NDCube
+                return NotImplemented
+        elif self.unit not in (None, u.Unit("")):
+            raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
+        else:
+            new_data = self.data + value
+        return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
+
+    def __radd__(self, value):
+        return self.__add__(value)
+
+    def __sub__(self, value):
+        return self.__add__(-value)
+
+    def __rsub__(self, value):
+        return self.__neg__().__add__(value)
+
+    def __mul__(self, value):
+        if hasattr(value, 'unit'):
+            if isinstance(value, u.Quantity):
+                # NOTE: if the cube does not have units, set the unit
+                # to dimensionless such that we can perform arithmetic
+                # between the two.
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                value_unit = value.unit
+                value = value.to_value()
+                new_unit = cube_unit * value_unit
+            else:
+                return NotImplemented
+        else:
+            new_unit = self.unit
+        new_data = self.data * value
+        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
+                           if self.uncertainty is not None else None)
+        new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
+        return new_cube
+
+    def __rmul__(self, value):
+        return self.__mul__(value)
+
+    def __truediv__(self, value):
+        return self.__mul__(1/value)
+
+    def to(self, new_unit, **kwargs):
+        """Convert instance to another unit.
+
+        Converts the data, uncertainty and unit and returns a new instance
+        with other attributes unchanged.
+
+        Parameters
+        ----------
+        new_unit: `astropy.unit.Unit`
+            The unit to convert to.
+        kwargs:
+            Passed to the unit conversion method, self.unit.to.
+
+        Returns
+        -------
+        : `ǸDCube`
+            A new instance with the new unit and data and uncertainties scales accordingly.
+        """
+        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
+
     def rebin(self, bin_shape, **kwargs):
         """Downsample array by combining contiguous pixels into bins.
 
@@ -923,189 +1109,3 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
             new_cube._extra_coords = self.extra_coords.interpolate(new_array_grids, new_cube)
 
         return new_cube
-
-
-class NDCube(NDCubeBase):
-    """
-    Class representing N-D data described by a single array and set of WCS transformations.
-
-    Parameters
-    ----------
-    data: `numpy.ndarray`
-        The array holding the actual data in this object.
-
-    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
-        The WCS object containing the axes' information, optional only if
-        ``data`` is an `astropy.nddata.NDData` object.
-
-    uncertainty : any type, optional
-        Uncertainty in the dataset. Should have an attribute uncertainty_type
-        that defines what kind of uncertainty is stored, for example "std"
-        for standard deviation or "var" for variance. A metaclass defining
-        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
-        has no such attribute the uncertainty is stored as UnknownUncertainty.
-        Defaults to None.
-
-    mask : any type, optional
-        Mask for the dataset. Masks should follow the numpy convention
-        that valid data points are marked by False and invalid ones with True.
-        Defaults to None.
-
-    meta : dict-like object, optional
-        Additional meta information about the dataset. If no meta is provided
-        an empty collections.OrderedDict is created. Default is None.
-
-    unit : Unit-like or str, optional
-        Unit for the dataset. Strings that can be converted to a Unit are allowed.
-        Default is None.
-
-    extra_coords : iterable of `tuple`, each with three entries
-        (`str`, `int`, `astropy.units.quantity` or array-like)
-        Gives the name, axis of data, and values of coordinates of a data axis not
-        included in the WCS object.
-
-    copy : bool, optional
-        Indicates whether to save the arguments as copy. True copies every attribute
-        before saving it while False tries to save every parameter as reference.
-        Note however that it is not always possible to save the input as reference.
-        Default is False.
-
-    """
-    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
-    # reflected operator will be used only if the Quantity non-reflected operator
-    # returns NotImplemented.  The Quantity operator strips the unit from the
-    # Quantity and tries to combine the value with the NDCube using NumPy's
-    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
-    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
-    # call, and consequently the Quantity operator, will return NotImplemented.
-    __array_ufunc__ = None
-
-    # We special case the default mpl plotter here so that we can only import
-    # matplotlib when `.plotter` is accessed and raise an ImportError at the
-    # last moment.
-    plotter = PlotterDescriptor(default_type="mpl_plotter")
-    """
-    A `~.MatplotlibPlotter` instance providing visualization methods.
-
-    The type of this attribute can be changed to provide custom visualization functionality.
-    """
-
-    def _as_mpl_axes(self):
-        if hasattr(self.plotter, "_as_mpl_axes"):
-            return self.plotter._as_mpl_axes()
-        else:
-            warnings.warn(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
-                          "The default MatplotlibPlotter._as_mpl_axes method will be used instead.",
-                          UserWarning)
-
-            plotter = MatplotlibPlotter(self)
-            return plotter._as_mpl_axes()
-
-    def plot(self, *args, **kwargs):
-        """
-        A convenience function for the plotters default ``plot()`` method.
-
-        Calling this method is the same as calling ``cube.plotter.plot``, the
-        behaviour of this method can change if the `NDCube.plotter` class is
-        set to a different ``Plotter`` class.
-
-        """
-        if self.plotter is None:
-            raise NotImplementedError(
-                "This NDCube object does not have a .plotter defined so "
-                "no default plotting functionality is available.")
-
-        return self.plotter.plot(*args, **kwargs)
-
-    def _new_instance_from_op(self, new_data, new_unit, new_uncertainty):
-        # This implicitly assumes that the arithmetic operation does not alter
-        # the WCS, mask, or metadata.
-        new_cube = type(self)(new_data,
-                              unit=new_unit,
-                              wcs=self.wcs,
-                              mask=deepcopy(self.mask),
-                              meta=deepcopy(self.meta),
-                              uncertainty=new_uncertainty)
-        if self.extra_coords is not None:
-            new_cube._extra_coords = deepcopy(self.extra_coords)
-        if self.global_coords is not None:
-            new_cube._global_coords = deepcopy(self.global_coords)
-        return new_cube
-
-    def __neg__(self):
-        return self._new_instance_from_op(-self.data, deepcopy(self.unit),
-                                          deepcopy(self.uncertainty))
-
-    def __add__(self, value):
-        if hasattr(value, 'unit'):
-            if isinstance(value, u.Quantity):
-                # NOTE: if the cube does not have units, we cannot
-                # perform arithmetic between a unitful quantity.
-                # This forces a conversion to a dimensionless quantity
-                # so that an error is thrown if value is not dimensionless
-                cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data + value.to_value(cube_unit)
-            else:
-                # NOTE: This explicitly excludes other NDCube objects and NDData objects
-                # which could carry a different WCS than the NDCube
-                return NotImplemented
-        elif self.unit not in (None, u.Unit("")):
-            raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
-        else:
-            new_data = self.data + value
-        return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
-
-    def __radd__(self, value):
-        return self.__add__(value)
-
-    def __sub__(self, value):
-        return self.__add__(-value)
-
-    def __rsub__(self, value):
-        return self.__neg__().__add__(value)
-
-    def __mul__(self, value):
-        if hasattr(value, 'unit'):
-            if isinstance(value, u.Quantity):
-                # NOTE: if the cube does not have units, set the unit
-                # to dimensionless such that we can perform arithmetic
-                # between the two.
-                cube_unit = u.Unit('') if self.unit is None else self.unit
-                value_unit = value.unit
-                value = value.to_value()
-                new_unit = cube_unit * value_unit
-            else:
-                return NotImplemented
-        else:
-            new_unit = self.unit
-        new_data = self.data * value
-        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
-                           if self.uncertainty is not None else None)
-        new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
-        return new_cube
-
-    def __rmul__(self, value):
-        return self.__mul__(value)
-
-    def __truediv__(self, value):
-        return self.__mul__(1/value)
-
-    def to(self, new_unit, **kwargs):
-        """Convert instance to another unit.
-
-        Converts the data, uncertainty and unit and returns a new instance
-        with other attributes unchanged.
-
-        Parameters
-        ----------
-        new_unit: `astropy.unit.Unit`
-            The unit to convert to.
-        kwargs:
-            Passed to the unit conversion method, self.unit.to.
-
-        Returns
-        -------
-        : `ǸDCube`
-            A new instance with the new unit and data and uncertainties scales accordingly.
-        """
-        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
