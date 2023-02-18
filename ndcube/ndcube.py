@@ -19,7 +19,7 @@ except ImportError:
     pass
 from astropy.wcs import WCS
 from astropy.wcs.utils import _split_matrix
-from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper
+from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube import utils
 from ndcube.extra_coords import ExtraCoords, ExtraCoordsABC
