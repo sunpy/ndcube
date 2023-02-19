@@ -21,20 +21,20 @@ authors:
   - name: Nabil Freij
     orcid: 0000-0002-6253-082X
     affiliation: "7, 8"
+  - name: Baptiste Pellorce
+    affiliation: "9, 10"
   - name: Richard O'Steen
     orcid: 0000-0002-2432-8946
-    affiliation: 9
-  - name: Baptiste Pellorce
-    affiliation: "10, 11"
+    affiliation: 11
   - name: Will T. Barnes
     orcid: 0000-0001-6874-2594
     affiliation: "12, 1"
-  - name: Laura A. Hayes
-    orcid: 0000-0002-6835-2390
-    affiliation: 13
   - name: Derek Homeier
     orcid: 0000-0002-8546-9128
     affiliation: 3
+  - name: Laura A. Hayes
+    orcid: 0000-0002-6835-2390
+    affiliation: 13
   - name: J. Marcus Hughes
     orcid: 0000-0003-3410-7650
     affiliation: 14
@@ -61,11 +61,11 @@ affiliations:
    index: 7
  - name: Bay Area Environmental Research Institute, USA
    index: 8
- - name: Space Telescope Science Institute, USA
-   index: 9
  - name: Claude Bernard Lyon 1 University, France
-   index: 10
+   index: 9
  - name: Institute of Theoretical Astrophysics, Norway
+   index: 10
+ - name: Space Telescope Science Institute, USA
    index: 11
  - name: NASA Goddard Space Flight Center, USA
    index: 12
@@ -73,7 +73,7 @@ affiliations:
    index: 13
  - name: Southwest Research Institute, USA
    index: 14
-date: 11 December 2021
+date: 24 February 2023
 bibliography: paper.bib
 
 ---
