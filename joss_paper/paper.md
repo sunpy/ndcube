@@ -4,18 +4,75 @@ tags:
   - Python
   - astronomy
 authors:
-  - name: Daniel F. Ryan^[co-first author] # note this makes a footnote saying 'co-first author'
+  - name: Daniel F. Ryan
     orcid: 0000-0001-8661-3825
-    affiliation: 1 # (Multiple affiliations must be quoted)
+    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    corresponding: true
   - name: Stuart Mumford^[co-first author] # note this makes a footnote saying 'co-first author'
-    affiliation: 2
-  - name: Author with no affiliation^[corresponding author]
+    orcid: 0000-0003-4217-4642
     affiliation: 3
+  - name: Yash Sharma
+    affiliation: 4
+  - name:  Ankit Kumar Baruah
+    affiliation: 5
+  - name: Adwait Bhope
+    orcid: 0000-0002-7133-8776
+    affiliation: 6
+  - name: Nabil Freij
+    orcid: 0000-0002-6253-082X
+    affiliation: "7, 8"
+  - name: Richard O'Steen
+    orcid: 0000-0002-2432-8946
+    affiliation: 9
+  - name: Baptiste Pellorce
+    affiliation: "10, 11"
+  - name: Will T. Barnes
+    orcid: 0000-0001-6874-2594
+    affiliation: "12, 1"
+  - name: Laura A. Hayes
+    orcid: 0000-0002-6835-2390
+    affiliation: 13
+  - name: Derek Homeier
+    orcid: 0000-0002-8546-9128
+    affiliation: 3
+  - name: J. Marcus Hughes
+    orcid: 0000-0003-3410-7650
+    affiliation: 14
+  - name: Albert Y. Shih
+    orcid: 0000-0001-6874-2594
+    affiliation: 12
+  - name: Matthew J. West
+    orcid: 0000-0002-0631-2393
+    affiliation: 14
 affiliations:
- - name: University of Applied Sciences Northwest Switzerland
+ - name: University of Applied Sciences Northwest Switzerland, Switzerland
    index: 1
- - name: Aperio Software Ltd
+ - name: American University, USA
    index: 2
+ - name: Aperio Software Ltd, UK
+   index: 3
+ - name: Meta Platforms Inc., UK
+   index: 4
+ - name: Workato Gmbh, Germany
+   index: 5
+ - name: Uptycs India Pvt. Ltd., India
+   index: 6
+ - name: Lockheed Martin Solar and Astrophysics Laboratory, USA
+   index: 7
+ - name: Bay Area Environmental Research Institute, USA
+   index: 8
+ - name: Space Telescope Science Institute, USA
+   index: 9
+ - name: Claude Bernard Lyon 1 University, France
+   index: 10
+ - name: Institute of Theoretical Astrophysics, Norway
+   index: 11
+ - name: NASA Goddard Space Flight Center, USA
+   index: 12
+ - name: European Space Agency, ESTEC
+   index: 13
+ - name: Southwest Research Institute, USA
+   index: 14
 date: 11 December 2021
 bibliography: paper.bib
 
@@ -30,124 +87,72 @@ These objects can be manipulated via array-like slicing operations which modify
 the data and coordinates simultaneously.
 They also allow coordinate transformations to be performed with reference to the
 shape of the data and enable coordinate-aware visualizations.
-ndcube leverages Astropy's WCS (World Coordinate System) API (APE 14) to enforce
-a generalized, standardized, and widely used framework for performing astronomical
+ndcube leverages Astropy's WCS (World Coordinate System) API [APE-14; @ape14] to
+enforce a standardized and widely used framework for performing astronomical
 coordinate transformations.
 The data-coordinate coupling provided by ndcube allows users to analyze their data
 more easily and accurately, thus helping to boost their scientific output.
 
-ndcube is agnostic to the physical properties represented by the data values and axes.
-This makes it a powerful base upon which to build tools for specific types of data.
-This might be a specific number and/or combination of physical types
-(spectrograms, image cubes, etc.), or data from specific instruments or simulations.
-Thus, ndcube can also enhance the productivity of developers by centralizing the
-development and maintenance of the most useful and general functionalities.
-This leaves more time for developing a greater range of tools for the community
-and/or enables part-time developers to devote more effort to other aspects of their
-jobs, e.g. scientific analysis.
-
-A network benefit of ndcube is that it standardizes the APIs for handling N-D data.
-Broad adoption throughout astronomy and heliophysics would help scientists to more
-easily work with data from different sub-fields.
-This can help facilitate synergies of new combinations of data,
-foster inter-field collaborations, and promote scientific innovation.
+ndcube serves three specific purposes.
+First, it formalizes the NDCube 2 API in software via its abstract base classes
+(ABCs), NDCubeABC, ExtraCoordsABC and GlobalCoordsABC.
+The NDCube 2 API is a standarized framework for inspecting and manipulating
+coordinate-aware N-D data.
+We refer readers to the 12th SunPy Enhancement Proposal [SEP-12; @sep12] for a
+definition of the API and to [@ndcube] for a discussion of the philosophies
+underpinning it.
+Second, the ndcube package implements the NDCube 2 API in corresponding data and
+coordinate classes, NDCubeBase, ExtraCoords and GlobalCoords.
+These are viable off-the-shelf tools for end users and developers who do
+not want to implement the API themselves.
+Third, the ndcube package provides additional support for coordinate-aware
+manipulation and visualization of N-D astronomical data via three high-level data
+classes, NDCube, NDCubeSequence and NDCollection.
+NDCube inherits from NDCubeBase and so adheres to the NDCube 2 API but adds some
+additional features beyond the API's scope, such as a default visualization suite.
+The other classes are designed to handle multiple NDCube instances simultaneously.
 
 # Statement of Need
 
 N-dimensional data sets are common in all areas of science and beyond.
 For example, a series of images taken sequentially with a CCD camera can be stored
 as a single 3-D array with two spatial axes and one temporal axis.
-The value in each array-element can represent the reading in a pixel at a given time.
 In astronomy, the most commonly used framework for translating between array element
-indices and the location and time in the Universe being observed is the
-World Coordinate System (WCS).
+indices and the location and time in the Universe being observed is the World
+Coordinate System (WCS).
 WCS’s ability to handle many different physical types (e.g. spatial, temporal, spectral, etc.)
 and projections (e.g. RA and Dec., helioprojective latitude and longitude, etc.)
 make it a succinct, standardized and powerful way to relate array axes to the physical
 properties they represent.
+However, while there exist Python packages for handling N-D array operations --
+e.g. numpy [@numpy], dask [@dask], etc -- and others for supporting WCS coordinate
+transformations -- e.g. astropy [@astropy], gWCS [gWCS] -- currently only ndcube is
+suited to treating them in a combined way.
 
-Due of the prevalence of N-D data and the importance of astronomical coordinate
-transformations, there exist mature Python packages for handling them.
-However, none are well-suited to treating data and coordinates in a combined way.
-This is the purpose of ndcube.
+ndcube is agnostic to the physical properties represented by the data values and axes.
+This makes it a powerful base upon which to build tools for specific types of data.
+This might be a specific number and/or combination of physical types
+(spectrograms, image cubes, etc.), or data from specific instruments or simulations.
+Thus, ndcube can enhance the productivity of developers by centralizing the
+development and maintenance of the most useful and general functionalities.
+This leaves more time for developing a greater range of tools for the community
+and/or enables part-time developers to devote more effort to other aspects of their
+jobs, e.g. scientific analysis.
 
-Perhaps ndcube's most defining feature is its support for WCS via the Astropy WCS API
-(APE 14).
-WCS is a "functional" framework.
-Its transformations are parameterized and only evaluated on demand.
-It therefore requires more specialized tools than lookup-table-based frameworks
-supported by other Python packages.
-Thus ndcube fulfills a unique and important role in facilitating astronomical
-data analysis in Python.
+# Community Applications
 
-# Data Objects: The Pillars of ndcube
-
-At the time of writing (ndcube v2.0), ndcube provides three primary data objects for
-manipulating astronomical data: `NDCube`, `NDCubeSequence`, and `NDCollection`.
-Each provide unified slicing, visualization, coordinate transformation and
-self-inspection APIs which are independent of the number and physical types of axes.
-
-NDCube is the primary data class the ndcube package.
-It’s designed to manage a single data array and set of WCS transformations.
-The data array can be of any type that acts like a numpy ndarray [REFERENCE]
-and the WCS object can be of any type that adheres to the Astropy WCS API [REFERENCE].
-NDCube can hold optional supplementary data including general metadata, a data unit,
-uncertainties, and a data mask.
-See Figure \autoref{fig:ndcube}.
-NDCube also provides support for tabular coordinates in addition to those stored in the
-the primary WCS object via its ExtraCoords class.
-Scalar coordinates that apply to the whole cube and not associated with specific axis/axes,
-e.g. the timestamp of a 2-D image, can be represented via the GlobalCoords class.
-Instances of both these classes are coupled to an `NDCube` instance and self-consistently
-handled by the slicing and visualization infrastructures.
-
-![Components of an NDCube.\label{fig:ndcube}](ndcube_diagram.png)
-
-![The effects of slicing -- e.g. via ``my_cube[2:4, 8:16]`` -- on the components of an NDCube.\label{fig:ndcube_sliced}](ndcube_sliced_diagram.png)
-
-Figure \autoref{fig:ndcube_sliced} demonstrates the power of NDCube by showing what happens
-when the standard Python slicing API is applied to an NDCube, e.g. ``my_cube[2:4, 8:16]``.
-Note that this single line of code simultaneously alters the shapes of the array-based
-components (blue squares) in accordance with the input slice item.
-The coordinate components (red/pink boxes) have been modified to ensure the same "pixels"
-correspond to the same real world coordinate values, even though their array indices
-have been altered by the slicing operation.
-Manually slicing and tracking these components is a tedious process that is prone to mistakes.
-By contrast NDCube makes this process effortless and reliable.
-
-NDCubeSequence handles an ordered list of NDCubes with the same data shape and
-axis physical types.
-They can be ordered along one of their axes, e.g. a sequence of images in a horizontal
-mosaic of the sky, or independent of the axes, e.g. a chronological sequence of
-2-D images of the same region.
-NDCubeSequence is most useful when it not possible to represent an axis is a single
-set of WCS transformations.
-Yet its slicing, coordinate transformation and visualization functionalities
-are designed to enable the user, as much as possible, to interact with the data as if
-it were a single NDCube.
-
-![Orthogonal and parallel ordering of NDCubes within an NDCubeSequence.\label{fig:ndcubesequence}](ndcubesequence_diagram.png)
-
-NDCollection is a class for grouping NDCubes or NDCubeSequences.
-It differs from NDCubeSequence in that the objects contained are not ordered,
-are not assumed to represent measurements of the same physical property,
-and can have different dimensionalities.
-One application of NDCollection is linking observations with derived data products.
-Consider a 3-D spectral image cube and a 2-D doppler velocity map derived
-by fitting a spectral line in each pixel.
-These objects are clearly related.
-They share the same spatial axes.
-But they have different dimensionalities (3-D and 2-D), represent different physical
-properties (flux and velocity) and don't have an order in their common coordinate space.
-They are therefore well-suited to being stored in an NDCollection.
-Each each cube is referenced by its name, making NDCollection similar to a Python dictionary.
-However it also enables axes to be marked as "aligned" which facilitates
-simultaneous slicing of the collection's components along those aligned axes.
-In the above example, we could mark the spatial axes of the spectral image cube and
-doppler map as "aligned" and then extract a spatial sub-region by slicing the NDCollection
-rather than the two data objects separately.
-Thus NDCollection also enables easier and more reliable manipulation of N-D astronomical
-data sets.
+ndcube already supports a variety of observatories and satellite missions including
+the James Webb Space Telescope (JWST), Solar Orbiter, Interface Region Imaging
+Spectrograph (IRIS), Hinode, and the Daniel K. Inouye Solar Telescope (DKIST),
+through the specutils [@specutils], sunraster [@sunraster], irispy-lmsal [@irispy],
+EISPAC [@eispac] and DKIST packages.
+It is also used in the data pipeline of the PUNCH mission [Polarimeter to UNify the
+Corona and Heliosphere; @punch], scheduled for launch in 2025.
+A network benefit of ndcube is that it standardizes the APIs for handling N-D data.
+Adoption across astronomy and heliophysics helps scientists to more easily work with
+data from different missions and sub-fields of astronomy.
+This can help facilitate synergies between new combinations of data, foster inter-field
+collaborations, and promote scientific innovation.
 
 # Citations
 
