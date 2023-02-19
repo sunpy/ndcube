@@ -126,7 +126,7 @@ make it a succinct, standardized and powerful way to relate array axes to the ph
 properties they represent.
 However, while there exist Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc -- and others for supporting WCS coordinate
-transformations -- e.g. astropy [@astropy], gWCS [gWCS] -- currently only ndcube is
+transformations -- e.g. astropy [@astropy], gWCS [@gWCS] -- currently only ndcube is
 suited to treating them in a combined way.
 
 ndcube is agnostic to the physical properties represented by the data values and axes.
@@ -144,8 +144,9 @@ jobs, e.g. scientific analysis.
 ndcube already supports a variety of observatories and satellite missions including
 the James Webb Space Telescope (JWST), Solar Orbiter, Interface Region Imaging
 Spectrograph (IRIS), Hinode, and the Daniel K. Inouye Solar Telescope (DKIST),
-through the specutils [@specutils], sunraster [@sunraster], irispy-lmsal [@irispy],
-EISPAC [@eispac] and DKIST packages.
+through the specutils [@specutils-docs; @specutils-code], sunraster [@sunraster],
+irispy-lmsal [@irispy-docs; @irispy-code], EISPAC [@eispac-docs; @eispac-code] and
+DKIST packages.
 It is also used in the data pipeline of the PUNCH mission [Polarimeter to UNify the
 Corona and Heliosphere; @punch], scheduled for launch in 2025.
 A network benefit of ndcube is that it standardizes the APIs for handling N-D data.
@@ -153,20 +154,6 @@ Adoption across astronomy and heliophysics helps scientists to more easily work 
 data from different missions and sub-fields of astronomy.
 This can help facilitate synergies between new combinations of data, foster inter-field
 collaborations, and promote scientific innovation.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
 
 # Acknowledgements
 
