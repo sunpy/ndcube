@@ -63,13 +63,6 @@ class NDCubeABC(astropy.nddata.NDDataBase, metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def dimensions(self) -> u.Quantity:
-        """
-        The array dimensions of the cube.
-        """
-
-    @property
-    @abc.abstractmethod
     def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
         """
         Returns the WCS physical types that vary along each array axis.
