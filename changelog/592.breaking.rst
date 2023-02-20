@@ -1,1 +1,0 @@
-Update `~ndcube.NDCubeABC`, `~ndcube.extra_coords.ExtraCoordsABC` and `~ndcube.GlobalCoordsABC` in line with official NDCube 2 API definition in SEP.
