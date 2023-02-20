@@ -9,7 +9,6 @@ from collections.abc import Mapping
 import astropy.nddata
 import astropy.units as u
 import numpy as np
-import numpy.typing
 from astropy.units import UnitsError
 
 try:
