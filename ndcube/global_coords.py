@@ -14,7 +14,7 @@ from ndcube.utils.wcs import validate_physical_types
 __all__ = ['GlobalCoordsABC', 'GlobalCoords']
 
 
-class GlobalCoordsABC(Mapping, metaclass=abc.ABCMeta):
+class GlobalCoordsABC(Mapping):
     """
     A structured representation of coordinate information applicable to a whole NDCubeABC.
 

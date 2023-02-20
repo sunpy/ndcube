@@ -32,7 +32,7 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 
-class NDCubeABC(astropy.nddata.NDDataBase, metaclass=abc.ABCMeta):
+class NDCubeABC(astropy.nddata.NDDataBase):
 
     @property
     @abc.abstractmethod
