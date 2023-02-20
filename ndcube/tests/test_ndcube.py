@@ -865,8 +865,8 @@ def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     expected_mask = np.zeros((5, 3), dtype=bool)
     expected_mask[:3, 0] = True
     # Execute function and assert result is as expected.
-    output = cube.rebin(bin_shape, operation=np.mean,
-                        exclude_masked_values=False, propagate_uncertainty=True)
+    output = cube.rebin(bin_shape, operation=np.mean, use_masked_values=True,
+                        handle_mask=np.any, propagate_uncertainty=True)
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
                        expected_uncert[np.logical_not(expected_mask)])

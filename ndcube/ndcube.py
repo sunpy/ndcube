@@ -728,14 +728,16 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
-        exclude_masked_values: `bool`
+        use_masked_values: `bool`
             Determines how masked values are handled.
-            If True (default), masked values are excluded when calculating rebinned value
-            and rebinned pixel is only masked if all constituent pixels are masked.
-            If False, masked values are used in calculating rebinned value but
-            rebinned pixel is masked if any constituent pixels are masked.
-            If False and propagate_uncertainty is not False, causes None to be passed
+            If False (default), masked values are excluded when calculating rebinned value.
+            If True, masked values are used in calculating rebinned value.
+            If True and propagate_uncertainty is not False, causes None to be passed
             to propagate_uncertainty function as the mask input.
+        handle_mask: `None` or function
+            Function to apply to each bin in the mask to calculate the new mask values.
+            If `None` resultant mask is `None`.
+            Default=`numpy.all`
         propagate_uncertainty: `bool` or function.
             If False, uncertainties are dropped.
             If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainty`)
@@ -827,7 +829,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         """
         # Sanitize input.
         operation = kwargs.get("operation", np.mean)
-        exclude_masked_values = kwargs.get("exclude_masked_values", True)
+        use_masked_values = kwargs.get("use_masked_values", False)
+        handle_mask = kwargs.get("handle_mask", np.all)
         propagate_uncertainty = kwargs.get("propagate_uncertainty", False)
         if propagate_uncertainty is True:
             propagate_uncertainty = utils.cube.propagate_rebin_uncertainties
@@ -850,7 +853,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
-        m = False if self.mask is None or not exclude_masked_values else self.mask
+        m = False if self.mask is None or use_masked_values else self.mask
         data = np.ma.masked_array(self.data, m)
         reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
@@ -859,23 +862,22 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
         reshape = tuple(reshape)
         reshaped_data = data.reshape(reshape)
         operation_axes = tuple(range(len(reshape) - 1, 0, -2))
-        new_data = operation(reshaped_data, axis=operation_axes)
-        if isinstance(self.mask, (type(None), bool)):  # Preserve original mask type.
+        new_data = operation(reshaped_data, axis=operation_axes).data
+        if handle_mask is None:
+            new_mask = None
+        elif isinstance(self.mask, (type(None), bool)):  # Preserve original mask type.
             new_mask = self.mask
-        elif not exclude_masked_values:
-            reshaped_mask = self.mask.reshape(reshape)
-            new_mask = reshaped_mask.sum(axis=operation_axes) > 0
         else:
-            new_mask = new_data.mask
-        new_data = new_data.data
+            reshaped_mask = self.mask.reshape(reshape)
+            new_mask = handle_mask(reshaped_mask, axis=operation_axes)
 
         # Propagate uncertainties.
         cannot_propagate = (
             propagate_uncertainty is False
             or isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
-            or (self.mask is True and exclude_masked_values)
+            or (self.mask is True and not use_masked_values)
             or (not isinstance(self.mask, (type(None), bool)) and self.mask.all()
-                and exclude_masked_values)
+                and not use_masked_values)
         )
         if cannot_propagate:
             new_uncertainty = None
