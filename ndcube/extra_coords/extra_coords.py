@@ -70,7 +70,8 @@ class ExtraCoordsABC(abc.ABC):
         The world axis names for all the coordinates in the extra coords.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def mapping(self) -> Iterable[Tuple[int, int]]:
         """
         The mapping between the array dimensions and pixel dimensions.
@@ -79,7 +80,8 @@ class ExtraCoordsABC(abc.ABC):
         of length equal to the number of pixel dimensions in the extra coords.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def wcs(self) -> BaseHighLevelWCS:
         """
         A WCS object representing the world coordinates described by this ``ExtraCoords``.

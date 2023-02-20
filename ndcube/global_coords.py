@@ -59,7 +59,8 @@ class GlobalCoordsABC(Mapping):
         Remove a coordinate from the collection.
         """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def physical_types(self):
         """
         A mapping of names to physical types for each coordinate.
