@@ -42,15 +42,23 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def crop(self, *points, wcs=None):
         """
-        Crop to the smallest cube in pixel space containing the world coordinate points.
+        Crop using real world coordinates.
+        This method crops the NDCube to the smallest bounding box in pixel space that
+        are contained within the provided world coordinate points.
+
+        This function takes the points defined high-level astropy coordinate objects
+        such as `~astropy.coordinates.SkyCoord`, `~astropy.coordinates.SpectralCoord`, etc.
 
         Parameters
         ----------
         points: iterable of iterables
             Tuples of high level coordinate objects
-            e.g. `~astropy.coordinates.SkyCoord`. The coordinates of the points
-            **must be specified in Cartesian (WCS) order** as they are passed
-            to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
+            e.g. `~astropy.coordinates.SkyCoord`.
+            Each iterable is of size two, and represents a single location
+            in the data array in real world coordinates.
+
+            The coordinates of the points **must be specified in Cartesian (WCS) order**
+            as they are passed to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
             Therefore their number and order must be compatible with the API
             of that method.
 
@@ -70,12 +78,27 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         -------
         result: `ndcube.NDCube`
 
+        Examples
+        --------
+        An example of a 3-D space-space-time cube of the Sun.
+        Lets slice out a region of interest:  # doctest: +SKIP
+        >>> point1 = [SkyCoord(-50*u.deg, -40*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
+        >>> point2 = [SkyCoord(0*u.deg, -6*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
+        >>> NDCube.crop(point1, point2) # doctest: +SKIP
+
         """
 
     @abc.abstractmethod
     def crop_by_values(self, *points, units=None, wcs=None):
         """
-        Crop to the smallest cube in pixel space containing the world coordinate points.
+        Crop using real world coordinates.
+        This method crops the NDCube to the smallest bounding box in pixel space that
+        are contained within the provided world coordinate points.
+
+        This function takes points as low-level coordinate objects as `~astropy.units.Quantity` objects.
+        This differs from the `.crop()` method which takes high-level coordinate objects that contain
+        all the relevant coordinate information such as coordinate frame etc.
+
 
         Parameters
         ----------
@@ -109,6 +132,11 @@ class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
         Returns
         -------
         result: `ndcube.NDCube`
+
+
+        Examples
+        --------
+        >>> NDCube.crop_by_values(-600, -600), (0, 0), units=(u.arcsec, u.arcsec)) # doctest: +SKIP
 
         """
 
@@ -338,7 +366,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
     @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
         """
-        Returns high-level WCS coordinates of all pixels for all axes.
+        Returns high-level WCS coordinates of all pixels for the desired axes.
 
         Parameters
         ----------
