@@ -2,6 +2,7 @@ import abc
 import textwrap
 import warnings
 from copy import deepcopy
+from typing import Any, Tuple, Union, Iterable, Optional
 from collections import namedtuple
 from collections.abc import Mapping
 
@@ -20,8 +21,8 @@ from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube import utils
-from ndcube.extra_coords import ExtraCoords
-from ndcube.global_coords import GlobalCoords
+from ndcube.extra_coords import ExtraCoords, ExtraCoordsABC
+from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
@@ -31,85 +32,198 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 
-class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
+class NDCubeABC(astropy.nddata.NDDataBase):
 
-    @abc.abstractproperty
-    def dimensions(self):
+    @property
+    @abc.abstractmethod
+    def extra_coords(self) -> ExtraCoordsABC:
         """
-        The array dimensions of the cube.
+        Coordinates not described by ``NDCubeABC.wcs`` which vary along one or more axes.
+        """
+
+    @property
+    @abc.abstractmethod
+    def global_coords(self) -> GlobalCoordsABC:
+        """
+        Coordinate metadata which applies to the whole cube.
+        """
+
+    @property
+    @abc.abstractmethod
+    def combined_wcs(self) -> BaseHighLevelWCS:
+        """
+        The WCS transform for the NDCube, including the coordinates specified in ``.extra_coords``.
+
+        This transform should implement the high level wcsapi, and have
+        ``pixel_n_dim`` equal to the number of array dimensions in the
+        `.NDCube`. The number of world dimensions should be equal to the
+        number of world dimensions in ``self.wcs`` and in ``self.extra_coords`` combined.
+        """
+
+    @property
+    @abc.abstractmethod
+    def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
+        """
+        Returns the WCS physical types that vary along each array axis.
+
+        Returns an iterable of tuples where each tuple corresponds to an array axis and
+        holds strings denoting the WCS physical types associated with that array axis.
+        Since multiple physical types can be associated with one array axis, tuples can
+        be of different lengths. Likewise, as a single physical type can correspond to
+        multiple array axes, the same physical type string can appear in multiple tuples.
+
+        The physical types returned by this property are drawn from the
+        `~NDCube.combined_wcs` property so they include the coordinates contained in
+        `~NDCube.extra_coords`.
         """
 
     @abc.abstractmethod
-    def crop(self, *points, wcs=None):
+    def axis_world_coords(self,
+                          *axes: Union[int, str],
+                          pixel_corners: bool = False,
+                          wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                          ) -> Iterable[Any]:
+        """
+        Returns objects representing the world coordinates of all pixel centers.
+
+        Parameters
+        ----------
+        axes: `int` or `str`
+            Axis number(s) in numpy ordering or unique substring of
+            `.NDCube.wcs.world_axis_physical_types` or
+            `.NDCube.wcs.world_axis_names` of axes for which real world
+            coordinates are desired. Not specifying axes implies all axes will be
+            returned.
+
+        pixel_corners; `bool`
+            If `True` then instead of returning the coordinates of the pixel
+            centers the coordinates of the pixel corners will be returned, this
+            increases the size of the output by 1 as all corners are returned.
+
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+            The WCS object to used to calculate the world coordinates.
+            Although technically this can be any valid WCS, it will typically be
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
+            the WCS and extra coords.
+            Default=self.wcs
+
+        Returns
+        -------
+        axes_coords: iterable
+            An iterable of "high level" objects giving the real world
+            coords for the axes requested by user.
+            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
+            The types returned are determined by the WCS object.
+            The dimensionality of these objects should match that of
+            their corresponding array dimensions.
+
+        Example
+        -------
+        >>> NDCube.axis_world_coords(('lat', 'lon'))  # doctest: +SKIP
+        >>> NDCube.axis_world_coords(2)  # doctest: +SKIP
+
+        """
+
+    @abc.abstractmethod
+    def axis_world_coords_values(self,
+                                 *axes: Union[int, str],
+                                 pixel_corners: bool = False,
+                                 wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                                 ) -> Iterable[u.Quantity]:
+        """
+        Returns world coordinate values of all pixel centers.
+
+        Parameters
+        ----------
+        axes: `int` or `str`
+            Axis number in numpy ordering or unique substring of
+            `.NDCube.wcs.world_axis_physical_types` or
+            `.NDCube.wcs.world_axis_names` of axes for which real world
+            coordinates are desired. ``axes=None`` implies all axes will be
+            returned.
+
+        pixel_corners: `bool`
+            If `True` then instead of returning the coordinates of the pixel
+            centers the coordinates of the pixel corners will be returned, this
+            increases the size of the output by 1 as all corners are returned.
+
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+            The WCS object to used to calculate the world coordinates.
+            Although technically this can be any valid WCS, it will typically be
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
+            the WCS and extra coords.
+            Default=self.wcs
+
+        Returns
+        -------
+        axes_coords: iterable of `~astropy.units.Quantity`
+            Coordinates for all requested world axes, units determined by the wcs.
+
+        Example
+        -------
+        >>> NDCube.axis_world_coords_values(('lat', 'lon'))  # doctest: +SKIP
+        >>> NDCube.axis_world_coords_values(2)  # doctest: +SKIP
+
+        """
+
+    @abc.abstractmethod
+    def crop(self,
+             *points: Iterable[Any],
+             wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+             ) -> "NDCubeABC":
         """
         Crop to the smallest cube in pixel space containing the world coordinate points.
 
         Parameters
         ----------
-        points: iterable of iterables
-            Tuples of high level coordinate objects
-            e.g. `~astropy.coordinates.SkyCoord`. The coordinates of the points
-            **must be specified in Cartesian (WCS) order** as they are passed
-            to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
-            Therefore their number and order must be compatible with the API
-            of that method.
+        points: iterable
+            Tuples of high level coordinate objects e.g. `~astropy.coordinates.SkyCoord`.
+            These points are passed to ``wcs.world_to_array_index``
+            so their number and order must be compatible with the API of that method.
 
-            It is possible to not specify a coordinate for an axis by
-            replacing any object with `None`. Any coordinate replaced by `None`
-            will not be used to calculate pixel coordinates, and therefore not
-            affect the calculation of the final bounding box.
-
-        wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS to use to calculate the pixel coordinates based on the
-            input. Will default to the ``.wcs`` property if not given. While
-            any valid WCS could be used it is expected that either the
-            ``.wcs``, ``.combined_wcs``, or ``.extra_coords`` properties will
-            be used.
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+            The WCS to use to calculate the pixel coordinates based on the input.
+            Will default to the ``.wcs`` property if not given. While any valid WCS
+            could be used it is expected that either the ``.wcs`` or
+            ``.extra_coords`` properties will be used.
 
         Returns
         -------
-        result: `ndcube.NDCube`
-
+        result: NDCubeABC
         """
 
     @abc.abstractmethod
-    def crop_by_values(self, *points, units=None, wcs=None):
+    def crop_by_values(self,
+                       *points: Iterable[Union[u.Quantity, float]],
+                       units: Optional[Iterable[Union[str, u.Unit]]] = None,
+                       wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                       ) -> "NDCubeABC":
         """
         Crop to the smallest cube in pixel space containing the world coordinate points.
 
         Parameters
         ----------
-        points: iterable of iterables
-            Tuples of coordinates as `~astropy.units.Quantity` objects. The
-            coordinates of the points **must be specified in Cartesian (WCS)
-            order** as they are passed to
-            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index_values`.
-            Therefore their number and order must be compatible with the API of
-            that method.
+        points: iterable
+            Tuples of coordinate values, the length of the tuples must be
+            equal to the number of world dimensions. These points are
+            passed to ``wcs.world_to_array_index_values`` so their units
+            and order must be compatible with that method.
 
-            It is possible to not specify a coordinate for an axis by replacing
-            any coordinate with `None`. Any coordinate replaced by `None` will
-            not be used to calculate pixel coordinates, and therefore not
-            affect the calculation of the final bounding box. Note that you
-            must specify either none or all coordinates for any correlated
-            axes, e.g. both spatial coordinates.
+        units: `str` or `~astropy.units.Unit`
+            If the inputs are set without units, the user must set the units
+            inside this argument as `str` or `~astropy.units.Unit` objects.
+            The length of the iterable must equal the number of world dimensions
+            and must have the same order as the coordinate points.
 
-        units: iterable of `astropy.units.Unit`
-            The unit of the corresponding entries in each point.
-            Must therefore be the same length as the number of world axes.
-            Only used if the corresponding type is not a `astropy.units.Quantity` or `None`.
-
-        wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS to use to calculate the pixel coordinates based on the
-            input. Will default to the ``.wcs`` property if not given. While
-            any valid WCS could be used it is expected that either the
-            ``.wcs``, ``.combined_wcs``, or ``.extra_coords`` properties will
-            be used.
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+            The WCS to use to calculate the pixel coordinates based on the input.
+            Will default to the ``.wcs`` property if not given. While any valid WCS
+            could be used it is expected that either the ``.wcs`` or
+            ``.extra_coords`` properties will be used.
 
         Returns
         -------
-        result: `ndcube.NDCube`
-
+        result: NDCube
         """
 
 
@@ -157,7 +271,7 @@ class NDCubeLinkedDescriptor:
         setattr(obj, self._attribute_name, value)
 
 
-class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
+class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
@@ -233,23 +347,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @property
     def extra_coords(self):
-        """
-        An `.ExtraCoords` object holding extra coordinates aligned to array axes.
-        """
+        # Docstring in NDCubeABC.
         return self._extra_coords
 
     @property
     def global_coords(self):
-        """
-        A `.GlobalCoords` object holding coordinate metadata not aligned to an array axis.
-        """
+        # Docstring in NDCubeABC.
         return self._global_coords
 
     @property
     def combined_wcs(self):
-        """
-        A `~astropy.wcs.wcsapi.BaseHighLevelWCS` object which combines ``.wcs`` with ``.extra_coords``.
-        """
+        # Docstring in NDCubeABC.
         if not self.extra_coords.wcs:
             return self.wcs
 
@@ -264,17 +372,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @property
     def array_axis_physical_types(self):
-        """
-        Returns the physical types associated with each array axis.
-
-        Returns an iterable of tuples where each tuple corresponds to an array axis and
-        holds strings denoting the physical types associated with that array axis.
-        Since multiple physical types can be associated with one array axis, tuples can
-        be of different lengths. Likewise, as a single physical type can correspond to
-        multiple array axes, the same physical type string can appear in multiple tuples.
-
-        The physical types are drawn from the WCS ExtraCoords objects.
-        """
+        # Docstring in NDCubeABC.
         wcs = self.combined_wcs
         world_axis_physical_types = np.array(wcs.world_axis_physical_types)
         axis_correlation_matrix = wcs.axis_correlation_matrix
@@ -337,46 +435,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
-        """
-        Returns WCS coordinate values of all pixels for all axes.
-
-        Parameters
-        ----------
-        axes: `int` or `str`, or multiple `int` or `str`, optional
-            Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.world_axis_physical_types`
-            of axes for which real world coordinates are desired.
-            axes=None implies all axes will be returned.
-
-        pixel_corners: `bool`, optional
-            If `True` then instead of returning the coordinates at the centers of the pixels,
-            the coordinates at the pixel corners will be returned. This
-            increases the size of the output by 1 in all dimensions as all corners are returned.
-
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
-            The WCS object to used to calculate the world coordinates.
-            Although technically this can be any valid WCS, it will typically be
-            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` which combines both
-            the WCS and extra coords.
-            Defaults to the ``.wcs`` property.
-
-        Returns
-        -------
-        axes_coords: `list`
-            An iterable of "high level" objects giving the real world
-            coords for the axes requested by user.
-            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
-            The types returned are determined by the WCS object.
-            The dimensionality of these objects should match that of
-            their corresponding array dimensions, unless ``pixel_corners=True``
-            in which case the length along each axis will be 1 greater than the number of pixels.
-
-        Example
-        -------
-        >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
-        >>> NDCube.all_world_coords(2) # doctest: +SKIP
-
-        """
+        # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
@@ -411,46 +470,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
-        """
-        Returns WCS coordinate values of all pixels for desired axes.
-
-        Parameters
-        ----------
-        axes: `int` or `str`, or multiple `int` or `str`, optional
-            Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.wcs.world_axis_physical_types`
-            of axes for which real world coordinates are desired.
-            axes=None implies all axes will be returned.
-
-        pixel_corners: `bool`, optional
-            If `True` then instead of returning the coordinates of the pixel
-            centers the coordinates of the pixel corners will be returned.  This
-            increases the size of the output along each dimension by 1 as all corners are returned.
-
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
-            The WCS object to used to calculate the world coordinates.
-            Although technically this can be any valid WCS, it will typically be
-            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
-            the WCS and extra coords.
-            Defaults to the ``.wcs`` property.
-
-        Returns
-        -------
-        axes_coords: `list`
-            An iterable of "high level" objects giving the real world
-            coords for the axes requested by user.
-            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
-            The types returned are determined by the WCS object.
-            The dimensionality of these objects should match that of
-            their corresponding array dimensions, unless ``pixel_corners=True``
-            in which case the length along each axis will be 1 greater than the number of pixels.
-
-        Example
-        -------
-        >>> NDCube.all_world_coords_values(('lat', 'lon')) # doctest: +SKIP
-        >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
-
-        """
+        # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
@@ -600,7 +620,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, return_footprint=False, **reproject_args):
         """
-        Reprojects this `~nducbe.NDCube` to the coordinates described by another WCS object.
+        Reprojects the instance to the coordinates described by another WCS object.
 
         Parameters
         ----------

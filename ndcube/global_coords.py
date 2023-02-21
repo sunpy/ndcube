@@ -1,4 +1,6 @@
+import abc
 import copy
+from typing import Any
 from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
 
@@ -9,12 +11,17 @@ from astropy.wcs.wcsapi.utils import deserialize_class
 
 from ndcube.utils.wcs import validate_physical_types
 
-__all__ = ['GlobalCoords']
+__all__ = ['GlobalCoordsABC', 'GlobalCoords']
 
 
-class GlobalCoords(Mapping):
+class GlobalCoordsABC(Mapping):
     """
-    A structured representation of coordinate information applicable to a whole NDCube.
+    A structured representation of coordinate information applicable to a whole NDCubeABC.
+
+    This class acts as a mapping between coordinate name and the coordinate object.
+    In addition to this a physical type is stored for each coordinate name.
+    A concrete implementation of this class must fulfill the `Mapping` ABC,
+    including methods such as ``__iter__`` and ``__len__``.
 
     Parameters
     ----------
@@ -23,6 +30,59 @@ class GlobalCoords(Mapping):
         from the wcs and extra coords of the ndcube. If not specified only
         coordinates explicitly added will be shown.
     """
+    @abc.abstractmethod
+    def add(self, name: str, physical_type: str, coord: Any):
+        """
+        Add a new coordinate to the collection.
+
+        Parameters
+        ----------
+        name: `str`
+            The name for the coordinate.
+        physical_type: `str`
+            An `IOVA UCD1+ physical type description for the coordinate
+            <https://www.ivoa.net/documents/latest/UCDlist.html>`__. If no matching UCD
+            type exists, this can instead be ``"custom:xxx"``, where ``xxx`` is an
+            arbitrary string. If not known, can be `None`.
+        coord
+            The object describing the coordinate value, for example a
+            `~astropy.units.Quantity` or a `~astropy.coordinates.SkyCoord`.
+        """
+
+    @abc.abstractmethod
+    def remove(self, name: str):
+        """
+        Remove a coordinate from the collection.
+        """
+
+    @property
+    @abc.abstractmethod
+    def physical_types(self):
+        """
+        A mapping of names to physical types for each coordinate.
+        """
+
+    @abc.abstractmethod
+    def __getitem__(self, item: str):
+        """
+        Indexing the object by name should return the coordinate object.
+        """
+
+    @abc.abstractmethod
+    def __iter__(self):
+        """
+        Iterate over the collection.
+        """
+
+    @abc.abstractmethod
+    def __len__(self):
+        """
+        Establish the length of the collection.
+        """
+
+
+class GlobalCoords(GlobalCoordsABC):
+    # Docstring in GlobalCoordsABC
 
     def __init__(self, ndcube=None):
         super().__init__()
@@ -117,22 +177,7 @@ class GlobalCoords(Mapping):
         return all_coords
 
     def add(self, name, physical_type, coord):
-        """
-        Add a new coordinate to the collection.
-
-        Parameters
-        ----------
-        name : `str`
-            The name for the coordinate.
-        physical_type : `str`
-            An IOVA UCD1+ physical type description for the coordinate
-            (http://www.ivoa.net/documents/latest/UCDlist.html). If no matching UCD
-            type exists, this can instead be ``"custom:xxx"``, where ``xxx`` is an
-            arbitrary string. If not known, can be `None`.
-        coord : `object`
-            The object describing the coordinate value, for example a
-            `~astropy.units.Quantity` or a `~astropy.coordinates.SkyCoord`.
-        """
+        # Docstring in GlobalCoordsABC
         if name in self._internal_coords.keys():
             raise ValueError("coordinate with same name already exists: "
                              f"{name}: {self._internal_coords[name]}")
@@ -143,16 +188,12 @@ class GlobalCoords(Mapping):
         self._internal_coords[name] = (physical_type, coord)
 
     def remove(self, name):
-        """
-        Remove a coordinate from the collection.
-        """
+        # Docstring in GlobalCoordsABC
         del self._internal_coords[name]
 
     @property
     def physical_types(self):
-        """
-        A mapping of names to physical types for each coordinate.
-        """
+        # Docstring in GlobalCoordsABC
         return dict((name, value[0]) for name, value in self._all_coords.items())
 
     def filter_by_physical_type(self, physical_type):
@@ -174,9 +215,7 @@ class GlobalCoords(Mapping):
         return gc
 
     def __getitem__(self, item):
-        """
-        Index the collection by a name.
-        """
+        # Docstring in GlobalCoordsABC
         if item not in self._all_coords:
             for key, value in self._all_coords.items():
                 if isinstance(key, tuple) and item in key:
@@ -185,15 +224,11 @@ class GlobalCoords(Mapping):
         return self._all_coords[item][1]
 
     def __iter__(self):
-        """
-        Iterate over the collection.
-        """
+        # Docstring in GlobalCoordsABC
         return iter(self._all_coords)
 
     def __len__(self):
-        """
-        Establish the length of the collection.
-        """
+        # Docstring in GlobalCoordsABC
         return len(self._all_coords)
 
     def __str__(self):
