@@ -922,7 +922,7 @@ class NDCube(NDCubeBase):
         handle_mask: `None` or function
             Function to apply to each bin in the mask to calculate the new mask values.
             If `None` resultant mask is `None`.
-            Default=`numpy.all`
+            Default is `numpy.all`
         propagate_uncertainties: `bool` or function.
             If False, uncertainties are dropped.
             If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainty`)
