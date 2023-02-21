@@ -42,6 +42,7 @@ try:
 except ImportError:
     pass
 
+
 class NDCubeABC(astropy.nddata.NDDataBase):
 
     @property
