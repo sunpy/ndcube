@@ -826,6 +826,17 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     assert np.allclose(output_time.value, expected_time.value)
 
 
+def test_rebin_dask(ndcube_2d_dask):
+    # Execute rebin.
+    cube = ndcube_2d_dask
+    bin_shape = (4, 2)
+    output = cube.rebin(bin_shape)
+    dask_type = dask.array.core.Array
+    assert isinstance(output.data, dask_type)
+    #assert isinstance(output.uncertainty.array, dask_type)
+    assert isinstance(output.mask, dask_type)
+
+
 def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
     # Confirm rebin does not try to handle extra coords when there aren't any.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]

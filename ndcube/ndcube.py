@@ -15,6 +15,7 @@ try:
     import sunpy.coordinates  # NOQA
 except ImportError:
     pass
+
 from astropy.wcs import WCS
 from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
@@ -1037,8 +1038,22 @@ class NDCube(NDCubeBase):
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
-        m = False if self.mask is None or use_masked_values else self.mask
-        data = np.ma.masked_array(self.data, m)
+        m = None if (self.mask is None or self.mask is False or use_masked_values) else self.mask
+        data = self.data
+        if m is None:
+            data = self.data
+        elif not isinstance(self.data, np.ndarray) and not isinstance(self.mask, np.ndarray):
+            try:
+                import dask.array
+                if (isinstance(self.data, dask.array.core.Array)
+                       and isinstance(m, (bool, dask.array.core.Array))):
+                   data = dask.array.ma.masked_array(self.data, m)
+                else:
+                    data = np.ma.masked_array(self.data, m)
+            except ImportError:
+                data = np.ma.masked_array(self.data, m)
+        else:
+            data = np.ma.masked_array(self.data, m)
         reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
@@ -1046,7 +1061,9 @@ class NDCube(NDCubeBase):
         reshape = tuple(reshape)
         reshaped_data = data.reshape(reshape)
         operation_axes = tuple(range(len(reshape) - 1, 0, -2))
-        new_data = operation(reshaped_data, axis=operation_axes).data
+        new_data = operation(reshaped_data, axis=operation_axes)
+        if isinstance(new_data, np.ma.core.MaskedArray):
+            new_data = new_data.data
         if handle_mask is None:
             new_mask = None
         elif isinstance(self.mask, (type(None), bool)):  # Preserve original mask type.
@@ -1063,11 +1080,6 @@ class NDCube(NDCubeBase):
             or (not isinstance(self.mask, (type(None), bool)) and self.mask.all()
                 and not use_masked_values)
         )
-        print(cannot_propagate)
-        print(propagate_uncertainties is False)
-        print(isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty)))
-        print(self.mask is True and not use_masked_values)
-        print(not isinstance(self.mask, (type(None), bool)) and self.mask.all() and not use_masked_values)
         if cannot_propagate:
             new_uncertainty = None
             if propagate_uncertainties is True:
@@ -1090,11 +1102,12 @@ class NDCube(NDCubeBase):
             flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
             flat_uncertainty = flat_uncertainty.reshape(flat_shape)
             flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
-            if reshaped_data.mask is not False:
-                flat_mask = np.moveaxis(reshaped_data.mask, dummy_axes, tuple(range(naxes)))
+            if m is not None:
+                reshaped_mask = self.mask.reshape(tuple(reshape))
+                flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
                 flat_mask = flat_mask.reshape(flat_shape)
             else:
-                flat_mask = False
+                flat_mask = None
             # Propagate uncertainties.
             new_uncertainty = propagate_uncertainties(flat_uncertainty, flat_data,
                                                       flat_mask, **kwargs)

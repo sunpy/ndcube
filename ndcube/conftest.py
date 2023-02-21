@@ -520,11 +520,11 @@ def ndcube_2d_dask(wcs_2d_lt_ln):
     shape = (8, 4)
     chunks = 2
     data = data_nd(shape).astype(float)
-    da = dask.array.from_array(data, chunks=chunks)
+    da = dask.array.asarray(data, chunks=chunks)
     mask = np.zeros(shape, dtype=bool)
-    da_mask = dask.array.from_array(mask, chunks=chunks)
+    da_mask = dask.array.asarray(mask, chunks=chunks)
     uncert = data * 0.1
-    da_uncert = StdDevUncertainty(dask.array.from_array(uncert, chunks=chunks))
+    da_uncert = StdDevUncertainty(dask.array.asarray(uncert, chunks=chunks))
     return NDCube(da, wcs=wcs_2d_lt_ln, uncertainty=da_uncert, mask=da_mask, unit=u.J)
 
 
