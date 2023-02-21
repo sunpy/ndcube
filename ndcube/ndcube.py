@@ -1020,6 +1020,12 @@ class NDCube(NDCubeBase):
         if propagate_uncertainties is True:
             propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
         new_unit = kwargs.get("new_unit", self.unit)
+        # Add kwarg values back into kwargs dict in case they weren't defined.
+        kwargs["operation"] = operation
+        kwargs["use_masked_values"] = use_masked_values
+        kwargs["handle_mask"] = handle_mask
+        kwargs["propagate_uncertainties"] = propagate_uncertainties
+        kwargs["new_unit"] = new_unit
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2

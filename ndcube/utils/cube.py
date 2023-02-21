@@ -241,7 +241,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
     flat_axis = 0
     # Extract inputs from kwargs.
     operation = kwargs.get("operation", None)
-    exclude_masked_values = kwargs.get("exclude_masked_values", True)
+    use_masked_values = kwargs.get("use_masked_values", False)
     propagation_operation = kwargs.get("propagation_operation", None)
     correlation = kwargs.pop("correlation", 0)
     operation_is_mean = True if operation in {np.mean, np.nanmean} else False
@@ -256,7 +256,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
             propagation_operation = operation
     # Build mask if not provided.
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
-    if not exclude_masked_values or mask is None:
+    if use_masked_values or mask is None:
         mask = False
     if mask is False:
         if operation_is_nantype:
@@ -269,8 +269,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
             # so non-mask can still be iterated.
             n_pix_per_bin = data.shape[flat_axis]
             new_shape = data.shape[1:]
-            empty_mask = np.zeros(new_shape, dtype=bool)
-            mask1 = (empty_mask for i in range(1, n_pix_per_bin))
+            mask1 = (False for i in range(1, n_pix_per_bin))
     else:
         # Mask uncertainties corresponding to nan data if operation is nantype.
         if operation_is_nantype:
@@ -296,6 +295,5 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
             new_uncertainty.array /= n_pix_per_bin
         else:
             unmasked_per_bin = np.logical_not(mask).astype(int).sum(axis=flat_axis)
-            idx = unmasked_per_bin > 0
-            new_uncertainty.array[idx] /= unmasked_per_bin[idx]
+            new_uncertainty.array /= np.clip(unmasked_per_bin, 1, None)
     return new_uncertainty

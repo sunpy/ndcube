@@ -830,10 +830,10 @@ def test_rebin_dask(ndcube_2d_dask):
     # Execute rebin.
     cube = ndcube_2d_dask
     bin_shape = (4, 2)
-    output = cube.rebin(bin_shape)
+    output = cube.rebin(bin_shape, propagate_uncertainties=True)
     dask_type = dask.array.core.Array
     assert isinstance(output.data, dask_type)
-    #assert isinstance(output.uncertainty.array, dask_type)
+    assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
 
 
