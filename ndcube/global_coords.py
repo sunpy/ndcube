@@ -21,7 +21,7 @@ class GlobalCoordsABC(Mapping):
     This class acts as a mapping between coordinate name and the coordinate object.
     In addition to this a physical type is stored for each coordinate name.
     A concrete implementation of this class must fulfill the `Mapping` ABC,
-    including methods such as `__iter__` and `__len__`.
+    including methods such as ``__iter__`` and ``__len__``.
 
     Parameters
     ----------
@@ -37,9 +37,9 @@ class GlobalCoordsABC(Mapping):
 
         Parameters
         ----------
-        name
+        name: `str`
             The name for the coordinate.
-        physical_type
+        physical_type: `str`
             An `IOVA UCD1+ physical type description for the coordinate
             <https://www.ivoa.net/documents/latest/UCDlist.html>`__. If no matching UCD
             type exists, this can instead be ``"custom:xxx"``, where ``xxx`` is an
