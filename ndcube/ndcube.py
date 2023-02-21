@@ -55,7 +55,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         The WCS transform for the NDCube, including the coordinates specified in ``.extra_coords``.
 
         This transform should implement the high level wcsapi, and have
-        `pixel_n_dim` equal to the number of array dimensions in the
+        ``pixel_n_dim`` equal to the number of array dimensions in the
         `.NDCube`. The number of world dimensions should be equal to the
         number of world dimensions in ``self.wcs`` and in ``self.extra_coords`` combined.
         """

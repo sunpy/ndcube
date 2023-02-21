@@ -31,11 +31,7 @@ class GlobalCoordsABC(Mapping):
         coordinates explicitly added will be shown.
     """
     @abc.abstractmethod
-    def add(self,
-            name: str,
-            physical_type: str,
-            coord: Any
-            ):
+    def add(self, name: str, physical_type: str, coord: Any):
         """
         Add a new coordinate to the collection.
 
@@ -45,7 +41,7 @@ class GlobalCoordsABC(Mapping):
             The name for the coordinate.
         physical_type
             An `IOVA UCD1+ physical type description for the coordinate
-            <http://www.ivoa.net/documents/latest/UCDlist.html>`__. If no matching UCD
+            <https://www.ivoa.net/documents/latest/UCDlist.html>`__. If no matching UCD
             type exists, this can instead be ``"custom:xxx"``, where ``xxx`` is an
             arbitrary string. If not known, can be `None`.
         coord

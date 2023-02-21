@@ -89,7 +89,7 @@ class ExtraCoordsABC(abc.ABC):
         .. note::
             This WCS object does not map to the pixel dimensions of the data array
             in the `.NDCube` object. It only includes pixel dimensions associated
-            with the extra coordinates.  For example, if there is only one extra coordinate
+            with the extra coordinates. For example, if there is only one extra coordinate
             associated with a single pixel dimension, this WCS will only have 1 pixel dimension,
             even if the `.NDCube` object has a data array of 2-D or greater.
             Therefore using this WCS directly might lead to some confusing results.
