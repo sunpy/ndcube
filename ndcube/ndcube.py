@@ -1052,8 +1052,8 @@ class NDCube(NDCubeBase):
             try:
                 import dask.array
                 if (isinstance(self.data, dask.array.core.Array)
-                       and isinstance(m, (bool, dask.array.core.Array))):
-                   data = dask.array.ma.masked_array(self.data, m)
+                        and isinstance(m, (bool, dask.array.core.Array))):
+                    data = dask.array.ma.masked_array(self.data, m)
                 else:
                     data = np.ma.masked_array(self.data, m)
             except ImportError:
