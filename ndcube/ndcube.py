@@ -31,6 +31,15 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
+# Create mapping to masked array types based on data array type for use in analysis methods.
+ARRAY_TYPES = {"numpy": np.ndarray}
+MASKED_TYPES = {"numpy": np.ma.masked_array}
+try:
+    import dask.array
+    ARRAY_TYPES["dask"] = dask.array.core.Array
+    MASKED_TYPES["dask"] = dask.array.ma.masked_array
+except ImportError:
+    pass
 
 class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
 
@@ -1048,18 +1057,19 @@ class NDCube(NDCubeBase):
         data = self.data
         if m is None:
             data = self.data
-        elif not isinstance(self.data, np.ndarray) and not isinstance(self.mask, np.ndarray):
-            try:
-                import dask.array
-                if (isinstance(self.data, dask.array.core.Array)
-                        and isinstance(m, (bool, dask.array.core.Array))):
-                    data = dask.array.ma.masked_array(self.data, m)
-                else:
-                    data = np.ma.masked_array(self.data, m)
-            except ImportError:
-                data = np.ma.masked_array(self.data, m)
         else:
-            data = np.ma.masked_array(self.data, m)
+            recognized_array_type = False
+            for key, array_type in ARRAY_TYPES.items():
+                recognized_array_type = (isinstance(self.data, array_type)
+                                         and isinstance(m, array_type))
+                if recognized_array_type:
+                    masked_type = MASKED_TYPES[key]
+                    break
+            if not recognized_array_type:
+                warn.warning("data and mask arrays of different or unrecognized types. "
+                             "Casting them into a numpy masked array.")
+                masked_type = MASKED_TYPES["numpy"]
+            data = masked_type(self.data, m)
         reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
