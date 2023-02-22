@@ -384,6 +384,31 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         """
         return _model_from_quantity(self.table, self.mesh)
 
+    def interpolate(self, new_array_grids, **kwargs):
+        """Interpolate QuantityTableCoordinate to new array index grids.
+
+
+        Kwargs are passed to underlying interpolation function.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the coords are desired.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.QuantityTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        old_array_grids = np.arange(len(self.table[0]))
+        new_tables = [np.interp(new_array_grids, old_array_grids, t.value, **kwargs) * t.unit
+                      for t in self.table]
+        new_coord = type(self)(*new_tables, mesh=self.mesh, names=self.names,
+                               physical_types=self.physical_types)
+        new_coord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_coord
+
 
 class SkyCoordTableCoordinate(BaseTableCoordinate):
     """
@@ -479,6 +504,35 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         return _model_from_quantity(self._sliced_components, mesh=self.mesh)
 
+    def interpolate(self, new_array_grids, **kwargs):
+        """
+        Interpolate SkyCoordTableCoordinate to new array index grids.
+
+        Kwargs are passed to underlying interpolation function.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the coords are desired.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.SkyCoordTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        # SkyCoords have multiple world components, e.g. lat and lon, even if
+        # it 1-D. Interpolate the components separately then recombine into a new SkyCoord.
+        old_array_grids = np.arange(len(self.table))
+        new_components = [
+            np.interp(new_array_grids, old_array_grids, getattr(self.table, name), **kwargs)
+            for name in self.table.representation_component_names.keys()]
+        new_skycoord = SkyCoord(*new_components, frame=self.table.frame)
+        new_tabcoord = type(self)(new_skycoord, mesh=self.mesh, names=self.names,
+                                  physical_types=self.physical_types)
+        new_tabcoord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_tabcoord
+
 
 class TimeTableCoordinate(BaseTableCoordinate):
     """
@@ -539,10 +593,34 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         return _model_from_quantity((deltas,), mesh=False)
 
+    def interpolate(self, new_array_grids, **kwargs):
+        """
+        Interpolate TimeTableCoordinate to new array index grids.
+
+        Kwargs are passed to underlying interpolation function.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the coords are desired.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.TimeTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        old_array_grids = np.arange(len(self.table))
+        new_table = Time(np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs),
+                         scale=self.table.scale, format="mjd")
+        new_coord =  type(self)(new_table, names=self.names, physical_types=self.physical_types)
+        new_coord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_coord
+
 
 class MultipleTableCoordinate(BaseTableCoordinate):
     """
-    A Holder for multiple multiple `.BaseTableCoordinate` objects.
+    A Holder for multiple `.BaseTableCoordinate` objects.
 
     This class allows the generation of a gWCS from many `.BaseTableCoordinate`
     objects.
@@ -697,3 +775,26 @@ class MultipleTableCoordinate(BaseTableCoordinate):
                 dropped_world_dimensions["value"].append(coord)
 
         return dropped_world_dimensions
+
+    def interpolate(self, new_array_grids, **kwargs):
+        """
+        Interpolate MultipleTableCoordinate to new array index grids.
+
+        Kwargs are passed to underlying interpolation function.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the coords are desired.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.MultipleTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        new_table_coordinates = [coord.interpolate(new_array_grids, **kwargs)
+                                 for coord in self.table_coords]
+        new_obj = type(self)(new_table_coordinates)
+        new_obj._dropped_coords = self._dropped_coords
+        return new_obj
