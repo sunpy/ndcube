@@ -153,7 +153,7 @@ cropped_cube.dimensions
 # just two points:
 
 point5 = [SkyCoord(0*u.arcsec, 0*u.arcsec, frame=frames.Helioprojective), SpectralCoord(10.2*u.angstrom)]
-point2 = [SkyCoord(200*u.arcsec, 100*u.arcsec, frame=frames.Helioprojective), SpectralCoord(10.6*u.angstrom)]
+point6 = [SkyCoord(200*u.arcsec, 100*u.arcsec, frame=frames.Helioprojective), SpectralCoord(10.6*u.angstrom)]
 
 cropped_cube = example_cube.crop(point5, point6)
 cropped_cube.dimensions
