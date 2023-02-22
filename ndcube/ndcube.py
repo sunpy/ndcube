@@ -189,7 +189,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             Each iterable of coordinate objects represents a single location
             in the data array in real world coordinates.
 
-            The coordinates of the points as they are passed to 
+            The coordinates of the points as they are passed to
             `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
             Therefore their number and order must be compatible with the API
             of that method, i.e. they must be passed in world order.
