@@ -14,7 +14,7 @@ of your cube. In this example, this method to slice an `~ndcube.NDCube` are illu
 import astropy.wcs
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, SpectralCoord
 from sunpy.coordinates import frames
 
 from ndcube import NDCube
