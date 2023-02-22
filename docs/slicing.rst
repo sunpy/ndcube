@@ -108,7 +108,11 @@ Each iterable describes a single location in the data array in real world coordi
 The crop method identifies the smallest rectangular region in the data array that contains all the specified coordinates, and crops the `~ndcube.NDCube` to that region.
 It does not rebin or interpolate the data.  The order of the high level coordinate objects in each iterable must be the same as that expected by `astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`, namely in world order.
 
-There is also the possibility to crop an `~ndcube.NDCube` using the `~ndcube.NDCube.crop_by_values` method, which the same as `~.crop` other than the method takes two iterables of low-level coordinate objects as `~astropy.Quantity` objects (e.g. u.deg, u.s, u.m). The difference being that the points passed in `~ndcube.NDCube.crop_by_values` do not contain the full coordinate information, but rather the unit values of the coordinates. It is recommended for users to utilise the `~ndcube.NDCube.crop` method, whereas the `~ndcube.NDCube.crop_by_values` may be useful for developers who wish to extend the `~ndcube.NDCube` functionality in some cases.
+Users can also crop their `~ndcube.NDCube` with the `~ndcube.NDCube.crop_by_values` method.
+It differs from `~ndcube.NDCube.crop` only in that it accepts and returns iterables of `~astropy.units.Quantity` objects rather than high-level astropy coordinate objects.
+In one sense this makes the API simpler as the full coordinate information (e.g. observer frame, epoch etc.) required by high level coordinate objects need not be provided.
+But this also makes it less explicit and so has the potential to be slightly more obscure.
+We therefore expect that the majority of users will be better served by `~ndcube.NDCube.crop` while some developers building tools on top of `~ndcube.NDCube` may be better served by `~ndcube.NDCube.crop_by_values`.
 
 In the following example we are working with a three dimensional (spectral, spatial, spatial) cube, and we wish to crop a smaller region of the spectral dimension and a smaller square in the spatial dimensions.
 To crop a rectangular region in the spatial axes, which correctly accounts for any rotation, we need to specify all four corners of the rectangle.
