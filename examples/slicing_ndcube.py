@@ -113,7 +113,7 @@ cropped_cube = example_cube.crop(point1, point2)
 
 ##############################################################################
 # Similar to before, we can inspect the dimesions of the sliced cube:
-cropped_cube.dimesions
+cropped_cube.dimensions
 
 
 ##############################################################################
@@ -129,7 +129,7 @@ cropped_cube = example_cube.crop(point1, point2, point3)
 
 ##############################################################################
 # we can inspect the dimesions of the cropped cube:
-cropped_cube.dimesions
+cropped_cube.dimensions
 
 
 ##############################################################################
