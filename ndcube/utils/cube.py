@@ -202,7 +202,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
 
 
 def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
-    """Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
+    """
+    Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
 
     First dimension of uncertainty, data and mask inputs represent the pixels
     in the bin being aggregated by the rebin process while the latter dimensions
@@ -234,9 +235,6 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
     new_uncertainty: same type as uncertainty input.
         The propagated uncertainty. Same shape as input uncertainty without its
         first dimension.
-
-    Notes
-    -----
     """
     flat_axis = 0
     # Extract inputs from kwargs.

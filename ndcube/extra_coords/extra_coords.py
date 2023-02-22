@@ -446,7 +446,7 @@ class ExtraCoords(ExtraCoordsABC):
         new_ec = type(self)(ndcube)
         if self.is_empty:
             return new_ec
-        cube_dims = self._ndcube.dimensions.value.astype(int)
+        cube_dims = self._ndcube.data.shape
         naxes = len(cube_dims)
         if len(new_array_grids) != naxes:
             raise ValueError("new_array_grids must have an entry for each array axis."

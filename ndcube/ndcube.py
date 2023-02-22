@@ -927,7 +927,8 @@ class NDCube(NDCubeBase):
         return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
 
     def rebin(self, bin_shape, **kwargs):
-        """Downsample array by combining contiguous pixels into bins.
+        """
+        Downsample array by combining contiguous pixels into bins.
 
         Values in bins are determined by applying a function to the pixel values within it.
         The number of pixels in each bin in each dimension is given by the bin_shape input.
@@ -959,7 +960,7 @@ class NDCube(NDCubeBase):
             Can also be set to a function which performs custom uncertainty propagation.
             Additional kwargs provided to this method are passed onto this function.
             See Notes section on how to write a custom propagate_uncertainties function.
-        new_unit: `astropy.units.Unit` (optional)
+        new_unit: `astropy.units.Unit`, optional
             If the rebinning operation alters the data unit, the new unit can be
             provided here.
 
@@ -974,8 +975,7 @@ class NDCube(NDCubeBase):
 
         Notes
         -----
-        Rebining Algorithm
-        ******************
+        **Rebining Algorithm**
         Rebinning is achieved by reshaping the N-D array to a 2N-D array and
         applying the function over the odd-numbered axes. To demonstrate,
         consider the following example.  Let's say you have an array::
@@ -1002,8 +1002,7 @@ class NDCube(NDCubeBase):
                     [2, 0, 4],
                     [1, 2, 2]])
 
-        Defining Custom Error Propagation
-        *********************************
+        **Defining Custom Error Propagation**
         To perform custom uncertainty propagation, a function must be provided via the
         propgate_uncertainty kwarg. This function must accept, although doesn't have to
         use, the following args:
@@ -1060,7 +1059,7 @@ class NDCube(NDCubeBase):
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2
         if all(bin_shape == 1):
-            deepcopy(self)
+            return self
         # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
         data_shape = self.dimensions.value.astype(int)
