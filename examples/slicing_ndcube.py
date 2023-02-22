@@ -63,7 +63,7 @@ example_cube.axis_world_coords()
 
 ##############################################################################
 # Slicing and cropping the cube
-# -------------------
+# -----------------------------
 # An `~ndcube.NDCube` can be sliced and cropped both by array indexing (similar to the way a numpy
 # array in indexed) or by real world coordinates. When we use array indices we say we
 # are "slicing" the cube.  When we use world coordinates we say we are "cropping" the cube.
@@ -71,7 +71,7 @@ example_cube.axis_world_coords()
 
 ##############################################################################
 # Slicing by array index
-# -------------------
+# ----------------------
 # To slice the `example_cube` so that we extract only one wavelength, we can do:
 # by indexing as such
 sliced_cube = example_cube[1, :, :]
@@ -90,7 +90,7 @@ sliced_cube.plot()
 
 ##############################################################################
 # Cropping cube using world coordinate values using `ndcube.NDCube.crop()`
-# -------------------
+# ------------------------------------------------------------------------
 # In many cases it's more useful to crop a cube to a region of interest based
 # on real world coordinates such as points in space or over some spectral
 # range. This is achieved by the `ndcube.NDCube.crop()` method which takes high-level astropy coordinate objects,
