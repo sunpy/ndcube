@@ -9,10 +9,11 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.wcs.wcsapi.high_level_wcs_wrapper import HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
-from ndcube.wcs.wrappers import CompoundLowLevelWCS
+from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
 from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                           SkyCoordTableCoordinate, TimeTableCoordinate)
@@ -53,7 +54,7 @@ class ExtraCoordsABC(abc.ABC):
         name : `str` or sequence of `str`
             The name(s) for these world coordinate(s).
         array_dimension : `int` or `tuple` of `int`
-            The pixel dimension(s), in the array, to which this lookup table corresponds.
+            The array dimension(s), in the array, to which this lookup table corresponds.
         lookup_table : `object` or sequence of `object`
             The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
             that can instantiate one, i.e. currently a `~astropy.time.Time`,
@@ -520,6 +521,70 @@ class ExtraCoords(ExtraCoordsABC):
                         new_coord = u.Quantity(new_table_values, unit=table.unit)
                     name = key
             new_ec.add(name, int(aom), new_coord, physical_types=lut[1].physical_types)
+        return new_ec
+
+    def resample(self, factor, offset=0, ndcube=None, **kwargs):
+        """
+        Resample all extra coords by given factors in array-index-space.
+
+        One resample factor must be supplied for each array axis in array-axis order.
+        Kwargs are passed to `numpy.interp`.
+
+        Parameters
+        ----------
+        factor: `ìnt`, `float`, or iterable thereof.
+            The factor by which each array axis is resampled.
+            If scalar, same factor is applied to all axes.
+            Otherwise a factor for each axis must be provided.
+
+        offset: `int` `float` of iterable therefore.
+            The location on the underlying grid which corresponds
+            to the zeroth element after resampling. If iterable, must have an entry
+            for each dimension.  If a scalar, the grid will be
+            shifted by the same amount in all dimensions.
+
+        ndcube: `~ndcube.NDCube`
+            The NDCube instance with which the output ExtraCoords object is associated.
+
+        Returns
+        -------
+        new_ec: `~ndcube.extra_coords.ExtraCoords`
+            A new ExtraCoords object holding the interpolated coords.
+        """
+        new_ec = type(self)(ndcube)
+        if self.is_empty:
+            return new_ec
+        cube_shape = self._ndcube.data.shape
+        ndim = len(cube_shape)
+        if np.isscalar(factor):
+            factor = [factor] * ndim
+        if len(factor) != ndim:
+            raise ValueError(
+                "factor must be scalar or an iterable with length equal to number of cube "
+                f"dimensions: len(factor) = {len(factor)}; No. cube dimensions = {ndim}.")
+        if np.isscalar(offset):
+            offset = [offset] * ndim
+        if len(offset) != ndim:
+            raise ValueError(
+                "offset must be scalar or an iterable with length equal to number of cube "
+                f"dimensions: len(offset) = {len(offset)}; No. cube dimensions = {ndim}.")
+        # If ExtraCoords object built on WCS, resample using WCS insfrastructure
+        if self._wcs is not None:
+            new_ec.wcs = HighLevelWCSWrapper(ResampledLowLevelWCS(self._wcs.low_level_wcs,
+                                                                  factor, offset))
+            return new_ec
+        # Else interpolate the lookup table coordinates.
+        factor = np.asarray(factor)
+        old_grids = np.array([np.arange(d) for d in self._ndcube.data.shape], dtype=object)
+        new_grids = []
+        for c, d, f in zip(offset, cube_shape, factor):
+            x = np.arange(c, d, f)
+            x = x[x <= d-1]
+            new_grids.append(x)
+        new_grids = np.array(new_grids, dtype=object)
+        for array_axes, coord in self._lookup_tables:
+            new_coord = coord.interpolate(new_grids[np.asarray(array_axes)], **kwargs)
+            new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)
         return new_ec
 
     @property

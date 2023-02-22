@@ -701,6 +701,7 @@ def assert_lutc_ancilliary_data_same(lutc1, lutc2):
     assert lutc1.physical_types == lutc2.physical_types
     assert lutc1._dropped_world_dimensions == lutc2._dropped_world_dimensions
 
+
 def test_quantity_interpolate(lut_3d_distance_mesh):
     lutc = lut_3d_distance_mesh
     new_array_grids = np.arange(1.5, 10, 1.5)
@@ -713,6 +714,7 @@ def test_quantity_interpolate(lut_3d_distance_mesh):
     assert u.allclose(output.table[2], expected_tables[2])
     assert_lutc_ancilliary_data_same(output, lutc)
 
+
 def test_time_interpolate(lut_1d_time):
     lutc = lut_1d_time
     new_array_grids = np.arange(1.5, 4,)
@@ -722,14 +724,14 @@ def test_time_interpolate(lut_1d_time):
     assert np.allclose(output.table.mjd, expected_table.mjd)
     assert_lutc_ancilliary_data_same(output, lutc)
 
+
 def test_skycoord_interpolate(lut_3d_skycoord_mesh):
     lutc = lut_3d_skycoord_mesh
     new_array_grids = np.arange(1.5, 10, 1.5)
     output = lutc.interpolate(new_array_grids)
-    expected_table = SkyCoord(np.arange(1.5, 10, 1.5), np.arange(1.5, 10, 1.5), 
+    expected_table = SkyCoord(np.arange(1.5, 10, 1.5), np.arange(1.5, 10, 1.5),
                               np.arange(1.5, 10, 1.5), unit=(u.deg, u.deg, u.AU))
     assert u.allclose(output.table.ra, expected_table.ra)
     assert u.allclose(output.table.dec, expected_table.dec)
     assert u.allclose(output.table.distance, expected_table.distance)
     assert_lutc_ancilliary_data_same(output, lutc)
-
