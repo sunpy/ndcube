@@ -110,8 +110,14 @@ point1 = [SkyCoord(0*u.arcsec, 0*u.arcsec, frame=frames.Helioprojective), None]
 point2 = [SkyCoord(200*u.arcsec, 100*u.arcsec, frame=frames.Helioprojective), None]
 
 cropped_cube = example_cube.crop(point1, point2)
+
+##############################################################################
+# Similar to before, we can inspect the dimesions of the sliced cube:
 cropped_cube.dimesions
 
+
+##############################################################################
+# and we can visualize it:
 cropped_cube.plot()
 
 ##############################################################################
@@ -120,8 +126,14 @@ cropped_cube.plot()
 point3 = [None, SpectralCoord(10.2*u.angstrom)]
 
 cropped_cube = example_cube.crop(point1, point2, point3)
+
+##############################################################################
+# we can inspect the dimesions of the cropped cube:
 cropped_cube.dimesions
 
+
+##############################################################################
+# and again visualize it:
 cropped_cube.plot()
 
 # Now let's say we instead want to crop over a wavelength range.
@@ -130,7 +142,10 @@ cropped_cube.plot()
 point4 = [None, SpectralCoord(10.6*u.angstrom)]
 
 cropped_cube = example_cube.crop(point1, point2, point3, point4)
-cropped_cube.dimesions
+
+##############################################################################
+# check dimensions:
+cropped_cube.dimensions
 
 ##############################################################################
 # Here we can just see how powerful this can be to easily crop over different world coordinates.
@@ -141,3 +156,4 @@ point5 = [SkyCoord(0*u.arcsec, 0*u.arcsec, frame=frames.Helioprojective), Spectr
 point2 = [SkyCoord(200*u.arcsec, 100*u.arcsec, frame=frames.Helioprojective), SpectralCoord(10.6*u.angstrom)]
 
 cropped_cube = example_cube.crop(point5, point6)
+cropped_cube.dimensions
