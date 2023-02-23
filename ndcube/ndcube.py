@@ -1160,6 +1160,6 @@ class NDCube(NDCubeBase):
             new_array_grids = [None if bin_shape[i] == 1 else
                                np.arange(offsets[i], data_shape[i] + offsets[i], bin_shape[i])
                                for i in range(naxes)]
-            new_cube._extra_coords = self.extra_coords.interpolate(new_array_grids, new_cube)
+            new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
 
         return new_cube

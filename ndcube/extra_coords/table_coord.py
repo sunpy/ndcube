@@ -384,7 +384,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         """
         return _model_from_quantity(self.table, self.mesh)
 
-    def interpolate(self, new_array_grids, **kwargs):
+    def interpolate(self, *new_array_grids, **kwargs):
         """Interpolate QuantityTableCoordinate to new array index grids.
 
 
@@ -392,9 +392,10 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         Parameters
         ----------
-        new_array_grids: iterable of array-like
-            The array index values at which the the new values of the coords are desired.
-            An array grid must be provided for each table in the TableCoordinate.
+        new_array_grids: array-like
+            The array index values at which the the new values of the coords
+            are desired. An array grid must be provided as a separate arg
+            for each table in the TableCoordinate.
 
         Returns
         -------
@@ -403,7 +404,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         """
         old_grids = (np.arange(len(t)) for t in self.table)
-        new_grids = new_array_grids if isinstance(new_array_grids, (tuple, list)) else (new_array_grids for t in self.table)
+        new_grids = (new_array_grids for t in self.table) if len(new_array_grids) == 1 and len(self.table) > 1 else new_array_grids
         new_tables = [np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
                       for new_grid, old_grid, t in zip(new_grids, old_grids, self.table)]
         new_coord = type(self)(*new_tables, mesh=self.mesh, names=self.names,
@@ -613,8 +614,8 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         """
         old_array_grids = np.arange(len(self.table))
-        new_table = Time(np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs),
-                         scale=self.table.scale, format="mjd")
+        new_table = np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs)
+        new_table = Time(new_table, scale=self.table.scale, format="mjd")
         new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
         return new_coord
