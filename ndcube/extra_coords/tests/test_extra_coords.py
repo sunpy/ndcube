@@ -483,12 +483,16 @@ def test_resample(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
     ec.add("hello", a, energy_lut)
 
     # Call resample.
-    output = ec.resample((1, 2, 1), (0.5, 0.5, 0), ndcube=cube)
+    output = ec.resample((0.5, 2, 1), (0, 0.5, 0), ndcube=cube)
 
     # Define expected values
-    expected_time = Time(["2011-01-01T00:00:05",
+    expected_time = Time(["2011-01-01T00:00:00",
+                          "2011-01-01T00:00:05",
+                          "2011-01-01T00:00:10",
                           "2011-01-01T00:00:15",
-                          "2011-01-01T00:00:25"], format="isot")
+                          "2011-01-01T00:00:15",
+                          "2011-01-01T00:00:25",
+                          "2011-01-01T00:00:30"], format="isot")
     expected_wave = np.arange(10.5, 19, 2) * u.nm
     expected_sky = SkyCoord(np.arange(0.5, 9, 2), np.arange(0.5, 9, 2), unit=u.deg)
 
