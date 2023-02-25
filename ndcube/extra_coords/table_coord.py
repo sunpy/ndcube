@@ -13,6 +13,10 @@ from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
+try:
+    import scipy.interpolate
+except ImportError:
+    pass
 
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
 
@@ -507,7 +511,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         return _model_from_quantity(self._sliced_components, mesh=self.mesh)
 
-    def interpolate(self, new_array_grids, **kwargs):
+    def interpolate(self, *new_array_grids, **kwargs):
         """
         Interpolate SkyCoordTableCoordinate to new array index grids.
 
@@ -516,22 +520,38 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         Parameters
         ----------
         new_array_grids: array-like
-            The array index values at which the the new values of the coords are desired.
+            The array index values at which the new values of the coords are desired.
+            A grid is required for pixel axis (in array-axis order).
 
         Returns
         -------
         new_coord: `~ndcube.extra_coords.table_coord.SkyCoordTableCoordinate`
             New TableCoordinate object holding the interpolated coords.
-
         """
         # SkyCoords have multiple world components, e.g. lat and lon, even if
         # it 1-D. Interpolate the components separately then recombine into a new SkyCoord.
-        old_array_grids = np.arange(len(self.table))
-        new_components = [
-            np.interp(new_array_grids, old_array_grids, getattr(self.table, name), **kwargs)
-            for name in self.table.representation_component_names.keys()]
-        new_skycoord = SkyCoord(*new_components, frame=self.table.frame)
-        new_tabcoord = type(self)(new_skycoord, mesh=self.mesh, names=self.names,
+        # First, inspect underlying SkyCoord.
+        sky_coord = self.table
+        sc_keys = sky_coord.representation_component_names.keys()
+        n_components = len(sc_keys)
+        sc_ndim = sky_coord.ndim
+        sc_shape = sky_coord.shape
+        # Sanitize input.
+        if len(new_array_grids) != sc_ndim:
+            raise ValueError(f"A new array grid must be given for each array axis, i.e. {sc_ndim}")
+        if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
+            raise ValueError("New array grids must all be same shape.")
+        # Build array grids for non-interpolated table.
+        old_array_grids = tuple(np.arange(d) for d in sc_shape)
+        # Iterate through components and interpolate each.
+        new_components = [scipy.interpolate.interpn(old_array_grids, getattr(sky_coord, key),
+                                                    new_array_grids, **kwargs)
+                          for key in sc_keys]
+        # Build new SkyCoord and return new TableCoordinate based on it.
+        new_skycoord = SkyCoord(*new_components,
+                                unit=sky_coord.representation_component_units.values(),
+                                frame=sky_coord.frame)
+        new_tabcoord = type(self)(new_skycoord, names=self.names,
                                   physical_types=self.physical_types)
         new_tabcoord._dropped_world_dimensions = self._dropped_world_dimensions
         return new_tabcoord

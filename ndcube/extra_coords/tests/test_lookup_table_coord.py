@@ -725,12 +725,15 @@ def test_time_interpolate(lut_1d_time):
     assert_lutc_ancilliary_data_same(output, lutc)
 
 
-def test_skycoord_interpolate(lut_3d_skycoord_mesh):
-    lutc = lut_3d_skycoord_mesh
-    new_array_grids = np.arange(1.5, 10, 1.5)
-    output = lutc.interpolate(new_array_grids)
-    expected_table = SkyCoord(np.arange(1.5, 10, 1.5), np.arange(1.5, 10, 1.5),
-                              np.arange(1.5, 10, 1.5), unit=(u.deg, u.deg, u.AU))
+def test_skycoord_interpolate(lut_2d_skycoord_no_mesh):
+    lutc = lut_2d_skycoord_no_mesh
+    new_array_grids = np.meshgrid(np.arange(0.5, 2), np.arange(0, 3))
+    output = lutc.interpolate(*new_array_grids)
+    expected1 = np.array([[1.5, 4.5],
+                          [2.5, 5.5],
+                          [3.5, 6.5]])
+    expected2 = expected_lat + 9
+    expected_table = SkyCoord(expected1, expected2, unit=(u.deg, u.deg))
     assert u.allclose(output.table.ra, expected_table.ra)
     assert u.allclose(output.table.dec, expected_table.dec)
     assert u.allclose(output.table.distance, expected_table.distance)
