@@ -94,8 +94,8 @@ sliced_cube.plot()
 # In many cases it's more useful to crop a cube to a region of interest based
 # on real world coordinates such as points in space or over some spectral
 # range. This is achieved by the `ndcube.NDCube.crop()` method which takes high-level astropy coordinate objects,
-# such as `astropy.coordinate.SkyCoord`. The `.crop()` method returns the smallest cube in array-index space that contains all
-# the passed points.
+# such as `astropy.coordinate.SkyCoord`. `ndcube.NDCube.crop()` returns the smallest cube
+# in array-index space that contains all the passed points.
 
 ##############################################################################
 # Let's first define some points over which to crop the `example_cube`. The points are

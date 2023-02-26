@@ -224,9 +224,11 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         This method crops the NDCube to the smallest bounding box in pixel space that
         contains all the provided world coordinate points.
 
-        This function takes points as iterables of low-level coordinate objects, i.e. `~astropy.units.Quantity` objects.
-        This differs from the `.crop()` method which takes high-level coordinate objects that contain
-        all the relevant coordinate information such as coordinate frame etc.
+        This function takes points as iterables of low-level coordinate objects,
+        i.e. `~astropy.units.Quantity` objects.  This differs from `~ndcube.NDCube.crop()` 
+        which takes high-level coordinate objects requiring all the relevant coordinate
+        information such as coordinate frame etc.  Hence this method's API is more basic
+        but less explicit.
 
 
         Parameters
