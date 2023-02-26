@@ -810,6 +810,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
                              -4.99999985, -4.99999979, -4.99999971, -4.99999962]]) * u.arcsec
     expected_spec = SpectralCoord([1.02e-09], unit=u.m)
     expected_time = Time([51544.00104167, 51544.00243056], format="mjd", scale="utc")
+    expected_time.format = "fits"
 
     # Confirm output is as expected.
     assert (output.dimensions.value == np.array([1, 2, 8])).all()
@@ -823,7 +824,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     assert u.allclose(output_spec, expected_spec)
     assert output_time.scale == expected_time.scale
     assert output_time.format == expected_time.format
-    assert np.allclose(output_time.value, expected_time.value)
+    assert np.allclose(output_time.mjd, expected_time.mjd)
 
 
 def test_rebin_dask(ndcube_2d_dask):

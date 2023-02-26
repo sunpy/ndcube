@@ -419,14 +419,14 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
     @property
     def _ndim(self):
-        return self.tables[0].ndim
+        return self.table[0].ndim
 
     @property
     def _shape(self):
         if self._ndim == 1:
-            return tuple(len(t) for t in self.tables)
+            return tuple(len(t) for t in self.table)
         else:
-            return self.tables[0].shape
+            return self.table[0].shape
 
     def interpolate(self, *new_array_grids, **kwargs):
         """Interpolate QuantityTableCoordinate to new array index grids.
@@ -460,10 +460,11 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         if ndim != 1:
             new_tables = [scipy.interpolate.interpn(old_array_grids, t.value,
                                                     new_array_grids, **kwargs) * t.unit
-                          for t in self.tables]
+                          for t in self.table]
         else:
-            new_tables = [np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
-                          for new_grid, old_grid, t in zip(new_grids, old_grids, self.table)]
+            new_tables = [
+                np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
+                for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
 
         new_coord = type(self)(*new_tables, mesh=self.mesh, names=self.names,
                                physical_types=self.physical_types)
@@ -497,13 +498,13 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
         if isinstance(names, str):
             names = [names]
-        n_compoments = len(tables[0].data_components)
-        if names is not None and len(names) != n_components):
+        n_components = len(tables[0].data.components)
+        if names is not None and len(names) != n_components:
             raise ValueError("The number of names must equal number of components in the input "
-                             f"SkyCoord: {n_components)}.")
+                             f"SkyCoord: {n_components}.")
         if physical_types is not None and len(physical_types) != n_components:
             raise ValueError("The number of physical types must equal number of components in "
-                             f"the input SkyCoord: {n_components)}.")
+                             f"the input SkyCoord: {n_components}.")
 
         sc = tables[0]
 
@@ -726,7 +727,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
         # Interpolate using MJD format and convert back to a Time object.
         new_table = np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs)
         new_table = Time(new_table, scale=self.table.scale, format="mjd")
-        new_table.format = self.format
+        new_table.format = self.table.format
         # Rebuild new TimeTableCoord and return.
         new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions

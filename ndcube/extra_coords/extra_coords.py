@@ -481,7 +481,7 @@ class ExtraCoords(ExtraCoordsABC):
         new_grids = np.array(new_grids, dtype=object)
         for array_axes, coord in self._lookup_tables:
             if np.isscalar(array_axes):
-                new_coord = coord.interpolate(new_grids[np.asarray(array_axes)], **kwargs)
+                new_coord = coord.interpolate(new_grids[array_axes], **kwargs)
             else:
                 new_coord = coord.interpolate(*new_grids[np.asarray(array_axes)], **kwargs)
             new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)

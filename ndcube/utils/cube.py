@@ -201,7 +201,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
     return tuple(item)
 
 
-def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
+def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked_values=False,
+                                  propagation_operation=None, correlation=0, **kwargs):
     """
     Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
 
@@ -224,8 +225,16 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
         Indicates whether any uncertainty elements should be ignored in propagation.
         If True, corresponding uncertainty element is ignored. If False, it is used.
         Must have same shape as above.
+    operation: function
+        The function used to aggregate the data for which the uncertainties are being
+        propagated here.
+    use_masked_values: `bool`
+        Determines whether masked values are used or excluded from calculation.
+        Default is False causing masked data and uncertainty to be excluded.
     propagation_operation: function
         The operation which defines how the uncertainties are propagated.
+        This can differ from operation, e.g. if operation is sum, then
+        propagation_operation should be add.
     correlation: `int`
         Passed to `astropy.nddata.NDUncertainty.propagate`. See that method's docstring.
         Default=0.
@@ -237,11 +246,6 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
         first dimension.
     """
     flat_axis = 0
-    # Extract inputs from kwargs.
-    operation = kwargs.get("operation", None)
-    use_masked_values = kwargs.get("use_masked_values", False)
-    propagation_operation = kwargs.get("propagation_operation", None)
-    correlation = kwargs.pop("correlation", 0)
     operation_is_mean = True if operation in {np.mean, np.nanmean} else False
     operation_is_nantype = True if operation in {np.nansum, np.nanmean, np.nanprod} else False
     # If propagation_operation kwarg not set manually, try to set it based on operation kwarg.
@@ -251,7 +255,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, **kwargs):
         elif operation in {np.prod, np.nanprod}:
             propagation_operation = np.multiply
         else:
-            propagation_operation = operation
+            raise ValueError("propagation_operation not recognized.")
     # Build mask if not provided.
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
     if use_masked_values or mask is None:

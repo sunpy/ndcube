@@ -33,12 +33,11 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
 # Create mapping to masked array types based on data array type for use in analysis methods.
-ARRAY_TYPES = {"numpy": np.ndarray}
-MASKED_TYPES = {"numpy": np.ma.masked_array}
+ARRAY_MASK_MAP = {}
+ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
 try:
     import dask.array
-    ARRAY_TYPES["dask"] = dask.array.core.Array
-    MASKED_TYPES["dask"] = dask.array.ma.masked_array
+    ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array
 except ImportError:
     pass
 
@@ -926,7 +925,8 @@ class NDCube(NDCubeBase):
         """
         return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
 
-    def rebin(self, bin_shape, **kwargs):
+    def rebin(self, bin_shape, operation=np.mean, use_masked_values=False, handle_mask=np.all,
+              propagate_uncertainties=False, new_unit=None, **kwargs):
         """
         Downsample array by combining contiguous pixels into bins.
 
@@ -1042,19 +1042,8 @@ class NDCube(NDCubeBase):
                  return type(uncertainty)(new_uncert)  # Convert to original uncert type and return.
         """
         # Sanitize input.
-        operation = kwargs.get("operation", np.mean)
-        use_masked_values = kwargs.get("use_masked_values", False)
-        handle_mask = kwargs.get("handle_mask", np.all)
-        propagate_uncertainties = kwargs.get("propagate_uncertainties", False)
-        if propagate_uncertainties is True:
-            propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
-        new_unit = kwargs.get("new_unit", self.unit)
-        # Add kwarg values back into kwargs dict in case they weren't defined.
-        kwargs["operation"] = operation
-        kwargs["use_masked_values"] = use_masked_values
-        kwargs["handle_mask"] = handle_mask
-        kwargs["propagate_uncertainties"] = propagate_uncertainties
-        kwargs["new_unit"] = new_unit
+        if new_unit is None:
+            new_unit = self.unit
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2
@@ -1078,17 +1067,14 @@ class NDCube(NDCubeBase):
         if m is None:
             data = self.data
         else:
-            recognized_array_type = False
-            for key, array_type in ARRAY_TYPES.items():
-                recognized_array_type = (isinstance(self.data, array_type)
-                                         and isinstance(m, array_type))
-                if recognized_array_type:
-                    masked_type = MASKED_TYPES[key]
+            masked_type = np.ma.masked_array
+            for array_type, m_type in ARRAY_MASK_MAP.items():
+                if isinstance(self.data, array_type):
+                    masked_type = m_type
                     break
-            if not recognized_array_type:
+            else:
                 warn.warning("data and mask arrays of different or unrecognized types. "
                              "Casting them into a numpy masked array.")
-                masked_type = MASKED_TYPES["numpy"]
             data = masked_type(self.data, m)
         reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
@@ -1098,7 +1084,7 @@ class NDCube(NDCubeBase):
         reshaped_data = data.reshape(reshape)
         operation_axes = tuple(range(len(reshape) - 1, 0, -2))
         new_data = operation(reshaped_data, axis=operation_axes)
-        if isinstance(new_data, np.ma.core.MaskedArray):
+        if isinstance(new_data, ARRAY_MASK_MAP[np.ndarray]):
             new_data = new_data.data
         if handle_mask is None:
             new_mask = None
@@ -1108,21 +1094,25 @@ class NDCube(NDCubeBase):
             reshaped_mask = self.mask.reshape(reshape)
             new_mask = handle_mask(reshaped_mask, axis=operation_axes)
 
-        # Propagate uncertainties.
-        cannot_propagate = (
-            propagate_uncertainties is False
-            or isinstance(self.uncertainty, (type(None), astropy.nddata.UnknownUncertainty))
-            or (self.mask is True and not use_masked_values)
-            or (not isinstance(self.mask, (type(None), bool)) and self.mask.all()
-                and not use_masked_values)
-        )
-        if cannot_propagate:
-            new_uncertainty = None
-            if propagate_uncertainties is True:
-                warnings.warn(
-                    "Uncertainties cannot be propagated because there are no uncertainties, "
-                    "type of uncertainty is unknown, or all data is masked.")
+        # Propagate uncertainties is propagate_uncertainties kwarg set.
+        new_uncertainty = None
+        if propagate_uncertainties is False:
+            pass
+        elif self.uncertainty is None:
+            warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
+                          "i.e. self.uncertainty is None.")
+        elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
+            warnings.warn("self.uncertainty is of type UnknownUncertainty which does not "
+                          "support uncertainty propagation.")
+        elif (not use_masked_values
+              and (self.mask is True or (self.mask is not None
+                                         and not isinstance(self.mask, bool)
+                                         and self.mask.all()))):
+            warnings.warn("Uncertainties cannot be propagated as all values are masked and "
+                          "use_masked_values is False.")
         else:
+            if propagate_uncertainties is True:
+                propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
             # If propagate_uncertainties, use astropy's infrastructure.
             # For this the data and uncertainty must be reshaped
             # so the first dimension represents the flattened size of a single bin
@@ -1145,8 +1135,10 @@ class NDCube(NDCubeBase):
             else:
                 flat_mask = None
             # Propagate uncertainties.
-            new_uncertainty = propagate_uncertainties(flat_uncertainty, flat_data,
-                                                      flat_mask, **kwargs)
+            new_uncertainty = propagate_uncertainties(
+                flat_uncertainty, flat_data, flat_mask,
+                operation=operation, use_masked_values=use_masked_values,
+                handle_mask=handle_mask, new_unit=new_unit, **kwargs)
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
