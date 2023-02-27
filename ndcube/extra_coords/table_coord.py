@@ -277,21 +277,17 @@ class BaseTableCoordinate(abc.ABC):
 
 class QuantityTableCoordinate(BaseTableCoordinate):
     """
-    A lookup table made up of ``N`` `~astropy.units.Quantity` objects.
+    A lookup table up built on `~astropy.units.Quantity`.
 
-    This class can either be instantiated with N ND arrays (i.e. the output of
-    `numpy.meshgrid`) or N 1D arrays (i.e. the input to `numpy.meshgrid`).
+    Quantities must be 1-D but more than one can be provided to represent
+    different dimensions of an N-D coordinate.
 
     Parameters
     ----------
     tables: one or more `~astropy.units.Quantity`
-        The coordinates. If multi-dimensional Quantity(ies) provided, they
-        must all have the same shape and the number of Quantities must equal
-        the number of dimensions.
-
-    mesh: `bool`
-        If True, Quantities are meshed together by the gWCS model of the class.
-        If True, all Quantities must be 1D.
+        The coordinates. Must be 1 dimensionsal. If coordinate system is >1D,
+        multiple 1-D Quantities can be provided representing the different
+        dimensions
 
     names: `str` or `list` of `str`
         Custom names for the components of the QuantityTableCoord. If provided,
@@ -302,46 +298,30 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         a physical type must be given for each input Quantity.
         Physical types of the components of the SkyCoord. If provided,
         a physical type must be given for each component.
-
-    Notes
-    -----
-    The reason for supporting both the input and output of meshgrid is that
-    meshgrid isn't called when ``mesh=True``, the "meshing" is done in the gWCS
-    layer.
     """
 
-    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+    def __init__(self, *tables, names=None, physical_types=None):
         if not all([isinstance(t, u.Quantity) for t in tables]):
             raise TypeError("All tables must be astropy Quantity objects")
         if not all([t.unit.is_equivalent(tables[0].unit) for t in tables]):
             raise u.UnitsError("All tables must have equivalent units.")
-        unmeshed_ndim = tables[0].ndim
-        ndim = len(tables) if mesh else unmeshed_ndim
+        ndim = len(tables)
         dims = np.array([t.ndim for t in tables])
-        if not mesh and any(dims != unmeshed_ndim):
-            raise ValueError("All tables must have same number of dimensions")
-        if mesh and any(dims > 1):
-            raise ValueError("If mesh=True, all tables must be 1-D.")
-        if unmeshed_ndim > 1 and any([t.shape != tables[0].shape for t in tables]):
-            raise ValueError("If tables >1D, all tables must have same shape.")
-        if unmeshed_ndim > 1 and len(tables) != ndim:
-            raise ValueError("If tables >1D, number of dimensions in each "
-                             "table must be the same as the number of tables.")
-        if not mesh and unmeshed_ndim > 1:
-            raise NotImplementedError("Support for lookup tables with more than one dimension is not yet implemented")
+        if any(dims > 1):
+            raise ValueError("All tables must be 1-D")
 
         if isinstance(names, str):
             names = [names]
-        if names is not None and len(names) != len(tables):
+        if names is not None and len(names) != ndim:
             raise ValueError("The number of names should match the number of world dimensions")
         if isinstance(physical_types, str):
             physical_types = [physical_types]
-        if physical_types is not None and len(physical_types) != len(tables):
+        if physical_types is not None and len(physical_types) != ndim:
             raise ValueError("The number of physical types should match the number of world dimensions")
 
         self.unit = tables[0].unit
 
-        super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+        super().__init__(*tables, mesh=True, names=names, physical_types=physical_types)
 
     def _slice_table(self, i, table, item, new_components, whole_slice):
         """
@@ -384,17 +364,13 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         new_components = defaultdict(list)
         new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
 
-        if self.mesh:
-            for i, (ele, table) in enumerate(zip(item, self.table)):
-                self._slice_table(i, table, ele, new_components, whole_slice=item)
-        else:
-            for i, table in enumerate(self.table):
-                self._slice_table(i, table, item, new_components, whole_slice=item)
+        for i, (ele, table) in enumerate(zip(item, self.table)):
+            self._slice_table(i, table, ele, new_components, whole_slice=item)
 
         names = new_components["names"] or None
         physical_types = new_components["physical_types"] or None
 
-        ret_table = type(self)(*new_components["tables"], mesh=self.mesh, names=names, physical_types=physical_types)
+        ret_table = type(self)(*new_components["tables"], names=names, physical_types=physical_types)
         ret_table._dropped_world_dimensions = new_components["dropped_world_dimensions"]
         return ret_table
 
@@ -417,22 +393,15 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        return _model_from_quantity(self.table, self.mesh)
+        return _model_from_quantity(self.table, True)
 
     @property
-    def _storage_ndim(self):
-        return self.table[0].ndim
-
-    @property
-    def _ndim(self):
+    def ndim(self):
         return len(self.table)
 
     @property
-    def _shape(self):
-        if self._storage_ndim == 1:
-            return tuple(len(t) for t in self.table)
-        else:
-            return self.table[0].shape
+    def shape(self):
+        return tuple(len(t) for t in self.table)
 
     def interpolate(self, *new_array_grids, **kwargs):
         """Interpolate QuantityTableCoordinate to new array index grids.
@@ -445,7 +414,9 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         new_array_grids: array-like
             The array index values at which the the new values of the coords
             are desired. An array grid must be provided as a separate arg
-            for each array dimension and must all have the same shape.
+            for each array dimension and corresponding elements in all arrays
+            represent a single location in the pixel grid. Therefore, array grids
+            must all have the same shape.
 
         Returns
         -------
@@ -454,25 +425,20 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         """
         # Sanitize input.
-        ndim = self._ndim
+        ndim = self.ndim
         if len(new_array_grids) != ndim:
             raise ValueError(
-                f"A new array grid must be given for each array axis, i.e. {self._ndim}")
+                f"A new array grid must be given for each array axis/table, i.e. {ndim}")
         if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
             raise ValueError("New array grids must all be same shape.")
         # Build array grids for non-interpolated table.
-        old_array_grids = tuple(np.arange(d) for d in self._shape)
+        old_array_grids = tuple(np.arange(d) for d in self.shape)
         # Iterate through tables and interpolate each.
-        if self._storage_ndim != 1:
-            new_tables = [scipy.interpolate.interpn(old_array_grids, t.value,
-                                                    new_array_grids, **kwargs) * t.unit
-                          for t in self.table]
-        else:
-            new_tables = [
-                np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
-                for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
-        new_coord = type(self)(*new_tables, mesh=self.mesh, names=self.names,
-                               physical_types=self.physical_types)
+        new_tables = [
+            np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
+            for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
+        # Rebuild return interpolated coord.
+        new_coord = type(self)(*new_tables, names=self.names, physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
         return new_coord
 

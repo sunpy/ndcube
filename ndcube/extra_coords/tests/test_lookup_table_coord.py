@@ -21,7 +21,7 @@ def lut_3d_distance_mesh():
                     u.Quantity(np.arange(10, 20) * u.km),
                     u.Quantity(np.arange(20, 30) * u.km))
 
-    return QuantityTableCoordinate(*lookup_table, mesh=True, names=['x', 'y', 'z'])
+    return QuantityTableCoordinate(*lookup_table, names=['x', 'y', 'z'])
 
 
 @pytest.fixture
@@ -253,19 +253,19 @@ def test_repr_str(lut_1d_time, lut_1d_wave):
 
 
 def test_slicing_quantity_table_coordinate():
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=False, names='x', physical_types='pos:x')
+    qtc = QuantityTableCoordinate(range(10)*u.m, names='x', physical_types='pos:x')
 
     assert u.allclose(qtc[2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2].table[0], 2*u.m)
     assert qtc.names == ['x']
     assert qtc.physical_types == ['pos:x']
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=True)
+    qtc = QuantityTableCoordinate(range(10)*u.m)
 
     assert u.allclose(qtc[2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2].table[0], 2*u.m)
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, range(10)*u.m, mesh=True,
+    qtc = QuantityTableCoordinate(range(10)*u.m, range(10)*u.m,
                                   names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
     assert u.allclose(qtc[2:8, 2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2:8, 2:8].table[1], range(2, 8)*u.m)
@@ -283,7 +283,7 @@ def test_slicing_quantity_table_coordinate():
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_slicing_quantity_table_coordinate_2d():
-    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m, mesh=False,
+    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m,
                                   names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
 
     assert u.allclose(qtc[2:8, 2:8].table[0], (np.mgrid[2:8, 2:8]*u.m)[0])
@@ -601,7 +601,7 @@ def test_and_base_table_coordinate():
 
     ttc = TimeTableCoordinate(data)
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=False)
+    qtc = QuantityTableCoordinate(range(10)*u.m)
 
     join = ttc & ttc
     assert isinstance(join, MultipleTableCoordinate)
@@ -637,7 +637,7 @@ def test_and_errors():
 
     ttc = TimeTableCoordinate(data)
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=False)
+    qtc = QuantityTableCoordinate(range(10)*u.m)
 
     with pytest.raises(TypeError) as ei:
         ttc & 5
