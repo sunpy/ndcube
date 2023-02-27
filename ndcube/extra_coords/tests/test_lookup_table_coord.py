@@ -40,13 +40,19 @@ def lut_1d_skycoord_no_mesh():
 def lut_2d_skycoord_no_mesh():
     data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
     sc = SkyCoord(*data, unit=u.deg)
-    return SkyCoordTableCoordinate(sc)
+    return SkyCoordTableCoordinate(sc, mesh=False)
 
 
 @pytest.fixture
 def lut_2d_skycoord_mesh():
     sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc)
+    return SkyCoordTableCoordinate(sc, mesh=True)
+
+
+@pytest.fixture
+def lut_3d_skycoord_mesh():
+    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
+    return SkyCoordTableCoordinate(sc, mesh=True)
 
 
 @pytest.fixture
@@ -169,6 +175,38 @@ def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
     assert u.allclose(pix, pixel_coords.value)
 
 
+def test_2d_skycoord_mesh(lut_2d_skycoord_mesh):
+    ltc = lut_2d_skycoord_mesh
+    assert ltc.model.n_inputs == 2
+    assert ltc.model.n_outputs == 2
+
+    pixel_coords = (0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
+
+
+def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
+    ltc = lut_3d_skycoord_mesh
+
+    assert ltc.model.n_inputs == 3
+    assert ltc.model.n_outputs == 3
+
+    # Known failure due to gwcs#120
+
+    # pixel_coords = (0, 0, 0)*u.pix
+    # sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    # pix = ltc.wcs.world_to_pixel(sc)
+    # assert u.allclose(pix, pixel_coords.value)
+
+    # assert isinstance(ltc.wcs, gwcs.WCS)
+    #
+    # sub_ltc = ltc[0:4, 0:5, 0:6]
+    # assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
+    # assert sub_ltc.delayed_models[0].lookup_table[1].shape == (5, )
+    # assert sub_ltc.delayed_models[0].lookup_table[2].shape == (6, )
+
+
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
     ltc = lut_2d_skycoord_no_mesh
@@ -205,8 +243,8 @@ def test_join(lut_1d_time, lut_1d_wave):
     assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0))
 
 
-def test_join_3d(lut_2d_skycoord_no_mesh, lut_1d_wave):
-    ltc = lut_2d_skycoord_no_mesh & lut_1d_wave
+def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
+    ltc = lut_2d_skycoord_mesh & lut_1d_wave
 
     assert ltc.model.n_inputs == 3
     assert ltc.model.n_outputs == 3
@@ -687,7 +725,7 @@ def test_time_interpolate(lut_1d_time):
     assert_lutc_ancilliary_data_same(output, lutc)
 
 
-def test_skycoord_interpolate(lut_2d_skycoord_no_mesh):
+def test_skycoord_interpolate_no_mesh(lut_2d_skycoord_no_mesh):
     lutc = lut_2d_skycoord_no_mesh
     new_array_grids = np.meshgrid(np.arange(0.5, 2), np.arange(0, 3))
     output = lutc.interpolate(*new_array_grids)
@@ -696,6 +734,18 @@ def test_skycoord_interpolate(lut_2d_skycoord_no_mesh):
                           [3.5, 6.5]])
     expected2 = expected1 + 9
     expected_table = SkyCoord(expected1, expected2, unit=(u.deg, u.deg))
+    assert u.allclose(output.table.ra, expected_table.ra)
+    assert u.allclose(output.table.dec, expected_table.dec)
+    assert u.allclose(output.table.distance, expected_table.distance)
+    assert_lutc_ancilliary_data_same(output, lutc)
+
+
+def test_skycoord_interpolate_mesh(lut_2d_skycoord_mesh):
+    lutc = lut_2d_skycoord_mesh
+    new_array_grids = np.arange(0.5, 2), np.arange(1, 3)
+    output = lutc.interpolate(*new_array_grids)
+    expected = new_array_grids
+    expected_table = SkyCoord(*expected, unit=(u.deg, u.deg))
     assert u.allclose(output.table.ra, expected_table.ra)
     assert u.allclose(output.table.dec, expected_table.dec)
     assert u.allclose(output.table.distance, expected_table.distance)

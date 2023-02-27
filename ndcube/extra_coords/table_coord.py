@@ -424,6 +424,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             New TableCoordinate object holding the interpolated coords.
 
         """
+        if self.is_scalar():
+            raise ValueError("Cannot interpolate a scalar QuantityTableCoordinate.")
         # Sanitize input.
         ndim = self.ndim
         if len(new_array_grids) != ndim:
@@ -447,12 +449,14 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     """
     A lookup table created from a `~astropy.coordinates.SkyCoord`.
 
-    mesh is not supported by this class.
-
     Parameters
     ----------
     table: `~astropy.coordinates.SkyCoord`
         SkyCoord of coordinates.  Only one can be provided.
+
+    mesh: `bool`
+        If True, world components of input SkyCoord are interpretted to represent
+        different array dimensions.  Input SkyCoord must be 1-D.
 
     names: `str` or `list` of `str`
         Custom names for the components of the SkyCoord. If provided, a name must
@@ -461,11 +465,19 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     physical_types: str` or `list` of `str`
         Physical types of the components of the SkyCoord. If provided,
         a physical type must be given for each component.
+
+    Notes
+    -----
+    If mesh is True, underlying SkyCoord must always be "square" due to nature of
+    `~astropy.coordiantes.SkyCoord`, i.e. the lat and lon components are always the
+    same length.
     """
 
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise ValueError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
+        if mesh and tables[0].ndim > 1:
+            raise ValueError("If mesh is True, input SkyCoord must be 1-D.")
 
         if isinstance(names, str):
             names = [names]
@@ -479,7 +491,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
         sc = tables[0]
 
-        super().__init__(sc, mesh=False, names=names, physical_types=physical_types)
+        super().__init__(sc, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
         self._slice = sanitize_slices(np.s_[...], self.n_inputs)
 
@@ -551,6 +563,20 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         return _model_from_quantity(self._sliced_components, mesh=self.mesh)
 
+    @property
+    def ndim(self):
+        if self.mesh:
+            return len(self.table.data.components)
+        else:
+            return self.table.ndim
+
+    @property
+    def shape(self):
+        if self.mesh:
+            return tuple(list(self.table.shape) * self.ndim)
+        else:
+            return self.table.shape
+
     def interpolate(self, *new_array_grids, **kwargs):
         """
         Interpolate SkyCoordTableCoordinate to new array index grids.
@@ -561,40 +587,66 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         ----------
         new_array_grids: array-like
             The array index values at which the new values of the coords
-            are desired. A grid is required for pixel axis (in array-axis
-            order).  All grids must be the same shape.
+            are desired. An array grid must be provided as a separate arg
+            for each array dimension and corresponding elements in all arrays
+            represent a single location in the pixel grid. Therefore, array grids
+            must all have the same shape.
 
         Returns
         -------
         new_coord: `~ndcube.extra_coords.table_coord.SkyCoordTableCoordinate`
             New TableCoordinate object holding the interpolated coords.
         """
+        if self.is_scalar():
+            raise ValueError("Cannot interpolate a scalar SkyCoordTableCoordinate.")
         # SkyCoords have multiple world components, e.g. lat and lon, even if
         # it 1-D. Interpolate the components separately then recombine into a new SkyCoord.
         # First, inspect underlying SkyCoord.
-        sky_coord = self.table
-        sc_names = sky_coord.data.components
-        sc_ndim = sky_coord.ndim
-        sc_shape = sky_coord.shape
         # Sanitize input.
-        if len(new_array_grids) != sc_ndim:
-            raise ValueError(f"A new array grid must be given for each array axis, i.e. {sc_ndim}")
+        ndim = self.ndim
+        shape = self.shape
+        if len(new_array_grids) != ndim:
+            raise ValueError(f"A new array grid must be given for each array axis, i.e. {dim}")
         if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
             raise ValueError("New array grids must all be same shape.")
-        # Build array grids for non-interpolated table.
-        old_array_grids = tuple(np.arange(d) for d in sc_shape)
+
+        # Build old array grids.  Note self._slice give the slice item(s) required to
+        # make the underlying SkyCoord match the dimensionality of the associated data cube.
+        old_array_grids = [np.arange(d)[slc] for d, slc in zip(shape, self._slice)]
         # Iterate through components and interpolate each.
-        new_components = [scipy.interpolate.interpn(old_array_grids, getattr(sky_coord.data, name),
-                                                    new_array_grids, **kwargs)
-                          for name in sc_names]
+        if self.mesh:
+            new_components = [np.interp(new_grid, old_grid, comp, **kwargs)
+                              for new_grid, old_grid, comp
+                              in zip(new_array_grids, old_array_grids, self._sliced_components)]
+        elif ndim == 1:
+            new_components = [np.interp(*new_array_grids, *old_array_grids, comp, **kwargs)
+                              for comp in self._sliced_components]
+        else:
+            new_components = [
+                scipy.interpolate.interpn(old_array_grids, component, new_array_grids, **kwargs)
+                for component in self._sliced_components]
+
         # Build new SkyCoord and return new TableCoordinate based on it.
+        new_shape = np.array([len(comp) for comp in new_components])
+        if self.mesh and any(new_shape != new_shape[0]):
+            # If above condition is true, new components will be meshed together.
+            # If this results in a lot of pixels, raise warning as there might be RAM issues.
+            new_size = new_shape.prod()
+            if new_size > 1e5:
+                warnings.warn("Coordinates underlying SkyCoordTableCoordinate will be meshed. "
+                              "This could significantly increase memory required.")
+            new_components = np.meshgrid(*new_components)
+            mesh = False
+        else:
+            mesh = self.mesh
+        print(new_components, self.mesh, ndim, new_array_grids, old_array_grids, self._sliced_components)
         new_skycoord = SkyCoord(*new_components,
-                                unit=sky_coord.representation_component_units.values(),
-                                frame=sky_coord.frame)
-        new_tabcoord = type(self)(new_skycoord, names=self.names,
-                                  physical_types=self.physical_types)
-        new_tabcoord._dropped_world_dimensions = self._dropped_world_dimensions
-        return new_tabcoord
+                                unit=self.table.representation_component_units.values(),
+                                frame=self.table.frame)
+        new_coord = type(self)(new_skycoord, mesh=mesh, names=self.names,
+                               physical_types=self.physical_types)
+        new_coord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_coord
 
 
 class TimeTableCoordinate(BaseTableCoordinate):
@@ -692,6 +744,8 @@ class TimeTableCoordinate(BaseTableCoordinate):
             New TableCoordinate object holding the interpolated coords.
 
         """
+        if self.is_scalar():
+            raise ValueError("Cannot interpolate a scalar TimeTableCoordinate.")
         # Build pixel grids for current TimeTableCoord.
         old_array_grids = np.arange(len(self.table))
         # Interpolate using MJD format and convert back to a Time object.

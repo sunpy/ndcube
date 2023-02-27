@@ -472,7 +472,6 @@ class ExtraCoords(ExtraCoordsABC):
             return new_ec
         # Else interpolate the lookup table coordinates.
         factor = np.asarray(factor)
-        old_grids = np.array([np.arange(d) for d in self._ndcube.data.shape], dtype=object)
         new_grids = []
         for c, d, f in zip(offset, cube_shape, factor):
             x = np.arange(c, d+f, f)

@@ -203,12 +203,12 @@ def test_two_1d_from_lookup_tables(time_lut):
         assert ec._lookup_tables[i][1].physical_types == [physical_types]
 
 
-def test_skycoord(skycoord_2d_lut):
+def test_skycoord(skycoord_1d_lut):
     cube = MagicMock()
-    cube.dimensions = [3, 3] * u.pix
+    cube.dimensions = [10, 10] * u.pix
 
     ec = ExtraCoords(cube)
-    ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut)
+    ec.add(("lat", "lon"), (0, 1), skycoord_1d_lut, mesh=True)
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (1, 0)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -222,7 +222,7 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
     cube.dimensions = [10] * u.pix
 
     ec = ExtraCoords(cube)
-    ec.add(("lon", "lat"), 0, skycoord_1d_lut)
+    ec.add(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
     assert ec.mapping == (0,)
     assert isinstance(ec.wcs, gwcs.WCS)
@@ -236,6 +236,20 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
     assert sec.wcs.world_axis_names == ("lon", "lat")
 
     assert isinstance(sec.wcs.pixel_to_world(0), SkyCoord)
+
+
+def test_skycoord_mesh_false(skycoord_2d_lut):
+    cube = MagicMock()
+    cube.dimensions = [10, 10] * u.pix
+
+    ec = ExtraCoords(cube)
+    ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
+    assert len(ec._lookup_tables) == 1
+    assert ec.mapping == (1, 0)
+    assert isinstance(ec.wcs, gwcs.WCS)
+    assert ec.wcs.pixel_n_dim == 2
+    assert ec.wcs.world_n_dim == 2
+    assert ec.wcs.world_axis_names == ("lat", "lon")
 
 
 def test_extra_coords_index(skycoord_2d_lut, time_lut):
