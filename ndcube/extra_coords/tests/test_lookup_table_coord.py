@@ -40,19 +40,13 @@ def lut_1d_skycoord_no_mesh():
 def lut_2d_skycoord_no_mesh():
     data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
     sc = SkyCoord(*data, unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=False)
+    return SkyCoordTableCoordinate(sc)
 
 
 @pytest.fixture
 def lut_2d_skycoord_mesh():
     sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=True)
-
-
-@pytest.fixture
-def lut_3d_skycoord_mesh():
-    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
-    return SkyCoordTableCoordinate(sc, mesh=True)
+    return SkyCoordTableCoordinate(sc)
 
 
 @pytest.fixture
@@ -107,11 +101,11 @@ def test_exceptions():
 
     with pytest.raises(ValueError) as ei:
         SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), names='x')
-    assert "names must equal two" in str(ei)
+    assert "The number of names must equal number of components in the input SkyCoord: 2." in str(ei)
 
     with pytest.raises(ValueError) as ei:
         SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), physical_types='x')
-    assert "physical types must equal two" in str(ei)
+    assert "The number of physical types must equal number of components in the input SkyCoord: 2." in str(ei)
 
     with pytest.raises(TypeError) as ei:
         MultipleTableCoordinate(10, SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg)))
@@ -175,38 +169,6 @@ def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
     assert u.allclose(pix, pixel_coords.value)
 
 
-def test_2d_skycoord_mesh(lut_2d_skycoord_mesh):
-    ltc = lut_2d_skycoord_mesh
-    assert ltc.model.n_inputs == 2
-    assert ltc.model.n_outputs == 2
-
-    pixel_coords = (0, 0)*u.pix
-    sc = ltc.wcs.pixel_to_world(*pixel_coords)
-    pix = ltc.wcs.world_to_pixel(sc)
-    assert u.allclose(pix, pixel_coords.value)
-
-
-def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
-    ltc = lut_3d_skycoord_mesh
-
-    assert ltc.model.n_inputs == 3
-    assert ltc.model.n_outputs == 3
-
-    # Known failure due to gwcs#120
-
-    # pixel_coords = (0, 0, 0)*u.pix
-    # sc = ltc.wcs.pixel_to_world(*pixel_coords)
-    # pix = ltc.wcs.world_to_pixel(sc)
-    # assert u.allclose(pix, pixel_coords.value)
-
-    # assert isinstance(ltc.wcs, gwcs.WCS)
-    #
-    # sub_ltc = ltc[0:4, 0:5, 0:6]
-    # assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
-    # assert sub_ltc.delayed_models[0].lookup_table[1].shape == (5, )
-    # assert sub_ltc.delayed_models[0].lookup_table[2].shape == (6, )
-
-
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
     ltc = lut_2d_skycoord_no_mesh
@@ -243,8 +205,8 @@ def test_join(lut_1d_time, lut_1d_wave):
     assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0))
 
 
-def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
-    ltc = lut_2d_skycoord_mesh & lut_1d_wave
+def test_join_3d(lut_2d_skycoord_no_mesh, lut_1d_wave):
+    ltc = lut_2d_skycoord_no_mesh & lut_1d_wave
 
     assert ltc.model.n_inputs == 3
     assert ltc.model.n_outputs == 3
@@ -704,8 +666,8 @@ def assert_lutc_ancilliary_data_same(lutc1, lutc2):
 
 def test_quantity_interpolate(lut_3d_distance_mesh):
     lutc = lut_3d_distance_mesh
-    new_array_grids = np.arange(1.5, 10, 1.5)
-    output = lutc.interpolate(new_array_grids)
+    new_array_grids = [np.arange(1.5, 10, 1.5)] * 3
+    output = lutc.interpolate(*new_array_grids)
     expected_tables = (np.arange(1.5, 10, 1.5) * u.km,
                        np.arange(11.5, 20, 1.5) * u.km,
                        np.arange(21.5, 30, 1.5) * u.km)
@@ -732,7 +694,7 @@ def test_skycoord_interpolate(lut_2d_skycoord_no_mesh):
     expected1 = np.array([[1.5, 4.5],
                           [2.5, 5.5],
                           [3.5, 6.5]])
-    expected2 = expected_lat + 9
+    expected2 = expected1 + 9
     expected_table = SkyCoord(expected1, expected2, unit=(u.deg, u.deg))
     assert u.allclose(output.table.ra, expected_table.ra)
     assert u.allclose(output.table.dec, expected_table.dec)

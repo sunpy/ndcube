@@ -13,6 +13,7 @@ from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
+
 try:
     import scipy.interpolate
 except ImportError:
@@ -314,18 +315,19 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             raise TypeError("All tables must be astropy Quantity objects")
         if not all([t.unit.is_equivalent(tables[0].unit) for t in tables]):
             raise u.UnitsError("All tables must have equivalent units.")
-        ndim = tables[0].ndim
+        unmeshed_ndim = tables[0].ndim
+        ndim = len(tables) if mesh else unmeshed_ndim
         dims = np.array([t.ndim for t in tables])
-        if any(dims != ndim):
+        if not mesh and any(dims != unmeshed_ndim):
             raise ValueError("All tables must have same number of dimensions")
-        if mesh and ndim != 1:
+        if mesh and any(dims > 1):
             raise ValueError("If mesh=True, all tables must be 1-D.")
-        if ndim > 1 and any([t.shape != tables[0].shape for t in tables]):
+        if unmeshed_ndim > 1 and any([t.shape != tables[0].shape for t in tables]):
             raise ValueError("If tables >1D, all tables must have same shape.")
-        if ndim > 1 and len(tables) != ndim:
+        if unmeshed_ndim > 1 and len(tables) != ndim:
             raise ValueError("If tables >1D, number of dimensions in each "
                              "table must be the same as the number of tables.")
-        if ndim > 1:
+        if not mesh and unmeshed_ndim > 1:
             raise NotImplementedError("Support for lookup tables with more than one dimension is not yet implemented")
 
         if isinstance(names, str):
@@ -418,12 +420,16 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         return _model_from_quantity(self.table, self.mesh)
 
     @property
-    def _ndim(self):
+    def _storage_ndim(self):
         return self.table[0].ndim
 
     @property
+    def _ndim(self):
+        return len(self.table)
+
+    @property
     def _shape(self):
-        if self._ndim == 1:
+        if self._storage_ndim == 1:
             return tuple(len(t) for t in self.table)
         else:
             return self.table[0].shape
@@ -457,7 +463,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         # Build array grids for non-interpolated table.
         old_array_grids = tuple(np.arange(d) for d in self._shape)
         # Iterate through tables and interpolate each.
-        if ndim != 1:
+        if self._storage_ndim != 1:
             new_tables = [scipy.interpolate.interpn(old_array_grids, t.value,
                                                     new_array_grids, **kwargs) * t.unit
                           for t in self.table]
@@ -465,7 +471,6 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             new_tables = [
                 np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
                 for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
-
         new_coord = type(self)(*new_tables, mesh=self.mesh, names=self.names,
                                physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
@@ -602,8 +607,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         # it 1-D. Interpolate the components separately then recombine into a new SkyCoord.
         # First, inspect underlying SkyCoord.
         sky_coord = self.table
-        sc_keys = sky_coord.representation_component_names.keys()
-        n_components = len(sc_keys)
+        sc_names = sky_coord.data.components
         sc_ndim = sky_coord.ndim
         sc_shape = sky_coord.shape
         # Sanitize input.
@@ -614,9 +618,9 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         # Build array grids for non-interpolated table.
         old_array_grids = tuple(np.arange(d) for d in sc_shape)
         # Iterate through components and interpolate each.
-        new_components = [scipy.interpolate.interpn(old_array_grids, getattr(sky_coord, key),
+        new_components = [scipy.interpolate.interpn(old_array_grids, getattr(sky_coord.data, name),
                                                     new_array_grids, **kwargs)
-                          for key in sc_keys]
+                          for name in sc_names]
         # Build new SkyCoord and return new TableCoordinate based on it.
         new_skycoord = SkyCoord(*new_components,
                                 unit=sky_coord.representation_component_units.values(),
