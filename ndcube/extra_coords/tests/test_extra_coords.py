@@ -529,6 +529,22 @@ def test_resample_scalar_factor(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
                        expected_wave.value)
 
 
+def test_resample_errors(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
+    # Build ExtraCoord to test.
+    cube = ndcube_4d_ln_lt_l_t[:4, 0]  # Slice cube to dimensions needed for our extra coords.
+    ec = ExtraCoords(ndcube=cube)
+    ec.add("time", 0, time_lut)
+    ec.add("wave", 1, wave_lut)
+
+    # Test error for incorrect number of factor elements.
+    with pytest.raises(ValueError):
+        output = ec.resample([2], ndcube=cube)
+
+    # Test error for incorrect number of offset elements.
+    with pytest.raises(ValueError):
+        output = ec.resample(2, [2], ndcube=cube)
+
+
 def test_length1_extra_coord(wave_lut):
     # This test hits a bug that existed in gwcs less than 0.16.1
     pytest.importorskip("gwcs", minversion="0.16.1")
