@@ -1001,6 +1001,8 @@ class NDCube(NDCubeBase):
         new_unit: `astropy.units.Unit`, optional
             If the rebinning operation alters the data unit, the new unit can be
             provided here.
+        kwargs
+            All kwargs are passed to the error propagation function.
 
         Returns
         -------
@@ -1080,8 +1082,7 @@ class NDCube(NDCubeBase):
                  return type(uncertainty)(new_uncert)  # Convert to original uncert type and return.
         """
         # Sanitize input.
-        if new_unit is None:
-            new_unit = self.unit
+        new_unit = new_unit or self.unit
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         offsets = (bin_shape - 1) / 2
@@ -1102,9 +1103,7 @@ class NDCube(NDCubeBase):
         # then apply function over those axes.
         m = None if (self.mask is None or self.mask is False or use_masked_values) else self.mask
         data = self.data
-        if m is None:
-            data = self.data
-        else:
+        if m is not None:
             for array_type, masked_type in ARRAY_MASK_MAP.items():
                 if isinstance(self.data, array_type):
                     break
@@ -1134,49 +1133,48 @@ class NDCube(NDCubeBase):
 
         # Propagate uncertainties if propagate_uncertainties kwarg set.
         new_uncertainty = None
-        if propagate_uncertainties is False:
-            pass
-        elif self.uncertainty is None:
-            warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
-                          "i.e. self.uncertainty is None.")
-        elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-            warnings.warn("self.uncertainty is of type UnknownUncertainty which does not "
-                          "support uncertainty propagation.")
-        elif (not use_masked_values
-              and (self.mask is True or (self.mask is not None
-                                         and not isinstance(self.mask, bool)
-                                         and self.mask.all()))):
-            warnings.warn("Uncertainties cannot be propagated as all values are masked and "
-                          "use_masked_values is False.")
-        else:
-            if propagate_uncertainties is True:
-                propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
-            # If propagate_uncertainties, use astropy's infrastructure.
-            # For this the data and uncertainty must be reshaped
-            # so the first dimension represents the flattened size of a single bin
-            # while the rest represent the shape of the new data. Then the elements
-            # in each bin can be iterated (all bins being treated in parallel) and
-            # their uncertainties propagated.
-            bin_size = bin_shape.prod()
-            flat_shape = [bin_size] + list(new_shape)
-            dummy_axes = tuple(range(1, len(reshape), 2))
-            flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
-            flat_data = flat_data.reshape(flat_shape)
-            reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
-            flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
-            flat_uncertainty = flat_uncertainty.reshape(flat_shape)
-            flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
-            if m is not None:
-                reshaped_mask = self.mask.reshape(tuple(reshape))
-                flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
-                flat_mask = flat_mask.reshape(flat_shape)
+        if propagate_uncertainties:
+            if self.uncertainty is None:
+                warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
+                              "i.e. self.uncertainty is None.")
+            elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
+                warnings.warn("self.uncertainty is of type UnknownUncertainty which does not "
+                              "support uncertainty propagation.")
+            elif (not use_masked_values
+                  and (self.mask is True or (self.mask is not None
+                                             and not isinstance(self.mask, bool)
+                                             and self.mask.all()))):
+                warnings.warn("Uncertainties cannot be propagated as all values are masked and "
+                              "use_masked_values is False.")
             else:
-                flat_mask = None
-            # Propagate uncertainties.
-            new_uncertainty = propagate_uncertainties(
-                flat_uncertainty, flat_data, flat_mask,
-                operation=operation, use_masked_values=use_masked_values,
-                handle_mask=handle_mask, new_unit=new_unit, **kwargs)
+                if propagate_uncertainties is True:
+                    propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
+                # If propagate_uncertainties, use astropy's infrastructure.
+                # For this the data and uncertainty must be reshaped
+                # so the first dimension represents the flattened size of a single bin
+                # while the rest represent the shape of the new data. Then the elements
+                # in each bin can be iterated (all bins being treated in parallel) and
+                # their uncertainties propagated.
+                bin_size = bin_shape.prod()
+                flat_shape = [bin_size] + list(new_shape)
+                dummy_axes = tuple(range(1, len(reshape), 2))
+                flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
+                flat_data = flat_data.reshape(flat_shape)
+                reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
+                flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
+                flat_uncertainty = flat_uncertainty.reshape(flat_shape)
+                flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
+                if m is not None:
+                    reshaped_mask = self.mask.reshape(tuple(reshape))
+                    flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
+                    flat_mask = flat_mask.reshape(flat_shape)
+                else:
+                    flat_mask = None
+                # Propagate uncertainties.
+                new_uncertainty = propagate_uncertainties(
+                    flat_uncertainty, flat_data, flat_mask,
+                    operation=operation, use_masked_values=use_masked_values,
+                    handle_mask=handle_mask, new_unit=new_unit, **kwargs)
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])

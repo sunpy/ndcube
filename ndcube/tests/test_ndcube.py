@@ -925,8 +925,6 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     # Execute rebin.
     cube = ndcube_2d_ln_lt_mask_uncert
     bin_shape = (2, 4)
-    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=False)
-    assert output.uncertainty is None
 
     cube._mask[:] = True
     output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,

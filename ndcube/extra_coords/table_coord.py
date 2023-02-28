@@ -399,17 +399,27 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
     @property
     def ndim(self):
+        """
+        Number of array dimensions to which this TableCoordinate corresponds.
+
+        Note this may be different from the number of the dimensions in the
+        underlying table(s) if different tables represent different dimensions.
+        """
         return len(self.table)
 
     @property
     def shape(self):
+        """
+        Shape of the array grid to which this TableCoordinate corresponds.
+
+        Note this may be different from the shape of the underlying table(s)
+        if different tables represent a different dimensions.
+        """
         return tuple(len(t) for t in self.table)
 
     def interpolate(self, *new_array_grids, **kwargs):
         """
         Interpolate QuantityTableCoordinate to new array index grids.
-
-        Kwargs are passed to underlying interpolation function.
 
         Parameters
         ----------
@@ -419,6 +429,9 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             for each array dimension and corresponding elements in all arrays
             represent a single location in the pixel grid. Therefore, array grids
             must all have the same shape.
+
+        kwargs
+            All remaining kwargs are passed to underlying interpolation function.
 
         Returns
         -------
@@ -567,6 +580,13 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
     @property
     def ndim(self):
+        """
+        Number of array dimensions to which this TableCoordinate corresponds.
+
+        Note that if mesh is False, this is equivalent to the number of dimensions
+        in the underlying SkyCoord. However, if mesh is True it is equivalent
+        to the number of components, e.g. lon, lat, etc.
+        """
         if self.mesh:
             return len(self.table.data.components)
         else:
@@ -574,6 +594,14 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
     @property
     def shape(self):
+        """
+        Shape of the array grid to which this TableCoordinate corresponds.
+
+        Note this may be different from the shape of the underlying SkyCoord
+        if mesh is True. In this case the components (e.g. lon, lat) represent
+        different dimensions and the length of each dimension is dictated by
+        the attached _slice.
+        """
         if self.mesh:
             return tuple(list(self.table.shape) * self.ndim)
         else:
@@ -582,8 +610,6 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     def interpolate(self, *new_array_grids, mesh_output=None, **kwargs):
         """
         Interpolate SkyCoordTableCoordinate to new array index grids.
-
-        Kwargs are passed to underlying interpolation function.
 
         Parameters
         ----------
@@ -599,6 +625,9 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
             SkyCoordTableCoordinate's mesh setting is True or False.
             If new_array_grids are >1-D, mesh is always set to False.
             Default is to maintain mesh setting from pre-interpolated object.
+
+        kwargs
+            All remaining kwargs are passed to underlying interpolation function.
 
         Returns
         -------
