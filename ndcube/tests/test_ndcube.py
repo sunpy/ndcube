@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
+from astropy.nddata import UnknownUncertainty
 from astropy.time import Time
 from astropy.units import UnitsError
 from astropy.wcs import WCS
@@ -918,6 +919,29 @@ def test_rebin_errors(ndcube_3d_l_ln_lt_ectime):
     # bin_shape not integer multiple of data shape.
     with pytest.raises(ValueError):
         output = cube.rebin((9, 2, 1))
+
+
+def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
+    # Execute rebin.
+    cube = ndcube_2d_ln_lt_mask_uncert
+    bin_shape = (2, 4)
+    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=False)
+    assert output.uncertainty is None
+
+    cube._mask[:] = True
+    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
+                        use_masked_values=False)
+    assert output.uncertainty is None
+
+    cube._mask = True
+    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
+                        use_masked_values=False)
+    assert output.uncertainty is None
+
+    cube._mask = False
+    cube._uncertainty = UnknownUncertainty(cube.data * 0.1)
+    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
+    assert output.uncertainty is None
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
