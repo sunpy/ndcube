@@ -225,7 +225,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         contains all the provided world coordinate points.
 
         This function takes points as iterables of low-level coordinate objects,
-        i.e. `~astropy.units.Quantity` objects.  This differs from `~ndcube.NDCube.crop()` 
+        i.e. `~astropy.units.Quantity` objects.  This differs from `~ndcube.NDCube.crop()`
         which takes high-level coordinate objects requiring all the relevant coordinate
         information such as coordinate frame etc.  Hence this method's API is more basic
         but less explicit.
