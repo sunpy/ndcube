@@ -490,14 +490,14 @@ def test_resample(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
                           "2011-01-01T00:00:05",
                           "2011-01-01T00:00:10",
                           "2011-01-01T00:00:15",
-                          "2011-01-01T00:00:15",
+                          "2011-01-01T00:00:20",
                           "2011-01-01T00:00:25",
                           "2011-01-01T00:00:30"], format="isot")
     expected_wave = np.arange(10.5, 19, 2) * u.nm
     expected_sky = SkyCoord(np.arange(0.5, 9, 2), np.arange(0.5, 9, 2), unit=u.deg)
 
     # Assert output values are as expected.
-    assert np.allclose(output._lookup_tables[0][1].table.mjd, expected_time.mjd)
+    assert all(output._lookup_tables[0][1].table.fits == expected_time.fits)
     assert np.allclose(output._lookup_tables[1][1].table[0].to_value(expected_wave.unit),
                        expected_wave.value)
     assert np.allclose(output._lookup_tables[2][1].table.ra.to_value(expected_sky.ra.unit),
@@ -506,6 +506,27 @@ def test_resample(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
                        expected_sky.dec.value)
     assert np.allclose(output._lookup_tables[3][1].table[0].to_value(energy_lut.unit),
                        energy_lut.value)
+
+
+def test_resample_scalar_factor(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
+    # Build ExtraCoord to test.
+    cube = ndcube_4d_ln_lt_l_t[:4, 0]  # Slice cube to dimensions needed for our extra coords.
+    ec = ExtraCoords(ndcube=cube)
+    ec.add("time", 0, time_lut)
+    ec.add("wave", 1, wave_lut)
+
+    # Call resample
+    output = ec.resample(2, ndcube=cube)
+    
+    # Define expected values
+    expected_time = Time(["2011-01-01T00:00:00",
+                          "2011-01-01T00:00:20"], format="isot")
+    expected_wave = np.arange(10, 20, 2) * u.nm
+
+    # Assert output values are as expected.
+    assert all(output._lookup_tables[0][1].table.fits == expected_time.fits)
+    assert np.allclose(output._lookup_tables[1][1].table[0].to_value(expected_wave.unit),
+                       expected_wave.value)
 
 
 def test_length1_extra_coord(wave_lut):
