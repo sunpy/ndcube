@@ -914,11 +914,11 @@ def test_rebin_errors(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
     # Wrong number of axes in bin_shape)
     with pytest.raises(ValueError):
-        output = cube.rebin((2,))
+        cube.rebin((2,))
 
     # bin_shape not integer multiple of data shape.
     with pytest.raises(ValueError):
-        output = cube.rebin((9, 2, 1))
+        cube.rebin((9, 2, 1))
 
 
 def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):

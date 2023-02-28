@@ -518,7 +518,7 @@ def test_resample_scalar_factor(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
 
     # Call resample
     output = ec.resample(2, ndcube=cube)
-    
+
     # Define expected values
     expected_time = Time(["2011-01-01T00:00:00",
                           "2011-01-01T00:00:20"], format="isot")
@@ -555,8 +555,6 @@ def test_resample_wcs(wcs_1d_l):
     factor = [2]
     offset = [0]
     output = ec.resample(factor, offset)
-    # Build expected WCS
-    expected_wcs = ResampledLowLevelWCS(wcs.low_level_wcs, factor, offset)
 
     assert isinstance(output.wcs.low_level_wcs, ResampledLowLevelWCS)
     assert all(output.wcs.low_level_wcs._factor == np.asarray(factor))

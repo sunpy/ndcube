@@ -441,7 +441,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         ndcube: `~ndcube.NDCube`
             The NDCube instance with which the output ExtraCoords object is associated.
-            
+
         kwargs
             All remaining kwargs are passed to `numpy.interp`.
 

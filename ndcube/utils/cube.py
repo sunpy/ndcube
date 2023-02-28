@@ -260,7 +260,6 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
     if use_masked_values or mask is None:
         mask = False
-        parent_mask = False
     if mask is False:
         if operation_is_nantype:
             nan_mask = np.isnan(data)
@@ -268,14 +267,12 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
                 mask = nan_mask
                 idx = np.logical_not(mask)
                 mask1 = mask[1:]
-                parent_mask = mask[0]
         else:
             # If there is no mask and operation is not nan-type, build generator
             # so non-mask can still be iterated.
             n_pix_per_bin = data.shape[flat_axis]
             new_shape = data.shape[1:]
             mask1 = (False for i in range(1, n_pix_per_bin))
-            parent_mask = False
     else:
         # Mask uncertainties corresponding to nan data if operation is nantype.
         if operation_is_nantype:
@@ -285,7 +282,6 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
         mask1 = mask[1:]
         idx = np.logical_not(mask)
         uncertainty.array[mask] = 0
-        parent_mask = mask[0]
         new_uncertainty.array[mask[0]] = 0
     # Propagate uncertainties.
     # Note uncertainty must be associated with a parent nddata for some propagations.
