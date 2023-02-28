@@ -1,1 +1,1 @@
-Implement new property, `ndcube.ExtraCoords.is_empty` that returns ``True`` if the object has not extra coords.  Otherwise return ``False``.
+Implement new property, `ndcube.ExtraCoords.is_empty` that returns ``True`` if the object has got extra coords.  Otherwise return ``False``.

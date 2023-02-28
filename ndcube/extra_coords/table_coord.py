@@ -404,8 +404,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         return tuple(len(t) for t in self.table)
 
     def interpolate(self, *new_array_grids, **kwargs):
-        """Interpolate QuantityTableCoordinate to new array index grids.
-
+        """
+        Interpolate QuantityTableCoordinate to new array index grids.
 
         Kwargs are passed to underlying interpolation function.
 
@@ -639,7 +639,6 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
             mesh = False
         else:
             mesh = self.mesh
-        print(new_components, self.mesh, ndim, new_array_grids, old_array_grids, self._sliced_components)
         new_skycoord = SkyCoord(*new_components,
                                 unit=self.table.representation_component_units.values(),
                                 frame=self.table.frame)

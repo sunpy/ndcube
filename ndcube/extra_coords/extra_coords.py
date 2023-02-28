@@ -54,7 +54,7 @@ class ExtraCoordsABC(abc.ABC):
         name : `str` or sequence of `str`
             The name(s) for these world coordinate(s).
         array_dimension : `int` or `tuple` of `int`
-            The array dimension(s), in the array, to which this lookup table corresponds.
+            The array dimension(s), to which this lookup table corresponds.
         lookup_table : `object` or sequence of `object`
             The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
             that can instantiate one, i.e. currently a `~astropy.time.Time`,
@@ -425,7 +425,6 @@ class ExtraCoords(ExtraCoordsABC):
         Resample all extra coords by given factors in array-index-space.
 
         One resample factor must be supplied for each array axis in array-axis order.
-        Kwargs are passed to `numpy.interp`.
 
         Parameters
         ----------
@@ -442,6 +441,9 @@ class ExtraCoords(ExtraCoordsABC):
 
         ndcube: `~ndcube.NDCube`
             The NDCube instance with which the output ExtraCoords object is associated.
+            
+        kwargs
+            All remaining kwargs are passed to `numpy.interp`.
 
         Returns
         -------

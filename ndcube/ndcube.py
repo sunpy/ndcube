@@ -1105,15 +1105,15 @@ class NDCube(NDCubeBase):
         if m is None:
             data = self.data
         else:
-            masked_type = np.ma.masked_array
-            for array_type, m_type in ARRAY_MASK_MAP.items():
+            for array_type, masked_type in ARRAY_MASK_MAP.items():
                 if isinstance(self.data, array_type):
-                    masked_type = m_type
                     break
             else:
+                masked_type = np.ma.masked_array
                 warn.warning("data and mask arrays of different or unrecognized types. "
                              "Casting them into a numpy masked array.")
             data = masked_type(self.data, m)
+
         reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
@@ -1132,7 +1132,7 @@ class NDCube(NDCubeBase):
             reshaped_mask = self.mask.reshape(reshape)
             new_mask = handle_mask(reshaped_mask, axis=operation_axes)
 
-        # Propagate uncertainties is propagate_uncertainties kwarg set.
+        # Propagate uncertainties if propagate_uncertainties kwarg set.
         new_uncertainty = None
         if propagate_uncertainties is False:
             pass
