@@ -451,8 +451,16 @@ class ExtraCoords(ExtraCoordsABC):
         new_ec = type(self)(ndcube)
         if self.is_empty:
             return new_ec
-        cube_shape = self._ndcube.data.shape
-        ndim = len(cube_shape)
+        if self._ndcube is not None:
+            cube_shape = self._ndcube.data.shape
+            ndim = len(cube_shape)
+        elif self._wcs is not None:
+            ndim = self._wcs.pixel_n_dim
+        else:
+            raise NotImplementedError(
+                "Resampling a lookup-table-based ExtraCoords not yet implemented. "
+                "Please raise an issue at https://github.com/sunpy/ndcube/issues "
+                "if you need this functionality")
         if np.isscalar(factor):
             factor = [factor] * ndim
         if len(factor) != ndim:

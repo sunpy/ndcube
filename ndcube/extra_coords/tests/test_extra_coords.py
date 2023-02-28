@@ -10,6 +10,7 @@ from astropy.wcs import WCS
 
 from ndcube import NDCube
 from ndcube.extra_coords import ExtraCoords
+from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
 # Fixtures
 
@@ -543,6 +544,23 @@ def test_resample_errors(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
     # Test error for incorrect number of offset elements.
     with pytest.raises(ValueError):
         output = ec.resample(2, [2], ndcube=cube)
+
+
+def test_resample_wcs(wcs_1d_l):
+    # Build ExtraCoords to resample.
+    wcs = wcs_1d_l
+    ec = ExtraCoords()
+    ec.wcs = wcs
+    # Call resample
+    factor = [2]
+    offset = [0]
+    output = ec.resample(factor, offset)
+    # Build expected WCS
+    expected_wcs = ResampledLowLevelWCS(wcs.low_level_wcs, factor, offset)
+
+    assert isinstance(output.wcs.low_level_wcs, ResampledLowLevelWCS)
+    assert all(output.wcs.low_level_wcs._factor == np.asarray(factor))
+    assert all(output.wcs.low_level_wcs._offset == np.asarray(offset))
 
 
 def test_length1_extra_coord(wave_lut):
