@@ -308,7 +308,9 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         ndim = len(tables)
         dims = np.array([t.ndim for t in tables])
         if any(dims > 1):
-            raise ValueError("All tables must be 1-D")
+            raise ValueError(
+                "Currently all tables must be 1-D. If you need >1D support, please "
+                "raise an issue at https://github.con/sunpy/ndcube/issues")
 
         if isinstance(names, str):
             names = [names]
@@ -606,7 +608,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         ndim = self.ndim
         shape = self.shape
         if len(new_array_grids) != ndim:
-            raise ValueError(f"A new array grid must be given for each array axis, i.e. {dim}")
+            raise ValueError(f"A new array grid must be given for each array axis, i.e. {ndim}")
         if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
             raise ValueError("New array grids must all be same shape.")
 

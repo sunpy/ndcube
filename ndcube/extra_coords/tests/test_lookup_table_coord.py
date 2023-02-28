@@ -695,13 +695,6 @@ def test_and_errors():
 ################################################################################
 # Interpolation Tests
 ################################################################################
-def assert_lutc_ancilliary_data_same(lutc1, lutc2):
-    assert lutc1.mesh is lutc2.mesh
-    assert lutc1.names == lutc2.names
-    assert lutc1.physical_types == lutc2.physical_types
-    assert lutc1._dropped_world_dimensions == lutc2._dropped_world_dimensions
-
-
 def test_quantity_interpolate(lut_3d_distance_mesh):
     lutc = lut_3d_distance_mesh
     new_array_grids = [np.arange(1.5, 10, 1.5)] * 3
@@ -750,3 +743,42 @@ def test_skycoord_interpolate_mesh(lut_2d_skycoord_mesh):
     assert u.allclose(output.table.dec, expected_table.dec)
     assert u.allclose(output.table.distance, expected_table.distance)
     assert_lutc_ancilliary_data_same(output, lutc)
+
+
+def test_quantity_interpolate_errors():
+    qtc = QuantityTableCoordinate(3 * u.m)
+    with pytest.raises(ValueError) as ei:
+        qtc.interpolate(np.ones(1))
+    assert "Cannot interpolate a scalar" in str(ei)
+
+    qtc = QuantityTableCoordinate(range(8) * u.m, range(6) * u.m)
+    with pytest.raises(ValueError) as ei:
+        qtc.interpolate(np.ones(1))
+    assert "A new array grid must be given for each array axis" in str(ei)
+
+    with pytest.raises(ValueError) as ei:
+        qtc.interpolate(np.ones(1), np.ones(2))
+    assert "New array grids must all be same shape." in str(ei)
+
+
+def test_skycoord_interpolate_error(lut_2d_skycoord_mesh):
+    sctc = SkyCoordTableCoordinate(SkyCoord(1 * u.deg, 2 * u.deg))
+    with pytest.raises(ValueError) as ei:
+        sctc.interpolate(np.ones(1))
+    assert "Cannot interpolate a scalar" in str(ei)
+
+    sctc = lut_2d_skycoord_mesh
+    with pytest.raises(ValueError) as ei:
+        sctc.interpolate(np.ones(1))
+    assert "A new array grid must be given for each array axis" in str(ei)
+
+    with pytest.raises(ValueError) as ei:
+        sctc.interpolate(np.ones(1), np.ones(2))
+    assert "New array grids must all be same shape." in str(ei)
+
+
+def assert_lutc_ancilliary_data_same(lutc1, lutc2):
+    assert lutc1.mesh is lutc2.mesh
+    assert lutc1.names == lutc2.names
+    assert lutc1.physical_types == lutc2.physical_types
+    assert lutc1._dropped_world_dimensions == lutc2._dropped_world_dimensions
