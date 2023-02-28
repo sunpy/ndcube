@@ -909,6 +909,17 @@ def test_rebin_some_masked_uncerts_exclude_masked_values(ndcube_2d_ln_lt_mask_un
     assert (output.mask == expected_mask).all()
 
 
+def test_rebin_errors(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime
+    # Wrong number of axes in bin_shape)
+    with pytest.raises(ValueError):
+        output = cube.rebin((2,))
+
+    # bin_shape not integer multiple of data shape.
+    with pytest.raises(ValueError):
+        output = cube.rebin((9, 2, 1))
+
+
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
     resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
