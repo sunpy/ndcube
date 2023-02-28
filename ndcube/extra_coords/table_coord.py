@@ -579,7 +579,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         else:
             return self.table.shape
 
-    def interpolate(self, *new_array_grids, **kwargs):
+    def interpolate(self, *new_array_grids, mesh_output=None, **kwargs):
         """
         Interpolate SkyCoordTableCoordinate to new array index grids.
 
@@ -593,6 +593,12 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
             for each array dimension and corresponding elements in all arrays
             represent a single location in the pixel grid. Therefore, array grids
             must all have the same shape.
+
+        mesh_output: `bool`
+            If new_array_grids are 1-D, this keyword sets whether the resulting
+            SkyCoordTableCoordinate's mesh setting is True or False.
+            If new_array_grids are >1-D, mesh is always set to False.
+            Default is to maintain mesh setting from pre-interpolated object.
 
         Returns
         -------
@@ -611,6 +617,11 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
             raise ValueError(f"A new array grid must be given for each array axis, i.e. {ndim}")
         if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
             raise ValueError("New array grids must all be same shape.")
+        if mesh_output is None:
+            if new_array_grids[0].ndim > 1:
+                mesh_output = False
+            else:
+                mesh_output = self.mesh
 
         # Build old array grids.  Note self._slice give the slice item(s) required to
         # make the underlying SkyCoord match the dimensionality of the associated data cube.
@@ -629,22 +640,10 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
                 for component in self._sliced_components]
 
         # Build new SkyCoord and return new TableCoordinate based on it.
-        new_shape = np.array([len(comp) for comp in new_components])
-        if self.mesh and any(new_shape != new_shape[0]):
-            # If above condition is true, new components will be meshed together.
-            # If this results in a lot of pixels, raise warning as there might be RAM issues.
-            new_size = new_shape.prod()
-            if new_size > 1e5:
-                warnings.warn("Coordinates underlying SkyCoordTableCoordinate will be meshed. "
-                              "This could significantly increase memory required.")
-            new_components = np.meshgrid(*new_components)
-            mesh = False
-        else:
-            mesh = self.mesh
         new_skycoord = SkyCoord(*new_components,
                                 unit=self.table.representation_component_units.values(),
                                 frame=self.table.frame)
-        new_coord = type(self)(new_skycoord, mesh=mesh, names=self.names,
+        new_coord = type(self)(new_skycoord, mesh=mesh_output, names=self.names,
                                physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
         return new_coord
