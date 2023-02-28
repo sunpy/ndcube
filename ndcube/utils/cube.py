@@ -252,7 +252,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
     if not propagation_operation:
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
-        elif operation in {np.prod, np.nanprod}:
+        elif operation in {np.product, np.prod, np.nanprod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")
@@ -260,18 +260,22 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
     if use_masked_values or mask is None:
         mask = False
+        parent_mask = False
     if mask is False:
         if operation_is_nantype:
             nan_mask = np.isnan(data)
             if nan_mask.any():
                 mask = nan_mask
+                idx = np.logical_not(mask)
                 mask1 = mask[1:]
+                parent_mask = mask[0]
         else:
             # If there is no mask and operation is not nan-type, build generator
             # so non-mask can still be iterated.
             n_pix_per_bin = data.shape[flat_axis]
             new_shape = data.shape[1:]
             mask1 = (False for i in range(1, n_pix_per_bin))
+            parent_mask = False
     else:
         # Mask uncertainties corresponding to nan data if operation is nantype.
         if operation_is_nantype:
@@ -281,8 +285,15 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
         mask1 = mask[1:]
         idx = np.logical_not(mask)
         uncertainty.array[mask] = 0
+        parent_mask = mask[0]
         new_uncertainty.array[mask[0]] = 0
     # Propagate uncertainties.
+    # Note uncertainty must be associated with a parent nddata for some propagations.
+    cumul_data = data[0]
+    if mask is not False and use_masked_values is False:
+        cumul_data[idx[0]] = 0
+    parent_nddata = astropy.nddata.NDData(cumul_data, uncertainty=new_uncertainty)
+    new_uncertainty.parent_nddata = parent_nddata
     for j, mask_slice in enumerate(mask1):
         i = j + 1
         cumul_data = operation(data[:i+1]) if mask is False else operation(data[:i+1][idx[:i+1]])
@@ -290,6 +301,8 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
                                            uncertainty=uncertainty[i])
         new_uncertainty = new_uncertainty.propagate(propagation_operation, data_slice,
                                                     cumul_data, correlation)
+        parent_nddata = astropy.nddata.NDData(cumul_data, uncertainty=new_uncertainty)
+        new_uncertainty.parent_nddata = parent_nddata
     # If aggregation operation is mean, uncertainties must be divided by
     # number of unmasked pixels in each bin.
     if operation_is_mean and propagation_operation is np.add:
