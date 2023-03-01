@@ -1,3 +1,48 @@
+v2.1.0 (2023-03-01)
+===================
+
+Backwards Incompatible Changes
+------------------------------
+
+- To support compatibility with reproject 0.9, the API of `.NDCube.reproject_to`
+  has been tweaked so that any keyword argument to the underlying reprojection
+  function can be passed through. This has the effect of being a breaking change
+  if you were specifying any arguments after ``shape_out=`` as positional rather
+  than keyword arguments. (Note that in a future release we will probably change
+  to require keyword arguments to ``reproject_to``. (`#552 <https://github.com/sunpy/ndcube/pull/552>`__)
+
+
+Features
+--------
+
+- Implement new property, `ndcube.ExtraCoords.is_empty` that returns ``True`` if the object has got extra coords.  Otherwise return ``False``. (`#450 <https://github.com/sunpy/ndcube/pull/450>`__)
+- Add `ndcube.ExtraCoords.resample` method to resample extra coordinates by a certain factor in each array dimension. (`#450 <https://github.com/sunpy/ndcube/pull/450>`__)
+- Implement a new `ndcube.NDCube.rebin` method to combine integer numbers of pixels along each axis into larger pixels. (`#450 <https://github.com/sunpy/ndcube/pull/450>`__)
+- Add new methods to interpolate lookup table coordinates: `ndcube.extra_coords.table_coord.QuantityTableCoordinate.interpolate`, `ndcube.extra_coords.table_coord.SkyCoordTableCoordinate.interpolate`, `ndcube.extra_coords.table_coord.TimeTableCoordinate.interpolate`, `ndcube.extra_coords.table_coord.MultipleTableCoordinate.interpolate` (`#450 <https://github.com/sunpy/ndcube/pull/450>`__)
+- Add `ndcube.NDCubeSequence.crop` and `ndcube.NDCubeSequence.crop_by_values` methods which crop the `~ndcube.NDCubeSequence` based on input world coordinate ranges. (`#466 <https://github.com/sunpy/ndcube/pull/466>`__)
+- Add basic arithmetic methods between `~ndcube.NDCube` objects and broadcastable arrays,
+  scalars, and `~astropy.unit.Quantity` objects. Operations between two `~ndcube.NDCube` objects
+  are not supported. (`#541 <https://github.com/sunpy/ndcube/pull/541>`__)
+- Add `ndcube.NDCube.to` to convert cube to new unit. (`#586 <https://github.com/sunpy/ndcube/pull/586>`__)
+- Created `~ndcube.GlobalCoordsABC` and updated `~ndcube.NDCubeABC`, and `~ndcube.extra_coords.ExtraCoordsABC` to reflect official NDCube 2 API definition in SEP. (`#592 <https://github.com/sunpy/ndcube/pull/592>`__)
+
+
+Bug Fixes
+---------
+
+- Fix bug #535 where `NDCollection` could not update when `aligned_axes` is `None` (`#538 <https://github.com/sunpy/ndcube/pull/538>`__)
+- Fix a bug where `aligned_axis_physical_types` caused `__str__`
+  to error when `aligned_axes` was `None`. (`#539 <https://github.com/sunpy/ndcube/pull/539>`__)
+- Fix a bug where ``data_unit`` was not being correctly passed through to the underlying plotting
+  function when animating a cube. (`#578 <https://github.com/sunpy/ndcube/pull/578>`__)
+
+
+Improved Documentation
+----------------------
+
+- Add example to example gallery of how to create an NDCube from a FITS file. (`#544 <https://github.com/sunpy/ndcube/pull/544>`__)
+
+
 v2.0.3 (2022-09-23)
 ===================
 
