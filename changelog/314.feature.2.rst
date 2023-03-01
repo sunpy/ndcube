@@ -1,1 +1,0 @@
-Make pyplot colorbar work with the output on NDCube.plot when it is a 2D image.

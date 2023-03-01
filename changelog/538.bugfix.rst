@@ -1,1 +1,0 @@
-Fix bug #535 where `NDCollection` could not update when `aligned_axes` is `None`

@@ -1,1 +1,0 @@
-Extends `~.NDCube.reproject_to` functionality by supporting ``adaptive`` and ``exact`` algorithms for an `~NDCube` with 2D celestial WCS.

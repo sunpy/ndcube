@@ -1,2 +1,0 @@
-Fixed a bug where the `plot_axes` key was not respected when passing `axes` to `plot`
-for 2D cubes.

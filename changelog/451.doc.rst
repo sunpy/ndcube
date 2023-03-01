@@ -1,1 +1,0 @@
-Document accepted input to ``lookup_table`` in `.ExtraCoords` setting its ``physical_types``.

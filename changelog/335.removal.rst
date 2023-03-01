@@ -1,1 +1,0 @@
-Remove NDCubeSequence.sequence_axis_extra_coords. This is replaced by NDCubeSequence.sequence_axis_coords.

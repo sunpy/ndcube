@@ -1,1 +1,0 @@
-Fix check as to whether user inputs to `ndcube.wcs.wrappers.CompoundLowLevelWCS.world_to_pixel_values` result in consistent pixel values when world dimensions share pixel dimensions.  Previously this check was unreliable when non-trivial mapping between world and pixel dimensions was used.
