@@ -1,1 +1,0 @@
-Allow `ndcube.NDCubeSequence.explode_along_axis` to explode sequence along any axis, not just the common axis.

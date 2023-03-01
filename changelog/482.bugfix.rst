@@ -1,1 +1,0 @@
-Fix slicing `~ndcube.ExtraCoords` made of lookup tables. This bug meant that mapping of coords to arrays axes was not adjusted when an axis was dropped.

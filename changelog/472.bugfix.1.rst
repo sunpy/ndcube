@@ -1,1 +1,0 @@
-Extend support for cropping an `~ndcube.NDCube` using an `~ndcube.extra_coords.ExtraCoords` instance as the wcs.

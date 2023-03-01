@@ -1,1 +1,0 @@
-Add `ndcube.NDCube.to` to convert cube to new unit.

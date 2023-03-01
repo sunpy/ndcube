@@ -1,1 +1,0 @@
-Implement a new `ndcube.NDCube.rebin` method to combine integer numbers of pixels along each axis into larger pixels.
