@@ -1,1 +1,0 @@
-Add ``__len__`` method to `~ndcube.NDCubeSequence` which makes ``len(sequence)`` return the number of cubes in the sequence.

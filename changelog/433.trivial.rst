@@ -1,1 +1,0 @@
-Adds a function to compare the physical types of two WCS objects.

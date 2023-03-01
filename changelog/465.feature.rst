@@ -1,1 +1,0 @@
-Add ``__iter__`` method to `~ndcube.NDCubeSequence` which iterates through the cubes within the sequence.
