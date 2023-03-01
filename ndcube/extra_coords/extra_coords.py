@@ -9,10 +9,11 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.wcs.wcsapi.high_level_wcs_wrapper import HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
-from ndcube.wcs.wrappers import CompoundLowLevelWCS
+from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
 from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
                           SkyCoordTableCoordinate, TimeTableCoordinate)
@@ -53,7 +54,7 @@ class ExtraCoordsABC(abc.ABC):
         name : `str` or sequence of `str`
             The name(s) for these world coordinate(s).
         array_dimension : `int` or `tuple` of `int`
-            The pixel dimension(s), in the array, to which this lookup table corresponds.
+            The array dimension(s), to which this lookup table corresponds.
         lookup_table : `object` or sequence of `object`
             The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
             that can instantiate one, i.e. currently a `~astropy.time.Time`,
@@ -95,6 +96,11 @@ class ExtraCoordsABC(abc.ABC):
             Therefore using this WCS directly might lead to some confusing results.
 
         """
+
+    @property
+    @abc.abstractproperty
+    def is_empty(self):
+        """Return True if no extra coords present, else return False."""
 
     @abc.abstractmethod
     def __getitem__(self, item: Union[str, int, slice, Iterable[Union[str, int, slice]]]) -> "ExtraCoordsABC":
@@ -218,7 +224,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
         self._lookup_tables = list(sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], int) else x[0][0]))
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0]))
 
     @property
     def _name_lut_map(self):
@@ -304,6 +310,14 @@ class ExtraCoords(ExtraCoordsABC):
                 )
 
         self._wcs = wcs
+
+    @property
+    def is_empty(self):
+        # docstring in ABC
+        if not self._wcs and not self._lookup_tables:
+            return True
+        else:
+            return False
 
     def _getitem_string(self, item):
         """
@@ -405,6 +419,82 @@ class ExtraCoords(ExtraCoordsABC):
             return mtc.dropped_world_dimensions
 
         return dict()
+
+    def resample(self, factor, offset=0, ndcube=None, **kwargs):
+        """
+        Resample all extra coords by given factors in array-index-space.
+
+        One resample factor must be supplied for each array axis in array-axis order.
+
+        Parameters
+        ----------
+        factor: `ìnt`, `float`, or iterable thereof.
+            The factor by which each array axis is resampled.
+            If scalar, same factor is applied to all axes.
+            Otherwise a factor for each axis must be provided.
+
+        offset: `int` `float` of iterable therefore.
+            The location on the underlying grid which corresponds
+            to the zeroth element after resampling. If iterable, must have an entry
+            for each dimension.  If a scalar, the grid will be
+            shifted by the same amount in all dimensions.
+
+        ndcube: `~ndcube.NDCube`
+            The NDCube instance with which the output ExtraCoords object is associated.
+
+        kwargs
+            All remaining kwargs are passed to `numpy.interp`.
+
+        Returns
+        -------
+        new_ec: `~ndcube.extra_coords.ExtraCoords`
+            A new ExtraCoords object holding the interpolated coords.
+        """
+        new_ec = type(self)(ndcube)
+        if self.is_empty:
+            return new_ec
+        if self._ndcube is not None:
+            cube_shape = self._ndcube.data.shape
+            ndim = len(cube_shape)
+        elif self._wcs is not None:
+            ndim = self._wcs.pixel_n_dim
+        else:
+            raise NotImplementedError(
+                "Resampling a lookup-table-based ExtraCoords not yet implemented. "
+                "Please raise an issue at https://github.com/sunpy/ndcube/issues "
+                "if you need this functionality")
+        if np.isscalar(factor):
+            factor = [factor] * ndim
+        if len(factor) != ndim:
+            raise ValueError(
+                "factor must be scalar or an iterable with length equal to number of cube "
+                f"dimensions: len(factor) = {len(factor)}; No. cube dimensions = {ndim}.")
+        if np.isscalar(offset):
+            offset = [offset] * ndim
+        if len(offset) != ndim:
+            raise ValueError(
+                "offset must be scalar or an iterable with length equal to number of cube "
+                f"dimensions: len(offset) = {len(offset)}; No. cube dimensions = {ndim}.")
+        # If ExtraCoords object built on WCS, resample using WCS insfrastructure
+        if self._wcs is not None:
+            new_ec.wcs = HighLevelWCSWrapper(ResampledLowLevelWCS(self._wcs.low_level_wcs,
+                                                                  factor, offset))
+            return new_ec
+        # Else interpolate the lookup table coordinates.
+        factor = np.asarray(factor)
+        new_grids = []
+        for c, d, f in zip(offset, cube_shape, factor):
+            x = np.arange(c, d+f, f)
+            x = x[x <= d-1]
+            new_grids.append(x)
+        new_grids = np.array(new_grids, dtype=object)
+        for array_axes, coord in self._lookup_tables:
+            if np.isscalar(array_axes):
+                new_coord = coord.interpolate(new_grids[array_axes], **kwargs)
+            else:
+                new_coord = coord.interpolate(*new_grids[np.asarray(array_axes)], **kwargs)
+            new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)
+        return new_ec
 
     @property
     def cube_wcs(self):

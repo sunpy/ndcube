@@ -14,6 +14,11 @@ from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
+try:
+    import scipy.interpolate
+except ImportError:
+    pass
+
 __all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
 
 
@@ -272,41 +277,53 @@ class BaseTableCoordinate(abc.ABC):
 
 class QuantityTableCoordinate(BaseTableCoordinate):
     """
-    A lookup table made up of ``N`` `~astropy.units.Quantity` objects.
+    A lookup table up built on `~astropy.units.Quantity`.
 
-    This class can either be instantiated with N ND arrays (i.e. the output of
-    `numpy.meshgrid`) or N 1D arrays (i.e. the input to `numpy.meshgrid`).
+    Quantities must be 1-D but more than one can be provided to represent
+    different dimensions of an N-D coordinate.
 
-    Notes
-    -----
-    The reason for supporting both the input and output of meshgrid is that
-    meshgrid isn't called when ``mesh=True``, the "meshing" is done in the gWCS
-    layer.
+    Parameters
+    ----------
+    tables: one or more `~astropy.units.Quantity`
+        The coordinates. Must be 1 dimensionsal. If coordinate system is >1D,
+        multiple 1-D Quantities can be provided representing the different
+        dimensions
+
+    names: `str` or `list` of `str`
+        Custom names for the components of the QuantityTableCoord. If provided,
+        a name must be given for each input Quantity.
+
+    physical_types: str` or `list` of `str`
+        Physical types for the components of the QuantityTableCoord. If provided,
+        a physical type must be given for each input Quantity.
+        Physical types of the components of the SkyCoord. If provided,
+        a physical type must be given for each component.
     """
 
-    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+    def __init__(self, *tables, names=None, physical_types=None):
         if not all([isinstance(t, u.Quantity) for t in tables]):
             raise TypeError("All tables must be astropy Quantity objects")
         if not all([t.unit.is_equivalent(tables[0].unit) for t in tables]):
             raise u.UnitsError("All tables must have equivalent units.")
+        ndim = len(tables)
+        dims = np.array([t.ndim for t in tables])
+        if any(dims > 1):
+            raise ValueError(
+                "Currently all tables must be 1-D. If you need >1D support, please "
+                "raise an issue at https://github.con/sunpy/ndcube/issues")
 
         if isinstance(names, str):
             names = [names]
+        if names is not None and len(names) != ndim:
+            raise ValueError("The number of names should match the number of world dimensions")
         if isinstance(physical_types, str):
             physical_types = [physical_types]
-
-        if names is not None and len(names) != len(tables):
-            raise ValueError("The number of names should match the number of world dimensions")
-        if physical_types is not None and len(physical_types) != len(tables):
+        if physical_types is not None and len(physical_types) != ndim:
             raise ValueError("The number of physical types should match the number of world dimensions")
 
         self.unit = tables[0].unit
 
-        dims = np.array([t.ndim for t in tables])
-        if not mesh and any(dims > 1):
-            raise NotImplementedError("Support for lookup tables with more than one dimension is not yet implemented")
-
-        super().__init__(*tables, mesh=mesh, names=names, physical_types=physical_types)
+        super().__init__(*tables, mesh=True, names=names, physical_types=physical_types)
 
     def _slice_table(self, i, table, item, new_components, whole_slice):
         """
@@ -349,17 +366,13 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         new_components = defaultdict(list)
         new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
 
-        if self.mesh:
-            for i, (ele, table) in enumerate(zip(item, self.table)):
-                self._slice_table(i, table, ele, new_components, whole_slice=item)
-        else:
-            for i, table in enumerate(self.table):
-                self._slice_table(i, table, item, new_components, whole_slice=item)
+        for i, (ele, table) in enumerate(zip(item, self.table)):
+            self._slice_table(i, table, ele, new_components, whole_slice=item)
 
         names = new_components["names"] or None
         physical_types = new_components["physical_types"] or None
 
-        ret_table = type(self)(*new_components["tables"], mesh=self.mesh, names=names, physical_types=physical_types)
+        ret_table = type(self)(*new_components["tables"], names=names, physical_types=physical_types)
         ret_table._dropped_world_dimensions = new_components["dropped_world_dimensions"]
         return ret_table
 
@@ -382,28 +395,114 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        return _model_from_quantity(self.table, self.mesh)
+        return _model_from_quantity(self.table, True)
+
+    @property
+    def ndim(self):
+        """
+        Number of array dimensions to which this TableCoordinate corresponds.
+
+        Note this may be different from the number of the dimensions in the
+        underlying table(s) if different tables represent different dimensions.
+        """
+        return len(self.table)
+
+    @property
+    def shape(self):
+        """
+        Shape of the array grid to which this TableCoordinate corresponds.
+
+        Note this may be different from the shape of the underlying table(s)
+        if different tables represent a different dimensions.
+        """
+        return tuple(len(t) for t in self.table)
+
+    def interpolate(self, *new_array_grids, **kwargs):
+        """
+        Interpolate QuantityTableCoordinate to new array index grids.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the coords
+            are desired. An array grid must be provided as a separate arg
+            for each array dimension and corresponding elements in all arrays
+            represent a single location in the pixel grid. Therefore, array grids
+            must all have the same shape.
+
+        kwargs
+            All remaining kwargs are passed to underlying interpolation function.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.QuantityTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        if self.is_scalar():
+            raise ValueError("Cannot interpolate a scalar QuantityTableCoordinate.")
+        # Sanitize input.
+        ndim = self.ndim
+        if len(new_array_grids) != ndim:
+            raise ValueError(
+                f"A new array grid must be given for each array axis/table, i.e. {ndim}")
+        if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
+            raise ValueError("New array grids must all be same shape.")
+        # Build array grids for non-interpolated table.
+        old_array_grids = tuple(np.arange(d) for d in self.shape)
+        # Iterate through tables and interpolate each.
+        new_tables = [
+            np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
+            for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
+        # Rebuild return interpolated coord.
+        new_coord = type(self)(*new_tables, names=self.names, physical_types=self.physical_types)
+        new_coord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_coord
 
 
 class SkyCoordTableCoordinate(BaseTableCoordinate):
     """
     A lookup table created from a `~astropy.coordinates.SkyCoord`.
 
-    If mesh is `True` in this class then `numpy.meshgrid` *is* called when the
-    class is constructed, this is to allow slicing operations on the tables
-    which make the length of the dimensions different.
+    Parameters
+    ----------
+    table: `~astropy.coordinates.SkyCoord`
+        SkyCoord of coordinates.  Only one can be provided.
+
+    mesh: `bool`
+        If True, world components of input SkyCoord are interpretted to represent
+        different array dimensions.  Input SkyCoord must be 1-D.
+
+    names: `str` or `list` of `str`
+        Custom names for the components of the SkyCoord. If provided, a name must
+        be given for each component.
+
+    physical_types: str` or `list` of `str`
+        Physical types of the components of the SkyCoord. If provided,
+        a physical type must be given for each component.
+
+    Notes
+    -----
+    If mesh is True, underlying SkyCoord must always be "square" due to nature of
+    `~astropy.coordiantes.SkyCoord`, i.e. the lat and lon components are always the
+    same length.
     """
 
     def __init__(self, *tables, mesh=False, names=None, physical_types=None):
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise ValueError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
+        if mesh and tables[0].ndim > 1:
+            raise ValueError("If mesh is True, input SkyCoord must be 1-D.")
 
         if isinstance(names, str):
             names = [names]
-        if names is not None and len(names) != 2:
-            raise ValueError("The number of names must equal two for a SkyCoord table.")
-        if physical_types is not None and len(physical_types) != 2:
-            raise ValueError("The number of physical types must equal two for a SkyCoord table.")
+        n_components = len(tables[0].data.components)
+        if names is not None and len(names) != n_components:
+            raise ValueError("The number of names must equal number of components in the input "
+                             f"SkyCoord: {n_components}.")
+        if physical_types is not None and len(physical_types) != n_components:
+            raise ValueError("The number of physical types must equal number of components in "
+                             f"the input SkyCoord: {n_components}.")
 
         sc = tables[0]
 
@@ -479,10 +578,126 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         return _model_from_quantity(self._sliced_components, mesh=self.mesh)
 
+    @property
+    def ndim(self):
+        """
+        Number of array dimensions to which this TableCoordinate corresponds.
+
+        Note that if mesh is False, this is equivalent to the number of dimensions
+        in the underlying SkyCoord. However, if mesh is True it is equivalent
+        to the number of components, e.g. lon, lat, etc.
+        """
+        if self.mesh:
+            return len(self.table.data.components)
+        else:
+            return self.table.ndim
+
+    @property
+    def shape(self):
+        """
+        Shape of the array grid to which this TableCoordinate corresponds.
+
+        Note this may be different from the shape of the underlying SkyCoord
+        if mesh is True. In this case the components (e.g. lon, lat) represent
+        different dimensions and the length of each dimension is dictated by
+        the attached _slice.
+        """
+        if self.mesh:
+            return tuple(list(self.table.shape) * self.ndim)
+        else:
+            return self.table.shape
+
+    def interpolate(self, *new_array_grids, mesh_output=None, **kwargs):
+        """
+        Interpolate SkyCoordTableCoordinate to new array index grids.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the new values of the coords
+            are desired. An array grid must be provided as a separate arg
+            for each array dimension and corresponding elements in all arrays
+            represent a single location in the pixel grid. Therefore, array grids
+            must all have the same shape.
+
+        mesh_output: `bool`
+            If new_array_grids are 1-D, this keyword sets whether the resulting
+            SkyCoordTableCoordinate's mesh setting is True or False.
+            If new_array_grids are >1-D, mesh is always set to False.
+            Default is to maintain mesh setting from pre-interpolated object.
+
+        kwargs
+            All remaining kwargs are passed to underlying interpolation function.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.SkyCoordTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+        """
+        if self.is_scalar():
+            raise ValueError("Cannot interpolate a scalar SkyCoordTableCoordinate.")
+        # SkyCoords have multiple world components, e.g. lat and lon, even if
+        # it 1-D. Interpolate the components separately then recombine into a new SkyCoord.
+        # First, inspect underlying SkyCoord.
+        # Sanitize input.
+        ndim = self.ndim
+        shape = self.shape
+        if len(new_array_grids) != ndim:
+            raise ValueError(f"A new array grid must be given for each array axis, i.e. {ndim}")
+        if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
+            raise ValueError("New array grids must all be same shape.")
+        if mesh_output is None:
+            if new_array_grids[0].ndim > 1:
+                mesh_output = False
+            else:
+                mesh_output = self.mesh
+
+        # Build old array grids.  Note self._slice give the slice item(s) required to
+        # make the underlying SkyCoord match the dimensionality of the associated data cube.
+        old_array_grids = [np.arange(d)[slc] for d, slc in zip(shape, self._slice)]
+        # Iterate through components and interpolate each.
+        if self.mesh:
+            new_components = [np.interp(new_grid, old_grid, comp, **kwargs)
+                              for new_grid, old_grid, comp
+                              in zip(new_array_grids, old_array_grids, self._sliced_components)]
+        elif ndim == 1:
+            new_components = [np.interp(*new_array_grids, *old_array_grids, comp, **kwargs)
+                              for comp in self._sliced_components]
+        else:
+            new_components = [
+                scipy.interpolate.interpn(old_array_grids, component, new_array_grids, **kwargs)
+                for component in self._sliced_components]
+
+        # Build new SkyCoord and return new TableCoordinate based on it.
+        new_skycoord = SkyCoord(*new_components,
+                                unit=self.table.representation_component_units.values(),
+                                frame=self.table.frame)
+        new_coord = type(self)(new_skycoord, mesh=mesh_output, names=self.names,
+                               physical_types=self.physical_types)
+        new_coord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_coord
+
 
 class TimeTableCoordinate(BaseTableCoordinate):
     """
     A lookup table based on a `~astropy.time.Time`, will always be one dimensional.
+
+    Parameters
+    ----------
+    table: `~astropy.time.Time`
+        Time coordinates.  Only one can be provided and must be 1D.
+
+    names: `str` or `list` of `str`
+        Custom names for the components of the SkyCoord. If provided, a name must
+        be given for each component.
+
+    physical_types: str` or `list` of `str`
+        Physical types of the components of the SkyCoord. If provided,
+        a physical type must be given for each component.
+
+    reference_time: `~astropy.time.Time`, optional
+        The reference time of the time coordinates.
+        Default is first time coordinate in table input.
     """
 
     def __init__(self, *tables, names=None, physical_types=None, reference_time=None):
@@ -539,10 +754,42 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         return _model_from_quantity((deltas,), mesh=False)
 
+    def interpolate(self, new_array_grids, **kwargs):
+        """
+        Interpolate TimeTableCoordinate to new array index grids.
+
+        Kwargs are passed to underlying interpolation function.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the
+            coords are desired. A grid must be supplied for each pixel
+            axis (in array-axis order).  All grids must be the same shape.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.TimeTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        if self.is_scalar():
+            raise ValueError("Cannot interpolate a scalar TimeTableCoordinate.")
+        # Build pixel grids for current TimeTableCoord.
+        old_array_grids = np.arange(len(self.table))
+        # Interpolate using MJD format and convert back to a Time object.
+        new_table = np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs)
+        new_table = Time(new_table, scale=self.table.scale, format="mjd")
+        new_table.format = self.table.format
+        # Rebuild new TimeTableCoord and return.
+        new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types)
+        new_coord._dropped_world_dimensions = self._dropped_world_dimensions
+        return new_coord
+
 
 class MultipleTableCoordinate(BaseTableCoordinate):
     """
-    A Holder for multiple multiple `.BaseTableCoordinate` objects.
+    A Holder for multiple `.BaseTableCoordinate` objects.
 
     This class allows the generation of a gWCS from many `.BaseTableCoordinate`
     objects.
@@ -697,3 +944,28 @@ class MultipleTableCoordinate(BaseTableCoordinate):
                 dropped_world_dimensions["value"].append(coord)
 
         return dropped_world_dimensions
+
+    def interpolate(self, new_array_grids, **kwargs):
+        """
+        Interpolate MultipleTableCoordinate to new array index grids.
+
+        Kwargs are passed to underlying interpolation function.
+
+        Parameters
+        ----------
+        new_array_grids: array-like
+            The array index values at which the the new values of the
+            coords are desired. A grid must be supplied for each pixel
+            axis (in array-axis order).  All grids must be the same shape.
+
+        Returns
+        -------
+        new_coord: `~ndcube.extra_coords.table_coord.MultipleTableCoordinate`
+            New TableCoordinate object holding the interpolated coords.
+
+        """
+        new_table_coordinates = [coord.interpolate(new_array_grids, **kwargs)
+                                 for coord in self.table_coords]
+        new_obj = type(self)(*new_table_coordinates)
+        new_obj._dropped_coords = self._dropped_coords
+        return new_obj

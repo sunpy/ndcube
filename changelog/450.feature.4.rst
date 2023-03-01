@@ -1,0 +1,1 @@
+Add `ndcube.ExtraCoords.resample` method to resample extra coordinates by a certain factor in each array dimension.

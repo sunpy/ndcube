@@ -1,0 +1,1 @@
+Add new methods to interpolate lookup table coordinates: `ndcube.extra_coords.table_coord.QuantityTableCoordinate.interpolate`, `ndcube.extra_coords.table_coord.SkyCoordTableCoordinate.interpolate`, `ndcube.extra_coords.table_coord.TimeTableCoordinate.interpolate`, `ndcube.extra_coords.table_coord.MultipleTableCoordinate.interpolate`
