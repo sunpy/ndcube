@@ -878,7 +878,7 @@ def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
     expected_mask = np.zeros((5, 3), dtype=bool)
     expected_mask[:3, 0] = True
     # Execute function and assert result is as expected.
-    output = cube.rebin(bin_shape, operation=np.mean, use_masked_values=True,
+    output = cube.rebin(bin_shape, operation=np.mean, operation_ignores_mask=True,
                         handle_mask=np.any, propagate_uncertainties=True)
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
@@ -902,7 +902,7 @@ def test_rebin_some_masked_uncerts_exclude_masked_values(ndcube_2d_ln_lt_mask_un
     expected_mask = np.zeros((5, 3), dtype=bool)
     expected_mask[2, 0] = True
     # Execute function and assert result is as expected.
-    output = cube.rebin(bin_shape, operation=np.mean, use_masked_values=False,
+    output = cube.rebin(bin_shape, operation=np.mean, operation_ignores_mask=False,
                         handle_mask=np.all, propagate_uncertainties=True)
     assert np.allclose(output.data, expected_data)
     assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
@@ -928,12 +928,12 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
 
     cube._mask[:] = True
     output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
-                        use_masked_values=False)
+                        operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = True
     output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
-                        use_masked_values=False)
+                        operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = False

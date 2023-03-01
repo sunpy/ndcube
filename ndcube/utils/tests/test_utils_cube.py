@@ -28,7 +28,7 @@ def test_propagate_rebin_uncertainties_mean(stacked_pixel_data):
 
     # Run function
     output = propagate_rebin_uncertainties(uncertainty, data, mask,
-                                           np.mean, use_masked_values=False)
+                                           np.mean, operation_ignores_mask=False)
 
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)
@@ -47,7 +47,7 @@ def test_propagate_rebin_uncertainties_use_masked(stacked_pixel_data):
 
     # Run function
     output = propagate_rebin_uncertainties(uncertainty, data, mask,
-                                           np.mean, use_masked_values=True)
+                                           np.mean, operation_ignores_mask=True)
 
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)
@@ -66,7 +66,7 @@ def test_propagate_rebin_uncertainties_prod(stacked_pixel_data):
 
     # Run function
     output = propagate_rebin_uncertainties(uncertainty, data, mask,
-                                           np.product, use_masked_values=False)
+                                           np.product, operation_ignores_mask=False)
 
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)
@@ -86,7 +86,7 @@ def test_propagate_rebin_uncertainties_nan(stacked_pixel_data):
 
     # Run function
     output = propagate_rebin_uncertainties(uncertainty, data, mask,
-                                           np.nanmean, use_masked_values=False)
+                                           np.nanmean, operation_ignores_mask=False)
 
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)
@@ -94,6 +94,6 @@ def test_propagate_rebin_uncertainties_nan(stacked_pixel_data):
     # Test another code path that does the same thing.
     mask = None
     output = propagate_rebin_uncertainties(uncertainty, data, mask,
-                                           np.nanmean, use_masked_values=False)
+                                           np.nanmean, operation_ignores_mask=False)
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)

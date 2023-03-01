@@ -963,7 +963,7 @@ class NDCube(NDCubeBase):
         """
         return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
 
-    def rebin(self, bin_shape, operation=np.mean, use_masked_values=False, handle_mask=np.all,
+    def rebin(self, bin_shape, operation=np.mean, operation_ignores_mask=False, handle_mask=np.all,
               propagate_uncertainties=False, new_unit=None, **kwargs):
         """
         Downsample array by combining contiguous pixels into bins.
@@ -984,7 +984,7 @@ class NDCube(NDCubeBase):
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
-        use_masked_values: `bool`
+        operation_ignores_mask: `bool`
             Determines how masked values are handled.
             If False (default), masked values are excluded when calculating rebinned value.
             If True, masked values are used in calculating rebinned value.
@@ -1101,7 +1101,7 @@ class NDCube(NDCubeBase):
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
-        m = None if (self.mask is None or self.mask is False or use_masked_values) else self.mask
+        m = None if (self.mask is None or self.mask is False or operation_ignores_mask) else self.mask
         data = self.data
         if m is not None:
             for array_type, masked_type in ARRAY_MASK_MAP.items():
@@ -1140,12 +1140,12 @@ class NDCube(NDCubeBase):
             elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
                 warnings.warn("self.uncertainty is of type UnknownUncertainty which does not "
                               "support uncertainty propagation.")
-            elif (not use_masked_values
+            elif (not operation_ignores_mask
                   and (self.mask is True or (self.mask is not None
                                              and not isinstance(self.mask, bool)
                                              and self.mask.all()))):
                 warnings.warn("Uncertainties cannot be propagated as all values are masked and "
-                              "use_masked_values is False.")
+                              "operation_ignores_mask is False.")
             else:
                 if propagate_uncertainties is True:
                     propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
@@ -1173,7 +1173,7 @@ class NDCube(NDCubeBase):
                 # Propagate uncertainties.
                 new_uncertainty = propagate_uncertainties(
                     flat_uncertainty, flat_data, flat_mask,
-                    operation=operation, use_masked_values=use_masked_values,
+                    operation=operation, operation_ignores_mask=operation_ignores_mask,
                     handle_mask=handle_mask, new_unit=new_unit, **kwargs)
 
         # Resample WCS

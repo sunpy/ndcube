@@ -201,7 +201,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
     return tuple(item)
 
 
-def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked_values=False,
+def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_ignores_mask=False,
                                   propagation_operation=None, correlation=0, **kwargs):
     """
     Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
@@ -228,7 +228,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
     operation: function
         The function used to aggregate the data for which the uncertainties are being
         propagated here.
-    use_masked_values: `bool`
+    operation_ignores_mask: `bool`
         Determines whether masked values are used or excluded from calculation.
         Default is False causing masked data and uncertainty to be excluded.
     propagation_operation: function
@@ -258,7 +258,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
             raise ValueError("propagation_operation not recognized.")
     # Build mask if not provided.
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
-    if use_masked_values or mask is None:
+    if operation_ignores_mask or mask is None:
         mask = False
     if mask is False:
         if operation_is_nantype:
@@ -286,7 +286,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, use_masked
     # Propagate uncertainties.
     # Note uncertainty must be associated with a parent nddata for some propagations.
     cumul_data = data[0]
-    if mask is not False and use_masked_values is False:
+    if mask is not False and operation_ignores_mask is False:
         cumul_data[idx[0]] = 0
     parent_nddata = astropy.nddata.NDData(cumul_data, uncertainty=new_uncertainty)
     new_uncertainty.parent_nddata = parent_nddata
