@@ -124,8 +124,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             their corresponding array dimensions, unless ``pixel_corners=True``
             in which case the length along each axis will be 1 greater than
             the number of pixels.
-        Example
-        -------
+        Examples
+        --------
         >>> NDCube.axis_world_coords('lat', 'lon') # doctest: +SKIP
         >>> NDCube.axis_world_coords(2) # doctest: +SKIP
 
@@ -171,8 +171,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             their corresponding array dimensions, unless ``pixel_corners=True``
             in which case the length along each axis will be 1 greater than the number of pixels.
 
-        Example
-        -------
+        Examples
+        --------
         >>> NDCube.axis_world_coords_values('lat', 'lon') # doctest: +SKIP
         >>> NDCube.axis_world_coords_values(2) # doctest: +SKIP
 
@@ -214,8 +214,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         -------
         result: `~ndcube..ndcube.NDCubeABC`
 
-        Example
-        -------
+        Examples
+        --------
         An example of cropping a region of interest on the Sun from a 3-D image-time cube:
         >>> point1 = [SkyCoord(-50*u.deg, -40*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
         >>> point2 = [SkyCoord(0*u.deg, -6*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
@@ -266,8 +266,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         result: `~ndcube.ndcube.NDCubeABC`
 
 
-        Example
-        -------
+        Examples
+        --------
         An example of cropping a region of interest on the Sun from a 3-D image-time cube:
         >>> NDCube.crop_by_values((-600, -600, 0), (0, 0, 0), units=(u.arcsec, u.arcsec, u.s)) # doctest: +SKIP
 
@@ -710,9 +710,9 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         See Also
         --------
 
-        * `reproject.reproject_interp`
-        * `reproject.reproject_adaptive`
-        * `reproject.reproject_exact`
+        reproject.reproject_interp
+        reproject.reproject_adaptive
+        reproject.reproject_exact
 
         Notes
         -----
