@@ -152,7 +152,7 @@ Thus `NDCube` not only supports numpy arrays but also others such as dask for
 distrubuted computing [@dask], cupy for GPU operations [@cupy].
 Meanwhile the WCS transformations must be provided in an AstroPy-WCS-API-compliant
 object.
-The components of an `NDCube` are supplied by the following kwargs and accessed via 
+The components of an `NDCube` are supplied by the following kwargs and accessed via
 attributes of the same name:
 - `data`: The data array.  (Required)
 - `wcs`: The primary set of coordinate transformations. (Required)
@@ -162,10 +162,12 @@ attributes of the same name:
 - `unit`: the unit of the data. (Optional)
 `NDCube` also supports additional coordinate information.  See the section on
 Coordinate Classes.
-`NDCube` provides several data and coordinate manipulation methods such as
-slicing (by array indices), cropping (by real world coordinates), reprojecting
-to new WCS transformations, visualization, rebinning data, arithmetic
-operations, and more.
+`NDCube` provides several analysis methods such as slicing (by array indices),
+cropping (by real world coordinates), reprojecting to new WCS transformations,
+visualization, rebinning data, arithmetic operations, and more.
+All these methods manipulate the data, coordinates, and supporting data (e.g.
+uncertainties) simultaneously and self-consistently, this relieving users of
+well-defined, but tedious and error-prone tasks.
 
 `NDCubeSequence` is designed to handle multiple `NDCube` instances that are arranged
 in some order.
@@ -191,21 +193,12 @@ This enables these axes on all constituent cubes to be sliced at the `NDCollecti
 level.
 One application of this is linking derived data products, e.g. a spectral image cube
 and a Doppler may derived from one of its spectral lines.
-These objects have the same spatial axes but are not ordered.
-They have a different number of dimensions because the spectral dimension has
-been collapsed in the Doppler map by the calculation of the Doppler velocity.
-The data in each also represent different physical properties (intensity vs.
-velocity).
-Therefore they cannot be combined in an `NDCubeSequence` but are suitable for
-an `NDCollection`.
-By marking both cubes' spatial axes as 'aligned', regions of interest can be
-extracted simultaneously from both cubes by applying the standard Python slicing
-API to the `NDCollection`.
-This simplifies the manipulation of complex data sets and ensures related data
-products continue to represent the same field of view.
+Marking both cubes' spatial axes as 'aligned' and slicing the `NDCollection``
+rather than the two cubes separately, simplifies the extraction of regions of
+interest and guarantees both cubes continue to represent the same field of view.
 
-More detailed discussion on the purpose of the features provided by these data
-classes and how to use them can be found in @ndcube and @ndcube-docs.
+More detailed discussion on the roles of the above data classes' features and
+how to use them can be found in @ndcube and @ndcube-docs.
 
 
 ## Coordinate Classes
@@ -215,22 +208,22 @@ The ndcube package provides two coordinates classes, `ExtraCoords` and
 `ExtraCoords` provides a mechanism for storing coordinate transformations
 that are supplemental to the primary WCS transformations.
 This can be very useful if, say, we have a spectral image cube whose images were
-taken at slightly different times, but whose WCS does not include time.
+taken at slightly different times but whose WCS does not include time.
 In this case `ExtraCoords` can be used to associate an `astropy.time.Time` object
 with the spectral axis without having to manually construct a new WCS,
 a potentially complicated task even for experiences users.
 `ExtraCoords` supports both functional and lookup-table-based transformations.
-It can therefore also be used for holding an alternative set of coordinate
+It can therefore also be used as an alternative set of coordinate
 transformations to those in the primary WCS and used interchangeably.
 
 By contrast, `GlobalCoords` supports scalar coordinates that apply to the whole
 `NDCube` rather than any of its axes, e.g. the timestamp of a 2-D image.
 WCS requires that all coordinates are associated with at least one array
 axis, hence the need for `GlobalCoords`.
-When an axis is dropped from an `NDCube` via slicing, e.g. a 2-D image sliced
-from a 3-D image stack, the values of the dropped coordinates at the relevant
-location along the dropped axis are automatically added to the associated
-`GlobalCoords` object.
+When an axis is dropped from an `NDCube` via slicing, the values of the dropped
+coordinates at the relevant location along the dropped axis are automatically
+added to the associated `GlobalCoords` object, e.g. the timestamp of a 2-D image
+sliced from a space-space-time cube.
 Thus coordinate information is never lost due to slicing.
 
 `NDCube` objects are always instantiated with associated `ExtraCoords` and
@@ -242,9 +235,10 @@ For a more in depth dicussion of `ExtraCoords` and `GlobalCoords`, see @ndcube.
 # Who Uses the ndcube Package?
 
 The importance of the ndcube package is demonstrated by the fact that it already
-supports a variety of ground-based and satellite observatories including the James
-Webb Space Telescope (JWST), Solar Orbiter, the Interface Region Imaging Spectrograph
-(IRIS), Hinode, and the Daniel K. Inouye Solar Telescope (DKIST), as a dependency
+supports a variety of current ground-based and satellite observatories.
+These include the James Webb Space Telescope (JWST), Solar Orbiter,
+the Interface Region Imaging Spectrograph (IRIS), Hinode, and the
+Daniel K. Inouye Solar Telescope (DKIST), as a dependency
 of the specutils [@specutils-docs; @specutils-code], sunraster [@sunraster],
 irispy-lmsal [@irispy-docs; @irispy-code], EISPAC [@eispac-docs; @eispac-code] and
 DKIST user tools packages, respectively.
@@ -270,4 +264,3 @@ We also acknowledge the SunPy and Python in Heliophysics communities for their
 contributions and support.
 
 # References
-
