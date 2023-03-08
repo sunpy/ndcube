@@ -86,14 +86,14 @@ as a single 3-D array with two spatial axes and one temporal axis.
 In astronomy, the most commonly used framework for translating between array element
 indices and the location, time, etc. in the Universe being observed is the World
 Coordinate System (WCS).
-WCS’s ability to handle many different physical types (e.g. spatial, temporal,
-spectral, etc.) and projections (e.g. RA and Dec., helioprojective latitude and
-longitude, etc.) make it a succinct, standardized and powerful way to relate array
-axes to the physical types they represent.
+WCS’s ability to handle many different physical types of coordinates (e.g. spatial,
+temporal, spectral, etc.) and their projections onto a data array (e.g. right ascension
+and declination, helioprojective latitude and longitude, etc.) make it a succinct,
+standardized and powerful way to relate array axes to the physical types they represent.
 However, while there exist Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc. -- and others for supporting WCS coordinate
 transformations -- e.g. astropy [@astropy], gWCS [@gWCS] -- currently only ndcube is
-suited to treating them in a combined way.
+treats them in a combined, self-consistent way.
 
 
 # What is the ndcube Package?
@@ -149,7 +149,7 @@ a set of WCS transformations.
 The array can be any object that exposes `.dtype` and `.shape` attributes and can
 be sliced by the standard Python slicing API.
 Thus `NDCube` not only supports numpy arrays but also others such as dask for
-distrubuted computing [@dask], cupy for GPU operations [@cupy].
+distributed computing [@dask], cupy for GPU operations [@cupy].
 Meanwhile the WCS transformations must be provided in an AstroPy-WCS-API-compliant
 object.
 The components of an `NDCube` are supplied by the following kwargs and accessed via
@@ -166,7 +166,7 @@ Coordinate Classes.
 cropping (by real world coordinates), reprojecting to new WCS transformations,
 visualization, rebinning data, arithmetic operations, and more.
 All these methods manipulate the data, coordinates, and supporting data (e.g.
-uncertainties) simultaneously and self-consistently, this relieving users of
+uncertainties) simultaneously and self-consistently, thus relieving users of
 well-defined, but tedious and error-prone tasks.
 
 `NDCubeSequence` is designed to handle multiple `NDCube` instances that are arranged
@@ -192,7 +192,7 @@ different cubes with the same lengths to be marked as 'aligned'.
 This enables these axes on all constituent cubes to be sliced at the `NDCollection`
 level.
 One application of this is linking derived data products, e.g. a spectral image cube
-and a Doppler may derived from one of its spectral lines.
+and a Doppler map derived from one of its spectral lines.
 Marking both cubes' spatial axes as 'aligned' and slicing the `NDCollection``
 rather than the two cubes separately, simplifies the extraction of regions of
 interest and guarantees both cubes continue to represent the same field of view.
@@ -211,7 +211,7 @@ This can be very useful if, say, we have a spectral image cube whose images were
 taken at slightly different times but whose WCS does not include time.
 In this case `ExtraCoords` can be used to associate an `astropy.time.Time` object
 with the spectral axis without having to manually construct a new WCS,
-a potentially complicated task even for experiences users.
+a potentially complicated task even for experienced users.
 `ExtraCoords` supports both functional and lookup-table-based transformations.
 It can therefore also be used as an alternative set of coordinate
 transformations to those in the primary WCS and used interchangeably.
