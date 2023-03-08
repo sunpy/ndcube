@@ -238,13 +238,13 @@ The importance of the ndcube package is demonstrated by the fact that it already
 supports a variety of current ground-based and satellite observatories.
 These include the James Webb Space Telescope (JWST), Solar Orbiter,
 the Interface Region Imaging Spectrograph (IRIS), Hinode, and the
-Daniel K. Inouye Solar Telescope (DKIST), as a dependency
-of the specutils [@specutils-docs; @specutils-code], sunraster [@sunraster],
+Daniel K. Inouye Solar Telescope (DKIST) via the
+specutils [@specutils-docs; @specutils-code], jdaviz [@jdaviz], sunraster [@sunraster],
 irispy-lmsal [@irispy-docs; @irispy-code], EISPAC [@eispac-docs; @eispac-code] and
-DKIST user tools packages, respectively.
-It is also used in the data pipeline of the PUNCH mission [Polarimeter to UNify
+DKIST user tools packages which all depend on ndcube.
+ndcube is also used in the data pipeline of the PUNCH mission [Polarimeter to UNify
 the Corona and Heliosphere; @punch], scheduled for launch in 2025.
-Individual researchers are also using the ndcube package in their own analysis
+In addition, individual researchers are using the ndcube package in their own analysis
 workflows.
 
 A network benefit of ndcube is that it standardizes the APIs for handling
