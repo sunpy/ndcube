@@ -1,1 +1,0 @@
-Add support for length-1 lookup table coords within extra coords.

@@ -1,2 +1,0 @@
-Fix a bug where `aligned_axis_physical_types` caused `__str__`
-to error when `aligned_axes` was `None`.

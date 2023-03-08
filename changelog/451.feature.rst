@@ -1,1 +1,0 @@
-`.ExtraCoords.from_lookup_table` accepts (a seqence of) ``physical_types`` as kwarg to set the types of its ``lookup_tables``.

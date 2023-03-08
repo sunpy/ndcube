@@ -1,1 +1,0 @@
-Adds a function to identify invariant axes between two WCS objects.

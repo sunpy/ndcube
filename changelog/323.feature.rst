@@ -1,1 +1,0 @@
-Introduce a new class, `~ndcube.global_coords.GlobalCoords`, for holding scalar coordinates that don't apply to any pixel axes.

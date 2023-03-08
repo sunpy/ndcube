@@ -1,2 +1,0 @@
-Fix a bug where ``data_unit`` was not being correctly passed through to the underlying plotting
-function when animating a cube.

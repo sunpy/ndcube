@@ -1,1 +1,0 @@
-Ensure corner inputs to `ndcube.NDCube.crop` are converted to units stored in WCS as `~astropy.wcs.WCS.world_to_array_index_values` does not handle units.

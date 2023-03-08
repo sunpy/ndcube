@@ -2,6 +2,7 @@ import abc
 import textwrap
 import warnings
 from copy import deepcopy
+from typing import Any, Tuple, Union, Iterable, Optional
 from collections import namedtuple
 from collections.abc import Mapping
 
@@ -15,100 +16,260 @@ try:
     import sunpy.coordinates  # NOQA
 except ImportError:
     pass
+
 from astropy.wcs import WCS
 from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube import utils
-from ndcube.extra_coords import ExtraCoords
-from ndcube.global_coords import GlobalCoords
+from ndcube.extra_coords import ExtraCoords, ExtraCoordsABC
+from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
-from ndcube.visualization.descriptor import PlotterDescriptor
-from ndcube.wcs.wrappers import CompoundLowLevelWCS
+from ndcube.visualization import PlotterDescriptor
+from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
 
+# Create mapping to masked array types based on data array type for use in analysis methods.
+ARRAY_MASK_MAP = {}
+ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
+try:
+    import dask.array
+    ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array
+except ImportError:
+    pass
 
-class NDCubeABC(astropy.nddata.NDData, metaclass=abc.ABCMeta):
 
-    @abc.abstractproperty
-    def dimensions(self):
+class NDCubeABC(astropy.nddata.NDDataBase):
+
+    @property
+    @abc.abstractmethod
+    def extra_coords(self) -> ExtraCoordsABC:
         """
-        The array dimensions of the cube.
+        Coordinates not described by ``NDCubeABC.wcs`` which vary along one or more axes.
+        """
+
+    @property
+    @abc.abstractmethod
+    def global_coords(self) -> GlobalCoordsABC:
+        """
+        Coordinate metadata which applies to the whole cube.
+        """
+
+    @property
+    @abc.abstractmethod
+    def combined_wcs(self) -> BaseHighLevelWCS:
+        """
+        The WCS transform for the NDCube, including the coordinates specified in ``.extra_coords``.
+
+        This transform should implement the high level wcsapi, and have
+        ``pixel_n_dim`` equal to the number of array dimensions in the
+        `.NDCube`. The number of world dimensions should be equal to the
+        number of world dimensions in ``self.wcs`` and in ``self.extra_coords`` combined.
+        """
+
+    @property
+    @abc.abstractmethod
+    def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
+        """
+        Returns the WCS physical types that vary along each array axis.
+
+        Returns an iterable of tuples where each tuple corresponds to an array axis and
+        holds strings denoting the WCS physical types associated with that array axis.
+        Since multiple physical types can be associated with one array axis, tuples can
+        be of different lengths. Likewise, as a single physical type can correspond to
+        multiple array axes, the same physical type string can appear in multiple tuples.
+
+        The physical types returned by this property are drawn from the
+        `~NDCube.combined_wcs` property so they include the coordinates contained in
+        `~NDCube.extra_coords`.
         """
 
     @abc.abstractmethod
-    def crop(self, *points, wcs=None):
+    def axis_world_coords(self,
+                          *axes: Union[int, str],
+                          pixel_corners: bool = False,
+                          wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                          ) -> Iterable[Any]:
         """
-        Crop to the smallest cube in pixel space containing the world coordinate points.
+        Returns objects representing the world coordinates of pixel centers for a desired axes.
+
+        Parameters
+        ----------
+        axes: `int` or `str`, or multiple `int` or `str`, optional
+            Axis number in numpy ordering or unique substring of
+            `~ndcube.NDCube.world_axis_physical_types`
+            of axes for which real world coordinates are desired.
+            Not specifying axes inputs causes results for all axes to be returned.
+        pixel_corners: `bool`, optional
+            If `True` then instead of returning the coordinates at the centers of the pixels,
+            the coordinates at the pixel corners will be returned. This
+            increases the size of the output by 1 in all dimensions as all corners are returned.
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+            The WCS object to used to calculate the world coordinates.
+            Although technically this can be any valid WCS, it will typically be
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` combining both
+            the WCS and extra coords.
+            Default=self.wcs
+        Returns
+        -------
+        axes_coords: iterable
+            An iterable of "high level" objects giving the real world
+            coords for the axes requested by user.
+            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
+            The types returned are determined by the WCS object.
+            The dimensionality of these objects should match that of
+            their corresponding array dimensions, unless ``pixel_corners=True``
+            in which case the length along each axis will be 1 greater than
+            the number of pixels.
+        Example
+        -------
+        >>> NDCube.axis_world_coords('lat', 'lon') # doctest: +SKIP
+        >>> NDCube.axis_world_coords(2) # doctest: +SKIP
+
+        """
+
+    @abc.abstractmethod
+    def axis_world_coords_values(self,
+                                 *axes: Union[int, str],
+                                 pixel_corners: bool = False,
+                                 wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                                 ) -> Iterable[u.Quantity]:
+        """
+        Returns the world coordinate values of all pixels for desired axes.
+        In contrast to `axis_world_coords()`, this method returns `~astropy.units.Quantity` objects. which only
+        provide units rather than full coordinate metadata provided by high-level coordinate objects.
+
+        Parameters
+        ----------
+        axes: `int` or `str`, or multiple `int` or `str`, optional
+            Axis number in numpy ordering or unique substring of
+            `~ndcube.NDCube.wcs.world_axis_physical_types`
+            of axes for which real world coordinates are desired.
+            axes=None implies all axes will be returned.
+
+        pixel_corners: `bool`, optional
+            If `True` then coordinates at pixel corners will be returned rather than at pixel centers.
+            This increases the size of the output along each dimension by 1
+            as all corners are returned.
+
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`, optional
+            The WCS object to be used to calculate the world coordinates.
+            Although technically this can be any valid WCS, it will typically be
+            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
+            the WCS and extra coords.
+            Defaults to the ``.wcs`` property.
+
+        Returns
+        -------
+        axes_coords: `tuple` of `~astropy.units.Quantity`
+            An iterable of raw coordinate values for all pixels for the requested axes.
+            The returned units are determined by the WCS object.
+            The dimensionality of these objects should match that of
+            their corresponding array dimensions, unless ``pixel_corners=True``
+            in which case the length along each axis will be 1 greater than the number of pixels.
+
+        Example
+        -------
+        >>> NDCube.axis_world_coords_values('lat', 'lon') # doctest: +SKIP
+        >>> NDCube.axis_world_coords_values(2) # doctest: +SKIP
+
+        """
+
+    @abc.abstractmethod
+    def crop(self,
+             *points: Iterable[Any],
+             wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+             ) -> "NDCubeABC":
+        """
+        Crop using real world coordinates.
+        This method crops the NDCube to the smallest bounding box in pixel space that
+        contains all the provided world coordinate points.
+
+        This function takes the points defined as high-level astropy coordinate objects
+        such as `~astropy.coordinates.SkyCoord`, `~astropy.coordinates.SpectralCoord`, etc.
 
         Parameters
         ----------
         points: iterable of iterables
             Tuples of high level coordinate objects
-            e.g. `~astropy.coordinates.SkyCoord`. The coordinates of the points
-            **must be specified in Cartesian (WCS) order** as they are passed
-            to `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
+            e.g. `~astropy.coordinates.SkyCoord`.
+            Each iterable of coordinate objects represents a single location
+            in the data array in real world coordinates.
+
+            The coordinates of the points as they are passed to
+            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
             Therefore their number and order must be compatible with the API
-            of that method.
+            of that method, i.e. they must be passed in world order.
 
-            It is possible to not specify a coordinate for an axis by
-            replacing any object with `None`. Any coordinate replaced by `None`
-            will not be used to calculate pixel coordinates, and therefore not
-            affect the calculation of the final bounding box.
-
-        wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS to use to calculate the pixel coordinates based on the
-            input. Will default to the ``.wcs`` property if not given. While
-            any valid WCS could be used it is expected that either the
-            ``.wcs``, ``.combined_wcs``, or ``.extra_coords`` properties will
-            be used.
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+            The WCS to use to calculate the pixel coordinates based on the input.
+            Will default to the ``.wcs`` property if not given. While any valid WCS
+            could be used it is expected that either the ``.wcs`` or
+            ``.extra_coords`` properties will be used.
 
         Returns
         -------
-        result: `ndcube.NDCube`
+        result: `~ndcube..ndcube.NDCubeABC`
+
+        Example
+        -------
+        An example of cropping a region of interest on the Sun from a 3-D image-time cube:
+        >>> point1 = [SkyCoord(-50*u.deg, -40*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
+        >>> point2 = [SkyCoord(0*u.deg, -6*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
+        >>> NDCube.crop(point1, point2) # doctest: +SKIP
 
         """
 
     @abc.abstractmethod
-    def crop_by_values(self, *points, units=None, wcs=None):
+    def crop_by_values(self,
+                       *points: Iterable[Union[u.Quantity, float]],
+                       units: Optional[Iterable[Union[str, u.Unit]]] = None,
+                       wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                       ) -> "NDCubeABC":
         """
-        Crop to the smallest cube in pixel space containing the world coordinate points.
+        Crop using real world coordinates.
+        This method crops the NDCube to the smallest bounding box in pixel space that
+        contains all the provided world coordinate points.
+
+        This function takes points as iterables of low-level coordinate objects,
+        i.e. `~astropy.units.Quantity` objects.  This differs from `~ndcube.NDCube.crop()`
+        which takes high-level coordinate objects requiring all the relevant coordinate
+        information such as coordinate frame etc.  Hence this method's API is more basic
+        but less explicit.
+
 
         Parameters
         ----------
-        points: iterable of iterables
-            Tuples of coordinates as `~astropy.units.Quantity` objects. The
-            coordinates of the points **must be specified in Cartesian (WCS)
-            order** as they are passed to
-            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index_values`.
-            Therefore their number and order must be compatible with the API of
-            that method.
+        points: iterable
+            Tuples of coordinate values, the length of the tuples must be
+            equal to the number of world dimensions. These points are
+            passed to ``wcs.world_to_array_index_values`` so their units
+            and order must be compatible with that method.
 
-            It is possible to not specify a coordinate for an axis by replacing
-            any coordinate with `None`. Any coordinate replaced by `None` will
-            not be used to calculate pixel coordinates, and therefore not
-            affect the calculation of the final bounding box. Note that you
-            must specify either none or all coordinates for any correlated
-            axes, e.g. both spatial coordinates.
+        units: `str` or `~astropy.units.Unit`
+            If the inputs are set without units, the user must set the units
+            inside this argument as `str` or `~astropy.units.Unit` objects.
+            The length of the iterable must equal the number of world dimensions
+            and must have the same order as the coordinate points.
 
-        units: iterable of `astropy.units.Unit`
-            The unit of the corresponding entries in each point.
-            Must therefore be the same length as the number of world axes.
-            Only used if the corresponding type is not a `astropy.units.Quantity` or `None`.
-
-        wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
-            The WCS to use to calculate the pixel coordinates based on the
-            input. Will default to the ``.wcs`` property if not given. While
-            any valid WCS could be used it is expected that either the
-            ``.wcs``, ``.combined_wcs``, or ``.extra_coords`` properties will
-            be used.
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+            The WCS to use to calculate the pixel coordinates based on the input.
+            Will default to the ``.wcs`` property if not given. While any valid WCS
+            could be used it is expected that either the ``.wcs`` or
+            ``.extra_coords`` properties will be used.
 
         Returns
         -------
-        result: `ndcube.NDCube`
+        result: `~ndcube.ndcube.NDCubeABC`
+
+
+        Example
+        -------
+        An example of cropping a region of interest on the Sun from a 3-D image-time cube:
+        >>> NDCube.crop_by_values((-600, -600, 0), (0, 0, 0), units=(u.arcsec, u.arcsec, u.s)) # doctest: +SKIP
 
         """
 
@@ -157,7 +318,7 @@ class NDCubeLinkedDescriptor:
         setattr(obj, self._attribute_name, value)
 
 
-class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
+class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
@@ -233,23 +394,17 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @property
     def extra_coords(self):
-        """
-        An `.ExtraCoords` object holding extra coordinates aligned to array axes.
-        """
+        # Docstring in NDCubeABC.
         return self._extra_coords
 
     @property
     def global_coords(self):
-        """
-        A `.GlobalCoords` object holding coordinate metadata not aligned to an array axis.
-        """
+        # Docstring in NDCubeABC.
         return self._global_coords
 
     @property
     def combined_wcs(self):
-        """
-        A `~astropy.wcs.wcsapi.BaseHighLevelWCS` object which combines ``.wcs`` with ``.extra_coords``.
-        """
+        # Docstring in NDCubeABC.
         if not self.extra_coords.wcs:
             return self.wcs
 
@@ -264,17 +419,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @property
     def array_axis_physical_types(self):
-        """
-        Returns the physical types associated with each array axis.
-
-        Returns an iterable of tuples where each tuple corresponds to an array axis and
-        holds strings denoting the physical types associated with that array axis.
-        Since multiple physical types can be associated with one array axis, tuples can
-        be of different lengths. Likewise, as a single physical type can correspond to
-        multiple array axes, the same physical type string can appear in multiple tuples.
-
-        The physical types are drawn from the WCS ExtraCoords objects.
-        """
+        # Docstring in NDCubeABC.
         wcs = self.combined_wcs
         world_axis_physical_types = np.array(wcs.world_axis_physical_types)
         axis_correlation_matrix = wcs.axis_correlation_matrix
@@ -337,46 +482,8 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
-        """
-        Returns WCS coordinate values of all pixels for all axes.
 
-        Parameters
-        ----------
-        axes: `int` or `str`, or multiple `int` or `str`, optional
-            Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.world_axis_physical_types`
-            of axes for which real world coordinates are desired.
-            axes=None implies all axes will be returned.
-
-        pixel_corners: `bool`, optional
-            If `True` then instead of returning the coordinates at the centers of the pixels,
-            the coordinates at the pixel corners will be returned. This
-            increases the size of the output by 1 in all dimensions as all corners are returned.
-
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
-            The WCS object to used to calculate the world coordinates.
-            Although technically this can be any valid WCS, it will typically be
-            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` which combines both
-            the WCS and extra coords.
-            Defaults to the ``.wcs`` property.
-
-        Returns
-        -------
-        axes_coords: `list`
-            An iterable of "high level" objects giving the real world
-            coords for the axes requested by user.
-            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
-            The types returned are determined by the WCS object.
-            The dimensionality of these objects should match that of
-            their corresponding array dimensions, unless ``pixel_corners=True``
-            in which case the length along each axis will be 1 greater than the number of pixels.
-
-        Example
-        -------
-        >>> NDCube.all_world_coords(('lat', 'lon')) # doctest: +SKIP
-        >>> NDCube.all_world_coords(2) # doctest: +SKIP
-
-        """
+        # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
@@ -411,46 +518,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     @utils.cube.sanitize_wcs
     def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
-        """
-        Returns WCS coordinate values of all pixels for desired axes.
-
-        Parameters
-        ----------
-        axes: `int` or `str`, or multiple `int` or `str`, optional
-            Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.wcs.world_axis_physical_types`
-            of axes for which real world coordinates are desired.
-            axes=None implies all axes will be returned.
-
-        pixel_corners: `bool`, optional
-            If `True` then instead of returning the coordinates of the pixel
-            centers the coordinates of the pixel corners will be returned.  This
-            increases the size of the output along each dimension by 1 as all corners are returned.
-
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
-            The WCS object to used to calculate the world coordinates.
-            Although technically this can be any valid WCS, it will typically be
-            ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
-            the WCS and extra coords.
-            Defaults to the ``.wcs`` property.
-
-        Returns
-        -------
-        axes_coords: `list`
-            An iterable of "high level" objects giving the real world
-            coords for the axes requested by user.
-            For example, a tuple of `~astropy.coordinates.SkyCoord` objects.
-            The types returned are determined by the WCS object.
-            The dimensionality of these objects should match that of
-            their corresponding array dimensions, unless ``pixel_corners=True``
-            in which case the length along each axis will be 1 greater than the number of pixels.
-
-        Example
-        -------
-        >>> NDCube.all_world_coords_values(('lat', 'lon')) # doctest: +SKIP
-        >>> NDCube.all_world_coords_values(2) # doctest: +SKIP
-
-        """
+        # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
@@ -600,7 +668,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
     def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, return_footprint=False, **reproject_args):
         """
-        Reprojects this `~nducbe.NDCube` to the coordinates described by another WCS object.
+        Reprojects the instance to the coordinates described by another WCS object.
 
         Parameters
         ----------
@@ -631,7 +699,7 @@ class NDCubeBase(NDCubeSlicingMixin, NDCubeABC):
 
         Returns
         -------
-        resampled_cube : `ndcube.NDCube`
+        reprojected_cube : `ndcube.NDCube`
             A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output ``NDCube``.
 
         footprint: `numpy.ndarray`
@@ -894,3 +962,232 @@ class NDCube(NDCubeBase):
             A new instance with the new unit and data and uncertainties scales accordingly.
         """
         return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
+
+    def rebin(self, bin_shape, operation=np.mean, operation_ignores_mask=False, handle_mask=np.all,
+              propagate_uncertainties=False, new_unit=None, **kwargs):
+        """
+        Downsample array by combining contiguous pixels into bins.
+
+        Values in bins are determined by applying a function to the pixel values within it.
+        The number of pixels in each bin in each dimension is given by the bin_shape input.
+        This must be an integer fraction of the cube's array size in each dimension.
+        If the NDCube instance has uncertainties attached, they are propagated
+        depending on binning method chosen.
+
+        Parameters
+        ----------
+        bin_shape : array-like
+            The number of pixels in a bin in each dimension.
+            Must be the same length as number of dimensions in data.
+            Each element must be in int. If they are not they will be rounded
+            to the nearest int.
+        operation : function
+            Function applied to the data to derive values of the bins.
+            Default is `numpy.mean`
+        operation_ignores_mask: `bool`
+            Determines how masked values are handled.
+            If False (default), masked values are excluded when calculating rebinned value.
+            If True, masked values are used in calculating rebinned value.
+        handle_mask: `None` or function
+            Function to apply to each bin in the mask to calculate the new mask values.
+            If `None` resultant mask is `None`.
+            Default is `numpy.all`
+        propagate_uncertainties: `bool` or function.
+            If False, uncertainties are dropped.
+            If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainty`)
+            Can also be set to a function which performs custom uncertainty propagation.
+            Additional kwargs provided to this method are passed onto this function.
+            See Notes section on how to write a custom propagate_uncertainties function.
+        new_unit: `astropy.units.Unit`, optional
+            If the rebinning operation alters the data unit, the new unit can be
+            provided here.
+        kwargs
+            All kwargs are passed to the error propagation function.
+
+        Returns
+        -------
+        new_cube: `NDCube`
+            The resolution-degraded cube.
+
+        References
+        ----------
+        https://mail.scipy.org/pipermail/numpy-discussion/2010-July/051760.html
+
+        Notes
+        -----
+        **Rebining Algorithm**
+        Rebinning is achieved by reshaping the N-D array to a 2N-D array and
+        applying the function over the odd-numbered axes. To demonstrate,
+        consider the following example.  Let's say you have an array::
+
+             x = np.array([[0, 0, 0, 1, 1, 1],
+                           [0, 0, 1, 1, 0, 0],
+                           [1, 1, 0, 0, 1, 1],
+                           [0, 0, 0, 0, 1, 1],
+                           [1, 0, 1, 0, 1, 1],
+                           [0, 0, 1, 0, 0, 0]])
+
+        and you want to sum over 2x2 non-overlapping sub-arrays.  This summing can
+        be done by reshaping the array::
+
+             y = x.reshape(3,2,3,2)
+
+        and then summing over the 1st and third directions::
+
+             y2 = y.sum(axis=3).sum(axis=1)
+
+        which gives the expected array::
+
+             array([[0, 3, 2],
+                    [2, 0, 4],
+                    [1, 2, 2]])
+
+        **Defining Custom Error Propagation**
+        To perform custom uncertainty propagation, a function must be provided via the
+        propgate_uncertainty kwarg. This function must accept, although doesn't have to
+        use, the following args:
+
+        uncertainty: `astropy.nddata.NDUncertainty` but not `astropy.nddata.UnknownUncertainty`
+            The uncertainties associated with the data.
+        data: array-like
+            The data associated with the above uncertainties.
+            Must have same shape as uncertainty.
+        mask: array-like of `bool` or `None`
+            Indicates whether any uncertainty elements should be ignored in propagation.
+            True elements cause corresponding uncertainty elements to be ignored.
+            False elements cause corresponding uncertainty elements to be propagated.
+            Must have same shape as above.
+            If None, no uncertainties are ignored.
+
+        All kwarg inputs to the rebin method are also passed on transparently to the
+        propagation function. Hence additional inputs to the propagation function can be
+        included as kwargs to `ndcube.NDCube.rebin`.
+
+        The shape of the uncertainty, data and mask inputs are such that the first
+        dimension represents the pixels in a given bin whose data and uncertainties
+        are aggregated by the rebin process.  The shape of the remaining dimensions
+        must be the same as the final rebinned data.  A silly but informative
+        example of a custom propagation function might be::
+
+             def my_propagate(uncertainty, data, mask, **kwargs):
+                 # As a silly example, propagate uncertainties by summing those in same bin.
+                 # Note not all args are used, but function must accept them.
+                 n_pixels_per_bin = data.shape[0]  # 1st dimension of inputs gives pixels in bin.
+                 final_shape = data.shape[1:]  # Trailing dims give shape of put rebinned data.
+                 # Propagate uncerts by adding them.
+                 new_uncert = numpy.zeros(final_shape)
+                 for i in range(n_pixels_per_bin):
+                     new_uncert += uncertainty.array[i]
+                 # Alternatively: new_uncerts = uncertainty.array.sum(axis=0)
+                 return type(uncertainty)(new_uncert)  # Convert to original uncert type and return.
+        """
+        # Sanitize input.
+        new_unit = new_unit or self.unit
+        # Make sure the input bin dimensions are integers.
+        bin_shape = np.rint(bin_shape).astype(int)
+        offsets = (bin_shape - 1) / 2
+        if all(bin_shape == 1):
+            return self
+        # Ensure bin_size has right number of entries and each entry is an
+        # integer fraction of the array shape in each dimension.
+        data_shape = self.dimensions.value.astype(int)
+        naxes = len(data_shape)
+        if len(bin_shape) != naxes:
+            raise ValueError("bin_shape must have an entry for each array axis.")
+        if (np.mod(data_shape, bin_shape) != 0).any():
+            raise ValueError(
+                "bin shape must be an integer fraction of the data shape in each dimension. "
+                f"data shape: {data_shape};  bin shape: {bin_shape}")
+
+        # Reshape array so odd dimensions represent pixels to be binned
+        # then apply function over those axes.
+        m = None if (self.mask is None or self.mask is False or operation_ignores_mask) else self.mask
+        data = self.data
+        if m is not None:
+            for array_type, masked_type in ARRAY_MASK_MAP.items():
+                if isinstance(self.data, array_type):
+                    break
+            else:
+                masked_type = np.ma.masked_array
+                warn.warning("data and mask arrays of different or unrecognized types. "
+                             "Casting them into a numpy masked array.")
+            data = masked_type(self.data, m)
+
+        reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
+        new_shape = (data_shape / bin_shape).astype(int)
+        reshape[0::2] = new_shape
+        reshape[1::2] = bin_shape
+        reshape = tuple(reshape)
+        reshaped_data = data.reshape(reshape)
+        operation_axes = tuple(range(len(reshape) - 1, 0, -2))
+        new_data = operation(reshaped_data, axis=operation_axes)
+        if isinstance(new_data, ARRAY_MASK_MAP[np.ndarray]):
+            new_data = new_data.data
+        if handle_mask is None:
+            new_mask = None
+        elif isinstance(self.mask, (type(None), bool)):  # Preserve original mask type.
+            new_mask = self.mask
+        else:
+            reshaped_mask = self.mask.reshape(reshape)
+            new_mask = handle_mask(reshaped_mask, axis=operation_axes)
+
+        # Propagate uncertainties if propagate_uncertainties kwarg set.
+        new_uncertainty = None
+        if propagate_uncertainties:
+            if self.uncertainty is None:
+                warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
+                              "i.e. self.uncertainty is None.")
+            elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
+                warnings.warn("self.uncertainty is of type UnknownUncertainty which does not "
+                              "support uncertainty propagation.")
+            elif (not operation_ignores_mask
+                  and (self.mask is True or (self.mask is not None
+                                             and not isinstance(self.mask, bool)
+                                             and self.mask.all()))):
+                warnings.warn("Uncertainties cannot be propagated as all values are masked and "
+                              "operation_ignores_mask is False.")
+            else:
+                if propagate_uncertainties is True:
+                    propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
+                # If propagate_uncertainties, use astropy's infrastructure.
+                # For this the data and uncertainty must be reshaped
+                # so the first dimension represents the flattened size of a single bin
+                # while the rest represent the shape of the new data. Then the elements
+                # in each bin can be iterated (all bins being treated in parallel) and
+                # their uncertainties propagated.
+                bin_size = bin_shape.prod()
+                flat_shape = [bin_size] + list(new_shape)
+                dummy_axes = tuple(range(1, len(reshape), 2))
+                flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
+                flat_data = flat_data.reshape(flat_shape)
+                reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
+                flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
+                flat_uncertainty = flat_uncertainty.reshape(flat_shape)
+                flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
+                if m is not None:
+                    reshaped_mask = self.mask.reshape(tuple(reshape))
+                    flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
+                    flat_mask = flat_mask.reshape(flat_shape)
+                else:
+                    flat_mask = None
+                # Propagate uncertainties.
+                new_uncertainty = propagate_uncertainties(
+                    flat_uncertainty, flat_data, flat_mask,
+                    operation=operation, operation_ignores_mask=operation_ignores_mask,
+                    handle_mask=handle_mask, new_unit=new_unit, **kwargs)
+
+        # Resample WCS
+        new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
+
+        # Reform NDCube.
+        new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
+                              meta=self.meta, unit=new_unit)
+        new_cube._global_coords = self._global_coords
+        # Reconstitute extra coords
+        if not self.extra_coords.is_empty:
+            new_array_grids = [None if bin_shape[i] == 1 else
+                               np.arange(offsets[i], data_shape[i] + offsets[i], bin_shape[i])
+                               for i in range(naxes)]
+            new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
+
+        return new_cube

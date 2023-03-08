@@ -1,1 +1,0 @@
-Fix bug in `~ndcube.utils.wcs.get_dependent_world_axes` where an erroneous matrix transpose caused an error for non-square axis correlation matrices and wrong results for diagonally non-symmetric ones.
