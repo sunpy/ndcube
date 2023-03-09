@@ -1,3 +1,12 @@
+v2.1.1 (2023-03-09)
+===================
+
+Bug Fixes
+---------
+
+- Fix docstring causing doc build problems for some users. (`#600 <https://github.com/sunpy/ndcube/pull/600>`__)
+
+
 v2.1.0 (2023-03-01)
 ===================
 
