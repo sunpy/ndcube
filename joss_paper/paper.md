@@ -81,11 +81,13 @@ bibliography: paper.bib
 # Summary
 
 ndcube is a free, open-source, community-developed Python package for inspecting,
-manipulating, and visualizing n-dimensional astronomical data.
+manipulating, and visualizing n-dimensional coordinate-aware astronomical data.
 Its features are agnostic to the number of data dimensions and the physical
 coordinate types they represent.
 Its data classes link data and their coordinates and provide analysis
 methods to manipulate them self-consistently.
+These aim to provide simple and intuitive ways of handling coordinate-aware data,
+analogous to how users handle coordinate-agnostic data with arrays.
 ndcube leverages Astropy's WCS API [APE-14; @ape14], a standardized API for the
 World Coordinate System (WCS) framework that is used throughout astronomy.
 ndcube's data-WCS coupling allows users to analyze their data more easily and
@@ -133,7 +135,7 @@ visualization of N-D astronomical data via three high-level data classes:
 such as a default visualization suite.
 The other classes are designed to handle multiple `NDCube` instances simultaneously.
 
-The ndcube features are designed to be practical tools for end users.
+The features in the ndcube package are designed to be practical tools for end users.
 But they are also powerful bases upon which to build tools for specific types of data.
 This might be a specific number and/or combination of physical types
 (spectrograms, image cubes, etc.), or data from specific instruments or simulations.
@@ -158,6 +160,7 @@ Meanwhile the WCS transformations must be provided in an AstroPy-WCS-API-complia
 object.
 The components of an `NDCube` are supplied by the following kwargs and accessed via
 attributes of the same name.
+
 - `data`: The data array.  (Required)
 - `wcs`: The primary set of coordinate transformations. (Required)
 - `uncertainty`: an `astropy.nddata.NDUncertainty` object giving the uncertainty of each element in the data array. (Optional)
@@ -184,8 +187,8 @@ Alternatively, the cubes can be ordered along one of the cubes' axes, e.g. a
 sequence of tiles in an image mosaic where each cube represents an adjacent region
 of the sky.
 `NDCubeSequence` provides separate APIs for both the (N+1)-D and extended N-D
-paradigms, enabling users to switch between them without reformatting the underlying
-data.
+paradigms, enabling users to switch between them without reformatting or copying the
+underlying data.
 `NDCubeSequence` also provides various methods to help with data analysis.
 These APIs are similar to `NDCube` wherever possible, e.g. slicing, visualization,
 etc., to minimize friction between analyzing single and multiple cubes.
