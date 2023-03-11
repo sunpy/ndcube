@@ -16,7 +16,7 @@ __all__ = ['GlobalCoordsABC', 'GlobalCoords']
 
 class GlobalCoordsABC(Mapping):
     """
-    A structured representation of coordinate information applicable to a whole NDCubeABC.
+    A structured representation of coordinate information applicable to a whole `~ndcube.ndcube.NDCubeABC`.
 
     This class acts as a mapping between coordinate name and the coordinate object.
     In addition to this a physical type is stored for each coordinate name.
@@ -92,7 +92,7 @@ class GlobalCoords(GlobalCoordsABC):
     @staticmethod
     def _convert_dropped_to_internal(dropped_dimensions):
         """
-        Convert the `~astropy.wcs.wcsapi.wrappers.SlicedLowLevelWCS` style
+        Convert the `~astropy.wcs.wcsapi.SlicedLowLevelWCS` style
         ``dropped_world_dimensions`` dictionary to the GlobalCoords internal
         representation.
         """

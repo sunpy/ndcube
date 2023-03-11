@@ -18,8 +18,8 @@ def sanitize_wcs(func):
 
     This decorator is only designed to be used on methods of NDCube.
 
-    It will find the wcs argument, keyword or positional and if it is None, set
-    it to `self.wcs`.
+    It will find the wcs argument, keyword or positional and if it is `None`, set
+    it to ``self.wcs``.
     It will then verify that the WCS has a matching number of pixel dimensions
     to the dimensionality of the array. It will finally verify that the object
     passed is a HighLevelWCS object, or an ExtraCoords object.
@@ -109,7 +109,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
         Each iterable represents a point in real world space.
         Each element in a point gives the real world coordinate value of the point
         in high-level coordinate objects or quantities.
-        (Must be consistenly high or low level within and across points.)
+        (Must be consistently high or low level within and across points.)
         Objects must be in the order required by
         wcs.world_to_array_index/world_to_array_index_values.
 
@@ -204,11 +204,11 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
 def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_ignores_mask=False,
                                   propagation_operation=None, correlation=0, **kwargs):
     """
-    Default algorithm for uncertainty propagation in `~NDCubeBase.rebin`.
+    Default algorithm for uncertainty propagation in :meth:`~ndcube.NDCube.rebin`.
 
     First dimension of uncertainty, data and mask inputs represent the pixels
     in the bin being aggregated by the rebin process while the latter dimensions
-    must have the same shape as the rebinned data.  The operation input is the
+    must have the same shape as the rebinned data. The operation input is the
     function used to aggregate elements in the first dimension, e.g. `numpy.sum`.
 
     Parameters

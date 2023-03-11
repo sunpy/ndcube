@@ -1,8 +1,8 @@
 .. _plotting:
 
-======================
-Visualizing ND Objects
-======================
+**********************
+Visualizing ND objects
+**********************
 
 .. _cube_plotting:
 
@@ -12,7 +12,7 @@ Visualizing NDCubes
 `~ndcube.NDCube` provides a simple-to-use, yet powerful visualization method, `~ndcube.NDCube.plot`, which produces sensible visualizations based on the dimensionality of the data and optional user inputs.
 It is intended to be a useful quicklook tool and not a replacement for high quality plots or animations, e.g. for publications.
 Let's define an `~ndcube.NDCube` as with a shape of ``(4, 4, 5)`` and physical axes of helioprojective longitude, latitude and wavelength.
-(Click the "Source code" link immediately below to see this `~ndcube.NDCube` instantiated.)
+Click the "Source code" link immediately below to see this `~ndcube.NDCube` instantiated.
 
 .. plot::
   :context: reset
@@ -37,7 +37,7 @@ Let's define an `~ndcube.NDCube` as with a shape of ``(4, 4, 5)`` and physical a
   >>> wcs.wcs.crval = 10, 0.5, 1
   >>> wcs.wcs.cname = 'wavelength', 'HPC lat', 'HPC lon'
 
-  >>> # Define mask.  Initially set all elements unmasked.
+  >>> # Define mask. Initially set all elements unmasked.
   >>> mask = np.zeros_like(data, dtype=bool)
   >>> mask[-1, -1][:] = True  # Now mask some values.
   >>> # Define uncertainty, metadata and unit.
@@ -119,7 +119,7 @@ Setting the x and y ranges of the plot can be done simply by indexing the `~ndcu
   >>> plt.close()
 
 Note that sometimes axis tickmarks are missing.
-This is a caused by a behavior in `~astropy.visualization.wcsaes.WCSAxes` whereby the ticks and labels are omitted if the plot extends beyond the valid range of the WCS projection.
+This is a caused by a behavior in `~astropy.visualization.wcsaxes.WCSAxes` whereby the ticks and labels are omitted if the plot extends beyond the valid range of the WCS projection.
 This can happen when `matplotlib` pads the axes and can be overcome by zooming into the image slightly so that the plot boundaries are again within the valid range of the WCS projection.
 
 Visualizations can be customized via the use of kwargs.
@@ -284,7 +284,7 @@ To extract and plot the data.
   >>> # Define the sequence
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2], common_axis=common_axis)
 
-To make a 4D array out of the data arrays within the `~ndcube.NDCubes` of `my_sequence`.
+To make a 4D array out of the data arrays within the `~ndcube.NDCubeSequence` of ``my_sequence``.
 
 .. code-block:: python
 

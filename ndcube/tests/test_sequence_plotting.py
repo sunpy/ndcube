@@ -433,7 +433,7 @@
 #     # Run plot method
 #     output = test_input.plot_as_cube(**test_kwargs)
 #     # Check values are correct
-#     # Check type of ouput plot object
+#     # Check type of output plot object
 #     assert isinstance(output, matplotlib.axes.Axes)
 #     # Check x and y data are correct.
 #     assert np.allclose(output.lines[0].get_xdata(), expected_x_data)

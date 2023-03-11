@@ -1,24 +1,22 @@
 .. _installation:
 
-=================
-Installing ndcube
-=================
+*********************
+Installing ``ndcube``
+*********************
 
-ndcube requires Python 3.7+, astropy 4.2+, and matplotlib.
+`ndcube` requires Python >=3.8, ``astropy``>=4.2, ``numpy``>=1.1.7 and ``gwcs``>=0.15.
 
-Installing the Stable Version
------------------------------
+Installing the release version
+------------------------------
 
-There are two options for installing the stable version of ndcube.
+There are two options for installing the release version of `ndcube`.
 
-The first is via the miniconda distribution using the conda-forge channel.
-(The anaconda distribution can also be used but because miniconda is more lightweight we recommend it.)
-For more information on installing the miniconda or anaconda distribution, see the `miniconda website`_.
+The first is via the miniforge distribution using the conda-forge channel.
+(The anaconda distribution can also be used but because ``miniforge`` is more lightweight, we recommend it.)
+For more information on installing ``miniforge`` see the `miniforge website`_.
 
 .. code-block:: console
 
-    $ conda config --add channels conda-forge
-    $ conda config --set channel_priority strict
     $ conda install ndcube
 
 To update ndcube do:
@@ -27,7 +25,7 @@ To update ndcube do:
 
     $ conda update ndcube
 
-The second option for installing the stable version of ndcube is via pip.
+The second option for installing the stable version of ndcube is via ``pip``.
 
 .. code-block:: console
 
@@ -39,15 +37,16 @@ Then to update ndcube do:
 
         $ pip install ndcube --upgrade
 
+Please see the `sunpy installation guide for more general installation help <https://docs.sunpy.org/en/stable/installation.html>`__.
+
 .. _dev_install:
 
-Installing the Development Version
+Installing the development version
 ----------------------------------
 
-The stable version of ndcube will be reliable.
-However, if you value getting the latest updates over reliability, or want to contribute to the development of ndcube, you will need to install the development version via `ndcube GitHub repository`_.
-Let's step through how to do this using miniconda.
-For information on installing the miniconda distribution, see the `miniconda website`_.
+If you want to contribute to the development of `ndcube`, you will need to install the development version via `ndcube GitHub repository`_.
+Let's step through how to do this using miniforge.
+For information on installing the miniforge distribution, see the `miniforge website`_.
 
 First, create a conda environment on your local machine to hold the ndcube bleeding edge version.
 Using a new environment allows you to keep your root environment for stable package releases.
@@ -56,26 +55,18 @@ Type the following into a terminal:
 
 .. code-block:: console
 
-    $ conda config --append channels conda-forge
     $ conda create -n ndcube-dev pip
 
 Be sure to activate the environment, i.e. switch into it.
-In Linux or MacOS, type:
 
 .. code-block:: console
 
     $ conda activate ndcube-dev
 
-In Windows, type:
-
-.. code-block:: console
-
-        > conda ndcube-dev
-
 Next clone the ndcube repo from GitHub to a new directory.
-Let's call it ndcude-git.
+Let's call it "ndcude-git".
 
-.. note::
+.. warning::
 
     If you want to develop ndcube, you should fork the repository and then clone your fork here and not the main ndcube repository.
 
@@ -98,5 +89,5 @@ Be sure you get the latest updates by regularly doing:
 
     $ git pull origin main
 
-.. _miniconda website: https://docs.conda.io/en/latest/miniconda.html
+.. _miniforge website: https://github.com/conda-forge/miniforge#download
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube

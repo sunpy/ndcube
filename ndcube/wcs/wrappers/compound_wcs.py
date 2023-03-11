@@ -21,7 +21,7 @@ class Mapping:
     ----------
     mapping : tuple
         A tuple of integers representing indices of the inputs to this model
-        to return and in what order to return them.  See
+        to return and in what order to return them. See
         :ref:`compound-model-mappings` for more details.
 
     """

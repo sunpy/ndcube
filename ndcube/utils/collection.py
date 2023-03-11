@@ -109,7 +109,7 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
 
 
 def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes, first_key):
-    # Remove dropped axes from aligned_axes.  MUST BE A BETTER WAY TO DO THIS.
+    # Remove dropped axes from aligned_axes. MUST BE A BETTER WAY TO DO THIS.
     if len(drop_aligned_axes_indices) <= 0:
         new_aligned_axes = tuple(aligned_axes.values())
     elif len(drop_aligned_axes_indices) == len(aligned_axes[first_key]):

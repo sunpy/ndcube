@@ -45,7 +45,7 @@ class MatplotlibPlotter(BasePlotter):
             axis the value of the list should either be a string giving the
             world axis type or `None` to use the default axis from the WCS.
 
-        data_unit: `astropy.unit.Unit`
+        data_unit: `astropy.units.Unit`
             The data is changed to the unit given or the ``NDCube.unit`` if not
             given.
 
@@ -57,8 +57,8 @@ class MatplotlibPlotter(BasePlotter):
             which depends on the dimensionality of the data and whether 1 or 2 plot_axes are
             defined:
             - Animations: `mpl_animators.ArrayAnimatorWCS`
-            - Static 2-D images: `matplotllib.pyplot.imshow`
-            - Static 1-D line plots: `matplotllib.pyplot.plot`
+            - Static 2-D images: `matplotlib.pyplot.imshow`
+            - Static 1-D line plots: `matplotlib.pyplot.plot`
         """
         naxis = self._ndcube.wcs.pixel_n_dim
 

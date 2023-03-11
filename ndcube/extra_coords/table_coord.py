@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
+__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate', "BaseTableCoordinate", "MultipleTableCoordinate"]
 
 
 class Length1Tabular(_Tabular):
@@ -242,7 +242,7 @@ class BaseTableCoordinate(abc.ABC):
         """
         Return a boolean if this coordinate is a scalar.
 
-        This is used by `.MultipleTableCoordinate` and `.ExtraCoords` to know
+        This is used by `.MultipleTableCoordinate` and `ndcube.ExtraCoords` to know
         if the dimension has been "dropped".
         """
 
@@ -467,11 +467,11 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     Parameters
     ----------
     table: `~astropy.coordinates.SkyCoord`
-        SkyCoord of coordinates.  Only one can be provided.
+        SkyCoord of coordinates. Only one can be provided.
 
     mesh: `bool`
-        If True, world components of input SkyCoord are interpretted to represent
-        different array dimensions.  Input SkyCoord must be 1-D.
+        If True, world components of input SkyCoord are interpreted to represent
+        different array dimensions. Input SkyCoord must be 1-D.
 
     names: `str` or `list` of `str`
         Custom names for the components of the SkyCoord. If provided, a name must
@@ -484,7 +484,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     Notes
     -----
     If mesh is True, underlying SkyCoord must always be "square" due to nature of
-    `~astropy.coordiantes.SkyCoord`, i.e. the lat and lon components are always the
+    `~astropy.coordinates.SkyCoord`, i.e. the lat and lon components are always the
     same length.
     """
 
@@ -652,7 +652,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
             else:
                 mesh_output = self.mesh
 
-        # Build old array grids.  Note self._slice give the slice item(s) required to
+        # Build old array grids. Note self._slice give the slice item(s) required to
         # make the underlying SkyCoord match the dimensionality of the associated data cube.
         old_array_grids = [np.arange(d)[slc] for d, slc in zip(shape, self._slice)]
         # Iterate through components and interpolate each.
@@ -685,7 +685,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
     Parameters
     ----------
     table: `~astropy.time.Time`
-        Time coordinates.  Only one can be provided and must be 1D.
+        Time coordinates. Only one can be provided and must be 1D.
 
     names: `str` or `list` of `str`
         Custom names for the components of the SkyCoord. If provided, a name must
@@ -765,7 +765,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
         new_array_grids: array-like
             The array index values at which the the new values of the
             coords are desired. A grid must be supplied for each pixel
-            axis (in array-axis order).  All grids must be the same shape.
+            axis (in array-axis order). All grids must be the same shape.
 
         Returns
         -------
@@ -789,7 +789,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
 class MultipleTableCoordinate(BaseTableCoordinate):
     """
-    A Holder for multiple `.BaseTableCoordinate` objects.
+    A Holder for multiple `ndcube.extra_coords.BaseTableCoordinate` objects.
 
     This class allows the generation of a gWCS from many `.BaseTableCoordinate`
     objects.
@@ -956,7 +956,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         new_array_grids: array-like
             The array index values at which the the new values of the
             coords are desired. A grid must be supplied for each pixel
-            axis (in array-axis order).  All grids must be the same shape.
+            axis (in array-axis order). All grids must be the same shape.
 
         Returns
         -------

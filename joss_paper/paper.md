@@ -114,7 +114,7 @@ as a single 3-D array with two spatial axes and one temporal axis.
 In astronomy, the most commonly used framework for translating between array element
 indices and the location, time, etc. in the Universe being observed is the World
 Coordinate System (WCS).
-WCS’s ability to handle many different physical types of coordinates (e.g. spatial,
+WCS's ability to handle many different physical types of coordinates (e.g. spatial,
 temporal, spectral, etc.) and their projections onto a data array (e.g. right ascension
 and declination, helioprojective latitude and longitude, etc.) make it a succinct,
 standardized and powerful way to relate array axes to the physical coordinate types
@@ -148,7 +148,7 @@ underlying WCS implementation, e.g. FITS-WCS, gWCS, etc.
 The ndcube package serves three specific purposes.
 First, it formalizes the NDCube 2 API in software via its abstract base classes
 (ABCs), `NDCubeABC`, `ExtraCoordsABC` and `GlobalCoordsABC`.
-The NDCube 2 API is a standarized framework for inspecting and manipulating
+The NDCube 2 API is a standardized framework for inspecting and manipulating
 coordinate-aware N-D astronomical data and is defined by 12th SunPy Enhancement
 Proposal [SEP-12; @sep12].
 A discussion of the philosophies underpinning the NDCube 2 API can be found
@@ -193,14 +193,14 @@ so long as it's supplied in an AstroPy-WCS-API-compliant object.
 The components of an `NDCube` are supplied by the following keyword arguments and
 accessed via attributes of the same name.
 
-- `data`: The data array.  (Required)
+- `data`: The data array. (Required)
 - `wcs`: The primary set of coordinate transformations. (Required)
-- `uncertainty`: an `astropy.nddata.NDUncertainty` object giving the uncertainty of each element in the data array. (Optional)
-- `mask`: a boolean array denoting which elements of the data array are reliable. (Optional) A `True` value implies the data is masked, i.e. unreliable. (Optional)
-- `meta`: an object for storing metadata, e.g. a Python dictionary. (Optional)
-- `unit`: the unit of the data. (Optional)
+- `uncertainty`: an `astropy.nddata.NDUncertainty` object giving the uncertainty of each element in the data array., optional
+- `mask`: a boolean array denoting which elements of the data array are reliable., optional A `True` value implies the data is masked, i.e. unreliable., optional
+- `meta`: an object for storing metadata, e.g. a Python dictionary., optional
+- `unit`: the unit of the data., optional
 
-`NDCube` also supports additional coordinate information.  See the subsection on
+`NDCube` also supports additional coordinate information. See the subsection on
 Coordinate Classes.
 `NDCube` provides several analysis methods such as slicing (by array indices),
 cropping (by real world coordinates), reprojecting to new WCS transformations,

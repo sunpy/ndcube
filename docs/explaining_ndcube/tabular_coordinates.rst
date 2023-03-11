@@ -1,10 +1,10 @@
 .. _tabular_coordinates:
 
-===================
-Tabular Coordinates
-===================
+*******************
+Tabular coordinates
+*******************
 
-So far we have assumed that we are constructing an NDCube using a WCS that has been read from a file or explicitly created.
+So far we have assumed that we are constructing an `~ndcube.NDCube` using a WCS that has been read from a file or explicitly created.
 However, in some cases we may have tables giving the coordinate values at each pixel and converting these into a WCS manually can be tedious.
 Therefore ndcube provides tools for constructing WCSes from such tables.
 
@@ -12,12 +12,12 @@ Tabular coordinates are useful when there is no mathematical description of the 
 It's worth considering that tabular coordinates are generally not as polished as a functional transform in a WCS.
 Therefore, if possible, building a functional WCS for your coordinate system is highly recommended.
 
-Tabular Coordinates and WCSes
+Tabular coordinates and WCSes
 =============================
 
 All coordinate information in ndcube is represented as a WCS.
-Even the `.ExtraCoords` class, which allows the user to add tabular data to axes, uses the
-`gwcs <https://gwcs.readthedocs.io/en/stable/>`_ library to store this information as a WCS.
+Even the `~ndcube.ExtraCoords` class, which allows the user to add tabular data to axes, uses the
+`gwcs <https://gwcs.readthedocs.io/en/stable/>`__ library to store this information as a WCS.
 This enables ndcube's coordinate transformation and plotting functions to leverage the same infrastructure, irrespective of whether the coordinates are functional or tabular.
 
 The FITS WCS standard also supports tabular axes with the ``-TAB`` CTYPE.
@@ -31,7 +31,7 @@ Constructing a WCS from Lookup Tables
 =====================================
 
 ndcube supports constructing lookup tables from `~astropy.coordinates.SkyCoord`,  `~astropy.time.Time` and `~astropy.units.Quantity` objects.
-These objects are wrapped in `BaseTableCoordinate <.table_coord>` objects which can be composed together into a multi-dimensional WCS.
+These objects are wrapped in `~ndcube.extra_coords.BaseTableCoordinate` objects which can be composed together into a multi-dimensional WCS.
 
 .. note::
 
@@ -64,7 +64,7 @@ is the following temporal axis::
     fill_value: nan
     bounds_error: False)>
 
-This `gwcs.WCS` object can then be passed to the constructor of `.NDCube` alongside your array and other parameters.
+This `gwcs.wcs.WCS` object can then be passed to the constructor of `ndcube.NDCube` alongside your array and other parameters.
 
 Combining Two Coordinates into a Single WCS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

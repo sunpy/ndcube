@@ -30,4 +30,4 @@ from .ndcube import NDCube, NDCubeBase  # NOQA
 from .ndcube_sequence import NDCubeSequence, NDCubeSequenceBase  # NOQA
 from .version import version as __version__  # NOQA
 
-__all__ = ['NDCube', 'NDCubeSequence', "NDCollection", "ExtraCoords", "GlobalCoords"]
+__all__ = ['NDCube', 'NDCubeSequence', "NDCollection", "ExtraCoords", "GlobalCoords", "ExtraCoordsABC", "GlobalCoordsABC", "NDCubeBase", "NDCubeSequenceBase"]

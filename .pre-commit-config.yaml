@@ -54,6 +54,10 @@ repos:
         exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*)$"
       - id: mixed-line-ending
         exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*)$"
-
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        args: ['--config setup.cfg']
 ci:
   autofix_prs: false
