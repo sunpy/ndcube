@@ -961,6 +961,7 @@ class NDCube(NDCubeBase):
         : `ǸDCube`
             A new instance with the new unit and data and uncertainties scales accordingly.
         """
+        new_unit = u.Unit(new_unit)
         return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
 
     def rebin(self, bin_shape, operation=np.mean, operation_ignores_mask=False, handle_mask=np.all,
