@@ -1,5 +1,7 @@
 import abc
 
+__all__ = ['BasePlotter']
+
 
 class BasePlotter(abc.ABC):
     """

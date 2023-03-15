@@ -4,6 +4,9 @@ MISSING_MATPLOTLIB_ERROR_MSG = ("Matplotlib can not be imported, so the default 
                                 "functionality is disabled. Please install matplotlib.")
 
 
+__all__ = ['PlotterDescriptor']
+
+
 class PlotterDescriptor:
     def __init__(self, default_type=None):
         self._default_type = default_type

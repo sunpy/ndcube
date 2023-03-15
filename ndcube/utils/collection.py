@@ -2,6 +2,8 @@ import numbers
 
 import numpy as np
 
+__all__ = ['assert_aligned_axes_compatible']
+
 
 def _sanitize_aligned_axes(keys, data, aligned_axes):
     if aligned_axes is None:

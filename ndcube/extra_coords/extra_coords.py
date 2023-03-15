@@ -89,10 +89,10 @@ class ExtraCoordsABC(abc.ABC):
 
         .. note::
             This WCS object does not map to the pixel dimensions of the data array
-            in the `.NDCube` object. It only includes pixel dimensions associated
+            in the `~ndcube.NDCube` object. It only includes pixel dimensions associated
             with the extra coordinates. For example, if there is only one extra coordinate
             associated with a single pixel dimension, this WCS will only have 1 pixel dimension,
-            even if the `.NDCube` object has a data array of 2-D or greater.
+            even if the `~ndcube.NDCube` object has a data array of 2-D or greater.
             Therefore using this WCS directly might lead to some confusing results.
 
         """
@@ -177,7 +177,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         Returns
         -------
-        `ndcube.extra_coords.ExtraCoords`
+        `ndcube.ExtraCoords`
 
         """
         if len(pixel_dimensions) != len(lookup_tables):
@@ -448,7 +448,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         Returns
         -------
-        new_ec: `~ndcube.extra_coords.ExtraCoords`
+        new_ec: `~ndcube.ExtraCoords`
             A new ExtraCoords object holding the interpolated coords.
         """
         new_ec = type(self)(ndcube)

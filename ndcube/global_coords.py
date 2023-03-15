@@ -11,7 +11,7 @@ from astropy.wcs.wcsapi.utils import deserialize_class
 
 from ndcube.utils.wcs import validate_physical_types
 
-__all__ = ['GlobalCoordsABC', 'GlobalCoords']
+__all__ = []
 
 
 class GlobalCoordsABC(Mapping):
@@ -25,7 +25,7 @@ class GlobalCoordsABC(Mapping):
 
     Parameters
     ----------
-    ndcube : `.NDCube`, optional
+    ndcube : `~ndcube.NDCube`, optional
         The parent ndcube for this object. Used to extract global coordinates
         from the wcs and extra coords of the ndcube. If not specified only
         coordinates explicitly added will be shown.

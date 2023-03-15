@@ -22,7 +22,7 @@ from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube import utils
-from ndcube.extra_coords import ExtraCoords, ExtraCoordsABC
+from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -30,7 +30,7 @@ from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
-__all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
+__all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 
 # Create mapping to masked array types based on data array type for use in analysis methods.
 ARRAY_MASK_MAP = {}
@@ -66,7 +66,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
         This transform should implement the high level wcsapi, and have
         ``pixel_n_dim`` equal to the number of array dimensions in the
-        `.NDCube`. The number of world dimensions should be equal to the
+        `~ndcube.NDCube`. The number of world dimensions should be equal to the
         number of world dimensions in ``self.wcs`` and in ``self.extra_coords`` combined.
         """
 
@@ -156,7 +156,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             This increases the size of the output along each dimension by 1
             as all corners are returned.
 
-        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`, optional
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`, optional
             The WCS object to be used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
             ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
@@ -205,7 +205,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             Therefore their number and order must be compatible with the API
             of that method, i.e. they must be passed in world order.
 
-        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`
             The WCS to use to calculate the pixel coordinates based on the input.
             Will default to the ``.wcs`` property if not given. While any valid WCS
             could be used it is expected that either the ``.wcs`` or
@@ -256,7 +256,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             The length of the iterable must equal the number of world dimensions
             and must have the same order as the coordinate points.
 
-        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`
             The WCS to use to calculate the pixel coordinates based on the input.
             Will default to the ``.wcs`` property if not given. While any valid WCS
             could be used it is expected that either the ``.wcs`` or

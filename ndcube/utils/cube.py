@@ -25,7 +25,7 @@ def sanitize_wcs(func):
     passed is a HighLevelWCS object, or an ExtraCoords object.
     """
     # This needs to be here to prevent a circular import
-    from ndcube.extra_coords import ExtraCoords
+    from ndcube.extra_coords.extra_coords import ExtraCoords
 
     @wraps(func)
     def wcs_wrapper(*args, **kwargs):
@@ -85,7 +85,7 @@ def sanitize_crop_inputs(points, wcs):
         raise ValueError("All points must have same number of coordinate objects."
                          f"Number of objects in each point: {n_coords}")
     # Import must be here to avoid circular import.
-    from ndcube.extra_coords import ExtraCoords
+    from ndcube.extra_coords.extra_coords import ExtraCoords
     if isinstance(wcs, ExtraCoords):
         # Determine how many dummy axes are needed
         n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)

@@ -4,7 +4,7 @@ from mpl_animators import ArrayAnimatorWCS
 from .base import BasePlotter
 from .plotting_utils import prep_plot_kwargs
 
-__all__ = ['MatplotlibSequencePlotter']
+__all__ = ['MatplotlibSequencePlotter', 'SequenceAnimator']
 
 
 class MatplotlibSequencePlotter(BasePlotter):

@@ -1,5 +1,3 @@
-# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
-
 """
 Miscellaneous WCS utilities.
 """

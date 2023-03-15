@@ -110,7 +110,7 @@ Deprecations and Removals
 -------------------------
 
 - Remove ``NDCube.pixel_to_world`` and ``NDCube.world_to_pixel``. (`#300 <https://github.com/sunpy/ndcube/pull/300>`__)
-- Remove ``world_axis_physical_types`` methods from `.NDCube` and  `.NDCubeSequence`. (`#302 <https://github.com/sunpy/ndcube/pull/302>`__)
+- Remove ``world_axis_physical_types`` methods from `~ndcube.NDCube` and  `.NDCubeSequence`. (`#302 <https://github.com/sunpy/ndcube/pull/302>`__)
 - Remove ``NDCubeSequence.sequence_axis_extra_coords``. This is replaced by ``NDCubeSequence.sequence_axis_coords``. (`#335 <https://github.com/sunpy/ndcube/pull/335>`__)
 - Remove ``ndcube.NDCubeSequence.common_axis_extra_coords``.  Will be replaced by `ndcube.NDCubeSequence.common_axis_coords`. (`#344 <https://github.com/sunpy/ndcube/pull/344>`__)
 - Remove ``NDCollection.aligned_world_axis_physical_types``.  It will be replaced by `~ndcube.NDCollection.aligned_axis_physical_types`. (`#347 <https://github.com/sunpy/ndcube/pull/347>`__)
@@ -152,7 +152,7 @@ Features
 - `~.NDCube.axis_world_coords` and `~.NDCube.axis_world_coords_values` now use a different, substantially faster and more memory efficient algorithm to generate the coordinates along all axes. (`#442 <https://github.com/sunpy/ndcube/pull/442>`__)
 - Extends `~.NDCube.reproject_to` functionality by supporting ``adaptive`` and ``exact`` algorithms for an `ndcube.NDCube` with 2D celestial WCS. (`#448 <https://github.com/sunpy/ndcube/pull/448>`__)
 - Introduce optional offset between old and new pixel grids in ``ndcube.wcs.wrappers.resampled_wcs.ResampledLowLevelWCS``. (`#449 <https://github.com/sunpy/ndcube/pull/449>`__)
-- `ndcube.extra_coords.ExtraCoords.from_lookup_tables` accepts (a sequence of) ``physical_types`` as kwarg to set the types of its ``lookup_tables``. (`#451 <https://github.com/sunpy/ndcube/pull/451>`__)
+- `ndcube.ExtraCoords.from_lookup_tables` accepts (a sequence of) ``physical_types`` as kwarg to set the types of its ``lookup_tables``. (`#451 <https://github.com/sunpy/ndcube/pull/451>`__)
 - Create new plotter class for animating `~ndcube.NDCubeSequence` is the 2.0 framework. This class always sets the sequence axis as a slider and leverages `ndcube.NDCube.plot`. (`#456 <https://github.com/sunpy/ndcube/pull/456>`__)
 - Add ``__len__`` method to `~ndcube.NDCubeSequence` which makes ``len(sequence)`` return the number of cubes in the sequence. (`#464 <https://github.com/sunpy/ndcube/pull/464>`__)
 - Add ``__iter__`` method to `~ndcube.NDCubeSequence` which iterates through the cubes within the sequence. (`#465 <https://github.com/sunpy/ndcube/pull/465>`__)
