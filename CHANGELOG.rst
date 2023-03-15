@@ -24,7 +24,7 @@ Features
   scalars, and `~astropy.units.Quantity` objects. Operations between two `~ndcube.NDCube` objects
   are not supported. (`#541 <https://github.com/sunpy/ndcube/pull/541>`__)
 - Add `ndcube.NDCube.to` to convert cube to new unit. (`#586 <https://github.com/sunpy/ndcube/pull/586>`__)
-- Created `~ndcube.GlobalCoordsABC` and updated `~ndcube.ndcube.NDCubeABC`, and `~ndcube.ExtraCoordsABC` to reflect official NDCube 2 API definition in SEP. (`#592 <https://github.com/sunpy/ndcube/pull/592>`__)
+- Created `~ndcube.GlobalCoordsABC` and updated `~ndcube.NDCubeABC`, and `~ndcube.ExtraCoordsABC` to reflect official NDCube 2 API definition in SEP. (`#592 <https://github.com/sunpy/ndcube/pull/592>`__)
 
 
 Bug Fixes
@@ -174,7 +174,7 @@ Bug Fixes
 - Fixes IndexError in `~ndcube.utils.wcs.array_indices_for_world_objects` which occurred when some of the world axes are dependent. (`#344 <https://github.com/sunpy/ndcube/pull/344>`__)
 - Stop `ndcube.NDCube.explode_along_axis` setting a common axis to the output `~ndcube.NDCubeSequence`.  The output sequence should have no common axis. (`#358 <https://github.com/sunpy/ndcube/pull/358>`__)
 - Enable 2-D NDCubes to be visualized as a 1-D animated line. (`#381 <https://github.com/sunpy/ndcube/pull/381>`__)
-- Ensure corner inputs to `ndcube.NDCube.crop` are converted to units stored in WCS as `~astropy.wcs.WCS.world_to_array_index_values` does not handle units. (`#382 <https://github.com/sunpy/ndcube/pull/382>`__)
+- Ensure corner inputs to :meth:`ndcube.NDCube.crop` are converted to units stored in WCS as `~astropy.wcs.WCS.world_to_array_index_values` does not handle units. (`#382 <https://github.com/sunpy/ndcube/pull/382>`__)
 - updated ndcube github repository link in "ndcube.docs.installation.rst". (`#392 <https://github.com/sunpy/ndcube/pull/392>`__)
 - Fix bug in NDCube.axis_world_coords_values when axes_coords is initially a
   bare astropy coordinate object rather than a list/tuple of coordinate objects. (`#400 <https://github.com/sunpy/ndcube/pull/400>`__)
@@ -205,7 +205,7 @@ Trivial/Internal Changes
 - Fix docstring formatting to help docs build. (`#262 <https://github.com/sunpy/ndcube/pull/262>`__)
 - Use pytest-mpl for figure tests. (`#312 <https://github.com/sunpy/ndcube/pull/312>`__)
 - Port the tests for NDCube to use pytest fixtures (`#318 <https://github.com/sunpy/ndcube/pull/318>`__)
-- Allow corner inputs to `~ndcube.NDCube.crop` to not be wrapped in a `tuple` is only one high level coordinate objects required. (`#380 <https://github.com/sunpy/ndcube/pull/380>`__)
+- Allow corner inputs to :meth:`~ndcube.NDCube.crop` to not be wrapped in a `tuple` is only one high level coordinate objects required. (`#380 <https://github.com/sunpy/ndcube/pull/380>`__)
 - Make sunpy an optional dependence. Without it, the _animate_cube plotting
   functionality will be disabled. (`#393 <https://github.com/sunpy/ndcube/pull/393>`__)
 - Adds a function to compare the physical types of two WCS objects. (`#433 <https://github.com/sunpy/ndcube/pull/433>`__)

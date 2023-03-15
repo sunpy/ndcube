@@ -16,7 +16,7 @@ __all__ = []
 
 class GlobalCoordsABC(Mapping):
     """
-    A structured representation of coordinate information applicable to a whole `~ndcube.ndcube.NDCubeABC`.
+    A structured representation of coordinate information applicable to a whole `~ndcube.NDCubeABC`.
 
     This class acts as a mapping between coordinate name and the coordinate object.
     In addition to this a physical type is stored for each coordinate name.

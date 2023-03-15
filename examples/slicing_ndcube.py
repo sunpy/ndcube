@@ -123,7 +123,7 @@ cropped_cube.plot()
 
 ##############################################################################
 # Now let's say we also want to crop out the image that includes a specific wavelength.
-# Let's define a new point, and then include it with the first two we passed to `~ndcube.NDCube.crop`.
+# Let's define a new point, and then include it with the first two we passed to :meth:`~ndcube.NDCube.crop`.
 
 point3 = [None, SpectralCoord(10.2*u.angstrom)]
 
@@ -141,7 +141,7 @@ cropped_cube.plot()
 
 # Now let's say we instead want to crop over a wavelength range.
 # Let's define a new point, and then include it with the first two we passed to
-# `~ndcube.NDCube.crop`.
+# :meth:`~ndcube.NDCube.crop`.
 point4 = [None, SpectralCoord(10.6*u.angstrom)]
 
 cropped_cube = example_cube.crop(point1, point2, point3, point4)

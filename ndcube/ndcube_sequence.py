@@ -251,7 +251,7 @@ class NDCubeSequenceBase:
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+            Passed to :meth:`ndcube.NDCube.crop` as the points arg without checking.
 
         wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes.
@@ -287,10 +287,10 @@ class NDCubeSequenceBase:
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+            Passed to :meth:`ndcube.NDCube.crop` as the points arg without checking.
 
         units:
-            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
 
         wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes. There must by one WCS per cube.
@@ -323,7 +323,7 @@ class NDCubeSequenceBase:
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop_by_values` as the ``points`` arg.
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``points`` arg.
 
         wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes. There must by one WCS per cube.
@@ -338,8 +338,8 @@ class NDCubeSequenceBase:
             If False, inputs are assumined to be high-level coordinate objects and
             the crop util is used.
 
-        units: (optiona)
-            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+        units: `astropy.units.Unit`, optional
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
             Only used if crop_by_values is True.
         """
         n_cubes = len(self.data)
