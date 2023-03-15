@@ -1,0 +1,1 @@
+Fixes a bug where passing a string representation of a unit to `ndcube.NDCube.to` raised a `TypeError`.

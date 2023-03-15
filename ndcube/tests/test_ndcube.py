@@ -1119,14 +1119,14 @@ def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
         _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
 
 
-def test_to(ndcube_1d_l):
+@pytest.mark.parametrize('new_unit', [u.mJ, 'mJ'])
+def test_to(ndcube_1d_l, new_unit):
     cube = ndcube_1d_l
-    new_unit = u.mJ
     expected_factor = 1000
     output = cube.to(new_unit)
     assert np.allclose(output.data, cube.data * expected_factor)
     assert np.allclose(output.uncertainty.array, cube.uncertainty.array * expected_factor)
-    assert output.unit == new_unit
+    assert output.unit == u.Unit(new_unit)
 
 
 def test_to_dask(ndcube_2d_dask):
