@@ -116,10 +116,28 @@ temporal, spectral, etc.) and their projections onto a data array (e.g. right as
 and declination, helioprojective latitude and longitude, etc.) make it a succinct,
 standardized and powerful way to relate array axes to the physical coordinate types
 they represent.
-However, while there exist Python packages for handling N-D array operations --
+
+There are mature Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc. -- and others for supporting WCS coordinate
-transformations -- e.g. astropy [@astropy], gWCS [@gWCS] -- currently only ndcube treats
-them in a combined, self-consistent way.
+transformations -- e.g. astropy [@astropy], gWCS [@gWCS].
+However, none treat data and coordinates in a combined, self-consistent way.
+The closest alternative to ndcube is xarray [@xarray].
+However xarray has been developed for the requirements and conventions of the
+geosciences which, although similar to those of astronomy in concept, are sufficiently
+different in construction to cause significant friction.
+Crucially, xarray does not currently support WCS coordinate transformations.
+Tools that do support WCS-based coordinate-aware data analysis, such as the SunPy
+[@sunpy] Map class for 2-D images of the Sun, tend to have APIs specific to particular
+combinations of dimensions, physical types, coordinate systems and WCS implementations.
+This limits their broader utility and makes the combined analysis of different types
+of data more difficult.
+It also inhibits collaboration by putting technical barriers between sub-fields of
+astronomy.
+
+ndcube overcomes these challenges via its design policy that all functionalities and
+APIs must be agnostic to the number of dimensions and coordinate types they represent.
+Moreover, ndcube's employment of the AstroPy WCS API makes it agnostic to the
+underlying WCS implementation, e.g. FITS-WCS, gWCS, etc.
 
 
 # The Role of ndcube and its Features
