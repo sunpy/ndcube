@@ -93,8 +93,12 @@ Its data classes link data and their coordinates and provide analysis
 methods to manipulate them self-consistently.
 These aim to provide simple and intuitive ways of handling coordinate-aware data,
 analogous to how users handle coordinate-agnostic data with arrays.
-ndcube leverages Astropy's WCS API [APE-14; @ape14], a standardized API for the
+ndcube leverages AstroPy's WCS API [APE-14; @ape14], a standardized API for the
 World Coordinate System (WCS) framework that is used throughout astronomy.
+Previously, each WCS implementation had its own Python API, making workflows and
+derived tools non-transferable between implementations.
+Now however, ndcube supports any WCS implementation, e.g. FITS-WCS, gWCS, etc.,
+so long as it's wrapped in an AstroPy-WCS-API-compliant object.
 ndcube's data-WCS coupling allows users to analyze their data more easily and
 reliably, thus helping to boost their scientific output.
 
@@ -161,8 +165,10 @@ The array can be any object that exposes `.dtype` and `.shape` attributes and ca
 be sliced by the standard Python slicing API.
 Thus `NDCube` not only supports numpy arrays but also others such as dask for
 distributed computing [@dask], cupy for GPU operations [@cupy], etc.
-Meanwhile the WCS transformations must be provided in an AstroPy-WCS-API-compliant
-object.
+`NDCube` leverages the AstroPy WCS API for interacting and manipulating the WCS
+transformations.
+This means `NDCube` can support any WCS implementation, e.g. FITS-WCS, gWCS, etc.,
+so long as it's supplied in an AstroPy-WCS-API-compliant object.
 The components of an `NDCube` are supplied by the following kwargs and accessed via
 attributes of the same name.
 
@@ -179,8 +185,8 @@ Coordinate Classes.
 cropping (by real world coordinates), reprojecting to new WCS transformations,
 visualization, rebinning data, arithmetic operations, and more.
 All these methods manipulate the data, coordinates, and supporting data (e.g.
-uncertainties) simultaneously and self-consistently, thus relieving users of
-well-defined, but tedious and error-prone tasks.
+uncertainties) simultaneously and self-consistently.
+This relieves users of well-defined, but tedious and error-prone tasks.
 
 `NDCubeSequence` is designed to handle multiple `NDCube` instances that are arranged
 in some order.
@@ -191,9 +197,10 @@ API to `NDCube`.
 Alternatively, the cubes can be ordered along one of the cubes' axes, e.g. a
 sequence of tiles in an image mosaic where each cube represents an adjacent region
 of the sky.
-`NDCubeSequence` provides separate APIs for both the (N+1)-D and extended N-D
-paradigms, enabling users to switch between them without reformatting or copying the
-underlying data.
+`NDCubeSequence` provides APIs for both the (N+1)-D and extended N-D paradigms,
+that are simultanesouly available on each `NDCubeSequence` instance.
+This enables users to switch between the paradigms without reformatting or copying
+the underlying data.
 `NDCubeSequence` also provides various methods to help with data analysis.
 These APIs are similar to `NDCube` wherever possible, e.g. slicing, visualization,
 etc., to minimize friction between analyzing single and multiple cubes.
@@ -231,12 +238,12 @@ transformations to those in the primary WCS and used interchangeably.
 
 By contrast, `GlobalCoords` supports scalar coordinates that apply to the whole
 `NDCube` rather than any of its axes, e.g. the timestamp of a 2-D image.
-WCS requires that all coordinates are associated with at least one array
-axis, hence the need for `GlobalCoords`.
+Scalar coordinates are not supported by WCS because it requires all coordinates
+to be associated with at least one array axis, hence the need for `GlobalCoords`.
 When an axis is dropped from an `NDCube` via slicing, the values of the dropped
 coordinates at the relevant location along the dropped axis are automatically
 added to the associated `GlobalCoords` object, e.g. the timestamp of a 2-D image
-sliced from a space-space-time cube.
+sliced from a 3-D space-space-time cube.
 Thus coordinate information is never lost due to slicing.
 
 `NDCube` objects are always instantiated with associated `ExtraCoords` and
@@ -247,8 +254,9 @@ For a more in depth dicussion of `ExtraCoords` and `GlobalCoords`, see @ndcube.
 
 # Community Applications of ndcube
 
-The importance of the ndcube package is demonstrated by the fact that it already
-supports a variety of current ground-based and satellite observatories.
+The importance of the ndcube package is demonstrated by the fact that it is
+already a dependency of various software tools that support current ground-based
+and satellite observatories.
 These include the James Webb Space Telescope (JWST), Solar Orbiter,
 the Interface Region Imaging Spectrograph (IRIS), Hinode, and the
 Daniel K. Inouye Solar Telescope (DKIST) via the
