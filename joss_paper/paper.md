@@ -114,8 +114,8 @@ standardized and powerful way to relate array axes to the physical coordinate ty
 they represent.
 However, while there exist Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc. -- and others for supporting WCS coordinate
-transformations -- e.g. astropy [@astropy], gWCS [@gWCS] -- currently only ndcube is
-treats them in a combined, self-consistent way.
+transformations -- e.g. astropy [@astropy], gWCS [@gWCS] -- currently only ndcube treats
+them in a combined, self-consistent way.
 
 
 # The Role of ndcube and its Features

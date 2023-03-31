@@ -1,5 +1,5 @@
 ******
-ncdube
+ndcube
 ******
 
 |Latest Version| |codecov| |matrix| |Powered by NumFOCUS| |Powered by SunPy|
