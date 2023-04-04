@@ -8,8 +8,6 @@ import numpy as np
 from ndcube import utils
 from ndcube.visualization.descriptor import PlotterDescriptor
 
-__all__ = []
-
 
 class NDCubeSequenceBase:
     """

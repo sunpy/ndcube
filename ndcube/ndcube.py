@@ -213,7 +213,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
         Returns
         -------
-        result: `~ndcube.NDCubeABC`
+        `~ndcube.ndcube.NDCubeABC`
 
         Examples
         --------
@@ -263,7 +263,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
         Returns
         -------
-        result: `~ndcube.NDCubeABC`
+        `~ndcube.ndcube.NDCubeABC`
 
         Examples
         --------

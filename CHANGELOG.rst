@@ -24,7 +24,7 @@ Features
   scalars, and `~astropy.units.Quantity` objects. Operations between two `~ndcube.NDCube` objects
   are not supported. (`#541 <https://github.com/sunpy/ndcube/pull/541>`__)
 - Add `ndcube.NDCube.to` to convert cube to new unit. (`#586 <https://github.com/sunpy/ndcube/pull/586>`__)
-- Created `~ndcube.GlobalCoordsABC` and updated `~ndcube.NDCubeABC`, and `~ndcube.ExtraCoordsABC` to reflect official NDCube 2 API definition in SEP. (`#592 <https://github.com/sunpy/ndcube/pull/592>`__)
+- Created `~ndcube.GlobalCoordsABC` and updated `~ndcube.ndcube.NDCubeABC`, and `~ndcube.ExtraCoordsABC` to reflect official NDCube 2 API definition in SEP. (`#592 <https://github.com/sunpy/ndcube/pull/592>`__)
 
 
 Bug Fixes

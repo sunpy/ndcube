@@ -11,12 +11,10 @@ from astropy.wcs.wcsapi.utils import deserialize_class
 
 from ndcube.utils.wcs import validate_physical_types
 
-__all__ = []
-
 
 class GlobalCoordsABC(Mapping):
     """
-    A structured representation of coordinate information applicable to a whole `~ndcube.NDCubeABC`.
+    A structured representation of coordinate information applicable to a whole `~ndcube.ndcube.NDCubeABC`.
 
     This class acts as a mapping between coordinate name and the coordinate object.
     In addition to this a physical type is stored for each coordinate name.
