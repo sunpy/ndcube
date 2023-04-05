@@ -93,8 +93,15 @@ Its data classes link data and their coordinates and provide analysis
 methods to manipulate them self-consistently.
 These aim to provide simple and intuitive ways of handling coordinate-aware data,
 analogous to how users handle coordinate-agnostic data with arrays.
-ndcube leverages Astropy's WCS API [APE-14; @ape14], a standardized API for the
-World Coordinate System (WCS) framework that is used throughout astronomy.
+ndcube requires that coordinate transformations be expressed via the World
+Coordinate System (WCS), a coordinate framework commonly used throughout
+astronomy.
+The WCS framework has multiple implementations, e.g. FITS-WCS, gWCS, etc.,
+each with a different incompatible API, which makes workflows and derived tools
+non-transferable between implementations.
+ndcube overcomes this by leveraging AstroPy's WCS API [APE-14; @ape14]
+which can be wrapped around underlying WCS implementations, thereby enabling ndcube
+to support any WCS implementation with the same API.
 ndcube's data-WCS coupling allows users to analyze their data more easily and
 reliably, thus helping to boost their scientific output.
 
@@ -112,10 +119,28 @@ temporal, spectral, etc.) and their projections onto a data array (e.g. right as
 and declination, helioprojective latitude and longitude, etc.) make it a succinct,
 standardized and powerful way to relate array axes to the physical coordinate types
 they represent.
-However, while there exist Python packages for handling N-D array operations --
+
+There are mature Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc. -- and others for supporting WCS coordinate
-transformations -- e.g. astropy [@astropy], gWCS [@gWCS] -- currently only ndcube is
-treats them in a combined, self-consistent way.
+transformations -- e.g. astropy [@astropy2013, @astropy2018, @astropy2022], gWCS [@gWCS].
+However, none treat data and coordinates in a combined, self-consistent way.
+The closest alternative to ndcube is xarray [@xarray].
+However xarray has been developed for the requirements and conventions of the
+geosciences which, although similar to those of astronomy in concept, are sufficiently
+different in construction to cause significant friction.
+Crucially, xarray does not currently support WCS coordinate transformations.
+Tools that do support WCS-based coordinate-aware data analysis, such as the SunPy
+[@sunpy] Map class for 2-D images of the Sun, tend to have APIs specific to particular
+combinations of dimensions, physical types, coordinate systems and WCS implementations.
+This limits their broader utility and makes the combined analysis of different types
+of data more difficult.
+It also inhibits collaboration by erecting technical barriers between sub-fields of
+astronomy.
+
+ndcube overcomes these challenges via its design policy that all functionalities and
+APIs must be agnostic to the number of dimensions and coordinate types they represent.
+Moreover, ndcube's employment of the AstroPy WCS API makes it agnostic to the
+underlying WCS implementation, e.g. FITS-WCS, gWCS, etc.
 
 
 # The Role of ndcube and its Features
@@ -161,10 +186,12 @@ The array can be any object that exposes `.dtype` and `.shape` attributes and ca
 be sliced by the standard Python slicing API.
 Thus `NDCube` not only supports numpy arrays but also others such as dask for
 distributed computing [@dask], cupy for GPU operations [@cupy], etc.
-Meanwhile the WCS transformations must be provided in an AstroPy-WCS-API-compliant
-object.
-The components of an `NDCube` are supplied by the following kwargs and accessed via
-attributes of the same name.
+`NDCube` leverages the AstroPy WCS API for interacting and manipulating the WCS
+transformations.
+This means `NDCube` can support any WCS implementation, e.g. FITS-WCS, gWCS, etc.,
+so long as it's supplied in an AstroPy-WCS-API-compliant object.
+The components of an `NDCube` are supplied by the following keyword arguments and
+accessed via attributes of the same name.
 
 - `data`: The data array.  (Required)
 - `wcs`: The primary set of coordinate transformations. (Required)
@@ -179,8 +206,8 @@ Coordinate Classes.
 cropping (by real world coordinates), reprojecting to new WCS transformations,
 visualization, rebinning data, arithmetic operations, and more.
 All these methods manipulate the data, coordinates, and supporting data (e.g.
-uncertainties) simultaneously and self-consistently, thus relieving users of
-well-defined, but tedious and error-prone tasks.
+uncertainties) simultaneously and self-consistently.
+This relieves users of well-defined, but tedious and error-prone tasks.
 
 `NDCubeSequence` is designed to handle multiple `NDCube` instances that are arranged
 in some order.
@@ -191,9 +218,10 @@ API to `NDCube`.
 Alternatively, the cubes can be ordered along one of the cubes' axes, e.g. a
 sequence of tiles in an image mosaic where each cube represents an adjacent region
 of the sky.
-`NDCubeSequence` provides separate APIs for both the (N+1)-D and extended N-D
-paradigms, enabling users to switch between them without reformatting or copying the
-underlying data.
+`NDCubeSequence` provides APIs for both the (N+1)-D and extended N-D paradigms,
+that are simultanesouly available on each `NDCubeSequence` instance.
+This enables users to switch between the paradigms without reformatting or copying
+the underlying data.
 `NDCubeSequence` also provides various methods to help with data analysis.
 These APIs are similar to `NDCube` wherever possible, e.g. slicing, visualization,
 etc., to minimize friction between analyzing single and multiple cubes.
@@ -231,12 +259,12 @@ transformations to those in the primary WCS and used interchangeably.
 
 By contrast, `GlobalCoords` supports scalar coordinates that apply to the whole
 `NDCube` rather than any of its axes, e.g. the timestamp of a 2-D image.
-WCS requires that all coordinates are associated with at least one array
-axis, hence the need for `GlobalCoords`.
+Scalar coordinates are not supported by WCS because it requires all coordinates
+to be associated with at least one array axis, hence the need for `GlobalCoords`.
 When an axis is dropped from an `NDCube` via slicing, the values of the dropped
 coordinates at the relevant location along the dropped axis are automatically
 added to the associated `GlobalCoords` object, e.g. the timestamp of a 2-D image
-sliced from a space-space-time cube.
+sliced from a 3-D space-space-time cube.
 Thus coordinate information is never lost due to slicing.
 
 `NDCube` objects are always instantiated with associated `ExtraCoords` and
@@ -247,8 +275,9 @@ For a more in depth dicussion of `ExtraCoords` and `GlobalCoords`, see @ndcube.
 
 # Community Applications of ndcube
 
-The importance of the ndcube package is demonstrated by the fact that it already
-supports a variety of current ground-based and satellite observatories.
+The importance of the ndcube package is demonstrated by the fact that it is
+already a dependency of various software tools that support current ground-based
+and satellite observatories.
 These include the James Webb Space Telescope (JWST), Solar Orbiter,
 the Interface Region Imaging Spectrograph (IRIS), Hinode, and the
 Daniel K. Inouye Solar Telescope (DKIST) via the
@@ -264,16 +293,16 @@ A network benefit of ndcube is that it standardizes the APIs for handling
 astronomical coordinate-aware N-D data.
 Adoption across astronomy and heliophysics helps scientists to more easily work
 with data from different missions and sub-communities.
-This can help facilitate synergies between new combinations of data, foster
-inter-field collaborations, and promote scientific innovation.
+This can simplify multi-instrument data analysis, foster inter-field collaborations,
+and promote scientific innovation.
 
 
 # Acknowledgements
 
 We acknowledge financial support for ndcube from NASA's Heliophysics Data
-Environment Enhancement program the Daniel K. Inouye Solar Telescope, and
+Environment Enhancement program, the Daniel K. Inouye Solar Telescope, and
 Solar Orbiter/SPICE (grant 80NSSC19K1000).
-We also acknowledge the SunPy and Python in Heliophysics communities for their
-contributions and support.
+We also acknowledge the SunPy, Python in Heliophysics, and AstroPy communities for
+their contributions and support.
 
 # References
