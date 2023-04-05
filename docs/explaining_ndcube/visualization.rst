@@ -284,7 +284,8 @@ To extract and plot the data.
   >>> # Define the sequence
   >>> my_sequence = NDCubeSequence([cube0, cube1, cube2], common_axis=common_axis)
 
-To make a 4D array out of the data arrays within the `~ndcube.NDCubeSequence` of ``my_sequence``.
+To make a 4D array out of the data arrays within the constituent `~ndcube.NDCube` instances in
+``my_sequence``.
 
 .. code-block:: python
 

@@ -698,7 +698,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         Returns
         -------
         reprojected_cube : `ndcube.NDCube`
-            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output `ndcube.NDCube`.
+            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output `~ndcube.NDCube`.
 
         footprint: `numpy.ndarray`
             Footprint of the input array in the output array.
@@ -956,7 +956,7 @@ class NDCube(NDCubeBase):
 
         Returns
         -------
-        : `ndcube.NDCube`
+        : `~ndcube.NDCube`
             A new instance with the new unit and data and uncertainties scales accordingly.
         """
         new_unit = u.Unit(new_unit)

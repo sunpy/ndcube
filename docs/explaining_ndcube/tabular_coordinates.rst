@@ -64,7 +64,7 @@ is the following temporal axis::
     fill_value: nan
     bounds_error: False)>
 
-This `gwcs.wcs.WCS` object can then be passed to the constructor of `ndcube.NDCube` alongside your array and other parameters.
+This `gwcs.wcs.WCS` object can then be passed to the constructor of `~ndcube.NDCube` alongside your array and other parameters.
 
 Combining Two Coordinates into a Single WCS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

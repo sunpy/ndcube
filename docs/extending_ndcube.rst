@@ -29,7 +29,7 @@ Before you subclass
 The data classes in ndcube have been designed to be subclassed and extended.
 One word of warning before you write ``myclass(NDCube)`` though: think about if the functionality you are writing is more generally applicable.
 Imagine for a moment that you are writing a class which is specifically for a cube with space, space, wavelength axes so that you can do some operations like fitting along the wavelength axis.
-Your subclass of `ndcube.NDCube` may provide great functionality for the users who have data which meet your assumptions.
+Your subclass of `~ndcube.NDCube` may provide great functionality for the users who have data which meet your assumptions.
 However, if I come along with a space, space, wavelength, time 4D cube I may want to make use of your fitting functions along the wavelength axis.
 
 **Can you write your functionality in a way that takes any ndcube object with any specific combination of physical types?**
@@ -44,7 +44,7 @@ You would need to customize all these operations.
 If instead you put an ``info`` key in the ``meta`` dictionary it would automatically be copied through the appropriate operations.
 
 If your subclass does have custom attributes you need to propagate through methods and functions, you will in most cases need to overload these methods in your subclass.
-On `ndcube.NDCube` the only method which returns another instance of your subclass is currently `~ndcube.NDCube.reproject_to`.
+On `~ndcube.NDCube` the only method which returns another instance of your subclass is currently `ndcube.NDCube.reproject_to`.
 
 .. _customizing_plotter:
 

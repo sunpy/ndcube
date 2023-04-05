@@ -2,7 +2,7 @@
 `ndcube` documentation
 **********************
 
-`ndcube` is a SunPy Project affiliated package designed for handling N-dimensional datacubes described by a WCS (World Coordinate System) translation.
+`ndcube` is a SunPy Project affiliated package designed for handling N-dimensional data cubes described by WCS (World Coordinate System) transformations.
 
 The side bar on the left contains links to the various sections of the documentation.
 
@@ -58,7 +58,7 @@ We strive to be an open and welcoming community for developers of all experience
 Discussing your ideas before you start can give you new insights that will make your development easier, lead to a better end product, and reduce the chances of your work being regretfully rejected because of an issue you weren't aware of, e.g. the functionality already exists elsewhere.
 
 The best guide we provide comes from the `sunpy newcomers guide <https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html>`__.
-The only think you will need to change is "sunpy" to "ndcube" e.g.,
+The only thing you will need to change is "sunpy" to "ndcube" e.g.,
 
 .. code-block:: console
 
