@@ -93,12 +93,15 @@ Its data classes link data and their coordinates and provide analysis
 methods to manipulate them self-consistently.
 These aim to provide simple and intuitive ways of handling coordinate-aware data,
 analogous to how users handle coordinate-agnostic data with arrays.
-ndcube leverages AstroPy's WCS API [APE-14; @ape14], a standardized API for the
-World Coordinate System (WCS) framework that is used throughout astronomy.
-Previously, each WCS implementation had its own Python API, making workflows and
-derived tools non-transferable between implementations.
-Now however, ndcube supports any WCS implementation, e.g. FITS-WCS, gWCS, etc.,
-so long as it's wrapped in an AstroPy-WCS-API-compliant object.
+ndcube requires that coordinate transformations be be expressed via the World
+Coordinate System (WCS), a coordinate framework commonly used throughout
+astronomy.
+The WCS framework has multiple implementations, e.g. FITS-WCS, gWCS, etc.,
+each with a different incompatible API, which makes workflows and derived tools
+non-transferable between implementations.
+ndcube overcomes this challenge by leveraging AstroPy's WCS API [APE-14; @ape14]
+which can be wrapped around underlying WCS implementations, thereby creating an
+implementation-agnostic API for interacting with the WCS coordinate transformations
 ndcube's data-WCS coupling allows users to analyze their data more easily and
 reliably, thus helping to boost their scientific output.
 
@@ -131,7 +134,7 @@ Tools that do support WCS-based coordinate-aware data analysis, such as the SunP
 combinations of dimensions, physical types, coordinate systems and WCS implementations.
 This limits their broader utility and makes the combined analysis of different types
 of data more difficult.
-It also inhibits collaboration by putting technical barriers between sub-fields of
+It also inhibits collaboration by erecting technical barriers between sub-fields of
 astronomy.
 
 ndcube overcomes these challenges via its design policy that all functionalities and
