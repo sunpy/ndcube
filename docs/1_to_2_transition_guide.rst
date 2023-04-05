@@ -88,7 +88,7 @@ In the future the default may change to ``.combined_wcs``.
 However, there are various technical reasons why this hasn't been done in the initial release, such as a significant performance penalty of using ``.combined_wcs``.
 
 `~ndcube.NDCube` Methods
-=======================
+========================
 
 ``crop_by_coords`` is now ``crop`` and ``crop_by_values``
 ---------------------------------------------------------

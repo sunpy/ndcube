@@ -13,3 +13,4 @@ API Reference
    visualization
    utils
    tests
+   wcs

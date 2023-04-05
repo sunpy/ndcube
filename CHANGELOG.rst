@@ -97,7 +97,7 @@ Backwards Incompatible Changes
 - Remove unused util functions and the ndcube WCS class.  Refactor util functions for converting between between data and WCS indices to reflect the APE14 nomenclature that distinguishes between array, pixel and world axes. (`#280 <https://github.com/sunpy/ndcube/pull/280>`__)
 - NDCubeSequence animation axes can no longer be set by extra coords. (`#294 <https://github.com/sunpy/ndcube/pull/294>`__)
 - ImageAnimatorNDCubeSequence, ImageAnimatorCubeLikeNDCubeSequence, LineAnimatorNDCubeSequence and LineAnimatorCubeLikeNDCubeSequence have been removed and replaced by NDCubeSequenceAnimator. (`#294 <https://github.com/sunpy/ndcube/pull/294>`__)
-- Change type of output of `ndcube.NDCollection.aligned_world_axis_physical_types` from tuple to list. This is to be consistent with output of `astropy.wcs.WCS.world_axis_physical_types`. (`#302 <https://github.com/sunpy/ndcube/pull/302>`__)
+- Change type of output of ``ndcube.NDCollection.aligned_world_axis_physical_types`` from tuple to list. This is to be consistent with output of `astropy.wcs.WCS.world_axis_physical_types`. (`#302 <https://github.com/sunpy/ndcube/pull/302>`__)
 - Change output type when common axis item is a slice that covers only one subcube. Previously this would return an NDCube. Now an NDCubeSequence is always returned unless the common axis item is an integer. Also, refactor NDCubeSequence.index_as_cube so codebase is simpler. (`#311 <https://github.com/sunpy/ndcube/pull/311>`__)
 - Replace NDCube.crop_by_coords and NDCube.crop_by_extra_coords with new method, NDCube.crop (`#316 <https://github.com/sunpy/ndcube/pull/316>`__)
 - Remove NDCubeSequence plotting. (`#322 <https://github.com/sunpy/ndcube/pull/322>`__)
@@ -120,7 +120,7 @@ Features
 --------
 
 - Implement a new `ndcube.ExtraCoords` class which allows the specification of extra coordinates via lookup tables or WCS. This class exposes the extra coords as an APE 14 WCS object. (`#271 <https://github.com/sunpy/ndcube/pull/271>`__)
-- Add new method, `ndcube.NDCube.axis_world_coord_values`, to return world coords for all pixels for all axes in WCS as quantity objects. (`#279 <https://github.com/sunpy/ndcube/pull/279>`__)
+- Add new method, ``ndcube.NDCube.axis_world_coord_values``, to return world coords for all pixels for all axes in WCS as quantity objects. (`#279 <https://github.com/sunpy/ndcube/pull/279>`__)
 - Added a new method `ndcube.NDCube.array_axis_physical_types` to show which physical types are associated with each array axis. (`#281 <https://github.com/sunpy/ndcube/pull/281>`__)
 - Add properties to NDCubeSequence giving the world physical types for each array axis. (`#301 <https://github.com/sunpy/ndcube/pull/301>`__)
 - Add as_mpl_axes method to NDCube plotting mixin so the an NDCube can be provided to astropy WCSAxes as a projection. (`#314 <https://github.com/sunpy/ndcube/pull/314>`__)
@@ -164,12 +164,12 @@ Bug Fixes
 
 - Fix `ndcube.NDCollection.aligned_dimensions` so it does not crash when components of collection are NDCubeSequences. (`#264 <https://github.com/sunpy/ndcube/pull/264>`__)
 - Generalize int type checking so it is independent of the bit-type of the OS. (`#269 <https://github.com/sunpy/ndcube/pull/269>`__)
-- Fix axis_world_coord_values when the WCS is 1D and ensure it always returns
+- Fix ``axis_world_coord_values`` when the WCS is 1D and ensure it always returns
   Quantities (`#287 <https://github.com/sunpy/ndcube/pull/287>`__)
-- Change name of NDCube.axis_world_coord_values to NDCube.axis_world_coords_values to be consistent with NDCube.axis_world_coords (`#293 <https://github.com/sunpy/ndcube/pull/293>`__)
+- Change name of ``NDCube.axis_world_coord_values`` to ``NDCube.axis_world_coords_values`` to be consistent with NDCube.axis_world_coords (`#293 <https://github.com/sunpy/ndcube/pull/293>`__)
 - Remove NDCubeSequence animation dependence of deprecated sunpy ImageAnimator and LineAnimator classes in favour of ArrayAnimatorWCS class. (`#294 <https://github.com/sunpy/ndcube/pull/294>`__)
 - Fix bug whereby common axis was not updated appropriately when slicing an NDCubeSequence. (`#310 <https://github.com/sunpy/ndcube/pull/310>`__)
-- Fix bug in NDCube.axis_world_coords_values when number of pixel and world dimensions differ. (`#319 <https://github.com/sunpy/ndcube/pull/319>`__)
+- Fix bug in ``NDCube.axis_world_coords_values`` when number of pixel and world dimensions differ. (`#319 <https://github.com/sunpy/ndcube/pull/319>`__)
 - Fixes bug in `~ndcube.utils.wcs.array_indices_for_world_objects` when the WCS input does not have a world_axis_object_components attribute. The fix causes the low_level_wcs version is tried before the code fails. This enables `ndcube.NDCube.combined_wcs` to be used with this function. (`#344 <https://github.com/sunpy/ndcube/pull/344>`__)
 - Fixes IndexError in `~ndcube.utils.wcs.array_indices_for_world_objects` which occurred when some of the world axes are dependent. (`#344 <https://github.com/sunpy/ndcube/pull/344>`__)
 - Stop `ndcube.NDCube.explode_along_axis` setting a common axis to the output `~ndcube.NDCubeSequence`.  The output sequence should have no common axis. (`#358 <https://github.com/sunpy/ndcube/pull/358>`__)
@@ -277,7 +277,7 @@ API-Breaking Changes
 New Features
 ------------
 - Created a new `~ndcube.NDCubeBase` which has all the functionality
-  of `~ncube.NDCube` except the plotting.  The old ``NDCubeBase``
+  of `~ndcube.NDCube` except the plotting.  The old ``NDCubeBase``
   which outlined the `ndcube.NDCube` API was renamed ``NDCubeABC``.
   ``~ndcube.NDCube`` has all the same functionality as before except is
   now simply inherits from ``~ndcube.NDCubeBase`` and
