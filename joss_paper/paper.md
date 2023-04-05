@@ -122,7 +122,7 @@ they represent.
 
 There are mature Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc. -- and others for supporting WCS coordinate
-transformations -- e.g. astropy [@astropy], gWCS [@gWCS].
+transformations -- e.g. astropy [@astropy2013, @astropy2018, @astropy2022], gWCS [@gWCS].
 However, none treat data and coordinates in a combined, self-consistent way.
 The closest alternative to ndcube is xarray [@xarray].
 However xarray has been developed for the requirements and conventions of the
@@ -190,8 +190,8 @@ distributed computing [@dask], cupy for GPU operations [@cupy], etc.
 transformations.
 This means `NDCube` can support any WCS implementation, e.g. FITS-WCS, gWCS, etc.,
 so long as it's supplied in an AstroPy-WCS-API-compliant object.
-The components of an `NDCube` are supplied by the following kwargs and accessed via
-attributes of the same name.
+The components of an `NDCube` are supplied by the following keyword arguments and
+accessed via attributes of the same name.
 
 - `data`: The data array.  (Required)
 - `wcs`: The primary set of coordinate transformations. (Required)
@@ -293,16 +293,16 @@ A network benefit of ndcube is that it standardizes the APIs for handling
 astronomical coordinate-aware N-D data.
 Adoption across astronomy and heliophysics helps scientists to more easily work
 with data from different missions and sub-communities.
-This can help facilitate synergies between new combinations of data, foster
-inter-field collaborations, and promote scientific innovation.
+This can simplify multi-instrument data analysis, foster inter-field collaborations,
+and promote scientific innovation.
 
 
 # Acknowledgements
 
 We acknowledge financial support for ndcube from NASA's Heliophysics Data
-Environment Enhancement program the Daniel K. Inouye Solar Telescope, and
+Environment Enhancement program, the Daniel K. Inouye Solar Telescope, and
 Solar Orbiter/SPICE (grant 80NSSC19K1000).
-We also acknowledge the SunPy and Python in Heliophysics communities for their
-contributions and support.
+We also acknowledge the SunPy, Python in Heliophysics, and AstroPy communities for
+their contributions and support.
 
 # References
