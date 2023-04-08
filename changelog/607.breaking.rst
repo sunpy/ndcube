@@ -1,1 +1,1 @@
-`ndcube.NDCollection` ``aligned_axes`` attribute is now property with a setter.
+`ndcube.NDCollection.aligned_axes` attribute is now property.
