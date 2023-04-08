@@ -78,13 +78,6 @@ class NDCollection(dict):
         """
         return self._aligned_axes
 
-    @aligned_axes.setter
-    def aligned_axes(self, value):
-        """
-        The axes of each array that are aligned in numpy order.
-        """
-        self._aligned_axes = value
-
     @property
     def _first_key(self):
         return list(self.keys())[0]
