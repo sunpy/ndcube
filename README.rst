@@ -8,7 +8,7 @@ ncdube
    :target: https://pypi.python.org/pypi/ndcube/
    :alt: It is up to date, we promise
 .. |matrix| image:: https://img.shields.io/matrix/ndcube:openastronomy.org.svg?colorB=%23FE7900&label=Chat&logo=matrix&server_fqdn=openastronomy.modular.im
-   :target: https://openastronomy.element.io/#/room/#ndcube:openastronomy.org
+   :target: https://app.element.io/#/room/#ndcube:openastronomy.org
    :alt: join us on #ndcube:openastronom.org on matrix
 .. |codecov| image:: https://codecov.io/gh/sunpy/ndcube/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/sunpy/sunpy
