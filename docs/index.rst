@@ -43,7 +43,7 @@ We could always use more voices and opinions in the discussions about ndcube and
 There are a number of ways to make your voice heard.
 Whether it be constructive criticism, inquiries about current or future capabilities, or flattering praise, we would love to hear from you.
 
-.. _`matrix channel`: https://openastronomy.element.io/#/room/#ndcube:openastronomy.org
+.. _`matrix channel`: https://app.element.io/#/room/#ndcube:openastronomy.org
 
 Reporting Bugs
 --------------
