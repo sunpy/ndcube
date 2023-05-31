@@ -1,0 +1,18 @@
+# Numpy?
+py:obj NDData
+py:class NDDataRef
+py:class NDDataArray
+py:obj NDDataRef
+py:obj NDDataArray
+py:class any type
+# Raised by core Python code
+py:class D[k] if k in D, else d.  d defaults to None.
+py:class a set-like object providing a view on D's items
+py:class a set-like object providing a view on D's keys
+py:class an object providing a view on D's values
+py:class D[k] if k in D, else d.  d defaults to None.
+py:class a set-like object providing a view on D's items
+py:class a set-like object providing a view on D's keys
+py:class an object providing a view on D's values
+py:class None.  Remove all items from D.
+py:class a shallow copy of D

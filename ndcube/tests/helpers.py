@@ -46,7 +46,7 @@ def figure_test(test_function):
     in the library. A PNG is also created in the 'result_image' directory,
     which is created on the current path.
 
-    All such decorated tests are marked with `pytest.mark.mpl_image` for convenient filtering.
+    All such decorated tests are marked with ``pytest.mark.mpl_image`` for convenient filtering.
     """
     hash_library_name = get_hash_library_name()
     hash_library_file = Path(__file__).parent / ".." / "visualization" / "tests" / hash_library_name
@@ -125,7 +125,7 @@ def assert_wcs_are_equal(wcs1, wcs2):
 
     Used in testing NDCube.
     Also checks if both the wcs objects are instance
-    of `SlicedLowLevelWCS`
+    of `~astropy.wcs.wcsapi.SlicedLowLevelWCS`.
     """
 
     if not isinstance(wcs1, BaseLowLevelWCS):

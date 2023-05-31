@@ -11,12 +11,10 @@ from astropy.wcs.wcsapi.utils import deserialize_class
 
 from ndcube.utils.wcs import validate_physical_types
 
-__all__ = ['GlobalCoordsABC', 'GlobalCoords']
-
 
 class GlobalCoordsABC(Mapping):
     """
-    A structured representation of coordinate information applicable to a whole NDCubeABC.
+    A structured representation of coordinate information applicable to a whole `~ndcube.ndcube.NDCubeABC`.
 
     This class acts as a mapping between coordinate name and the coordinate object.
     In addition to this a physical type is stored for each coordinate name.
@@ -25,7 +23,7 @@ class GlobalCoordsABC(Mapping):
 
     Parameters
     ----------
-    ndcube : `.NDCube`, optional
+    ndcube : `~ndcube.NDCube`, optional
         The parent ndcube for this object. Used to extract global coordinates
         from the wcs and extra coords of the ndcube. If not specified only
         coordinates explicitly added will be shown.
@@ -92,7 +90,7 @@ class GlobalCoords(GlobalCoordsABC):
     @staticmethod
     def _convert_dropped_to_internal(dropped_dimensions):
         """
-        Convert the `~astropy.wcs.wcsapi.wrappers.SlicedLowLevelWCS` style
+        Convert the `~astropy.wcs.wcsapi.SlicedLowLevelWCS` style
         ``dropped_world_dimensions`` dictionary to the GlobalCoords internal
         representation.
         """

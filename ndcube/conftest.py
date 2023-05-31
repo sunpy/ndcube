@@ -1,6 +1,6 @@
 """
 This file contains a set of common fixtures to get a set of different but
-predicable NDCube objects.
+predictable NDCube objects.
 """
 import logging
 

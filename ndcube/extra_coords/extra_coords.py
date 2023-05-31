@@ -26,7 +26,7 @@ class ExtraCoordsABC(abc.ABC):
     A representation of additional world coordinates associated with pixel axes.
 
     ExtraCoords can be initialised by either specifying a
-    `~astropy.wcs.wcsapi.LowLevelWCS` object and a ``mapping``, or it can be
+    `~astropy.wcs.wcsapi.BaseLowLevelWCS` object and a ``mapping``, or it can be
     built up by specifying one or more lookup tables.
 
     Parameters
@@ -47,7 +47,7 @@ class ExtraCoordsABC(abc.ABC):
             physical_types: Union[str, Iterable[str]] = None,
             **kwargs):
         """
-        Add a coordinate to this ``ExtraCoords`` based on a lookup table.
+        Add a coordinate to this `~ndcube.ExtraCoords` based on a lookup table.
 
         Parameters
         ----------
@@ -56,11 +56,11 @@ class ExtraCoordsABC(abc.ABC):
         array_dimension : `int` or `tuple` of `int`
             The array dimension(s), to which this lookup table corresponds.
         lookup_table : `object` or sequence of `object`
-            The lookup table. A `BaseTableCoordinate <.table_coord>` subclass or anything
+            The lookup table. A `~ndcube.extra_coords.BaseTableCoordinate` subclass or anything
             that can instantiate one, i.e. currently a `~astropy.time.Time`,
             `~astropy.coordinates.SkyCoord`, or a (sequence of) `~astropy.units.Quantity`.
         physical_types: `str` or iterable of `str`, optional
-            Descriptor(s) of the `physical type <../data_classes.html#dimensions-and-physical-types>`_
+            Descriptor(s) of the :ref:`<dimensions and physical types <dimensions>`
             associated with each axis; length must match the number of dimensions in
             ``lookup_table``.
         """
@@ -89,10 +89,10 @@ class ExtraCoordsABC(abc.ABC):
 
         .. note::
             This WCS object does not map to the pixel dimensions of the data array
-            in the `.NDCube` object. It only includes pixel dimensions associated
+            in the `~ndcube.NDCube` object. It only includes pixel dimensions associated
             with the extra coordinates. For example, if there is only one extra coordinate
             associated with a single pixel dimension, this WCS will only have 1 pixel dimension,
-            even if the `.NDCube` object has a data array of 2-D or greater.
+            even if the `~ndcube.NDCube` object has a data array of 2-D or greater.
             Therefore using this WCS directly might lead to some confusing results.
 
         """
@@ -120,7 +120,7 @@ class ExtraCoords(ExtraCoordsABC):
     A representation of additional world coordinates associated with pixel axes.
 
     ExtraCoords can be initialised by either specifying a
-    `~astropy.wcs.wcsapi.LowLevelWCS` object and a ``mapping``, or it can be
+    `~astropy.wcs.wcsapi.BaseLowLevelWCS` object and a ``mapping``, or it can be
     built up by specifying one or more lookup tables.
 
     Parameters
@@ -154,7 +154,7 @@ class ExtraCoords(ExtraCoordsABC):
         """
         Construct a new ExtraCoords instance from lookup tables.
 
-        This is a convience wrapper around `.add` which does not
+        This is a convenience wrapper around `ndcube.ExtraCoords.add` which does not
         expose all the options available in that method.
 
         Parameters
@@ -166,17 +166,18 @@ class ExtraCoords(ExtraCoordsABC):
             apply. Must be the same length as ``lookup_tables``.
         lookup_tables : iterable of `object`
             The lookup tables which specify the world coordinates for the ``pixel_dimensions``.
-            Must be `BaseTableCoordinate <.table_coord>` subclass instances or objects from
-            which to instantiate them (see `.ExtraCoords.add`).
+            Must be `~ndcube.extra_coords.BaseTableCoordinate` subclass instances or objects from
+            which to instantiate them (see `ndcube.ExtraCoords.add`).
         physical_types: sequence of `str` or of sequences of `str`, optional
-            Descriptors of the `physical types <../data_classes.html#dimensions-and-physical-types>`_
+            Descriptors of the :ref:`dimensions`
             associated with each axis in the tables. Must be the same length as ``lookup_tables``;
             and length of each element must match the number of dimensions in corresponding
             ``lookup_tables[i]``.
+            Defaults to `None`.
 
         Returns
         -------
-        `ndcube.extra_coords.ExtraCoords`
+        `ndcube.ExtraCoords`
 
         """
         if len(pixel_dimensions) != len(lookup_tables):
@@ -428,15 +429,15 @@ class ExtraCoords(ExtraCoordsABC):
 
         Parameters
         ----------
-        factor: `ìnt`, `float`, or iterable thereof.
+        factor: `int`, `float`, or iterable thereof.
             The factor by which each array axis is resampled.
             If scalar, same factor is applied to all axes.
             Otherwise a factor for each axis must be provided.
 
-        offset: `int` `float` of iterable therefore.
+        offset: `int`, `float`, or iterable therefore.
             The location on the underlying grid which corresponds
             to the zeroth element after resampling. If iterable, must have an entry
-            for each dimension.  If a scalar, the grid will be
+            for each dimension. If a scalar, the grid will be
             shifted by the same amount in all dimensions.
 
         ndcube: `~ndcube.NDCube`
@@ -447,7 +448,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         Returns
         -------
-        new_ec: `~ndcube.extra_coords.ExtraCoords`
+        new_ec: `~ndcube.ExtraCoords`
             A new ExtraCoords object holding the interpolated coords.
         """
         new_ec = type(self)(ndcube)

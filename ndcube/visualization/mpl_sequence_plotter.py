@@ -4,7 +4,7 @@ from mpl_animators import ArrayAnimatorWCS
 from .base import BasePlotter
 from .plotting_utils import prep_plot_kwargs
 
-__all__ = ['MatplotlibSequencePlotter']
+__all__ = ['MatplotlibSequencePlotter', 'SequenceAnimator']
 
 
 class MatplotlibSequencePlotter(BasePlotter):
@@ -21,11 +21,11 @@ class MatplotlibSequencePlotter(BasePlotter):
 
         Parameters
         ----------
-        sequence_axis_coords: `str` or array-like (optional)
+        sequence_axis_coords: `str` or array-like, optional
             The real world value of each step along the sequene axis.
             If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
 
-        sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
+        sequence_axis_unit: `str` or `astropy.units.Unit`, optional
             The unit in which to display the sequence_axis_coords.
         """
         sequence_dims = self._ndcube.dimensions
@@ -38,10 +38,10 @@ class MatplotlibSequencePlotter(BasePlotter):
         """
         Animate the `~ndcube.NDCubeSequence` with the sequence axis as a slider.
 
-        **kwargs are passed to
+        Keyword arguments are passed to
         `ndcube.visualization.mpl_plotter.MatplotlibPlotter.plot` and therefore only
         apply to cube axes, not the sequence axis.
-        See that method's docstring for definition of **kwargs.
+        See that method's docstring for definition of keyword arguments.
 
         Parameters
         ----------
@@ -50,11 +50,11 @@ class MatplotlibSequencePlotter(BasePlotter):
             to be used as the slider pixel values.
             If None, array indices will be used.
 
-        sequence_axis_units: `astropy.units.Unit` or `str` (optional)
+        sequence_axis_units: `astropy.units.Unit` or `str`, optional
             The unit in which the sequence_axis_coordinates should be displayed.
             If None, the default unit will be used.
         """
-        return SequenceAnimator(self._ndcube, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs)
+        return SequenceAnimator(self._ndcube, sequence_axis_coords=sequence_axis_coords, sequence_axis_unit=sequence_axis_unit, **kwargs)
 
 
 class SequenceAnimator(ArrayAnimatorWCS):
@@ -71,11 +71,11 @@ class SequenceAnimator(ArrayAnimatorWCS):
     sequence: `~ndcube.NDCubeSequence`
         The sequence to animate.
 
-    sequence_axis_coords: `str` or array-like (optional)
+    sequence_axis_coords: `str` or array-like, optional
         The real world value of each step along the sequene axis.
         If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
 
-    sequence_axis_unit: `str` or `astropy.units.Unit` (optional)
+    sequence_axis_unit: `str` or `astropy.units.Unit`, optional
         The unit in which to display the sequence_axis_coords.
     """
 
@@ -113,7 +113,7 @@ class SequenceAnimator(ArrayAnimatorWCS):
 
     def _sequence_slider_function(self, val, artist, slider):
         self._sequence_idx = int(val)
-        self.data, self.wcs, _plot_axes, _coord_params = self._cubes[self._sequence_idx].plotter._prep_animate_args(
+        self.data, self.wcs, _, _ = self._cubes[self._sequence_idx].plotter._prep_animate_args(
             self._cubes[self._sequence_idx].wcs, self._plot_axes, self._axes_units, self._data_unit)
         if self.plot_dimensionality == 1:
             self.update_plot_1d(val, artist, slider)

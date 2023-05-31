@@ -14,17 +14,17 @@ class NDCollection(dict):
 
     Parameters
     ----------
-    data: sequence of `tuple`s of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+    data: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
         The names and data cubes/sequences to held in the collection.
 
-    aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, 'all', or None, optional
+    aligned_axes: `tuple` of `int`, `tuple` of `tuple` of `int`, 'all', or None, optional
         Axes of each cube/sequence that are aligned in numpy order.
         If elements are int, then the same axis numbers in all cubes/sequences are aligned.
         If elements are tuples of ints, then there must be one tuple for every cube/sequence.
         Each element of each tuple gives the axes of each cube/sequence that are aligned.
         If 'all', all axes are aligned in natural order, i.e. the 0th axes of all cubes
         are aligned, as are the 1st, and so on.
-        Default=None
+        Default is `None`.
 
     meta: `dict`, optional
         General metadata for the overall collection.
@@ -42,7 +42,7 @@ class NDCollection(dict):
     >>> aligned_axes = ((0, 1), (2, 1))  # doctest: +SKIP
 
     then the first tuple corresponds to cube0 and the second with cube1.
-    This is interpretted as axis 0 of cube0 is aligned with axis 2 of cube1 while
+    This is interpreted as axis 0 of cube0 is aligned with axis 2 of cube1 while
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
 
@@ -65,11 +65,18 @@ class NDCollection(dict):
                 f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'"
             )
         # Attach aligned axes to object.
-        self.aligned_axes = aligned_axes
-        if self.aligned_axes is None:
+        self._aligned_axes = aligned_axes
+        if self._aligned_axes is None:
             self.n_aligned_axes = 0
         else:
             self.n_aligned_axes = len(self.aligned_axes[keys[0]])
+
+    @property
+    def aligned_axes(self):
+        """
+        The axes of each array that are aligned in numpy order.
+        """
+        return self._aligned_axes
 
     @property
     def _first_key(self):
@@ -104,8 +111,8 @@ class NDCollection(dict):
         """
         The physical types common to all members that are associated with each aligned axis.
 
-        One tuple is retured for each axis as there can be more than one physical type
-        associated with an aligned axis.  If there are no physical types associated
+        One tuple is returned for each axis as there can be more than one physical type
+        associated with an aligned axis. If there are no physical types associated
         with an aligned that is common to all collection members, an empty tuple is
         returned for that axis.
         """

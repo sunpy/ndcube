@@ -67,7 +67,7 @@ napoleon_use_rtype = False
 napoleon_google_docstring = False
 napoleon_use_param = False
 # TODO: Enable this in future.
-nitpicky = False
+nitpicky = True
 # This is not used. See docs/nitpick-exceptions file for the actual listing.
 nitpick_ignore = []
 for line in open('nitpick-exceptions'):
@@ -89,7 +89,8 @@ intersphinx_mapping = {
     'sunpy': ('https://docs.sunpy.org/en/stable/', None),
     'mpl_animators': ('https://docs.sunpy.org/projects/mpl-animators/en/stable/', None),
     'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None),
-    'reproject': ("https://reproject.readthedocs.io/en/stable/", None)}
+    'reproject': ("https://reproject.readthedocs.io/en/stable/", None)
+    }
 
 # -- Options for HTML output
 from sunpy_sphinx_theme.conf import *  # NOQA

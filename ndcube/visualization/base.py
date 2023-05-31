@@ -15,7 +15,7 @@ class BasePlotter(abc.ABC):
         The default plot method.
 
         ``Plotter`` classes should provide a ``plot()`` method which is called
-        when users access `.NDCube.plot`. It should strive to provide a good
+        when users access `ndcube.NDCube.plot`. It should strive to provide a good
         overview of the cube by default but the behaviour is left to the
         implementation.
 

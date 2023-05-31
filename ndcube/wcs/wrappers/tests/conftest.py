@@ -1,1 +1,1 @@
-from astropy.wcs.wcsapi.conftest import *  # noqa
+from astropy.wcs.wcsapi.conftest import *  # NOQA

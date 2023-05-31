@@ -1,10 +1,10 @@
 .. _data_classes:
 
-==========
-ND Objects
-==========
+**********
+ND objects
+**********
 
-ndcube provides its features via its data objects: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.
+`ndcube` provides its features via its data objects: `~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`.
 This section describes the purpose of each and how they are structured and instantiated.
 To learn how to slice, visualize, and perform coordinate transformations with these classes, see the :ref:`slicing`, :ref:`plotting` and :ref:`coordinates` sections.
 
@@ -13,17 +13,20 @@ To learn how to slice, visualize, and perform coordinate transformations with th
 NDCube
 ======
 
-`~ndcube.NDCube` is the primary data class the ndcube package.
-It's designed to manage a single data array and set of WCS transformations.
+`~ndcube.NDCube` is the primary data class the ndcube package provides.
+It is designed to manage a single data array and set of WCS transformations.
 `~ndcube.NDCube` provides unified slicing, visualization, coordinate transformation and self-inspection APIs which are independent of the number and physical types of axes.
 It can therefore be used for any type of data (e.g. images, spectra, timeseries, etc.) so long as those data are represented by an object that behaves like a `numpy.ndarray` and the coordinates by an object that adheres to the Astropy `WCS API <https://docs.astropy.org/en/stable/wcs/wcsapi.html>`__.
 This makes `~ndcube.NDCube` a powerful base class when developing tools for specific data types.
 
 Thanks to its inheritance from `astropy.nddata.NDData`, `~ndcube.NDCube` can hold optional supplementary data in addition to its data array and primary WCS transformations.
 These include:
-1. general metadata (located at ``.meta``);
-2. the unit of the data (an `astropy.units.Unit` or unit `str` located at ``.unit``);
-3. the uncertainty of each data value (subclass of `astropy.nddata.NDUncertainty` located at ``.uncertainty``); and a mask marking unreliable data values (boolean array located at ``.mask``). Note that in keeping with the convention of `numpy.ma.masked_array`, ``True`` means that the corresponding data value is masked, i.e. it is bad data, while ``False`` signifies good data.
+
+1. general metadata (located at ``.meta``)
+2. the unit of the data (an `astropy.units.Unit` or unit `str` located at ``.unit``)
+3. the uncertainty of each data value (subclass of `astropy.nddata.NDUncertainty` located at ``.uncertainty``)
+4. a mask marking unreliable data values (boolean array located at ``.mask``).
+   Note that in keeping with the convention of `numpy.ma.masked_array`, `True` means that the corresponding data value is masked, i.e., it is bad data, while `False` signifies good data.
 
 `~ndcube.NDCube` also provides classes for representing additional coordinates not included in the primary WCS object.
 These are `~ndcube.ExtraCoords` (located at ``.extra_coords``) --- for additional coordinates associated with specific array axes --- and `~ndcube.GlobalCoords` (located at ``.global_coords``) for scalar coordinates associated with the `~ndcube.NDCube` as a whole.
@@ -69,7 +72,7 @@ Remember that due to convention, the order of WCS axes is reversed relative to t
 The data array is stored in ``my_cube.data`` while the WCS object is stored in ``my_cube.wcs``.
 The ``.data`` attribute should only be used to access specific raw data values.
 When manipulating/slicing the data it is better to slice the `~ndcube.NDCube` instance as a whole so as to ensure that supporting data --- e.g. coordinates, uncertainties, mask --- remain consistent.
-(See :ref:`cube_slicing`.)
+See :ref:`cube_slicing` for more information.
 
 To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncertainties and a mask, we can do the following:
 
@@ -94,7 +97,7 @@ To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncer
   >>> wcs.wcs.crval = 10, 0.5, 1
   >>> wcs.wcs.cname = 'wavelength', 'HPC lat', 'HPC lon'
 
-  >>> # Define mask.  Initially set all elements unmasked.
+  >>> # Define mask. Initially set all elements unmasked.
   >>> mask = np.zeros_like(data, dtype=bool)
   >>> mask[0, 0][:] = True  # Now mask some values.
   >>> # Define uncertainty, metadata and unit.
@@ -105,7 +108,7 @@ To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncer
   >>> # Instantiate NDCube with supporting data.
   >>> my_cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta, unit=unit)
 
-Attaching coordinates in addition to those described by ``NDCube.wcs`` via `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` is discussed in the :ref:`extra_coords` and :ref:`global_coords` sections.
+Attaching coordinates in addition to those described by ``.wcs`` via `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` is discussed in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
 Dimensions and Physical Types
 -----------------------------
@@ -130,21 +133,21 @@ The axis names are in generated in accordance with the International Virtual Obs
 
 .. _explode_cube:
 
-Explode NDCube Along Axis
--------------------------
+Explode NDCube along an axis
+----------------------------
 
-During analysis of some data --- say a of stack of images --- it may be necessary to make some different fine-pointing adjustments to each image that isn't accounted for the in the original WCS translations, e.g. due to satellite wobble.
-If these changes are not describable with a single WCS object, it may be desirable to break up the NDCube along a given axis into a sequence of (N-1)DCubes each with their own WCS.
+During analysis of some data --- say a of stack of images --- it may be necessary to make some different fine-pointing adjustments to each image that isn't accounted for the in the original WCS translations, e.g., due to satellite wobble.
+If these changes are not describable with a single WCS object, it may be desirable to break up the NDCube along a given axis into a sequence of (N-1)D cubes each with their own WCS.
 This would enable each WCS to be altered separately.
 
-This is the purpose of the `ndcube.NDCube.explode_along_axis` method.
+This is the purpose of the :meth:`ndcube.NDCube.explode_along_axis` method.
 To explode ``my_cube`` along the last array axis so that we have 5 2-D images, each at a different wavelength, simply call the `~ndcube.NDCube.explode_along_axis` and supply it with the array axis along which the `~ndcube.NDCube` should be exploded.
 
 .. code-block:: python
 
   >>> exploded = my_cube.explode_along_axis(2)
 
-This returns an `~ndcube.NDCubeSequence` with where the sequence axis acts as the wavelength axis.
+This returns an `~ndcube.NDCubeSequence` where the sequence axis acts as the wavelength axis.
 
 .. code-block:: python
 
@@ -157,7 +160,7 @@ This returns an `~ndcube.NDCubeSequence` with where the sequence axis acts as th
 
 To learn more about this object, read the :ref:`ndcubesequence` section below.
 
-And Much More!
+And much more!
 --------------
 
 `~ndcube.NDCube` provides many more helpful features, specifically for coordinate transformations, slicing and visualization.
@@ -211,7 +214,7 @@ To initialize the most basic `~ndcube.NDCubeSequence`, all you need is a list of
 Let's say we have four 3-D NDCubes with shapes of ``(4, 4, 5)`` and physical types of helioprojective longitude, latitude and wavelength.
 
 .. expanding-code-block:: python
-  :summary: Click to see NDCubes instantiated for use in the following NDCubeSequence
+  :summary: Click to see NDCubes instantiated for use in the following NDCubeSequence.
 
   >>> import astropy.units as u
   >>> import astropy.wcs
@@ -265,7 +268,7 @@ Let's reinstantiate the `~ndcube.NDCubeSequence` with the common axis as the fir
 
 .. _dimensions:
 
-Dimensions and Physical Types
+Dimensions and physical types
 -----------------------------
 
 Analogous to `ndcube.NDCube.dimensions`, there is also a `ndcube.NDCubeSequence.dimensions` property for easily inspecting the shape of an `~ndcube.NDCubeSequence` instance.
@@ -306,10 +309,10 @@ Once again, we can see the physical types associated with each axis in the cube-
 
 .. _explode_sequence:
 
-Explode Along Axis
-------------------
+Explode along an axis
+---------------------
 
-Just like `~ndcube.NDCube`, `~ndcube.NDCubeSequence` has an `~ndcube.NDCubeSequence.explode_along_axis` method.
+Just like `~ndcube.NDCube`, `~ndcube.NDCubeSequence` has an :meth:`~ndcube.NDCubeSequence.explode_along_axis` method.
 Its purpose and API are exactly the same as `ndcube.NDCube.explode_along_axis` and we refer readers to the (:ref:`explode_cube`) section describing it.
 
 To demonstrate the behavior of `ndcube.NDCubeSequence.explode_along_axis` version of this method, let's consider ``my_sequence`` defined above.
@@ -323,7 +326,7 @@ So to explode along the wavelength axis, we should use an array axis index of ``
 
   >>> exploded_sequence = my_sequence.explode_along_axis(2)
 
-  >>> # Check old and new shapes of the squence
+  >>> # Check old and new shapes of the sequence
   >>> my_sequence.dimensions
   (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
   >>> exploded_sequence.dimensions
@@ -332,7 +335,7 @@ So to explode along the wavelength axis, we should use an array axis index of ``
 Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.
 A common axis need not be defined and if one is it need not be the axis along which the `~ndcube.NDCubeSequence` is exploded.
 
-And Much More
+And much more
 -------------
 
 `~ndcube.NDCubeSequence` provides many more helpful features, specifically for coordinate transformations, slicing and visualization.
@@ -346,7 +349,7 @@ NDCollection
 `~ndcube.NDCollection` is a container class for grouping `~ndcube.NDCube` or `~ndcube.NDCubeSequence` instances in an unordered way.
 `~ndcube.NDCollection` therefore differs from `~ndcube.NDCubeSequence` in that the objects contained are not considered to be in any order, are not assumed to represent measurements of the same physical property, and they can have different dimensionalities.
 However `~ndcube.NDCollection` is more powerful than a simple `dict` because it enables us to identify axes that are aligned between the objects and hence provides some limited slicing functionality.
-(See :ref:`collection_slicing` to for more on slicing.)
+See :ref:`collection_slicing` to for more on slicing.
 
 One possible application of `~ndcube.NDCollection` is linking observations with derived data products.
 Let's say we have a 3-D `~ndcube.NDCube` representing space-space-wavelength.
@@ -394,26 +397,26 @@ Editing NDCollections
 ---------------------
 
 Because `~ndcube.NDCollection` inherits from `dict`, we can edit the collection using many of the same methods.
-These have the same or analogous APIs to the `dict` versions and include `del`, `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
+These have the same or analogous APIs to the `dict` versions and include `~ndcube.NDCollection.pop`, and `~ndcube.NDCollection.update`.
 Some `dict` methods may not be implemented on `~ndcube.NDCollection` if they are not consistent with its design.
 
 .. _aligned_axes:
 
-Aligned Axes
+Aligned axes
 ------------
 In the above example, the linewidth object's axes are aligned with the first two axes of the observations object.
 Designating these axes as aligned allows both members of the collection to be simultaneously sliced, thus enabling users to quickly and accurately crop their entire data set to a region of interest.
-(For more on this, see :ref:`collection_slicing`.)
+For more on this, see :ref:`collection_slicing`.
 There are a few ways to designate aligned axes.
 If the members of the collection have the same axis ordering, as is the case in our example, we can provide a single `tuple` of `int`, designating the array axes that are aligned.
-(Note that aligned axes must have the same lengths.)
+Note that aligned axes must have the same lengths.
 
 .. code-block:: python
 
   >>> my_collection = NDCollection([("observations", my_cube), ("linewidths", linewidth_cube)],
   ...                              aligned_axes=(0, 1))
 
-We can see which axes are aligned by inpecting the ``aligned_axes`` attribute:
+We can see which axes are aligned by inspecting the ``aligned_axes`` attribute:
 
 .. code-block:: python
 
