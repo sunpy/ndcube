@@ -1,5 +1,7 @@
 import astropy.units as u
 
+__all__ = ['prep_plot_kwargs', 'set_wcsaxes_format_units']
+
 
 def _expand_ellipsis(ndim, plist):
     if Ellipsis in plist:

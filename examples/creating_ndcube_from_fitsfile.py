@@ -23,15 +23,16 @@ image_file = get_pkg_data_filename('tutorials/FITS-images/HorseHead.fits')
 
 ###########################################################################
 # Lets extract the image data and the header information from the FITS file.
-# This can be achieved by using the functionality within `~astropy.io`.
+# This can be achieved by using the functionality within `astropy.io.fits`.
 # In this file the image information is located in the Primary HDU (extension 0).
+
 image_data = fits.getdata(image_file)
 image_header = fits.getheader(image_file)
 
 ##########################################################################
 # To create an `~ndcube.NDCube` object, we need both the data array and a
 # WCS object (e.g. an `~astropy.wcs.WCS`). Here the data WCS information is
-# within the header, which we can pass to `~astropy.wcs.WCS()` to create a WCS object.
+# within the header, which we can pass to :class:`~astropy.wcs.WCS` to create a WCS object.
 
 example_ndcube = NDCube(image_data, WCS(image_header))
 
@@ -47,7 +48,7 @@ print(example_ndcube.wcs)
 print(example_ndcube.dimensions)
 
 ##########################################################################
-# We can also quickly visualize the data using the `~ndcube.NDCube.plot()` method.
+# We can also quickly visualize the data using the :meth:`~ndcube.NDCube.plot` method.
 
 example_ndcube.plot()
 

@@ -9,7 +9,7 @@ from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import NDCube
-from ndcube.extra_coords import ExtraCoords
+from ndcube.extra_coords.extra_coords import ExtraCoords
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
 # Fixtures

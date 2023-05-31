@@ -22,7 +22,7 @@ from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 
 from ndcube import utils
-from ndcube.extra_coords import ExtraCoords, ExtraCoordsABC
+from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
@@ -30,7 +30,7 @@ from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
-__all__ = ['NDCubeABC', 'NDCubeBase', 'NDCube']
+__all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 
 # Create mapping to masked array types based on data array type for use in analysis methods.
 ARRAY_MASK_MAP = {}
@@ -66,7 +66,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
         This transform should implement the high level wcsapi, and have
         ``pixel_n_dim`` equal to the number of array dimensions in the
-        `.NDCube`. The number of world dimensions should be equal to the
+        `~ndcube.NDCube`. The number of world dimensions should be equal to the
         number of world dimensions in ``self.wcs`` and in ``self.extra_coords`` combined.
         """
 
@@ -83,8 +83,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         multiple array axes, the same physical type string can appear in multiple tuples.
 
         The physical types returned by this property are drawn from the
-        `~NDCube.combined_wcs` property so they include the coordinates contained in
-        `~NDCube.extra_coords`.
+        `~ndcube.NDCube.combined_wcs` property so they include the coordinates contained in
+        `~ndcube.NDCube.extra_coords`.
         """
 
     @abc.abstractmethod
@@ -100,7 +100,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         ----------
         axes: `int` or `str`, or multiple `int` or `str`, optional
             Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.world_axis_physical_types`
+            `ndcube.NDCube.wcs.world_axis_physical_types <astropy.wcs.wcsapi.BaseWCSWrapper>`
             of axes for which real world coordinates are desired.
             Not specifying axes inputs causes results for all axes to be returned.
         pixel_corners: `bool`, optional
@@ -139,14 +139,15 @@ class NDCubeABC(astropy.nddata.NDDataBase):
                                  ) -> Iterable[u.Quantity]:
         """
         Returns the world coordinate values of all pixels for desired axes.
-        In contrast to `axis_world_coords()`, this method returns `~astropy.units.Quantity` objects. which only
-        provide units rather than full coordinate metadata provided by high-level coordinate objects.
+        In contrast to :meth:`ndcube.NDCube.axis_world_coords`, this method returns
+        `~astropy.units.Quantity` objects. Which only provide units rather than full
+        coordinate metadata provided by high-level coordinate objects.
 
         Parameters
         ----------
         axes: `int` or `str`, or multiple `int` or `str`, optional
             Axis number in numpy ordering or unique substring of
-            `~ndcube.NDCube.wcs.world_axis_physical_types`
+            `ndcube.NDCube.wcs.world_axis_physical_types <astropy.wcs.wcsapi.BaseWCSWrapper>`
             of axes for which real world coordinates are desired.
             axes=None implies all axes will be returned.
 
@@ -155,7 +156,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             This increases the size of the output along each dimension by 1
             as all corners are returned.
 
-        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`, optional
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`, optional
             The WCS object to be used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
             ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs``, combing both
@@ -204,7 +205,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             Therefore their number and order must be compatible with the API
             of that method, i.e. they must be passed in world order.
 
-        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`
             The WCS to use to calculate the pixel coordinates based on the input.
             Will default to the ``.wcs`` property if not given. While any valid WCS
             could be used it is expected that either the ``.wcs`` or
@@ -212,7 +213,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
         Returns
         -------
-        result: `~ndcube..ndcube.NDCubeABC`
+        `~ndcube.ndcube.NDCubeABC`
 
         Examples
         --------
@@ -235,11 +236,10 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         contains all the provided world coordinate points.
 
         This function takes points as iterables of low-level coordinate objects,
-        i.e. `~astropy.units.Quantity` objects.  This differs from `~ndcube.NDCube.crop()`
+        i.e. `~astropy.units.Quantity` objects. This differs from :meth:`~ndcube.NDCube.crop`
         which takes high-level coordinate objects requiring all the relevant coordinate
-        information such as coordinate frame etc.  Hence this method's API is more basic
+        information such as coordinate frame etc. Hence this method's API is more basic
         but less explicit.
-
 
         Parameters
         ----------
@@ -255,7 +255,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             The length of the iterable must equal the number of world dimensions
             and must have the same order as the coordinate points.
 
-        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.extra_coords.ExtraCoordsABC`
+        wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`
             The WCS to use to calculate the pixel coordinates based on the input.
             Will default to the ``.wcs`` property if not given. While any valid WCS
             could be used it is expected that either the ``.wcs`` or
@@ -263,14 +263,12 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
         Returns
         -------
-        result: `~ndcube.ndcube.NDCubeABC`
-
+        `~ndcube.ndcube.NDCubeABC`
 
         Examples
         --------
         An example of cropping a region of interest on the Sun from a 3-D image-time cube:
         >>> NDCube.crop_by_values((-600, -600, 0), (0, 0, 0), units=(u.arcsec, u.arcsec, u.s)) # doctest: +SKIP
-
         """
 
 
@@ -324,23 +322,23 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     Parameters
     ----------
-    data: array-like or `astropy.nddata.NDData`
+    data : array-like or `astropy.nddata.NDData`
         The array holding the actual data in this object.
 
-    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+    wcs : `astropy.wcs.wcsapi.BaseLowLevelWCS`, `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
         The WCS object containing the axes' information, optional only if
         ``data`` is an `astropy.nddata.NDData` object.
 
-    uncertainty : any type, optional
+    uncertainty : Any, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
         that defines what kind of uncertainty is stored, for example "std"
         for standard deviation or "var" for variance. A metaclass defining such
-        an interface is `~astropy.nddata.NDUncertainty` - but isn’t mandatory.
+        an interface is `~astropy.nddata.NDUncertainty` - but isn't mandatory.
         If the uncertainty has no such attribute the uncertainty is stored as
         `~astropy.nddata.UnknownUncertainty`.
         Defaults to None.
 
-    mask : any type, optional
+    mask : Any, optional
         Mask for the dataset. Masks should follow the numpy convention
         that valid data points are marked by `False` and invalid ones with `True`.
         Defaults to `None`.
@@ -350,7 +348,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         an empty dictionary is created.
 
     unit : Unit-like or `str`, optional
-        Unit for the dataset. Strings that can be converted to a `~astropy.unit.Unit` are allowed.
+        Unit for the dataset. Strings that can be converted to a `~astropy.units.Unit` are allowed.
         Default is `None` which results in dimensionless units.
 
     copy : bool, optional
@@ -674,13 +672,13 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         ----------
         target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`, `astropy.wcs.wcsapi.BaseLowLevelWCS`,
             or `astropy.io.fits.Header`
-            The WCS object to which the ``NDCube`` is to be reprojected.
+            The WCS object to which the `ndcube.NDCube` is to be reprojected.
 
-        algorithm: `str` {'interpolation', 'adaptive', 'exact'}
+        algorithm: {'interpolation' | 'adaptive' | 'exact'}
             The algorithm to use for reprojecting.
-            When set to `'interpolation'` `~reproject.reproject_interp` is used,
-            when set to `'adaptive'` `~reproject.reproject_adaptive` is used and
-            when set to `'exact'` `~reproject.reproject_exact` is used.
+            When set to "interpolation" `~reproject.reproject_interp` is used,
+            when set to "adaptive" `~reproject.reproject_adaptive` is used and
+            when set to "exact" `~reproject.reproject_exact` is used.
 
         shape_out: `tuple`, optional
             The shape of the output data array. The ordering of the dimensions must follow NumPy
@@ -689,7 +687,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             (if available) from the low level API of the ``target_wcs`` is used.
 
         return_footprint : `bool`
-            If `True`` the footprint is returned in addition to the new `~ndcube.NDCube`.
+            If `True` the footprint is returned in addition to the new `~ndcube.NDCube`.
             Defaults to `False`.
 
         **reproject_args
@@ -700,7 +698,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         Returns
         -------
         reprojected_cube : `ndcube.NDCube`
-            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output ``NDCube``.
+            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output `~ndcube.NDCube`.
 
         footprint: `numpy.ndarray`
             Footprint of the input array in the output array.
@@ -791,15 +789,15 @@ class NDCube(NDCubeBase):
         The WCS object containing the axes' information, optional only if
         ``data`` is an `astropy.nddata.NDData` object.
 
-    uncertainty : any type, optional
+    uncertainty : Any, optional
         Uncertainty in the dataset. Should have an attribute uncertainty_type
         that defines what kind of uncertainty is stored, for example "std"
         for standard deviation or "var" for variance. A metaclass defining
-        such an interface is NDUncertainty - but isn’t mandatory. If the uncertainty
+        such an interface is NDUncertainty - but isn't mandatory. If the uncertainty
         has no such attribute the uncertainty is stored as UnknownUncertainty.
         Defaults to None.
 
-    mask : any type, optional
+    mask : Any, optional
         Mask for the dataset. Masks should follow the numpy convention
         that valid data points are marked by False and invalid ones with True.
         Defaults to None.
@@ -824,12 +822,12 @@ class NDCube(NDCubeBase):
         Default is False.
 
     """
-    # Enabling the NDCube reflected operators is a bit subtle.  The NDCube
+    # Enabling the NDCube reflected operators is a bit subtle. The NDCube
     # reflected operator will be used only if the Quantity non-reflected operator
-    # returns NotImplemented.  The Quantity operator strips the unit from the
+    # returns NotImplemented. The Quantity operator strips the unit from the
     # Quantity and tries to combine the value with the NDCube using NumPy's
-    # __array_ufunc__().  If NumPy believes that it can proceed, this will result
-    # in an error.  We explicitly set __array_ufunc__ = None so that the NumPy
+    # __array_ufunc__(). If NumPy believes that it can proceed, this will result
+    # in an error. We explicitly set __array_ufunc__ = None so that the NumPy
     # call, and consequently the Quantity operator, will return NotImplemented.
     __array_ufunc__ = None
 
@@ -859,7 +857,7 @@ class NDCube(NDCubeBase):
         A convenience function for the plotters default ``plot()`` method.
 
         Calling this method is the same as calling ``cube.plotter.plot``, the
-        behaviour of this method can change if the `NDCube.plotter` class is
+        behaviour of this method can change if the `ndcube.NDCube.plotter` class is
         set to a different ``Plotter`` class.
 
         """
@@ -951,14 +949,14 @@ class NDCube(NDCubeBase):
 
         Parameters
         ----------
-        new_unit: `astropy.unit.Unit`
+        new_unit: `astropy.units.Unit`
             The unit to convert to.
         kwargs:
             Passed to the unit conversion method, self.unit.to.
 
         Returns
         -------
-        : `ǸDCube`
+        : `~ndcube.NDCube`
             A new instance with the new unit and data and uncertainties scales accordingly.
         """
         new_unit = u.Unit(new_unit)
@@ -995,10 +993,10 @@ class NDCube(NDCubeBase):
             Default is `numpy.all`
         propagate_uncertainties: `bool` or function.
             If False, uncertainties are dropped.
-            If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainty`)
+            If True, default algorithm is used (`~ndcube.utils.cube.propagate_rebin_uncertainties`)
             Can also be set to a function which performs custom uncertainty propagation.
             Additional kwargs provided to this method are passed onto this function.
-            See Notes section on how to write a custom propagate_uncertainties function.
+            See Notes section on how to write a custom ``propagate_uncertainties`` function.
         new_unit: `astropy.units.Unit`, optional
             If the rebinning operation alters the data unit, the new unit can be
             provided here.
@@ -1007,7 +1005,7 @@ class NDCube(NDCubeBase):
 
         Returns
         -------
-        new_cube: `NDCube`
+        new_cube: `~ndcube.NDCube`
             The resolution-degraded cube.
 
         References
@@ -1019,7 +1017,7 @@ class NDCube(NDCubeBase):
         **Rebining Algorithm**
         Rebinning is achieved by reshaping the N-D array to a 2N-D array and
         applying the function over the odd-numbered axes. To demonstrate,
-        consider the following example.  Let's say you have an array::
+        consider the following example. Let's say you have an array::
 
              x = np.array([[0, 0, 0, 1, 1, 1],
                            [0, 0, 1, 1, 0, 0],
@@ -1028,7 +1026,7 @@ class NDCube(NDCubeBase):
                            [1, 0, 1, 0, 1, 1],
                            [0, 0, 1, 0, 0, 0]])
 
-        and you want to sum over 2x2 non-overlapping sub-arrays.  This summing can
+        and you want to sum over 2x2 non-overlapping sub-arrays. This summing can
         be done by reshaping the array::
 
              y = x.reshape(3,2,3,2)
@@ -1062,12 +1060,12 @@ class NDCube(NDCubeBase):
 
         All kwarg inputs to the rebin method are also passed on transparently to the
         propagation function. Hence additional inputs to the propagation function can be
-        included as kwargs to `ndcube.NDCube.rebin`.
+        included as kwargs to :meth:`ndcube.NDCube.rebin`.
 
         The shape of the uncertainty, data and mask inputs are such that the first
         dimension represents the pixels in a given bin whose data and uncertainties
-        are aggregated by the rebin process.  The shape of the remaining dimensions
-        must be the same as the final rebinned data.  A silly but informative
+        are aggregated by the rebin process. The shape of the remaining dimensions
+        must be the same as the final rebinned data. A silly but informative
         example of a custom propagation function might be::
 
              def my_propagate(uncertainty, data, mask, **kwargs):

@@ -8,8 +8,6 @@ import numpy as np
 from ndcube import utils
 from ndcube.visualization.descriptor import PlotterDescriptor
 
-__all__ = ['NDCubeSequence']
-
 
 class NDCubeSequenceBase:
     """
@@ -147,8 +145,8 @@ class NDCubeSequenceBase:
         The coordinate values at each location along the common axis across all cubes.
 
         Only coordinates associated with the common axis in all cubes in the sequence
-        are returned.  Coordinates from different cubes are concatenated along the
-        common axis.  They thus represent the coordinate values at each location as
+        are returned. Coordinates from different cubes are concatenated along the
+        common axis. They thus represent the coordinate values at each location as
         if all cubes in the sequence were concatenated along the common axis.
         """
         common_axis = self._common_axis
@@ -237,23 +235,23 @@ class NDCubeSequenceBase:
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 
         Each input point is given as a tuple of high-level world coordinate objects.
-        This method does not crop the sequence axis.  Instead input points
-        are passed to the crop method of cubes in sequence.  Note, therefore,
+        This method does not crop the sequence axis. Instead input points
+        are passed to the crop method of cubes in sequence. Note, therefore,
         that the input points do not include an entry for world coords only
         associated with the sequence axis.
         For a description of how the bounding box is defined, see the docstring
-        of the `ndcube.NDCube.crop` method.
+        of the :meth:`ndcube.NDCube.crop` method.
         In cases where the cubes are not aligned, all cubes are cropped
-        to the same region in pixel space.  This region will be the smallest
+        to the same region in pixel space. This region will be the smallest
         that encompasses the input points in all cubes while maintaining
         consistent array shape between the cubes.
 
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+            Passed to :meth:`ndcube.NDCube.crop` as the points arg without checking.
 
-        wcses: iterable of WCS objects or `str` (optional)
+        wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes.
             There must by one WCS per cube.
             Alternatively, can be a string giving the name of the cube wcs attribute to be used,
@@ -273,26 +271,26 @@ class NDCubeSequenceBase:
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 
         Each input point is given as a tuple of low-level world coordinate objects.
-        This method does not crop the sequence axis.  Instead input points
-        are passed to the `ndcube.NDCube.crop_by_values` method of cubes in sequence.  Note, therefore,
+        This method does not crop the sequence axis. Instead input points
+        are passed to the :meth:`ndcube.NDCube.crop_by_values` method of cubes in sequence. Note, therefore,
         that the input points do not include an entry for world coords only
         associated with the sequence axis.
         For a description of how the bounding box is defined, see the docstring
         of the NDCube.crop_by_values method.
         In cases where the cubes are not aligned, all cubes are cropped
-        to the same region in pixel space.  This region will be the smallest
+        to the same region in pixel space. This region will be the smallest
         that encompasses the input points in all cubes while maintaining
         consistent array shape between the cubes.
 
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+            Passed to :meth:`ndcube.NDCube.crop` as the points arg without checking.
 
         units:
-            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
 
-        wcses: iterable of WCS objects or `str` (optional)
+        wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes. There must by one WCS per cube.
             Alternatively, can be a string giving the name of the cube wcs attribute to be used,
             namely, 'wcs', 'combined_wcs', or 'extra_coords'.
@@ -314,18 +312,18 @@ class NDCubeSequenceBase:
         Note, therefore, that the input points do not include an entry for world
         coords only associated with the sequence axis.
         To learn how the bounding box is defined, see the docstrings of NDCube's
-        `~ndcube.NDCube.crop` and `~ndcube.NDCube.crop_by_values` methods.
+        :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` methods.
         In cases where the cubes are not aligned, all cubes are cropped
-        to the same region in pixel space.  This region will be the smallest
+        to the same region in pixel space. This region will be the smallest
         that encompasses the input world ranges in all cubes while maintaining
         consistent array shape between the cubes.
 
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop_by_values` as the ``points`` arg.
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``points`` arg.
 
-        wcses: iterable of WCS objects or `str` (optional)
+        wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes. There must by one WCS per cube.
             Alternatively, can be a string giving the name of the cube wcs attribute to be used,
             namely, 'wcs', 'combined_wcs', or 'extra_coords'.
@@ -338,8 +336,8 @@ class NDCubeSequenceBase:
             If False, inputs are assumined to be high-level coordinate objects and
             the crop util is used.
 
-        units: (optiona)
-            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+        units: `astropy.units.Unit`, optional
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
             Only used if crop_by_values is True.
         """
         n_cubes = len(self.data)
