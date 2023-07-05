@@ -126,7 +126,7 @@ they represent.
 
 There are mature Python packages for handling N-D array operations --
 e.g. numpy [@numpy], dask [@dask], etc. -- and others for supporting WCS coordinate
-transformations -- e.g. astropy [@astropy2013, @astropy2018, @astropy2022], gWCS [@gWCS].
+transformations -- e.g. astropy [@astropy2013; @astropy2018; @astropy2022], gWCS [@gwcs].
 However, none treat data and coordinates in a combined, self-consistent way.
 The closest alternative to ndcube is xarray [@xarray].
 However xarray has been developed for the requirements and conventions of the
