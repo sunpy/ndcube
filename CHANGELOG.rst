@@ -1,3 +1,12 @@
+v2.1.3 (2023-07-08)
+===================
+
+Trivial/Internal Changes
+------------------------
+
+- Remove internal use of numpy.product as its now deprecated and replace with numpy.prod as recommended. (`#625 <https://github.com/sunpy/ndcube/pull/625>`__)
+- Write paper to Journal of Open Source Software describing ndcube package (`#599 <https://github.com/sunpy/ndcube/pull/599>`__, `#609 <https://github.com/sunpy/ndcube/pull/609>`__, `#611 <https://github.com/sunpy/ndcube/pull/611>`__, `#621 <https://github.com/sunpy/ndcube/pull/621>`__, `#622 <https://github.com/sunpy/ndcube/pull/622>`__, `#623 <https://github.com/sunpy/ndcube/pull/623>`__)
+
 2.1.2 (2023-05-31)
 ==================
 
