@@ -104,8 +104,8 @@ The WCS framework has multiple implementations, e.g. FITS-WCS, gWCS, etc.,
 each with a different incompatible API, which makes workflows and derived tools
 non-transferable between implementations.
 ndcube overcomes this by leveraging AstroPy's WCS API [APE-14; @ape14]
-which can be wrapped around underlying WCS implementations, thereby enabling ndcube
-to support any WCS implementation with the same API.
+which can be wrapped around any underlying WCS implementation.
+This enables ndcube to use the same API to interact with any set of WCS transformations.
 ndcube's data-WCS coupling allows users to analyze their data more easily and
 reliably, thus helping to boost their scientific output.
 
@@ -190,7 +190,7 @@ The array can be any object that exposes `.dtype` and `.shape` attributes and ca
 be sliced by the standard Python slicing API.
 Thus `NDCube` not only supports numpy arrays but also others such as dask for
 distributed computing [@dask], cupy for GPU operations [@cupy], etc.
-`NDCube` leverages the AstroPy WCS API for interacting and manipulating the WCS
+`NDCube` leverages the AstroPy WCS API for interacting with and manipulating the WCS
 transformations.
 This means `NDCube` can support any WCS implementation, e.g. FITS-WCS, gWCS, etc.,
 so long as it's supplied in an AstroPy-WCS-API-compliant object.
@@ -243,7 +243,7 @@ rather than the two cubes separately, simplifies the extraction of regions of
 interest and guarantees both cubes continue to represent the same field of view.
 
 More detailed discussion on the roles of the above data classes' features and
-how to use them can be found in @ndcube and @ndcube-docs.
+how to use them can be found in @ndcube and the ndcube documentation [@ndcube-docs].
 
 
 ## Coordinate Classes
