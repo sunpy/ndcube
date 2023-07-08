@@ -1,2 +1,0 @@
-Keywords for ``sequence_axis_coords`` and ``sequence_axis_unit`` were not passed to the ``SequenceAnimator`` constructor.
-This is now fixed.

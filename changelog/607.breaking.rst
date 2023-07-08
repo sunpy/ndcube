@@ -1,1 +1,0 @@
-`ndcube.NDCollection.aligned_axes` attribute is now property.

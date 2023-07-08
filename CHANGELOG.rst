@@ -1,3 +1,34 @@
+2.1.2 (2023-05-31)
+==================
+
+Backwards Incompatible Changes
+------------------------------
+
+- `ndcube.NDCollection.aligned_axes` attribute is now property. (`#607 <https://github.com/sunpy/ndcube/pull/607>`__)
+
+
+Bug Fixes
+---------
+
+- Keywords for ``sequence_axis_coords`` and ``sequence_axis_unit`` were not passed to the ``SequenceAnimator`` constructor.
+  This is now fixed. (`#607 <https://github.com/sunpy/ndcube/pull/607>`__)
+
+Improved Documentation
+----------------------
+
+- Sphinx nitpicky was enabled and lots of references were updated.
+- Overall documentation layout was adjusted to shrink the sidebar.
+
+
+v2.1.1 (2023-03-09)
+===================
+
+Bug Fixes
+---------
+
+- Fix docstring causing doc build problems for some users. (`#600 <https://github.com/sunpy/ndcube/pull/600>`__)
+
+
 v2.1.0 (2023-03-01)
 ===================
 
