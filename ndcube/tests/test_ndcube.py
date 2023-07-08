@@ -21,7 +21,7 @@ from ndcube.tests import helpers
 
 
 def generate_data(shape):
-    data = np.arange(np.product(shape))
+    data = np.arange(np.prod(shape))
     return data.reshape(shape)
 
 
@@ -211,7 +211,7 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     ec_shape = cube.data.shape[1:3]
-    data = np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
+    data = np.arange(np.prod(ec_shape)).reshape(ec_shape) * u.m / u.s
 
     # The lookup table has to be in world order so transpose it.
     cube.extra_coords.add('velocity', (2, 1), data.T)

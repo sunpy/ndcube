@@ -1,0 +1,1 @@
+Remove internal use of numpy.product as its now deprecated and replace with numpy.prod as recommended.

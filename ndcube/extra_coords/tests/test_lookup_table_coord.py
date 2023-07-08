@@ -265,7 +265,7 @@ def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_quantity():
     shape = (3, 3)
-    data = np.arange(np.product(shape)).reshape(shape) * u.m / u.s
+    data = np.arange(np.prod(shape)).reshape(shape) * u.m / u.s
 
     ltc = QuantityTableCoordinate(data)
     assert u.allclose(ltc.wcs.pixel_to_world(0, 0), 0 * u.m / u.s)
