@@ -66,7 +66,7 @@ def test_propagate_rebin_uncertainties_prod(stacked_pixel_data):
 
     # Run function
     output = propagate_rebin_uncertainties(uncertainty, data, mask,
-                                           np.product, operation_ignores_mask=False)
+                                           np.prod, operation_ignores_mask=False)
 
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)

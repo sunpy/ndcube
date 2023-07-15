@@ -36,14 +36,14 @@ console_logger.setLevel('INFO')
 
 
 def skycoord_2d_lut(shape):
-    total_len = np.product(shape)
+    total_len = np.prod(shape)
     data = (np.arange(total_len).reshape(shape),
             np.arange(total_len, total_len * 2).reshape(shape))
     return SkyCoord(*data, unit=u.deg)
 
 
 def data_nd(shape):
-    nelem = np.product(shape)
+    nelem = np.prod(shape)
     return np.arange(nelem).reshape(shape)
 
 

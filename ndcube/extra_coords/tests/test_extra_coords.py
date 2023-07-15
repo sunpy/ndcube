@@ -42,7 +42,7 @@ def skycoord_2d_lut():
 @pytest.fixture
 def quantity_2d_lut():
     ec_shape = (3, 3)
-    return np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
+    return np.arange(np.prod(ec_shape)).reshape(ec_shape) * u.m / u.s
 
 
 # ExtraCoords from WCS
