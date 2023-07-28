@@ -1,0 +1,112 @@
+{
+    "description": "ndcube is an open-source SunPy affiliated package for manipulating, inspecting and visualizing multi-dimensional contiguous and non-contiguous coordinate-aware data arrays.",
+    "license": "BSD-2-Clause",
+    "title": "ndcube",
+    "upload_type": "software",
+    "creators": [
+        {
+            "name": "Daniel F. Ryan",
+            "orcid": "0000-0001-8661-3825",
+            "affiliation": "1 - University of Applied Sciences Northwest Switzerland, Switzerland 2 - American University, USA "
+        },
+        {
+            "name": "Stuart J. Mumford",
+            "orcid": "0000-0003-4217-4642",
+            "affiliation": "Aperio Software Ltd."
+        },
+        {
+            "name": "Yash Sharma",
+            "orcid": "0000-0002-7861-9677",
+            "affiliation": "Meta Platforms Inc., UK"
+        },
+        {
+            "name": "Ankit Baruah",
+            "affiliation": "Workato Gmbh, Germany"
+        },
+        {
+            "name": "Nabil Freij",
+            "orcid": "0000-0002-6253-082X",
+            "affiliation": "1 - Lockheed Martin Solar and Astrophysics Laboratory, USA 2 - Bay Area Environmental Research Institute, USA"
+        },
+        {
+            "name": "Adwait Bhope",
+            "orcid": "0000-0002-7133-8776",
+            "affiliation": "Uptycs India Pvt. Ltd., India"
+        },
+        {
+            "name": "Laura Hayes",
+            "orcid": "0000-0002-6835-2390",
+            "affiliation": "European Space Agency, ESTEC"
+        },
+        {
+            "name": "Ricky O'Steen",
+            "orcid": "A0000-0002-2432-8946",
+            "affiliation": "Space Telescope Science Institute, USA"
+        },
+        {
+            "name": "Baptiste Pellorce",
+            "affiliation": "1 - Claude Bernard Lyon 1 University, France 2 - Institute of Theoretical Astrophysics, Norway"
+        },
+        {
+            "name": "Will Barnes",
+            "orcid": "0000-0001-9642-6089",
+            "affiliation": "1 - NASA Goddard Space Flight Center, USA 2 - American University, USA"
+        },
+        {
+            "name": "Drew Leonard",
+            "orcid": "0000-0001-5270-7487",
+            "affiliation": "Aperio Software Ltd."
+        },
+        {
+            "name": "Mateo Inchaurrandieta"
+        },
+        {
+            "name": "Derek Homeier",
+            "orcid": "0000-0002-8546-9128",
+            "affiliation": "Aperio Software Ltd."
+        },
+        {
+            "name": "David Stansby",
+            "orcid": "0000-0002-1365-1908",
+            "affiliation": "Advanced Research Computing Centre, University College London, UK"
+        },
+        {
+            "name": "J. Marcus Hughes",
+            "orcid": "0000-0003-3410-7650",
+            "affiliation": "Southwest Research Institute, USA"
+        },
+        {
+            "name": "Kris Stern"
+        },
+        {
+            "name": "Aoife Maria Ryan"
+        },
+        {
+            "name": "Gabe Shafiq"
+        },
+        {
+            "name": "Roy Smart"
+        },
+        {
+            "name": "Dan F-M"
+        },
+        {
+            "name": "Kritika Ranjan",
+            "orcid": "0000-0001-5638-016X",
+            "affiliation": "Jain (Deemed-to-be University), Bangalore"
+        },
+        {
+            "name": "Matthew J. West",
+            "orcid": "0000-0002-0631-2393",
+            "affiliation": "Southwest Research Institute, USA"
+        },
+        {
+            "name": "P. L. Lim",
+            "affiliation": "Space Telescope Science Institute, USA"
+        },
+        {
+            "name": "Shelbe Timothy"
+        }
+    ],
+    "access_right": "open"
+}

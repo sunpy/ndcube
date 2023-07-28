@@ -26,7 +26,7 @@ authors:
     affiliation: 13
   - name: Will T. Barnes
     orcid: 0000-0001-6874-2594
-    affiliation: "12, 1"
+    affiliation: "12, 2"
   - name: Baptiste Pellorce
     affiliation: "9, 10"
   - name: Richard O'Steen
