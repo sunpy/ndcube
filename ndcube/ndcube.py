@@ -1008,10 +1008,6 @@ class NDCube(NDCubeBase):
         new_cube: `~ndcube.NDCube`
             The resolution-degraded cube.
 
-        References
-        ----------
-        https://mail.scipy.org/pipermail/numpy-discussion/2010-July/051760.html
-
         Notes
         -----
         **Rebining Algorithm**
