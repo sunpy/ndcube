@@ -17,7 +17,7 @@ repos:
           ]
         exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*|extern.*|.rst|.md)$"
   - repo: https://github.com/PyCQA/autoflake
-    rev: v2.2.0
+    rev: v2.2.1
     hooks:
       - id: autoflake
         args:
@@ -33,7 +33,7 @@ repos:
       - id: isort
         args: ["--sp", "setup.cfg"]
         exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*|extern.*|.rst|.md)$"
-  - repo: https://github.com/pre-commit/mirrors-autopep8
+  - repo: https://github.com/hhatto/autopep8
     rev: v2.0.4
     hooks:
     -   id: autopep8
