@@ -274,7 +274,7 @@ Thus coordinate information is never lost due to slicing.
 `NDCube` objects are always instantiated with associated `ExtraCoords` and
 `GlobalCoords` objects, even if empty.
 Users can then add and remove coordinates subsequently.
-For a more in depth dicussion of `ExtraCoords` and `GlobalCoords`, see @ndcube.
+For a more in depth discussion of `ExtraCoords` and `GlobalCoords`, see @ndcube.
 
 
 # Community Applications of ndcube
