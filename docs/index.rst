@@ -79,6 +79,7 @@ where appropriate.
    introduction
    installation
    explaining_ndcube/index
+   acknowledging
    reference/index
    generated/gallery/index
    extending_ndcube

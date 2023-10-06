@@ -19,11 +19,21 @@ ndcube
 .. |Powered by SunPy| image:: http://img.shields.io/badge/powered%20by-SunPy-orange.svg?style=flat
    :target: http://www.sunpy.org
    :alt: SunPy
+.. image:: https://joss.theoj.org/papers/10.21105/joss.05296/status.svg
+   :target: https://doi.org/10.21105/joss.05296
+   :alt: JOSS
 
-ndcube is an open-source SunPy affiliated package for manipulating, inspecting and visualizing multi-dimensional contiguous and non-contiguous coordinate-aware data arrays.
+``ndcube`` is an open-source SunPy affiliated package for manipulating, inspecting and visualizing multi-dimensional contiguous and non-contiguous coordinate-aware data arrays.
 
 It combines data, uncertainties, units, metadata, masking, and coordinate transformations into classes with unified slicing and generic coordinate transformations and plotting/animation capabilities.
 It is designed to handle data of any number of dimensions and axis types (e.g. spatial, temporal, spectral, etc.) whose relationship between the array elements and the real world can be described by World Coordinate System (WCS) translations.
+
+Acknowledging ndcube
+====================
+If you use ``ndcube`` is your work, we kindly ask you to `acknowledge ndcube`_ in your
+publications and presentations.
+
+.. _acknowledge ndcube: https://docs.sunpy.org/projects/ndcube/en/stable/acknowledging.html
 
 Installation
 ============
