@@ -22,7 +22,7 @@ class MatplotlibSequencePlotter(BasePlotter):
         Parameters
         ----------
         sequence_axis_coords: `str` or array-like, optional
-            The real world value of each step along the sequene axis.
+            The real world value of each step along the sequence axis.
             If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
 
         sequence_axis_unit: `str` or `astropy.units.Unit`, optional
@@ -72,7 +72,7 @@ class SequenceAnimator(ArrayAnimatorWCS):
         The sequence to animate.
 
     sequence_axis_coords: `str` or array-like, optional
-        The real world value of each step along the sequene axis.
+        The real world value of each step along the sequence axis.
         If `str`, the values are taken from `ndcube.NDCubeSequence.sequence_axis_coords`.
 
     sequence_axis_unit: `str` or `astropy.units.Unit`, optional
