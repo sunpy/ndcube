@@ -38,6 +38,7 @@ sequence20 = NDCubeSequence([cube2, cube0])
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
 cube_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes)
+unaligned_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes=None)
 seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
 
 
@@ -87,11 +88,13 @@ def test_slice_cube_from_collection(item, collection, expected):
 
 def test_collection_copy():
     helpers.assert_collections_equal(cube_collection.copy(), cube_collection)
+    helpers.assert_collections_equal(unaligned_collection.copy(), unaligned_collection)
 
 
 @pytest.mark.parametrize("collection,popped_key,expected_popped,expected_collection", [
     (cube_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)],
-                                                   aligned_axes=aligned_axes[1:]))])
+                                                   aligned_axes=aligned_axes[1:])),
+    (unaligned_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)]))])
 def test_collection_pop(collection, popped_key, expected_popped, expected_collection):
     popped_collection = collection.copy()
     output = popped_collection.pop(popped_key)
