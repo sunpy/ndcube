@@ -1,3 +1,1 @@
-- Adds ``None`` check on ``self.aligned_axes`` to ``NDCollection.copy()`` and ``NDCollection.pop()`` which raised a ``AttributeError``
-- Adds test data to represent collection with ``None`` aligned axes in ``test_ndcollection.py``
-- Updates tests for ``copy()`` and ``pop()`` to test with new test data
+Adds ``None`` check on ``self.aligned_axes`` to ``NDCollection.copy()`` and ``NDCollection.pop()`` which raised a ``AttributeError``
