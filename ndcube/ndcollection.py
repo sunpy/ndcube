@@ -223,11 +223,8 @@ class NDCollection(dict):
 
     def copy(self):
         # Aligned axes is not a required parameter and may be None
-        if self.aligned_axes is not None:
-            return self.__class__(self.items(), tuple(self.aligned_axes.values()),
-                                  meta=self.meta, sanitize_inputs=False)
-        else:
-            return self.__class__(self.items(), None, meta=self.meta, sanitize_inputs=False)
+        aligned_axes = None if self.aligned_axes is None else tuple(self.aligned_axes.values())
+        return self.__class__(self.items(), aligned_axes, meta=self.meta, sanitize_inputs=False)
 
     def setdefault(self):
         """Not supported by `~ndcube.NDCollection`"""
