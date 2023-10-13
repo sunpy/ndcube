@@ -222,8 +222,9 @@ class NDCollection(dict):
         return collection_items, new_aligned_axes
 
     def copy(self):
-        return self.__class__(self.items(), tuple(self.aligned_axes.values()),
-                              meta=self.meta, sanitize_inputs=False)
+        # Aligned axes is not a required parameter and may be None
+        aligned_axes = None if self.aligned_axes is None else tuple(self.aligned_axes.values())
+        return self.__class__(self.items(), aligned_axes, meta=self.meta, sanitize_inputs=False)
 
     def setdefault(self):
         """Not supported by `~ndcube.NDCollection`"""
@@ -244,8 +245,10 @@ class NDCollection(dict):
         """
         # Extract desired cube from collection.
         popped_cube = super().pop(key)
-        # Delete corresponding aligned axes
-        self.aligned_axes.pop(key)
+        # Aligned axes is not a required parameter and may be None
+        if self.aligned_axes is not None:
+            # Delete corresponding aligned axes
+            self.aligned_axes.pop(key)
         return popped_cube
 
     def update(self, *args):
