@@ -52,15 +52,16 @@ def unwrap_wcs_to_fitswcs(wcs):
     for low_level_wrapper in wrapper_chain[::-1]:
         if isinstance(low_level_wrapper, SlicedLowLevelWCS):
             slice_items = np.array([slice(None)] * fitswcs.naxis)
-            slice_items[dropped_data_axes == False] = low_level_wrapper._slices_array
+            slice_items[dropped_data_axes == False] = low_level_wrapper._slices_array # numpy order
             fitswcs, dda = _slice_fitswcs(fitswcs, slice_items, numpy_order=True)
             dropped_data_axes[dda] = True
         elif isinstance(low_level_wrapper, ResampledLowLevelWCS):
-            factor = np.ones(fitswcs.naxis, dtype=int)
-            offset = np.zeros(fitswcs.naxis, dtype=int)
-            kept_data_axes = dropped_data_axes == False
-            factor[kept_data_axes] = low_level_wrapper._factor
-            offset[kept_data_axes] = low_level_wrapper._offset
+            factor = np.ones(fitswcs.naxis)
+            offset = np.zeros(fitswcs.naxis)
+            kept_wcs_axes = dropped_data_axes[::-1] == False  # WCS-order
+            factor[kept_wcs_axes] = low_level_wrapper._factor
+            offset[kept_wcs_axes] = low_level_wrapper._offset
+            print(factor, offset)
             fitswcs = _resample_fitswcs(fitswcs, factor, offset)
         else:
             raise TypeError("Unrecognized/unsupported WCS Wrapper type: {type(low_level_wrapper)}")
@@ -118,6 +119,7 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True):
         else:
             raise TypeError("All slice_items must be a slice or an int. "
                             f"type(slice_items[{i}]) = {type(slice_items[i])}")
+    print(slice_items)
     # Slice WCS
     sliced_wcs = fitswcs.slice(slice_items, numpy_order=numpy_order)
     return sliced_wcs, dropped_data_axes
@@ -136,9 +138,11 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
         The factor by which the FITS-WCS is resampled.
         Must be same length as number of axes in ``fitswcs``.
         If scalar, the same factor is applied to all axes.
+        Factors must be given in WCS-order (opposite to data axes order).
     offset: 1-D array-like or scalar
         The location on the initial pixel grid which corresponds to zero on the
         resampled pixel grid. If scalar, the same offset is applied to all axes.
+        Offsets must be given in WCS-order (opposite to data axes order).
 
     Returns
     -------
@@ -154,5 +158,7 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
         raise ValueError(f"Length of offset must equal number of dimensions {fitswcs.naxis}.")
     # Scale plate scale and shift by offset.
     fitswcs.wcs.cdelt *= factor
-    fitswcs.wcs.crpix -= offset
+    fitswcs.wcs.crpix = (fitswcs.wcs.crpix + offset) / factor
+    print(fitswcs._naxis, factor)
+    fitswcs._naxis = list(np.round(np.array(fitswcs._naxis) / factor).astype(int))
     return fitswcs
