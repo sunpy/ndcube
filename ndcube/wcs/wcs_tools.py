@@ -61,7 +61,6 @@ def unwrap_wcs_to_fitswcs(wcs):
             kept_wcs_axes = dropped_data_axes[::-1] == False  # WCS-order
             factor[kept_wcs_axes] = low_level_wrapper._factor
             offset[kept_wcs_axes] = low_level_wrapper._offset
-            print(factor, offset)
             fitswcs = _resample_fitswcs(fitswcs, factor, offset)
         else:
             raise TypeError("Unrecognized/unsupported WCS Wrapper type: {type(low_level_wrapper)}")
@@ -119,7 +118,6 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True):
         else:
             raise TypeError("All slice_items must be a slice or an int. "
                             f"type(slice_items[{i}]) = {type(slice_items[i])}")
-    print(slice_items)
     # Slice WCS
     sliced_wcs = fitswcs.slice(slice_items, numpy_order=numpy_order)
     return sliced_wcs, dropped_data_axes
@@ -159,6 +157,5 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
     # Scale plate scale and shift by offset.
     fitswcs.wcs.cdelt *= factor
     fitswcs.wcs.crpix = (fitswcs.wcs.crpix + offset) / factor
-    print(fitswcs._naxis, factor)
     fitswcs._naxis = list(np.round(np.array(fitswcs._naxis) / factor).astype(int))
     return fitswcs
