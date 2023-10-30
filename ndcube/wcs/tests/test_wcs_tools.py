@@ -1,4 +1,3 @@
-import astropy.units as u
 import numpy as np
 from astropy.time import Time
 from astropy.wcs import WCS
