@@ -2,10 +2,11 @@ import astropy.units as u
 import numpy as np
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from ndcube.wcs.wcs_tools import unwrap_wcs_to_fitswcs
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
+
 
 def test_unwrap_wcs_to_fitswcs():
     # Build FITS-WCS and wrap it in different operations.

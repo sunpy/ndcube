@@ -1,7 +1,6 @@
 from numbers import Integral
 
 import numpy as np
-
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
@@ -10,13 +9,14 @@ from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
 __all__ = ["unwrap_wcs_to_fitswcs"]
 
+
 def unwrap_wcs_to_fitswcs(wcs):
     """Create FITS-WCS equivalent to (nested) WCS wrapper object.
 
     Underlying WCS must be FITS-WCS.
     No axes are dropped from original FITS-WCS, even if sliced by an integer.
     Instead, integer-sliced axes is sliced to length-1 and marked True in the
-    ``dropped_data_axes`` ouput.
+    ``dropped_data_axes`` output.
     Currently supported wrapper classes include `astropy.wcs.wcsapi.SlicedLowLevelWCS`
     and `ndcube.wcs.wrappers.ResampledLowLevelWCS`.
 
@@ -137,7 +137,7 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
         Must be same length as number of axes in ``fitswcs``.
         If scalar, the same factor is applied to all axes.
     offset: 1-D array-like or scalar
-        The location on the intial pixel grid which corresponds to zero on the
+        The location on the initial pixel grid which corresponds to zero on the
         resampled pixel grid. If scalar, the same offset is applied to all axes.
 
     Returns
