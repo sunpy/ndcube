@@ -5,6 +5,7 @@ import numpy as np
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
+
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
 __all__ = ["unwrap_wcs_to_fitswcs"]
@@ -33,14 +34,16 @@ def unwrap_wcs_to_fitswcs(wcs):
         Axes are in array/numpy order, reversed compared to WCS.
     """
     # If wcs is already a FITS-WCS, return it.
-    low_level_wrapper = wcs.low_level_wcs
+    low_level_wrapper = wcs.low_level_wcs if hasattr(wcs, "low_level_wcs") else wcs
     if isinstance(low_level_wrapper, WCS):
         return low_level_wrapper, np.zeros(low_level_wrapper.naxis, dtype=bool)
     # Determine chain of wrappers down to the FITS-WCS.
     wrapper_chain = []
     while isinstance(low_level_wrapper, BaseWCSWrapper):
         wrapper_chain.append(low_level_wrapper)
-        low_level_wrapper = low_level_wrapper._wcs.low_level_wcs
+        low_level_wrapper = low_level_wrapper._wcs
+        if hasattr(low_level_wrapper, "low_level_wcs"):
+            low_level_wrapper = low_level_wrapper.low_level_wcs
     if not isinstance(low_level_wrapper, WCS):
         raise TypeError(f"Base-level WCS must be type {type(WCS)}. Found: {type(low_level_wcs)}")
     fitswcs = low_level_wrapper
@@ -48,16 +51,23 @@ def unwrap_wcs_to_fitswcs(wcs):
     # Unwrap each wrapper in reverse order and edit fitswcs.
     for low_level_wrapper in wrapper_chain[::-1]:
         if isinstance(low_level_wrapper, SlicedLowLevelWCS):
-            fitswcs, dda = slice_fitswcs(fitswcs, low_level_wrapper._slices_array, numpy_order=True)
+            slice_items = np.array([slice(None)] * fitswcs.naxis)
+            slice_items[dropped_data_axes == False] = low_level_wrapper._slices_array
+            fitswcs, dda = _slice_fitswcs(fitswcs, slice_items, numpy_order=True)
             dropped_data_axes[dda] = True
         elif isinstance(low_level_wrapper, ResampledLowLevelWCS):
-            fitswcs = resample_fitswcs(fitswcs, low_level_wrapper.factor, low_level_wrapper.offset)
+            factor = np.ones(fitswcs.naxis, dtype=int)
+            offset = np.zeros(fitswcs.naxis, dtype=int)
+            kept_data_axes = dropped_data_axes == False
+            factor[kept_data_axes] = low_level_wrapper._factor
+            offset[kept_data_axes] = low_level_wrapper._offset
+            fitswcs = _resample_fitswcs(fitswcs, factor, offset)
         else:
             raise TypeError("Unrecognized/unsupported WCS Wrapper type: {type(low_level_wrapper)}")
     return fitswcs, dropped_data_axes
 
 
-def slice_fitswcs(fitswcs, slice_items, numpy_order=True):
+def _slice_fitswcs(fitswcs, slice_items, numpy_order=True):
     """
     Slice a FITS-WCS.
 
@@ -85,13 +95,10 @@ def slice_fitswcs(fitswcs, slice_items, numpy_order=True):
         Denotes which axes must have been dropped from the data array by slicing wrappers.
         Order of axes (numpy or WCS) is dictated by ``numpy_order`` kwarg.
     """
-    slice_items = list(slice_items)
-    # If slice_items does not have a slice for each axis, pad with slice(None) for trailing axes.
-    if len(slice_items) != fitswcs.naxis:
-        slice_items += [slice(None)] * (fitswcs.naxis - len(slice_items))
     naxis = fitswcs.naxis
     dropped_data_axes = np.zeros(naxis, dtype=bool)
     # Sanitize inputs
+    slice_items = list(slice_items)
     for i, item in enumerate(slice_items):
         # Determine length of axis.
         len_axis = fitswcs._naxis[naxis - 1 - i] if numpy_order else fitswcs._naxis[i]
@@ -103,14 +110,11 @@ def slice_fitswcs(fitswcs, slice_items, numpy_order=True):
                 item = len_axis + item
             slice_items[i] = slice(item, item + 1)
         elif isinstance(item, slice):
-            if item.step is not None and item.step != 1:
-                raise ValueError("Only steps equal to 1 or None currently supported. "
-                                 f"slice_items[{i}].step = {slice_items[i].step}")
             # Convert negative indices inside slice item to positive equivalent.
-            if item.start < 0 or item.stop < 0:
-                start = len_axis + item.start if item.start < 0 else item.start
-                stop = len_axis + item.stop if item.stop < 0 else item.stop
-                slice_items[i] = slice(start, stop)
+            start = (len_axis + item.start if (item.start is not None and item.start < 0)
+                     else item.start)
+            stop = len_axis + item.stop if (item.stop is not None and item.stop < 0) else item.stop
+            slice_items[i] = slice(start, stop, item.step)
         else:
             raise TypeError("All slice_items must be a slice or an int. "
                             f"type(slice_items[{i}]) = {type(slice_items[i])}")
@@ -119,7 +123,7 @@ def slice_fitswcs(fitswcs, slice_items, numpy_order=True):
     return sliced_wcs, dropped_data_axes
 
 
-def resample_fitswcs(fitswcs, factor, offset=0):
+def _resample_fitswcs(fitswcs, factor, offset=0):
     """Resample the plate scale of a FITS-WCS by a given factor.
 
     ``factor`` and ``offset`` inputs are in pixel order.
@@ -142,14 +146,10 @@ def resample_fitswcs(fitswcs, factor, offset=0):
         The resampled FITS-WCS.
     """
     # Sanitize inputs.
-    if np.isscalar(factor):
-        factor = [factor] * fitswcs.naxis
-    factor = np.array(factor)
+    factor = np.asarray(factor)
     if len(factor) != fitswcs.naxis:
         raise ValueError(f"Length of factor must equal number of dimensions {fitswcs.naxis}.")
-    if np.isscalar(offset):
-        offset = [offset] * fitswcs.naxis
-    offset = np.array(offset)
+    offset = np.asarray(offset)
     if len(offset) != fitswcs.naxis:
         raise ValueError(f"Length of offset must equal number of dimensions {fitswcs.naxis}.")
     # Scale plate scale and shift by offset.
