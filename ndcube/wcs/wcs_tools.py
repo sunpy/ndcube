@@ -67,7 +67,7 @@ def unwrap_wcs_to_fitswcs(wcs):
     return fitswcs, dropped_data_axes
 
 
-def _slice_fitswcs(fitswcs, slice_items, numpy_order=True):
+def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
     """
     Slice a FITS-WCS.
 
@@ -86,6 +86,10 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True):
     numpy_order: `bool`
         If True, slices in ``slice_items`` are in array/numpy order, which is
         reversed compared to the WCS order.
+    shape: sequence of `int`, optional
+        The length of each axis.  Only used if negative indices are supplied
+        in ``slice_items``.  If not supplied, set to ``fitswcs._naxis``.
+        Order defined by numpy_order kwarg.
 
     Returns
     -------
@@ -95,26 +99,45 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True):
         Denotes which axes must have been dropped from the data array by slicing wrappers.
         Order of axes (numpy or WCS) is dictated by ``numpy_order`` kwarg.
     """
+    negative_index_error_msg = lambda x: (
+        f"Negative indexing not supported as {x}th axis length is 0 in "
+         "underlying FITS-WCS. Supply axes lengths via shape kwarg.")
     naxis = fitswcs.naxis
     dropped_data_axes = np.zeros(naxis, dtype=bool)
     # Sanitize inputs
+    if shape is None:
+        shape = fitswcs._naxis
+        if numpy_order:
+            shape = shape[::-1]
+    else:
+        if len(shape) != naxis:
+            raise ValueError("shape kwarg must be same length as number of pixel axes "
+                             f"in FITS-WCS, i.e. {naxis}")
+        if not all(isinstance(s, Integral) for s in shape):
+            raise TypeError("All elements of ``shape`` must be integers. "
+                            f"shapes types = {[type(s) for s in shape]}")
     slice_items = list(slice_items)
-    for i, item in enumerate(slice_items):
-        # Determine length of axis.
-        len_axis = fitswcs._naxis[naxis - 1 - i] if numpy_order else fitswcs._naxis[i]
+    for i, (item, len_axis) in enumerate(zip(slice_items, shape)):
         if isinstance(item, Integral):
             # Mark axis corresponding to int item as dropped from data array.
             dropped_data_axes[i] = True
             # Convert negative indices to positive equivalent.
             if item < 0:
+                if len_axis == 0:
+                    raise ValueError(negative_index_error_msg(i))
                 item = len_axis + item
+            # Convert int item to slice so a FITS-WCS is returned after slicing.
             slice_items[i] = slice(item, item + 1)
         elif isinstance(item, slice):
             # Convert negative indices inside slice item to positive equivalent.
-            start = (len_axis + item.start if (item.start is not None and item.start < 0)
-                     else item.start)
-            stop = len_axis + item.stop if (item.stop is not None and item.stop < 0) else item.stop
-            slice_items[i] = slice(start, stop, item.step)
+            start_neg = item.start is not None and item.start < 0
+            stop_neg = item.stop is not None and item.stop < 0
+            if start_neg or stop_neg:
+                if len_axis == 0:
+                    raise ValueError(negative_index_error_msg(i))
+                start = len_axis + item.start if start_neg else item.start
+                stop = len_axis + item.stop if stop_neg else item.stop
+                slice_items[i] = slice(start, stop, item.step)
         else:
             raise TypeError("All slice_items must be a slice or an int. "
                             f"type(slice_items[{i}]) = {type(slice_items[i])}")
