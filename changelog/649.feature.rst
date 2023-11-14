@@ -1,1 +1,2 @@
-Provide new function, `~ndcube.wcs.wcs_tools.unwrap_wcs_to_fitswcs`, to create a `astropy.wcs.WCS` instance equivalent to a sliced and/or resampled WCS instance. Only valid if the underlying implementation of the wrapped WCS instance is also an `astropy.wcs.WCS` instance.
+Provides `~ndcube.wcs.tools.unwrap_wcs_to_fitswcs`, a function to create a `astropy.wcs.WCS` instance equivalent to a sliced and/or resampled WCS instance.
+Only valid if the underlying implementation of the wrapped WCS instance is also an `astropy.wcs.WCS` instance.

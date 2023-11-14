@@ -24,7 +24,8 @@ def unwrap_wcs_to_fitswcs(wcs):
     Parameters
     ----------
     wcs: `BaseWCSWrapper`
-        The WCS Wrapper object. Base level WCS implementation must be FITS-WCS.
+        The WCS Wrapper object.
+        Base level WCS implementation must be FITS-WCS.
 
     Returns
     -------
