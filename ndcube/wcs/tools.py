@@ -100,9 +100,9 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
         Denotes which axes must have been dropped from the data array by slicing wrappers.
         Order of axes (numpy or WCS) is dictated by ``numpy_order`` kwarg.
     """
-    negative_index_error_msg = lambda x: (
+    def negative_index_error_msg(x): return (
         f"Negative indexing not supported as {x}th axis length is 0 in "
-         "underlying FITS-WCS. Supply axes lengths via shape kwarg.")
+        "underlying FITS-WCS. Supply axes lengths via shape kwarg.")
     naxis = fitswcs.naxis
     dropped_data_axes = np.zeros(naxis, dtype=bool)
     # Sanitize inputs
