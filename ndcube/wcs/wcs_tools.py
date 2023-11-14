@@ -11,7 +11,8 @@ __all__ = ["unwrap_wcs_to_fitswcs"]
 
 
 def unwrap_wcs_to_fitswcs(wcs):
-    """Create FITS-WCS equivalent to (nested) WCS wrapper object.
+    """
+    Create FITS-WCS equivalent to (nested) WCS wrapper object.
 
     Underlying WCS must be FITS-WCS.
     No axes are dropped from original FITS-WCS, even if sliced by an integer.
@@ -147,7 +148,8 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
 
 
 def _resample_fitswcs(fitswcs, factor, offset=0):
-    """Resample the plate scale of a FITS-WCS by a given factor.
+    """
+    Resample the plate scale of a FITS-WCS by a given factor.
 
     ``factor`` and ``offset`` inputs are in pixel order.
 
