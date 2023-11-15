@@ -23,7 +23,7 @@ def unwrap_wcs_to_fitswcs(wcs):
 
     Parameters
     ----------
-    wcs: `BaseWCSWrapper`
+    wcs: `~astropy.wcs.wcsapi.BaseWCSWrapper`
         The WCS Wrapper object.
         Base level WCS implementation must be FITS-WCS.
 
