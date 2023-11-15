@@ -1,7 +1,11 @@
 import functools
 
-MISSING_MATPLOTLIB_ERROR_MSG = ("Matplotlib can not be imported, so the default plotting "
-                                "functionality is disabled. Please install matplotlib.")
+MISSING_MATPLOTLIB_ERROR_MSG = ("matplotlib can not be imported, so the default plotting "
+                                "functionality is disabled. Please install matplotlib")
+MISSING_ANIMATORS_ERROR_MSG = ("mpl_animators can not be imported, so the default plotting "
+                               "functionality is disabled. Please install mpl_animators")
+
+__all__ = ['PlotterDescriptor', 'MISSING_MATPLOTLIB_ERROR_MSG', 'MISSING_ANIMATORS_ERROR_MSG']
 
 
 class PlotterDescriptor:
@@ -29,16 +33,20 @@ class PlotterDescriptor:
         # delay the import of matplotlib until the plotter is first
         # accessed.
         if self._default_type in ("mpl_plotter", "mpl_sequence_plotter"):
-            try:
-                if self._default_type == "mpl_plotter":
+            if self._default_type == "mpl_plotter":
+                try:
                     from ndcube.visualization.mpl_plotter import MatplotlibPlotter
                     return MatplotlibPlotter
-                elif self._default_type == "mpl_sequence_plotter":
+                except ImportError as e:
+                    if raise_error:
+                        raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
+            elif self._default_type == "mpl_sequence_plotter":
+                try:
                     from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
                     return MatplotlibSequencePlotter
-            except ImportError as e:
-                if raise_error:
-                    raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
+                except ImportError as e:
+                    if raise_error:
+                        raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
 
         elif self._default_type is not None:
             return self._default_type
