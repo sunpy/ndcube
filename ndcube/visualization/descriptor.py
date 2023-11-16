@@ -1,8 +1,8 @@
 import functools
 
-MISSING_MATPLOTLIB_ERROR_MSG = ("matplotlib can not be imported, so the default plotting "
+MISSING_MATPLOTLIB_ERROR_MSG = ("matplotlib cannot be imported, so the default plotting "
                                 "functionality is disabled. Please install matplotlib")
-MISSING_ANIMATORS_ERROR_MSG = ("mpl_animators can not be imported, so the default plotting "
+MISSING_ANIMATORS_ERROR_MSG = ("mpl_animators cannot be imported, so the default plotting "
                                "functionality is disabled. Please install mpl_animators")
 
 __all__ = ['PlotterDescriptor', 'MISSING_MATPLOTLIB_ERROR_MSG', 'MISSING_ANIMATORS_ERROR_MSG']
