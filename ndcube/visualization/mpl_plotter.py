@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
-from mpl_animators import ArrayAnimatorWCS
 
 from . import plotting_utils as utils
 from .base import BasePlotter
+from .descriptor import MISSING_ANIMATORS_ERROR_MSG
 
 __all__ = ['MatplotlibPlotter']
 
@@ -189,9 +189,15 @@ class MatplotlibPlotter(BasePlotter):
 
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
+        try:
+            from mpl_animators import ArrayAnimatorWCS
+        except ImportError as e:
+            raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
+
         # Derive inputs for animation object and instantiate.
         data, wcs, plot_axes, coord_params = self._prep_animate_args(wcs, plot_axes,
                                                                      axes_units, data_unit)
+
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         # We need to modify the visible axes after the axes object has been created.
