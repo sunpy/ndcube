@@ -34,6 +34,7 @@ jobs:
     needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
+      default_python: '3.9'
       submodules: false
       coverage: codecov
       toxdeps: tox-pypi-filter
