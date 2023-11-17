@@ -1,1 +1,0 @@
-Adds ``None`` check on ``self.aligned_axes`` to ``NDCollection.copy()`` and ``NDCollection.pop()`` which raised a ``AttributeError``

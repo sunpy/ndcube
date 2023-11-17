@@ -1,7 +1,0 @@
-- Dropped Python 3.8 support
-
-- Increased minimum required for ``astropy`` to 5.0
-
-- Increased minimum required for ``numpy`` to 1.21
-
-- Increased minimum required for ``gwcs`` to 0.18.

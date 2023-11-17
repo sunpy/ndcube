@@ -1,1 +1,0 @@
-Fix docstring causing doc build problems for some users.
