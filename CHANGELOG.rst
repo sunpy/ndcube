@@ -1,3 +1,13 @@
+2.1.4 (2023-11-16)
+==================
+
+This is aimed as a maintenance release, to update some CI/CD and package template related items.
+
+Trivial/Internal Changes
+------------------------
+
+- Updated the error messages when missing either ``matplotlib`` or ``mpl_animators`` when creating a plot. (`#651 <https://github.com/sunpy/ndcube/pull/651>`__)
+
 v2.1.3 (2023-07-08)
 ===================
 
