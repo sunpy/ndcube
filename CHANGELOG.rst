@@ -1,3 +1,35 @@
+2.2.0 (2023-11-16)
+==================
+
+Backwards Incompatible Changes
+------------------------------
+
+- `ndcube.NDCollection.aligned_axes` attribute is now property. (`#607 <https://github.com/sunpy/ndcube/pull/607>`__)
+- Dropped Python 3.8 support
+- Increased minimum required for ``astropy`` to 5.0
+- Increased minimum required for ``numpy`` to 1.21
+- Increased minimum required for ``gwcs`` to 0.18. (`#636 <https://github.com/sunpy/ndcube/pull/636>`__)
+
+Features
+--------
+
+- Provides `~ndcube.wcs.tools.unwrap_wcs_to_fitswcs`, a function to create a `astropy.wcs.WCS` instance equivalent to a sliced and/or resampled WCS instance.
+  Only valid if the underlying implementation of the wrapped WCS instance is also an `astropy.wcs.WCS` instance. (`#649 <https://github.com/sunpy/ndcube/pull/649>`__)
+
+Bug Fixes
+---------
+
+- Fix docstring causing doc build problems for some users. (`#600 <https://github.com/sunpy/ndcube/pull/600>`__)
+- Fixes a bug where passing a string representation of a unit to `ndcube.NDCube.to` raised a `TypeError`. (`#605 <https://github.com/sunpy/ndcube/pull/605>`__)
+- Keywords for ``sequence_axis_coords`` and ``sequence_axis_unit`` were not passed to the ``SequenceAnimator`` constructor.
+  This is now fixed. (`#607 <https://github.com/sunpy/ndcube/pull/607>`__)
+- Adds ``None`` check on ``self.aligned_axes`` to ``NDCollection.copy()`` and ``NDCollection.pop()`` which raised a ``AttributeError`` (`#646 <https://github.com/sunpy/ndcube/pull/646>`__)
+
+Trivial/Internal Changes
+------------------------
+
+- Updated the error messages when missing either ``matplotlib`` or ``mpl_animators`` when creating a plot. (`#651 <https://github.com/sunpy/ndcube/pull/651>`__)
+
 v2.1.0 (2023-03-01)
 ===================
 
