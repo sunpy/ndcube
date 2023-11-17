@@ -77,6 +77,7 @@ jobs:
     needs: [test]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
     with:
+      python-version: '3.9'
       test_extras: 'dev'
       test_command: 'pytest -p no:warnings --doctest-rst -m "not mpl_image_compare" --pyargs ndcube'
       submodules: false
