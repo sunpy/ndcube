@@ -46,8 +46,8 @@ except ImportError:
 
         # Check that the number of classes matches the number of inputs
         if len(world_objects) != len(classes):
-            raise ValueError("Number of world inputs ({}) does not match "
-                             "expected ({})".format(len(world_objects), len(classes)))
+            raise ValueError(f"Number of world inputs ({len(world_objects)}) does not match "
+                             f"expected ({len(classes)})")
 
         # Determine whether the classes are uniquely matched, that is we check
         # whether there is only one of each class.

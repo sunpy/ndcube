@@ -1,4 +1,4 @@
-name: rtd_ndcube
+name: ndcube
 channels:
   - conda-forge
 dependencies:
