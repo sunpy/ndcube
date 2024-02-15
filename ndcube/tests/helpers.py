@@ -164,4 +164,4 @@ def assert_collections_equal(collection1, collection2):
         elif isinstance(cube1, NDCubeSequence):
             assert_cubesequences_equal(cube1, cube2)
         else:
-            raise TypeError("Unsupported Type in NDCollection: {0}".format(type(cube1)))
+            raise TypeError(f"Unsupported Type in NDCollection: {type(cube1)}")

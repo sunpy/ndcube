@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
 import os
@@ -18,7 +17,7 @@ if on_rtd:
 # -- Project information
 project = 'ndcube'
 author = 'The SunPy Community'
-copyright = '{}, {}'.format(datetime.now().year, author)
+copyright = f'{datetime.now().year}, {author}'
 
 # The full version, including alpha/beta/rc tags
 from ndcube import __version__  # NOQA
