@@ -883,11 +883,44 @@ class NDCube(NDCubeBase):
             new_cube._global_coords = deepcopy(self.global_coords)
         return new_cube
 
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method == '__call__':
+            if ufunc == np.add:
+                if isinstance(inputs[0], NDCube):
+                    new_data = inputs[0].data + inputs[1]
+                    return new_data
+                else:
+                    return (self.__radd__(inputs[0]))
+            elif ufunc == np.subtract:
+                return (self.__rsub__(inputs[0]))
+            elif ufunc == np.multiply:
+                if isinstance(inputs[0], NDCube):
+                    new_data = inputs[0].data * inputs[1]
+                    return new_data
+                else:
+                    return (self.__rmul__(inputs[0]))
+            elif ufunc == np.equal:
+                if all(isinstance(inp, NDCube) for inp in inputs):
+                    return (np.equal(inputs[1].data, inputs[0].data))
+                else:
+                    NotImplemented
+            elif ufunc == np.maximum:
+                if all(isinstance(inp, NDCube) for inp in inputs):
+                    new_data = np.maximum(inputs[0].data, inputs[1].data)
+                    return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
+            elif ufunc == np.isinf:
+                if isinstance(inputs[0], NDCube):
+                    return (np.isinf(inputs[0].data))
+        else:
+            return NotImplemented
+
     def __neg__(self):
         return self._new_instance_from_op(-self.data, deepcopy(self.unit),
                                           deepcopy(self.uncertainty))
 
     def __add__(self, value):
+        if getattr(value, '__array_ufunc__', None) is None:
+            return NotImplemented
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
@@ -895,7 +928,7 @@ class NDCube(NDCubeBase):
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data + value.to_value(cube_unit)
+                new_data = self.__array_ufunc__(np.add, '__call__', self, value.to_value(cube_unit))
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -903,7 +936,7 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            new_data = self.data + value
+            new_data = self.__array_ufunc__(np.add, '__call__', self, value)
         return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
 
     def __radd__(self, value):
@@ -916,6 +949,8 @@ class NDCube(NDCubeBase):
         return self.__neg__().__add__(value)
 
     def __mul__(self, value):
+        if getattr(value, '__array_ufunc__', None) is None:
+            return NotImplemented
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, set the unit
@@ -929,7 +964,7 @@ class NDCube(NDCubeBase):
                 return NotImplemented
         else:
             new_unit = self.unit
-        new_data = self.data * value
+        new_data = self.__array_ufunc__(np.multiply, '__call__', self, value)
         new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
         new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
