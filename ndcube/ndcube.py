@@ -886,28 +886,32 @@ class NDCube(NDCubeBase):
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         if method == '__call__':
             if ufunc == np.add:
-                if isinstance(inputs[0], NDCube):
+                if isinstance(inputs[0], NDCube) and kwargs.get("dunder"):
                     new_data = inputs[0].data + inputs[1]
                     return new_data
+                elif isinstance(inputs[1] , NDCube) and kwargs.get("dunder"):
+                    return (self.__radd__(inputs[0]))
+                elif isinstance(inputs[0], NDCube) and not kwargs.get("dunder"):
+                    return (self.__add__(inputs[1]))
                 else:
                     return (self.__radd__(inputs[0]))
             elif ufunc == np.subtract:
+                if not kwargs.get("dunder"):
+                    if isinstance(inputs[0], NDCube):
+                        return (self.__sub__(inputs[1]))
+                    else:
+                        return (self.__rsub__(inputs[0]))
                 return (self.__rsub__(inputs[0]))
             elif ufunc == np.multiply:
-                if isinstance(inputs[0], NDCube):
+                if isinstance(inputs[0], NDCube) and kwargs.get("dunder"):
                     new_data = inputs[0].data * inputs[1]
                     return new_data
+                elif isinstance(inputs[1], NDCube) and kwargs.get("dunder"):
+                    return (self.__rmul__(inputs[0]))
+                elif isinstance(inputs[0], NDCube) and not kwargs.get("dunder"):
+                    return(self.__mul__(inputs[1]))
                 else:
                     return (self.__rmul__(inputs[0]))
-            elif ufunc == np.equal:
-                if all(isinstance(inp, NDCube) for inp in inputs):
-                    return (np.equal(inputs[1].data, inputs[0].data))
-                else:
-                    NotImplemented
-            elif ufunc == np.maximum:
-                if all(isinstance(inp, NDCube) for inp in inputs):
-                    new_data = np.maximum(inputs[0].data, inputs[1].data)
-                    return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
             elif ufunc == np.isinf:
                 if isinstance(inputs[0], NDCube):
                     return (np.isinf(inputs[0].data))
@@ -928,7 +932,7 @@ class NDCube(NDCubeBase):
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.__array_ufunc__(np.add, '__call__', self, value.to_value(cube_unit))
+                new_data = self.__array_ufunc__(np.add, '__call__', self, value.to_value(cube_unit), dunder =True)
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -936,7 +940,7 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            new_data = self.__array_ufunc__(np.add, '__call__', self, value)
+            new_data = self.__array_ufunc__(np.add, '__call__', self, value, dunder =True)
         return self._new_instance_from_op(new_data, deepcopy(self.unit), deepcopy(self.uncertainty))
 
     def __radd__(self, value):
@@ -964,7 +968,7 @@ class NDCube(NDCubeBase):
                 return NotImplemented
         else:
             new_unit = self.unit
-        new_data = self.__array_ufunc__(np.multiply, '__call__', self, value)
+        new_data = self.__array_ufunc__(np.multiply, '__call__', self, value, dunder =True)
         new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
         new_cube = self._new_instance_from_op(new_data, new_unit, new_uncertainty)
