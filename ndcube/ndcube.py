@@ -218,9 +218,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         Examples
         --------
         An example of cropping a region of interest on the Sun from a 3-D image-time cube
-            >>> point1 = [[-50*u.deg, -40*u.deg], None]  # doctest: +SKIP
-            >>> point2 = [[0*u.deg, -6*u.deg], None]  # doctest: +SKIP
-            >>> NDCube.crop_by_values(point1, point2) # doctest: +SKIP
+            >>> point1 = [SkyCoord(-50*u.deg, -40*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
+            >>> point2 = [SkyCoord(0*u.deg, -6*u.deg, frame=frames.HeliographicStonyhurst), None]  # doctest: +SKIP
+            >>> NDCube.crop(point1, point2) # doctest: +SKIP
 
         """
 
