@@ -1136,3 +1136,14 @@ def test_to_dask(ndcube_2d_dask):
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
+
+
+def test_squeeze(ndcube_4d_ln_l_t_lt):
+    same = ndcube_4d_ln_l_t_lt.squeeze()
+    assert np.array_equal(same.dimensions, ndcube_4d_ln_l_t_lt.dimensions)
+    same = same[0:1,:,:,:]
+    assert np.array_equal(same.dimensions, same.squeeze([1,2,3]).dimensions)
+    assert np.array_equal(same[0,:,:,:].dimensions, same.squeeze().dimensions)
+    same = same[:,:,0:1,:]
+    assert np.array_equal(same[0,:,0,:].dimensions, same.squeeze().dimensions)
+    assert np.array_equal(same[:,:,0,:].dimensions, same.squeeze([1,2]).dimensions)
