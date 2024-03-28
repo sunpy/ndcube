@@ -1186,3 +1186,46 @@ class NDCube(NDCubeBase):
             new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
 
         return new_cube
+
+    def squeeze(self, axis=None):
+        """Removes axes with length 1
+
+        Uses slicing to remove possibly redundant axes which 
+        have length 1.
+
+        Parameters
+        ----------
+        axis: array-like, optional
+            Specifies specific axes to be removed. If one of those axes
+            has length larger than 1, it gets ignored. If not specified,
+            all axes length 1 get removed.
+
+        Returns
+        -------
+        : `~ndcube.NDCube`
+            A new instance with the removed axes.
+        """
+        # List of positions for dimensions to be removed.
+        to_modify = []
+
+        # Checks which dimensions are to be removed.
+        for i, axis_length in enumerate(self.data.shape):
+
+            # Case in which no axis is specified.
+            if axis_length == 1 and axis is None:
+                to_modify.append(i)
+
+            # Case in which axis specified.
+            elif axis_length == 1 and axis is not None and i in axis:
+                to_modify.append(i)
+
+        # Create "mask" for the slicing.
+        arr = np.full(len(self.dimensions),slice(None))
+
+        # The "mask" contains slice(None) for the dimensions we ignore
+        # and 0 for the dimensions that are to be trimmed.
+        for i in to_modify:
+            arr[i] = 0
+
+        # We do the actual slicing.
+        return self[tuple(arr)]
