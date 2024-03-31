@@ -1197,7 +1197,7 @@ class NDCube(NDCubeBase):
         ----------
         axis: array-like, optional
             Specifies specific axes to be removed. If one of those axes
-            has length larger than 1, it gets ignored. If not specified,
+            has length larger than 1, an error is thrown. If not specified,
             all axes length 1 get removed.
 
         Returns
@@ -1205,27 +1205,23 @@ class NDCube(NDCubeBase):
         : `~ndcube.NDCube`
             A new instance with the removed axes.
         """
-        # List of positions for dimensions to be removed.
-        to_modify = []
-
-        # Checks which dimensions are to be removed.
-        for i, axis_length in enumerate(self.data.shape):
-
-            # Case in which no axis is specified.
-            if axis_length == 1 and axis is None:
-                to_modify.append(i)
-
-            # Case in which axis specified.
-            elif axis_length == 1 and axis is not None and i in axis:
-                to_modify.append(i)
-
-        # Create "mask" for the slicing.
-        arr = np.full(len(self.dimensions),slice(None))
-
-        # The "mask" contains slice(None) for the dimensions we ignore
-        # and 0 for the dimensions that are to be trimmed.
-        for i in to_modify:
-            arr[i] = 0
-
-        # We do the actual slicing.
-        return self[tuple(arr)]
+        # Build item to drop squeezed axes.
+        item = np.full(self.data.ndim, slice(None))
+        shape = np.asarray(self.data.shape)
+        if axis is None:
+            item[shape == 1] = 0
+        else:
+            # For simplicity sake, if axis is scalar make it a tuple.
+            if isinstance(axis, int):
+                axis = (axis,)
+            axis = np.asarray(axis)
+            # If user tries to squeeze an axis that is not length-1, raise an error.
+            if not (shape[axis] == 1).all():
+                raise ValueError("Cannot select an axis to squeeze out which has size not equal to one.")
+            item[axis] = 0
+        # As scalar NDCubes are not supported, raise error
+        # if operation would cause all axes to be squeezed.
+        if (item == 0).all():
+            raise ValueError("All axes length 1. Cannot squeeze NDCube to a scalar. Use axis= kwarg to specify a subset of axes to squeeze.")
+        # Drop squeezed axes by slicing cube.
+        return self[tuple(item)]

@@ -1142,8 +1142,13 @@ def test_squeeze(ndcube_4d_ln_l_t_lt):
     same = ndcube_4d_ln_l_t_lt.squeeze()
     assert np.array_equal(same.dimensions, ndcube_4d_ln_l_t_lt.dimensions)
     same = same[0:1,:,:,:]
-    assert np.array_equal(same.dimensions, same.squeeze([1,2,3]).dimensions)
-    assert np.array_equal(same[0,:,:,:].dimensions, same.squeeze().dimensions)
+    with pytest.raises(ValueError, match="Cannot select an axis to squeeze out which has size not equal to one."):
+        same.squeeze([0,1])
     same = same[:,:,0:1,:]
     assert np.array_equal(same[0,:,0,:].dimensions, same.squeeze().dimensions)
-    assert np.array_equal(same[:,:,0,:].dimensions, same.squeeze([1,2]).dimensions)
+    assert np.array_equal(same[:,:,0,:].dimensions, same.squeeze(2).dimensions)
+    same = same[:,0:1,:,:]
+    assert np.array_equal(same[:,0,0,:].dimensions, same.squeeze([1,2]).dimensions)
+    same = same[:,:,:,0:1]
+    with pytest.raises(ValueError, match="All axes length 1. Cannot squeeze NDCube to a scalar.  Use axis= kwarg to specify a subset of axes to squeeze."):
+        same.squeeze()
