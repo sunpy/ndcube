@@ -8,8 +8,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
-readme = "README.rst"
 requires-python = ">=3.9"
+readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "licenses/LICENSE.rst", content-type = "text/plain" }
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
@@ -19,18 +19,18 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
-    "pytest",
-    "pytest-doctestplus",
-    "pytest-cov",
+  "pytest",
+  "pytest-doctestplus",
+  "pytest-cov"
 ]
 docs = [
-    "sphinx",
-    "sphinx-automodapi",
+  "sphinx",
+  "sphinx-automodapi",
     "tomli; python_version <\"3.11\"",
 ]
 
 [project.urls]
-repository = "https://docs.sunpy.org/projects/ndcube/"
+repository = "https://docs.sunpy.org/projects/ndcube"
 
 [tool.setuptools]
 zip-safe = false

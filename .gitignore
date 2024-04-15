@@ -75,6 +75,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+# automodapi
+docs/api
 
 # PyBuilder
 .pybuilder/
@@ -180,7 +182,7 @@ Icon
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 
-### MacOS: https://raw.githubusercontent.com/github/gitignore/master/Global/macOS.gitignore
+# pytype static type analyzer
 .pytype/
 
 # General
@@ -236,8 +238,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-
-### Extra Python Items and SunPy Specific
 
 ### Extra Python Items and ndcube Specific
 .hypothesis

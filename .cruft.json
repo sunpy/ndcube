@@ -1,6 +1,6 @@
 {
-  "template": "/home/sam/Code/OpenAstronomy/../OpenAstronomy/packaging-guide",
-  "commit": "79c7c63fa9f20c7873063e08516778e99dd39318",
+  "template": "https://github.com/sunpy/package-template",
+  "commit": "6d6729b22066ef890e70c37438da70cac33e03b4",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -9,7 +9,7 @@
       "short_description": "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays.",
       "author_name": "The SunPy Community",
       "author_email": "sunpy@googlegroups.com",
-      "project_url": "https://docs.sunpy.org/projects/ndcube/",
+      "project_url": "https://docs.sunpy.org/projects/ndcube",
       "license": "BSD 2-Clause",
       "minimum_python_version": "3.9",
       "use_compiled_extensions": "n",
@@ -24,7 +24,7 @@
         "docs/_static",
         ".github/workflows/sub_package_update.yml"
       ],
-      "_template": "/home/sam/Code/OpenAstronomy/../OpenAstronomy/packaging-guide"
+      "_template": "https://github.com/sunpy/package-template"
     }
   },
   "directory": null

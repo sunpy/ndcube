@@ -1,5 +1,5 @@
 This project is based upon the OpenAstronomy package template
-(https://github.com/open-astronomy/package-template/) which is licenced under the terms
+(https://github.com/OpenAstronomy/package-template/) which is licensed under the terms
 of the following licence.
 
 ---
