@@ -20,10 +20,6 @@ extend-ignore = [
   "PT023", # Always use () on pytest decorators
 ]
 
-[flake8-tidy-imports]
-[flake8-tidy-imports.banned-api]
-"warnings.warn".msg = "Use sunpy specific warning helpers warn_* from sunpy.utils.exceptions"
-
 [per-file-ignores]
 # Part of configuration, not a package.
 "setup.py" = ["INP001"]
@@ -36,8 +32,6 @@ extend-ignore = [
 ]
 "__init__.py" = ["E402", "F401", "F403"]
 "test_*.py" = ["B011", "D", "E402", "PGH001", "S101"]
-# Need to import clients to register them, but don't use them in file
-"ndcube/net/__init__.py" = ["F811"]
 
 [lint.pydocstyle]
 convention = "numpy"
