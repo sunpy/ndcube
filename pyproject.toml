@@ -15,19 +15,35 @@ license = { file = "licenses/LICENSE.rst", content-type = "text/plain" }
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
-dependencies = []
+dependencies = [
+  "astropy>=5.0.6,!=5.1.0",
+  "gwcs>=0.18",
+  "numpy>=1.23.0",
+  "dask"
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
+  "dask",
   "pytest",
+  "pytest-astropy",
   "pytest-doctestplus",
-  "pytest-cov"
+  "pytest-mpl>=0.12",
+  "scipy",
+  "sunpy>=5.0.0"
 ]
 docs = [
+  "matplotlib",
+  "mpl-animators>=1.0",
+  "pytest-docstestplus>=0.9.0",
   "sphinx",
   "sphinx-automodapi",
-    "tomli; python_version <\"3.11\"",
+  "sphinx-changelog>=1.1.0",
+  "sphinx-gallery",
+  "sphinxext-opengraph",
+  "sunpy-sphinx-theme",
+  "sunpy>=5.0.0"
 ]
 
 [project.urls]
