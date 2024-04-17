@@ -45,7 +45,16 @@ docs = [
   "sunpy-sphinx-theme",
   "sunpy>=5.0.0"
 ]
-
+plotting = [
+  "matplotlib>=3.5.0",
+  "mpl_animators>=1.0",
+]
+reproject = [
+  "reproject>=0.7.1",
+]
+all = [
+  "ndcube[plotting, reproject]",
+]
 [project.urls]
 repository = "https://docs.sunpy.org/projects/ndcube"
 
