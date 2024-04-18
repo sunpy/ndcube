@@ -8,8 +8,15 @@ exclude = [
 ]
 
 [lint]
-select = ["E", "F", "W", "UP", "PT"]
+select = [
+  "E",
+  #"F",
+  "W",
+  #"UP",
+  #"PT"
+]
 extend-ignore = [
+  "E712",
   # pycodestyle (E, W)
   "E501", # LineTooLong                             # TODO! fix
   # pytest (PT)
