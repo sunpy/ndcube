@@ -18,8 +18,7 @@ authors = [
 dependencies = [
   "astropy>=5.0.6,!=5.1.0",
   "gwcs>=0.18",
-  "numpy>=1.23.0",
-  "dask"
+  "numpy>=1.23.0"
 ]
 dynamic = ["version"]
 

@@ -2,6 +2,8 @@
 skip = *.asdf,*.fits,*.fts,*.header,*.json,*.xsh,*cache*,*egg*,*extern*,.git,.idea,.tox,_build,*truncated,*.svg,.asv_env,.history
 ignore-words-list =
     alog,
+    aas,
+    Hart,
     nd,
     nin,
     observ,
