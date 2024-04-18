@@ -48,7 +48,6 @@ extensions = [
     'sphinx_automodapi.smart_resolver',
     'ndcube.utils.sphinx.code_context',
     'sphinx_changelog',
-    'pytest_doctestplus.sphinx.doctestplus',
     'sphinx_gallery.gen_gallery',
     "sphinxext.opengraph",
 ]
