@@ -20,7 +20,7 @@ extend-ignore = [
   "PT023", # Always use () on pytest decorators
 ]
 
-[per-file-ignores]
+[lint.per-file-ignores]
 # Part of configuration, not a package.
 "setup.py" = ["INP001"]
 "conftest.py" = ["INP001"]
