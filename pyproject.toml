@@ -30,13 +30,13 @@ tests = [
   "pytest-astropy",
   "pytest-doctestplus",
   "pytest-mpl>=0.12",
+  "pytest-xdist",
   "scipy",
   "sunpy>=5.0.0"
 ]
 docs = [
   "matplotlib",
   "mpl-animators>=1.0",
-  "pytest-docstestplus>=0.9.0",
   "sphinx",
   "sphinx-automodapi",
   "sphinx-changelog>=1.1.0",
