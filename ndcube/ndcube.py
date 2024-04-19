@@ -3,13 +3,13 @@ import textwrap
 import warnings
 from copy import deepcopy
 from typing import Any
-from collections.abc import Iterable
 from collections import namedtuple
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
+
+import numpy as np
 
 import astropy.nddata
 import astropy.units as u
-import numpy as np
 from astropy.units import UnitsError
 
 try:

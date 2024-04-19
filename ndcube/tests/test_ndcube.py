@@ -1,11 +1,12 @@
 from inspect import signature
 from textwrap import dedent
 
-import astropy.units as u
-import astropy.wcs
 import dask.array
 import numpy as np
 import pytest
+
+import astropy.units as u
+import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.nddata import UnknownUncertainty

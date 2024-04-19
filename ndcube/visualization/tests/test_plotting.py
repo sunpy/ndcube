@@ -1,8 +1,9 @@
-import astropy.units as u
 import matplotlib.pyplot as plt
 import mpl_animators
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.visualization.wcsaxes import WCSAxes
 from astropy.wcs import WCS
 

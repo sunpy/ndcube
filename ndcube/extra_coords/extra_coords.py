@@ -1,11 +1,12 @@
 import abc
 from typing import Any
-from collections.abc import Iterable
 from numbers import Integral
 from functools import reduce, partial
+from collections.abc import Iterable
+
+import numpy as np
 
 import astropy.units as u
-import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
@@ -15,9 +16,13 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_s
 
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
-
-from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
-                          SkyCoordTableCoordinate, TimeTableCoordinate)
+from .table_coord import (
+    BaseTableCoordinate,
+    MultipleTableCoordinate,
+    QuantityTableCoordinate,
+    SkyCoordTableCoordinate,
+    TimeTableCoordinate,
+)
 
 __all__ = ['ExtraCoordsABC', 'ExtraCoords']
 

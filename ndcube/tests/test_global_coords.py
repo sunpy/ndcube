@@ -1,6 +1,7 @@
-import astropy.units as u
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.spectral_coordinate import SpectralCoord
 from astropy.wcs.wcsapi.high_level_api import HighLevelWCSMixin

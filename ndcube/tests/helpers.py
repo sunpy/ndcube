@@ -6,16 +6,17 @@ import unittest
 from pathlib import Path
 from functools import wraps
 
-import astropy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_animators
 import numpy as np
 import pytest
+from numpy.testing import assert_equal
+
+import astropy
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
-from numpy.testing import assert_equal
 
 from ndcube import NDCube, NDCubeSequence
 

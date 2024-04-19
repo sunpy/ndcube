@@ -10,10 +10,12 @@ standardised and easy way.
 For example, there may be a region of interest you would like to crop out along a certain dimension
 of your cube. In this example, this method to slice an `~ndcube.NDCube` are illustrated.
 """
-import astropy.wcs
 import numpy as np
+
+import astropy.wcs
 from astropy import units as u
 from astropy.coordinates import SkyCoord, SpectralCoord
+
 from sunpy.coordinates import frames
 
 from ndcube import NDCube

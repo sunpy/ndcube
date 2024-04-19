@@ -1,12 +1,17 @@
-import astropy.units as u
 import gwcs.coordinate_frames as cf
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
-from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
-                                             SkyCoordTableCoordinate, TimeTableCoordinate)
+from ndcube.extra_coords.table_coord import (
+    MultipleTableCoordinate,
+    QuantityTableCoordinate,
+    SkyCoordTableCoordinate,
+    TimeTableCoordinate,
+)
 
 
 @pytest.fixture
