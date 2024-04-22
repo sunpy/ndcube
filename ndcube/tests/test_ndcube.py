@@ -1136,3 +1136,9 @@ def test_to_dask(ndcube_2d_dask):
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
+
+
+def test_ndcube_quantity(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    expected = u.Quantity(cube.data, cube.unit)
+    np.testing.assert_array_equal(cube.quantity, expected)
