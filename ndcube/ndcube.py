@@ -1,4 +1,5 @@
 import abc
+import numbers
 import textwrap
 import warnings
 from copy import deepcopy
@@ -1209,7 +1210,7 @@ class NDCube(NDCubeBase):
             item[shape == 1] = 0
         else:
             # For simplicity’s sake, if the axis is scalar make it a tuple.
-            if isinstance(axis, int):
+            if isinstance(axis, numbers.Integral):
                 axis = (axis,)
             axis = np.asarray(axis)
             if not (shape[axis] == 1).all():
