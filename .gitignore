@@ -248,6 +248,7 @@ docs/_build
 docs/generated
 docs/api
 docs/whatsnew/latest_changelog.txt
+docs/sg_execution_times.rst
 examples/**/*.asdf
 examples/**/*.csv
 figure_test_images*
