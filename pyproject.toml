@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "licenses/LICENSE.rst", content-type = "text/plain" }
 authors = [
@@ -24,20 +24,21 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
-  "dask",
   "pytest",
-  "pytest-astropy",
   "pytest-doctestplus",
-  "pytest-mpl>=0.12",
+  "pytest-cov",
   "pytest-xdist",
+  "pytest-astropy",
+  "pytest-mpl>=0.12",
+  "dask",
   "scipy",
   "sunpy>=5.0.0"
 ]
 docs = [
-  "matplotlib",
-  "mpl-animators>=1.0",
   "sphinx",
   "sphinx-automodapi",
+  "matplotlib",
+  "mpl-animators>=1.0",
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",

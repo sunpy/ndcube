@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/sunpy/package-template",
-  "commit": "6d6729b22066ef890e70c37438da70cac33e03b4",
+  "commit": "1eff2ed0ff32c123e64b5faacf7c505362cfbb92",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -11,7 +11,7 @@
       "author_email": "sunpy@googlegroups.com",
       "project_url": "https://docs.sunpy.org/projects/ndcube",
       "license": "BSD 2-Clause",
-      "minimum_python_version": "3.9",
+      "minimum_python_version": "3.10",
       "use_compiled_extensions": "n",
       "enable_dynamic_dev_versions": "y",
       "include_example_code": "n",
