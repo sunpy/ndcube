@@ -3,10 +3,11 @@ import copy
 from numbers import Integral
 from collections import defaultdict
 
-import astropy.units as u
 import gwcs
 import gwcs.coordinate_frames as cf
 import numpy as np
+
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model

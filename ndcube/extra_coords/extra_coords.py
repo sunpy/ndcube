@@ -1,10 +1,12 @@
 import abc
-from typing import Any, Tuple, Union, Iterable
+from typing import Any
 from numbers import Integral
 from functools import reduce, partial
+from collections.abc import Iterable
+
+import numpy as np
 
 import astropy.units as u
-import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
@@ -14,9 +16,13 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_s
 
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
-
-from .table_coord import (BaseTableCoordinate, MultipleTableCoordinate, QuantityTableCoordinate,
-                          SkyCoordTableCoordinate, TimeTableCoordinate)
+from .table_coord import (
+    BaseTableCoordinate,
+    MultipleTableCoordinate,
+    QuantityTableCoordinate,
+    SkyCoordTableCoordinate,
+    TimeTableCoordinate,
+)
 
 __all__ = ['ExtraCoordsABC', 'ExtraCoords']
 
@@ -41,10 +47,10 @@ class ExtraCoordsABC(abc.ABC):
     """
     @abc.abstractmethod
     def add(self,
-            name: Union[str, Iterable[str]],
-            array_dimension: Union[int, Iterable[int]],
+            name: str | Iterable[str],
+            array_dimension: int | Iterable[int],
             lookup_table: Any,
-            physical_types: Union[str, Iterable[str]] = None,
+            physical_types: str | Iterable[str] = None,
             **kwargs):
         """
         Add a coordinate to this `~ndcube.ExtraCoords` based on a lookup table.
@@ -73,7 +79,7 @@ class ExtraCoordsABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def mapping(self) -> Iterable[Tuple[int, int]]:
+    def mapping(self) -> Iterable[tuple[int, int]]:
         """
         The mapping between the array dimensions and pixel dimensions.
 
@@ -103,7 +109,7 @@ class ExtraCoordsABC(abc.ABC):
         """Return True if no extra coords present, else return False."""
 
     @abc.abstractmethod
-    def __getitem__(self, item: Union[str, int, slice, Iterable[Union[str, int, slice]]]) -> "ExtraCoordsABC":
+    def __getitem__(self, item: str | int | slice | Iterable[str | int | slice]) -> "ExtraCoordsABC":
         """
         ExtraCoords can be sliced with either a string, or a numpy like slice.
 

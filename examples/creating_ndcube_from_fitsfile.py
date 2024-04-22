@@ -8,6 +8,7 @@ Here we will use an example of a single image.
 """
 
 import matplotlib.pyplot as plt
+
 from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 from astropy.wcs import WCS

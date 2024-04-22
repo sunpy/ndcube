@@ -4,11 +4,12 @@ predictable NDCube objects.
 """
 import logging
 
-import astropy.nddata
-import astropy.units as u
 import dask.array
 import numpy as np
 import pytest
+
+import astropy.nddata
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta

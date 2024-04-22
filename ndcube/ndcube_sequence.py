@@ -2,8 +2,9 @@ import copy
 import numbers
 import textwrap
 
-import astropy.units as u
 import numpy as np
+
+import astropy.units as u
 
 from ndcube import utils
 from ndcube.visualization.descriptor import PlotterDescriptor
