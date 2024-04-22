@@ -1187,7 +1187,7 @@ class NDCube(NDCubeBase):
 
         return new_cube
 
-    def squeeze(self, *, axis=None):
+    def squeeze(self, axis=None):
         """
         Removes all axes with a length of 1.
 
