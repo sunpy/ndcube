@@ -2,13 +2,14 @@ import abc
 import textwrap
 import warnings
 from copy import deepcopy
-from typing import Any, Tuple, Union, Iterable, Optional
+from typing import Any
 from collections import namedtuple
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
+
+import numpy as np
 
 import astropy.nddata
 import astropy.units as u
-import numpy as np
 from astropy.units import UnitsError
 
 try:
@@ -72,7 +73,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @property
     @abc.abstractmethod
-    def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
+    def array_axis_physical_types(self) -> Iterable[tuple[str, ...]]:
         """
         Returns the WCS physical types that vary along each array axis.
 
@@ -89,9 +90,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @abc.abstractmethod
     def axis_world_coords(self,
-                          *axes: Union[int, str],
+                          *axes: int | str,
                           pixel_corners: bool = False,
-                          wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                          wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
                           ) -> Iterable[Any]:
         """
         Returns objects representing the world coordinates of pixel centers for a desired axes.
@@ -133,9 +134,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @abc.abstractmethod
     def axis_world_coords_values(self,
-                                 *axes: Union[int, str],
+                                 *axes: int | str,
                                  pixel_corners: bool = False,
-                                 wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                                 wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
                                  ) -> Iterable[u.Quantity]:
         """
         Returns the world coordinate values of all pixels for desired axes.
@@ -182,7 +183,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
     @abc.abstractmethod
     def crop(self,
              *points: Iterable[Any],
-             wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+             wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
              ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -225,9 +226,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @abc.abstractmethod
     def crop_by_values(self,
-                       *points: Iterable[Union[u.Quantity, float]],
-                       units: Optional[Iterable[Union[str, u.Unit]]] = None,
-                       wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                       *points: Iterable[u.Quantity | float],
+                       units: Iterable[str | u.Unit] | None = None,
+                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
                        ) -> "NDCubeABC":
         """
         Crop using real world coordinates.

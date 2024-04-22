@@ -7,9 +7,11 @@ exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
 
 # Prune folders
-prune .circleci
-prune .github
-prune changelog
+prune build
+prune docs/_build
+prune docs/api
+global-exclude *.pyc *.o
 
-# This subpackage is only used in development checkouts and should not be included in built tarballs
+# This subpackage is only used in development checkouts
+# and should not be included in built tarballs
 prune ndcube/_dev

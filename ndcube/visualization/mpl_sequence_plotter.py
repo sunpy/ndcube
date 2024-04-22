@@ -1,5 +1,6 @@
-from astropy.wcs.wcsapi import BaseLowLevelWCS
 from mpl_animators import ArrayAnimatorWCS
+
+from astropy.wcs.wcsapi import BaseLowLevelWCS
 
 from .base import BasePlotter
 from .plotting_utils import prep_plot_kwargs

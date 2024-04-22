@@ -6,16 +6,17 @@ import unittest
 from pathlib import Path
 from functools import wraps
 
-import astropy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_animators
 import numpy as np
 import pytest
+from numpy.testing import assert_equal
+
+import astropy
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
-from numpy.testing import assert_equal
 
 from ndcube import NDCube, NDCubeSequence
 
@@ -164,4 +165,4 @@ def assert_collections_equal(collection1, collection2):
         elif isinstance(cube1, NDCubeSequence):
             assert_cubesequences_equal(cube1, cube2)
         else:
-            raise TypeError("Unsupported Type in NDCollection: {0}".format(type(cube1)))
+            raise TypeError(f"Unsupported Type in NDCollection: {type(cube1)}")

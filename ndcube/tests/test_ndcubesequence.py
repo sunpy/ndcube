@@ -1,8 +1,9 @@
 import unittest
 
-import astropy.units as u
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.time import Time, TimeDelta
 
 from ndcube import NDCube, NDCubeSequence

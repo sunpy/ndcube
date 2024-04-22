@@ -1,6 +1,7 @@
 
 import numpy as np
 import pytest
+
 from astropy.nddata import StdDevUncertainty
 
 from ndcube.utils.cube import propagate_rebin_uncertainties
