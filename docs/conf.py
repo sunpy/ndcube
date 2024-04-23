@@ -1,3 +1,4 @@
+#
 # Configuration file for the Sphinx documentation builder.
 import os
 import warnings
@@ -16,7 +17,7 @@ if on_rtd:
 # -- Project information
 project = 'ndcube'
 author = 'The SunPy Community'
-copyright = '{}, {}'.format(datetime.now().year, author)
+copyright = f'{datetime.now().year}, {author}'
 
 # The full version, including alpha/beta/rc tags
 from ndcube import __version__  # NOQA
@@ -47,7 +48,6 @@ extensions = [
     'sphinx_automodapi.smart_resolver',
     'ndcube.utils.sphinx.code_context',
     'sphinx_changelog',
-    'pytest_doctestplus.sphinx.doctestplus',
     'sphinx_gallery.gen_gallery',
     "sphinxext.opengraph",
 ]

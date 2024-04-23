@@ -5,6 +5,7 @@ from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
 
 import numpy as np
+
 from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.wcs.wcsapi.high_level_api import default_order
 from astropy.wcs.wcsapi.utils import deserialize_class

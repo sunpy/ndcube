@@ -1,14 +1,16 @@
 import abc
+import numbers
 import textwrap
 import warnings
 from copy import deepcopy
-from typing import Any, Tuple, Union, Iterable, Optional
+from typing import Any
 from collections import namedtuple
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
+
+import numpy as np
 
 import astropy.nddata
 import astropy.units as u
-import numpy as np
 from astropy.units import UnitsError
 
 try:
@@ -35,6 +37,7 @@ __all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 # Create mapping to masked array types based on data array type for use in analysis methods.
 ARRAY_MASK_MAP = {}
 ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
+_NUMPY_COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
 try:
     import dask.array
     ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array
@@ -72,7 +75,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @property
     @abc.abstractmethod
-    def array_axis_physical_types(self) -> Iterable[Tuple[str, ...]]:
+    def array_axis_physical_types(self) -> Iterable[tuple[str, ...]]:
         """
         Returns the WCS physical types that vary along each array axis.
 
@@ -89,9 +92,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @abc.abstractmethod
     def axis_world_coords(self,
-                          *axes: Union[int, str],
+                          *axes: int | str,
                           pixel_corners: bool = False,
-                          wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                          wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
                           ) -> Iterable[Any]:
         """
         Returns objects representing the world coordinates of pixel centers for a desired axes.
@@ -133,9 +136,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @abc.abstractmethod
     def axis_world_coords_values(self,
-                                 *axes: Union[int, str],
+                                 *axes: int | str,
                                  pixel_corners: bool = False,
-                                 wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                                 wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
                                  ) -> Iterable[u.Quantity]:
         """
         Returns the world coordinate values of all pixels for desired axes.
@@ -182,7 +185,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
     @abc.abstractmethod
     def crop(self,
              *points: Iterable[Any],
-             wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+             wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
              ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -225,9 +228,9 @@ class NDCubeABC(astropy.nddata.NDDataBase):
 
     @abc.abstractmethod
     def crop_by_values(self,
-                       *points: Iterable[Union[u.Quantity, float]],
-                       units: Optional[Iterable[Union[str, u.Unit]]] = None,
-                       wcs: Optional[Union[BaseHighLevelWCS, ExtraCoordsABC]] = None
+                       *points: Iterable[u.Quantity | float],
+                       units: Iterable[str | u.Unit] | None = None,
+                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
                        ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -422,6 +425,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         axis_correlation_matrix = wcs.axis_correlation_matrix
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
+
+    @property
+    def quantity(self):
+        """Unitful representation of the NDCube data."""
+        return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
     def _generate_world_coords(self, pixel_corners, wcs):
         # TODO: We can improve this by not always generating all coordinates
@@ -1154,7 +1162,7 @@ class NDCube(NDCubeBase):
                 warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
                               "i.e. self.uncertainty is None.")
             elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-                warnings.warn("self.uncertainty is of type UnknownUncertainty which does not "
+                warnings.warn("Uncertainty is an UnknownUncertainty which does not "
                               "support uncertainty propagation.")
             elif (not operation_ignores_mask
                   and (self.mask is True or (self.mask is not None
@@ -1207,3 +1215,36 @@ class NDCube(NDCubeBase):
             new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
 
         return new_cube
+
+    def squeeze(self, axis=None):
+        """
+        Removes all axes with a length of 1.
+
+        Parameters
+        ----------
+        axis: array-like, optional
+            Specifies specific axes to be removed. If one of those axes
+            has length larger than 1, an error is thrown. If not specified,
+            all axes of length 1 get removed.
+
+        Returns
+        -------
+        `~ndcube.NDCube`
+            A new NDCube instance with the removed axes.
+        """
+        item = np.full(self.data.ndim, slice(None))
+        shape = np.asarray(self.data.shape)
+        if axis is None:
+            item[shape == 1] = 0
+        else:
+            # For simplicity’s sake, if the axis is scalar make it a tuple.
+            if isinstance(axis, numbers.Integral):
+                axis = (axis,)
+            axis = np.asarray(axis)
+            if not (shape[axis] == 1).all():
+                raise ValueError("Cannot select any axis to squeeze out, as none of them has size equal to one.")
+            item[axis] = 0
+        # Scalar NDCubes are not supported, so we raise error as the operation would cause all the axes to be squeezed.
+        if (item == 0).all():
+            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
+        return self[tuple(item)]

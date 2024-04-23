@@ -2,11 +2,12 @@ import numbers
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose, assert_equal
+
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs.wcsapi import HighLevelWCSWrapper
-from numpy.testing import assert_allclose, assert_equal
 
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
 

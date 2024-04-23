@@ -1,11 +1,12 @@
 from inspect import signature
 from textwrap import dedent
 
-import astropy.units as u
-import astropy.wcs
 import dask.array
 import numpy as np
 import pytest
+
+import astropy.units as u
+import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.nddata import UnknownUncertainty
@@ -787,10 +788,10 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
 
 
 def test_rebin(ndcube_3d_l_ln_lt_ectime):
-    # Execute rebin.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     bin_shape = (10, 2, 1)
-    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
+    with pytest.warns(UserWarning, match="Uncertainty is an UnknownUncertainty which does not support uncertainty propagation."):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
     output_time, = output.axis_world_coords(wcs=output.extra_coords)
 
@@ -844,7 +845,8 @@ def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     cube._extra_coords = ExtraCoords(cube)
     bin_shape = (10, 2, 1)
-    output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
+    with pytest.warns(UserWarning, match="Uncertainty is an UnknownUncertainty which does not support uncertainty propagation."):
+        output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
     assert output.extra_coords.is_empty
 
 
@@ -927,18 +929,21 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     bin_shape = (2, 4)
 
     cube._mask[:] = True
-    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
-                        operation_ignores_mask=False)
+    with pytest.warns(UserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
+                            operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = True
-    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
-                        operation_ignores_mask=False)
+    with pytest.warns(UserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
+                            operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = False
     cube._uncertainty = UnknownUncertainty(cube.data * 0.1)
-    output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
+    with pytest.warns(UserWarning, match="Uncertainty is an UnknownUncertainty which does not support uncertainty propagation."):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
 
 
@@ -1151,3 +1156,25 @@ def test_to_dask(ndcube_2d_dask):
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
+
+
+def test_squeeze(ndcube_4d_ln_l_t_lt):
+    assert np.array_equal(ndcube_4d_ln_l_t_lt.squeeze().dimensions, ndcube_4d_ln_l_t_lt.dimensions)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze().dimensions)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze(2).dimensions)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze([1,2]).dimensions)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0:1,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze(2).dimensions)
+
+
+def test_squeeze_error(ndcube_4d_ln_l_t_lt):
+    same = ndcube_4d_ln_l_t_lt.squeeze()[0:1,:,:,:]
+    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, as none of them has size equal to one."):
+        same.squeeze([0,1])
+    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
+        same[0:1,0:1,0:1,0:1].squeeze()
+
+
+def test_ndcube_quantity(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    expected = u.Quantity(cube.data, cube.unit)
+    np.testing.assert_array_equal(cube.quantity, expected)

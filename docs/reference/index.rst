@@ -12,5 +12,4 @@ API Reference
    mixins
    visualization
    utils
-   tests
    wcs

@@ -1,10 +1,72 @@
 [build-system]
 requires = [
-  "setuptools",
-  "setuptools_scm",
-  "wheel",
+  "setuptools>=62.1",
+  "setuptools_scm[toml]>=6.2",
+  "wheel"
 ]
-build-backend = 'setuptools.build_meta'
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ndcube"
+description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
+requires-python = ">=3.10"
+readme = { file = "README.rst", content-type = "text/x-rst" }
+license = { file = "licenses/LICENSE.rst", content-type = "text/plain" }
+authors = [
+  { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
+]
+dependencies = [
+  "astropy>=5.0.6,!=5.1.0",
+  "gwcs>=0.18",
+  "numpy>=1.23.0"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+tests = [
+  "pytest",
+  "pytest-doctestplus",
+  "pytest-cov",
+  "pytest-xdist",
+  "pytest-astropy",
+  "pytest-mpl>=0.12",
+  "dask",
+  "scipy",
+  "sunpy>=5.0.0"
+]
+docs = [
+  "sphinx",
+  "sphinx-automodapi",
+  "matplotlib",
+  "mpl-animators>=1.0",
+  "sphinx-changelog>=1.1.0",
+  "sphinx-gallery",
+  "sphinxext-opengraph",
+  "sunpy-sphinx-theme",
+  "sunpy>=5.0.0"
+]
+plotting = [
+  "matplotlib>=3.5.0",
+  "mpl_animators>=1.0",
+]
+reproject = [
+  "reproject>=0.7.1",
+]
+all = [
+  "ndcube[plotting, reproject]",
+]
+[project.urls]
+repository = "https://docs.sunpy.org/projects/ndcube"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["ndcube._dev*"]
+
+[tool.setuptools_scm]
+write_to = "ndcube/_version.py"
 
 [tool.towncrier]
     package = "ndcube"

@@ -1,6 +1,7 @@
 from numbers import Integral
 
 import numpy as np
+
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper

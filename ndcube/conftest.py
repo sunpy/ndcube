@@ -4,11 +4,12 @@ predictable NDCube objects.
 """
 import logging
 
-import astropy.nddata
-import astropy.units as u
 import dask.array
 import numpy as np
 import pytest
+
+import astropy.nddata
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
@@ -245,7 +246,7 @@ def wcs_3d_ln_lt_t_rotated():
         'NAXIS2': 5,
 
         'CTYPE3': 'TIME    ',
-        'CUNIT3': 'seconds',
+        'CUNIT3': 's',
         'CDELT3': 3,
         'CRPIX3': 0,
         'CRVAL3': 0,

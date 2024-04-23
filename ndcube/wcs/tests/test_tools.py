@@ -1,8 +1,9 @@
 import numpy as np
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
 from astropy.time import Time
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
-from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from ndcube.wcs.tools import unwrap_wcs_to_fitswcs
 from ndcube.wcs.wrappers import ResampledLowLevelWCS

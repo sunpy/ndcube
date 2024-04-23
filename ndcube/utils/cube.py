@@ -2,8 +2,9 @@ import inspect
 from functools import wraps
 from itertools import chain
 
-import astropy.nddata
 import numpy as np
+
+import astropy.nddata
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils

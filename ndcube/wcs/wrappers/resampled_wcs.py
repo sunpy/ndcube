@@ -1,4 +1,5 @@
 import numpy as np
+
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 __all__ = ['ResampledLowLevelWCS']
