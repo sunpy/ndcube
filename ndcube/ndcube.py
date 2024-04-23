@@ -948,6 +948,28 @@ class NDCube(NDCubeBase):
     def __truediv__(self, value):
         return self.__mul__(1/value)
 
+    def __pow__(self, value):
+        new_data = self.data ** value
+        new_unit = self.unit if self.unit is None else self.unit ** value
+        new_uncertainty = self.uncertainty
+
+        if self.uncertainty is not None:
+            try:
+                new_uncertainty = new_uncertainty.propagate(np.power, self, self.data ** value, correlation=1)
+            except ValueError as e:
+                if "unsupported operation" in e.args[0]:
+                    new_uncertainty = None
+                    warnings.warn(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.",
+                                  UserWarning, stacklevel=2)
+                elif "does not support uncertainty propagation" in e.args[0]:
+                    new_uncertainty = None
+                    warnings.warn(f"{e.args[0]} Setting uncertainties to None.",
+                                  UserWarning, stacklevel=2)
+                else:
+                    raise e
+
+        return self._new_instance_from_op(new_data, new_unit, new_uncertainty)
+
     def to(self, new_unit, **kwargs):
         """Convert instance to another unit.
 
