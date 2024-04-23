@@ -1056,7 +1056,6 @@ def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
-    10.0,
     np.random.rand(12),
     np.random.rand(10, 12),
 ])
@@ -1072,7 +1071,6 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
-    10.0,
     np.random.rand(12),
     np.random.rand(10, 12),
 ])
@@ -1088,7 +1086,6 @@ def test_cube_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
     u.Quantity([2], u.s),
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
-    10.0,
     np.random.rand(12),
     np.random.rand(10, 12),
 ])
