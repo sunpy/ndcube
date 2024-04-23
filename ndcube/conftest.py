@@ -42,9 +42,9 @@ def skycoord_2d_lut(shape):
     return SkyCoord(*data, unit=u.deg)
 
 
-def data_nd(shape):
+def data_nd(shape, dtype=float):
     nelem = np.prod(shape)
-    return np.arange(nelem).reshape(shape)
+    return np.arange(nelem, dtype=dtype).reshape(shape)
 
 
 def time_extra_coords(shape, axis, base):
@@ -329,7 +329,7 @@ def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
 def ndcube_4d_ln_lt_l_t(wcs_4d_t_l_lt_ln):
     shape = (5, 8, 10, 12)
     wcs_4d_t_l_lt_ln.array_shape = shape
-    data_cube = data_nd(shape)
+    data_cube = data_nd(shape, dtype=int)
     return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln)
 
 
@@ -478,7 +478,7 @@ def ndcube_2d_ln_lt_uncert(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
-    cube = NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
+    cube = NDCube(data_cube+1, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
     return cube
 
 
@@ -512,7 +512,7 @@ def ndcube_2d_ln_lt_uncert_ec(wcs_2d_lt_ln):
 def ndcube_2d_ln_lt_units(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape).astype(float)
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, unit=u.ct)
+    return NDCube(data_cube + 1, wcs=wcs_2d_lt_ln, unit=u.ct)
 
 
 @pytest.fixture
