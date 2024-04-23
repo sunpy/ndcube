@@ -1,0 +1,2 @@
+Added a new `~ndcube.NDCube.squeeze` method to `ndcube.NDCube`.
+It will remove all axes of length 1.

@@ -1,4 +1,5 @@
 import abc
+import numbers
 import textwrap
 import warnings
 from copy import deepcopy
@@ -1192,3 +1193,36 @@ class NDCube(NDCubeBase):
             new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
 
         return new_cube
+
+    def squeeze(self, axis=None):
+        """
+        Removes all axes with a length of 1.
+
+        Parameters
+        ----------
+        axis: array-like, optional
+            Specifies specific axes to be removed. If one of those axes
+            has length larger than 1, an error is thrown. If not specified,
+            all axes of length 1 get removed.
+
+        Returns
+        -------
+        `~ndcube.NDCube`
+            A new NDCube instance with the removed axes.
+        """
+        item = np.full(self.data.ndim, slice(None))
+        shape = np.asarray(self.data.shape)
+        if axis is None:
+            item[shape == 1] = 0
+        else:
+            # For simplicity’s sake, if the axis is scalar make it a tuple.
+            if isinstance(axis, numbers.Integral):
+                axis = (axis,)
+            axis = np.asarray(axis)
+            if not (shape[axis] == 1).all():
+                raise ValueError("Cannot select any axis to squeeze out, as none of them has size equal to one.")
+            item[axis] = 0
+        # Scalar NDCubes are not supported, so we raise error as the operation would cause all the axes to be squeezed.
+        if (item == 0).all():
+            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
+        return self[tuple(item)]
