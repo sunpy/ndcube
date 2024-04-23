@@ -1,0 +1,1 @@
+Add __pow__ to ndcube.NDCube.
