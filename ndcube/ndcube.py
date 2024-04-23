@@ -8,7 +8,6 @@ from collections import namedtuple
 from collections.abc import Mapping, Iterable
 
 import numpy as np
-from deprecated import deprecated
 
 import astropy.nddata
 import astropy.units as u
@@ -29,6 +28,7 @@ from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.utils.exceptions import NDCubeDeprecationWarning
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
@@ -417,6 +417,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     @deprecated(version='3.0.0', reason='Quantity removed. Use `ndcube.NDCube.shape` instead.')
     @property
     def dimensions(self):
+        warnings.warn("Quantity removed. Use `ndcube.NDCube.shape` instead.", NDCubeDeprecationWarning)
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
