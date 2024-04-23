@@ -46,7 +46,11 @@ class NDCubeSequenceBase:
         """
         The length of each axis including the sequence axis.
         """
-        return self._dimensions
+        return tuple([d * u.pix for d in self._shape])
+
+    @property
+    def shape(self):
+        return self._shape
 
     @property
     def _shape(self):
