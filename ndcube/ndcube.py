@@ -952,7 +952,7 @@ class NDCube(NDCubeBase):
             except ValueError as e:
                 if "unsupported operation" in e.args[0]:
                     new_uncertainty = None
-                    warnings.warn(f"{type(self.uncertainty)} does not support power propagation of uncertainties, setting uncertainties to None.",
+                    warnings.warn(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.",
                                   UserWarning, stacklevel=2)
                 else:
                     raise e
