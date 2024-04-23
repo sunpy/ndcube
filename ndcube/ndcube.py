@@ -8,6 +8,7 @@ from collections import namedtuple
 from collections.abc import Mapping, Iterable
 
 import numpy as np
+from deprecated import deprecated
 
 import astropy.nddata
 import astropy.units as u
@@ -413,9 +414,14 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             CompoundLowLevelWCS(self.wcs.low_level_wcs, self._extra_coords.wcs, mapping=mapping)
         )
 
+    @deprecated(version='3.0.0', reason='Quantity removed. Use `ndcube.NDCube.shape` instead.')
     @property
     def dimensions(self):
         return u.Quantity(self.data.shape, unit=u.pix)
+
+    @property
+    def shape(self):
+        return self.data.shape
 
     @property
     def array_axis_physical_types(self):
