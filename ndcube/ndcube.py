@@ -942,10 +942,7 @@ class NDCube(NDCubeBase):
 
     def __pow__(self, value):
         new_data = self.data ** value
-        new_unit = self.unit
-        if self.unit is not None:
-            new_unit = self.unit ** value
-
+        new_unit = self.unit if self.unit is None else self.unit ** value
         new_uncertainty = self.uncertainty
 
         if self.uncertainty is not None:
