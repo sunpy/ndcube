@@ -479,7 +479,7 @@ def ndcube_2d_ln_lt_uncert(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
-    cube = NDCube(data_cube+1, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
+    cube = NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
     return cube
 
 
