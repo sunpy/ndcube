@@ -948,7 +948,6 @@ class NDCube(NDCubeBase):
         if self.uncertainty is not None:
             try:
                 new_uncertainty = new_uncertainty.propagate(np.power, self, self.data ** value, correlation=1)
-
             except ValueError as e:
                 if "unsupported operation" in e.args[0]:
                     new_uncertainty = None
