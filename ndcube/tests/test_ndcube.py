@@ -1141,7 +1141,7 @@ def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, p
 
 @pytest.mark.filterwarnings('ignore::RuntimeWarning')
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
-def test_cube_arithmetic_power_uncertainty(ndcube_2d_ln_lt_uncert, power):
+def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
     with pytest.warns(UserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
         new_cube = ndcube_2d_ln_lt_uncert ** power
