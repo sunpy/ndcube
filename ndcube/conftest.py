@@ -246,7 +246,7 @@ def wcs_3d_ln_lt_t_rotated():
         'NAXIS2': 5,
 
         'CTYPE3': 'TIME    ',
-        'CUNIT3': 'seconds',
+        'CUNIT3': 's',
         'CDELT3': 3,
         'CRPIX3': 0,
         'CRVAL3': 0,
