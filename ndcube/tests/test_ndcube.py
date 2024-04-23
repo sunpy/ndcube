@@ -1101,6 +1101,20 @@ def test_cube_arithmetic_divide(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units / value
     check_arithmetic_value_and_units(new_cube, cube_quantity / value)
 
+@pytest.mark.parametrize('value', [1, 2, -1])
+def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    with np.errstate(divide='ignore'):
+        new_cube =  value / ndcube_2d_ln_lt_units
+        check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
+
+@pytest.mark.parametrize('value', [1, 2, -1])
+def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
+    cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
+    with pytest.warns(UserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+        with np.errstate(divide='ignore'):
+            new_cube =  value / ndcube_4d_unit_uncertainty
+            check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
 
 def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
     check_arithmetic_value_and_units(
