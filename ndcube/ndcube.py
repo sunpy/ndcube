@@ -948,6 +948,9 @@ class NDCube(NDCubeBase):
     def __truediv__(self, value):
         return self.__mul__(1/value)
 
+    def __rtruediv__(self, value):
+        return self.__pow__(-1)
+
     def __pow__(self, value):
         new_data = self.data ** value
         new_unit = self.unit if self.unit is None else self.unit ** value
