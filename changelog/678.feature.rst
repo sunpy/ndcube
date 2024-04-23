@@ -1,1 +1,1 @@
-Add __pow__ to ndcube.NDCube.
+Enable `~ndcube.NDCube` to be raised to a power.
