@@ -1151,3 +1151,9 @@ def test_squeeze_error(ndcube_4d_ln_l_t_lt):
         same.squeeze([0,1])
     with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
         same[0:1,0:1,0:1,0:1].squeeze()
+
+
+def test_ndcube_quantity(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    expected = u.Quantity(cube.data, cube.unit)
+    np.testing.assert_array_equal(cube.quantity, expected)
