@@ -49,7 +49,7 @@ class NDCubeSequenceBase:
         return self._dimensions
 
     @property
-    def _dimensions(self):
+    def _shape(self):
         dimensions = [len(self.data)] + list(self.data[0].shape)
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
