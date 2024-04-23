@@ -46,7 +46,7 @@ def test_wcs_object(all_ndcubes):
                          indirect=("ndc",))
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
-    assert len(sndc.dimensions) == 2
+    assert len(sndc.shape) == 2
     assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat",
                                                        "custom:pos.helioprojective.lon"}
     if sndc.uncertainty is not None:
@@ -82,7 +82,7 @@ def test_slicing_ln_lt(ndc, item):
                          indirect=("ndc",))
 def test_slicing_wave(ndc, item):
     sndc = ndc[item]
-    assert len(sndc.dimensions) == 1
+    assert len(sndc.shape) == 1
     assert set(sndc.wcs.world_axis_physical_types) == {"em.wl"}
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
@@ -117,7 +117,7 @@ def test_slicing_wave(ndc, item):
                          indirect=("ndc",))
 def test_slicing_split_celestial(ndc, item):
     sndc = ndc[item]
-    assert len(sndc.dimensions) == 2
+    assert len(sndc.shape) == 2
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
     if sndc.mask is not None:
@@ -815,7 +815,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     expected_time.format = "fits"
 
     # Confirm output is as expected.
-    assert (output.dimensions.value == np.array([1, 2, 8])).all()
+    assert (output.shape.value == np.array([1, 2, 8])).all()
     assert (output.data == expected_data).all()
     assert (output.mask == expected_mask).all()
     assert output.uncertainty == expected_uncertainty
@@ -1184,11 +1184,11 @@ def test_to_dask(ndcube_2d_dask):
 
 
 def test_squeeze(ndcube_4d_ln_l_t_lt):
-    assert np.array_equal(ndcube_4d_ln_l_t_lt.squeeze().dimensions, ndcube_4d_ln_l_t_lt.dimensions)
-    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze().dimensions)
-    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze(2).dimensions)
-    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze([1,2]).dimensions)
-    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0:1,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze(2).dimensions)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt.squeeze().shape, ndcube_4d_ln_l_t_lt.shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].shape, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze().shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].shape, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze(2).shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0,0,:].shape, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze([1,2]).shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0:1,0,:].shape, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze(2).shape)
 
 
 def test_squeeze_error(ndcube_4d_ln_l_t_lt):
