@@ -50,7 +50,7 @@ class NDCubeSequenceBase:
 
     @property
     def _dimensions(self):
-        dimensions = [len(self.data) * u.pix] + list(self.data[0].shape)
+        dimensions = [len(self.data)] + list(self.data[0].shape)
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
