@@ -1138,10 +1138,11 @@ class NDCube(NDCubeBase):
         if propagate_uncertainties:
             if self.uncertainty is None:
                 warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
-                              "i.e. self.uncertainty is None.")
+                              "i.e., the `uncertainty` keyword was never set on creation of this NDCube.")
             elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-                warnings.warn("Uncertainty is an UnknownUncertainty which does not "
-                              "support uncertainty propagation.")
+                warnings.warn("The set uncertainty on this NDCube has no known way to propagate forward and so will be dropped. "
+                              "To create an uncertainty that can propagate, please see "
+                              "https://docs.astropy.org/en/stable/uncertainty/index.html")
             elif (not operation_ignores_mask
                   and (self.mask is True or (self.mask is not None
                                              and not isinstance(self.mask, bool)
