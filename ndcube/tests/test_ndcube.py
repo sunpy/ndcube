@@ -790,7 +790,7 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
 def test_rebin(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     bin_shape = (10, 2, 1)
-    with pytest.warns(UserWarning, match="Uncertainty is an UnknownUncertainty which does not support uncertainty propagation."):
+    with pytest.warns(UserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
     output_time, = output.axis_world_coords(wcs=output.extra_coords)
@@ -815,7 +815,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     expected_time.format = "fits"
 
     # Confirm output is as expected.
-    assert (output.shape.value == np.array([1, 2, 8])).all()
+    assert (output.shape == np.array([1, 2, 8])).all()
     assert (output.data == expected_data).all()
     assert (output.mask == expected_mask).all()
     assert output.uncertainty == expected_uncertainty
@@ -845,7 +845,7 @@ def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     cube._extra_coords = ExtraCoords(cube)
     bin_shape = (10, 2, 1)
-    with pytest.warns(UserWarning, match="Uncertainty is an UnknownUncertainty which does not support uncertainty propagation."):
+    with pytest.warns(UserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
     assert output.extra_coords.is_empty
 
@@ -942,7 +942,7 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
 
     cube._mask = False
     cube._uncertainty = UnknownUncertainty(cube.data * 0.1)
-    with pytest.warns(UserWarning, match="Uncertainty is an UnknownUncertainty which does not support uncertainty propagation."):
+    with pytest.warns(UserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
 
@@ -1122,6 +1122,33 @@ def test_cube_arithmetic_add_notimplementederror(ndcube_2d_ln_lt_units):
 def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
     with pytest.raises(TypeError):
         _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
+
+
+
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power(ndcube_2d_ln_lt, power):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt.data, ndcube_2d_ln_lt.unit)
+    with np.errstate(divide='ignore'):
+        new_cube = ndcube_2d_ln_lt ** power
+        check_arithmetic_value_and_units(new_cube, cube_quantity**power)
+
+
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, power):
+    cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
+    with pytest.warns(UserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+        with np.errstate(divide='ignore'):
+            new_cube = ndcube_4d_unit_uncertainty ** power
+            check_arithmetic_value_and_units(new_cube, cube_quantity**power)
+
+
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
+    with pytest.warns(UserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
+        with np.errstate(divide='ignore'):
+            new_cube = ndcube_2d_ln_lt_uncert ** power
+            check_arithmetic_value_and_units(new_cube, cube_quantity**power)
 
 
 @pytest.mark.parametrize('new_unit', [u.mJ, 'mJ'])

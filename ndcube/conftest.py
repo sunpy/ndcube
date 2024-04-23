@@ -43,9 +43,9 @@ def skycoord_2d_lut(shape):
     return SkyCoord(*data, unit=u.deg)
 
 
-def data_nd(shape):
+def data_nd(shape, dtype=float):
     nelem = np.prod(shape)
-    return np.arange(nelem).reshape(shape)
+    return np.arange(nelem, dtype=dtype).reshape(shape)
 
 
 def time_extra_coords(shape, axis, base):
@@ -330,7 +330,7 @@ def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
 def ndcube_4d_ln_lt_l_t(wcs_4d_t_l_lt_ln):
     shape = (5, 8, 10, 12)
     wcs_4d_t_l_lt_ln.array_shape = shape
-    data_cube = data_nd(shape)
+    data_cube = data_nd(shape, dtype=int)
     return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln)
 
 

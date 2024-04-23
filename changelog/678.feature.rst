@@ -1,0 +1,1 @@
+Enable `~ndcube.NDCube` to be raised to a power.
