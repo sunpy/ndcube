@@ -953,6 +953,10 @@ class NDCube(NDCubeBase):
                     new_uncertainty = None
                     warnings.warn(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.",
                                   UserWarning, stacklevel=2)
+                elif "UnknownUncertainty does not support uncertainty propagation with correlation." in e.args[0]:
+                    new_uncertainty = None
+                    warnings.warn(f"{type(self.uncertainty)} does not support uncertainty propagation with correlation. Setting uncertainties to None.",
+                                  UserWarning, stacklevel=2)
                 else:
                     raise e
 

@@ -1119,8 +1119,17 @@ def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
         _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
 
 
+@pytest.mark.filterwarnings('ignore::RuntimeWarning')
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
-def test_cube_arithmetic_power(ndcube_2d_ln_lt_uncert, power):
+def test_cube_arithmetic_power(ndcube_4d_unit_uncertainty, power):
+    cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
+    new_cube = ndcube_4d_unit_uncertainty ** power
+    check_arithmetic_value_and_units(new_cube, cube_quantity**power)
+
+
+@pytest.mark.filterwarnings('ignore::RuntimeWarning')
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power_uncertainty_nounit(ndcube_2d_ln_lt_uncert, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
     new_cube = ndcube_2d_ln_lt_uncert ** power
     check_arithmetic_value_and_units(new_cube, cube_quantity**power)
