@@ -36,6 +36,7 @@ __all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 # Create mapping to masked array types based on data array type for use in analysis methods.
 ARRAY_MASK_MAP = {}
 ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
+_NUMPY_COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
 try:
     import dask.array
     ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array
@@ -423,6 +424,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         axis_correlation_matrix = wcs.axis_correlation_matrix
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
+
+    @property
+    def quantity(self):
+        """Unitful representation of the NDCube data."""
+        return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
     def _generate_world_coords(self, pixel_corners, wcs):
         # TODO: We can improve this by not always generating all coordinates
