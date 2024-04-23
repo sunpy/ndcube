@@ -942,7 +942,10 @@ class NDCube(NDCubeBase):
 
     def __pow__(self, value):
         new_data = self.data ** value
-        new_unit = self.unit ** value
+        new_unit = self.unit
+        if self.unit is not None:
+            new_unit = self.unit ** value
+
         new_uncertainty = self.uncertainty
 
         if self.uncertainty is not None:
@@ -950,10 +953,10 @@ class NDCube(NDCubeBase):
                 new_uncertainty = new_uncertainty.propagate(np.power, self, self.data ** value, correlation=1)
 
             except ValueError as e:
-                if "unsupported operation: power" in e.args[0]:
+                if "unsupported operation" in e.args[0]:
                     new_uncertainty = None
-                    raise warnings.warn(f"{type(self.uncertainty)} does not support power propagation of uncertainties, setting uncertainties to None.",
-                                        UserWarning)
+                    warnings.warn(f"{type(self.uncertainty)} does not support power propagation of uncertainties, setting uncertainties to None.",
+                                  UserWarning, stacklevel=2)
                 else:
                     raise e
 
