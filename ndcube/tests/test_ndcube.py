@@ -1143,7 +1143,7 @@ def test_squeeze(ndcube_4d_ln_l_t_lt):
     assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze().dimensions)
     assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze(2).dimensions)
     assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze([1,2]).dimensions)
-assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0:1,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze(2).dimensions)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0:1,0,:].dimensions, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze(2).dimensions)
 
 
 def test_squeeze_error(ndcube_4d_ln_l_t_lt):
