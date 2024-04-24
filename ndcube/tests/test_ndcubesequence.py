@@ -1,4 +1,3 @@
-import unittest
 
 import numpy as np
 import pytest
@@ -19,9 +18,8 @@ def derive_sliced_cube_dims(orig_cube_dims, tuple_item):
             if isinstance(s, int):
                 del expected_cube_dims[i]
             else:
-                expected_cube_dims[i] = float(s.stop - s.start) * u.pix
-    expected_cube_dims *= u.pix
-    return expected_cube_dims
+                expected_cube_dims[i] = float(s.stop - s.start)
+    return tuple(expected_cube_dims)
 
 
 @pytest.mark.parametrize("ndc, item",
@@ -35,12 +33,12 @@ def derive_sliced_cube_dims(orig_cube_dims, tuple_item):
 def test_slice_sequence_axis(ndc, item):
     # Calculate expected dimensions of cubes with sequence after slicing.
     tuple_item = item if isinstance(item, tuple) else (item,)
-    expected_cube0_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]][0].dimensions, tuple_item)
+    expected_cube0_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]][0].shape, tuple_item)
     # Assert output is as expected.
     sliced_sequence = ndc[item]
     assert isinstance(sliced_sequence, NDCubeSequence)
-    assert int(sliced_sequence.dimensions[0].value) == tuple_item[0].stop - tuple_item[0].start
-    assert (sliced_sequence[0].dimensions == expected_cube0_dims).all()
+    assert int(sliced_sequence.shape[0]) == tuple_item[0].stop - tuple_item[0].start
+    assert np.all(sliced_sequence[0].shape == expected_cube0_dims)
 
 
 @pytest.mark.parametrize("ndc, item",
@@ -54,9 +52,9 @@ def test_slice_sequence_axis(ndc, item):
 def test_extract_ndcube(ndc, item):
     cube = ndc[item]
     tuple_item = item if isinstance(item, tuple) else (item,)
-    expected_cube_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]].dimensions, tuple_item)
+    expected_cube_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]].shape, tuple_item)
     assert isinstance(cube, NDCube)
-    assert (cube.dimensions == expected_cube_dims).all()
+    assert np.all(cube.shape == expected_cube_dims)
 
 
 @pytest.mark.parametrize("ndc, item, expected_common_axis",
@@ -72,93 +70,74 @@ def test_slice_common_axis(ndc, item, expected_common_axis):
     assert sliced_sequence._common_axis == expected_common_axis
 
 
-@pytest.mark.parametrize("ndc, item, expected_dimensions",
+@pytest.mark.parametrize("ndc, item, expected_shape",
                          (
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7], (3 * u.pix,
-                                                                             2 * u.pix,
-                                                                             [2., 3., 1.] * u.pix,
-                                                                             4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7, 0], (3 * u.pix,
-                                                                                [2., 3., 1.] * u.pix,
-                                                                                4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[2:4], (2 * u.pix,
-                                                                             2 * u.pix,
-                                                                             1 * u.pix,
-                                                                             4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6], (2 * u.pix,
-                                                                             2 * u.pix,
-                                                                             3 * u.pix,
-                                                                             4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6, :, 0], (3 * u.pix,
-                                                                                   2 * u.pix,
-                                                                                   4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0::, 0, 0], (4 * u.pix,
-                                                                                   2 * u.pix))
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 1:7], (3, 2, (2, 3, 1), 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0, 1:7], (3, (2, 3, 1), 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 2:4], (2, 2, 1, 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 0:6], (2, 2, 3, 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0, 0:6], (2, 3, 4)),
                          ),
                          indirect=("ndc",))
-def test_index_as_cube(ndc, item, expected_dimensions):
-    sliced_sequence = ndc.index_as_cube[item]
-    sliced_dims = sliced_sequence.dimensions
-    for dim, expected_dim in zip(sliced_dims, expected_dimensions):
-        (dim == expected_dim).all()
+def test_index_as_cube(ndc, item, expected_shape):
+    assert (ndc.index_as_cube[item].shape == expected_shape)
 
 
-@pytest.mark.parametrize("ndc, axis, expected_dimensions",
+@pytest.mark.parametrize("ndc, axis, expected_shape",
                          (
-                             ("ndcubesequence_4c_ln_lt_l", 0, (8 * u.pix,
-                                                               3 * u.pix,
-                                                               4 * u.pix)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", 1, (12 * u.pix,
-                                                                    2 * u.pix,
-                                                                    4 * u.pix))
+                             ("ndcubesequence_4c_ln_lt_l", 0, (8,
+                                                               3,
+                                                               4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", 1, (12,
+                                                                    2,
+                                                                    4))
                          ),
                          indirect=("ndc",))
-def test_explode_along_axis_common_axis_None(ndc, axis, expected_dimensions):
+def test_explode_along_axis_common_axis_None(ndc, axis, expected_shape):
     exploded_sequence = ndc.explode_along_axis(axis)
-    assert exploded_sequence.dimensions == expected_dimensions
+    assert np.all(exploded_sequence.shape == expected_shape)
     assert exploded_sequence._common_axis is None
 
 
 @pytest.mark.parametrize("ndc", (('ndcubesequence_4c_ln_lt_l_cax1',)), indirect=("ndc",))
 def test_explode_along_axis_common_axis_same(ndc):
     exploded_sequence = ndc.explode_along_axis(2)
-    assert exploded_sequence.dimensions == (16*u.pix, 2*u.pix, 3*u.pix)
+    assert exploded_sequence.shape == (16, 2, 3)
     assert exploded_sequence._common_axis == ndc._common_axis
 
 
 @pytest.mark.parametrize("ndc", (('ndcubesequence_4c_ln_lt_l_cax1',)), indirect=("ndc",))
 def test_explode_along_axis_common_axis_changed(ndc):
     exploded_sequence = ndc.explode_along_axis(0)
-    assert exploded_sequence.dimensions == (8*u.pix, 3*u.pix, 4*u.pix)
+    assert exploded_sequence.shape == (8, 3, 4)
     assert exploded_sequence._common_axis == ndc._common_axis - 1
 
 
-@pytest.mark.parametrize("ndc, expected_dimensions",
+@pytest.mark.parametrize("ndc, expected_shape",
                          (
-                             ("ndcubesequence_4c_ln_lt_l_cax1", (4 * u.pix,
-                                                                 2. * u.pix,
-                                                                 3. * u.pix,
-                                                                 4. * u.pix)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", (4,
+                                                                 2.,
+                                                                 3.,
+                                                                 4.)),
                          ),
                          indirect=("ndc",))
-def test_dimensions(ndc, expected_dimensions):
-    unit_tester = unittest.TestCase()
-    unit_tester.assertEqual(ndc.dimensions, expected_dimensions)
+def test_shape(ndc, expected_shape):
+    np.testing.assert_array_equal(ndc.shape, expected_shape)
 
 
-@pytest.mark.parametrize("ndc, expected_dimensions",
+@pytest.mark.parametrize("ndc, expected_shape",
                          (
-                             ("ndcubesequence_4c_ln_lt_l_cax1", [2., 12, 4] * u.pix),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", [2., 12, 4]),
                          ),
                          indirect=("ndc",))
-def test_cube_like_dimensions(ndc, expected_dimensions):
-    assert (ndc.cube_like_dimensions == expected_dimensions).all()
+def test_cube_like_shape(ndc, expected_shape):
+    assert np.all(ndc.cube_like_shape == expected_shape)
 
 
 @pytest.mark.parametrize("ndc", (("ndcubesequence_4c_ln_lt_l",)), indirect=("ndc",))
-def test_cube_like_dimensions_error(ndc):
+def test_cube_like_shape_error(ndc):
     with pytest.raises(TypeError):
-        ndc.cube_like_dimensions
+        ndc.cube_like_shape
 
 
 @pytest.mark.parametrize("ndc", (("ndcubesequence_3c_l_ln_lt_cax1",)), indirect=("ndc",))
@@ -199,4 +178,20 @@ def test_crop(ndcubesequence_4c_ln_lt_l):
     upper_corner = [coord[-1] for coord in intervals]
     expected = seq[:, 1:3, 0:2, 0:3]
     output = seq.crop(lower_corner, upper_corner)
+    helpers.assert_cubesequences_equal(output, expected)
+
+
+def test_crop_by_values(ndcubesequence_4c_ln_lt_l):
+    seq = ndcubesequence_4c_ln_lt_l
+    intervals = seq[0].wcs.array_index_to_world_values([1, 2], [0, 1], [0, 2])
+    units = [u.m, u.deg, u.deg]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    # Ensure some quantities are in units different from each other
+    # and those stored in the WCS.
+    lower_corner[0] = lower_corner[0].to(units[0])
+    lower_corner[-1] = lower_corner[-1].to(units[-1])
+    upper_corner[-1] = upper_corner[-1].to(units[-1])
+    expected = seq[:, 1:3, 0:2, 0:3]
+    output = seq.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubesequences_equal(output, expected)

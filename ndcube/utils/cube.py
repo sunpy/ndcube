@@ -272,7 +272,6 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
             # If there is no mask and operation is not nan-type, build generator
             # so non-mask can still be iterated.
             n_pix_per_bin = data.shape[flat_axis]
-            new_shape = data.shape[1:]
             mask1 = (False for i in range(1, n_pix_per_bin))
     else:
         # Mask uncertainties corresponding to nan data if operation is nantype.

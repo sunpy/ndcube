@@ -82,8 +82,8 @@ For example:
 .. code-block:: python
 
   >>> celestial = my_cube.axis_world_coords('lon')[0]  # Must extract object from returned tuple with [0]
-  >>> my_cube.dimensions
-  <Quantity [4., 4., 5.] pix>
+  >>> my_cube.shape
+  (4, 4, 5)
   >>> celestial.shape
   (4, 4)
   >>> celestial

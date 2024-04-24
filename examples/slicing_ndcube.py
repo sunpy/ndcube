@@ -54,8 +54,8 @@ example_cube = NDCube(data, wcs=wcs)
 example_cube.plot()
 
 ##############################################################################
-# We can also inspect the dimensions of the cube:
-example_cube.dimensions
+# We can also inspect the shape of the cube:
+example_cube.shape
 
 ##############################################################################
 # We can also inspect the world coordinates for all array elements:
@@ -77,14 +77,14 @@ example_cube.axis_world_coords()
 
 sliced_cube = example_cube[1, :, :]
 # here we can see we are left with a 2-D cube which is an image at one wavelength.
-sliced_cube.dimensions
+sliced_cube.shape
 
 # We can also index a region of interest of the cube at a particular wavelength.
 # Again note that we are slicing here based on the ``array`` index rather than cropping by
 # real world value
 
 sliced_cube = example_cube[1, 10:20, 20:40]
-sliced_cube.dimensions
+sliced_cube.shape
 
 # Now we can inspect the sliced cube, and see it's now a smaller region of interest.
 sliced_cube.plot()
@@ -114,9 +114,9 @@ point2 = [SkyCoord(200*u.arcsec, 100*u.arcsec, frame=frames.Helioprojective), No
 cropped_cube = example_cube.crop(point1, point2)
 
 ##############################################################################
-# Similar to before, we can inspect the dimensions of the sliced cube:
+# Similar to before, we can inspect the dimensions of the sliced cube via the shape property:
 
-cropped_cube.dimensions
+cropped_cube.shape
 
 ##############################################################################
 # and we can visualize it:
@@ -134,7 +134,7 @@ cropped_cube = example_cube.crop(point1, point2, point3)
 ##############################################################################
 # we can inspect the dimensions of the cropped cube:
 
-cropped_cube.dimensions
+cropped_cube.shape
 
 ##############################################################################
 # and again visualize it:
@@ -151,7 +151,7 @@ cropped_cube = example_cube.crop(point1, point2, point3, point4)
 ##############################################################################
 # Check dimensions:
 
-cropped_cube.dimensions
+cropped_cube.shape
 
 ##############################################################################
 # Here we can just see how powerful this can be to easily crop over different world coordinates.
@@ -162,4 +162,4 @@ point5 = [SkyCoord(0*u.arcsec, 0*u.arcsec, frame=frames.Helioprojective), Spectr
 point6 = [SkyCoord(200*u.arcsec, 100*u.arcsec, frame=frames.Helioprojective), SpectralCoord(10.6*u.angstrom)]
 
 cropped_cube = example_cube.crop(point5, point6)
-cropped_cube.dimensions
+cropped_cube.shape

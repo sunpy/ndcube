@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
 
+from ndcube.utils.exceptions import warn_user
 from . import plotting_utils as utils
 from .base import BasePlotter
 from .descriptor import MISSING_ANIMATORS_ERROR_MSG
@@ -73,7 +74,7 @@ class MatplotlibPlotter(BasePlotter):
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
-            len(self._ndcube.dimensions), plot_wcs, plot_axes, axes_coordinates, axes_units)
+            len(self._ndcube.shape), plot_wcs, plot_axes, axes_coordinates, axes_units)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', AstropyUserWarning)
@@ -230,7 +231,7 @@ class MatplotlibPlotter(BasePlotter):
         axes. See https://wcsaxes.readthedocs.io for more information.
         """
         kwargs = {'wcs': self._ndcube.wcs}
-        n_dim = len(self._ndcube.dimensions)
+        n_dim = len(self._ndcube.shape)
         if n_dim > 2:
             kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
@@ -253,10 +254,9 @@ class MatplotlibPlotter(BasePlotter):
 
         # TODO: Add support for transposing the array.
         if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
-            warnings.warn(
+            warn_user(
                 "Animating a NDCube does not support transposing the array. The world axes "
-                "may not display as expected because the array will not be transposed.",
-                UserWarning
+                "may not display as expected because the array will not be transposed."
             )
         plot_axes = [p if p is not None else 0 for p in plot_axes]
 

@@ -140,7 +140,7 @@ def test_wcs_1d(wcs_1d_l):
 @pytest.fixture
 def extra_coords_wave(wave_lut):
     cube = MagicMock()
-    cube.dimensions = [10] * u.pix
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
     ec.add("wave", 0, wave_lut)
 
@@ -162,9 +162,8 @@ def test_single_from_lut(extra_coords_wave):
 
 def test_two_1d_from_lut(time_lut):
     cube = MagicMock()
-    cube.dimensions = [10] * u.pix
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
-
     exposure_lut = range(10) * u.s
     ec.add("time", 0, time_lut)
     ec.add("exposure_time", 0, exposure_lut)
@@ -193,7 +192,7 @@ def test_two_1d_from_lookup_tables(time_lut):
                                         [time_lut, exposure_lut], pt)
 
     # This has created an "orphan" extra_coords with no NDCube connected.
-    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'dimensions'"):
+    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'shape'"):
         assert ec.mapping == (0, 0)
 
     assert len(ec._lookup_tables) == 2
@@ -207,8 +206,7 @@ def test_two_1d_from_lookup_tables(time_lut):
 
 def test_skycoord(skycoord_1d_lut):
     cube = MagicMock()
-    cube.dimensions = [10, 10] * u.pix
-
+    cube.shape = (10, 10)
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_1d_lut, mesh=True)
     assert len(ec._lookup_tables) == 1
@@ -221,8 +219,7 @@ def test_skycoord(skycoord_1d_lut):
 
 def test_skycoord_1_pixel(skycoord_1d_lut):
     cube = MagicMock()
-    cube.dimensions = [10] * u.pix
-
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
     ec.add(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
@@ -242,8 +239,7 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
 
 def test_skycoord_mesh_false(skycoord_2d_lut):
     cube = MagicMock()
-    cube.dimensions = [10, 10] * u.pix
-
+    cube.shape = (10, 10)
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
@@ -256,7 +252,7 @@ def test_skycoord_mesh_false(skycoord_2d_lut):
 
 def test_extra_coords_index(skycoord_2d_lut, time_lut):
     cube = MagicMock()
-    cube.dimensions = [10, 10] * u.pix
+    cube.shape = (10, 10)
 
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
@@ -481,7 +477,7 @@ def test_resample(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
     ec.add(("lon", "lat"), 1, skycoord_1d_lut)
     # Add coord that will not be sliced
     a = 2
-    energy_lut = range(int(cube.dimensions[a].value)) * u.keV
+    energy_lut = range(int(cube.shape[a])) * u.keV
     ec.add("hello", a, energy_lut)
 
     # Call resample.
@@ -540,11 +536,11 @@ def test_resample_errors(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
 
     # Test error for incorrect number of factor elements.
     with pytest.raises(ValueError):
-        output = ec.resample([2], ndcube=cube)
+        ec.resample([2], ndcube=cube)
 
     # Test error for incorrect number of offset elements.
     with pytest.raises(ValueError):
-        output = ec.resample(2, [2], ndcube=cube)
+        ec.resample(2, [2], ndcube=cube)
 
 
 def test_resample_wcs(wcs_1d_l):
