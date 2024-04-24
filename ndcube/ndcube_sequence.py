@@ -1,14 +1,13 @@
 import copy
 import numbers
 import textwrap
-import warnings
 
 import numpy as np
 
 import astropy.units as u
 
 from ndcube import utils
-from ndcube.utils.exceptions import NDCubeDeprecationWarning, warn_deprecated
+from ndcube.utils.exceptions import warn_deprecated
 from ndcube.visualization.descriptor import PlotterDescriptor
 
 
@@ -48,7 +47,7 @@ class NDCubeSequenceBase:
         """
         The length of each axis including the sequence axis.
         """
-        warnings.warn("Replaced by ndcube.NDCubeSequence.shape", NDCubeDeprecationWarning)
+        warn_deprecated("Replaced by ndcube.NDCubeSequence.shape")
         return tuple([d * u.pix for d in self._shape])
 
     @property
@@ -82,7 +81,7 @@ class NDCubeSequenceBase:
         """
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
-        warn_deprecated("Replaced by cube_like_shape")
+        warn_deprecated("Replaced by ndcube.NDCubeSequence.cube_like_shape")
         if not isinstance(self._common_axis, int):
             raise TypeError("Common axis must be set.")
         dimensions = list(self._dimensions)
@@ -174,8 +173,6 @@ class NDCubeSequenceBase:
         """
         common_axis = self._common_axis
         # Get coordinate objects associated with the common axis in all cubes.
-        common_axis_names = set.intersection(*[set(cube.array_axis_physical_types[common_axis])
-                                               for cube in self.data])
         common_coords = []
         mappings = []
         for i, cube in enumerate(self.data):
@@ -289,7 +286,7 @@ class NDCubeSequenceBase:
         item = self._get_sequence_crop_item(*points, wcses=wcses)
         return self[item]
 
-    def crop_by_values(self, lower_corner, upper_corner, units=None, wcses=None):
+    def crop_by_values(self, *points, units=None, wcses=None):
         """
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 

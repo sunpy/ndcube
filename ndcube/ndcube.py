@@ -1,7 +1,6 @@
 import abc
 import numbers
 import textwrap
-import warnings
 from copy import deepcopy
 from typing import Any
 from collections import namedtuple
@@ -22,14 +21,14 @@ except ImportError:
 from astropy.wcs import WCS
 from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
+from astropy.wcs.wcsapi.high_level_api import values_to_high_level_objects
 
 from ndcube import utils
 from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.exceptions import NDCubeDeprecationWarning
-from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
+from ndcube.utils.exceptions import warn_deprecated, warn_user
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 
@@ -420,6 +419,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     @property
     def dimensions(self):
+        warn_deprecated("Replaced by ndcube.NDCube.shape")
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
@@ -857,9 +857,10 @@ class NDCube(NDCubeBase):
         if hasattr(self.plotter, "_as_mpl_axes"):
             return self.plotter._as_mpl_axes()
         else:
-            warnings.warn(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
-                          "The default MatplotlibPlotter._as_mpl_axes method will be used instead.",
-                          UserWarning)
+            warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
+                        "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
+
+            from ndcube.visualization.mpl_plotter import MatplotlibPlotter
 
             plotter = MatplotlibPlotter(self)
             return plotter._as_mpl_axes()
@@ -967,12 +968,10 @@ class NDCube(NDCubeBase):
             except ValueError as e:
                 if "unsupported operation" in e.args[0]:
                     new_uncertainty = None
-                    warnings.warn(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.",
-                                  UserWarning, stacklevel=2)
+                    warn_user(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.")
                 elif "does not support uncertainty propagation" in e.args[0]:
                     new_uncertainty = None
-                    warnings.warn(f"{e.args[0]} Setting uncertainties to None.",
-                                  UserWarning, stacklevel=2)
+                    warn_user(f"{e.args[0]} Setting uncertainties to None.")
                 else:
                     raise e
 
@@ -1117,12 +1116,11 @@ class NDCube(NDCubeBase):
         new_unit = new_unit or self.unit
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
-        offsets = (bin_shape - 1) / 2
         if all(bin_shape == 1):
             return self
         # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
-        data_shape = self.shape.astype(int)
+        data_shape = self.shape
         naxes = len(data_shape)
         if len(bin_shape) != naxes:
             raise ValueError("bin_shape must have an entry for each array axis.")
@@ -1141,11 +1139,10 @@ class NDCube(NDCubeBase):
                     break
             else:
                 masked_type = np.ma.masked_array
-                warn.warning("data and mask arrays of different or unrecognized types. "
-                             "Casting them into a numpy masked array.")
+                warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
             data = masked_type(self.data, m)
 
-        reshape = np.empty(data_shape.size + bin_shape.size, dtype=int)
+        reshape = np.empty(data_shape + bin_shape, dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
         reshape[1::2] = bin_shape
@@ -1167,17 +1164,17 @@ class NDCube(NDCubeBase):
         new_uncertainty = None
         if propagate_uncertainties:
             if self.uncertainty is None:
-                warnings.warn("Uncertainties cannot be propagated as there are no uncertainties, "
+                warn_user("Uncertainties cannot be propagated as there are no uncertainties, "
                               "i.e., the `uncertainty` keyword was never set on creation of this NDCube.")
             elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-                warnings.warn("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped. "
+                warn_user("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped. "
                               "To create an uncertainty that can propagate, please see "
                               "https://docs.astropy.org/en/stable/uncertainty/index.html")
             elif (not operation_ignores_mask
                   and (self.mask is True or (self.mask is not None
                                              and not isinstance(self.mask, bool)
                                              and self.mask.all()))):
-                warnings.warn("Uncertainties cannot be propagated as all values are masked and "
+                warn_user("Uncertainties cannot be propagated as all values are masked and "
                               "operation_ignores_mask is False.")
             else:
                 if propagate_uncertainties is True:
@@ -1218,9 +1215,6 @@ class NDCube(NDCubeBase):
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
-            new_array_grids = [None if bin_shape[i] == 1 else
-                               np.arange(offsets[i], data_shape[i] + offsets[i], bin_shape[i])
-                               for i in range(naxes)]
             new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
 
         return new_cube

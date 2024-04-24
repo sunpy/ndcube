@@ -7,6 +7,7 @@ import astropy.units as u
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
 
+from ndcube.utils.exceptions import warn_user
 from . import plotting_utils as utils
 from .base import BasePlotter
 from .descriptor import MISSING_ANIMATORS_ERROR_MSG
@@ -253,10 +254,9 @@ class MatplotlibPlotter(BasePlotter):
 
         # TODO: Add support for transposing the array.
         if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
-            warnings.warn(
+            warn_user(
                 "Animating a NDCube does not support transposing the array. The world axes "
-                "may not display as expected because the array will not be transposed.",
-                UserWarning
+                "may not display as expected because the array will not be transposed."
             )
         plot_axes = [p if p is not None else 0 for p in plot_axes]
 

@@ -329,7 +329,7 @@ So to explode along the wavelength axis, we should use an array axis index of ``
   >>> my_sequence.shape
   (4, 4, 4, 5)
   >>> exploded_sequence.shape
-  (20, 4, ,4)
+  (20, 4, 4)
 
 Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.
 A common axis need not be defined and if one is it need not be the axis along which the `~ndcube.NDCubeSequence` is exploded.
@@ -456,7 +456,7 @@ Because aligned axes must have the same lengths, we can get the lengths of the a
 .. code-block:: python
 
   >>> my_collection.aligned_dimensions
-  <Quantity [4., 4.] pix>
+  array([4, 4], dtype=object)
 
 Note that this only tells us the lengths of the aligned axes.
 To see the lengths of the non-aligned axes, e.g. the spectral axis of the ``observations`` object, you must inspect that ND object individually.

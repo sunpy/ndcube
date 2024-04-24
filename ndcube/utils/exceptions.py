@@ -6,7 +6,7 @@ but rather in the particular package.
 """
 import warnings
 
-__all__ = ["NDCubeWarning", "NDCubeDeprecationWarning", "warn_deprecated"]
+__all__ = ["NDCubeWarning", "NDCubeDeprecationWarning", "warn_user", "warn_deprecated"]
 
 
 class NDCubeWarning(UserWarning):
@@ -18,6 +18,23 @@ class NDCubeDeprecationWarning(FutureWarning, NDCubeWarning):
     """
     A warning class to indicate a deprecated feature.
     """
+
+
+def warn_user(msg, stacklevel=1):
+    """
+    Raise a `NDCubeWarning`.
+
+    Parameters
+    ----------
+    msg : str
+        Warning message.
+    stacklevel : int
+        This is interpreted relative to the call to this function,
+        e.g. ``stacklevel=1`` (the default) sets the stack level in the
+        code that calls this function.
+    """
+    warnings.warn(msg, NDCubeWarning , stacklevel + 1)
+
 
 def warn_deprecated(msg, stacklevel=1):
     """

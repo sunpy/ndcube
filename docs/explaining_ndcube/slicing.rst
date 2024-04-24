@@ -296,7 +296,7 @@ In cube-like indexing this corresponds to slices 3 to 9 along to their 1st cube 
 
   >>> roi_across_cubes = my_sequence.index_as_cube[3:9, 1:3, 1:4]
   >>> roi_across_cubes.shape
-  (3, [1, 4, 1], 2, 3)
+  (3, (1, 4, 1), 2, 3)
   >>> roi_across_cubes.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
@@ -360,7 +360,7 @@ Thus a self-consistent result is obtained.
   >>> sliced_collection.keys()
   dict_keys(['observations', 'linewidths'])
   >>> sliced_collection.aligned_dimensions
-  <Quantity [2.0, 1.0] pix>
+  array([2, 1], dtype=object)
 
 This is true even if the aligned axes are not in order.
 Let's say we axis order of the ``linewidths`` cube was reversed.
@@ -383,6 +383,6 @@ Let's say we axis order of the ``linewidths`` cube was reversed.
   >>> sliced_collection_reversed.keys()
   dict_keys(['observations', 'linewidths'])
   >>> sliced_collection_reversed.aligned_dimensions
-  <Quantity [2.0, 1.0] pix>
+  array([2, 1], dtype=object)
 
 The same result is obtained.
