@@ -28,7 +28,7 @@ from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
-from ndcube.utils.exceptions import NDCubeDeprecationWarning
+from ndcube.utils.exceptions import warn_deprecated
 from ndcube.utils.wcs_high_level_conversion import values_to_high_level_objects
 from ndcube.visualization import PlotterDescriptor
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
@@ -416,7 +416,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     @property
     def dimensions(self):
-        warnings.warn("Replaced by ndcube.NDCube.shape", NDCubeDeprecationWarning)
+        warn_deprecated("Replaced by ndcube.NDCube.shape")
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
