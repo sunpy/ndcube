@@ -1,12 +1,14 @@
 import copy
 import numbers
 import textwrap
+import warnings
 
 import numpy as np
 
 import astropy.units as u
 
 from ndcube import utils
+from ndcube.utils.exceptions import NDCubeDeprecationWarning
 from ndcube.visualization.descriptor import PlotterDescriptor
 
 
@@ -46,6 +48,7 @@ class NDCubeSequenceBase:
         """
         The length of each axis including the sequence axis.
         """
+        warnings.warn("Replaced by ndcube.NDCubeSequence.shape", NDCubeDeprecationWarning)
         return tuple([d * u.pix for d in self._shape])
 
     @property
