@@ -414,7 +414,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             CompoundLowLevelWCS(self.wcs.low_level_wcs, self._extra_coords.wcs, mapping=mapping)
         )
 
-    @deprecated(version='3.0.0', reason='Quantity removed. Use `ndcube.NDCube.shape` instead.')
+    @deprecated(version='3.0.0', reason='Replaced by ndcube.NDCube.shape')
     @property
     def dimensions(self):
         warnings.warn("Quantity removed. Use `ndcube.NDCube.shape` instead.", NDCubeDeprecationWarning)
