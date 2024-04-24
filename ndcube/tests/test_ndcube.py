@@ -816,9 +816,9 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     expected_time.format = "fits"
 
     # Confirm output is as expected.
-    assert (output.shape == np.array([1, 2, 8])).all()
-    assert (output.data == expected_data).all()
-    assert (output.mask == expected_mask).all()
+    assert np.all(output.shape == np.array([1, 2, 8]))
+    assert np.all(output.data == expected_data)
+    assert np.all(output.mask == expected_mask)
     assert output.uncertainty == expected_uncertainty
     assert output.unit == expected_unit
     assert output.meta == expected_meta
