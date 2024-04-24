@@ -180,3 +180,19 @@ def test_crop(ndcubesequence_4c_ln_lt_l):
     expected = seq[:, 1:3, 0:2, 0:3]
     output = seq.crop(lower_corner, upper_corner)
     helpers.assert_cubesequences_equal(output, expected)
+
+
+def test_crop_by_values(ndcubesequence_4c_ln_lt_l):
+    seq = ndcubesequence_4c_ln_lt_l
+    intervals = seq[0].wcs.array_index_to_world_values([1, 2], [0, 1], [0, 2])
+    units = [u.m, u.deg, u.deg]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    # Ensure some quantities are in units different from each other
+    # and those stored in the WCS.
+    lower_corner[0] = lower_corner[0].to(units[0])
+    lower_corner[-1] = lower_corner[-1].to(units[-1])
+    upper_corner[-1] = upper_corner[-1].to(units[-1])
+    expected = seq[:, 1:3, 0:2, 0:3]
+    output = seq.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubesequences_equal(output, expected)

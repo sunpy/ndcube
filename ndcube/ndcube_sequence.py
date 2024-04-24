@@ -318,10 +318,10 @@ class NDCubeSequenceBase:
 
         Returns
         -------
-        : `~ndcube.NDCubeSequence`
+        `~ndcube.NDCubeSequence`
             The cropped sequence.
         """
-        item = self._get_sequence_crop_item(*points, wcses=wcses, crop_by_values=True, unit=units)
+        item = self._get_sequence_crop_item(*points, wcses=wcses, crop_by_values=True, units=units)
         return self[item]
 
     def _get_sequence_crop_item(self, *points, wcses=None, crop_by_values=False, units=None):
