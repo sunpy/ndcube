@@ -1,0 +1,1 @@
+"dimensions" property has been depcreated and replaced by "shape"
