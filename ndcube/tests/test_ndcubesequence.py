@@ -72,12 +72,11 @@ def test_slice_common_axis(ndc, item, expected_common_axis):
 
 @pytest.mark.parametrize("ndc, item, expected_shape",
                          (
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7], (4, 1, 3, 4)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[1:7, 0], (1, 4)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[2:4], (4, 0, 3, 4)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6], (4, 2, 3, 4)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0:6, :, 0], (4, 2, 3)),
-                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0::, 0, 0], (2,))
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 1:7], (3, 2, (2, 3, 1), 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0, 1:7], (3, (2, 3, 1), 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 2:4], (2, 2, 1, 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 0:6], (2, 2, 3, 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0, 0:6], (2, 3, 4)),
                          ),
                          indirect=("ndc",))
 def test_index_as_cube(ndc, item, expected_shape):
