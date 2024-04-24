@@ -105,6 +105,7 @@ def assert_cubes_equal(test_input, expected_cube):
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert all(test_input.dimensions.value == expected_cube.dimensions.value)
     assert test_input.dimensions.unit == expected_cube.dimensions.unit
+    assert_metas_equal(test_input.meta, expected_cube.meta)
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
         raise AssertionError("NDCube extra_coords not of same type: {0} != {1}".format(
             type(test_input.extra_coords), type(expected_cube.extra_coords)))
