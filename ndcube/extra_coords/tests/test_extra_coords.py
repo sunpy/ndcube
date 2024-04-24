@@ -140,7 +140,7 @@ def test_wcs_1d(wcs_1d_l):
 @pytest.fixture
 def extra_coords_wave(wave_lut):
     cube = MagicMock()
-    cube.shape = [10]
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
     ec.add("wave", 0, wave_lut)
 
@@ -162,9 +162,8 @@ def test_single_from_lut(extra_coords_wave):
 
 def test_two_1d_from_lut(time_lut):
     cube = MagicMock()
-    cube.shape = [10]
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
-
     exposure_lut = range(10) * u.s
     ec.add("time", 0, time_lut)
     ec.add("exposure_time", 0, exposure_lut)
@@ -207,8 +206,7 @@ def test_two_1d_from_lookup_tables(time_lut):
 
 def test_skycoord(skycoord_1d_lut):
     cube = MagicMock()
-    cube.shape = [10, 10]
-
+    cube.shape = (10, 10)
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_1d_lut, mesh=True)
     assert len(ec._lookup_tables) == 1
@@ -221,8 +219,7 @@ def test_skycoord(skycoord_1d_lut):
 
 def test_skycoord_1_pixel(skycoord_1d_lut):
     cube = MagicMock()
-    cube.shape = [10]
-
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
     ec.add(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
@@ -242,8 +239,7 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
 
 def test_skycoord_mesh_false(skycoord_2d_lut):
     cube = MagicMock()
-    cube.shape = [10, 10]
-
+    cube.shape = (10, 10)
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
@@ -256,7 +252,7 @@ def test_skycoord_mesh_false(skycoord_2d_lut):
 
 def test_extra_coords_index(skycoord_2d_lut, time_lut):
     cube = MagicMock()
-    cube.shape = [10, 10]
+    cube.shape = (10, 10)
 
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
