@@ -48,7 +48,7 @@ def unwrap_wcs_to_fitswcs(wcs):
         if hasattr(low_level_wrapper, "low_level_wcs"):
             low_level_wrapper = low_level_wrapper.low_level_wcs
     if not isinstance(low_level_wrapper, WCS):
-        raise TypeError(f"Base-level WCS must be type {type(WCS)}. Found: {type(low_level_wcs)}")
+        raise TypeError(f"Base-level WCS must be type {type(WCS)}. Found: {type(low_level_wrapper)}")
     fitswcs = low_level_wrapper
     dropped_data_axes = np.zeros(fitswcs.naxis, dtype=bool)
     # Unwrap each wrapper in reverse order and edit fitswcs.

@@ -505,7 +505,7 @@ def ndcube_2d_ln_lt_uncert_ec(wcs_2d_lt_ln):
     cube = NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
     cube.extra_coords.add(
         "time", 0,
-        Time("2000-01-01 00:00", scale="utc") + Timedelta(np.arange(shape[0])*60, format="sec"))
+        Time("2000-01-01 00:00", scale="utc") + TimeDelta(np.arange(shape[0])*60, format="sec"))
     return cube
 
 

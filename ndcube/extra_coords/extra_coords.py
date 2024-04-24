@@ -261,7 +261,7 @@ class ExtraCoords(ExtraCoordsABC):
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
         lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
-        converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.dimensions))
+        converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.shape))
         pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
         return tuple(reduce(list.__add__, pixel_indicies))
 
@@ -527,7 +527,7 @@ class ExtraCoords(ExtraCoordsABC):
     @property
     def _cube_array_axes_without_extra_coords(self):
         """Return the array axes not associated with any extra coord."""
-        return set(range(len(self._ndcube.dimensions))) - set(self.mapping)
+        return set(range(len(self._ndcube.shape))) - set(self.mapping)
 
     def __str__(self):
         classname = self.__class__.__name__

@@ -10,7 +10,7 @@ exclude = [
 [lint]
 select = [
   "E",
-  #"F",
+  "F",
   "W",
   #"UP",
   #"PT"

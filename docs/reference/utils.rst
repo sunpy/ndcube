@@ -13,6 +13,4 @@ utils (`ndcube.utils`)
 
 .. automodapi:: ndcube.utils.sequence
 
-.. automodapi:: ndcube.utils.wcs_high_level_conversion
-
 .. automodapi:: ndcube.utils.wcs

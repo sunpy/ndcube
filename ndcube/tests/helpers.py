@@ -2,7 +2,6 @@
 """
 Helpers for testing ndcube.
 """
-import unittest
 from pathlib import Path
 from functools import wraps
 
@@ -97,14 +96,12 @@ def assert_metas_equal(test_input, expected_output):
 
 
 def assert_cubes_equal(test_input, expected_cube):
-    unittest.TestCase()
     assert isinstance(test_input, type(expected_cube))
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
     if test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
-    assert all(test_input.dimensions.value == expected_cube.dimensions.value)
-    assert test_input.dimensions.unit == expected_cube.dimensions.unit
+    assert np.all(test_input.shape == expected_cube.shape)
     assert_metas_equal(test_input.meta, expected_cube.meta)
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
         raise AssertionError("NDCube extra_coords not of same type: {0} != {1}".format(

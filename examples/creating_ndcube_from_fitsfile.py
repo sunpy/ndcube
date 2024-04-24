@@ -46,7 +46,7 @@ print(example_ndcube.wcs)
 ##########################################################################
 # and we can also inspect the dimensions.
 
-print(example_ndcube.dimensions)
+print(example_ndcube.shape)
 
 ##########################################################################
 # We can also quickly visualize the data using the :meth:`~ndcube.NDCube.plot` method.
