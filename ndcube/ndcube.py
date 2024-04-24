@@ -416,12 +416,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     @property
     def dimensions(self):
-        warnings.warn("Replaced by ndcube.NDCube.shape", NDCubeDeprecationWarning)
         return u.Quantity(self.data.shape, unit=u.pix)
-
-    @property
-    def shape(self):
-        return self.data.shape
 
     @property
     def array_axis_physical_types(self):
@@ -636,7 +631,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return textwrap.dedent(f"""\
                 NDCube
                 ------
-                Dimensions: {self.shape}
+                Dimensions: {self.dimensions}
                 Physical Types of Axes: {self.array_axis_physical_types}
                 Unit: {self.unit}
                 Data Type: {self.data.dtype}""")
@@ -659,7 +654,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube
         if axis < 0:
-            axis = len(self.shape) + axis
+            axis = len(self.dimensions) + axis
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
@@ -1123,7 +1118,7 @@ class NDCube(NDCubeBase):
             return self
         # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
-        data_shape = self.shape.astype(int)
+        data_shape = self.dimensions.value.astype(int)
         naxes = len(data_shape)
         if len(bin_shape) != naxes:
             raise ValueError("bin_shape must have an entry for each array axis.")
