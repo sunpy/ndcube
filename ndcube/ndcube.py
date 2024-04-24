@@ -1142,7 +1142,7 @@ class NDCube(NDCubeBase):
                 warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
             data = masked_type(self.data, m)
 
-        reshape = np.empty(data_shape + bin_shape, dtype=int)
+        reshape = np.empty(len(data_shape) + len(bin_shape), dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
         reshape[1::2] = bin_shape

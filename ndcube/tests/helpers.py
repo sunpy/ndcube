@@ -2,7 +2,6 @@
 """
 Helpers for testing ndcube.
 """
-import unittest
 from pathlib import Path
 from functools import wraps
 
@@ -97,7 +96,6 @@ def assert_metas_equal(test_input, expected_output):
 
 
 def assert_cubes_equal(test_input, expected_cube):
-    unittest.TestCase()
     assert isinstance(test_input, type(expected_cube))
     assert np.all(test_input.mask == expected_cube.mask)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)

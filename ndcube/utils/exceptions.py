@@ -6,13 +6,22 @@ but rather in the particular package.
 """
 import warnings
 
-__all__ = ["NDCubeWarning", "NDCubeDeprecationWarning", "warn_user", "warn_deprecated"]
+__all__ = ["NDCubeWarning", "NDCubeUserWarning", "NDCubeDeprecationWarning", "warn_user", "warn_deprecated"]
 
 
-class NDCubeWarning(UserWarning):
+class NDCubeWarning(Warning):
     """
-    A general NDCube warning
+    The base warning class from which all ndcube warnings should inherit.
     """
+
+
+class NDCubeUserWarning(UserWarning, NDCubeWarning):
+    """
+    The primary warning class for ndcube.
+
+    Use this if you do not need a specific type of warning.
+    """
+
 
 class NDCubeDeprecationWarning(FutureWarning, NDCubeWarning):
     """
@@ -33,7 +42,7 @@ def warn_user(msg, stacklevel=1):
         e.g. ``stacklevel=1`` (the default) sets the stack level in the
         code that calls this function.
     """
-    warnings.warn(msg, NDCubeWarning , stacklevel + 1)
+    warnings.warn(msg, NDCubeUserWarning , stacklevel + 1)
 
 
 def warn_deprecated(msg, stacklevel=1):

@@ -1,4 +1,3 @@
-import unittest
 
 import numpy as np
 import pytest
@@ -39,7 +38,7 @@ def test_slice_sequence_axis(ndc, item):
     sliced_sequence = ndc[item]
     assert isinstance(sliced_sequence, NDCubeSequence)
     assert int(sliced_sequence.shape[0]) == tuple_item[0].stop - tuple_item[0].start
-    assert (sliced_sequence[0].shape == expected_cube0_dims)
+    assert np.all(sliced_sequence[0].shape == expected_cube0_dims)
 
 
 @pytest.mark.parametrize("ndc, item",
@@ -55,7 +54,7 @@ def test_extract_ndcube(ndc, item):
     tuple_item = item if isinstance(item, tuple) else (item,)
     expected_cube_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]].shape, tuple_item)
     assert isinstance(cube, NDCube)
-    assert (cube.shape == expected_cube_dims)
+    assert np.all(cube.shape == expected_cube_dims)
 
 
 @pytest.mark.parametrize("ndc, item, expected_common_axis",
@@ -97,7 +96,7 @@ def test_index_as_cube(ndc, item, expected_shape):
                          indirect=("ndc",))
 def test_explode_along_axis_common_axis_None(ndc, axis, expected_shape):
     exploded_sequence = ndc.explode_along_axis(axis)
-    assert exploded_sequence.shape == expected_shape
+    assert np.all(exploded_sequence.shape == expected_shape)
     assert exploded_sequence._common_axis is None
 
 
@@ -124,8 +123,7 @@ def test_explode_along_axis_common_axis_changed(ndc):
                          ),
                          indirect=("ndc",))
 def test_shape(ndc, expected_shape):
-    unit_tester = unittest.TestCase()
-    unit_tester.assertEqual(ndc.shape, expected_shape)
+    np.testing.assert_array_equal(ndc.shape, expected_shape)
 
 
 @pytest.mark.parametrize("ndc, expected_shape",
@@ -134,7 +132,7 @@ def test_shape(ndc, expected_shape):
                          ),
                          indirect=("ndc",))
 def test_cube_like_shape(ndc, expected_shape):
-    assert (ndc.cube_like_shape == expected_shape)
+    assert np.all(ndc.cube_like_shape == expected_shape)
 
 
 @pytest.mark.parametrize("ndc", (("ndcubesequence_4c_ln_lt_l",)), indirect=("ndc",))
