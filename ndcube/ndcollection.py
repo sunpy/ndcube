@@ -102,7 +102,7 @@ class NDCollection(dict):
         If there are no aligned axes, returns None.
         """
         if self.aligned_axes is not None:
-            return np.asanyarray(self[self._first_key].dimensions, dtype=object)[
+            return np.asanyarray(self[self._first_key].shape, dtype=object)[
                 np.array(self.aligned_axes[self._first_key])
             ]
 
@@ -178,7 +178,7 @@ class NDCollection(dict):
         # and drop any aligned axes that are sliced out.
 
         # First, define empty lists of slice items to be applied to each cube in collection.
-        collection_items = [[slice(None)] * len(self[key].dimensions) for key in self]
+        collection_items = [[slice(None)] * len(self[key].shape) for key in self]
         # Define empty list to hold aligned axes dropped by the slicing.
         drop_aligned_axes_indices = []
 
@@ -275,7 +275,7 @@ class NDCollection(dict):
         first_old_aligned_axes = self.aligned_axes[self._first_key] if self.aligned_axes is not None else None
         first_new_aligned_axes = new_aligned_axes[new_keys[0]] if new_aligned_axes is not None else None
         collection_utils.assert_aligned_axes_compatible(
-            self[self._first_key].dimensions, new_data[0].dimensions,
+            self[self._first_key].shape, new_data[0].shape,
             first_old_aligned_axes, first_new_aligned_axes
         )
         # Update collection
