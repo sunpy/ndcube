@@ -481,7 +481,7 @@ def test_resample(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
     ec.add(("lon", "lat"), 1, skycoord_1d_lut)
     # Add coord that will not be sliced
     a = 2
-    energy_lut = range(int(cube.dimensions[a].value)) * u.keV
+    energy_lut = range(int(cube.shape[a].value)) * u.keV
     ec.add("hello", a, energy_lut)
 
     # Call resample.

@@ -35,12 +35,12 @@ def derive_sliced_cube_dims(orig_cube_dims, tuple_item):
 def test_slice_sequence_axis(ndc, item):
     # Calculate expected dimensions of cubes with sequence after slicing.
     tuple_item = item if isinstance(item, tuple) else (item,)
-    expected_cube0_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]][0].dimensions, tuple_item)
+    expected_cube0_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]][0].shape, tuple_item)
     # Assert output is as expected.
     sliced_sequence = ndc[item]
     assert isinstance(sliced_sequence, NDCubeSequence)
-    assert int(sliced_sequence.dimensions[0]) == tuple_item[0].stop - tuple_item[0].start
-    assert (sliced_sequence[0].dimensions == expected_cube0_dims).all()
+    assert int(sliced_sequence.shape[0]) == tuple_item[0].stop - tuple_item[0].start
+    assert (sliced_sequence[0].shape == expected_cube0_dims).all()
 
 
 @pytest.mark.parametrize("ndc, item",
@@ -56,7 +56,7 @@ def test_extract_ndcube(ndc, item):
     tuple_item = item if isinstance(item, tuple) else (item,)
     expected_cube_dims = derive_sliced_cube_dims(ndc.data[tuple_item[0]].shape, tuple_item)
     assert isinstance(cube, NDCube)
-    assert (cube.dimensions == expected_cube_dims).all()
+    assert (cube.shape == expected_cube_dims).all()
 
 
 @pytest.mark.parametrize("ndc, item, expected_common_axis",
@@ -143,7 +143,7 @@ def test_explode_along_axis_common_axis_changed(ndc):
                          indirect=("ndc",))
 def test_dimensions(ndc, expected_dimensions):
     unit_tester = unittest.TestCase()
-    unit_tester.assertEqual(ndc.dimensions, expected_dimensions)
+    unit_tester.assertEqual(ndc.shape, expected_dimensions)
 
 
 @pytest.mark.parametrize("ndc, expected_dimensions",

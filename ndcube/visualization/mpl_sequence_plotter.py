@@ -29,7 +29,7 @@ class MatplotlibSequencePlotter(BasePlotter):
         sequence_axis_unit: `str` or `astropy.units.Unit`, optional
             The unit in which to display the sequence_axis_coords.
         """
-        sequence_dims = self._ndcube.dimensions
+        sequence_dims = self._ndcube.shape
         if len(sequence_dims) == 2:
             raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
         else:
@@ -95,7 +95,7 @@ class SequenceAnimator(ArrayAnimatorWCS):
         axes_units = kwargs.pop("axes_units", None)
         self._data_unit = kwargs.pop("data_unit", None)
         init_idx = 0
-        n_cube_dims = len(self._cubes[init_idx].dimensions)
+        n_cube_dims = len(self._cubes[init_idx].shape)
         init_wcs = self._cubes[init_idx].wcs
         self._plot_axes, self._axes_coordinates, self._axes_units = prep_plot_kwargs(
             n_cube_dims, init_wcs, plot_axes, axes_coordinates, axes_units)

@@ -214,7 +214,7 @@ class NDCubeSequenceBase:
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube.
         if axis < 0:
-            axis = len(self.dimensions[1::]) + axis
+            axis = len(self.shape[1::]) + axis
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
@@ -348,7 +348,7 @@ class NDCubeSequenceBase:
             Only used if crop_by_values is True.
         """
         n_cubes = len(self.data)
-        cube_ndim = len(self.dimensions[1:])
+        cube_ndim = len(self.shape[1:])
         starts = np.zeros((n_cubes, cube_ndim), dtype=int)
         stops = np.zeros((n_cubes, cube_ndim), dtype=int)
         if wcses is None:
@@ -378,7 +378,7 @@ class NDCubeSequenceBase:
         return (textwrap.dedent(f"""\
                 NDCubeSequence
                 --------------
-                Dimensions:  {self.dimensions}
+                Dimensions:  {self.shape}
                 Physical Types of Axes: {self.array_axis_physical_types}
                 Common Cube Axis: {self._common_axis}"""))
 
@@ -473,7 +473,7 @@ class _IndexAsCubeSlicer:
 
     def __getitem__(self, item):
         common_axis = self.seq._common_axis
-        common_axis_lengths = [int(cube.dimensions[common_axis].value) for cube in self.seq.data]
+        common_axis_lengths = [int(cube.shape[common_axis].value) for cube in self.seq.data]
         n_cube_dims = len(self.seq.cube_like_dimensions)
         n_uncommon_cube_dims = n_cube_dims - 1
         # If item is iint or slice, turn into a tuple, filling in items

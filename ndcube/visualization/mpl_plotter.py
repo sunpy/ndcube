@@ -73,7 +73,7 @@ class MatplotlibPlotter(BasePlotter):
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
-            len(self._ndcube.dimensions), plot_wcs, plot_axes, axes_coordinates, axes_units)
+            len(self._ndcube.shape), plot_wcs, plot_axes, axes_coordinates, axes_units)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', AstropyUserWarning)
@@ -230,7 +230,7 @@ class MatplotlibPlotter(BasePlotter):
         axes. See https://wcsaxes.readthedocs.io for more information.
         """
         kwargs = {'wcs': self._ndcube.wcs}
-        n_dim = len(self._ndcube.dimensions)
+        n_dim = len(self._ndcube.shape)
         if n_dim > 2:
             kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
