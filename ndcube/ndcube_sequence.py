@@ -8,7 +8,7 @@ import numpy as np
 import astropy.units as u
 
 from ndcube import utils
-from ndcube.utils.exceptions import NDCubeDeprecationWarning
+from ndcube.utils.exceptions import NDCubeDeprecationWarning, warn_deprecated
 from ndcube.visualization.descriptor import PlotterDescriptor
 
 
@@ -57,7 +57,7 @@ class NDCubeSequenceBase:
 
     @property
     def _shape(self):
-        dimensions = [len(self.data)] + list(self.data[0].shape)
+        dimensions = [len(self.data)] + list(self.data[0].data.shape)
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
@@ -82,10 +82,11 @@ class NDCubeSequenceBase:
         """
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
+        warn_deprecated("Replaced by cube_like_shape")
         if not isinstance(self._common_axis, int):
             raise TypeError("Common axis must be set.")
         dimensions = list(self._dimensions)
-        cube_like_dimensions = list(self._dimensions[1:])
+        cube_like_dimensions = list(self._shape[1:])
         if dimensions[self._common_axis + 1].isscalar:
             cube_like_dimensions[self._common_axis] = u.Quantity(
                 dimensions[0].value * dimensions[self._common_axis + 1].value, unit=u.pix)
@@ -94,6 +95,21 @@ class NDCubeSequenceBase:
         # Combine into single Quantity
         cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
         return cube_like_dimensions
+
+    @property
+    def cube_like_shape(self):
+        """
+        The length of each array axis as if all cubes were concatenated along the common axis.
+        """
+        if not isinstance(self._common_axis, int):
+            raise TypeError("Common axis must be set.")
+        dimensions = list(self.shape)
+        cube_like_shape = list(self._shape[1:])
+        if isinstance(dimensions[self._common_axis + 1], numbers.Integral):
+            cube_like_shape[self._common_axis] =  dimensions[0] * dimensions[self._common_axis + 1]
+        else:
+            cube_like_shape[self._common_axis] = sum(dimensions[self._common_axis + 1])
+        return cube_like_shape
 
     @property
     def cube_like_array_axis_physical_types(self):
@@ -473,8 +489,8 @@ class _IndexAsCubeSlicer:
 
     def __getitem__(self, item):
         common_axis = self.seq._common_axis
-        common_axis_lengths = [int(cube.shape[common_axis].value) for cube in self.seq.data]
-        n_cube_dims = len(self.seq.cube_like_dimensions)
+        common_axis_lengths = [int(cube.shape[common_axis]) for cube in self.seq.data]
+        n_cube_dims = len(self.seq.cube_like_shape)
         n_uncommon_cube_dims = n_cube_dims - 1
         # If item is iint or slice, turn into a tuple, filling in items
         # for unincluded axes with slice(None). This ensures it is

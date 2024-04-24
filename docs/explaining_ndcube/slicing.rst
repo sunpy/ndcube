@@ -16,7 +16,7 @@ Slicing NDCubes
 The `~ndcube.NDCube` slicing infrastructure returns a new `~ndcube.NDCube` with all relevant information consistently altered.
 This includes the data, WCS transformations, `~ndcube.ExtraCoords`, uncertainty and mask.
 This is achieved by applying the standard slicing API to the `~ndcube.NDCube`.
-Because many of the inspection properties such `~ndcube.NDCube.dimensions` and `~ndcube.NDCube.array_axis_physical_types` are calculated on the fly, the information they return after slicing is also consistent with the sliced `~ndcube.NDCube`.
+Because many of the inspection properties such `~ndcube.NDCube.shape` and `~ndcube.NDCube.array_axis_physical_types` are calculated on the fly, the information they return after slicing is also consistent with the sliced `~ndcube.NDCube`.
 This makes `~ndcube.NDCube`'s slicing infrastructure very powerful.
 
 To slice ``my_cube``, simply do something like:
@@ -208,12 +208,12 @@ The arrays (blue) in each cube have been sliced and the coordinate objects (red/
   :width: 800
   :alt: Schematic of an NDCubeSequence after slicing.
 
-We can confirm the dimensionality and physical types of the new sequence by checking the ``.dimensions`` and ``.array_axis_physical_types`` properties.
+We can confirm the dimensionality and physical types of the new sequence by checking the ``.shape`` and ``.array_axis_physical_types`` properties.
 
 .. code-block:: python
 
-  >>> my_sequence_roi.dimensions
-  (<Quantity 3. pix>, <Quantity 2. pix>, <Quantity 2. pix>, <Quantity 2. pix>)
+  >>> my_sequence_roi.shape
+  (3, 2, 2, 2)
   >>> my_sequence_roi.array_axis_physical_types
   [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
@@ -222,8 +222,8 @@ If we want our region of interest to only apply to a single sub-cube, and we ind
 .. code-block:: python
 
   >>> single_cube_roi = my_sequence[1, 0, 1:3, 1:4]
-  >>> single_cube_roi.dimensions
-  <Quantity [2., 3.] pix>
+  >>> single_cube_roi.shape
+  (2, 3)
   >>> single_cube_roi.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
@@ -234,8 +234,8 @@ This sequence will still represent the same region of interest from the same sin
 .. code-block:: python
 
   >>> roi_length1_sequence = my_sequence[0:1, 0, 1:3, 1:4]
-  >>> roi_length1_sequence.dimensions
-  (<Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
+  >>> roi_length1_sequence.shape
+  (1, 2, 3)
   >>> roi_length1_sequence.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
@@ -252,13 +252,13 @@ Note that if a common axis is set, we do not have to slice this way.
 Instead, we simply have the option of using regular slicing or `ndcube.NDCubeSequence.index_as_cube`.
 
 In the above example, we set the common axis to ``0``.
-Recall that, ``my_sequence`` has a shape of ``(<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)``.
-Therefore it has ``cube-like`` dimensions of ``(<Quantity 16. pix>, <Quantity 4. pix>, <Quantity 5. pix>)`` where the first sub-cube extends along the 0th cube-like axis from 0 to 4, the second from 4 to 8 and the third from 8 to 12, and the fourth from 12 to 16.
+Recall that, ``my_sequence`` has a shape of ``(4, 4, 4, 5)``.
+Therefore it has ``cube-like`` dimensions of ``[16, 4, 5]`` where the first sub-cube extends along the 0th cube-like axis from 0 to 4, the second from 4 to 8 and the third from 8 to 12, and the fourth from 12 to 16.
 
 .. code-block:: python
 
-  >>> my_sequence.cube_like_dimensions
-  <Quantity [16., 4., 5.] pix>
+  >>> my_sequence.cube_like_shape
+  [16, 4, 5]
 
 Now say we want to extract the same region of interest as above, i.e. ``my_sequence[1, 0, 1:3, 1:4]``.
 This can be achieved by entering:
@@ -266,8 +266,8 @@ This can be achieved by entering:
 .. code-block:: python
 
   >>> single_cube_roi = my_sequence.index_as_cube[4, 1:3, 1:4]
-  >>> single_cube_roi.dimensions
-  <Quantity [2., 3.] pix>
+  >>> single_cube_roi.shape
+  (2, 3)
   >>> single_cube_roi.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
@@ -279,8 +279,8 @@ As before, the same region of interest from the same sub-cube is represented, ju
 .. code-block:: python
 
   >>> roi_length1_sequence = my_sequence.index_as_cube[4:5, 1:3, 1:4]
-  >>> roi_length1_sequence.dimensions
-  (<Quantity 1. pix>, <Quantity 1. pix>, <Quantity 2. pix>, <Quantity 3. pix>)
+  >>> roi_length1_sequence.shape
+  (1, 1, 2, 3)
   >>> roi_length1_sequence.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
@@ -295,11 +295,8 @@ In cube-like indexing this corresponds to slices 3 to 9 along to their 1st cube 
 .. code-block:: python
 
   >>> roi_across_cubes = my_sequence.index_as_cube[3:9, 1:3, 1:4]
-  >>> roi_across_cubes.dimensions
-  (<Quantity 3. pix>,
-   <Quantity [1., 4., 1.] pix>,
-   <Quantity 2. pix>,
-   <Quantity 3. pix>)
+  >>> roi_across_cubes.shape
+  (3, [1, 4, 1], 2, 3)
   >>> roi_across_cubes.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),

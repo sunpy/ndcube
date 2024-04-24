@@ -110,21 +110,21 @@ To instantiate a more complex `~ndcube.NDCube` with metadata, a data unit, uncer
 
 Attaching coordinates in addition to those described by ``.wcs`` via `~ndcube.ExtraCoords` and `~ndcube.GlobalCoords` is discussed in the :ref:`extra_coords` and :ref:`global_coords` sections.
 
-Dimensions and Physical Types
------------------------------
+Shape and physical types
+------------------------
 
-`~ndcube.NDCube` has useful properties for inspecting its axes: `~ndcube.NDCube.dimensions` and `~ndcube.NDCube.array_axis_physical_types`.
+`~ndcube.NDCube` has useful properties for inspecting its axes: `~ndcube.NDCube.shape` and `~ndcube.NDCube.array_axis_physical_types`.
 
 .. code-block:: python
 
-  >>> my_cube.dimensions
-  <Quantity [4., 4., 5.] pix>
+  >>> my_cube.shape
+  (4, 4, 5)
   >>> my_cube.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
    ('em.wl',)]
 
-`~ndcube.NDCube.dimensions` returns a `~astropy.units.Quantity` in pixel units giving the length of each dimension in the `~ndcube.NDCube`.
+`~ndcube.NDCube.shape` returns a tuple giving the length of each dimension in the `~ndcube.NDCube`.
 `~ndcube.NDCube.array_axis_physical_types` returns tuples of strings denoting the types of physical properties represented by each array axis.
 The tuples are arranged in array axis order, while the physical types inside each tuple are returned in world order.
 As more than one physical type can be associated with an array axis, the length of each tuple can be greater than 1.
@@ -151,8 +151,8 @@ This returns an `~ndcube.NDCubeSequence` where the sequence axis acts as the wav
 
 .. code-block:: python
 
-  >>> exploded.dimensions
-  (<Quantity 5. pix>, <Quantity 4. pix>, <Quantity 4. pix>)
+  >>> exploded.shape
+  (5, 4, 4)
   >>> exploded.array_axis_physical_types
   [('meta.obs.sequence',),
    ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
@@ -268,23 +268,22 @@ Let's reinstantiate the `~ndcube.NDCubeSequence` with the common axis as the fir
 
 .. _dimensions:
 
-Dimensions and physical types
------------------------------
+Shape and physical types
+------------------------
 
-Analogous to `ndcube.NDCube.dimensions`, there is also a `ndcube.NDCubeSequence.dimensions` property for easily inspecting the shape of an `~ndcube.NDCubeSequence` instance.
-
-.. code-block:: python
-
-  >>> my_sequence.dimensions
-  (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
-
-Slightly differently to `ndcube.NDCube.dimensions`, `ndcube.NDCubeSequence.dimensions` returns a tuple of `astropy.units.Quantity` instances in pixel units, giving the length of each axis.
-To see the dimensionality of the sequence in the cube-like paradigm, i.e. taking into account the common axis, use the `ndcube.NDCubeSequence.cube_like_dimensions` property.
+Analogous to `ndcube.NDCube.shape`, there is also a `ndcube.NDCubeSequence.shape` property for easily inspecting the shape of an `~ndcube.NDCubeSequence` instance.
 
 .. code-block:: python
 
-  >>> my_sequence.cube_like_dimensions
-  <Quantity [16., 4., 5.] pix>
+  >>> my_sequence.shape
+  (4, 4, 4, 5)
+
+To see the dimensionality of the sequence in the cube-like paradigm, i.e. taking into account the common axis, use the `ndcube.NDCubeSequence.cube_like_shape` property.
+
+.. code-block:: python
+
+  >>> my_sequence.cube_like_shape
+  [16, 4, 5]
 
 Equivalent to `ndcube.NDCube.array_axis_physical_types`, `ndcube.NDCubeSequence.array_axis_physical_types` returns a list of tuples of physical axis types.
 The same `IVOA UCD1+ controlled words <http://www.ivoa.net/documents/REC/UCD/UCDlist-20070402.html>`__ are used for the cube axes.
@@ -327,10 +326,10 @@ So to explode along the wavelength axis, we should use an array axis index of ``
   >>> exploded_sequence = my_sequence.explode_along_axis(2)
 
   >>> # Check old and new shapes of the sequence
-  >>> my_sequence.dimensions
-  (<Quantity 4. pix>, <Quantity 4. pix>, <Quantity 4. pix>, <Quantity 5. pix>)
-  >>> exploded_sequence.dimensions
-  (<Quantity 20. pix>, <Quantity 4. pix>, <Quantity 4. pix>)
+  >>> my_sequence.shape
+  (4, 4, 4, 5)
+  >>> exploded_sequence.shape
+  (20, 4, ,4)
 
 Note that an `~ndcube.NDCubeSequence` can be exploded along any axis.
 A common axis need not be defined and if one is it need not be the axis along which the `~ndcube.NDCubeSequence` is exploded.

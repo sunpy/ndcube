@@ -19,7 +19,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
 
-        item = tuple(sanitize_slices(item, len(self.dimensions)))
+        item = tuple(sanitize_slices(item, len(self.data.shape)))
         sliced_cube = super().__getitem__(item)
 
         sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords

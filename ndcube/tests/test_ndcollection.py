@@ -146,10 +146,10 @@ def test_collection_update_without_aligned_axes():
 
 
 @pytest.mark.parametrize("collection, expected_aligned_dimensions", [
-    (cube_collection, [4, 5]*u.pix),
-    (seq_collection, np.array([2*u.pix, 3*u.pix, 4*u.pix, 5*u.pix], dtype=object))])
+    (cube_collection, [4, 5]),
+    (seq_collection, [2, 3, 4, 5])])
 def test_aligned_dimensions(collection, expected_aligned_dimensions):
-    assert all(collection.aligned_dimensions == expected_aligned_dimensions)
+    assert np.all(collection.aligned_dimensions == expected_aligned_dimensions)
 
 
 @pytest.mark.parametrize("collection, expected", [
