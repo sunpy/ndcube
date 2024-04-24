@@ -1,7 +1,7 @@
 """
 This module provides errors/exceptions and warnings of general use for NDCube.
 
-Exceptions that are specific to a given package should **not** be here,
+Exceptions that are specific to a given subpackage should **not** be here,
 but rather in the particular package.
 """
 import warnings
