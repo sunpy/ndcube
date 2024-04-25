@@ -46,7 +46,7 @@ wave_wcs = QuantityTableCoordinate(waves, physical_types="em.wl", names="wavelen
 cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
 
 #############################################################################
-# Combine the new 3-D WCS with the stack of AIA images via NDCube.
+# Combine the new 3D WCS with the stack of AIA images using `ndcube.NDCube`.
 
 my_cube = NDCube(maps.as_array(), wcs=cube_wcs)
 # Produce an interactive plot of the spectral-image stack.
