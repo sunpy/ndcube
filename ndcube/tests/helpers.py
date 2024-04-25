@@ -13,7 +13,7 @@ import pytest
 from numpy.testing import assert_equal
 
 import astropy
-from astropy.wcs.wcsapi import SlicedLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
@@ -145,11 +145,11 @@ def assert_wcs_are_equal(wcs1, wcs2):
     assert wcs1.pixel_bounds == wcs2.pixel_bounds
     if wcs1.pixel_shape is not None:
         random_idx = np.random.randint(wcs1.pixel_shape,size=[10,wcs1.pixel_n_dim])
-        # SlicedLowLevelWCS vs HighLevelWCS don't have the same pixel_to_world method
-        if isinstance(wcs1, SlicedLowLevelWCS):
-            np.testing.assert_array_equal(wcs1.pixel_to_world_values(*random_idx.T), wcs2.pixel_to_world_values(*random_idx.T))
-        else:
-            np.testing.assert_array_equal(wcs1.pixel_to_world(*random_idx.T), wcs2.pixel_to_world(*random_idx.T))
+        # SlicedLowLevelWCS vs BaseHighLevelWCS don't have the same pixel_to_world method
+        low_level_wcs = wcs1
+        if isinstance(wcs1, BaseHighLevelWCS):
+            low_level_wcs = wcs1.low_level_wcs
+        np.testing.assert_array_equal(low_level_wcs.pixel_to_world_values(*random_idx.T), low_level_wcs.pixel_to_world_values(*random_idx.T))
 
 def create_sliced_wcs(wcs, item, dim):
     """
