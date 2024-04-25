@@ -3,7 +3,7 @@
 Combining a celestial WCS with a wavelength axis
 ================================================
 
-The goal of this example is to construct a spectral-image cube of AIA images at different wavelength.
+The goal of this example is to construct a spectral-image cube of AIA images at different wavelengths.
 
 This will showcase how to add an arbitrarily spaced wavelength dimension
 to a celestial WCS.
@@ -41,16 +41,16 @@ sequence_of_maps.maps = list(sorted(sequence_of_maps.maps, key=lambda m: m.wavel
 
 waves = u.Quantity([m.wavelength for m in maps])
 wave_wcs = QuantityTableCoordinate(waves, physical_types="em.wl", names="wavelength").wcs
-cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
+cube_wcs = CompoundLowLevelWCS(wave_wcs, sequence_of_maps[0].wcs)
 
 #############################################################################
 # Combine the new 3D WCS with the stack of AIA images using `ndcube.NDCube`.
 # Note that because we set the wavelength to the first axis
 # in the WCS (cube_wcs), the final data cube is stacked such 
-# that wavelength corresponds to the array is last. 
+# that wavelength corresponds to the array axis which is last. 
 # This is due to the convention that WCS axis ordering is reversed 
 # compared to data array axis ordering.
-my_cube = NDCube(maps.as_array(), wcs=cube_wcs)
+my_cube = NDCube(sequence_of_maps.as_array(), wcs=cube_wcs)
 # Produce an interactive plot of the spectral-image stack.
 my_cube.plot(plot_axes=['y', 'x', None])
 
