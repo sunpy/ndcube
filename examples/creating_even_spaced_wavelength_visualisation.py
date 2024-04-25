@@ -41,12 +41,16 @@ sequence_of_maps.maps = list(sorted(sequence_of_maps.maps, key=lambda m: m.wavel
 
 waves = u.Quantity([m.wavelength for m in maps])
 wave_wcs = QuantityTableCoordinate(waves, physical_types="em.wl", names="wavelength").wcs
-# We put the WCS wavelength axis first. Therefore, the last axis
-# of the associated spectral-image data array will have to be last.
 cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
 
 #############################################################################
 # Combine the new 3D WCS with the stack of AIA images using `ndcube.NDCube`.
+
+# Note that because we set the wavelength to the first axis
+# in the WCS (cube_wcs), the final data cube is stacked such 
+# that wavelength corresponds to the array is last. 
+# This is due to the convention that WCS axis ordering is reversed 
+# compared to data array axis ordering.
 
 my_cube = NDCube(maps.as_array(), wcs=cube_wcs)
 # Produce an interactive plot of the spectral-image stack.
