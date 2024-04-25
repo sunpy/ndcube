@@ -35,7 +35,7 @@ sequence_of_maps = sunpy.map.Map(aia_files, sequence=True)
 sequence_of_maps.maps = list(sorted(sequence_of_maps.maps, key=lambda m: m.wavelength))
 
 #############################################################################
-# Using an `astropy.unit.Quantity` of the wavelengths of the images, we can construct
+# Using an `astropy.units.Quantity` of the wavelengths of the images, we can construct
 # a 1D lookup-table WCS via `.QuantityTableCoordinate`.
 # This is then combined with the celestial WCS into a single 3D WCS via `.CompoundLowLevelWCS`.
 
