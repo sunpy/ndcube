@@ -8,26 +8,33 @@ The goal of this example is to construct a spectral-image cube of AIA images at 
 This will showcase how to add an arbitrarily spaced wavelength dimension
 to a celestial WCS.
 """
-import matplotlib.pyplot as plt
-
 import astropy.units as u
-
+import matplotlib.pyplot as plt
+import sunpy.data.sample
 import sunpy.map
-from sunpy.net import Fido
-from sunpy.net import attrs as a
 
 from ndcube import NDCube
 from ndcube.extra_coords import QuantityTableCoordinate
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 #############################################################################
-# Use SunPy's Fido to search for the desired data and then read the data files with sunpy Map.
+# Use SunPy's sample data to get a sequence of AIA image files for different wavelengths
+# and read them with sunpy Map.
 # `sequence=True` causes a sequence of maps to be returned, one for each image file.
-aia_files = Fido.fetch(Fido.search(a.Time("2023/01/01", "2023/01/01 00:00:11"), a.Instrument.aia))
+
+aia_files = [sunpy.data.sample.AIA_094_IMAGE,
+             sunpy.data.sample.AIA_131_IMAGE,
+             sunpy.data.sample.AIA_171_IMAGE,
+             sunpy.data.sample.AIA_193_IMAGE,
+             sunpy.data.sample.AIA_211_IMAGE,
+             sunpy.data.sample.AIA_304_IMAGE,
+             sunpy.data.sample.AIA_335_IMAGE,
+             sunpy.data.sample.AIA_1600_IMAGE]
 maps = sunpy.map.Map(aia_files, sequence=True)
 
 #############################################################################
 # Sort the maps in the sequence in order of wavelength.
+
 maps.maps = list(sorted(maps.maps, key=lambda m: m.wavelength))
 
 #############################################################################
@@ -35,13 +42,18 @@ maps.maps = list(sorted(maps.maps, key=lambda m: m.wavelength))
 # 1-D lookup-table WCS via `QuantityTableCoordinate`.
 # This is then combined with the celestial WCS into a single 3-D WCS
 # via CompoundLowLevelWCS.
+
 waves = u.Quantity([m.wavelength for m in maps])
 wave_wcs = QuantityTableCoordinate(waves, physical_types="em.wl", names="wavelength").wcs
-cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)  # We have put the WCS wavelength axis first. Therefore, the last axis of the associated spectral-image data array will have to be last.
+cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
+# In the above WCS, we have put the WCS wavelength axis first. Therefore, the last axis
+# of the associated spectral-image data array will have to be last.
 
 #############################################################################
 # Combine the new 3-D WCS with the stack of AIA images via NDCube.
+
 my_cube = NDCube(maps.as_array(), wcs=cube_wcs)
 # Produce an interactive plot of the spectral-image stack.
 my_cube.plot(plot_axes=['y', 'x', None])
+
 plt.show()
