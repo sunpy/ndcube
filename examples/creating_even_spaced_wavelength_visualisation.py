@@ -7,10 +7,6 @@ The goal of this example is to construct a spectral-image cube of AIA images at 
 
 This will showcase how to add an arbitrarily spaced wavelength dimension to a
 celestial WCS.
-The example uses `sunpy.Fido` to retrieve a bunch of AIA files for different filters
-and `sunpy.Map` to read the files.  `NDCube` is used to stack the images into a
-spectral-image cube with the new 3D WCS.
-
 """
 import matplotlib.pyplot as plt
 
