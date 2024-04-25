@@ -5,8 +5,8 @@ Combining a celestial WCS with a wavelength axis
 
 The goal of this example is to construct a spectral-image cube of AIA images at different wavelength.
 
-This will showcase how to add an arbitrarily spaced wavelength dimension to a
-celestial WCS.
+This will showcase how to add an arbitrarily spaced wavelength dimension
+to a celestial WCS.
 """
 import matplotlib.pyplot as plt
 
