@@ -1,4 +1,5 @@
 import abc
+import inspect
 import numbers
 import textwrap
 from copy import deepcopy
@@ -883,10 +884,15 @@ class NDCube(NDCubeBase):
 
     def _new_instance(self, **kwargs):
         keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
-        new_kwargs = {k: deepcopy(getattr(self, k)) for k in keys}
-        new_kwargs['data'] = self.data  # Explicitly NOT deepcopying the data
-        new_kwargs.update(kwargs)
-        new_cube = type(self)(**new_kwargs)
+        new_kwargs = {k: deepcopy(getattr(self, k, None)) for k in keys}
+        # To support old versions of astropy, we need to make sure
+        # we only pass in the parameters that are valid for the NDData
+        params = list(inspect.signature(astropy.nddata.NDData).parameters)
+        full_kwargs = {x: new_kwargs.pop(x) for x in params & new_kwargs.keys()}
+        # We Explicitly DO NOT deepcopy any data
+        full_kwargs['data'] = self.data
+        full_kwargs.update(kwargs)
+        new_cube = type(self)(**full_kwargs)
         if self.extra_coords is not None:
             new_cube._extra_coords = deepcopy(self.extra_coords)
         if self.global_coords is not None:
