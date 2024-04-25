@@ -42,9 +42,9 @@ sequence_of_maps.maps = list(sorted(sequence_of_maps.maps, key=lambda m: m.wavel
 
 waves = u.Quantity([m.wavelength for m in maps])
 wave_wcs = QuantityTableCoordinate(waves, physical_types="em.wl", names="wavelength").wcs
-cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
-# In the above WCS, we have put the WCS wavelength axis first. Therefore, the last axis
+# We put the WCS wavelength axis first. Therefore, the last axis
 # of the associated spectral-image data array will have to be last.
+cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
 
 #############################################################################
 # Combine the new 3-D WCS with the stack of AIA images via NDCube.
