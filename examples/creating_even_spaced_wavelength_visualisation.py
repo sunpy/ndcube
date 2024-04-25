@@ -18,9 +18,8 @@ from ndcube.extra_coords import QuantityTableCoordinate
 from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 #############################################################################
-# Use SunPy's sample data to get a sequence of AIA image files for different wavelengths
-# and read them with sunpy Map.
-# `sequence=True` causes a sequence of maps to be returned, one for each image file.
+# We will use the sample data that ``sunpy`` provides to construct a sequence of AIA
+# image files for different wavelengths using `sunpy.map.Map`.
 
 aia_files = [sunpy.data.sample.AIA_094_IMAGE,
              sunpy.data.sample.AIA_131_IMAGE,
@@ -30,12 +29,11 @@ aia_files = [sunpy.data.sample.AIA_094_IMAGE,
              sunpy.data.sample.AIA_304_IMAGE,
              sunpy.data.sample.AIA_335_IMAGE,
              sunpy.data.sample.AIA_1600_IMAGE]
-maps = sunpy.map.Map(aia_files, sequence=True)
-
-#############################################################################
+# `sequence=True` causes a sequence of maps to be returned, one for each image file.
+sequence_of_maps = sunpy.map.Map(aia_files, sequence=True)
 # Sort the maps in the sequence in order of wavelength.
 
-maps.maps = list(sorted(maps.maps, key=lambda m: m.wavelength))
+sequence_of_maps.maps = list(sorted(sequence_of_maps.maps, key=lambda m: m.wavelength))
 
 #############################################################################
 # Create an AstroPy Quantity of the wavelengths of the images and use it to build a
