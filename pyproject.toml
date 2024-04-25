@@ -53,7 +53,10 @@ reproject = [
   "reproject>=0.7.1",
 ]
 all = [
-  "ndcube[plotting, reproject]",
+  "ndcube[plotting,reproject]",
+]
+dev = [
+  "ndcube[tests,docs,plotting,reproject]",
 ]
 [project.urls]
 repository = "https://docs.sunpy.org/projects/ndcube"
