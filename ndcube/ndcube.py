@@ -881,12 +881,12 @@ class NDCube(NDCubeBase):
 
         return self.plotter.plot(*args, **kwargs)
 
-    def _new_instance_from_op(self, **kwargs):
-        keys = ('data', 'unit', 'wcs', 'mask', 'meta', 'uncertainty')
-        new_kwargs = {k: kwargs.pop(k, deepcopy(getattr(self, k))) for k in keys}
-        # This implicitly assumes that the arithmetic operation does not alter
-        # the WCS, mask, or metadata.
-        new_cube = type(self)(**new_kwargs, **kwargs)
+    def _new_instance(self, **kwargs):
+        keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
+        new_kwargs = {k: deepcopy(getattr(self, k)) for k in keys}
+        new_kwargs['data'] = self.data  # Explicitly NOT deepcopying the data
+        new_kwargs.update(kwargs)
+        new_cube = type(self)(**new_kwargs)
         if self.extra_coords is not None:
             new_cube._extra_coords = deepcopy(self.extra_coords)
         if self.global_coords is not None:
@@ -894,7 +894,7 @@ class NDCube(NDCubeBase):
         return new_cube
 
     def __neg__(self):
-        return self._new_instance_from_op(data=-self.data)
+        return self._new_instance(data=-self.data)
 
     def __add__(self, value):
         if hasattr(value, 'unit'):
@@ -913,7 +913,7 @@ class NDCube(NDCubeBase):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
             new_data = self.data + value
-        return self._new_instance_from_op(data=new_data)
+        return self._new_instance(data=new_data)
 
     def __radd__(self, value):
         return self.__add__(value)
@@ -941,7 +941,7 @@ class NDCube(NDCubeBase):
         new_data = self.data * value
         new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
-        new_cube = self._new_instance_from_op(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
+        new_cube = self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
         return new_cube
 
     def __rmul__(self, value):
@@ -971,7 +971,7 @@ class NDCube(NDCubeBase):
                 else:
                     raise e
 
-        return self._new_instance_from_op(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
+        return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
 
     def to(self, new_unit, **kwargs):
         """Convert instance to another unit.
