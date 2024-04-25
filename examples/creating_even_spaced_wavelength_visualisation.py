@@ -45,13 +45,11 @@ cube_wcs = CompoundLowLevelWCS(wave_wcs, maps[0].wcs)
 
 #############################################################################
 # Combine the new 3D WCS with the stack of AIA images using `ndcube.NDCube`.
-
 # Note that because we set the wavelength to the first axis
 # in the WCS (cube_wcs), the final data cube is stacked such 
 # that wavelength corresponds to the array is last. 
 # This is due to the convention that WCS axis ordering is reversed 
 # compared to data array axis ordering.
-
 my_cube = NDCube(maps.as_array(), wcs=cube_wcs)
 # Produce an interactive plot of the spectral-image stack.
 my_cube.plot(plot_axes=['y', 'x', None])
