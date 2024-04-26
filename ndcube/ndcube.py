@@ -368,12 +368,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
                  unit=None, copy=False, **kwargs):
 
-        super().__init__(data, uncertainty=uncertainty, mask=mask,
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
-        if not self.wcs:
-            self.wcs = wcs  # This line is required as a patch for an astropy bug.
-        # Above line is in if statement to prevent WCS being overwritten with None
-        # if we are instantiating from an NDCube.
 
         # Enforce that the WCS object is not None
         if self.wcs is None:
@@ -1212,8 +1208,14 @@ class NDCube(NDCubeBase):
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
 
         # Reform NDCube.
-        new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
-                              meta=self.meta, unit=new_unit)
+        new_cube = type(self)(
+            data=new_data,
+            wcs=new_wcs,
+            uncertainty=new_uncertainty,
+            mask=new_mask,
+            meta=self.meta,
+            unit=new_unit
+        )
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
