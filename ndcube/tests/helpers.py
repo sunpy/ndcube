@@ -96,7 +96,7 @@ def assert_metas_equal(test_input, expected_output):
             assert test_input[key] == expected_output[key]
 
 
-def assert_cubes_equal(test_input, expected_cube, check_data=False):
+def assert_cubes_equal(test_input, expected_cube, check_data=True):
     assert isinstance(test_input, type(expected_cube))
     assert np.all(test_input.mask == expected_cube.mask)
     if check_data:
@@ -113,7 +113,7 @@ def assert_cubes_equal(test_input, expected_cube, check_data=False):
         assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
 
 
-def assert_cubesequences_equal(test_input, expected_sequence, check_data=False):
+def assert_cubesequences_equal(test_input, expected_sequence, check_data=True):
     assert isinstance(test_input, type(expected_sequence))
     assert_metas_equal(test_input.meta, expected_sequence.meta)
     assert test_input._common_axis == expected_sequence._common_axis
@@ -146,10 +146,9 @@ def assert_wcs_are_equal(wcs1, wcs2):
     if wcs1.pixel_shape is not None:
         random_idx = np.random.randint(wcs1.pixel_shape,size=[10,wcs1.pixel_n_dim])
         # SlicedLowLevelWCS vs BaseHighLevelWCS don't have the same pixel_to_world method
-        low_level_wcs = wcs1
-        if isinstance(wcs1, BaseHighLevelWCS):
-            low_level_wcs = wcs1.low_level_wcs
-        np.testing.assert_array_equal(low_level_wcs.pixel_to_world_values(*random_idx.T), low_level_wcs.pixel_to_world_values(*random_idx.T))
+        low_level_wcs1 = wcs1.low_level_wcs if isinstance(wcs1, BaseHighLevelWCS) else wcs1
+        low_level_wcs2 = wcs2.low_level_wcs if isinstance(wcs2, BaseHighLevelWCS) else wcs2
+        np.testing.assert_array_equal(low_level_wcs1.pixel_to_world_values(*random_idx.T), low_level_wcs2.pixel_to_world_values(*random_idx.T))
 
 def create_sliced_wcs(wcs, item, dim):
     """
@@ -161,7 +160,7 @@ def create_sliced_wcs(wcs, item, dim):
     return SlicedFITSWCS(wcs, item)
 
 
-def assert_collections_equal(collection1, collection2, check_data=False):
+def assert_collections_equal(collection1, collection2, check_data=True):
     assert collection1.keys() == collection2.keys()
     assert collection1.aligned_axes == collection2.aligned_axes
     for cube1, cube2 in zip(collection1.values(), collection2.values()):
