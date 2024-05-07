@@ -11,7 +11,7 @@ class Meta(dict):
     """
     A sliceable object for storing metadata.
 
-    Metdata can be linked to a data axis which causes it to be sliced when the
+    Metadata can be linked to a data axis which causes it to be sliced when the
     standard Python numeric slicing API is applied to the object.
     Specific pieces of metadata can be obtain using the dict-like str slicing API.
     Metadata associated with an axis/axes must have the same length/shape as those axes.
@@ -71,7 +71,7 @@ class Meta(dict):
             if not (isinstance(data_shape, collections.abc.Iterable) and
                     all([isinstance(i, numbers.Integral) for i in data_shape])):
                 raise TypeError("If axes is set, data_shape must be an iterable giving "
-                                "the length of each axis of the assocated cube.")
+                                "the length of each axis of the associated cube.")
             axes = dict(axes)
             if not set(axes.keys()).issubset(set(header_keys)):
                 raise ValueError(

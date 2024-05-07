@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from ndcube.meta import Meta
-
 from .helpers import assert_metas_equal
 
 # Fixtures

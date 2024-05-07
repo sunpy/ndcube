@@ -23,7 +23,7 @@ if sys.version_info < tuple(int(val) for val in __minimum_python_version__.split
     raise UnsupportedPythonError(
         "sunpy does not support Python < {}".format(__minimum_python_version__))
 
-    
+
 from .extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from .global_coords import GlobalCoords, GlobalCoordsABC
 from .meta import Meta
