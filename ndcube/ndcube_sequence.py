@@ -2,13 +2,13 @@ import copy
 import numbers
 import textwrap
 
-import astropy.units as u
 import numpy as np
 
-from ndcube import utils
-from ndcube.visualization import PlotterDescriptor
+import astropy.units as u
 
-__all__ = ['NDCubeSequence']
+from ndcube import utils
+from ndcube.utils.exceptions import warn_deprecated
+from ndcube.visualization.descriptor import PlotterDescriptor
 
 
 class NDCubeSequenceBase:
@@ -33,6 +33,7 @@ class NDCubeSequenceBase:
         `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
         were a single cube concatenated along the common axis.
     """
+
     def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
         self.data = data_list
         self.meta = meta
@@ -46,11 +47,16 @@ class NDCubeSequenceBase:
         """
         The length of each axis including the sequence axis.
         """
-        return self._dimensions
+        warn_deprecated("Replaced by ndcube.NDCubeSequence.shape")
+        return tuple([d * u.pix for d in self._shape])
 
     @property
-    def _dimensions(self):
-        dimensions = [len(self.data) * u.pix] + list(self.data[0].dimensions)
+    def shape(self):
+        return self._shape
+
+    @property
+    def _shape(self):
+        dimensions = [len(self.data)] + list(self.data[0].data.shape)
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
@@ -58,10 +64,9 @@ class NDCubeSequenceBase:
             if self._common_axis is not None:
                 common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
                 if len(np.unique(common_axis_lengths)) != 1:
-                    common_axis_dimensions = [cube.dimensions[self._common_axis]
-                                              for cube in self.data]
-                    dimensions[self._common_axis + 1] = u.Quantity(
-                        common_axis_dimensions, unit=common_axis_dimensions[0].unit)
+                    common_axis_dimensions = tuple([cube.shape[self._common_axis]
+                                                   for cube in self.data])
+                    dimensions[self._common_axis + 1] = common_axis_dimensions
         return tuple(dimensions)
 
     @property
@@ -76,10 +81,11 @@ class NDCubeSequenceBase:
         """
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
+        warn_deprecated("Replaced by ndcube.NDCubeSequence.cube_like_shape")
         if not isinstance(self._common_axis, int):
             raise TypeError("Common axis must be set.")
         dimensions = list(self._dimensions)
-        cube_like_dimensions = list(self._dimensions[1:])
+        cube_like_dimensions = list(self._shape[1:])
         if dimensions[self._common_axis + 1].isscalar:
             cube_like_dimensions[self._common_axis] = u.Quantity(
                 dimensions[0].value * dimensions[self._common_axis + 1].value, unit=u.pix)
@@ -88,6 +94,21 @@ class NDCubeSequenceBase:
         # Combine into single Quantity
         cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
         return cube_like_dimensions
+
+    @property
+    def cube_like_shape(self):
+        """
+        The length of each array axis as if all cubes were concatenated along the common axis.
+        """
+        if not isinstance(self._common_axis, int):
+            raise TypeError("Common axis must be set.")
+        dimensions = list(self.shape)
+        cube_like_shape = list(self._shape[1:])
+        if isinstance(dimensions[self._common_axis + 1], numbers.Integral):
+            cube_like_shape[self._common_axis] =  dimensions[0] * dimensions[self._common_axis + 1]
+        else:
+            cube_like_shape[self._common_axis] = sum(dimensions[self._common_axis + 1])
+        return cube_like_shape
 
     @property
     def cube_like_array_axis_physical_types(self):
@@ -146,14 +167,12 @@ class NDCubeSequenceBase:
         The coordinate values at each location along the common axis across all cubes.
 
         Only coordinates associated with the common axis in all cubes in the sequence
-        are returned.  Coordinates from different cubes are concatenated along the
-        common axis.  They thus represent the coordinate values at each location as
+        are returned. Coordinates from different cubes are concatenated along the
+        common axis. They thus represent the coordinate values at each location as
         if all cubes in the sequence were concatenated along the common axis.
         """
         common_axis = self._common_axis
         # Get coordinate objects associated with the common axis in all cubes.
-        common_axis_names = set.intersection(*[set(cube.array_axis_physical_types[common_axis])
-                                               for cube in self.data])
         common_coords = []
         mappings = []
         for i, cube in enumerate(self.data):
@@ -208,7 +227,7 @@ class NDCubeSequenceBase:
         """
         # If axis is -ve then calculate the axis from the length of the dimensions of one cube.
         if axis < 0:
-            axis = len(self.dimensions[1::]) + axis
+            axis = len(self.shape[1::]) + axis
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
@@ -236,23 +255,23 @@ class NDCubeSequenceBase:
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 
         Each input point is given as a tuple of high-level world coordinate objects.
-        This method does not crop the sequence axis.  Instead input points
-        are passed to the crop method of cubes in sequence.  Note, therefore,
+        This method does not crop the sequence axis. Instead input points
+        are passed to the crop method of cubes in sequence. Note, therefore,
         that the input points do not include an entry for world coords only
         associated with the sequence axis.
         For a description of how the bounding box is defined, see the docstring
-        of the `ndcube.NDCube.crop` method.
+        of the :meth:`ndcube.NDCube.crop` method.
         In cases where the cubes are not aligned, all cubes are cropped
-        to the same region in pixel space.  This region will be the smallest
+        to the same region in pixel space. This region will be the smallest
         that encompasses the input points in all cubes while maintaining
         consistent array shape between the cubes.
 
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+            Passed to :meth:`ndcube.NDCube.crop` as the points arg without checking.
 
-        wcses: iterable of WCS objects or `str` (optional)
+        wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes.
             There must by one WCS per cube.
             Alternatively, can be a string giving the name of the cube wcs attribute to be used,
@@ -267,31 +286,31 @@ class NDCubeSequenceBase:
         item = self._get_sequence_crop_item(*points, wcses=wcses)
         return self[item]
 
-    def crop_by_values(self, lower_corner, upper_corner, units=None, wcses=None):
+    def crop_by_values(self, *points, units=None, wcses=None):
         """
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 
         Each input point is given as a tuple of low-level world coordinate objects.
-        This method does not crop the sequence axis.  Instead input points
-        are passed to the `ndcube.NDCube.crop_by_values` method of cubes in sequence.  Note, therefore,
+        This method does not crop the sequence axis. Instead input points
+        are passed to the :meth:`ndcube.NDCube.crop_by_values` method of cubes in sequence. Note, therefore,
         that the input points do not include an entry for world coords only
         associated with the sequence axis.
         For a description of how the bounding box is defined, see the docstring
         of the NDCube.crop_by_values method.
         In cases where the cubes are not aligned, all cubes are cropped
-        to the same region in pixel space.  This region will be the smallest
+        to the same region in pixel space. This region will be the smallest
         that encompasses the input points in all cubes while maintaining
         consistent array shape between the cubes.
 
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop` as the points arg without checking.
+            Passed to :meth:`ndcube.NDCube.crop` as the points arg without checking.
 
         units:
-            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
 
-        wcses: iterable of WCS objects or `str` (optional)
+        wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes. There must by one WCS per cube.
             Alternatively, can be a string giving the name of the cube wcs attribute to be used,
             namely, 'wcs', 'combined_wcs', or 'extra_coords'.
@@ -299,10 +318,10 @@ class NDCubeSequenceBase:
 
         Returns
         -------
-        : `~ndcube.NDCubeSequence`
+        `~ndcube.NDCubeSequence`
             The cropped sequence.
         """
-        item = self._get_sequence_crop_item(*points, wcses=wcses, crop_by_values=True, unit=units)
+        item = self._get_sequence_crop_item(*points, wcses=wcses, crop_by_values=True, units=units)
         return self[item]
 
     def _get_sequence_crop_item(self, *points, wcses=None, crop_by_values=False, units=None):
@@ -313,18 +332,18 @@ class NDCubeSequenceBase:
         Note, therefore, that the input points do not include an entry for world
         coords only associated with the sequence axis.
         To learn how the bounding box is defined, see the docstrings of NDCube's
-        `~ndcube.NDCube.crop` and `~ndcube.NDCube.crop_by_values` methods.
+        :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` methods.
         In cases where the cubes are not aligned, all cubes are cropped
-        to the same region in pixel space.  This region will be the smallest
+        to the same region in pixel space. This region will be the smallest
         that encompasses the input world ranges in all cubes while maintaining
         consistent array shape between the cubes.
 
         Parameters
         ----------
         points:
-            Passed to `ndcube.NDCube.crop_by_values` as the ``points`` arg.
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``points`` arg.
 
-        wcses: iterable of WCS objects or `str` (optional)
+        wcses: iterable of WCS objects or `str`, optional
             The WCS objects to be used to crop the cubes. There must by one WCS per cube.
             Alternatively, can be a string giving the name of the cube wcs attribute to be used,
             namely, 'wcs', 'combined_wcs', or 'extra_coords'.
@@ -337,12 +356,12 @@ class NDCubeSequenceBase:
             If False, inputs are assumined to be high-level coordinate objects and
             the crop util is used.
 
-        units: (optiona)
-            Passed to `ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
+        units: `astropy.units.Unit`, optional
+            Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
             Only used if crop_by_values is True.
         """
         n_cubes = len(self.data)
-        cube_ndim = len(self.dimensions[1:])
+        cube_ndim = len(self.shape[1:])
         starts = np.zeros((n_cubes, cube_ndim), dtype=int)
         stops = np.zeros((n_cubes, cube_ndim), dtype=int)
         if wcses is None:
@@ -372,7 +391,7 @@ class NDCubeSequenceBase:
         return (textwrap.dedent(f"""\
                 NDCubeSequence
                 --------------
-                Dimensions:  {self.dimensions}
+                Dimensions:  {self.shape}
                 Physical Types of Axes: {self.array_axis_physical_types}
                 Common Cube Axis: {self._common_axis}"""))
 
@@ -467,8 +486,8 @@ class _IndexAsCubeSlicer:
 
     def __getitem__(self, item):
         common_axis = self.seq._common_axis
-        common_axis_lengths = [int(cube.dimensions[common_axis].value) for cube in self.seq.data]
-        n_cube_dims = len(self.seq.cube_like_dimensions)
+        common_axis_lengths = [int(cube.shape[common_axis]) for cube in self.seq.data]
+        n_cube_dims = len(self.seq.cube_like_shape)
         n_uncommon_cube_dims = n_cube_dims - 1
         # If item is iint or slice, turn into a tuple, filling in items
         # for unincluded axes with slice(None). This ensures it is

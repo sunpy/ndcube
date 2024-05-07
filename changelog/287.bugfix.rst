@@ -1,2 +1,0 @@
-Fix axis_world_coord_values when the WCS is 1D and ensure it always returns
-Quantities

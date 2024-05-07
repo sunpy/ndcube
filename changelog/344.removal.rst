@@ -1,1 +1,0 @@
-Remove `ndcube.NDCubeSequence.common_axis_extra_coords`.  Will be replaced by `ndcube.NDCubeSequence.common_axis_coords`.

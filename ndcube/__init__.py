@@ -23,13 +23,13 @@ if sys.version_info < tuple(int(val) for val in __minimum_python_version__.split
     raise UnsupportedPythonError(
         "sunpy does not support Python < {}".format(__minimum_python_version__))
 
-
-from .extra_coords import ExtraCoords
-from .global_coords import GlobalCoords
+    
+from .extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
+from .global_coords import GlobalCoords, GlobalCoordsABC
 from .meta import Meta
 from .ndcollection import NDCollection
-from .ndcube import NDCube
-from .ndcube_sequence import NDCubeSequence
+from .ndcube import NDCube, NDCubeBase
+from .ndcube_sequence import NDCubeSequence, NDCubeSequenceBase
 from .version import version as __version__
 
-__all__ = ["ExtraCoords", "GlobalCoords", "Meta", "NDCollection", "NDCube", "NDCubeSequence"]
+__all__ = ['NDCube', 'NDCubeSequence', "Meta", "NDCollection", "ExtraCoords", "GlobalCoords", "ExtraCoordsABC", "GlobalCoordsABC", "NDCubeBase", "NDCubeSequenceBase", "__version__"]

@@ -2,11 +2,12 @@ import numbers
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose, assert_equal
+
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs.wcsapi import HighLevelWCSWrapper
-from numpy.testing import assert_allclose, assert_equal
 
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
@@ -143,7 +144,7 @@ def test_factor_wrong_length_error(celestial_wcs):
                          indirect=True)
 def test_scalar_wrong_length_error(celestial_wcs):
     with pytest.raises(ValueError):
-        wcs = ResampledLowLevelWCS(celestial_wcs, 2, offset=[1] * 3)
+        ResampledLowLevelWCS(celestial_wcs, 2, offset=[1] * 3)
 
 
 @pytest.mark.parametrize('celestial_wcs',

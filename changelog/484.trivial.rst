@@ -1,2 +1,0 @@
-The matplotlib animators code has been moved from `sunpy` to a new package
-`mpl_animators` so ndcube no longer has an optional dependancy on sunpy.

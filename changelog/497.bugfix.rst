@@ -1,1 +1,0 @@
-Patch to convert quantity objects passed to ``crop_by_coords`` to the units given in the ``wcs.world_axis_units``.

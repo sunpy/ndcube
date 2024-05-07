@@ -1,8 +1,9 @@
-import astropy.units as u
 import matplotlib.pyplot as plt
 import mpl_animators
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.visualization.wcsaxes import WCSAxes
 from astropy.wcs import WCS
 
@@ -58,6 +59,22 @@ def test_plot_2D_cube_colorbar(ndcube_2d_ln_lt):
     ax = ndcube_2d_ln_lt.plot()
     assert isinstance(ax, WCSAxes)
     plt.colorbar()
+    return fig
+
+
+@figure_test
+def test_plot_2D_cube_custom_axis(ndcube_2d_ln_lt):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
+    ndcube_2d_ln_lt.plot(axes=ax)
+    return fig
+
+
+@figure_test
+def test_plot_2D_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
+    ndcube_2d_ln_lt.plot(axes=ax, plot_axes=('x', 'y'))
     return fig
 
 

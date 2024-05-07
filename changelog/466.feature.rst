@@ -1,1 +1,0 @@
-Add `ndcube.NDCubeSequence.crop` and `ndcube.NDCubeSequence.crop_by_values` methods which crop the `~ndcube.NDCubeSequence` based on input world coordinate ranges.

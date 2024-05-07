@@ -14,17 +14,17 @@ class NDCollection(dict):
 
     Parameters
     ----------
-    data: sequence of `tuple`s of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+    data: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
         The names and data cubes/sequences to held in the collection.
 
-    aligned_axes: `tuple` of `int`, `tuple` of `tuple`s of `int`, 'all', or None, optional
+    aligned_axes: `tuple` of `int`, `tuple` of `tuple` of `int`, 'all', or None, optional
         Axes of each cube/sequence that are aligned in numpy order.
         If elements are int, then the same axis numbers in all cubes/sequences are aligned.
         If elements are tuples of ints, then there must be one tuple for every cube/sequence.
         Each element of each tuple gives the axes of each cube/sequence that are aligned.
         If 'all', all axes are aligned in natural order, i.e. the 0th axes of all cubes
         are aligned, as are the 1st, and so on.
-        Default=None
+        Default is `None`.
 
     meta: `dict`, optional
         General metadata for the overall collection.
@@ -42,9 +42,10 @@ class NDCollection(dict):
     >>> aligned_axes = ((0, 1), (2, 1))  # doctest: +SKIP
 
     then the first tuple corresponds to cube0 and the second with cube1.
-    This is interpretted as axis 0 of cube0 is aligned with axis 2 of cube1 while
+    This is interpreted as axis 0 of cube0 is aligned with axis 2 of cube1 while
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
+
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
         # Enter data and metadata into object.
         super().__init__(key_data_pairs)
@@ -64,11 +65,18 @@ class NDCollection(dict):
                 f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'"
             )
         # Attach aligned axes to object.
-        self.aligned_axes = aligned_axes
-        if self.aligned_axes is None:
+        self._aligned_axes = aligned_axes
+        if self._aligned_axes is None:
             self.n_aligned_axes = 0
         else:
             self.n_aligned_axes = len(self.aligned_axes[keys[0]])
+
+    @property
+    def aligned_axes(self):
+        """
+        The axes of each array that are aligned in numpy order.
+        """
+        return self._aligned_axes
 
     @property
     def _first_key(self):
@@ -94,7 +102,7 @@ class NDCollection(dict):
         If there are no aligned axes, returns None.
         """
         if self.aligned_axes is not None:
-            return np.asanyarray(self[self._first_key].dimensions, dtype=object)[
+            return np.asanyarray(self[self._first_key].shape, dtype=object)[
                 np.array(self.aligned_axes[self._first_key])
             ]
 
@@ -103,13 +111,13 @@ class NDCollection(dict):
         """
         The physical types common to all members that are associated with each aligned axis.
 
-        One tuple is retured for each axis as there can be more than one physical type
-        associated with an aligned axis.  If there are no physical types associated
+        One tuple is returned for each axis as there can be more than one physical type
+        associated with an aligned axis. If there are no physical types associated
         with an aligned that is common to all collection members, an empty tuple is
-        returned for that axis.  If there are no aligned axes, raises a ValueError.
+        returned for that axis.
         """
         if self.aligned_axes is None:
-            raise ValueError("aligned_axes must be set to use this property.")
+            return None
         # Get array axis physical types for each aligned axis for all members of collection.
         collection_types = [np.array(cube.array_axis_physical_types,
                                      dtype=object)[np.array(self.aligned_axes[name])]
@@ -170,7 +178,7 @@ class NDCollection(dict):
         # and drop any aligned axes that are sliced out.
 
         # First, define empty lists of slice items to be applied to each cube in collection.
-        collection_items = [[slice(None)] * len(self[key].dimensions) for key in self]
+        collection_items = [[slice(None)] * len(self[key].shape) for key in self]
         # Define empty list to hold aligned axes dropped by the slicing.
         drop_aligned_axes_indices = []
 
@@ -214,8 +222,9 @@ class NDCollection(dict):
         return collection_items, new_aligned_axes
 
     def copy(self):
-        return self.__class__(self.items(), tuple(self.aligned_axes.values()),
-                              meta=self.meta, sanitize_inputs=False)
+        # Aligned axes is not a required parameter and may be None
+        aligned_axes = None if self.aligned_axes is None else tuple(self.aligned_axes.values())
+        return self.__class__(self.items(), aligned_axes, meta=self.meta, sanitize_inputs=False)
 
     def setdefault(self):
         """Not supported by `~ndcube.NDCollection`"""
@@ -236,8 +245,10 @@ class NDCollection(dict):
         """
         # Extract desired cube from collection.
         popped_cube = super().pop(key)
-        # Delete corresponding aligned axes
-        self.aligned_axes.pop(key)
+        # Aligned axes is not a required parameter and may be None
+        if self.aligned_axes is not None:
+            # Delete corresponding aligned axes
+            self.aligned_axes.pop(key)
         return popped_cube
 
     def update(self, *args):
@@ -258,15 +269,19 @@ class NDCollection(dict):
             new_data = list(collection.values())
             key_data_pairs = zip(new_keys, new_data)
             new_aligned_axes = collection.aligned_axes
+
         # Check aligned axes of new inputs are compatible with those in self.
         # As they've already been sanitized, only one set of aligned axes need be checked.
+        first_old_aligned_axes = self.aligned_axes[self._first_key] if self.aligned_axes is not None else None
+        first_new_aligned_axes = new_aligned_axes[new_keys[0]] if new_aligned_axes is not None else None
         collection_utils.assert_aligned_axes_compatible(
-            self[self._first_key].dimensions, new_data[0].dimensions,
-            self.aligned_axes[self._first_key], new_aligned_axes[new_keys[0]]
+            self[self._first_key].shape, new_data[0].shape,
+            first_old_aligned_axes, first_new_aligned_axes
         )
         # Update collection
         super().update(key_data_pairs)
-        self.aligned_axes.update(new_aligned_axes)
+        if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
+            self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):
         super().__delitem__(key)

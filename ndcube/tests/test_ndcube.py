@@ -1,11 +1,15 @@
+from inspect import signature
 from textwrap import dedent
+
+import dask.array
+import numpy as np
+import pytest
 
 import astropy.units as u
 import astropy.wcs
-import numpy as np
-import pytest
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
+from astropy.nddata import UnknownUncertainty
 from astropy.time import Time
 from astropy.units import UnitsError
 from astropy.wcs import WCS
@@ -15,10 +19,11 @@ from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import ExtraCoords, NDCube
 from ndcube.tests import helpers
+from ndcube.utils.exceptions import NDCubeUserWarning
 
 
 def generate_data(shape):
-    data = np.arange(np.product(shape))
+    data = np.arange(np.prod(shape))
     return data.reshape(shape)
 
 
@@ -42,7 +47,7 @@ def test_wcs_object(all_ndcubes):
                          indirect=("ndc",))
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
-    assert len(sndc.dimensions) == 2
+    assert len(sndc.shape) == 2
     assert set(sndc.wcs.world_axis_physical_types) == {"custom:pos.helioprojective.lat",
                                                        "custom:pos.helioprojective.lon"}
     if sndc.uncertainty is not None:
@@ -78,7 +83,7 @@ def test_slicing_ln_lt(ndc, item):
                          indirect=("ndc",))
 def test_slicing_wave(ndc, item):
     sndc = ndc[item]
-    assert len(sndc.dimensions) == 1
+    assert len(sndc.shape) == 1
     assert set(sndc.wcs.world_axis_physical_types) == {"em.wl"}
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
@@ -113,7 +118,7 @@ def test_slicing_wave(ndc, item):
                          indirect=("ndc",))
 def test_slicing_split_celestial(ndc, item):
     sndc = ndc[item]
-    assert len(sndc.dimensions) == 2
+    assert len(sndc.shape) == 2
     if sndc.uncertainty is not None:
         assert np.allclose(sndc.data, sndc.uncertainty.array)
     if sndc.mask is not None:
@@ -208,7 +213,7 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     ec_shape = cube.data.shape[1:3]
-    data = np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
+    data = np.arange(np.prod(ec_shape)).reshape(ec_shape) * u.m / u.s
 
     # The lookup table has to be in world order so transpose it.
     cube.extra_coords.add('velocity', (2, 1), data.T)
@@ -783,6 +788,166 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
     assert isinstance(cube.wcs, BaseHighLevelWCS)
 
 
+def test_rebin(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
+    bin_shape = (10, 2, 1)
+    with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
+    output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)
+    output_time, = output.axis_world_coords(wcs=output.extra_coords)
+
+    # Build expected cube contents.
+    expected_data = np.array([[3840, 3860, 3880, 3900, 3920, 3940, 3960, 3980],
+                              [4160, 4180, 4200, 4220, 4240, 4260, 4280, 4300]])
+    expected_mask = np.zeros(expected_data.shape, dtype=bool)
+    expected_uncertainty = None
+    expected_unit = cube.unit
+    expected_meta = cube.meta
+    expected_Tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
+                             49.99999902, 59.99999831, 69.99999731, 79.99999599],
+                            [9.99999999, 19.99999994, 29.99999979, 39.9999995,
+                             49.99999902, 59.99999831, 69.99999731, 79.99999599]]) * u.arcsec
+    expected_Ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
+                             -14.99999953, -14.99999934, -14.99999911, -14.99999885],
+                            [-4.99999999, -4.99999998, -4.99999995, -4.9999999,
+                             -4.99999985, -4.99999979, -4.99999971, -4.99999962]]) * u.arcsec
+    expected_spec = SpectralCoord([1.02e-09], unit=u.m)
+    expected_time = Time([51544.00104167, 51544.00243056], format="mjd", scale="utc")
+    expected_time.format = "fits"
+
+    # Confirm output is as expected.
+    assert np.all(output.shape == np.array([1, 2, 8]))
+    assert np.all(output.data == expected_data)
+    assert np.all(output.mask == expected_mask)
+    assert output.uncertainty == expected_uncertainty
+    assert output.unit == expected_unit
+    assert output.meta == expected_meta
+    assert u.allclose(output_sc.Tx, expected_Tx)
+    assert u.allclose(output_sc.Ty, expected_Ty)
+    assert u.allclose(output_spec, expected_spec)
+    assert output_time.scale == expected_time.scale
+    assert output_time.format == expected_time.format
+    assert np.allclose(output_time.mjd, expected_time.mjd)
+
+
+def test_rebin_dask(ndcube_2d_dask):
+    # Execute rebin.
+    cube = ndcube_2d_dask
+    bin_shape = (4, 2)
+    output = cube.rebin(bin_shape, propagate_uncertainties=True)
+    dask_type = dask.array.core.Array
+    assert isinstance(output.data, dask_type)
+    assert isinstance(output.uncertainty.array, dask_type)
+    assert isinstance(output.mask, dask_type)
+
+
+def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
+    # Confirm rebin does not try to handle extra coords when there aren't any.
+    cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
+    cube._extra_coords = ExtraCoords(cube)
+    bin_shape = (10, 2, 1)
+    with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
+        output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
+    assert output.extra_coords.is_empty
+
+
+def test_rebin_uncerts(ndcube_2d_ln_lt_uncert):
+    cube = ndcube_2d_ln_lt_uncert
+    bin_shape = (2, 4)
+    output = cube.rebin(bin_shape, operation=np.mean, propagate_uncertainties=True)
+    output_uncert = output.uncertainty.array
+    expected_uncert = (np.array([[2.73495887,  3.68239053,  4.7116876],
+                                 [9.07524104, 10.1882285, 11.30486621],
+                                 [15.79240324, 16.91744662, 18.0432813],
+                                 [22.55216176, 23.68037162, 24.80886938],
+                                 [29.32507459, 30.45455631, 31.58417325]])
+                       / np.array(bin_shape).prod())
+    assert np.allclose(output_uncert, expected_uncert)
+
+
+def test_rebin_some_masked_uncerts(ndcube_2d_ln_lt_mask_uncert):
+    cube = ndcube_2d_ln_lt_mask_uncert
+    bin_shape = (2, 4)
+    expected_data = np.array([[7.5,  11.5,  15.5],
+                              [31.5,  35.5,  39.5],
+                              [55.5,  59.5,  63.5],
+                              [79.5,  83.5,  87.5],
+                              [103.5, 107.5, 111.5]])
+    expected_uncert = np.array([[0.34186986, 0.46029882, 0.58896095],
+                                [1.13440513, 1.27352856, 1.41310828],
+                                [1.9740504, 2.11468083, 2.25541016],
+                                [2.81902022, 2.96004645, 3.10110867],
+                                [3.66563432, 3.80681954, 3.94802166]])
+    expected_mask = np.zeros((5, 3), dtype=bool)
+    expected_mask[:3, 0] = True
+    # Execute function and assert result is as expected.
+    output = cube.rebin(bin_shape, operation=np.mean, operation_ignores_mask=True,
+                        handle_mask=np.any, propagate_uncertainties=True)
+    assert np.allclose(output.data, expected_data)
+    assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
+                       expected_uncert[np.logical_not(expected_mask)])
+    assert (output.mask == expected_mask).all()
+
+
+def test_rebin_some_masked_uncerts_exclude_masked_values(ndcube_2d_ln_lt_mask_uncert):
+    cube = ndcube_2d_ln_lt_mask_uncert
+    bin_shape = (2, 4)
+    expected_data = np.array([[6.71428571,  11.5,  15.5],
+                              [31.5,  35.5,  39.5],
+                              [0.,  59.5,  63.5],
+                              [79.5,  83.5,  87.5],
+                              [103.5, 107.5, 111.5]])
+    expected_uncert = np.array([[0.34374884, 0.46029882, 0.58896095],
+                                [1.30586285, 1.27352856, 1.41310828],
+                                [0., 2.11468083, 2.25541016],
+                                [2.81902022, 2.96004645, 3.10110867],
+                                [3.66563432, 3.80681954, 3.94802166]])
+    expected_mask = np.zeros((5, 3), dtype=bool)
+    expected_mask[2, 0] = True
+    # Execute function and assert result is as expected.
+    output = cube.rebin(bin_shape, operation=np.mean, operation_ignores_mask=False,
+                        handle_mask=np.all, propagate_uncertainties=True)
+    assert np.allclose(output.data, expected_data)
+    assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
+                       expected_uncert[np.logical_not(expected_mask)])
+    assert (output.mask == expected_mask).all()
+
+
+def test_rebin_errors(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime
+    # Wrong number of axes in bin_shape)
+    with pytest.raises(ValueError):
+        cube.rebin((2,))
+
+    # bin_shape not integer multiple of data shape.
+    with pytest.raises(ValueError):
+        cube.rebin((9, 2, 1))
+
+
+def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
+    # Execute rebin.
+    cube = ndcube_2d_ln_lt_mask_uncert
+    bin_shape = (2, 4)
+
+    cube._mask[:] = True
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
+                            operation_ignores_mask=False)
+    assert output.uncertainty is None
+
+    cube._mask = True
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
+                            operation_ignores_mask=False)
+    assert output.uncertainty is None
+
+    cube._mask = False
+    cube._uncertainty = UnknownUncertainty(cube.data * 0.1)
+    with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
+        output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
+    assert output.uncertainty is None
+
+
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
     resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
@@ -807,29 +972,6 @@ def test_reproject_invalid_algorithm(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
                                              shape_out=(5, 10, 12, 8))
 
 
-def test_reproject_invalid_order(ndcube_2d_ln_lt, wcs_2d_lt_ln):
-    shape_out = (10, 12)
-
-    # Supported for interpolation
-    for order in ['nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic']:
-        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='interpolation',
-                                         shape_out=shape_out, order=order)
-
-    # Supported for adaptive
-    for order in ['nearest-neighbor', 'bilinear']:
-        _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
-                                         shape_out=shape_out, order=order)
-
-    # Not supported for adaptive
-    for order in ['biquadratic', 'bicubic', 'my_order']:
-        with pytest.raises(ValueError):
-            _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
-                                             shape_out=shape_out, order=order)
-
-    # 'exact' does not need 'order'
-    _ = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='exact', shape_out=shape_out)
-
-
 def test_reproject_adaptive_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
                                              wcs_1d_l, ndcube_1d_l):
     with pytest.raises(ValueError):
@@ -850,3 +992,215 @@ def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
     with pytest.raises(ValueError):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='exact',
                                              shape_out=(5, 10, 12, 8))
+
+
+def test_plot_docstring():
+    cube = NDCube([], astropy.wcs.WCS())
+
+    assert cube.plot.__doc__ == cube.plotter.plot.__doc__
+    assert signature(cube.plot) == signature(cube.plotter.plot)
+# This function is used in the arithmetic tests below
+
+
+def check_arithmetic_value_and_units(cube_new, data_expected):
+    cube_quantity = u.Quantity(cube_new.data, cube_new.unit)
+    assert u.allclose(cube_quantity, data_expected)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    # Add
+    new_cube = ndcube_2d_ln_lt_units + value
+    check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_radd(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = value + ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value + cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units - value
+    check_arithmetic_value_and_units(new_cube, cube_quantity - value)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+])
+def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = value - ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value - cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(12),
+    np.random.rand(10, 12),
+])
+def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units * value
+    check_arithmetic_value_and_units(new_cube, cube_quantity * value)
+    # TODO: test that uncertainties scale correctly
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(12),
+    np.random.rand(10, 12),
+])
+def test_cube_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = value * ndcube_2d_ln_lt_units
+    check_arithmetic_value_and_units(new_cube, value * cube_quantity)
+
+
+@pytest.mark.parametrize('value', [
+    10 * u.ct,
+    u.Quantity([10], u.ct),
+    u.Quantity([2], u.s),
+    u.Quantity(np.random.rand(12), u.ct),
+    u.Quantity(np.random.rand(10, 12), u.ct),
+    10.0,
+    np.random.rand(12),
+    np.random.rand(10, 12),
+])
+def test_cube_arithmetic_divide(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    new_cube = ndcube_2d_ln_lt_units / value
+    check_arithmetic_value_and_units(new_cube, cube_quantity / value)
+
+@pytest.mark.parametrize('value', [1, 2, -1])
+def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
+    with np.errstate(divide='ignore'):
+        new_cube =  value / ndcube_2d_ln_lt_units
+        check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
+
+@pytest.mark.parametrize('value', [1, 2, -1])
+def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
+    cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+        with np.errstate(divide='ignore'):
+            new_cube =  value / ndcube_4d_unit_uncertainty
+            check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
+
+def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
+    check_arithmetic_value_and_units(
+        -ndcube_2d_ln_lt_units,
+        u.Quantity(-ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit),
+    )
+
+
+def test_add_unitless_cube_typeerror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units + 10.0
+
+
+def test_cube_arithmetic_add_notimplementederror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units + ndcube_2d_ln_lt_units
+
+
+def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
+    with pytest.raises(TypeError):
+        _ = ndcube_2d_ln_lt_units * ndcube_2d_ln_lt_units
+
+
+
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power(ndcube_2d_ln_lt, power):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt.data, ndcube_2d_ln_lt.unit)
+    with np.errstate(divide='ignore'):
+        new_cube = ndcube_2d_ln_lt ** power
+        check_arithmetic_value_and_units(new_cube, cube_quantity**power)
+
+
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, power):
+    cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+        with np.errstate(divide='ignore'):
+            new_cube = ndcube_4d_unit_uncertainty ** power
+            check_arithmetic_value_and_units(new_cube, cube_quantity**power)
+
+
+@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
+    cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
+    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
+        with np.errstate(divide='ignore'):
+            new_cube = ndcube_2d_ln_lt_uncert ** power
+            check_arithmetic_value_and_units(new_cube, cube_quantity**power)
+
+
+@pytest.mark.parametrize('new_unit', [u.mJ, 'mJ'])
+def test_to(ndcube_1d_l, new_unit):
+    cube = ndcube_1d_l
+    expected_factor = 1000
+    output = cube.to(new_unit)
+    assert np.allclose(output.data, cube.data * expected_factor)
+    assert np.allclose(output.uncertainty.array, cube.uncertainty.array * expected_factor)
+    assert output.unit == u.Unit(new_unit)
+
+
+def test_to_dask(ndcube_2d_dask):
+    output = ndcube_2d_dask.to(u.mJ)
+    dask_type = dask.array.core.Array
+    assert isinstance(output.data, dask_type)
+    assert isinstance(output.uncertainty.array, dask_type)
+    assert isinstance(output.mask, dask_type)
+
+
+def test_squeeze(ndcube_4d_ln_l_t_lt):
+    assert np.array_equal(ndcube_4d_ln_l_t_lt.squeeze().shape, ndcube_4d_ln_l_t_lt.shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].shape, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze().shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,:,0,:].shape, ndcube_4d_ln_l_t_lt[:,:,0:1,:].squeeze(2).shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0,0,:].shape, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze([1,2]).shape)
+    assert np.array_equal(ndcube_4d_ln_l_t_lt[:,0:1,0,:].shape, ndcube_4d_ln_l_t_lt[:,0:1,0:1,:].squeeze(2).shape)
+
+
+def test_squeeze_error(ndcube_4d_ln_l_t_lt):
+    same = ndcube_4d_ln_l_t_lt.squeeze()[0:1,:,:,:]
+    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, as none of them has size equal to one."):
+        same.squeeze([0,1])
+    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
+        same[0:1,0:1,0:1,0:1].squeeze()
+
+
+def test_ndcube_quantity(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    expected = u.Quantity(cube.data, cube.unit)
+    np.testing.assert_array_equal(cube.quantity, expected)

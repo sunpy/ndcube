@@ -1,15 +1,17 @@
 from unittest.mock import MagicMock
 
-import astropy.units as u
 import gwcs
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import NDCube
-from ndcube.extra_coords import ExtraCoords
+from ndcube.extra_coords.extra_coords import ExtraCoords
+from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
 # Fixtures
 
@@ -41,7 +43,7 @@ def skycoord_2d_lut():
 @pytest.fixture
 def quantity_2d_lut():
     ec_shape = (3, 3)
-    return np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
+    return np.arange(np.prod(ec_shape)).reshape(ec_shape) * u.m / u.s
 
 
 # ExtraCoords from WCS
@@ -138,7 +140,7 @@ def test_wcs_1d(wcs_1d_l):
 @pytest.fixture
 def extra_coords_wave(wave_lut):
     cube = MagicMock()
-    cube.dimensions = [10] * u.pix
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
     ec.add("wave", 0, wave_lut)
 
@@ -160,9 +162,8 @@ def test_single_from_lut(extra_coords_wave):
 
 def test_two_1d_from_lut(time_lut):
     cube = MagicMock()
-    cube.dimensions = [10] * u.pix
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
-
     exposure_lut = range(10) * u.s
     ec.add("time", 0, time_lut)
     ec.add("exposure_time", 0, exposure_lut)
@@ -191,7 +192,7 @@ def test_two_1d_from_lookup_tables(time_lut):
                                         [time_lut, exposure_lut], pt)
 
     # This has created an "orphan" extra_coords with no NDCube connected.
-    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'dimensions'"):
+    with pytest.raises(AttributeError, match=r"'NoneType' object has no attribute 'shape'"):
         assert ec.mapping == (0, 0)
 
     assert len(ec._lookup_tables) == 2
@@ -205,8 +206,7 @@ def test_two_1d_from_lookup_tables(time_lut):
 
 def test_skycoord(skycoord_1d_lut):
     cube = MagicMock()
-    cube.dimensions = [10, 10] * u.pix
-
+    cube.shape = (10, 10)
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_1d_lut, mesh=True)
     assert len(ec._lookup_tables) == 1
@@ -219,8 +219,7 @@ def test_skycoord(skycoord_1d_lut):
 
 def test_skycoord_1_pixel(skycoord_1d_lut):
     cube = MagicMock()
-    cube.dimensions = [10] * u.pix
-
+    cube.shape = (10,)
     ec = ExtraCoords(cube)
     ec.add(("lon", "lat"), 0, skycoord_1d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
@@ -240,8 +239,7 @@ def test_skycoord_1_pixel(skycoord_1d_lut):
 
 def test_skycoord_mesh_false(skycoord_2d_lut):
     cube = MagicMock()
-    cube.dimensions = [10, 10] * u.pix
-
+    cube.shape = (10, 10)
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
     assert len(ec._lookup_tables) == 1
@@ -254,7 +252,7 @@ def test_skycoord_mesh_false(skycoord_2d_lut):
 
 def test_extra_coords_index(skycoord_2d_lut, time_lut):
     cube = MagicMock()
-    cube.dimensions = [10, 10] * u.pix
+    cube.shape = (10, 10)
 
     ec = ExtraCoords(cube)
     ec.add(("lat", "lon"), (0, 1), skycoord_2d_lut, mesh=False)
@@ -470,10 +468,102 @@ def test_dropped_dimension_reordering():
     assert "time" not in my_cube[0].array_axis_physical_types[0]
 
 
+def test_resample(time_lut, wave_lut, skycoord_1d_lut, ndcube_4d_ln_lt_l_t):
+    # Build ExtraCoords instance to test.
+    cube = ndcube_4d_ln_lt_l_t[:4, 0]  # Slice cube to dimensions needed for our extra coords.
+    ec = ExtraCoords(ndcube=cube)
+    ec.add("time", 0, time_lut)
+    ec.add("wave", 1, wave_lut)
+    ec.add(("lon", "lat"), 1, skycoord_1d_lut)
+    # Add coord that will not be sliced
+    a = 2
+    energy_lut = range(int(cube.shape[a])) * u.keV
+    ec.add("hello", a, energy_lut)
+
+    # Call resample.
+    output = ec.resample((0.5, 2, 1), (0, 0.5, 0), ndcube=cube)
+
+    # Define expected values
+    expected_time = Time(["2011-01-01T00:00:00",
+                          "2011-01-01T00:00:05",
+                          "2011-01-01T00:00:10",
+                          "2011-01-01T00:00:15",
+                          "2011-01-01T00:00:20",
+                          "2011-01-01T00:00:25",
+                          "2011-01-01T00:00:30"], format="isot")
+    expected_wave = np.arange(10.5, 19, 2) * u.nm
+    expected_sky = SkyCoord(np.arange(0.5, 9, 2), np.arange(0.5, 9, 2), unit=u.deg)
+
+    # Assert output values are as expected.
+    assert all(output._lookup_tables[0][1].table.fits == expected_time.fits)
+    assert np.allclose(output._lookup_tables[1][1].table[0].to_value(expected_wave.unit),
+                       expected_wave.value)
+    assert np.allclose(output._lookup_tables[2][1].table.ra.to_value(expected_sky.ra.unit),
+                       expected_sky.ra.value)
+    assert np.allclose(output._lookup_tables[2][1].table.dec.to_value(expected_sky.dec.unit),
+                       expected_sky.dec.value)
+    assert np.allclose(output._lookup_tables[3][1].table[0].to_value(energy_lut.unit),
+                       energy_lut.value)
+
+
+def test_resample_scalar_factor(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
+    # Build ExtraCoord to test.
+    cube = ndcube_4d_ln_lt_l_t[:4, 0]  # Slice cube to dimensions needed for our extra coords.
+    ec = ExtraCoords(ndcube=cube)
+    ec.add("time", 0, time_lut)
+    ec.add("wave", 1, wave_lut)
+
+    # Call resample
+    output = ec.resample(2, ndcube=cube)
+
+    # Define expected values
+    expected_time = Time(["2011-01-01T00:00:00",
+                          "2011-01-01T00:00:20"], format="isot")
+    expected_wave = np.arange(10, 20, 2) * u.nm
+
+    # Assert output values are as expected.
+    assert all(output._lookup_tables[0][1].table.fits == expected_time.fits)
+    assert np.allclose(output._lookup_tables[1][1].table[0].to_value(expected_wave.unit),
+                       expected_wave.value)
+
+
+def test_resample_errors(time_lut, wave_lut, ndcube_4d_ln_lt_l_t):
+    # Build ExtraCoord to test.
+    cube = ndcube_4d_ln_lt_l_t[:4, 0]  # Slice cube to dimensions needed for our extra coords.
+    ec = ExtraCoords(ndcube=cube)
+    ec.add("time", 0, time_lut)
+    ec.add("wave", 1, wave_lut)
+
+    # Test error for incorrect number of factor elements.
+    with pytest.raises(ValueError):
+        ec.resample([2], ndcube=cube)
+
+    # Test error for incorrect number of offset elements.
+    with pytest.raises(ValueError):
+        ec.resample(2, [2], ndcube=cube)
+
+
+def test_resample_wcs(wcs_1d_l):
+    # Build ExtraCoords to resample.
+    wcs = wcs_1d_l
+    ec = ExtraCoords()
+    ec.wcs = wcs
+    # Call resample
+    factor = [2]
+    offset = [0]
+    output = ec.resample(factor, offset)
+
+    assert isinstance(output.wcs.low_level_wcs, ResampledLowLevelWCS)
+    assert all(output.wcs.low_level_wcs._factor == np.asarray(factor))
+    assert all(output.wcs.low_level_wcs._offset == np.asarray(offset))
+
+
 def test_length1_extra_coord(wave_lut):
+    # This test hits a bug that existed in gwcs less than 0.16.1
+    pytest.importorskip("gwcs", minversion="0.16.1")
     ec = ExtraCoords()
     ec.add("wavey", 0, wave_lut)
     item = slice(1, 2)
     sec = ec[item]
-    assert (sec.wcs.pixel_to_world(0)[0] == wave_lut[item]).all()
+    assert (sec.wcs.pixel_to_world(0) == wave_lut[item]).all()
     assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()

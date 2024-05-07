@@ -1,0 +1,1 @@
+"dimensions" property on ~ndcube.NDCube` and `~ndcube.NDCubeSequence` have been deprecated and replaced by "shape"

@@ -1,5 +1,3 @@
-# Author: Ankit Baruah and Daniel Ryan <ryand5@tcd.ie>
-
 """
 Miscellaneous WCS utilities.
 """
@@ -8,6 +6,7 @@ import numbers
 from collections import UserDict
 
 import numpy as np
+
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
@@ -77,11 +76,11 @@ def convert_between_array_and_pixel_axes(axis, naxes):
     if not isinstance(axis, np.ndarray):
         raise TypeError(f"input must be of array type. Got type: {type(axis)}")
     if axis.dtype.char not in np.typecodes['AllInteger']:
-        raise TypeError(f"input dtype must be of int type.  Got dtype: {axis.dtype})")
+        raise TypeError(f"input dtype must be of int type. Got dtype: {axis.dtype})")
     # Convert negative indices to positive equivalents.
     axis[axis < 0] += naxes
     if any(axis > naxes - 1):
-        raise IndexError("Axis out of range.  "
+        raise IndexError("Axis out of range. "
                          f"Number of axes = {naxes}; Axis numbers requested = {axis}")
     # Reflect axis about center of number of axes.
     reflected_axis = naxes - 1 - axis
@@ -100,7 +99,7 @@ def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+        Format same as `astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
@@ -117,11 +116,11 @@ def world_axis_to_pixel_axes(world_axis, axis_correlation_matrix):
     Parameters
     ----------
     world_axis: `int`
-        The index of the physical type for which the pixes axes are desired.
+        The index of the physical type for which the pixels axes are desired.
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+        Format same as `astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
@@ -140,7 +139,7 @@ def pixel_axis_to_physical_types(pixel_axis, wcs):
     pixel_axis: `int`
         The pixel axis number(s) for which the world axis numbers are desired.
 
-    wcs: `astropy.wcs.BaseLowLevelWCS`
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS object defining the relationship between pixel and world axes.
 
     Returns
@@ -160,7 +159,7 @@ def physical_type_to_pixel_axes(physical_type, wcs):
     physical_type: `int`
         The pixel axis number(s) for which the world axis numbers are desired.
 
-    wcs: `astropy.wcs.BaseLowLevelWCS`
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS object defining the relationship between pixel and world axes.
 
     Returns
@@ -184,8 +183,8 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
         The physical type or a substring unique to a physical type.
 
     world_axis_physical_types: sequence of `str`
-        All available physical types.  Ordering must be same as
-        `astropy.wcs.BaseLowLevelWCS.world_axis_physical_types`
+        All available physical types. Ordering must be same as
+        `astropy.wcs.wcsapi.BaseLowLevelWCS.world_axis_physical_types`
 
     Returns
     -------
@@ -231,11 +230,11 @@ def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+        Format same as `astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
-    dependent_pixel_axes: `np.ndarray` of `int`
+    dependent_pixel_axes: `numpy.ndarray` of `int`
         Sorted indices of pixel axes dependent on input axis in WCS ordering convention.
     """
     # The axis_correlation_matrix is (n_world, n_pixel) but we want to know
@@ -269,11 +268,11 @@ def get_dependent_array_axes(array_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+        Format same as `astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
-    dependent_array_axes: `np.ndarray` of `int`
+    dependent_array_axes: `numpy.ndarray` of `int`
         Sorted indices of array axes dependent on input axis in numpy ordering convention.
     """
     naxes = axis_correlation_matrix.shape[1]
@@ -297,11 +296,11 @@ def get_dependent_world_axes(world_axis, axis_correlation_matrix):
 
     axis_correlation_matrix: `numpy.ndarray` of `bool`
         2D boolean correlation matrix defining the dependence between the pixel and world axes.
-        Format same as `astropy.wcs.BaseLowLevelWCS.axis_correlation_matrix`.
+        Format same as `astropy.wcs.wcsapi.BaseLowLevelWCS.axis_correlation_matrix`.
 
     Returns
     -------
-    dependent_world_axes: `np.ndarray` of `int`
+    dependent_world_axes: `numpy.ndarray` of `int`
         Sorted indices of pixel axes dependent on input axis in WCS ordering convention.
     """
     # The axis_correlation_matrix is (n_world, n_pixel) but we want to know
@@ -322,12 +321,12 @@ def get_dependent_physical_types(physical_type, wcs):
     physical_type: `str`
         The world axis physical types whose dependent physical types are desired.
 
-    wcs: `astropy.wcs.BaseLowLevelWCS`
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS object defining the relationship between pixel and world axes.
 
     Returns
     -------
-    dependent_physical_types: `np.ndarray` of `str`
+    dependent_physical_types: `numpy.ndarray` of `str`
         Physical types dependent on the input physical type.
     """
     world_axis_physical_types = wcs.world_axis_physical_types
@@ -420,8 +419,8 @@ def array_indices_for_world_objects(wcs, axes=None):
         # If this world index is deselected by axes= then skip
         if world_index not in world_indices:
             continue
-        # Select the first occurence of the object name.
-        # Other occurences are ignored so as to return duplicate coordinate objects.
+        # Select the first occurrence of the object name.
+        # Other occurrences are ignored so as to return duplicate coordinate objects.
         oinds = np.atleast_1d(object_names == oname).nonzero()[0][0]
         # Calculate the array axes corresponding the coordinate's world axis
         # and enter them into the element of the array indices array corresponding
@@ -454,7 +453,7 @@ def get_low_level_wcs(wcs, name='wcs'):
     elif isinstance(wcs, BaseLowLevelWCS):
         return wcs
     else:
-        raise(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
+        raise ValueError(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
 
 
 def compare_wcs_physical_types(source_wcs, target_wcs):
@@ -464,7 +463,7 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     Parameters
     ----------
     source_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
-        The WCS which is currently in use, usually `self.wcs`.
+        The WCS which is currently in use, usually "ndcube.NDCube.wcs".
 
     target_wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS` or `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS object on which the NDCube is to be reprojected.

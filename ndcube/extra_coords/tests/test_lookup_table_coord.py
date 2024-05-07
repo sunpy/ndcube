@@ -1,12 +1,17 @@
-import astropy.units as u
 import gwcs.coordinate_frames as cf
 import numpy as np
 import pytest
+
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
-from ndcube.extra_coords.table_coord import (MultipleTableCoordinate, QuantityTableCoordinate,
-                                             SkyCoordTableCoordinate, TimeTableCoordinate)
+from ndcube.extra_coords.table_coord import (
+    MultipleTableCoordinate,
+    QuantityTableCoordinate,
+    SkyCoordTableCoordinate,
+    TimeTableCoordinate,
+)
 
 
 @pytest.fixture
@@ -21,7 +26,7 @@ def lut_3d_distance_mesh():
                     u.Quantity(np.arange(10, 20) * u.km),
                     u.Quantity(np.arange(20, 30) * u.km))
 
-    return QuantityTableCoordinate(*lookup_table, mesh=True, names=['x', 'y', 'z'])
+    return QuantityTableCoordinate(*lookup_table, names=['x', 'y', 'z'])
 
 
 @pytest.fixture
@@ -107,11 +112,11 @@ def test_exceptions():
 
     with pytest.raises(ValueError) as ei:
         SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), names='x')
-    assert "names must equal two" in str(ei)
+    assert "The number of names must equal number of components in the input SkyCoord: 2." in str(ei)
 
     with pytest.raises(ValueError) as ei:
         SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), physical_types='x')
-    assert "physical types must equal two" in str(ei)
+    assert "The number of physical types must equal number of components in the input SkyCoord: 2." in str(ei)
 
     with pytest.raises(TypeError) as ei:
         MultipleTableCoordinate(10, SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg)))
@@ -265,7 +270,7 @@ def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_quantity():
     shape = (3, 3)
-    data = np.arange(np.product(shape)).reshape(shape) * u.m / u.s
+    data = np.arange(np.prod(shape)).reshape(shape) * u.m / u.s
 
     ltc = QuantityTableCoordinate(data)
     assert u.allclose(ltc.wcs.pixel_to_world(0, 0), 0 * u.m / u.s)
@@ -291,19 +296,19 @@ def test_repr_str(lut_1d_time, lut_1d_wave):
 
 
 def test_slicing_quantity_table_coordinate():
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=False, names='x', physical_types='pos:x')
+    qtc = QuantityTableCoordinate(range(10)*u.m, names='x', physical_types='pos:x')
 
     assert u.allclose(qtc[2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2].table[0], 2*u.m)
     assert qtc.names == ['x']
     assert qtc.physical_types == ['pos:x']
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=True)
+    qtc = QuantityTableCoordinate(range(10)*u.m)
 
     assert u.allclose(qtc[2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2].table[0], 2*u.m)
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, range(10)*u.m, mesh=True,
+    qtc = QuantityTableCoordinate(range(10)*u.m, range(10)*u.m,
                                   names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
     assert u.allclose(qtc[2:8, 2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2:8, 2:8].table[1], range(2, 8)*u.m)
@@ -321,7 +326,7 @@ def test_slicing_quantity_table_coordinate():
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_slicing_quantity_table_coordinate_2d():
-    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m, mesh=False,
+    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m,
                                   names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
 
     assert u.allclose(qtc[2:8, 2:8].table[0], (np.mgrid[2:8, 2:8]*u.m)[0])
@@ -639,7 +644,7 @@ def test_and_base_table_coordinate():
 
     ttc = TimeTableCoordinate(data)
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=False)
+    qtc = QuantityTableCoordinate(range(10)*u.m)
 
     join = ttc & ttc
     assert isinstance(join, MultipleTableCoordinate)
@@ -675,7 +680,7 @@ def test_and_errors():
 
     ttc = TimeTableCoordinate(data)
 
-    qtc = QuantityTableCoordinate(range(10)*u.m, mesh=False)
+    qtc = QuantityTableCoordinate(range(10)*u.m)
 
     with pytest.raises(TypeError) as ei:
         ttc & 5
@@ -690,3 +695,95 @@ def test_and_errors():
     with pytest.raises(TypeError) as ei:
         5 & join
     assert "unsupported operand type(s) for &: 'int' and 'MultipleTableCoordinate'" in str(ei)
+
+
+################################################################################
+# Interpolation Tests
+################################################################################
+def test_quantity_interpolate(lut_3d_distance_mesh):
+    lutc = lut_3d_distance_mesh
+    new_array_grids = [np.arange(1.5, 10, 1.5)] * 3
+    output = lutc.interpolate(*new_array_grids)
+    expected_tables = (np.arange(1.5, 10, 1.5) * u.km,
+                       np.arange(11.5, 20, 1.5) * u.km,
+                       np.arange(21.5, 30, 1.5) * u.km)
+    assert u.allclose(output.table[0], expected_tables[0])
+    assert u.allclose(output.table[1], expected_tables[1])
+    assert u.allclose(output.table[2], expected_tables[2])
+    assert_lutc_ancilliary_data_same(output, lutc)
+
+
+def test_time_interpolate(lut_1d_time):
+    lutc = lut_1d_time
+    new_array_grids = np.arange(1.5, 4,)
+    output = lutc.interpolate(new_array_grids)
+    expected_table = Time(['2011-01-01T00:00:05.000', '2011-01-01T00:00:15.000',
+                           '2011-01-01T00:00:25.000'], scale="utc", format="isot")
+    assert np.allclose(output.table.mjd, expected_table.mjd)
+    assert_lutc_ancilliary_data_same(output, lutc)
+
+
+def test_skycoord_interpolate_no_mesh(lut_2d_skycoord_no_mesh):
+    lutc = lut_2d_skycoord_no_mesh
+    new_array_grids = np.meshgrid(np.arange(0.5, 2), np.arange(0, 3))
+    output = lutc.interpolate(*new_array_grids)
+    expected1 = np.array([[1.5, 4.5],
+                          [2.5, 5.5],
+                          [3.5, 6.5]])
+    expected2 = expected1 + 9
+    expected_table = SkyCoord(expected1, expected2, unit=(u.deg, u.deg))
+    assert u.allclose(output.table.ra, expected_table.ra)
+    assert u.allclose(output.table.dec, expected_table.dec)
+    assert u.allclose(output.table.distance, expected_table.distance)
+    assert_lutc_ancilliary_data_same(output, lutc)
+
+
+def test_skycoord_interpolate_mesh(lut_2d_skycoord_mesh):
+    lutc = lut_2d_skycoord_mesh
+    new_array_grids = np.arange(0.5, 2), np.arange(1, 3)
+    output = lutc.interpolate(*new_array_grids)
+    expected = new_array_grids
+    expected_table = SkyCoord(*expected, unit=(u.deg, u.deg))
+    assert u.allclose(output.table.ra, expected_table.ra)
+    assert u.allclose(output.table.dec, expected_table.dec)
+    assert u.allclose(output.table.distance, expected_table.distance)
+    assert_lutc_ancilliary_data_same(output, lutc)
+
+
+def test_quantity_interpolate_errors():
+    qtc = QuantityTableCoordinate(3 * u.m)
+    with pytest.raises(ValueError) as ei:
+        qtc.interpolate(np.ones(1))
+    assert "Cannot interpolate a scalar" in str(ei)
+
+    qtc = QuantityTableCoordinate(range(8) * u.m, range(6) * u.m)
+    with pytest.raises(ValueError) as ei:
+        qtc.interpolate(np.ones(1))
+    assert "A new array grid must be given for each array axis" in str(ei)
+
+    with pytest.raises(ValueError) as ei:
+        qtc.interpolate(np.ones(1), np.ones(2))
+    assert "New array grids must all be same shape." in str(ei)
+
+
+def test_skycoord_interpolate_error(lut_2d_skycoord_mesh):
+    sctc = SkyCoordTableCoordinate(SkyCoord(1 * u.deg, 2 * u.deg))
+    with pytest.raises(ValueError) as ei:
+        sctc.interpolate(np.ones(1))
+    assert "Cannot interpolate a scalar" in str(ei)
+
+    sctc = lut_2d_skycoord_mesh
+    with pytest.raises(ValueError) as ei:
+        sctc.interpolate(np.ones(1))
+    assert "A new array grid must be given for each array axis" in str(ei)
+
+    with pytest.raises(ValueError) as ei:
+        sctc.interpolate(np.ones(1), np.ones(2))
+    assert "New array grids must all be same shape." in str(ei)
+
+
+def assert_lutc_ancilliary_data_same(lutc1, lutc2):
+    assert lutc1.mesh is lutc2.mesh
+    assert lutc1.names == lutc2.names
+    assert lutc1.physical_types == lutc2.physical_types
+    assert lutc1._dropped_world_dimensions == lutc2._dropped_world_dimensions

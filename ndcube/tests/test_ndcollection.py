@@ -1,8 +1,8 @@
 
-import astropy.units as u
-import astropy.wcs
 import numpy as np
 import pytest
+
+import astropy.wcs
 
 from ndcube import NDCollection, NDCube, NDCubeSequence
 from ndcube.tests import helpers
@@ -38,6 +38,7 @@ sequence20 = NDCubeSequence([cube2, cube0])
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
 cube_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes)
+unaligned_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes=None)
 seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
 
 
@@ -87,11 +88,13 @@ def test_slice_cube_from_collection(item, collection, expected):
 
 def test_collection_copy():
     helpers.assert_collections_equal(cube_collection.copy(), cube_collection)
+    helpers.assert_collections_equal(unaligned_collection.copy(), unaligned_collection)
 
 
 @pytest.mark.parametrize("collection,popped_key,expected_popped,expected_collection", [
     (cube_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)],
-                                                   aligned_axes=aligned_axes[1:]))])
+                                                   aligned_axes=aligned_axes[1:])),
+    (unaligned_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)]))])
 def test_collection_pop(collection, popped_key, expected_popped, expected_collection):
     popped_collection = collection.copy()
     output = popped_collection.pop(popped_key)
@@ -132,11 +135,20 @@ def test_collection_update_collecton_input():
     helpers.assert_collections_equal(orig_collection, expected)
 
 
+def test_collection_update_without_aligned_axes():
+    orig_collection = NDCollection([("cube0", cube0), ("cube1", cube1)])
+    new_collection = NDCollection([("cube2", cube2)])
+    orig_collection.update(new_collection)
+
+    expected = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)])
+    helpers.assert_collections_equal(orig_collection, expected)
+
+
 @pytest.mark.parametrize("collection, expected_aligned_dimensions", [
-    (cube_collection, [4, 5]*u.pix),
-    (seq_collection, np.array([2*u.pix, 3*u.pix, 4*u.pix, 5*u.pix], dtype=object))])
+    (cube_collection, [4, 5]),
+    (seq_collection, [2, 3, 4, 5])])
 def test_aligned_dimensions(collection, expected_aligned_dimensions):
-    assert all(collection.aligned_dimensions == expected_aligned_dimensions)
+    assert np.all(collection.aligned_dimensions == expected_aligned_dimensions)
 
 
 @pytest.mark.parametrize("collection, expected", [

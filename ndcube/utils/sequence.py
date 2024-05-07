@@ -65,7 +65,7 @@ def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_length
     Parameters
     ----------
     item: iterable of `int` or `slice`
-        The slicing item.  The common axis entry must be a `slice`
+        The slicing item. The common axis entry must be a `slice`
 
     common_axis: `int`
         The index of the item corresponding to the common axis.

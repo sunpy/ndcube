@@ -1,5 +1,6 @@
-import astropy.units as u
 import pytest
+
+import astropy.units as u
 
 import ndcube.visualization.plotting_utils as utils
 

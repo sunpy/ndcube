@@ -1,14 +1,16 @@
 import warnings
 
-import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+
+import astropy.units as u
 from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization.wcsaxes import WCSAxes
-from mpl_animators import ArrayAnimatorWCS
 
+from ndcube.utils.exceptions import warn_user
 from . import plotting_utils as utils
 from .base import BasePlotter
+from .descriptor import MISSING_ANIMATORS_ERROR_MSG
 
 __all__ = ['MatplotlibPlotter']
 
@@ -45,7 +47,7 @@ class MatplotlibPlotter(BasePlotter):
             axis the value of the list should either be a string giving the
             world axis type or `None` to use the default axis from the WCS.
 
-        data_unit: `astropy.unit.Unit`
+        data_unit: `astropy.units.Unit`
             The data is changed to the unit given or the ``NDCube.unit`` if not
             given.
 
@@ -57,8 +59,8 @@ class MatplotlibPlotter(BasePlotter):
             which depends on the dimensionality of the data and whether 1 or 2 plot_axes are
             defined:
             - Animations: `mpl_animators.ArrayAnimatorWCS`
-            - Static 2-D images: `matplotllib.pyplot.imshow`
-            - Static 1-D line plots: `matplotllib.pyplot.plot`
+            - Static 2-D images: `matplotlib.pyplot.imshow`
+            - Static 1-D line plots: `matplotlib.pyplot.plot`
         """
         naxis = self._ndcube.wcs.pixel_n_dim
 
@@ -72,7 +74,7 @@ class MatplotlibPlotter(BasePlotter):
 
         # Check kwargs are in consistent formats and set default values if not done so by user.
         plot_axes, axes_coordinates, axes_units = utils.prep_plot_kwargs(
-            len(self._ndcube.dimensions), plot_wcs, plot_axes, axes_coordinates, axes_units)
+            len(self._ndcube.shape), plot_wcs, plot_axes, axes_coordinates, axes_units)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', AstropyUserWarning)
@@ -86,7 +88,7 @@ class MatplotlibPlotter(BasePlotter):
             else:
                 ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
                                         axes_coordinates=axes_coordinates,
-                                        axes_units=axes_units, **kwargs)
+                                        axes_units=axes_units, data_unit=data_unit, **kwargs)
 
         return ax
 
@@ -156,6 +158,9 @@ class MatplotlibPlotter(BasePlotter):
         if axes is None:
             axes = plt.subplot(projection=wcs, slices=plot_axes)
 
+        if axes and plot_axes:
+            axes.reset_wcs(wcs=wcs, slices=plot_axes)
+
         utils.set_wcsaxes_format_units(axes.coords, wcs, axes_units)
 
         self._apply_axes_coordinates(axes, axes_coordinates)
@@ -186,9 +191,15 @@ class MatplotlibPlotter(BasePlotter):
 
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
+        try:
+            from mpl_animators import ArrayAnimatorWCS
+        except ImportError as e:
+            raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
+
         # Derive inputs for animation object and instantiate.
         data, wcs, plot_axes, coord_params = self._prep_animate_args(wcs, plot_axes,
                                                                      axes_units, data_unit)
+
         ax = ArrayAnimatorWCS(data, wcs, plot_axes, coord_params=coord_params, **kwargs)
 
         # We need to modify the visible axes after the axes object has been created.
@@ -220,7 +231,7 @@ class MatplotlibPlotter(BasePlotter):
         axes. See https://wcsaxes.readthedocs.io for more information.
         """
         kwargs = {'wcs': self._ndcube.wcs}
-        n_dim = len(self._ndcube.dimensions)
+        n_dim = len(self._ndcube.shape)
         if n_dim > 2:
             kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
@@ -243,10 +254,9 @@ class MatplotlibPlotter(BasePlotter):
 
         # TODO: Add support for transposing the array.
         if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
-            warnings.warn(
+            warn_user(
                 "Animating a NDCube does not support transposing the array. The world axes "
-                "may not display as expected because the array will not be transposed.",
-                UserWarning
+                "may not display as expected because the array will not be transposed."
             )
         plot_axes = [p if p is not None else 0 for p in plot_axes]
 

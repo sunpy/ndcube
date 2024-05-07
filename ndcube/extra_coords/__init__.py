@@ -1,4 +1,10 @@
-from .extra_coords import ExtraCoords
-from .table_coord import *
+from .table_coord import (
+    BaseTableCoordinate,
+    MultipleTableCoordinate,
+    QuantityTableCoordinate,
+    SkyCoordTableCoordinate,
+    TimeTableCoordinate,
+)
 
-__all__ = ['ExtraCoords', 'TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate']
+__all__ = ['TimeTableCoordinate', "MultipleTableCoordinate",
+           'SkyCoordTableCoordinate', 'QuantityTableCoordinate', "BaseTableCoordinate"]
