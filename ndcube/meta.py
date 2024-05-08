@@ -31,7 +31,7 @@ class Meta(dict):
         Metadata in header without a corresponding entry here are assumed to not
         be associated with an axis.
 
-    data_shape: `iterable` of `int`, optional
+    data_shape: `iterator` of `int`, optional
         The shape of the data with which this metadata is associated.
         Must be set if axes input is set.
     """
