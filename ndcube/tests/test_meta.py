@@ -6,8 +6,6 @@ import pytest
 from ndcube.meta import Meta
 from .helpers import assert_metas_equal
 
-# Fixtures
-
 
 @pytest.fixture
 def basic_meta_values():
