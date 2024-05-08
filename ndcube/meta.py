@@ -31,7 +31,7 @@ class Meta(dict):
         Metadata in header without a corresponding entry here are assumed to not
         be associated with an axis.
 
-    data_shape: `iterator` of `int`, optional
+    data_shape: iterator of `int`, optional
         The shape of the data with which this metadata is associated.
         Must be set if axes input is set.
     """
@@ -39,7 +39,6 @@ class Meta(dict):
         self.__ndcube_can_slice__ = True
         self.original_header = header
 
-        # Sanitize metadata values and instantiate class.
         if header is None:
             header = {}
         else:
@@ -47,7 +46,6 @@ class Meta(dict):
         super().__init__(header.items())
         header_keys = header.keys()
 
-        # Generate dictionary for comments.
         if comments is None:
             self._comments = dict()
         else:
@@ -57,7 +55,6 @@ class Meta(dict):
                     "All comments must correspond to a value in header under the same key.")
             self._comments = comments
 
-        # Define data shape.
         if data_shape is None:
             self._data_shape = data_shape
         else:
@@ -85,7 +82,6 @@ class Meta(dict):
         if self.shape is None:
             raise TypeError("Meta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
-        # Verify each entry in axes is an iterable of ints.
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
@@ -197,7 +193,6 @@ class Meta(dict):
 
         else:
             new_meta = copy.deepcopy(self)
-            # Convert item to array of ints and slices for consistent behaviour.
             if isinstance(item, (numbers.Integral, slice)):
                 item = [item]
             item = np.array(list(item) + [slice(None)] * (len(self.shape) - len(item)),
@@ -226,7 +221,6 @@ class Meta(dict):
                                     "Must be an int, slice and tuple of the same.")
             new_meta._data_shape = new_shape[np.invert(dropped_axes)]
 
-            # Calculate the cumulative number of dropped axes.
             cumul_dropped_axes = np.cumsum(dropped_axes)
 
             # Slice all metadata associated with axes.
