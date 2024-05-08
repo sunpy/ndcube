@@ -24,7 +24,6 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
-  "docutils",
   "pytest",
   "pytest-doctestplus",
   "pytest-cov",
