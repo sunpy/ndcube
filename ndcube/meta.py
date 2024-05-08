@@ -13,7 +13,7 @@ class Meta(dict):
 
     Metadata can be linked to a data axis which causes it to be sliced when the
     standard Python numeric slicing API is applied to the object.
-    Specific pieces of metadata can be obtain using the dict-like str slicing API.
+    Specific pieces of metadata can be obtain using the dict-like string slicing API.
     Metadata associated with an axis/axes must have the same length/shape as those axes.
 
     Parameters
@@ -21,17 +21,17 @@ class Meta(dict):
     header: dict-like
         The names and values of metadata.
 
-    comments: dict-like (optional)
+    comments: dict-like, optional
         Comments associated with any of the above pieces of metadata.
 
-    axes: dict-like (optional)
+    axes: dict-like, optional
         The axis/axes associated with the above metadata values.
         Each axis value must be None (for no axis association), and `int`
         or an iterable of `int` if the metadata is associated with multiple axes.
         Metadata in header without a corresponding entry here are assumed to not
         be associated with an axis.
 
-    data_shape: iterable of `int` (optional)
+    data_shape: `iterable` of `int`, optional
         The shape of the data with which this metadata is associated.
         Must be set if axes input is set.
     """
@@ -90,7 +90,7 @@ class Meta(dict):
             axis = (axis,)
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
                                                                     for i in axis])):
-            raise TypeError("Values in axes must be an int or tuple of ints giving "
+            raise TypeError("Values in axes must be an integer or iterable of integers giving "
                             "the data axis/axes associated with the metadata.")
         axis = np.asarray(axis)
 
@@ -131,18 +131,18 @@ class Meta(dict):
         name: `str`
             The name/label of the metadata.
 
-        value:
-            The value of the metadata.  If axes input is not None, this must have the
-            same length/shape as those axes as defined by self.shape.
+        value: Any
+            The value of the metadata. If axes input is not None, this must have the
+            same length/shape as those axes as defined by ``self.shape``.
 
         comment: `str` or `None`
             Any comment associated with this metadata. Set to None if no comment desired.
 
         axis: `int`, iterable of `int`, or `None`
-            The axis/axes with which the metadata is linked.  If not associated with any
+            The axis/axes with which the metadata is linked. If not associated with any
             axis, set this to None.
 
-        overwrite: `bool` (optional)
+        overwrite: `bool`, optional
             If True, overwrites the entry of the name name if already present.
         """
         if name in self.keys() and overwrite is not True:
@@ -155,7 +155,8 @@ class Meta(dict):
             self._axes[name] = axis
         elif name in self._axes:
             del self._axes[name]
-        self.__setitem__(name, value)  # This must be done after updating self._axes otherwise it may error.
+        # This must be done after updating self._axes otherwise it may error.
+        self.__setitem__(name, value)
 
     def remove(self, name):
         if name in self._comments:
