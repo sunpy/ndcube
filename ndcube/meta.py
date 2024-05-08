@@ -60,11 +60,9 @@ class Meta(dict):
         else:
             self._data_shape = np.asarray(data_shape, dtype=int)
 
-        # Generate dictionary for axes.
         if axes is None:
             self._axes = dict()
         else:
-            # Verify data_shape is set if axes is set.
             if not (isinstance(data_shape, collections.abc.Iterable) and
                     all([isinstance(i, numbers.Integral) for i in data_shape])):
                 raise TypeError("If axes is set, data_shape must be an iterable giving "
@@ -90,8 +88,6 @@ class Meta(dict):
                             "the data axis/axes associated with the metadata.")
         axis = np.asarray(axis)
 
-        # Confirm each axis-associated piece of metadata has the same shape
-        # as its associated axes.
         shape_error_msg = (f"{key} must have shape {tuple(self.shape[axis])} "
                            f"as it is associated with axes {axis}")
         if len(axis) == 1:
@@ -183,11 +179,9 @@ class Meta(dict):
         # by typical python numeric slicing API,
         # i.e. slice the each piece of metadata associated with an axes.
 
-        # If item is single string, slicing is simple.
         if isinstance(item, str):
             return super().__getitem__(item)
 
-        # Else, the item is assumed to be a typical slicing item.
         elif self.shape is None:
             raise TypeError("Meta object does not have a shape and so cannot be sliced.")
 
