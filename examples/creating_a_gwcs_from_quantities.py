@@ -13,7 +13,6 @@ from astropy.time import Time
 
 from ndcube import NDCube
 from ndcube.extra_coords import QuantityTableCoordinate, TimeTableCoordinate
-from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 ##############################################################################
 # We aim to create coordinates that are focused around time and energies using astropy quantities.
@@ -33,16 +32,13 @@ time_coord = TimeTableCoordinate(time, names='time', physical_types='time')
 print(time_coord)
 
 ##############################################################################
-# Now we need to create a `~ndcube.wcs.wrappers.compound_wcs.CompoundLowLevelWCS` instance
-# using the previously created table coordinates.
-# Please note the ordering, it is important to make sure you are assigning them
-# in the correct order. 
+# Now we need to combine table coordinates created above and extract the ``.wcs`` from the result.
 
-wcs = CompoundLowLevelWCS(time_coord.wcs, energy_coord.wcs, )
+wcs = (time_coord & energy_coord).wcs
 print(wcs)
 
 ##############################################################################
-# Now, we have all of the pieces required to construct a `~ndcube.NDCube` with this data and the GWCS we just created.
+# Now, we have all the pieces required to construct a `~ndcube.NDCube` with this data and the GWCS we just created.
 
 data = np.random.rand(len(time), len(energy))
 cube = NDCube(data=data, wcs=wcs)
