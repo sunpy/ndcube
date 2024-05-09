@@ -6,8 +6,6 @@ import pytest
 from ndcube.meta import Meta
 from .helpers import assert_metas_equal
 
-# Fixtures
-
 
 @pytest.fixture
 def basic_meta_values():
@@ -65,10 +63,8 @@ def test_slice_axis_with_no_meta(basic_meta):
 
 def test_slice_away_independent_axis(basic_meta):
     meta = basic_meta
-    # Get output
     item = 0
     output = meta[item]
-    # Build expected result.
     values = dict([(key, value) for key, value in meta.items()])
     values["b"] = values["b"][0]
     comments = meta.comments
@@ -77,19 +73,13 @@ def test_slice_away_independent_axis(basic_meta):
     axes["c"] -= 1
     axes["d"] -= 1
     shape = meta.shape[1:]
-    print(values, comments, axes, shape)
     expected = Meta(values, comments, axes, shape)
-    # Compare output and expected.
     assert_metas_equal(output, expected)
 
 
 def test_slice_dependent_axes(basic_meta):
     meta = basic_meta
-    print(meta["a"])
-    # Get output
     output = meta[:, 1:3, 1]
-    print(meta["a"])
-    # Build expected result.
     values = dict([(key, value) for key, value in meta.items()])
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]
@@ -99,7 +89,6 @@ def test_slice_dependent_axes(basic_meta):
     del axes["d"]
     shape = np.array([2, 2, 5])
     expected = Meta(values, comments, axes, shape)
-    # Compare output and expected.
     assert_metas_equal(output, expected)
 
 

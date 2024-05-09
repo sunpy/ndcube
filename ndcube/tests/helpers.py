@@ -97,23 +97,19 @@ def assert_metas_equal(test_input, expected_output):
             f"input: {type(test_input)}; expected: {type(expected_output)}")
     multi_element_msg = "more than one element is ambiguous"
     if isinstance(test_input, Meta) and isinstance(expected_output, Meta):
-        # Check keys are the same.
         assert test_input.keys() == expected_output.keys()
 
-        # Check shapes are the same.
         if test_input.shape is None or expected_output.shape is None:
             assert test_input.shape == expected_output.shape
         else:
             assert np.allclose(test_input.shape, expected_output.shape)
 
-        # Check values and axes are the same.
         for test_value, expected_value in zip(test_input.values(), expected_output.values()):
             try:
                 assert test_value == expected_value
             except ValueError as err:
                 if multi_element_msg in err.args[0]:
                     assert np.allclose(test_value, expected_value)
-        # Check axes are the same.
         for test_axis, expected_axis in zip(test_input.axes.values(),
                                             expected_output.axes.values()):
             assert all(test_axis == expected_axis)

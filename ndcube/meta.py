@@ -31,7 +31,7 @@ class Meta(dict):
         acceptable if the metadata is associated with a single axis. An empty
         iterable also means the metadata is not associated with any axes.
 
-    data_shape: `iterator` of `int`, optional
+    data_shape: iterator of `int`, optional
         The shape of the data with which this metadata is associated.
         Must be set if axes input is set.
     """
@@ -39,7 +39,6 @@ class Meta(dict):
         self.__ndcube_can_slice__ = True
         self.original_header = header
 
-        # Sanitize metadata values and instantiate class.
         if header is None:
             header = {}
         else:
@@ -47,7 +46,6 @@ class Meta(dict):
         super().__init__(header.items())
         header_keys = header.keys()
 
-        # Generate dictionary for comments.
         if comments is None:
             self._comments = dict()
         else:
@@ -57,17 +55,14 @@ class Meta(dict):
                     "All comments must correspond to a value in header under the same key.")
             self._comments = comments
 
-        # Define data shape.
         if data_shape is None:
             self._data_shape = data_shape
         else:
             self._data_shape = np.asarray(data_shape, dtype=int)
 
-        # Generate dictionary for axes.
         if axes is None:
             self._axes = dict()
         else:
-            # Verify data_shape is set if axes is set.
             if not (isinstance(data_shape, collections.abc.Iterable) and
                     all([isinstance(i, numbers.Integral) for i in data_shape])):
                 raise TypeError("If axes is set, data_shape must be an iterable giving "
@@ -88,14 +83,14 @@ class Meta(dict):
             raise TypeError("Meta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
         # Verify each entry in axes is an iterable of ints.
+        if isinstance(axis, numbers.Integral):
+            axis = (axis,)
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
                                                                     for i in axis])):
             raise TypeError("Values in axes must be an integer or iterable of integers giving "
                             "the data axis/axes associated with the metadata.")
         axis = np.asarray(axis)
 
-        # Confirm each axis-associated piece of metadata has the same shape
-        # as its associated axes.
         shape_error_msg = (f"{key} must have shape {tuple(self.shape[axis])} "
                            f"as it is associated with axes {axis}")
         if len(axis) == 1:
@@ -187,17 +182,14 @@ class Meta(dict):
         # by typical python numeric slicing API,
         # i.e. slice the each piece of metadata associated with an axes.
 
-        # If item is single string, slicing is simple.
         if isinstance(item, str):
             return super().__getitem__(item)
 
-        # Else, the item is assumed to be a typical slicing item.
         elif self.shape is None:
             raise TypeError("Meta object does not have a shape and so cannot be sliced.")
 
         else:
             new_meta = copy.deepcopy(self)
-            # Convert item to array of ints and slices for consistent behaviour.
             if isinstance(item, (numbers.Integral, slice)):
                 item = [item]
             item = np.array(list(item) + [slice(None)] * (len(self.shape) - len(item)),
@@ -226,7 +218,6 @@ class Meta(dict):
                                     "Must be an int, slice and tuple of the same.")
             new_meta._data_shape = new_shape[np.invert(dropped_axes)]
 
-            # Calculate the cumulative number of dropped axes.
             cumul_dropped_axes = np.cumsum(dropped_axes)
 
             # Slice all metadata associated with axes.
