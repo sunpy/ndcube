@@ -25,11 +25,11 @@ class Meta(dict):
         Comments associated with any of the above pieces of metadata.
 
     axes: dict-like, optional
-        The axis/axes associated with the above metadata values.
-        Each axis value must be None (for no axis association), and `int`
-        or an iterable of `int` if the metadata is associated with multiple axes.
-        Metadata in header without a corresponding entry here are assumed to not
-        be associated with an axis.
+        The axis/axes associated with the metadata denoted by the keys.
+        Metadata not included are considered not to be associated with any axis.
+        Each axis value must be an iterable of `int`. An `int` itself is also
+        acceptable if the metadata is associated with a single axis. An empty
+        iterable also means the metadata is not associated with any axes.
 
     data_shape: `iterator` of `int`, optional
         The shape of the data with which this metadata is associated.
@@ -80,14 +80,14 @@ class Meta(dict):
                                for key, axis in axes.items()])
 
     def _sanitize_axis_value(self, axis, value, key):
-        if axis is None:
-            return None
+        if isinstance(axis, numbers.Integral):
+            axis = (axis,)
+        if len(axis) == 0:
+            return tuple()
         if self.shape is None:
             raise TypeError("Meta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
         # Verify each entry in axes is an iterable of ints.
-        if isinstance(axis, numbers.Integral):
-            axis = (axis,)
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
                                                                     for i in axis])):
             raise TypeError("Values in axes must be an integer or iterable of integers giving "
@@ -123,7 +123,7 @@ class Meta(dict):
     def shape(self):
         return self._data_shape
 
-    def add(self, name, value, comment, axis, overwrite=False):
+    def add(self, name, value, comment=None, axis=None, overwrite=False):
         """Add a new piece of metadata to instance.
 
         Parameters

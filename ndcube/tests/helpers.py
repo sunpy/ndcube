@@ -116,8 +116,7 @@ def assert_metas_equal(test_input, expected_output):
         # Check axes are the same.
         for test_axis, expected_axis in zip(test_input.axes.values(),
                                             expected_output.axes.values()):
-            assert ((test_axis is None and expected_axis is None) or
-                    all(test_axis == expected_axis))
+            assert all(test_axis == expected_axis)
     else:
         if not (test_input is None and expected_output is None):
             assert test_input.keys() == expected_output.keys()
