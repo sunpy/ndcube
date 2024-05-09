@@ -24,7 +24,7 @@ from astropy.wcs.utils import _split_matrix
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.high_level_api import values_to_high_level_objects
 
-from ndcube import utils
+from ndcube import utils, Meta
 from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.mixins import NDCubeSlicingMixin
@@ -1206,6 +1206,17 @@ class NDCube(NDCubeBase):
 
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
+
+        # If meta is axis-aware, drop axis-awareness for metadata associated with rebinned axes.
+        if isinstance(self.meta, Meta):
+            rebinned_axes, = set(np.where(np.asarray(bin_shape) != 1))
+            new_meta = copy.deepcopy(self.meta)
+            null_set = set()
+            for name, axes in new_meta._axes.item():
+                if set(axes).intersection(rebinned_axes) != null_set:
+                    del new_meta._axes[name]
+        else:
+            new_meta = self.meta
 
         # Reform NDCube.
         new_cube = type(self)(
