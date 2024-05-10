@@ -1,3 +1,4 @@
+import copy
 from inspect import signature
 from textwrap import dedent
 
@@ -946,6 +947,21 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
+
+
+def test_rebin_axis_aware_meta(ndcube_4d_axis_aware_meta):
+    # Execute rebin.
+    cube = ndcube_4d_axis_aware_meta
+    bin_shape = (1, 2, 5, 1)
+    output = cube.rebin(bin_shape, operation=np.sum)
+
+    # Build expected meta
+    expected_meta = copy.deepcopy(cube.meta)
+    del expected_meta._axes["pixel label"]
+    del expected_meta._axes["line"]
+
+    # Confirm output meta is as expected.
+    helpers.assert_metas_equal(output.meta, expected_meta)
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):

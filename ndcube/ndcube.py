@@ -1209,10 +1209,10 @@ class NDCube(NDCubeBase):
 
         # If meta is axis-aware, drop axis-awareness for metadata associated with rebinned axes.
         if isinstance(self.meta, Meta):
-            rebinned_axes, = set(np.where(np.asarray(bin_shape) != 1))
+            rebinned_axes = set(np.where(np.asarray(bin_shape) != 1)[0])
             new_meta = deepcopy(self.meta)
             null_set = set()
-            for name, axes in new_meta._axes.item():
+            for name, axes in self.meta.axes.items():
                 if set(axes).intersection(rebinned_axes) != null_set:
                     del new_meta._axes[name]
         else:
@@ -1224,7 +1224,7 @@ class NDCube(NDCubeBase):
             wcs=new_wcs,
             uncertainty=new_uncertainty,
             mask=new_mask,
-            meta=self.meta,
+            meta=new_meta,
             unit=new_unit
         )
         new_cube._global_coords = self._global_coords
