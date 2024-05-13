@@ -110,7 +110,6 @@ def assert_metas_equal(test_input, expected_output):
             except ValueError as err:
                 if multi_element_msg in err.args[0]:
                     assert np.allclose(test_value, expected_value)
-        print(test_input.axes, expected_output.axes)
         for key in test_input.axes.keys():
             assert all(test_input.axes[key] == expected_output.axes[key])
     else:

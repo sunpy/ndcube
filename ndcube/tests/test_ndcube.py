@@ -959,6 +959,7 @@ def test_rebin_axis_aware_meta(ndcube_4d_axis_aware_meta):
     expected_meta = copy.deepcopy(cube.meta)
     del expected_meta._axes["pixel label"]
     del expected_meta._axes["line"]
+    expected_meta._data_shape = np.array([5, 4, 2, 12], dtype=int)
 
     # Confirm output meta is as expected.
     helpers.assert_metas_equal(output.meta, expected_meta)

@@ -37,6 +37,7 @@ class Meta(dict):
     """
     def __init__(self, header=None, comments=None, axes=None, data_shape=None):
         self.__ndcube_can_slice__ = True
+        self.__ndcube_can_rebin__ = True
         self.original_header = header
 
         if header is None:
@@ -239,3 +240,42 @@ class Meta(dict):
                                  overwrite=True)
 
             return new_meta
+
+    def rebin(self, bin_shape):
+        """
+        Adjusts axis-aware metadata to stay consistent with a rebinned `~ndcube.NDCube`.
+
+        This is done by simply removing the axis-awareness of metadata associated with
+        rebinned axes. The metadata itself is not changed or removed. This operation
+        does not remove axis-awareness from metadata only associated with non-rebinned
+        axes, i.e. axes whose corresponding entries in ``bin_shape`` are 1.
+
+        Parameters
+        ----------
+        bin_shape: `tuple` or `int`
+            The new lengths of each axis of the associated data.
+        """
+        # Sanitize input.
+        data_shape = self.shape
+        if len(bin_shape) != len(data_shape):
+            raise ValueError(f"bin_shape must be same length as data shape: "
+                             f"{len(bin_shape)} != {len(self.shape)}")
+        if not all([isinstance(dim, numbers.Integral) for dim in bin_shape]):
+            raise TypeError("bin_shape must contain only integer types.")
+        # Convert bin_shape to array. Do this after checking types of elements to avoid
+        # floats being incorrectly rounded down.
+        bin_shape = np.asarray(bin_shape, dtype=int)
+        if any(data_shape % bin_shape):
+            raise ValueError(
+                "All elements in bin_shape must be a factor of corresponding element"
+                f" of data shape: data_shape mod bin_shape = {self.shape % bin_shape}")
+        # Remove axis-awareness from metadata associated with rebinned axes.
+        rebinned_axes = set(np.where(bin_shape != 1)[0])
+        new_meta = copy.deepcopy(self)
+        null_set = set()
+        for name, axes in self.axes.items():
+            if set(axes).intersection(rebinned_axes) != null_set:
+                del new_meta._axes[name]
+        # Update data shape.
+        new_meta._data_shape = (data_shape / bin_shape).astype(int)
+        return new_meta
