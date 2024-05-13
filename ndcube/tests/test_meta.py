@@ -12,7 +12,8 @@ def basic_meta_values():
     return {"a": "hello",
             "b": list(range(10, 25, 10)),
             "c": np.array([[1, 2, 3, 4], [10, 20, 30, 40], [100, 200, 300, 400]]),
-            "d": list(range(3, 13, 3))
+            "d": list(range(3, 13, 3)),
+            "e": list(range(2, 8, 2))
             }
 
 
@@ -29,6 +30,7 @@ def basic_axes():
     return {"b": 0,
             "c": (1, 2),
             "d": (2,),
+            "e": 1
             }
 
 
@@ -72,6 +74,7 @@ def test_slice_away_independent_axis(basic_meta):
     del axes["b"]
     axes["c"] -= 1
     axes["d"] -= 1
+    axes["e"] -= 1
     shape = meta.shape[1:]
     expected = Meta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
@@ -83,6 +86,7 @@ def test_slice_dependent_axes(basic_meta):
     values = dict([(key, value) for key, value in meta.items()])
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]
+    values["e"] = values["e"][1:3]
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     axes["c"] = 1
@@ -149,3 +153,29 @@ def test_remove(basic_meta):
     assert name not in meta.keys()
     assert name not in meta.comments.keys()
     assert name not in meta.axes.keys()
+
+
+def test_rebin(basic_meta):
+    meta = basic_meta
+    bin_shape = (2, 1, 2, 1)
+    output = meta.rebin(bin_shape)
+    # Build expected result.
+    expected = copy.deepcopy(meta)
+    del expected._axes["b"]
+    del expected._axes["c"]
+    del expected._axes["d"]
+    expected._data_shape = np.array([1, 3, 2, 5], dtype=int)
+    assert_metas_equal(output, expected)
+
+
+def test_rebin_wrong_len(basic_meta):
+    with pytest.raises(ValueError):
+        basic_meta.rebin((1,))
+
+def test_rebin_not_ints(basic_meta):
+    with pytest.raises(TypeError):
+        basic_meta.rebin((1, 3.9, 1, 1))
+
+def test_rebin_not_factors(basic_meta):
+    with pytest.raises(ValueError):
+        basic_meta.rebin((1, 2, 1, 1))
