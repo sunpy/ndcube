@@ -83,7 +83,7 @@ class Meta(dict):
         if self.shape is None:
             raise TypeError("Meta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
-        # Verify each entry in axes is an iterable of ints.
+        # Verify each entry in axes is an iterable of ints or a scalar.
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
@@ -94,16 +94,17 @@ class Meta(dict):
 
         shape_error_msg = (f"{key} must have shape {tuple(self.shape[axis])} "
                            f"as it is associated with axes {axis}")
-        if len(axis) == 1:
-            if not hasattr(value, "__len__"):
-                raise TypeError(shape_error_msg)
-            meta_shape = (len(value),)
-        else:
-            if not hasattr(value, "shape"):
-                raise TypeError(shape_error_msg)
-            meta_shape = value.shape
-        if not all(meta_shape == self.shape[axis]):
-            raise ValueError(shape_error_msg)
+        if not _isscalar(value):
+            if len(axis) == 1:
+                if not hasattr(value, "__len__"):
+                    raise TypeError(shape_error_msg)
+                meta_shape = (len(value),)
+            else:
+                if not hasattr(value, "shape"):
+                    raise TypeError(shape_error_msg)
+                meta_shape = value.shape
+            if not all(meta_shape == self.shape[axis]):
+                raise ValueError(shape_error_msg)
 
         return axis
 
@@ -165,16 +166,17 @@ class Meta(dict):
         axis = self.axes.get(key, None)
         if axis is not None:
             recommendation = "We recommend using the 'add' method to set values."
-            if len(axis) == 1:
-                if not (hasattr(val, "__len__") and len(val) == self.shape[axis[0]]):
-                    raise TypeError(f"{key} must have same length as associated axis, "
-                                    f"i.e. axis {axis[0]}: {self.shape[axis[0]]}\n"
-                                    f"{recommendation}")
-            else:
-                if not (hasattr(val, "shape") and all(val.shape == self.shape[axis])):
-                    raise TypeError(f"{key} must have same shape as associated axes, "
-                                    f"i.e axes {axis}: {self.shape[axis]}\n"
-                                    f"{recommendation}")
+            if not _isscalar(val):
+                if len(axis) == 1:
+                    if not (hasattr(val, "__len__") and len(val) == self.shape[axis[0]]):
+                        raise TypeError(f"{key} must have same length as associated axis, "
+                                        f"i.e. axis {axis[0]}: {self.shape[axis[0]]}\n"
+                                        f"{recommendation}")
+                else:
+                    if not (hasattr(val, "shape") and all(val.shape == self.shape[axis])):
+                        raise TypeError(f"{key} must have same shape as associated axes, "
+                                        f"i.e axes {axis}: {self.shape[axis]}\n"
+                                        f"{recommendation}")
         super().__setitem__(key, val)
 
     def __getitem__(self, item):
@@ -226,7 +228,9 @@ class Meta(dict):
                 axis = self.axes.get(key, None)
                 if axis is not None:
                     new_item = tuple(item[axis])
-                    if len(new_item) == 1:
+                    if _isscalar(value):
+                        new_value = value
+                    elif len(new_item) == 1:
                         new_value = value[new_item[0]]
                     else:
                         new_value = value[new_item]
@@ -269,13 +273,18 @@ class Meta(dict):
             raise ValueError(
                 "All elements in bin_shape must be a factor of corresponding element"
                 f" of data shape: data_shape mod bin_shape = {self.shape % bin_shape}")
-        # Remove axis-awareness from metadata associated with rebinned axes.
+        # Remove axis-awareness from metadata associated with rebinned axes,
+        # unless the value is scalar.
         rebinned_axes = set(np.where(bin_shape != 1)[0])
         new_meta = copy.deepcopy(self)
         null_set = set()
         for name, axes in self.axes.items():
-            if set(axes).intersection(rebinned_axes) != null_set:
+            if set(axes).intersection(rebinned_axes) != null_set and not _isscalar(self[name]):
                 del new_meta._axes[name]
         # Update data shape.
         new_meta._data_shape = (data_shape / bin_shape).astype(int)
         return new_meta
+
+
+def _isscalar(value):
+    return ((hasattr(value, "isscalar") and value.isscalar) or np.isscalar(value))

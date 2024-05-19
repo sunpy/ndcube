@@ -13,7 +13,9 @@ def basic_meta_values():
             "b": list(range(10, 25, 10)),
             "c": np.array([[1, 2, 3, 4], [10, 20, 30, 40], [100, 200, 300, 400]]),
             "d": list(range(3, 13, 3)),
-            "e": list(range(2, 8, 2))
+            "e": list(range(2, 8, 2)),
+            "f": "world",
+            "g": "!"
             }
 
 
@@ -30,7 +32,9 @@ def basic_axes():
     return {"b": 0,
             "c": (1, 2),
             "d": (2,),
-            "e": 1
+            "e": 1,
+            "f": 0,
+            "g": (1, 2)
             }
 
 
@@ -72,9 +76,11 @@ def test_slice_away_independent_axis(basic_meta):
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     del axes["b"]
+    del axes["f"]
     axes["c"] -= 1
     axes["d"] -= 1
     axes["e"] -= 1
+    axes["g"] -= 1
     shape = meta.shape[1:]
     expected = Meta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
@@ -90,6 +96,7 @@ def test_slice_dependent_axes(basic_meta):
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     axes["c"] = 1
+    axes["g"] = 1
     del axes["d"]
     shape = np.array([2, 2, 5])
     expected = Meta(values, comments, axes, shape)
