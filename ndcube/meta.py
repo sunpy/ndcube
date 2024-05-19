@@ -93,19 +93,19 @@ class Meta(dict):
         axis = np.asarray(axis)
 
         shape_error_msg = (f"{key} must have shape {tuple(self.shape[axis])} "
-                           f"as it is associated with axes {axis}")
-        if not _isscalar(value):
-            if len(axis) == 1:
-                if not hasattr(value, "__len__"):
-                    raise TypeError(shape_error_msg)
+                           f"as its associated axes {axis}, ",
+                           f"or same length as number of associated axes ({len(axis)}). "
+                           f"Has shape {value.shape if hasattr(value, 'shape') else len(value)}")
+        if _not_scalar(value):
+            if hasattr(value, "shape"):
+                meta_shape = value.shape
+            elif hasattr(value, "__len__"):
                 meta_shape = (len(value),)
             else:
-                if not hasattr(value, "shape"):
-                    raise TypeError(shape_error_msg)
-                meta_shape = value.shape
-            if not all(meta_shape == self.shape[axis]):
+                raise TypeError(shape_error_msg)
+            data_shape = tuple(self.shape[axis])
+            if not (meta_shape == data_shape or (len(axis) > 1 and meta_shape == (len(data_shape),))):
                 raise ValueError(shape_error_msg)
-
         return axis
 
     @property
@@ -166,14 +166,16 @@ class Meta(dict):
         axis = self.axes.get(key, None)
         if axis is not None:
             recommendation = "We recommend using the 'add' method to set values."
-            if not _isscalar(val):
+            if _not_scalar(val):
+                data_shape = tuple(self.shape[axis])
                 if len(axis) == 1:
-                    if not (hasattr(val, "__len__") and len(val) == self.shape[axis[0]]):
+                    if not (hasattr(val, "__len__") and (len(val),) == data_shape):
                         raise TypeError(f"{key} must have same length as associated axis, "
                                         f"i.e. axis {axis[0]}: {self.shape[axis[0]]}\n"
                                         f"{recommendation}")
                 else:
-                    if not (hasattr(val, "shape") and all(val.shape == self.shape[axis])):
+                    if ((not (hasattr(val, "shape") and val.shape == data_shape))
+                        and (not (hasattr(val, "__len__") and len(val) == len(data_shape)))):
                         raise TypeError(f"{key} must have same shape as associated axes, "
                                         f"i.e axes {axis}: {self.shape[axis]}\n"
                                         f"{recommendation}")
@@ -195,11 +197,12 @@ class Meta(dict):
             new_meta = copy.deepcopy(self)
             if isinstance(item, (numbers.Integral, slice)):
                 item = [item]
-            item = np.array(list(item) + [slice(None)] * (len(self.shape) - len(item)),
+            naxes = len(self.shape)
+            item = np.array(list(item) + [slice(None)] * (naxes - len(item)),
                             dtype=object)
 
             # Edit data shape and calculate which axis will be dropped.
-            dropped_axes = np.zeros(len(self.shape), dtype=bool)
+            dropped_axes = np.zeros(naxes, dtype=bool)
             new_shape = new_meta.shape
             for i, axis_item in enumerate(item):
                 if isinstance(axis_item, numbers.Integral):
@@ -219,27 +222,53 @@ class Meta(dict):
                 else:
                     raise TypeError("Unrecognized slice type. "
                                     "Must be an int, slice and tuple of the same.")
-            new_meta._data_shape = new_shape[np.invert(dropped_axes)]
-
-            cumul_dropped_axes = np.cumsum(dropped_axes)
+            kept_axes = np.invert(dropped_axes)
+            new_meta._data_shape = new_shape[kept_axes]
 
             # Slice all metadata associated with axes.
             for key, value in self.items():
                 axis = self.axes.get(key, None)
                 if axis is not None:
-                    new_item = tuple(item[axis])
-                    if _isscalar(value):
+                    val_is_scalar = not _not_scalar(value)
+                    if val_is_scalar:
                         new_value = value
-                    elif len(new_item) == 1:
-                        new_value = value[new_item[0]]
                     else:
-                        new_value = value[new_item]
-                    new_axis = np.array([-1 if isinstance(i, numbers.Integral) else a
-                                         for i, a in zip(new_item, axis)])
-                    new_axis -= cumul_dropped_axes[axis]
-                    new_axis = new_axis[new_axis >= 0]
+                        scalar_per_axis = (len(axis) > 1
+                                           and not (hasattr(value, "shape")
+                                                    and value.shape == tuple(self.shape[axis]))
+                                           and len(value) == len(axis))
+                        if scalar_per_axis:
+                            # If shape/len of metadata value equals number of axes,
+                            # the metadata represents a single value per axis.
+                            # Change item so values for dropped axes are dropped.
+                            new_item = kept_axes[axis]
+                        else:
+                            new_item = tuple(item[axis])
+                        # Slice metadata value.
+                        try:
+                            new_value = value[new_item]
+                        except:
+                            # If value cannot be sliced by fancy slicing, convert it
+                            # it to an array, slice it, and then if necessary, convert
+                            # it back to its original type.
+                            new_value = (np.asanyarray(value)[new_item])
+                            if hasattr(new_value, "__len__"):
+                                new_value = type(value)(new_value)
+                        if scalar_per_axis and len(new_value) == 1:
+                           # If value gives a scalar for each axis, the value itself must
+                           # be scalar if it only applies to one axis. Therefore, if
+                           # slice down length is one, extract value out of iterable.
+                           new_value = new_value[0]
+                    # Update axis indices.
+                    new_axis = np.asarray(list(
+                        set(axis).intersection(set(np.arange(naxes)[kept_axes]))
+                        ))
                     if len(new_axis) == 0:
                         new_axis = None
+                    else:
+                        cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
+                        new_axis -= cumul_dropped_axes
+                    # Overwrite metadata value with newly sliced version.
                     new_meta.add(key, new_value, self.comments.get(key, None), new_axis,
                                  overwrite=True)
 
@@ -274,17 +303,26 @@ class Meta(dict):
                 "All elements in bin_shape must be a factor of corresponding element"
                 f" of data shape: data_shape mod bin_shape = {self.shape % bin_shape}")
         # Remove axis-awareness from metadata associated with rebinned axes,
-        # unless the value is scalar.
+        # unless the value is scalar or gives a single value for each axis.
         rebinned_axes = set(np.where(bin_shape != 1)[0])
         new_meta = copy.deepcopy(self)
         null_set = set()
         for name, axes in self.axes.items():
-            if set(axes).intersection(rebinned_axes) != null_set and not _isscalar(self[name]):
+            value = self[name]
+            if _not_scalar(value) and set(axes).intersection(rebinned_axes) != null_set:
                 del new_meta._axes[name]
         # Update data shape.
         new_meta._data_shape = (data_shape / bin_shape).astype(int)
         return new_meta
 
 
-def _isscalar(value):
-    return ((hasattr(value, "isscalar") and value.isscalar) or np.isscalar(value))
+def _not_scalar(value):
+    return (
+        (
+         hasattr(value, "shape")
+         or hasattr(value, "__len__")
+        )
+        and not
+        (
+         isinstance(value, str)
+        ))

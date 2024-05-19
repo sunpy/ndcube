@@ -15,7 +15,7 @@ def basic_meta_values():
             "d": list(range(3, 13, 3)),
             "e": list(range(2, 8, 2)),
             "f": "world",
-            "g": "!"
+            "g": ["hello", "world", "!"]
             }
 
 
@@ -34,7 +34,7 @@ def basic_axes():
             "d": (2,),
             "e": 1,
             "f": 0,
-            "g": (1, 2)
+            "g": (0, 1, 2)
             }
 
 
@@ -73,6 +73,7 @@ def test_slice_away_independent_axis(basic_meta):
     output = meta[item]
     values = dict([(key, value) for key, value in meta.items()])
     values["b"] = values["b"][0]
+    values["g"] = ["world", "!"]
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     del axes["b"]
@@ -80,8 +81,30 @@ def test_slice_away_independent_axis(basic_meta):
     axes["c"] -= 1
     axes["d"] -= 1
     axes["e"] -= 1
-    axes["g"] -= 1
+    axes["g"] = (0, 1)
     shape = meta.shape[1:]
+    expected = Meta(values, comments, axes, shape)
+    assert_metas_equal(output, expected)
+
+
+def test_slice_away_independent_and_dependent_axis(basic_meta):
+    meta = basic_meta
+    item = (0, 1)
+    output = meta[item]
+    values = dict([(key, value) for key, value in meta.items()])
+    values["b"] = values["b"][0]
+    values["c"] = values["c"][1]
+    values["e"] = values["e"][1]
+    values["g"] = "!"
+    comments = meta.comments
+    axes = dict([(key, axis) for key, axis in meta.axes.items()])
+    del axes["b"]
+    del axes["e"]
+    del axes["f"]
+    axes["c"] = 0
+    axes["d"] = 0
+    axes["g"] = 0
+    shape = meta.shape[2:]
     expected = Meta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
 
@@ -93,11 +116,12 @@ def test_slice_dependent_axes(basic_meta):
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]
     values["e"] = values["e"][1:3]
+    values["g"] = values["g"][:2]
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
-    axes["c"] = 1
-    axes["g"] = 1
     del axes["d"]
+    axes["c"] = 1
+    axes["g"] = (0, 1)
     shape = np.array([2, 2, 5])
     expected = Meta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
@@ -171,6 +195,7 @@ def test_rebin(basic_meta):
     del expected._axes["b"]
     del expected._axes["c"]
     del expected._axes["d"]
+    del expected._axes["g"]
     expected._data_shape = np.array([1, 3, 2, 5], dtype=int)
     assert_metas_equal(output, expected)
 
