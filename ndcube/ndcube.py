@@ -1129,17 +1129,8 @@ class NDCube(NDCubeBase):
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
-        m = None if (self.mask is None or self.mask is False or operation_ignores_mask) else self.mask
-        data = self.data
-        if m is not None:
-            for array_type, masked_type in ARRAY_MASK_MAP.items():
-                if isinstance(self.data, array_type):
-                    break
-            else:
-                masked_type = np.ma.masked_array
-                warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
-            data = masked_type(self.data, m)
-
+        data, sanitized_mask = _create_masked_array_for_rebinning(self.data, self.mask,
+                                                                  operation_ignores_mask)
         reshape = np.empty(len(data_shape) + len(bin_shape), dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
@@ -1192,7 +1183,7 @@ class NDCube(NDCubeBase):
                 flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
                 flat_uncertainty = flat_uncertainty.reshape(flat_shape)
                 flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
-                if m is not None:
+                if sanitized_mask is not None:
                     reshaped_mask = self.mask.reshape(tuple(reshape))
                     flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
                     flat_mask = flat_mask.reshape(flat_shape)
@@ -1261,3 +1252,17 @@ class NDCube(NDCubeBase):
         if (item == 0).all():
             raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
+
+
+def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
+    m = None if (mask is None or mask is False or operation_ignores_mask) else mask
+    if m is None:
+        return data, m
+    else:
+        for array_type, masked_type in ARRAY_MASK_MAP.items():
+            if isinstance(data, array_type):
+                break
+        else:
+            masked_type = np.ma.masked_array
+            warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
+        return masked_type(data, m), m
