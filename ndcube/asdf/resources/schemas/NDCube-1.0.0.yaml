@@ -1,0 +1,21 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/NDCube-1.0.0"
+
+title: |
+  Represents the ndcube.NDCube class object
+
+description:
+  Test ndcube class
+
+type: object
+properties:
+  data:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
+  wcs:
+    $ref: "http://stsci.edu/schemas/gwcs/wcs-1.1.0"
+
+required: [data , wcs]
+allowAdditionalProperties: False
+...

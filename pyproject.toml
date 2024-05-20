@@ -71,6 +71,12 @@ exclude = ["ndcube._dev*"]
 [tool.setuptools_scm]
 write_to = "ndcube/_version.py"
 
+[project.entry-points."asdf.resource_mappings"]
+ndcube = "ndcube.asdf.entry_points:get_resource_mappings"
+
+[project.entry-points."asdf.extensions"]
+ndcube = "ndcube.asdf.entry_points:get_extensions"
+
 [tool.towncrier]
     package = "ndcube"
     filename = "CHANGELOG.rst"
