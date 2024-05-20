@@ -1200,7 +1200,9 @@ class NDCube(NDCubeBase):
 
         # If meta is axis-aware, drop axis-awareness for metadata associated with rebinned axes.
         if hasattr(self.meta, "__ndcube_can_rebin__") and self.meta.__ndcube_can_rebin__:
-            new_meta = self.meta.rebin(bin_shape)
+            new_shape = (np.asarray(self.shape) / np.asarray(bin_shape)).astype(int)
+            rebinned_axes = set(np.where(bin_shape != 1)[0])
+            new_meta = self.meta.rebin(rebinned_axes, new_shape)
         else:
             new_meta = self.meta
 

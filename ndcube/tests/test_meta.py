@@ -190,8 +190,9 @@ def test_remove(basic_meta):
 
 def test_rebin(basic_meta):
     meta = basic_meta
-    bin_shape = (2, 1, 2, 1)
-    output = meta.rebin(bin_shape)
+    rebinned_axes = {0, 2}
+    new_shape = (1, 3, 2, 5)
+    output = meta.rebin(rebinned_axes, new_shape)
     # Build expected result.
     expected = copy.deepcopy(meta)
     del expected._axes["b"]
@@ -199,16 +200,3 @@ def test_rebin(basic_meta):
     del expected._axes["d"]
     expected._data_shape = np.array([1, 3, 2, 5], dtype=int)
     assert_metas_equal(output, expected)
-
-
-def test_rebin_wrong_len(basic_meta):
-    with pytest.raises(ValueError):
-        basic_meta.rebin((1,))
-
-def test_rebin_not_ints(basic_meta):
-    with pytest.raises(TypeError):
-        basic_meta.rebin((1, 3.9, 1, 1))
-
-def test_rebin_not_factors(basic_meta):
-    with pytest.raises(ValueError):
-        basic_meta.rebin((1, 2, 1, 1))

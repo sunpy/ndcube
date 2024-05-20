@@ -299,7 +299,7 @@ class Meta(dict):
 
             return new_meta
 
-    def rebin(self, bin_shape):
+    def rebin(self, rebinned_axes, new_shape):
         """
         Adjusts axis-aware metadata to stay consistent with a rebinned `~ndcube.NDCube`.
 
@@ -310,25 +310,28 @@ class Meta(dict):
 
         Parameters
         ----------
-        bin_shape: `tuple` or `int`
-            The new lengths of each axis of the associated data.
+        rebinned_axes: `set` of `int`
+            Set of array indices of axes that are rebinned.
+        new_shape: `tuple` of `int`
+            The new shape of the rebinned data.
         """
         # Sanitize input.
         data_shape = self.shape
-        if len(bin_shape) != len(data_shape):
-            raise ValueError(f"bin_shape must be same length as data shape: "
-                             f"{len(bin_shape)} != {len(self.shape)}")
-        if not all([isinstance(dim, numbers.Integral) for dim in bin_shape]):
-            raise TypeError("bin_shape must contain only integer types.")
-        # Convert bin_shape to array. Do this after checking types of elements to avoid
-        # floats being incorrectly rounded down.
-        bin_shape = np.asarray(bin_shape, dtype=int)
-        if any(data_shape % bin_shape):
+        if not isinstance(rebinned_axes, set):
+            raise TypeError(
+                f"rebinned_axes must be a set. type of rebinned_axes is {type(rebinned_axes)}")
+        if not all([isinstance(dim, numbers.Integral) for dim in rebinned_axes]):
+            raise ValueError("All elements of rebinned_axes must be ints.")
+        list_axes = list(rebinned_axes)
+        if min(list_axes) < 0 or max(list_axes) >= len(data_shape):
             raise ValueError(
-                "All elements in bin_shape must be a factor of corresponding element"
-                f" of data shape: data_shape mod bin_shape = {self.shape % bin_shape}")
+                f"Elements in rebinned_axes must be in range 0--{len(data_shape)-1} inclusive.")
+        if len(new_shape) != len(data_shape):
+            raise ValueError(f"new_shape must be a tuple of same length as data shape: "
+                             f"{len(new_shape)} != {len(self.shape)}")
+        if not all([isinstance(dim, numbers.Integral) for dim in new_shape]):
+            raise TypeError("bin_shape must contain only integer types.")
         # Remove axis-awareness from grid-aligned metadata associated with rebinned axes.
-        rebinned_axes = set(np.where(bin_shape != 1)[0])
         new_meta = copy.deepcopy(self)
         null_set = set()
         for name, axes in self.axes.items():
@@ -336,7 +339,7 @@ class Meta(dict):
                 and set(axes).intersection(rebinned_axes) != null_set):
                 del new_meta._axes[name]
         # Update data shape.
-        new_meta._data_shape = (data_shape / bin_shape).astype(int)
+        new_meta._data_shape = np.asarray(new_shape).astype(int)
         return new_meta
 
 
