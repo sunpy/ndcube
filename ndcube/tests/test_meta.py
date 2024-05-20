@@ -74,6 +74,7 @@ def test_slice_away_independent_axis(basic_meta):
     values = dict([(key, value) for key, value in meta.items()])
     values["b"] = values["b"][0]
     values["g"] = ["world", "!"]
+    del values["f"]
     comments = meta.comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     del axes["b"]
@@ -92,6 +93,7 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     item = (0, 1)
     output = meta[item]
     values = dict([(key, value) for key, value in meta.items()])
+    del values["f"]
     values["b"] = values["b"][0]
     values["c"] = values["c"][1]
     values["e"] = values["e"][1]
@@ -195,7 +197,6 @@ def test_rebin(basic_meta):
     del expected._axes["b"]
     del expected._axes["c"]
     del expected._axes["d"]
-    del expected._axes["g"]
     expected._data_shape = np.array([1, 3, 2, 5], dtype=int)
     assert_metas_equal(output, expected)
 

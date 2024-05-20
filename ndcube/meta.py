@@ -28,12 +28,49 @@ class Meta(dict):
         The axis/axes associated with the metadata denoted by the keys.
         Metadata not included are considered not to be associated with any axis.
         Each axis value must be an iterable of `int`. An `int` itself is also
-        acceptable if the metadata is associated with a single axis. An empty
-        iterable also means the metadata is not associated with any axes.
+        acceptable if the metadata is associated with a single axis.
+        The value of axis-assigned metadata in header must be same length as
+        number of associated axes (axis-aligned), or same shape as the associated
+        data array's axes (grid-aligned).
 
     data_shape: iterator of `int`, optional
         The shape of the data with which this metadata is associated.
         Must be set if axes input is set.
+
+    Notes
+    -----
+    **Axis-aware Metadata**
+    There are two valid types of axis-aware metadata: axis-aligned and grid-aligned.
+    Axis-aligned metadata gives one value per associated axis, while grid-aligned
+    metadata gives a value for each data array element in the associated axes.
+    Consequently, axis-aligned metadata has the same length as the number of
+    associated axes, while grid-aligned metadata has the same shape as the associated
+    axes. To avoid confusion, axis-aligned metadata that is only associated with one
+    axis must be scalar or a string. Length-1 objects (excluding strings) are assumed
+    to be grid-aligned and associated with a length-1 axis.
+
+    **Slicing and Rebinning Axis-aware Metadata**
+    Axis-aligned metadata is only considered valid if the associated axes are present.
+    Therefore, axis-aligned metadata is only changed if an associated axis is dropped
+    by an operation, e.g. slicing. In such a case, the value associated with the
+    dropped axes is also dropped and hence lost.  If the axis of a 1-axis-aligned
+    metadata value (scalar) is slicing away, the metadata key is entirely removed
+    from the Meta object.
+
+    Grid-aligned metadata is mirrors the data array, it is sliced following
+    the same rules with one exception. If an axis is dropped by slicing, the metadata
+    name is kept, but its value is set to the value at the row/column where the
+    axis/axes was sliced away, and the metadata axis-awareness is removed. This is
+    similar to how coordinate values are transferred to ``global_coords`` when their
+    associated axes are sliced away.
+
+    Note that because rebinning does not drop axes, axis-aligned metadata is unaltered
+    by rebinning. By contrast, grid-aligned metadata must necessarily by affected by
+    rebinning. However, how it is affected depends on the nature of the metadata and
+    there is no generalized solution. Therefore, this class does not alter the shape
+    or values of grid-aligned metadata during rebinning, but simply removes its
+    axis-awareness.  If specific pieces of metadata have a known way to behave during
+    rebinning, this can be handled by subclasses or mixins.
     """
     def __init__(self, header=None, comments=None, axes=None, data_shape=None):
         self.__ndcube_can_slice__ = True
@@ -76,36 +113,28 @@ class Meta(dict):
                                for key, axis in axes.items()])
 
     def _sanitize_axis_value(self, axis, value, key):
+        axis_err_msg = ("Values in axes must be an integer or iterable of integers giving "
+                        f"the data axis/axes associated with the metadata.  axis = {axis}.")
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
         if len(axis) == 0:
-            return tuple()
+            return ValueError(axis_err_msg)
         if self.shape is None:
             raise TypeError("Meta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
         # Verify each entry in axes is an iterable of ints or a scalar.
-        if isinstance(axis, numbers.Integral):
-            axis = (axis,)
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
                                                                     for i in axis])):
-            raise TypeError("Values in axes must be an integer or iterable of integers giving "
-                            "the data axis/axes associated with the metadata.")
+            return ValueError(axis_err_msg)
         axis = np.asarray(axis)
-
-        shape_error_msg = (f"{key} must have shape {tuple(self.shape[axis])} "
-                           f"as its associated axes {axis}, ",
-                           f"or same length as number of associated axes ({len(axis)}). "
-                           f"Has shape {value.shape if hasattr(value, 'shape') else len(value)}")
         if _not_scalar(value):
-            if hasattr(value, "shape"):
-                meta_shape = value.shape
-            elif hasattr(value, "__len__"):
-                meta_shape = (len(value),)
-            else:
-                raise TypeError(shape_error_msg)
-            data_shape = tuple(self.shape[axis])
-            if not (meta_shape == data_shape or (len(axis) > 1 and meta_shape == (len(data_shape),))):
-                raise ValueError(shape_error_msg)
+            axis_shape = tuple(self.shape[axis])
+            if not _is_grid_aligned(value, axis_shape) and not _is_axis_aligned(value, axis_shape):
+                raise ValueError(
+                    f"{key} must have shape {tuple(self.shape[axis])} "
+                    f"as its associated axes {axis}, ",
+                    f"or same length as number of associated axes ({len(axis)}). "
+                    f"Has shape {value.shape if hasattr(value, 'shape') else len(value)}")
         return axis
 
     @property
@@ -165,20 +194,15 @@ class Meta(dict):
     def __setitem__(self, key, val):
         axis = self.axes.get(key, None)
         if axis is not None:
-            recommendation = "We recommend using the 'add' method to set values."
             if _not_scalar(val):
-                data_shape = tuple(self.shape[axis])
-                if len(axis) == 1:
-                    if not (hasattr(val, "__len__") and (len(val),) == data_shape):
-                        raise TypeError(f"{key} must have same length as associated axis, "
-                                        f"i.e. axis {axis[0]}: {self.shape[axis[0]]}\n"
-                                        f"{recommendation}")
-                else:
-                    if ((not (hasattr(val, "shape") and val.shape == data_shape))
-                        and (not (hasattr(val, "__len__") and len(val) == len(data_shape)))):
-                        raise TypeError(f"{key} must have same shape as associated axes, "
-                                        f"i.e axes {axis}: {self.shape[axis]}\n"
-                                        f"{recommendation}")
+                axis_shape = tuple(self.shape[axis])
+                if not _is_grid_aligned(val, axis_shape) and not _is_axis_aligned(val, axis_shape):
+                    raise TypeError(
+                        f"{key} is already associated with axis/axes {axis}. val must therefore "
+                        f"must either have same length as number associated axes ({len(axis)}), "
+                        f"or the same shape as associated data axes {tuple(self.shape[axis])}. "
+                        f"val shape = {val.shape if hasattr(val, 'shape') else (len(val),)}\n"
+                        "We recommend using the 'add' method to set values.")
         super().__setitem__(key, val)
 
     def __getitem__(self, item):
@@ -228,19 +252,28 @@ class Meta(dict):
             # Slice all metadata associated with axes.
             for key, value in self.items():
                 axis = self.axes.get(key, None)
+                drop_key = False
                 if axis is not None:
-                    val_is_scalar = not _not_scalar(value)
-                    if val_is_scalar:
-                        new_value = value
+                    # Calculate new axis indices.
+                    new_axis = np.asarray(list(
+                        set(axis).intersection(set(np.arange(naxes)[kept_axes]))
+                        ))
+                    if len(new_axis) == 0:
+                        new_axis = None
                     else:
-                        scalar_per_axis = (len(axis) > 1
-                                           and not (hasattr(value, "shape")
-                                                    and value.shape == tuple(self.shape[axis]))
-                                           and len(value) == len(axis))
-                        if scalar_per_axis:
-                            # If shape/len of metadata value equals number of axes,
-                            # the metadata represents a single value per axis.
-                            # Change item so values for dropped axes are dropped.
+                        cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
+                        new_axis -= cumul_dropped_axes
+
+                    # Calculate sliced metadata values.
+                    axis_shape = tuple(self.shape[axis])
+                    if _is_scalar(value):
+                        new_value = value
+                        # If scalar metadata's axes have been dropped, mark metadata to be dropped.
+                        if new_axis is None:
+                            drop_key = True
+                    else:
+                        value_is_axis_aligned = _is_axis_aligned(value, axis_shape)
+                        if value_is_axis_aligned:
                             new_item = kept_axes[axis]
                         else:
                             new_item = tuple(item[axis])
@@ -254,23 +287,15 @@ class Meta(dict):
                             new_value = (np.asanyarray(value)[new_item])
                             if hasattr(new_value, "__len__"):
                                 new_value = type(value)(new_value)
-                        if scalar_per_axis and len(new_value) == 1:
-                           # If value gives a scalar for each axis, the value itself must
-                           # be scalar if it only applies to one axis. Therefore, if
-                           # slice down length is one, extract value out of iterable.
-                           new_value = new_value[0]
-                    # Update axis indices.
-                    new_axis = np.asarray(list(
-                        set(axis).intersection(set(np.arange(naxes)[kept_axes]))
-                        ))
-                    if len(new_axis) == 0:
-                        new_axis = None
-                    else:
-                        cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
-                        new_axis -= cumul_dropped_axes
+                        # If axis-aligned metadata sliced down to length 1, convert to scalar.
+                        if value_is_axis_aligned and len(new_value) == 1:
+                            new_value = new_value[0]
                     # Overwrite metadata value with newly sliced version.
-                    new_meta.add(key, new_value, self.comments.get(key, None), new_axis,
-                                 overwrite=True)
+                    if drop_key:
+                        new_meta.remove(key)
+                    else:
+                        new_meta.add(key, new_value, self.comments.get(key, None), new_axis,
+                                     overwrite=True)
 
             return new_meta
 
@@ -302,14 +327,13 @@ class Meta(dict):
             raise ValueError(
                 "All elements in bin_shape must be a factor of corresponding element"
                 f" of data shape: data_shape mod bin_shape = {self.shape % bin_shape}")
-        # Remove axis-awareness from metadata associated with rebinned axes,
-        # unless the value is scalar or gives a single value for each axis.
+        # Remove axis-awareness from grid-aligned metadata associated with rebinned axes.
         rebinned_axes = set(np.where(bin_shape != 1)[0])
         new_meta = copy.deepcopy(self)
         null_set = set()
         for name, axes in self.axes.items():
-            value = self[name]
-            if _not_scalar(value) and set(axes).intersection(rebinned_axes) != null_set:
+            if (_is_grid_aligned(self[name], tuple(self.shape[axes]))
+                and set(axes).intersection(rebinned_axes) != null_set):
                 del new_meta._axes[name]
         # Update data shape.
         new_meta._data_shape = (data_shape / bin_shape).astype(int)
@@ -326,3 +350,21 @@ def _not_scalar(value):
         (
          isinstance(value, str)
         ))
+
+
+def _is_scalar(value):
+    return not _not_scalar(value)
+
+
+def _is_grid_aligned(value, axis_shape):
+    if _is_scalar(value):
+        return False
+    value_shape = value.shape if hasattr(value, "shape") else (len(value),)
+    if value_shape != axis_shape:
+        return False
+    return True
+
+
+def _is_axis_aligned(value, axis_shape):
+    len_value = len(value) if _not_scalar(value) else 1
+    return not _is_grid_aligned(value, axis_shape) and len_value == len(axis_shape)
