@@ -1,0 +1,10 @@
+%YAML 1.1
+---
+id: asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0
+extension_uri: asdf://sunpy.org/extensions/ndcube-0.1.0
+title: NDCube ASDF Manifest
+description: ASDF schemas and tags for NDCube classes.
+
+tags:
+  - tag_uri: "tag:sunpy.org:ndcube/ndcube/NDCube-0.1.0"
+    schema_uri: "asdf://sunpy.org/ndcube/schemas/NDCube-0.1.0"

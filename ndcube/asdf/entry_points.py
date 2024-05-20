@@ -33,7 +33,7 @@ def get_extensions():
     from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
 
     ndcube_converters = [NDCubeConverter()]
-    _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-1.0.0"
+    _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
 
     return [
         ManifestExtension.from_uri(_manifest_uri, converters=ndcube_converters)

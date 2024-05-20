@@ -1,13 +1,13 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "asdf://sunpy.org/ndcube/schemas/NDCube-1.0.0"
+id: "asdf://sunpy.org/ndcube/schemas/NDCube-0.1.0"
 
 title: |
-  Represents the ndcube.NDCube class object
+  Represents the ndcube NDCube object
 
 description:
-  Test ndcube class
+  Represents the ndcube NDCube object
 
 type: object
 properties:
