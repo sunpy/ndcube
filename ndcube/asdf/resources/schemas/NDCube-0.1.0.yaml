@@ -3,7 +3,7 @@
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
 id: "asdf://sunpy.org/ndcube/schemas/NDCube-0.1.0"
 
-title: |
+title:
   Represents the ndcube NDCube object
 
 description:
@@ -12,9 +12,11 @@ description:
 type: object
 properties:
   data:
-    tag: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
   wcs:
-    $ref: "http://stsci.edu/schemas/gwcs/wcs-1.1.0"
+    anyOf:
+      - $ref: "http://stsci.edu/schemas/gwcs/wcs-1.1.0"
+      - $ref: "http://stsci.edu/schemas/gwcs/wcs-1.0.0"
 
 required: [data , wcs]
 allowAdditionalProperties: False
