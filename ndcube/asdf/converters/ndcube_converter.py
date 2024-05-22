@@ -14,6 +14,6 @@ class NDCubeConverter(Converter):
 
     def to_yaml_tree(self, ndcube, tag, ctx):
         node = {}
-        node["data"] =np.array(ndcube.data)
+        node["data"] =np.asarray(ndcube.data)
         node["wcs"] = ndcube.wcs
         return node
