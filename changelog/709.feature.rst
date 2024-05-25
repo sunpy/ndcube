@@ -1,0 +1,1 @@
+Add convenience methods, `~ndcube.NDCube.celestial`, `~ndcube.NDCube.time`, `~ndcube.NDCube.spectral`, `~ndcube.NDCube.stokes`, to return coordinates for array indices from relevant axes for common coordinate types.
