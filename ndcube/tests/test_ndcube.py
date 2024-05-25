@@ -1204,3 +1204,30 @@ def test_ndcube_quantity(ndcube_2d_ln_lt_units):
     cube = ndcube_2d_ln_lt_units
     expected = u.Quantity(cube.data, cube.unit)
     np.testing.assert_array_equal(cube.quantity, expected)
+
+
+def test_celestial(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+    output = cube.celestial()
+    expected = cube.axis_world_coords("lon")[0]
+    assert (output == expected).all()
+
+
+def test_time(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+    output = cube.time()
+    expected = cube.axis_world_coords("time")[0]
+    assert (output == expected).all()
+
+
+def test_spectral(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+    output = cube.spectral()
+    expected = cube.axis_world_coords("em")[0]
+    assert (output == expected).all()
+
+
+def test_no_stokes(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+    output = cube.stokes()
+    assert output is None

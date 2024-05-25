@@ -1247,6 +1247,100 @@ class NDCube(NDCubeBase):
             raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
 
+    def celestial(self, wcs=None):
+        """
+        Returns celestial coordinates for all array indices in relevant axes.
+
+        Celestial world axis physical type name must contain 'pos.'.
+
+        Parameters
+        ----------
+        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
+           The WCS object with which to calculate the coordinates. Must be
+           self.wcs, self.extra_coords, or self.combined_wcs
+
+        Returns
+        -------
+        : `astropy.coordinates.SkyCoord`
+        """
+        return self._get_coords_by_word("pos", wcs)
+
+    def time(self, wcs=None):
+        """
+        Returns time coordinates for all array indices in relevant axes.
+
+        Time world axis physical type name must contain 'time'.
+
+        Parameters
+        ----------
+        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
+           The WCS object with which to calculate the coordinates. Must be
+           self.wcs, self.extra_coords, or self.combined_wcs
+
+        Returns
+        -------
+        : `astropy.time.Time`
+        """
+        return self._get_coords_by_word("time", wcs)
+
+    def spectral(self, wcs=None):
+        """
+        Returns spectral coordinates from WCS.
+
+        Spectral world axis physical type name must contain 'em.'.
+
+        Parameters
+        ----------
+        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
+           The WCS object with which to calculate the coordinates. Must be
+           self.wcs, self.extra_coords, or self.combined_wcs
+
+        Returns
+        -------
+        : `astropy.coordinates.SpectralCoord` or `astropy.units.Quantity`
+        """
+        return self._get_coords_by_word("em", wcs)
+
+    def stokes(self, wcs=None):
+        """
+        Returns stokes polarization for all array indices in relevant axes.
+
+        Stokes world axis physical type name must contain 'stokes'.
+
+        Parameters
+        ----------
+        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
+           The WCS object with which to calculate the coordinates. Must be
+           self.wcs, self.extra_coords, or self.combined_wcs
+
+        Returns
+        -------
+        :
+        """
+        return self._get_coords_by_word("stokes", wcs)
+
+    def _get_coords_by_word(self, words, wcs):
+            """
+            Returns coordinates from a WCS corresponding to a world axis physical type.
+            """
+            if wcs is None:
+                wcs = self.wcs
+            elif isinstance(wcs, ExtraCoords):
+                wcs = wcs.wcs
+            if isinstance(words, str):
+                words = [words]
+            world_types = []
+            for world_type in wcs.world_axis_physical_types:
+                words_in_type = set(world_type.replace(":", ".").split("."))
+                if any(word in words_in_type for word in words):
+                    world_types.append(world_type)
+            if len(world_types) == 0:
+                return None
+            coords = self.axis_world_coords(*world_types, wcs=wcs)
+            if len(coords) == 1:
+                coords = coords[0]
+            return coords
+
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
