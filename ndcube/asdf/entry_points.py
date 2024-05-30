@@ -31,8 +31,10 @@ def get_extensions():
     Get the list of extensions.
     """
     from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
+    from ndcube.asdf.converters.extracoords_converter import ExtraCoordsConverter
+    from ndcube.asdf.converters.tablecoord_converter import TableCoordConverter
 
-    ndcube_converters = [NDCubeConverter()]
+    ndcube_converters = [NDCubeConverter(),ExtraCoordsConverter(),TableCoordConverter()]
     _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
 
     return [
