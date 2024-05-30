@@ -1,0 +1,27 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/TimeTableCoordinate-0.1.0"
+
+title:
+  Represents the TimeTableCoords class
+
+description:
+  Represents the TimeTableCoords class
+
+type: object
+properties:
+  table:
+    tag: "tag:stsci.edu:asdf/time/time-1*"
+  names:
+    type: array
+  mesh:
+    type: boolean
+  physical_types:
+    type: array
+  reference_time:
+    tag: "tag:stsci.edu:asdf/time/time-1*"
+
+required: ["table"]
+additionalProperties: False
+...

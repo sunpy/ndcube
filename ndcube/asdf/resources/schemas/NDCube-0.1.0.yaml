@@ -14,9 +14,9 @@ properties:
   data:
     tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
   wcs:
-    anyOf:
-      - $ref: "http://stsci.edu/schemas/gwcs/wcs-1.1.0"
-      - $ref: "http://stsci.edu/schemas/gwcs/wcs-1.0.0"
+    tag: "tag:stsci.edu:gwcs/wcs-1.*"
+  extra_coords:
+    $ref: "asdf://sunpy.org/ndcube/schemas/ExtraCoords-0.1.0"
 
 required: [data , wcs]
 allowAdditionalProperties: False
