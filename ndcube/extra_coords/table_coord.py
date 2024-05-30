@@ -372,16 +372,20 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         if not (len(item) == len(self.table) or len(item) == self.table[0].ndim):
             raise ValueError("Can not slice with incorrect length")
 
+        # Since underlying tables store corner and center values, item must be changed to reflect this.
+        new_item = _convert_cube_item_to_table_item(item)
+
         new_components = defaultdict(list)
         new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
 
-        for i, (ele, table) in enumerate(zip(item, self.table)):
-            self._slice_table(i, table, ele, new_components, whole_slice=item)
+        for i, (ele, table) in enumerate(zip(new_item, self.table)):
+            self._slice_table(i, table, ele, new_components, whole_slice=new_item)
 
         names = new_components["names"] or None
         physical_types = new_components["physical_types"] or None
 
-        ret_table = type(self)(*new_components["tables"], names=names, physical_types=physical_types)
+        ret_table = type(self)(*new_components["tables"], names=names, physical_types=physical_types,
+                               grid_points="centers and corners")
         ret_table._dropped_world_dimensions = new_components["dropped_world_dimensions"]
         return ret_table
 
@@ -750,13 +754,17 @@ class TimeTableCoordinate(BaseTableCoordinate):
         self.reference_time = reference_time or self.table[0]
 
     def __getitem__(self, item):
-        if not (isinstance(item, (slice, Integral)) or len(item) == 1):
+        if isinstance(item, (slice, Integral)):
+            item = (item,)
+        elif len(item) != 1:
             raise ValueError("Can not slice with incorrect length")
-
-        return type(self)(self.table[item],
+        # Since table grid includes centers and corners, the input item must be changes accordingly.
+        new_item = _convert_cube_item_to_table_item(item)[0]
+        return type(self)(self.table[new_item],
                           names=self.names,
                           physical_types=self.physical_types,
-                          reference_time=self.reference_time)
+                          reference_time=self.reference_time,
+                          grid_points="centers and corners")
 
     @property
     def n_inputs(self):
@@ -1004,6 +1012,8 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
 
 def _get_grid_from_centers(tables):
+    if not hasattr(tables, "__len__"):
+        return tables
     new_tables = []
     for table in tables:
         new_table = np.zeros(len(table) * 2 + 1)
@@ -1019,6 +1029,8 @@ def _get_grid_from_centers(tables):
 
 
 def _get_grid_from_corners(tables):
+    if not hasattr(tables, "__len__"):
+        return tables
     new_tables = []
     for table in tables:
         new_table = np.zeros(len(table) * 2 - 1)
@@ -1029,3 +1041,17 @@ def _get_grid_from_corners(tables):
             new_table *= table.unit
         new_tables.append(new_table)
     return tuple(new_tables)
+
+
+def _convert_cube_item_to_table_item(item):
+    new_item = []
+    for idx in item:
+        # Assume entries in item must be integers or slices. Fancy indexing not supported.
+        if isinstance(idx, Integral):
+            new_idx = idx * 2 + 1
+        else:
+            new_start = None if idx.start is None else idx.start * 2
+            new_stop = None if idx.stop is None else idx.stop * 2 + 1
+            new_idx = slice(new_start, new_stop)
+        new_item.append(new_idx)
+    return tuple(new_item)
