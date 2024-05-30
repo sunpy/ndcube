@@ -7,13 +7,19 @@ class NDCubeConverter(Converter):
     types = ["ndcube.ndcube.NDCube"]
 
     def from_yaml_tree(self, node, tag, ctx):
-        from ndcube import ndcube
+        from ndcube.ndcube import NDCube
+
         data = np.asanyarray(node["data"])
         wcs = node["wcs"]
-        return(ndcube.NDCube(data, wcs))
+        ndcube = NDCube(data, wcs)
+        ndcube._extra_coords = node["extra_coords"]
+
+        return ndcube
 
     def to_yaml_tree(self, ndcube, tag, ctx):
         node = {}
-        node["data"] =np.asarray(ndcube.data)
+        node["data"] = np.asarray(ndcube.data)
         node["wcs"] = ndcube.wcs
+        node["extra_coords"] = ndcube.extra_coords
+
         return node
