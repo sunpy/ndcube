@@ -1,0 +1,29 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/QuantityTableCoordinate-0.1.0"
+
+title:
+  Represents the QuantityTableCoords class
+
+description:
+  Represents the QuantityTableCoords class
+
+type: object
+properties:
+  unit: 
+    tag: "tag:stsci.edu:asdf/unit/unit-*"
+  table:
+    type: array
+    properties:
+      tag: "tag:stsci.edu:asdf/unit/quantity-*"
+  names:
+    type: array
+  mesh:
+    type: boolean
+  physical_types:
+    type: array
+
+required: ["table"]
+additionalProperties: False
+...
