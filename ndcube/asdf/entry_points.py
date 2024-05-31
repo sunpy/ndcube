@@ -32,9 +32,11 @@ def get_extensions():
     """
     from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
     from ndcube.asdf.converters.extracoords_converter import ExtraCoordsConverter
-    from ndcube.asdf.converters.tablecoord_converter import TableCoordConverter
+    from ndcube.asdf.converters.tablecoord_converter import TimeTableCoordConverter
+    from ndcube.asdf.converters.tablecoord_converter import QuantityTableCoordinateConverter
+    from ndcube.asdf.converters.tablecoord_converter import SkyCoordTableCoordinateConverter
 
-    ndcube_converters = [NDCubeConverter(),ExtraCoordsConverter(),TableCoordConverter()]
+    ndcube_converters = [NDCubeConverter(),ExtraCoordsConverter(),TimeTableCoordConverter(),QuantityTableCoordinateConverter(),SkyCoordTableCoordinateConverter()]
     _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
 
     return [
