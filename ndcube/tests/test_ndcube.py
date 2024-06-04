@@ -4,6 +4,7 @@ from textwrap import dedent
 import dask.array
 import numpy as np
 import pytest
+from specutils import Spectrum1D
 
 import astropy.units as u
 import astropy.wcs
@@ -946,6 +947,15 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
+
+
+def test_rebin_specutils():
+    # Tests for https://github.com/sunpy/ndcube/issues/717
+    y = np.arange(4000)*u.ct
+    x = np.arange(200, 4200)*u.nm
+    spec = Spectrum1D(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
+    output = spec.rebin((10,), operation=np.sum, operation_ignores_mask=False)
+    assert output.shape == (400,)
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
