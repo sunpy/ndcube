@@ -1,1 +1,0 @@
-Fixed the creation of a `specutils.Spectrum1D` when using the rebin method.

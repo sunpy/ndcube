@@ -1,3 +1,12 @@
+2.2.1 (2024-06-04)
+==================
+
+Bug Fixes
+---------
+
+- Fixed the creation of a `specutils.Spectrum1D` when using the rebin method. (`#719 <https://github.com/sunpy/ndcube/pull/719>`__)
+
+
 2.2.0 (2023-11-16)
 ==================
 
