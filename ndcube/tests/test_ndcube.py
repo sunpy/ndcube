@@ -15,6 +15,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
+from specutils import Spectrum1D
 
 from ndcube import ExtraCoords, NDCube
 from ndcube.tests import helpers
@@ -940,6 +941,15 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     cube._uncertainty = UnknownUncertainty(cube.data * 0.1)
     output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
+
+
+def test_rebin_specutils():
+    # Tests for https://github.com/sunpy/ndcube/issues/717
+    y = np.arange(4000)*u.ct
+    x = np.arange(200, 4200)*u.nm
+    spec = Spectrum1D(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
+    output = spec.rebin((10,), operation=np.sum, operation_ignores_mask=False)
+    assert output.shape == (400,)
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):

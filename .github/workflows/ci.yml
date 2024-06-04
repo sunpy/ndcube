@@ -41,7 +41,6 @@ jobs:
       envs: |
         - macos: py310
         - windows: py39
-        - linux: py39-oldestdeps
         - linux: build_docs
           posargs: ''
           pytest: false

@@ -6,7 +6,6 @@ from datetime import datetime
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from matplotlib import MatplotlibDeprecationWarning
 from packaging.version import Version
-from sphinx_gallery.sorting import ExampleTitleSortKey
 
 # -- Read the Docs Specific Configuration
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -89,7 +88,8 @@ intersphinx_mapping = {
     'sunpy': ('https://docs.sunpy.org/en/stable/', None),
     'mpl_animators': ('https://docs.sunpy.org/projects/mpl-animators/en/stable/', None),
     'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None),
-    'reproject': ("https://reproject.readthedocs.io/en/stable/", None)
+    'reproject': ("https://reproject.readthedocs.io/en/stable/", None),
+    'specutils': ("https://specutils.readthedocs.io/en/stable/", None),
     }
 
 # -- Options for HTML output
@@ -113,7 +113,7 @@ sphinx_gallery_conf = {
     'backreferences_dir': os.path.join('generated', 'modules'),
     'filename_pattern': '^((?!skip_).)*$',
     'examples_dirs': os.path.join('..', 'examples'),
-    'within_subsection_order': ExampleTitleSortKey,
+    'within_subsection_order': "ExampleTitleSortKey",
     'gallery_dirs': os.path.join('generated', 'gallery'),
     'matplotlib_animations': True,
     # Comes from the theme.
