@@ -1174,7 +1174,7 @@ class NDCube(NDCubeBase):
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
 
         # Reform NDCube.
-        new_cube = type(self)(new_data, new_wcs, uncertainty=new_uncertainty, mask=new_mask,
+        new_cube = type(self)(new_data * new_unit, wcs=new_wcs, uncertainty=new_uncertainty, mask=new_mask,
                               meta=self.meta, unit=new_unit)
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
