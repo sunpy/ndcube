@@ -17,7 +17,7 @@ properties:
     type: array
   mesh:
     type: boolean
-  physical_types: 
+  physical_types:
     type: array
 
 required: ["table"]

@@ -2,6 +2,7 @@
 This file contains the entry points for asdf.
 """
 import importlib.resources as importlib_resources
+
 from asdf.extension import ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
@@ -30,11 +31,13 @@ def get_extensions():
     """
     Get the list of extensions.
     """
-    from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
     from ndcube.asdf.converters.extracoords_converter import ExtraCoordsConverter
-    from ndcube.asdf.converters.tablecoord_converter import TimeTableCoordConverter
-    from ndcube.asdf.converters.tablecoord_converter import QuantityTableCoordinateConverter
-    from ndcube.asdf.converters.tablecoord_converter import SkyCoordTableCoordinateConverter
+    from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
+    from ndcube.asdf.converters.tablecoord_converter import (
+        QuantityTableCoordinateConverter,
+        SkyCoordTableCoordinateConverter,
+        TimeTableCoordConverter,
+    )
 
     ndcube_converters = [NDCubeConverter(),ExtraCoordsConverter(),TimeTableCoordConverter(),QuantityTableCoordinateConverter(),SkyCoordTableCoordinateConverter()]
     _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
