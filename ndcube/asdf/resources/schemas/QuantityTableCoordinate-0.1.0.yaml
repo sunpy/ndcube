@@ -11,7 +11,7 @@ description:
 
 type: object
 properties:
-  unit: 
+  unit:
     tag: "tag:stsci.edu:asdf/unit/unit-*"
   table:
     type: array

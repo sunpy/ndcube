@@ -1,5 +1,6 @@
-from asdf.extension import Converter
 import numpy as np
+
+from asdf.extension import Converter
 
 
 class NDCubeConverter(Converter):
