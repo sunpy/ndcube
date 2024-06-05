@@ -15,7 +15,7 @@ properties:
     tag: "tag:stsci.edu:asdf/unit/unit-*"
   table:
     type: array
-    properties:
+    items:
       tag: "tag:stsci.edu:asdf/unit/quantity-*"
   names:
     type: array
