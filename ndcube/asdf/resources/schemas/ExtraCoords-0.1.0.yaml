@@ -27,7 +27,7 @@ properties:
   dropped_tables:
     type: array
   ndcube:
-    $ref: "asdf://sunpy.org/ndcube/schemas/NDCube-0.1.0"
+    tag: tag:sunpy.org:ndcube/ndcube/NDCube-0.1.0
 
 required: [ndcube]
 allowAdditionalProperties: False
