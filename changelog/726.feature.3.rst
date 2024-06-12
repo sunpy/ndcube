@@ -1,0 +1,1 @@
+Add a function for rebinning `~ndcube.NDCube` objects into irregularly sized bins along axes.

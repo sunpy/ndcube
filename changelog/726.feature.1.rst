@@ -1,0 +1,1 @@
+Add an `~ndcube.analysis` subpackage for hold analysis functions that act on `ndcube` data classes.
