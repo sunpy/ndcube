@@ -1,7 +1,8 @@
-import astropy.nddata
 import numpy as np
 
-from ndcube import utils
+import astropy.nddata
+
+from ndcube import ExtraCoords, utils
 from ndcube.utils.exceptions import warn_user
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
@@ -277,12 +278,12 @@ def rebin_by_edges(
     orig_wcs = cube.combined_wcs
     new_coord_values = list(cube.axis_world_coords_values(wcs=orig_wcs))
     new_coord_physical_types = orig_wcs.world_axis_physical_types[::-1]
-    new_coord_pix_idxs = [physical_type_to_pixel_axes(phys_type, orig_wcs) for phys_type in new_coord_physical_types]
+    new_coord_pix_idxs = [utils.wcs.physical_type_to_pixel_axes(phys_type, orig_wcs) for phys_type in new_coord_physical_types]
     new_coord_names = (
         name if name else phys_type
         for name, phys_type in zip(orig_wcs.world_axis_names[::-1], new_coord_physical_types)
     )
-    wc_arr_idxs = [convert_between_array_and_pixel_axes(idx, ndim) for idx in new_coord_pix_idxs]
+    wc_arr_idxs = [utils.wcs.convert_between_array_and_pixel_axes(idx, ndim) for idx in new_coord_pix_idxs]
 
     # Combine data and mask and determine whether mask also needs rebinning.
     new_data = _create_masked_array_for_rebinning(cube.data, cube.mask, operation_ignores_mask)
@@ -328,7 +329,7 @@ def rebin_by_edges(
                 )
                 data_unc = np.moveaxis(data_chunk, i, 0)
                 mask_unc = np.moveaxis(mask_chunk, i, 0) if rebin_mask else new_mask
-                tmp_uncertainty = propagate_rebin_uncertainties(
+                tmp_uncertainty = utils.cube.propagate_rebin_uncertainties(
                     uncertainty_chunk,
                     data_unc,
                     mask_unc,
