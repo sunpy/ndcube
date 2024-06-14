@@ -260,7 +260,7 @@ def rebin_by_edges(
     Example
     -------
     >>> import numpy as np
-    >>> from stixpy.product.tools import rebin_by_edges
+    >>> from ndcube.analysis.rebin import rebin_by_edges
     >>> axes_idx_edges = [0, 2, 3], [0, 2, 4], [0, 3, 5]
     >>> data = np.ones((3, 4, 5))
     >>> rebin_by_edges(data, axes_idx_edges, operation=np.sum) # doctest: +SKIP
