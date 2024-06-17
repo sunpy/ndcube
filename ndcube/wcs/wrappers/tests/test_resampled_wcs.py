@@ -22,11 +22,11 @@ ResampledLowLevelWCS Transformation
 
 This transformation has 2 pixel and 2 world dimensions
 
-Array shape (Numpy order): (2.3333333333333335, 15.0)
+Array shape (Numpy order): (np.float64(2.3333333333333335), np.float64(15.0))
 
 Pixel Dim  Axis Name  Data size  Bounds
-        0  None              15  (-2.5, 12.5)
-        1  None         2.33333  (0.3333333333333333, 2.3333333333333335)
+        0  None              15  (np.float64(-2.5), np.float64(12.5))
+        1  None         2.33333  (np.float64(0.3333333333333333), np.float64(2.3333333333333335))
 
 World Dim  Axis Name        Physical Type  Units
         0  Right Ascension  pos.eq.ra      deg

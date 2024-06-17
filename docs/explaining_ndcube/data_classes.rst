@@ -120,9 +120,7 @@ Shape and physical types
   >>> my_cube.shape
   (4, 4, 5)
   >>> my_cube.array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [(np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
 
 `~ndcube.NDCube.shape` returns a tuple giving the length of each dimension in the `~ndcube.NDCube`.
 `~ndcube.NDCube.array_axis_physical_types` returns tuples of strings denoting the types of physical properties represented by each array axis.
@@ -154,9 +152,7 @@ This returns an `~ndcube.NDCubeSequence` where the sequence axis acts as the wav
   >>> exploded.shape
   (5, 4, 4)
   >>> exploded.array_axis_physical_types
-  [('meta.obs.sequence',),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
+  [('meta.obs.sequence',), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon'))]
 
 To learn more about this object, read the :ref:`ndcubesequence` section below.
 
@@ -293,18 +289,14 @@ To call, simply do:
 .. code-block:: python
 
   >>> my_sequence.array_axis_physical_types
-  [('meta.obs.sequence',),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('meta.obs.sequence',), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
 
 Once again, we can see the physical types associated with each axis in the cube-like paradigm be calling `ndcube.NDCubeSequence.cube_like_array_axis_physical_types`.
 
 .. code-block:: python
 
   >>> my_sequence.cube_like_array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [(np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
 
 .. _explode_sequence:
 
