@@ -14,6 +14,7 @@ class NDCubeConverter(Converter):
         wcs = node["wcs"]
         ndcube = NDCube(data, wcs)
         ndcube._extra_coords = node["extra_coords"]
+        ndcube._global_coords = node["global_coords"]
 
         return ndcube
 
@@ -22,5 +23,6 @@ class NDCubeConverter(Converter):
         node["data"] = np.asarray(ndcube.data)
         node["wcs"] = ndcube.wcs
         node["extra_coords"] = ndcube.extra_coords
+        node["global_coords"] = ndcube.global_coords
 
         return node
