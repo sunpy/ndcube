@@ -18,12 +18,15 @@ properties:
   lookup_tables:
     type: array
     items:
-      type: array
-      properties:
-        index:
-          type: array
-        table:
-          $ref: "asdf://sunpy.org/ndcube/schemas/TimeTableCoordinate-0.1.0"
+        type: array
+        items:
+            - oneOf:
+              - type: number
+              - type: array
+            - oneOf:
+              - $ref: "asdf://sunpy.org/ndcube/schemas/QuantityTableCoordinate-0.1.0"
+              - $ref: "asdf://sunpy.org/ndcube/schemas/SkyCoordTableCoordinate-0.1.0"
+              - $ref: "asdf://sunpy.org/ndcube/schemas/TimeTableCoordinate-0.1.0"
   dropped_tables:
     type: array
   ndcube:
