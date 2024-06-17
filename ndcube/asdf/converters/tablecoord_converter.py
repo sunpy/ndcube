@@ -42,7 +42,7 @@ class QuantityTableCoordinateConverter(Converter):
         mesh = node.get("mesh")
         physical_types = node.get("physical_types")
         quantitytablecoordinate = QuantityTableCoordinate(*table,
-                                                          names=names, physical_types=physical_types,)
+                                                          names=names, physical_types=physical_types)
         quantitytablecoordinate.unit = unit
         quantitytablecoordinate.mesh = mesh
         return quantitytablecoordinate
