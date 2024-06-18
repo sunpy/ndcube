@@ -215,7 +215,7 @@ We can confirm the dimensionality and physical types of the new sequence by chec
   >>> my_sequence_roi.shape
   (3, 2, 2, 2)
   >>> my_sequence_roi.array_axis_physical_types
-  [('meta.obs.sequence',), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 If we want our region of interest to only apply to a single sub-cube, and we index the sequence axis with an `int`, an `~ndcube.NDCube` is returned.
 
@@ -225,7 +225,7 @@ If we want our region of interest to only apply to a single sub-cube, and we ind
   >>> single_cube_roi.shape
   (2, 3)
   >>> single_cube_roi.array_axis_physical_types
-  [(np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 However, as with numpy slicing, we can induce the slicing operation to return an `~ndcube.NDCubeSequence` by supplying a length-1 `slice` to the sequence axis, rather than an `int`.
 This sequence will still represent the same region of interest from the same single sub-cube, but the sequence axis will have a length of 1, rather than be removed.
@@ -236,7 +236,7 @@ This sequence will still represent the same region of interest from the same sin
   >>> roi_length1_sequence.shape
   (1, 2, 3)
   >>> roi_length1_sequence.array_axis_physical_types
-  [('meta.obs.sequence',), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 Cube-like Slicing
 -----------------
@@ -266,7 +266,7 @@ This can be achieved by entering:
   >>> single_cube_roi.shape
   (2, 3)
   >>> single_cube_roi.array_axis_physical_types
-  [(np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 This returns the same `~ndcube.NDCube` as above.
 However, also as above, we can induce the return type to be an `~ndcube.NDCubeSequence` by supplying a length-1 `slice`.
@@ -278,7 +278,7 @@ As before, the same region of interest from the same sub-cube is represented, ju
   >>> roi_length1_sequence.shape
   (1, 1, 2, 3)
   >>> roi_length1_sequence.array_axis_physical_types
-  [('meta.obs.sequence',), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 In the case the entire region came from a single sub-cube.
 However, `~ndcube.NDCubeSequence.index_as_cube` also works when the region of interest spans multiple sub-cubes in the sequence.
@@ -291,7 +291,7 @@ In cube-like indexing this corresponds to slices 3 to 9 along to their 1st cube 
   >>> roi_across_cubes.shape
   (3, (1, 4, 1), 2, 3)
   >>> roi_across_cubes.array_axis_physical_types
-  [('meta.obs.sequence',), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 Notice that since the sub-cubes are now of different lengths along the common axis, the corresponding `~astropy.units.Quantity` gives the
 lengths of each cube individually.

@@ -225,7 +225,7 @@ The physical types of extra coordinates are also returned by `~ndcube.NDCube.arr
 .. code-block:: python
 
   >>> my_cube.array_axis_physical_types
-  [(np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon'), np.str_('time')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon')), (np.str_('em.wl'),)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 The values of the extra coordinates at each array index can be retrieved using and combination of :meth:`ndcube.NDCube.axis_world_coords` and `ndcube.NDCube.combined_wcs`.
 See :ref:`combined_wcs` below.
@@ -312,8 +312,7 @@ The values of dropped coordinates at the position where the `~ndcube.NDCube` was
 
   >>> my_2d_cube = my_cube[:, :, 0]
   >>> my_2d_cube.array_axis_physical_types  # Note the wavelength axis is now gone.
-  [(np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon'), np.str_('time')), (np.str_('custom:pos.helioprojective.lat'), np.str_('custom:pos.helioprojective.lon'))]
-
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon', 'time'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
   >>> # The wavelength value at the slicing location is now in the GLobalCoords object.
   >>> list(my_2d_cube.global_coords.keys())
   ['distance', 'em.wl']
