@@ -1,3 +1,12 @@
+2.2.2 (2024-06-18)
+==================
+
+Trivial/Internal Changes
+------------------------
+
+- Added explicit support for numpy 2.0. (`#729 <https://github.com/sunpy/ndcube/pull/729>`__)
+
+
 2.2.1 (2024-06-04)
 ==================
 
