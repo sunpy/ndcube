@@ -420,7 +420,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         wcs = self.combined_wcs
         world_axis_physical_types = np.array(wcs.world_axis_physical_types)
         axis_correlation_matrix = wcs.axis_correlation_matrix
-        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
+        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]].tolist())
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
     def _generate_world_coords(self, pixel_corners, wcs):
