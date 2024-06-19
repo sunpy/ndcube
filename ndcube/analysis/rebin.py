@@ -6,7 +6,7 @@ from ndcube import ExtraCoords, utils
 from ndcube.utils.exceptions import warn_user
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
-__all__ = ["rebin"]
+__all__ = ["rebin", "rebin_by_edges"]
 
 # Create mapping to masked array types based on data array type for use in analysis methods.
 ARRAY_MASK_MAP = {}
