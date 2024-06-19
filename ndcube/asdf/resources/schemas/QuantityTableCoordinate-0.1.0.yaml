@@ -24,6 +24,6 @@ properties:
   physical_types:
     type: array
 
-required: ["table"]
+required: ["table","unit"]
 additionalProperties: False
 ...

@@ -22,7 +22,5 @@ class GlobalCoordsConverter(Converter):
         node["ndcube"] = globalcoords._ndcube
         if globalcoords._internal_coords:
             node["internal_coords"] = dict(globalcoords._internal_coords)
-        # Todo: Include `_all_coords` as a node key to preserve the dropped dimensions
-        # after ndcube support serialization of sliced NDCube object to asdf.
 
         return node
