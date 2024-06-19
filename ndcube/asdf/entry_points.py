@@ -40,7 +40,14 @@ def get_extensions():
         TimeTableCoordConverter,
     )
 
-    ndcube_converters = [NDCubeConverter(),ExtraCoordsConverter(),TimeTableCoordConverter(),QuantityTableCoordinateConverter(),SkyCoordTableCoordinateConverter(),GlobalCoordsConverter()]
+    ndcube_converters = [
+        NDCubeConverter(),
+        ExtraCoordsConverter(),
+        TimeTableCoordConverter(),
+        QuantityTableCoordinateConverter(),
+        SkyCoordTableCoordinateConverter(),
+        GlobalCoordsConverter(),
+        ]
     _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
 
     return [
