@@ -1,4 +1,5 @@
 from ndcube import NDCubeABC
+from ndcube.utils.wcs import physical_type_to_array_axes
 
 class NDCoords:
     def __init__(self, ndcube):
@@ -8,7 +9,7 @@ class NDCoords:
         # Create aliases to coordinate methods already on NDCube.
         self.axis_world_coords = self._ndcube.axis_world_coords
         self.axis_world_coords_values = self._ndcube.axis_world_coords_values
-        # Exposure properties to get values of coordinate types based on
+        # Expose properties to get values of coordinate types based on
         # physical types present in NDCube.wcs and NDCube.extra_coords.
         self._celestial_words = ["pos"]
         self._time_words = ["time"]
@@ -16,12 +17,16 @@ class NDCoords:
         self._stokes_words = ["stokes"]
         if _words_in_physical_types(self._celestial_words)
             self.celestial = self._celestial
+            self.celestial_array_axes = self._celestial_array_axes
         if _words_in_physical_types(self._time_words)
             self.time = self._time
+            self.time_array_axes = self._time_array_axes
         if _words_in_physical_types(self._spectral_words)
             self.spectral = self._spectral
+            self.spectral_array_axes = self._spectral_array_axes
         if _words_in_physical_types(self._stokes_words)
             self.stokes = self._stokes
+            self.stokes_array_axes = self._stokes_array_axes
 
     @property
     def wcs(self):
@@ -46,13 +51,8 @@ class NDCoords:
     @property
     def _celestial(self):
         """
-        Returns celestial coordinates for all array indices in relevant axes.
-        Celestial world axis physical type name must contain 'pos.'.
-        Parameters
-        ----------
-        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
-           The WCS object with which to calculate the coordinates. Must be
-           self.wcs, self.extra_coords, or self.combined_wcs
+        Returns celestial coordinates of associated NDCube.
+        
         Returns
         -------
         : `astropy.coordinates.SkyCoord`
@@ -60,15 +60,16 @@ class NDCoords:
         return self._get_coords_by_word(self._celestial_words)
 
     @property
+    def _celestial_array_axes(self):
+        """Returns array axis indices associated with celestial coordinates."""
+        return _get_array_axes_from_coord_words(self._celestial_words)
+        
+
+    @property
     def _time(self):
         """
-        Returns time coordinates for all array indices in relevant axes.
-        Time world axis physical type name must contain 'time'.
-        Parameters
-        ----------
-        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
-           The WCS object with which to calculate the coordinates. Must be
-           self.wcs, self.extra_coords, or self.combined_wcs
+        Returns time coordinates for associated NDCube.
+
         Returns
         -------
         : `astropy.time.Time`
@@ -76,15 +77,15 @@ class NDCoords:
         return self._get_coords_by_word(self._time_words)
 
     @property
+    def _time_array_axes(self):
+        """Returns array axis indices associated with time coordinates."""
+        return _get_array_axes_from_coord_words(self._time_words)
+
+    @property
     def _spectral(self):
         """
-        Returns spectral coordinates from WCS.
-        Spectral world axis physical type name must contain 'em.'.
-        Parameters
-        ----------
-        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
-           The WCS object with which to calculate the coordinates. Must be
-           self.wcs, self.extra_coords, or self.combined_wcs
+        Returns spectral coordinates of associated NDCube.
+
         Returns
         -------
         : `astropy.coordinates.SpectralCoord` or `astropy.units.Quantity`
@@ -92,20 +93,21 @@ class NDCoords:
         return self._get_coords_by_word(self._spectral_words)
 
     @property
+    def _spectral_array_axes(self):
+        """Returns array axis indices associated with spectral coordinates."""
+        return _get_array_axes_from_coord_words(self._spectral_words)
+
+    @property
     def _stokes(self):
         """
-        Returns stokes polarization for all array indices in relevant axes.
-        Stokes world axis physical type name must contain 'stokes'.
-        Parameters
-        ----------
-        wcs : `astropy.wcs.wcsapi.BaseHighLevelWCS`
-           The WCS object with which to calculate the coordinates. Must be
-           self.wcs, self.extra_coords, or self.combined_wcs
-        Returns
-        -------
-        :
+        Returns stokes polarization coordinates of associated NDCube.
         """
         return self._get_coords_by_word(self._stokes_words)
+
+    @property
+    def _stokes_array_axes(self):
+        """Returns array axis indices associated with stokes coordinates."""
+        return _get_array_axes_from_coord_words(self._stokes_words)
 
     def _get_coords_by_word(self, coord_words):
         """
@@ -154,3 +156,12 @@ def _words_in_physical_types(coord_words, wcses):
         return True
     else:
         return False
+
+
+def _get_array_axes_from_coord_words(coord_words, wcs):
+    physical_types = _get_physical_types_from_words(coord_words, wcs)[0]
+    dims = set()
+    for phys_type in physical_types:
+        dims = dims.union(set(physical_type_to_array_axes(phys_type, wcs))
+    return tuple(dims)
+
