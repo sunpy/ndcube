@@ -217,7 +217,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             ``.extra_coords`` properties will be used.
 
         keepdims: `bool`, optional
-            If `True` keep length-1 dimensions rather than dropping.
+            If `False` and if cropping results in length-1 dimensions, these are sliced away in output cube.
+            If `True`, length-1 dimensions are kept.  Default=False
 
         Returns
         -------
@@ -270,7 +271,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             ``.extra_coords`` properties will be used.
 
         keepdims: `bool`, optional
-            If `True` keep length-1 dimensions rather than dropping.
+            If `False` and if cropping results in length-1 dimensions, these are sliced away in output cube.
+            If `True`, length-1 dimensions are kept.  Default=False
 
         Returns
         -------

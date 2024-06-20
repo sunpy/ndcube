@@ -122,7 +122,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
         i.e. low-level objects.
 
     keep_dims : `bool`
-        If `False`, return item that will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
+        If `False`, returned item will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
 
     Returns
     -------
