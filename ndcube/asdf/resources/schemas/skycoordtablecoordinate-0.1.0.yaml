@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "asdf://sunpy.org/ndcube/schemas/SkyCoordTableCoordinate-0.1.0"
+id: "asdf://sunpy.org/ndcube/schemas/skycoordtablecoordinate-0.1.0"
 
 title:
   Represents the SkyCoordTableCoordinate class

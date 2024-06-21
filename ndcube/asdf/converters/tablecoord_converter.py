@@ -2,7 +2,7 @@ from asdf.extension import Converter
 
 
 class TimeTableCoordConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/TimeTableCoordinate-*"]
+    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-*"]
     types = ["ndcube.extra_coords.table_coord.TimeTableCoordinate"]
 
     def from_yaml_tree(self, node, tag, ctx):
@@ -30,7 +30,7 @@ class TimeTableCoordConverter(Converter):
 
 
 class QuantityTableCoordinateConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/QuantityTableCoordinate-*"]
+    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-*"]
     types = ["ndcube.extra_coords.table_coord.QuantityTableCoordinate"]
 
     def from_yaml_tree(self, node, tag, ctx):
@@ -60,7 +60,7 @@ class QuantityTableCoordinateConverter(Converter):
 
 
 class SkyCoordTableCoordinateConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/SkyCoordTableCoordinate-*"]
+    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-*"]
     types = ["ndcube.extra_coords.table_coord.SkyCoordTableCoordinate"]
 
     def from_yaml_tree(self, node, tag, ctx):

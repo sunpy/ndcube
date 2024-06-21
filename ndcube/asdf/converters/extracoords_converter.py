@@ -2,7 +2,7 @@ from asdf.extension import Converter
 
 
 class ExtraCoordsConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/extra_coords/extra_coords/ExtraCoords-*"]
+    tags = ["tag:sunpy.org:ndcube/extra_coords/extra_coords/extracoords-*"]
     types = ["ndcube.extra_coords.extra_coords.ExtraCoords"]
 
     def from_yaml_tree(self, node, tag, ctx):
