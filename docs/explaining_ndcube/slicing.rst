@@ -137,7 +137,7 @@ This means that these world points are not used in calculating the pixel range t
 
 By default, :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` discard length-1 dimensions to make the resulting cube more wieldy.
 However, there are cases where it is preferable to keep the number of dimensions the same.
-In such cases setting the ``keepdims=True`` kwarg in either crop or crop_by_values.
+In such cases setting the :code:`keepdims=True` kwarg in either crop or crop_by_values.
 
   >>> # Use coordinate objects to mark the lower limit of the region of interest.
   >>> lower_left = [SpectralCoord(1.02e-9, unit=u.m),
@@ -149,13 +149,14 @@ In such cases setting the ``keepdims=True`` kwarg in either crop or crop_by_valu
   >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
   >>> my_cube_roi.shape
   (2, 3)
-  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left, keepdims=True)
+  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left,
+  ...                                 keepdims=True)
   >>> my_cube_roi_keep.shape
   (2, 3, 1)
 
-One use case for `keepdims=True` is when cropping leads to a cube with only one array element.
-Because cropping an `NDCube` to a scalar is not allowed, such an operation would normally raise an error.
-But if `keepdims=True`, a valid NDCube is returned with N length-1 dimensions.
+One use case for :code:`keepdims=True` is when cropping leads to a cube with only one array element.
+Because cropping an `~ndcube.NDCube` to a scalar is not allowed, such an operation would normally raise an error.
+But if :code:`keepdims=True`, a valid NDCube is returned with N length-1 dimensions.
 
   >>> # Use coordinate objects to mark the lower limit of the region of interest.
   >>> lower_left = [SpectralCoord(1.02e-9, unit=u.m),
@@ -168,7 +169,8 @@ But if `keepdims=True`, a valid NDCube is returned with N length-1 dimensions.
   Traceback (most recent call last):
     ...
   ValueError: Input points causes cube to be cropped to a single pixel. This is not supported.
-  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left, keepdims=True)
+  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left,
+  ...                                 keepdims=True)
   >>> my_cube_roi_keep.shape
   (1, 1, 1)
 
