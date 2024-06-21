@@ -135,6 +135,44 @@ This means that these world points are not used in calculating the pixel range t
   >>> upper_left = [None, SkyCoord(Tx=1, Ty=1.5, unit=u.deg, frame=Helioprojective)]
   >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
 
+By default, :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` discard length-1 dimensions to make the resulting cube more wieldy.
+However, there are cases where it is preferable to keep the number of dimensions the same.
+In such cases setting the ``keepdims=True`` kwarg in either crop or crop_by_values.
+
+  >>> # Use coordinate objects to mark the lower limit of the region of interest.
+  >>> lower_left = [SpectralCoord(1.02e-9, unit=u.m),
+  ...               SkyCoord(Tx=1, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_right = [SpectralCoord(1.03e-9, unit=u.m),
+  ...                SkyCoord(Tx=1.5, Ty=1.5, unit=u.deg, frame=Helioprojective)]
+  >>> lower_right = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_left = [None, SkyCoord(Tx=1, Ty=1.5, unit=u.deg, frame=Helioprojective)]
+  >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
+  >>> my_cube_roi.shape
+  (2, 3)
+  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left, keepdims=True)
+  >>> my_cube_roi_keep.shape
+  (2, 3, 1)
+
+One use case for `keepdims=True` is when cropping leads to a cube with only one array element.
+Because cropping an `NDCube` to a scalar is not allowed, such an operation would normally raise an error.
+But if `keepdims=True`, a valid NDCube is returned with N length-1 dimensions.
+
+  >>> # Use coordinate objects to mark the lower limit of the region of interest.
+  >>> lower_left = [SpectralCoord(1.02e-9, unit=u.m),
+  ...               SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_right = [SpectralCoord(1.03e-9, unit=u.m),
+  ...                SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> lower_right = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_left = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
+  Traceback (most recent call last):
+    ...
+  ValueError: Input points causes cube to be cropped to a single pixel. This is not supported.
+  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left, keepdims=True)
+  >>> my_cube_roi_keep.shape
+  (1, 1, 1)
+
+
 .. _sequence_slicing:
 
 Slicing NDCubeSequences
