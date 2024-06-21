@@ -460,6 +460,15 @@ def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_keepdims(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    point = (None, SpectralCoord([3e-11], unit=u.m), None)
+    output = cube.crop(point, keepdims=True)
+    expected = cube[:, :, 0:1, :]
+    assert output.shape == (5, 8, 1, 12)
+    helpers.assert_cubes_equal(output, expected)
+
+
 def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
@@ -503,6 +512,18 @@ def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     upper_corner[-1] = upper_corner[-1].to(units[-1])
     expected = cube[1:3, 0:2, 0:2, 0:3]
     output = cube.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_keepdims(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    intervals = list(cube.wcs.array_index_to_world_values([1, 2], [0], [0, 1], [0, 2]))
+    units = [u.min, u.m, u.deg, u.deg]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    expected = cube[1:3, 0:1, 0:2, 0:3]
+    output = cube.crop_by_values(lower_corner, upper_corner, keepdims=True)
+    assert output.shape == (2, 1, 2, 3)
     helpers.assert_cubes_equal(output, expected)
 
 
