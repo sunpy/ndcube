@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "asdf://sunpy.org/ndcube/schemas/ExtraCoords-0.1.0"
+id: "asdf://sunpy.org/ndcube/schemas/extra_coords-0.1.0"
 
 title:
   Represents the ndcube ExtraCoords object
@@ -24,14 +24,14 @@ properties:
               - type: number
               - type: array
             - oneOf:
-              - $ref: "asdf://sunpy.org/ndcube/schemas/QuantityTableCoordinate-0.1.0"
-              - $ref: "asdf://sunpy.org/ndcube/schemas/SkyCoordTableCoordinate-0.1.0"
-              - $ref: "asdf://sunpy.org/ndcube/schemas/TimeTableCoordinate-0.1.0"
+              - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-0.*"
+              - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-0.*"
+              - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-0.*"
   dropped_tables:
     type: array
   ndcube:
-    tag: tag:sunpy.org:ndcube/ndcube/NDCube-0.1.0
+    tag: "tag:sunpy.org:ndcube/ndcube/ndcube-0.*"
 
 required: [ndcube]
-allowAdditionalProperties: False
+additionalProperties: false
 ...

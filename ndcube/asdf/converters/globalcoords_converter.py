@@ -4,7 +4,7 @@ from asdf.extension import Converter
 
 
 class GlobalCoordsConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/global_coords/GlobalCoords-*"]
+    tags = ["tag:sunpy.org:ndcube/global_coords/globalcoords-*"]
     types = ["ndcube.global_coords.GlobalCoords"]
 
     def from_yaml_tree(self, node, tag, ctx):

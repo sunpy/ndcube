@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "asdf://sunpy.org/ndcube/schemas/QuantityTableCoordinate-0.1.0"
+id: "asdf://sunpy.org/ndcube/schemas/quantitytablecoordinate-0.1.0"
 
 title:
   Represents the QuantityTableCoords class
@@ -24,6 +24,6 @@ properties:
   physical_types:
     type: array
 
-required: ["table","unit"]
+required: ["table", "unit"]
 additionalProperties: False
 ...
