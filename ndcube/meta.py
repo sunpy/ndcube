@@ -150,7 +150,8 @@ class Meta(dict):
         return self._data_shape
 
     def add(self, name, value, comment=None, axis=None, overwrite=False):
-        """Add a new piece of metadata to instance.
+        """
+        Add a new piece of metadata to instance.
 
         Parameters
         ----------
