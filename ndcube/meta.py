@@ -18,7 +18,7 @@ class Meta(dict):
 
     Parameters
     ----------
-    header: dict-like
+    meta: dict-like
         The names and values of metadata.
 
     comments: dict-like, optional
@@ -29,7 +29,7 @@ class Meta(dict):
         Metadata not included are considered not to be associated with any axis.
         Each axis value must be an iterable of `int`. An `int` itself is also
         acceptable if the metadata is associated with a single axis.
-        The value of axis-assigned metadata in header must be same length as
+        The value of axis-assigned metadata in meta must be same length as
         number of associated axes (axis-aligned), or same shape as the associated
         data array's axes (grid-aligned).
 
@@ -72,25 +72,25 @@ class Meta(dict):
     axis-awareness.  If specific pieces of metadata have a known way to behave during
     rebinning, this can be handled by subclasses or mixins.
     """
-    def __init__(self, header=None, comments=None, axes=None, data_shape=None):
+    def __init__(self, meta=None, comments=None, axes=None, data_shape=None):
         self.__ndcube_can_slice__ = True
         self.__ndcube_can_rebin__ = True
-        self.original_header = header
+        self.original_meta = meta
 
-        if header is None:
-            header = {}
+        if meta is None:
+            meta = {}
         else:
-            header = dict(header)
-        super().__init__(header.items())
-        header_keys = header.keys()
+            meta = dict(header)
+        super().__init__(meta.items())
+        meta_keys = meta.keys()
 
         if comments is None:
             self._comments = dict()
         else:
             comments = dict(comments)
-            if not set(comments.keys()).issubset(set(header_keys)):
+            if not set(comments.keys()).issubset(set(meta_keys)):
                 raise ValueError(
-                    "All comments must correspond to a value in header under the same key.")
+                    "All comments must correspond to a value in meta under the same key.")
             self._comments = comments
 
         if data_shape is None:
@@ -106,10 +106,10 @@ class Meta(dict):
                 raise TypeError("If axes is set, data_shape must be an iterable giving "
                                 "the length of each axis of the associated cube.")
             axes = dict(axes)
-            if not set(axes.keys()).issubset(set(header_keys)):
+            if not set(axes.keys()).issubset(set(meta_keys)):
                 raise ValueError(
-                    "All axes must correspond to a value in header under the same key.")
-            self._axes = dict([(key, self._sanitize_axis_value(axis, header[key], key))
+                    "All axes must correspond to a value in meta under the same key.")
+            self._axes = dict([(key, self._sanitize_axis_value(axis, meta[key], key))
                                for key, axis in axes.items()])
 
     def _sanitize_axis_value(self, axis, value, key):
