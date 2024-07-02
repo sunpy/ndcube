@@ -171,6 +171,27 @@ def physical_type_to_pixel_axes(physical_type, wcs):
     return world_axis_to_pixel_axes(world_axis, wcs.axis_correlation_matrix)
 
 
+def physical_type_to_array_axes(physical_type, wcs):
+    """
+    Gets the array axis indices corresponding to a world axis physical type.
+
+    Parameters
+    ----------
+    physical_type: `int`
+        The pixel axis number(s) for which the world axis numbers are desired.
+
+    wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
+        The WCS object defining the relationship between pixel and world axes.
+
+    Returns
+    -------
+    array_axes: `numpy.ndarray`
+        The array axis indices corresponding to the physical type.
+    """
+    return convert_between_array_and_pixel_axes(physical_type_to_pixel_axes(physical_type, wcs),
+                                                wcs.pixel_n_dim)
+
+
 def physical_type_to_world_axis(physical_type, world_axis_physical_types):
     """
     Returns world axis index of a physical type based on WCS world_axis_physical_types.
