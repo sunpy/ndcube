@@ -9,7 +9,7 @@ A base package for multi-dimensional contiguous and non-contiguous coordinate-aw
 """
 from .extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from .global_coords import GlobalCoords, GlobalCoordsABC
-from .meta import Meta
+from .meta import NDMeta
 from .ndcollection import NDCollection
 from .ndcube import NDCube, NDCubeBase
 from .ndcube_sequence import NDCubeSequence, NDCubeSequenceBase

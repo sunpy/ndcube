@@ -19,7 +19,7 @@ from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 from ndcube import NDCube, NDCubeSequence
-from ndcube.meta import Meta
+from ndcube.meta import NDMeta
 
 __all__ = ['figure_test',
            'get_hash_library_name',
@@ -96,7 +96,7 @@ def assert_metas_equal(test_input, expected_output):
             "input and expected are of different type. "
             f"input: {type(test_input)}; expected: {type(expected_output)}")
     multi_element_msg = "more than one element is ambiguous"
-    if isinstance(test_input, Meta) and isinstance(expected_output, Meta):
+    if isinstance(test_input, NDMeta) and isinstance(expected_output, NDMeta):
         assert test_input.keys() == expected_output.keys()
 
         if test_input.shape is None or expected_output.shape is None:

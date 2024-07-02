@@ -4,10 +4,10 @@ import collections.abc
 
 import numpy as np
 
-__all__ = ["Meta"]
+__all__ = ["NDMeta"]
 
 
-class Meta(dict):
+class NDMeta(dict):
     """
     A sliceable object for storing metadata.
 
@@ -55,7 +55,7 @@ class Meta(dict):
     by an operation, e.g. slicing. In such a case, the value associated with the
     dropped axes is also dropped and hence lost.  If the axis of a 1-axis-aligned
     metadata value (scalar) is slicing away, the metadata key is entirely removed
-    from the Meta object.
+    from the NDMeta object.
 
     Grid-aligned metadata is mirrors the data array, it is sliced following
     the same rules with one exception. If an axis is dropped by slicing, the metadata
@@ -80,7 +80,7 @@ class Meta(dict):
         if meta is None:
             meta = {}
         else:
-            meta = dict(header)
+            meta = dict(meta)
         super().__init__(meta.items())
         meta_keys = meta.keys()
 
@@ -120,7 +120,7 @@ class Meta(dict):
         if len(axis) == 0:
             return ValueError(axis_err_msg)
         if self.shape is None:
-            raise TypeError("Meta instance does not have a shape so new metadata "
+            raise TypeError("NDMeta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
         # Verify each entry in axes is an iterable of ints or a scalar.
         if not (isinstance(axis, collections.abc.Iterable) and all([isinstance(i, numbers.Integral)
@@ -216,7 +216,7 @@ class Meta(dict):
             return super().__getitem__(item)
 
         elif self.shape is None:
-            raise TypeError("Meta object does not have a shape and so cannot be sliced.")
+            raise TypeError("NDMeta object does not have a shape and so cannot be sliced.")
 
         else:
             new_meta = copy.deepcopy(self)

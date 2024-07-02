@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import pytest
 
-from ndcube.meta import Meta
+from ndcube.meta import NDMeta
 from .helpers import assert_metas_equal
 
 
@@ -45,12 +45,12 @@ def basic_data_shape():
 
 @pytest.fixture
 def basic_meta(basic_meta_values, basic_comments, basic_axes, basic_data_shape):
-    return Meta(basic_meta_values, basic_comments, basic_axes, basic_data_shape)
+    return NDMeta(basic_meta_values, basic_comments, basic_axes, basic_data_shape)
 
 
 @pytest.fixture
 def no_shape_meta():
-    return Meta({"a": "hello"})
+    return NDMeta({"a": "hello"})
 
 
 def test_shape(basic_meta, basic_data_shape):
@@ -84,7 +84,7 @@ def test_slice_away_independent_axis(basic_meta):
     axes["e"] -= 1
     axes["g"] = (0, 1)
     shape = meta.shape[1:]
-    expected = Meta(values, comments, axes, shape)
+    expected = NDMeta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
 
 
@@ -107,7 +107,7 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     axes["d"] = 0
     axes["g"] = 0
     shape = meta.shape[2:]
-    expected = Meta(values, comments, axes, shape)
+    expected = NDMeta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
 
 
@@ -125,7 +125,7 @@ def test_slice_dependent_axes(basic_meta):
     axes["c"] = 1
     axes["g"] = (0, 1)
     shape = np.array([2, 2, 5])
-    expected = Meta(values, comments, axes, shape)
+    expected = NDMeta(values, comments, axes, shape)
     assert_metas_equal(output, expected)
 
 
