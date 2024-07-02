@@ -186,7 +186,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
     @abc.abstractmethod
     def crop(self,
              *points: Iterable[Any],
-             wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
+             wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None,
+             keepdims: bool = False,
              ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -215,6 +216,10 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             could be used it is expected that either the ``.wcs`` or
             ``.extra_coords`` properties will be used.
 
+        keepdims: `bool`, optional
+            If `False` and if cropping results in length-1 dimensions, these are sliced away in output cube.
+            If `True`, length-1 dimensions are kept.  Default=False
+
         Returns
         -------
         `~ndcube.ndcube.NDCubeABC`
@@ -231,7 +236,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
     def crop_by_values(self,
                        *points: Iterable[u.Quantity | float],
                        units: Iterable[str | u.Unit] | None = None,
-                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
+                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None,
+                       keepdims: bool = False
                        ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -263,6 +269,10 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             Will default to the ``.wcs`` property if not given. While any valid WCS
             could be used it is expected that either the ``.wcs`` or
             ``.extra_coords`` properties will be used.
+
+        keepdims: `bool`, optional
+            If `False` and if cropping results in length-1 dimensions, these are sliced away in output cube.
+            If `True`, length-1 dimensions are kept.  Default=False
 
         Returns
         -------
@@ -425,7 +435,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         wcs = self.combined_wcs
         world_axis_physical_types = np.array(wcs.world_axis_physical_types)
         axis_correlation_matrix = wcs.axis_correlation_matrix
-        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
+        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]].tolist())
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
     @property
@@ -554,14 +564,14 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    def crop(self, *points, wcs=None):
+    def crop(self, *points, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
-        item = self._get_crop_item(*points, wcs=wcs)
+        item = self._get_crop_item(*points, wcs=wcs, keepdims=keepdims)
         return self[item]
 
     @utils.cube.sanitize_wcs
-    def _get_crop_item(self, *points, wcs=None):
+    def _get_crop_item(self, *points, wcs=None, keepdims=False):
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
@@ -584,16 +594,16 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                         f"incompatible with WCS component {comp[j]} "
                                         f"{classes[j]}.")
-            return utils.cube.get_crop_item_from_points(points, wcs, False)
+            return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
 
-    def crop_by_values(self, *points, units=None, wcs=None):
+    def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
-        item = self._get_crop_by_values_item(*points, units=units, wcs=wcs)
+        item = self._get_crop_by_values_item(*points, units=units, wcs=wcs, keepdims=keepdims)
         return self[item]
 
     @utils.cube.sanitize_wcs
-    def _get_crop_by_values_item(self, *points, units=None, wcs=None):
+    def _get_crop_by_values_item(self, *points, units=None, wcs=None, keepdims=False):
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
@@ -626,7 +636,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
-        return utils.cube.get_crop_item_from_points(points, wcs, True)
+        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
 
     def __str__(self):
         return textwrap.dedent(f"""\
