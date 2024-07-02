@@ -1,3 +1,4 @@
+import abc
 import copy
 import numbers
 import collections.abc
@@ -7,7 +8,7 @@ import numpy as np
 __all__ = ["NDMeta"]
 
 
-class NDMeta(dict):
+class NDMetaABC(collections.abc.Mapping):
     """
     A sliceable object for storing metadata.
 
@@ -72,6 +73,65 @@ class NDMeta(dict):
     axis-awareness.  If specific pieces of metadata have a known way to behave during
     rebinning, this can be handled by subclasses or mixins.
     """
+    @property
+    @abc.abstractmethod
+    def axes(self):
+        """
+        Mapping from metadata keys to axes with which they are associated.
+
+        Metadata not associated with any axes need not be represented here.
+        """
+
+    @property
+    @abc.abstractmethod
+    def comments(self):
+        """
+        Mapping from metadata keys to associated comments.
+
+        Metadata without a comment need not be represented here.
+        """
+
+    @property
+    @abc.abstractmethod
+    def shape(self):
+        """
+        The shape of the data with which the metadata is associated.
+        """
+
+    @abc.abstractmethod
+    def add(self, name, value, comment=None, axis=None, overwrite=False):
+        """
+        Add a new piece of metadata to instance.
+
+        Parameters
+        ----------
+        name: `str`
+            The name/label of the metadata.
+
+        value: Any
+            The value of the metadata. If axes input is not None, this must have the
+            same length/shape as those axes as defined by ``self.shape``.
+
+        comment: `str` or `None`
+            Any comment associated with this metadata. Set to None if no comment desired.
+
+        axis: `int`, iterable of `int`, or `None`
+            The axis/axes with which the metadata is linked. If not associated with any
+            axis, set this to None.
+
+        overwrite: `bool`, optional
+            If True, overwrites the entry of the name name if already present.
+        """
+
+    @abc.abstractmethod
+    def rebin(self, rebinned_axes, new_shape):
+        """
+        Adjusts grid-aware metadata to stay consistent with rebinned data.
+        """
+
+
+class NDMeta(dict, NDMetaABC):
+    # Docstring in ABC
     __ndcube_can_slice__ = True
     __ndcube_can_rebin__ = True
 
@@ -151,28 +211,7 @@ class NDMeta(dict):
         return self._data_shape
 
     def add(self, name, value, comment=None, axis=None, overwrite=False):
-        """
-        Add a new piece of metadata to instance.
-
-        Parameters
-        ----------
-        name: `str`
-            The name/label of the metadata.
-
-        value: Any
-            The value of the metadata. If axes input is not None, this must have the
-            same length/shape as those axes as defined by ``self.shape``.
-
-        comment: `str` or `None`
-            Any comment associated with this metadata. Set to None if no comment desired.
-
-        axis: `int`, iterable of `int`, or `None`
-            The axis/axes with which the metadata is linked. If not associated with any
-            axis, set this to None.
-
-        overwrite: `bool`, optional
-            If True, overwrites the entry of the name name if already present.
-        """
+        # Docstring in ABC.
         if name in self.keys() and overwrite is not True:
             raise KeyError(f"'{name}' already exists. "
                            "To update an existing metadata entry set overwrite=True.")
