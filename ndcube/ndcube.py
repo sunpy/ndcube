@@ -1208,13 +1208,21 @@ class NDCube(NDCubeBase):
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
 
+        # If meta is axis-aware, drop axis-awareness for metadata associated with rebinned axes.
+        if hasattr(self.meta, "__ndcube_can_rebin__") and self.meta.__ndcube_can_rebin__:
+            new_shape = (np.asarray(self.shape) / np.asarray(bin_shape)).astype(int)
+            rebinned_axes = set(np.where(bin_shape != 1)[0])
+            new_meta = self.meta.rebin(rebinned_axes, new_shape)
+        else:
+            new_meta = self.meta
+
         # Reform NDCube.
         new_cube = type(self)(
             data=new_data,
             wcs=new_wcs,
             uncertainty=new_uncertainty,
             mask=new_mask,
-            meta=self.meta,
+            meta=new_meta,
             unit=new_unit
         )
         new_cube._global_coords = self._global_coords
