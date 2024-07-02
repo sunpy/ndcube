@@ -42,7 +42,6 @@ def basic_axes():
 def basic_data_shape():
     return (2, 3, 0, 4)
 
-
 @pytest.fixture
 def basic_meta(basic_meta_values, basic_comments, basic_axes):
     return NDMeta(basic_meta_values, basic_comments, basic_axes)
@@ -187,13 +186,12 @@ def test_remove(basic_meta):
 
 def test_rebin(basic_meta):
     meta = basic_meta
-    rebinned_axes = {0, 2}
-    new_shape = (1, 3, 5, 2)
-    output = meta.rebin(rebinned_axes, new_shape)
+    bin_shape = (2, 1, 1, 2)
+    output = meta.rebin(bin_shape)
     # Build expected result.
     expected = copy.deepcopy(meta)
     del expected._axes["b"]
     del expected._axes["c"]
     del expected._axes["d"]
-    expected._data_shape = np.array([1, 3, 5, 2], dtype=int)
+    expected._data_shape = np.array([1, 3, 0, 2], dtype=int)
     assert_metas_equal(output, expected)

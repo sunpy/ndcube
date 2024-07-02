@@ -268,7 +268,7 @@ class NDMeta(dict, NDMetaABC):
         # Docstring in ABC.
         return _NDMetaSlicer(self)
 
-    def rebin(self, rebinned_axes, new_shape):
+    def rebin(self, bin_shape):
         """
         Adjusts axis-aware metadata to stay consistent with a rebinned `~ndcube.NDCube`.
 
@@ -279,36 +279,25 @@ class NDMeta(dict, NDMetaABC):
 
         Parameters
         ----------
-        rebinned_axes: `set` of `int`
-            Set of array indices of axes that are rebinned.
-        new_shape: `tuple` of `int`
-            The new shape of the rebinned data.
+        bin_shape : array-like
+            The number of pixels in a bin in each dimension.
         """
-        # Sanitize input.
+        # Sanitize input
+        bin_shape = np.round(bin_shape).astype(int)
         data_shape = self.data_shape
-        if not isinstance(rebinned_axes, set):
-            raise TypeError(
-                f"rebinned_axes must be a set. type of rebinned_axes is {type(rebinned_axes)}")
-        if not all([isinstance(dim, numbers.Integral) for dim in rebinned_axes]):
-            raise ValueError("All elements of rebinned_axes must be ints.")
-        list_axes = list(rebinned_axes)
-        if min(list_axes) < 0 or max(list_axes) >= len(data_shape):
-            raise ValueError(
-                f"Elements in rebinned_axes must be in range 0--{len(data_shape)-1} inclusive.")
-        if len(new_shape) != len(data_shape):
-            raise ValueError(f"new_shape must be a tuple of same length as data shape: "
-                             f"{len(new_shape)} != {len(self.data_shape)}")
-        if not all([isinstance(dim, numbers.Integral) for dim in new_shape]):
-            raise TypeError("bin_shape must contain only integer types.")
+        bin_shape = bin_shape[:len(data_shape)]  # Drop info on axes not defined by NDMeta.
+        if (np.mod(data_shape, bin_shape) != 0).any():
+            raise ValueError("bin_shape must be integer factors of their associated axes.")
         # Remove axis-awareness from grid-aligned metadata associated with rebinned axes.
+        rebinned_axes = set(np.where(bin_shape != 1)[0])
         new_meta = copy.deepcopy(self)
         null_set = set()
         for name, axes in self.axes.items():
-            if (_is_grid_aligned(self[name], tuple(self.data_shape[axes]))
+            if (_is_grid_aligned(self[name], data_shape[axes])
                 and set(axes).intersection(rebinned_axes) != null_set):
                 del new_meta._axes[name]
         # Update data shape.
-        new_meta._data_shape = np.asarray(new_shape).astype(int)
+        new_meta._data_shape = new_meta._data_shape // bin_shape
         return new_meta
 
 
@@ -345,9 +334,7 @@ class _NDMetaSlicer:
         # with slice(None) so data shape is not altered.
         idx = [not isinstance(i, numbers.Integral) and s == 0 for i, s in zip(item, data_shape)]
         idx = np.arange(len(idx))[idx]
-        print("original item = ", item)
         item[idx] = np.array([slice(None)] * len(idx))
-        print("updated item = ", item)
 
         # Edit data shape and calculate which axis will be dropped.
         dropped_axes = np.zeros(naxes, dtype=bool)
@@ -402,7 +389,6 @@ class _NDMetaSlicer:
                     else:
                         new_item = tuple(item[axis])
                     # Slice metadata value.
-                    print(new_item)
                     try:
                         new_value = value[new_item]
                     except:
