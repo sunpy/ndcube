@@ -5,7 +5,7 @@ import collections.abc
 
 import numpy as np
 
-__all__ = ["NDMeta"]
+__all__ = ["NDMeta", "NDMetaABC"]
 
 
 class NDMetaABC(collections.abc.Mapping):

@@ -27,6 +27,7 @@ from astropy.wcs.wcsapi.high_level_api import values_to_high_level_objects
 from ndcube import utils
 from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
+from ndcube.meta import NDMetaABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.exceptions import warn_deprecated, warn_user
@@ -398,6 +399,10 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             if copy:
                 global_coords = deepcopy(global_coords)
             self._global_coords = global_coords
+
+        # If meta is axis-aware, make it to have same shape as cube.
+        if isinstance(self.meta, NDMetaABC):
+            self.meta.data_shape = self.shape
 
     @property
     def extra_coords(self):
