@@ -195,3 +195,16 @@ def test_rebin(basic_meta):
     del expected._axes["d"]
     expected._data_shape = np.array([1, 3, 0, 2], dtype=int)
     assert_metas_equal(output, expected)
+
+
+def test_data_shape_setter(basic_meta):
+    meta = basic_meta
+    new_shape = np.array([2, 3, 5, 4], dtype=int)
+    meta.data_shape = new_shape
+    assert tuple(meta.data_shape) == tuple(new_shape)
+
+
+def test_data_shape_setter_error(basic_meta):
+    meta = basic_meta
+    with pytest.raises(ValueError):
+        meta.data_shape = (3, 3, 0, 4)

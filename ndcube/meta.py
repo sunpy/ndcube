@@ -224,6 +224,30 @@ class NDMeta(dict, NDMetaABC):
     def data_shape(self):
         return self._data_shape
 
+    @data_shape.setter
+    def data_shape(self, new_shape):
+        """
+        Set data shape to new shape.
+
+        Must agree with shpaes of any axes already associated with metadata
+
+        Parameters
+        ----------
+        new_shape: array-like
+            The new shape of the data. Elements must of of type `int`.
+        """
+        new_shape = np.round(new_shape).astype(int)
+        if (new_shape < 0).any():
+            raise ValueError("new_shape cannot include negative numbers.")
+        # Confirm input shape agrees with shapes of pre-existin metadata.
+        old_shape = self.data_shape
+        idx, = np.where(old_shape > 0)
+        print(idx, old_shape, new_shape)
+        if len(idx) > 0 and (old_shape[idx] != new_shape[idx]).any():
+            raise ValueError("new_shape not compatible with pre-existing metadata. "
+                             f"old shape = {old_shape}, new_shape = {new_shape}")
+        self._data_shape = new_shape
+
     def add(self, name, value, comment=None, axis=None, overwrite=False):
         # Docstring in ABC.
         if name in self.keys() and overwrite is not True:
