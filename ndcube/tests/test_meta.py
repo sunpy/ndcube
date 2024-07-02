@@ -126,8 +126,8 @@ def test_slice_dependent_axes(basic_meta):
     del axes["d"]
     axes["c"] = 1
     axes["g"] = (0, 1)
-    shape = np.array([2, 2, 0])
-    expected = NDMeta(values, comments, axes, data_shape=shape)
+    expected = NDMeta(values, comments, axes)
+    expected._data_shape = np.array([2, 2, 0])
     assert_metas_equal(output, expected)
 
 

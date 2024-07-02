@@ -34,9 +34,6 @@ class NDMetaABC(collections.abc.Mapping):
         number of associated axes (axis-aligned), or same shape as the associated
         data array's axes (grid-aligned).
 
-    data_shape: iterator of `int`, optional
-        The shape of the data with which this metadata is associated.
-
     Notes
     -----
     **Axis-aware Metadata**
@@ -145,9 +142,9 @@ class NDMeta(dict, NDMetaABC):
     __ndcube_can_slice__ = True
     __ndcube_can_rebin__ = True
 
-    def __init__(self, meta=None, comments=None, axes=None, data_shape=None):
+    def __init__(self, meta=None, comments=None, axes=None):
         self.original_meta = meta
-        self._data_shape = np.array([], dtype=int) if data_shape is None else np.asarray(data_shape, dtype=int)
+        self._data_shape = np.array([], dtype=int)
 
         if meta is None:
             meta = {}
