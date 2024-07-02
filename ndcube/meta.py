@@ -72,9 +72,10 @@ class NDMeta(dict):
     axis-awareness.  If specific pieces of metadata have a known way to behave during
     rebinning, this can be handled by subclasses or mixins.
     """
+    __ndcube_can_slice__ = True
+    __ndcube_can_rebin__ = True
+
     def __init__(self, meta=None, comments=None, axes=None, data_shape=None):
-        self.__ndcube_can_slice__ = True
-        self.__ndcube_can_rebin__ = True
         self.original_meta = meta
 
         if meta is None:
