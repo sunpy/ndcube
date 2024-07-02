@@ -99,10 +99,10 @@ def assert_metas_equal(test_input, expected_output):
     if isinstance(test_input, NDMeta) and isinstance(expected_output, NDMeta):
         assert test_input.keys() == expected_output.keys()
 
-        if test_input.shape is None or expected_output.shape is None:
-            assert test_input.shape == expected_output.shape
+        if test_input.data_shape is None or expected_output.data_shape is None:
+            assert test_input.data_shape == expected_output.data_shape
         else:
-            assert np.allclose(test_input.shape, expected_output.shape)
+            assert np.allclose(test_input.data_shape, expected_output.data_shape)
 
         for test_value, expected_value in zip(test_input.values(), expected_output.values()):
             try:

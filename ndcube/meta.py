@@ -93,7 +93,7 @@ class NDMetaABC(collections.abc.Mapping):
 
     @property
     @abc.abstractmethod
-    def shape(self):
+    def data_shape(self):
         """
         The shape of the data with which the metadata is associated.
         """
@@ -110,7 +110,7 @@ class NDMetaABC(collections.abc.Mapping):
 
         value: Any
             The value of the metadata. If axes input is not None, this must have the
-            same length/shape as those axes as defined by ``self.shape``.
+            same length/shape as those axes as defined by ``self.data_shape``.
 
         comment: `str` or `None`
             Any comment associated with this metadata. Set to None if no comment desired.
@@ -191,7 +191,7 @@ class NDMeta(dict, NDMetaABC):
             axis = (axis,)
         if len(axis) == 0:
             return ValueError(axis_err_msg)
-        if self.shape is None:
+        if self.data_shape is None:
             raise TypeError("NDMeta instance does not have a shape so new metadata "
                             "cannot be assigned to an axis.")
         # Verify each entry in axes is an iterable of ints or a scalar.
@@ -200,10 +200,10 @@ class NDMeta(dict, NDMetaABC):
             return ValueError(axis_err_msg)
         axis = np.asarray(axis)
         if _not_scalar(value):
-            axis_shape = tuple(self.shape[axis])
+            axis_shape = tuple(self.data_shape[axis])
             if not _is_grid_aligned(value, axis_shape) and not _is_axis_aligned(value, axis_shape):
                 raise ValueError(
-                    f"{key} must have shape {tuple(self.shape[axis])} "
+                    f"{key} must have shape {tuple(self.data_shape[axis])} "
                     f"as its associated axes {axis}, ",
                     f"or same length as number of associated axes ({len(axis)}). "
                     f"Has shape {value.shape if hasattr(value, 'shape') else len(value)}")
@@ -218,7 +218,7 @@ class NDMeta(dict, NDMetaABC):
         return self._axes
 
     @property
-    def shape(self):
+    def data_shape(self):
         return self._data_shape
 
     def add(self, name, value, comment=None, axis=None, overwrite=False):
@@ -247,12 +247,12 @@ class NDMeta(dict, NDMetaABC):
         axis = self.axes.get(key, None)
         if axis is not None:
             if _not_scalar(val):
-                axis_shape = tuple(self.shape[axis])
+                axis_shape = tuple(self.data_shape[axis])
                 if not _is_grid_aligned(val, axis_shape) and not _is_axis_aligned(val, axis_shape):
                     raise TypeError(
                         f"{key} is already associated with axis/axes {axis}. val must therefore "
                         f"must either have same length as number associated axes ({len(axis)}), "
-                        f"or the same shape as associated data axes {tuple(self.shape[axis])}. "
+                        f"or the same shape as associated data axes {tuple(self.data_shape[axis])}. "
                         f"val shape = {val.shape if hasattr(val, 'shape') else (len(val),)}\n"
                         "We recommend using the 'add' method to set values.")
         super().__setitem__(key, val)
@@ -279,7 +279,7 @@ class NDMeta(dict, NDMetaABC):
             The new shape of the rebinned data.
         """
         # Sanitize input.
-        data_shape = self.shape
+        data_shape = self.data_shape
         if not isinstance(rebinned_axes, set):
             raise TypeError(
                 f"rebinned_axes must be a set. type of rebinned_axes is {type(rebinned_axes)}")
@@ -291,14 +291,14 @@ class NDMeta(dict, NDMetaABC):
                 f"Elements in rebinned_axes must be in range 0--{len(data_shape)-1} inclusive.")
         if len(new_shape) != len(data_shape):
             raise ValueError(f"new_shape must be a tuple of same length as data shape: "
-                             f"{len(new_shape)} != {len(self.shape)}")
+                             f"{len(new_shape)} != {len(self.data_shape)}")
         if not all([isinstance(dim, numbers.Integral) for dim in new_shape]):
             raise TypeError("bin_shape must contain only integer types.")
         # Remove axis-awareness from grid-aligned metadata associated with rebinned axes.
         new_meta = copy.deepcopy(self)
         null_set = set()
         for name, axes in self.axes.items():
-            if (_is_grid_aligned(self[name], tuple(self.shape[axes]))
+            if (_is_grid_aligned(self[name], tuple(self.data_shape[axes]))
                 and set(axes).intersection(rebinned_axes) != null_set):
                 del new_meta._axes[name]
         # Update data shape.
@@ -319,19 +319,19 @@ class _NDMetaSlicer:
         self.meta = meta
 
     def __getitem__(self, item):
-        if self.meta.shape is None:
+        if self.meta.data_shape is None:
             raise TypeError("NDMeta object does not have a shape and so cannot be sliced.")
 
         new_meta = copy.deepcopy(self.meta)
         if isinstance(item, (numbers.Integral, slice)):
             item = [item]
-        naxes = len(self.meta.shape)
+        naxes = len(self.meta.data_shape)
         item = np.array(list(item) + [slice(None)] * (naxes - len(item)),
                         dtype=object)
 
         # Edit data shape and calculate which axis will be dropped.
         dropped_axes = np.zeros(naxes, dtype=bool)
-        new_shape = new_meta.shape
+        new_shape = new_meta.data_shape
         for i, axis_item in enumerate(item):
             if isinstance(axis_item, numbers.Integral):
                 dropped_axes[i] = True
@@ -340,12 +340,12 @@ class _NDMetaSlicer:
                 if start is None:
                     start = 0
                 if start < 0:
-                    start = self.meta.shape[i] - start
+                    start = self.meta.data_shape[i] - start
                 stop = axis_item.stop
                 if stop is None:
-                    stop = self.meta.shape[i]
+                    stop = self.meta.data_shape[i]
                 if stop < 0:
-                    stop = self.meta.shape[i] - stop
+                    stop = self.meta.data_shape[i] - stop
                 new_shape[i] = stop - start
             else:
                 raise TypeError("Unrecognized slice type. "
@@ -369,7 +369,7 @@ class _NDMetaSlicer:
                     new_axis -= cumul_dropped_axes
 
                 # Calculate sliced metadata values.
-                axis_shape = tuple(self.meta.shape[axis])
+                axis_shape = tuple(self.meta.data_shape[axis])
                 if _is_scalar(value):
                     new_value = value
                     # If scalar metadata's axes have been dropped, mark metadata to be dropped.
