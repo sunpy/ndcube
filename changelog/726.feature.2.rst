@@ -1,0 +1,1 @@
+Create a `ndcube.analysis.rebin` module for rebinning `~ndcube.NDCube` objects.
