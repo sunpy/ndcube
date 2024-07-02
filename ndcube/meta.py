@@ -123,6 +123,17 @@ class NDMetaABC(collections.abc.Mapping):
             If True, overwrites the entry of the name name if already present.
         """
 
+    @property
+    @abc.abstractmethod
+    def slice(self):
+        """
+        A helper class which, when sliced, returns a new NDMeta with axis- and grid-aligned metadata sliced.
+
+        Example
+        -------
+        >>> sliced_meta = meta.slice[0:3, :, 2] # doctest: +SKIP
+        """
+
     @abc.abstractmethod
     def rebin(self, rebinned_axes, new_shape):
         """
@@ -246,99 +257,10 @@ class NDMeta(dict, NDMetaABC):
                         "We recommend using the 'add' method to set values.")
         super().__setitem__(key, val)
 
-    def __getitem__(self, item):
-        # There are two ways to slice:
-        # by key, or
-        # by typical python numeric slicing API,
-        # i.e. slice the each piece of metadata associated with an axes.
-
-        if isinstance(item, str):
-            return super().__getitem__(item)
-
-        elif self.shape is None:
-            raise TypeError("NDMeta object does not have a shape and so cannot be sliced.")
-
-        else:
-            new_meta = copy.deepcopy(self)
-            if isinstance(item, (numbers.Integral, slice)):
-                item = [item]
-            naxes = len(self.shape)
-            item = np.array(list(item) + [slice(None)] * (naxes - len(item)),
-                            dtype=object)
-
-            # Edit data shape and calculate which axis will be dropped.
-            dropped_axes = np.zeros(naxes, dtype=bool)
-            new_shape = new_meta.shape
-            for i, axis_item in enumerate(item):
-                if isinstance(axis_item, numbers.Integral):
-                    dropped_axes[i] = True
-                elif isinstance(axis_item, slice):
-                    start = axis_item.start
-                    if start is None:
-                        start = 0
-                    if start < 0:
-                        start = self.shape[i] - start
-                    stop = axis_item.stop
-                    if stop is None:
-                        stop = self.shape[i]
-                    if stop < 0:
-                        stop = self.shape[i] - stop
-                    new_shape[i] = stop - start
-                else:
-                    raise TypeError("Unrecognized slice type. "
-                                    "Must be an int, slice and tuple of the same.")
-            kept_axes = np.invert(dropped_axes)
-            new_meta._data_shape = new_shape[kept_axes]
-
-            # Slice all metadata associated with axes.
-            for key, value in self.items():
-                axis = self.axes.get(key, None)
-                drop_key = False
-                if axis is not None:
-                    # Calculate new axis indices.
-                    new_axis = np.asarray(list(
-                        set(axis).intersection(set(np.arange(naxes)[kept_axes]))
-                        ))
-                    if len(new_axis) == 0:
-                        new_axis = None
-                    else:
-                        cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
-                        new_axis -= cumul_dropped_axes
-
-                    # Calculate sliced metadata values.
-                    axis_shape = tuple(self.shape[axis])
-                    if _is_scalar(value):
-                        new_value = value
-                        # If scalar metadata's axes have been dropped, mark metadata to be dropped.
-                        if new_axis is None:
-                            drop_key = True
-                    else:
-                        value_is_axis_aligned = _is_axis_aligned(value, axis_shape)
-                        if value_is_axis_aligned:
-                            new_item = kept_axes[axis]
-                        else:
-                            new_item = tuple(item[axis])
-                        # Slice metadata value.
-                        try:
-                            new_value = value[new_item]
-                        except:
-                            # If value cannot be sliced by fancy slicing, convert it
-                            # it to an array, slice it, and then if necessary, convert
-                            # it back to its original type.
-                            new_value = (np.asanyarray(value)[new_item])
-                            if hasattr(new_value, "__len__"):
-                                new_value = type(value)(new_value)
-                        # If axis-aligned metadata sliced down to length 1, convert to scalar.
-                        if value_is_axis_aligned and len(new_value) == 1:
-                            new_value = new_value[0]
-                    # Overwrite metadata value with newly sliced version.
-                    if drop_key:
-                        new_meta.remove(key)
-                    else:
-                        new_meta.add(key, new_value, self.comments.get(key, None), new_axis,
-                                     overwrite=True)
-
-            return new_meta
+    @property
+    def slice(self):
+        # Docstring in ABC.
+        return _NDMetaSlicer(self)
 
     def rebin(self, rebinned_axes, new_shape):
         """
@@ -381,6 +303,104 @@ class NDMeta(dict, NDMetaABC):
                 del new_meta._axes[name]
         # Update data shape.
         new_meta._data_shape = np.asarray(new_shape).astype(int)
+        return new_meta
+
+
+class _NDMetaSlicer:
+    """
+    Helper class to slice an NDMeta instance using a slicing item.
+
+    Parameters
+    ----------
+    meta: `NDMetaABC`
+        The metadata object to slice.
+    """
+    def __init__(self, meta):
+        self.meta = meta
+
+    def __getitem__(self, item):
+        if self.meta.shape is None:
+            raise TypeError("NDMeta object does not have a shape and so cannot be sliced.")
+
+        new_meta = copy.deepcopy(self.meta)
+        if isinstance(item, (numbers.Integral, slice)):
+            item = [item]
+        naxes = len(self.meta.shape)
+        item = np.array(list(item) + [slice(None)] * (naxes - len(item)),
+                        dtype=object)
+
+        # Edit data shape and calculate which axis will be dropped.
+        dropped_axes = np.zeros(naxes, dtype=bool)
+        new_shape = new_meta.shape
+        for i, axis_item in enumerate(item):
+            if isinstance(axis_item, numbers.Integral):
+                dropped_axes[i] = True
+            elif isinstance(axis_item, slice):
+                start = axis_item.start
+                if start is None:
+                    start = 0
+                if start < 0:
+                    start = self.meta.shape[i] - start
+                stop = axis_item.stop
+                if stop is None:
+                    stop = self.meta.shape[i]
+                if stop < 0:
+                    stop = self.meta.shape[i] - stop
+                new_shape[i] = stop - start
+            else:
+                raise TypeError("Unrecognized slice type. "
+                                "Must be an int, slice and tuple of the same.")
+        kept_axes = np.invert(dropped_axes)
+        new_meta._data_shape = new_shape[kept_axes]
+
+        # Slice all metadata associated with axes.
+        for key, value in self.meta.items():
+            axis = self.meta.axes.get(key, None)
+            drop_key = False
+            if axis is not None:
+                # Calculate new axis indices.
+                new_axis = np.asarray(list(
+                    set(axis).intersection(set(np.arange(naxes)[kept_axes]))
+                    ))
+                if len(new_axis) == 0:
+                    new_axis = None
+                else:
+                    cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
+                    new_axis -= cumul_dropped_axes
+
+                # Calculate sliced metadata values.
+                axis_shape = tuple(self.meta.shape[axis])
+                if _is_scalar(value):
+                    new_value = value
+                    # If scalar metadata's axes have been dropped, mark metadata to be dropped.
+                    if new_axis is None:
+                        drop_key = True
+                else:
+                    value_is_axis_aligned = _is_axis_aligned(value, axis_shape)
+                    if value_is_axis_aligned:
+                        new_item = kept_axes[axis]
+                    else:
+                        new_item = tuple(item[axis])
+                    # Slice metadata value.
+                    try:
+                        new_value = value[new_item]
+                    except:
+                        # If value cannot be sliced by fancy slicing, convert it
+                        # it to an array, slice it, and then if necessary, convert
+                        # it back to its original type.
+                        new_value = (np.asanyarray(value)[new_item])
+                        if hasattr(new_value, "__len__"):
+                            new_value = type(value)(new_value)
+                    # If axis-aligned metadata sliced down to length 1, convert to scalar.
+                    if value_is_axis_aligned and len(new_value) == 1:
+                        new_value = new_value[0]
+                # Overwrite metadata value with newly sliced version.
+                if drop_key:
+                    new_meta.remove(key)
+                else:
+                    new_meta.add(key, new_value, self.meta.comments.get(key, None), new_axis,
+                                 overwrite=True)
+
         return new_meta
 
 

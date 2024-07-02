@@ -61,7 +61,7 @@ def test_shape(basic_meta, basic_data_shape):
 
 def test_slice_axis_with_no_meta(basic_meta):
     meta = basic_meta
-    output = meta[:, :, :, 0]
+    output = meta.slice[:, :, :, 0]
     expected = copy.deepcopy(meta)
     expected._data_shape = meta._data_shape[:-1]
     assert_metas_equal(output, expected)
@@ -70,7 +70,7 @@ def test_slice_axis_with_no_meta(basic_meta):
 def test_slice_away_independent_axis(basic_meta):
     meta = basic_meta
     item = 0
-    output = meta[item]
+    output = meta.slice[item]
     values = dict([(key, value) for key, value in meta.items()])
     values["b"] = values["b"][0]
     values["g"] = ["world", "!"]
@@ -91,7 +91,7 @@ def test_slice_away_independent_axis(basic_meta):
 def test_slice_away_independent_and_dependent_axis(basic_meta):
     meta = basic_meta
     item = (0, 1)
-    output = meta[item]
+    output = meta.slice[item]
     values = dict([(key, value) for key, value in meta.items()])
     del values["f"]
     values["b"] = values["b"][0]
@@ -113,7 +113,7 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
 
 def test_slice_dependent_axes(basic_meta):
     meta = basic_meta
-    output = meta[:, 1:3, 1]
+    output = meta.slice[:, 1:3, 1]
     values = dict([(key, value) for key, value in meta.items()])
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]

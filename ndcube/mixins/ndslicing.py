@@ -27,6 +27,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
         # Slice metadata if possible.
         if hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__:
-            sliced_cube.meta = self.meta[item]
+            sliced_cube.meta = self.meta.slice(item)
 
         return sliced_cube
