@@ -175,10 +175,10 @@ def test_add_overwrite_error(basic_meta):
         meta.add("a", "world", None, None)
 
 
-def test_remove(basic_meta):
+def test_del(basic_meta):
     meta = basic_meta
     name = "b"
-    meta.remove(name)
+    del meta[name]
     assert name not in meta.keys()
     assert name not in meta.comments.keys()
     assert name not in meta.axes.keys()

@@ -263,12 +263,12 @@ class NDMeta(dict, NDMetaABC):
         # This must be done after updating self._axes otherwise it may error.
         self.__setitem__(name, value)
 
-    def remove(self, name):
+    def __delitem__(self, name):
         if name in self._comments:
             del self._comments[name]
         if name in self._axes:
             del self._axes[name]
-        del self[name]
+        super().__delitem__(name)
 
     def __setitem__(self, key, val):
         axis = self.axes.get(key, None)
@@ -425,7 +425,7 @@ class _NDMetaSlicer:
                     new_value = new_value[0]
             # Overwrite metadata value with newly sliced version.
             if drop_key:
-                new_meta.remove(key)
+                del new_meta[key]
             else:
                 new_meta.add(key, new_value, self.meta.comments.get(key, None), new_axis,
                              overwrite=True)
