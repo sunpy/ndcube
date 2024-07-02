@@ -30,22 +30,22 @@ def basic_comments():
 @pytest.fixture
 def basic_axes():
     return {"b": 0,
-            "c": (1, 2),
-            "d": (2,),
+            "c": (1, 3),
+            "d": (3,),
             "e": 1,
             "f": 0,
-            "g": (0, 1, 2)
+            "g": (0, 1, 3)
             }
 
 
 @pytest.fixture
 def basic_data_shape():
-    return (2, 3, 4, 5)
+    return (2, 3, 0, 4)
 
 
 @pytest.fixture
-def basic_meta(basic_meta_values, basic_comments, basic_axes, basic_data_shape):
-    return NDMeta(basic_meta_values, basic_comments, basic_axes, basic_data_shape)
+def basic_meta(basic_meta_values, basic_comments, basic_axes):
+    return NDMeta(basic_meta_values, basic_comments, basic_axes)
 
 
 @pytest.fixture
@@ -61,9 +61,12 @@ def test_shape(basic_meta, basic_data_shape):
 
 def test_slice_axis_with_no_meta(basic_meta):
     meta = basic_meta
-    output = meta.slice[:, :, :, 0]
+    output = meta.slice[:, :, 0]
     expected = copy.deepcopy(meta)
-    expected._data_shape = meta._data_shape[:-1]
+    expected._data_shape = meta._data_shape[[0, 1, 3]]
+    expected._axes["c"] = (1, 2)
+    expected._axes["d"] = (2,)
+    expected._axes["g"] = (0, 1, 2)
     assert_metas_equal(output, expected)
 
 
@@ -82,9 +85,9 @@ def test_slice_away_independent_axis(basic_meta):
     axes["c"] -= 1
     axes["d"] -= 1
     axes["e"] -= 1
-    axes["g"] = (0, 1)
+    axes["g"] = (0, 2)
     shape = meta.data_shape[1:]
-    expected = NDMeta(values, comments, axes, shape)
+    expected = NDMeta(values, comments, axes)
     assert_metas_equal(output, expected)
 
 
@@ -103,17 +106,17 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     del axes["b"]
     del axes["e"]
     del axes["f"]
-    axes["c"] = 0
-    axes["d"] = 0
-    axes["g"] = 0
+    axes["c"] = 1
+    axes["d"] = 1
+    axes["g"] = 1
     shape = meta.data_shape[2:]
-    expected = NDMeta(values, comments, axes, shape)
+    expected = NDMeta(values, comments, axes)
     assert_metas_equal(output, expected)
 
 
 def test_slice_dependent_axes(basic_meta):
     meta = basic_meta
-    output = meta.slice[:, 1:3, 1]
+    output = meta.slice[:, 1:3, :, 1]
     values = dict([(key, value) for key, value in meta.items()])
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]
@@ -124,8 +127,8 @@ def test_slice_dependent_axes(basic_meta):
     del axes["d"]
     axes["c"] = 1
     axes["g"] = (0, 1)
-    shape = np.array([2, 2, 5])
-    expected = NDMeta(values, comments, axes, shape)
+    shape = np.array([2, 2, 0])
+    expected = NDMeta(values, comments, axes, data_shape=shape)
     assert_metas_equal(output, expected)
 
 
@@ -173,12 +176,6 @@ def test_add_overwrite_error(basic_meta):
         meta.add("a", "world", None, None)
 
 
-def test_add_axis_without_shape(no_shape_meta):
-    meta = no_shape_meta
-    with pytest.raises(TypeError):
-        meta.add("z", [100], axis=0)
-
-
 def test_remove(basic_meta):
     meta = basic_meta
     name = "b"
@@ -191,12 +188,12 @@ def test_remove(basic_meta):
 def test_rebin(basic_meta):
     meta = basic_meta
     rebinned_axes = {0, 2}
-    new_shape = (1, 3, 2, 5)
+    new_shape = (1, 3, 5, 2)
     output = meta.rebin(rebinned_axes, new_shape)
     # Build expected result.
     expected = copy.deepcopy(meta)
     del expected._axes["b"]
     del expected._axes["c"]
     del expected._axes["d"]
-    expected._data_shape = np.array([1, 3, 2, 5], dtype=int)
+    expected._data_shape = np.array([1, 3, 5, 2], dtype=int)
     assert_metas_equal(output, expected)

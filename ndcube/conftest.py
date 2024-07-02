@@ -344,7 +344,6 @@ def ndcube_4d_axis_aware_meta(wcs_4d_t_l_lt_ln):
                  "pixel label": np.arange(np.prod(shape[:2])).reshape(shape[:2]),
                  "line": ["Si IV"] * shape[2],
                  "exposure time": ([2] * shape[-1]) * u.s},
-                data_shape=shape,
                 axes={"slit position": 0,
                       "pixel label": (0, 1),
                       "line": (2,),
