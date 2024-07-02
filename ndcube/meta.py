@@ -361,49 +361,50 @@ class _NDMetaSlicer:
         for key, value in self.meta.items():
             axis = self.meta.axes.get(key, None)
             drop_key = False
-            if axis is not None:
-                # Calculate new axis indices.
-                new_axis = np.asarray(list(
-                    set(axis).intersection(set(np.arange(naxes)[kept_axes]))
-                    ))
-                if len(new_axis) == 0:
-                    new_axis = None
-                else:
-                    cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
-                    new_axis -= cumul_dropped_axes
+            if axis is None:
+                continue
+            # Calculate new axis indices.
+            new_axis = np.asarray(list(
+                set(axis).intersection(set(np.arange(naxes)[kept_axes]))
+                ))
+            if len(new_axis) == 0:
+                new_axis = None
+            else:
+                cumul_dropped_axes = np.cumsum(dropped_axes)[new_axis]
+                new_axis -= cumul_dropped_axes
 
-                # Calculate sliced metadata values.
-                axis_shape = tuple(self.meta.data_shape[axis])
-                if _is_scalar(value):
-                    new_value = value
-                    # If scalar metadata's axes have been dropped, mark metadata to be dropped.
-                    if new_axis is None:
-                        drop_key = True
+            # Calculate sliced metadata values.
+            axis_shape = tuple(self.meta.data_shape[axis])
+            if _is_scalar(value):
+                new_value = value
+                # If scalar metadata's axes have been dropped, mark metadata to be dropped.
+                if new_axis is None:
+                    drop_key = True
+            else:
+                value_is_axis_aligned = _is_axis_aligned(value, axis_shape)
+                if value_is_axis_aligned:
+                    new_item = kept_axes[axis]
                 else:
-                    value_is_axis_aligned = _is_axis_aligned(value, axis_shape)
-                    if value_is_axis_aligned:
-                        new_item = kept_axes[axis]
-                    else:
-                        new_item = tuple(item[axis])
-                    # Slice metadata value.
-                    try:
-                        new_value = value[new_item]
-                    except:
-                        # If value cannot be sliced by fancy slicing, convert it
-                        # it to an array, slice it, and then if necessary, convert
-                        # it back to its original type.
-                        new_value = (np.asanyarray(value)[new_item])
-                        if hasattr(new_value, "__len__"):
-                            new_value = type(value)(new_value)
-                    # If axis-aligned metadata sliced down to length 1, convert to scalar.
-                    if value_is_axis_aligned and len(new_value) == 1:
-                        new_value = new_value[0]
-                # Overwrite metadata value with newly sliced version.
-                if drop_key:
-                    new_meta.remove(key)
-                else:
-                    new_meta.add(key, new_value, self.meta.comments.get(key, None), new_axis,
-                                 overwrite=True)
+                    new_item = tuple(item[axis])
+                # Slice metadata value.
+                try:
+                    new_value = value[new_item]
+                except:
+                    # If value cannot be sliced by fancy slicing, convert it
+                    # it to an array, slice it, and then if necessary, convert
+                    # it back to its original type.
+                    new_value = (np.asanyarray(value)[new_item])
+                    if hasattr(new_value, "__len__"):
+                        new_value = type(value)(new_value)
+                # If axis-aligned metadata sliced down to length 1, convert to scalar.
+                if value_is_axis_aligned and len(new_value) == 1:
+                    new_value = new_value[0]
+            # Overwrite metadata value with newly sliced version.
+            if drop_key:
+                new_meta.remove(key)
+            else:
+                new_meta.add(key, new_value, self.meta.comments.get(key, None), new_axis,
+                             overwrite=True)
 
         return new_meta
 

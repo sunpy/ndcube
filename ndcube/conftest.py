@@ -15,7 +15,7 @@ from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
-from ndcube import ExtraCoords, GlobalCoords, NDMeta, NDCube, NDCubeSequence
+from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence, NDMeta
 
 # Force MPL to use non-gui backends for testing.
 try:
@@ -340,14 +340,14 @@ def ndcube_4d_axis_aware_meta(wcs_4d_t_l_lt_ln):
     wcs_4d_t_l_lt_ln.array_shape = shape
     data_cube = data_nd(shape, dtype=int)
     meta = NDMeta({"a": "scalar",
-                 "slit position": np.arange(shape[0], dtype=int),
-                 "pixel label": np.arange(np.prod(shape[:2])).reshape(shape[:2]),
-                 "line": ["Si IV"] * shape[2],
-                 "exposure time": ([2] * shape[-1]) * u.s},
-                axes={"slit position": 0,
-                      "pixel label": (0, 1),
-                      "line": (2,),
-                      "exposure time": 3})
+                   "slit position": np.arange(shape[0], dtype=int),
+                   "pixel label": np.arange(np.prod(shape[:2])).reshape(shape[:2]),
+                   "line": ["Si IV"] * shape[2],
+                   "exposure time": ([2] * shape[-1]) * u.s},
+                  axes={"slit position": 0,
+                        "pixel label": (0, 1),
+                        "line": (2,),
+                        "exposure time": 3})
     return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, meta=meta)
 
 
