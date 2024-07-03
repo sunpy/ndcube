@@ -85,7 +85,6 @@ def test_slice_away_independent_axis(basic_meta):
     axes["d"] -= 1
     axes["e"] -= 1
     axes["g"] = (0, 2)
-    shape = meta.data_shape[1:]
     expected = NDMeta(values, comments, axes)
     assert_metas_equal(output, expected)
 
@@ -108,7 +107,6 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     axes["c"] = 1
     axes["d"] = 1
     axes["g"] = 1
-    shape = meta.data_shape[2:]
     expected = NDMeta(values, comments, axes)
     assert_metas_equal(output, expected)
 

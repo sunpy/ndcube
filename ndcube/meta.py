@@ -208,7 +208,7 @@ class NDMeta(dict, NDMetaABC):
                         f"Has shape {value.shape if hasattr(value, 'shape') else len(value)}")
         elif len(axis) != 1:
             raise ValueError("Scalar and str metadata can only be assigned to one axis. "
-                             f"key = {key}; value = {value}; axes = {axes}")
+                             f"key = {key}; value = {value}; axes = {axis}")
         self._data_shape = data_shape
         return axis
 
