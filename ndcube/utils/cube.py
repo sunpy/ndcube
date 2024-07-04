@@ -100,7 +100,7 @@ def sanitize_crop_inputs(points, wcs):
     return False, points, wcs
 
 
-def get_crop_item_from_points(points, wcs, crop_by_values):
+def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     """
     Find slice item that crops to minimum cube in array-space containing specified world points.
 
@@ -120,6 +120,9 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
     crop_by_values : `bool`
         Denotes whether cropping is done using high-level objects or "values",
         i.e. low-level objects.
+
+    keep_dims : `bool`
+        If `False`, returned item will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
 
     Returns
     -------
@@ -190,7 +193,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
         else:
             min_idx = min(axis_indices)
             max_idx = max(axis_indices) + 1
-            if max_idx - min_idx == 1:
+            if max_idx - min_idx == 1 and not keepdims:
                 item.append(min_idx)
             else:
                 item.append(slice(min_idx, max_idx))
@@ -253,7 +256,8 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
     if not propagation_operation:
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
-        elif operation in {np.prod, np.nanprod, np.product}:
+        # TODO: product was renamed to prod for numpy 2.0
+        elif operation in {np.prod, np.nanprod, np.product if hasattr(np, "product") else np.prod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")
