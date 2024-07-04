@@ -2,6 +2,7 @@ import abc
 import copy
 import numbers
 import collections.abc
+from types import MappingProxyType
 
 import numpy as np
 
@@ -144,7 +145,7 @@ class NDMeta(dict, NDMetaABC):
     __ndcube_can_rebin__ = True
 
     def __init__(self, meta=None, key_comments=None, axes=None):
-        self.original_meta = meta
+        self._original_meta = meta
         self._data_shape = np.array([], dtype=int)
 
         if meta is None:
@@ -280,6 +281,10 @@ class NDMeta(dict, NDMetaABC):
                         f"val shape = {val.shape if hasattr(val, 'shape') else (len(val),)}\n"
                         "We recommend using the 'add' method to set values.")
         super().__setitem__(key, val)
+
+    @property
+    def original_meta(self):
+        return MappingProxyType(self._original_meta)
 
     @property
     def slice(self):
