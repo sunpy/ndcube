@@ -1217,7 +1217,7 @@ class NDCube(NDCubeBase):
         if hasattr(self.meta, "__ndcube_can_rebin__") and self.meta.__ndcube_can_rebin__:
             new_meta = self.meta.rebin(bin_shape)
         else:
-            new_meta = self.meta
+            new_meta = deepcopy(self.meta)
 
         # Reform NDCube.
         new_cube = type(self)(

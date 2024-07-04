@@ -20,7 +20,7 @@ def basic_meta_values():
 
 
 @pytest.fixture
-def basic_comments():
+def basic_key_comments():
     return {"a": "Comment A",
             "b": "Comment B",
             "c": "Comment C",
@@ -43,8 +43,8 @@ def basic_data_shape():
     return (2, 3, 0, 4)
 
 @pytest.fixture
-def basic_meta(basic_meta_values, basic_comments, basic_axes):
-    return NDMeta(basic_meta_values, basic_comments, basic_axes)
+def basic_meta(basic_meta_values, basic_key_comments, basic_axes):
+    return NDMeta(basic_meta_values, basic_key_comments, basic_axes)
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ def test_slice_away_independent_axis(basic_meta):
     values["b"] = values["b"][0]
     values["g"] = ["world", "!"]
     del values["f"]
-    comments = meta.comments
+    key_comments = meta.key_comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     del axes["b"]
     del axes["f"]
@@ -85,7 +85,7 @@ def test_slice_away_independent_axis(basic_meta):
     axes["d"] -= 1
     axes["e"] -= 1
     axes["g"] = (0, 2)
-    expected = NDMeta(values, comments, axes)
+    expected = NDMeta(values, key_comments, axes)
     assert_metas_equal(output, expected)
 
 
@@ -99,7 +99,7 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     values["c"] = values["c"][1]
     values["e"] = values["e"][1]
     values["g"] = "!"
-    comments = meta.comments
+    key_comments = meta.key_comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     del axes["b"]
     del axes["e"]
@@ -107,7 +107,7 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     axes["c"] = 1
     axes["d"] = 1
     axes["g"] = 1
-    expected = NDMeta(values, comments, axes)
+    expected = NDMeta(values, key_comments, axes)
     assert_metas_equal(output, expected)
 
 
@@ -119,12 +119,12 @@ def test_slice_dependent_axes(basic_meta):
     values["d"] = values["d"][1]
     values["e"] = values["e"][1:3]
     values["g"] = values["g"][:2]
-    comments = meta.comments
+    key_comments = meta.key_comments
     axes = dict([(key, axis) for key, axis in meta.axes.items()])
     del axes["d"]
     axes["c"] = 1
     axes["g"] = (0, 1)
-    expected = NDMeta(values, comments, axes)
+    expected = NDMeta(values, key_comments, axes)
     expected._data_shape = np.array([2, 2, 0])
     assert_metas_equal(output, expected)
 
@@ -139,11 +139,11 @@ def test_add1(basic_meta):
     meta = basic_meta
     name = "z"
     value = 100
-    comment = "Comment E"
-    meta.add(name, value, comment, None)
+    key_comment = "Comment E"
+    meta.add(name, value, key_comment, None)
     assert name in meta.keys()
     assert meta[name] == value
-    assert meta.comments[name] == comment
+    assert meta.key_comments[name] == key_comment
     assert meta.axes.get(name, None) is None
 
 
@@ -155,7 +155,7 @@ def test_add2(basic_meta):
     meta.add(name, value, None, axis)
     assert name in meta.keys()
     assert meta[name] == value
-    assert meta.comments.get(name, None) is None
+    assert meta.key_comments.get(name, None) is None
     assert meta.axes[name] == np.array([axis])
 
 
@@ -178,7 +178,7 @@ def test_del(basic_meta):
     name = "b"
     del meta[name]
     assert name not in meta.keys()
-    assert name not in meta.comments.keys()
+    assert name not in meta.key_comments.keys()
     assert name not in meta.axes.keys()
 
 

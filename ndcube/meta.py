@@ -22,7 +22,7 @@ class NDMetaABC(collections.abc.Mapping):
     meta: dict-like
         The names and values of metadata.
 
-    comments: dict-like, optional
+    key_comments: dict-like, optional
         Comments associated with any of the above pieces of metadata.
 
     axes: dict-like, optional
@@ -80,7 +80,7 @@ class NDMetaABC(collections.abc.Mapping):
 
     @property
     @abc.abstractmethod
-    def comments(self):
+    def key_comments(self):
         """
         Mapping from metadata keys to associated comments.
 
@@ -95,7 +95,7 @@ class NDMetaABC(collections.abc.Mapping):
         """
 
     @abc.abstractmethod
-    def add(self, name, value, comment=None, axis=None, overwrite=False):
+    def add(self, name, value, key_comment=None, axis=None, overwrite=False):
         """
         Add a new piece of metadata to instance.
 
@@ -108,7 +108,7 @@ class NDMetaABC(collections.abc.Mapping):
             The value of the metadata. If axes input is not None, this must have the
             same length/shape as those axes as defined by ``self.data_shape``.
 
-        comment: `str` or `None`
+        key_comment: `str` or `None`
             Any comment associated with this metadata. Set to None if no comment desired.
 
         axis: `int`, iterable of `int`, or `None`
@@ -142,25 +142,22 @@ class NDMeta(dict, NDMetaABC):
     __ndcube_can_slice__ = True
     __ndcube_can_rebin__ = True
 
-    def __init__(self, meta=None, comments=None, axes=None):
+    def __init__(self, meta=None, key_comments=None, axes=None):
         self.original_meta = meta
         self._data_shape = np.array([], dtype=int)
 
         if meta is None:
             meta = {}
-        else:
-            meta = dict(meta)
         super().__init__(meta.items())
         meta_keys = meta.keys()
 
-        if comments is None:
-            self._comments = dict()
+        if key_comments is None:
+            self._key_comments = dict()
         else:
-            comments = dict(comments)
-            if not set(comments.keys()).issubset(set(meta_keys)):
+            if not set(key_comments.keys()).issubset(set(meta_keys)):
                 raise ValueError(
                     "All comments must correspond to a value in meta under the same key.")
-            self._comments = comments
+            self._key_comments = key_comments
 
         if axes is None:
             self._axes = dict()
@@ -184,7 +181,7 @@ class NDMeta(dict, NDMetaABC):
                 and all([isinstance(i, numbers.Integral) for i in axis])):
             return ValueError(axis_err_msg)
         # If metadata's axis/axes include axis beyond current data shape, extend it.
-        data_shape = copy.deepcopy(self.data_shape)
+        data_shape = self.data_shape
         if max(axis) >= len(data_shape):
             data_shape = np.concatenate((data_shape,
                                          np.zeros(max(axis) + 1 - len(data_shape), dtype=int)))
@@ -213,8 +210,8 @@ class NDMeta(dict, NDMetaABC):
         return axis
 
     @property
-    def comments(self):
-        return self._comments
+    def key_comments(self):
+        return self._key_comments
 
     @property
     def axes(self):
@@ -229,7 +226,7 @@ class NDMeta(dict, NDMetaABC):
         """
         Set data shape to new shape.
 
-        Must agree with shpaes of any axes already associated with metadata
+        Must agree with shapes of any axes already associated with metadata
 
         Parameters
         ----------
@@ -248,13 +245,13 @@ class NDMeta(dict, NDMetaABC):
                              f"old shape = {old_shape}, new_shape = {new_shape}")
         self._data_shape = new_shape
 
-    def add(self, name, value, comment=None, axis=None, overwrite=False):
+    def add(self, name, value, key_comment=None, axis=None, overwrite=False):
         # Docstring in ABC.
         if name in self.keys() and overwrite is not True:
             raise KeyError(f"'{name}' already exists. "
                            "To update an existing metadata entry set overwrite=True.")
-        if comment is not None:
-            self._comments[name] = comment
+        if key_comment is not None:
+            self._key_comments[name] = key_comment
         if axis is not None:
             axis = self._sanitize_axis_value(axis, value, name)
             self._axes[name] = axis
@@ -264,8 +261,8 @@ class NDMeta(dict, NDMetaABC):
         self.__setitem__(name, value)
 
     def __delitem__(self, name):
-        if name in self._comments:
-            del self._comments[name]
+        if name in self._key_comments:
+            del self._key_comments[name]
         if name in self._axes:
             del self._axes[name]
         super().__delitem__(name)
@@ -427,7 +424,7 @@ class _NDMetaSlicer:
             if drop_key:
                 del new_meta[key]
             else:
-                new_meta.add(key, new_value, self.meta.comments.get(key, None), new_axis,
+                new_meta.add(key, new_value, self.meta.key_comments.get(key, None), new_axis,
                              overwrite=True)
 
         return new_meta
