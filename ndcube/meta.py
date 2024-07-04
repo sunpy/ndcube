@@ -69,6 +69,7 @@ class NDMetaABC(collections.abc.Mapping):
     axis-awareness.  If specific pieces of metadata have a known way to behave during
     rebinning, this can be handled by subclasses or mixins.
     """
+
     @property
     @abc.abstractmethod
     def axes(self):
@@ -239,7 +240,6 @@ class NDMeta(dict, NDMetaABC):
         # Confirm input shape agrees with shapes of pre-existin metadata.
         old_shape = self.data_shape
         idx, = np.where(old_shape > 0)
-        print(idx, old_shape, new_shape)
         if len(idx) > 0 and (old_shape[idx] != new_shape[idx]).any():
             raise ValueError("new_shape not compatible with pre-existing metadata. "
                              f"old shape = {old_shape}, new_shape = {new_shape}")
@@ -380,10 +380,9 @@ class _NDMetaSlicer:
 
         # Slice all metadata associated with axes.
         for key, value in self.meta.items():
-            axis = self.meta.axes.get(key, None)
-            drop_key = False
-            if axis is None:
+            if (axis := self.meta.axes.get(key, None)) is None:
                 continue
+            drop_key = False
             # Calculate new axis indices.
             new_axis = np.asarray(list(
                 set(axis).intersection(set(np.arange(naxes)[kept_axes]))
