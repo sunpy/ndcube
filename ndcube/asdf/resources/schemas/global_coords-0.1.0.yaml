@@ -13,15 +13,14 @@ type: object
 properties:
   internal_coords:
     type: object
-    patternProperties:
-      .*:
-        type: array
-        items:
-            - type: string
-            - type: object
-              oneOf:
-                - tag: "tag:stsci.edu:asdf/unit/quantity-*"
-                - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
+    additionalProperties:
+      type: array
+      items:
+          - type: string
+          - type: object
+            oneOf:
+              - tag: "tag:stsci.edu:asdf/unit/quantity-*"
+              - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
   ndcube:
     tag: "tag:sunpy.org:ndcube/ndcube/ndcube-0.*"
 

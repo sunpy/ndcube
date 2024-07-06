@@ -8,9 +8,10 @@ from ndcube.tests.helpers import assert_cubes_equal
 
 @pytest.mark.parametrize("ndc",[("ndcube_gwcs_2d_ln_lt"),
                                 ("ndcube_gwcs_3d_ln_lt_l"),
-                                ("ndcube_gwcs_3d_ln_lt_l_ec_gc"),
+                                ("ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim"),
+                                ("ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc"),
                                 ("ndcube_gwcs_3d_rotated"),
-                                ("ndcube_gwcs_4d_ln_lt_l_t"),
+                                ("ndcube_gwcs_4d_ln_lt_l_t")
                                 ], indirect=("ndc",))
 def test_serialization(ndc, tmp_path):
     file_path = tmp_path / "test.asdf"
