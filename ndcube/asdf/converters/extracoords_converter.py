@@ -10,7 +10,7 @@ class ExtraCoordsConverter(Converter):
         extra_coords = ExtraCoords()
         extra_coords._wcs = node.get("wcs")
         extra_coords._mapping = node.get("mapping")
-        extra_coords._lookup_tables = node.get("lookup_tables")
+        extra_coords._lookup_tables = node.get("lookup_tables", [])
         extra_coords._dropped_tables = node.get("dropped_tables")
         extra_coords._ndcube = node.get("ndcube")
         return extra_coords
@@ -23,7 +23,6 @@ class ExtraCoordsConverter(Converter):
             node["mapping"] = extracoords._mapping
         if extracoords._lookup_tables:
             node["lookup_tables"] = extracoords._lookup_tables
-        if extracoords._dropped_tables:
-            node["dropped_tables"] = extracoords._dropped_tables
+        node["dropped_tables"] = extracoords._dropped_tables
         node["ndcube"] = extracoords._ndcube
         return node

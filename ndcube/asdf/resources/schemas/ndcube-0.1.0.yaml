@@ -20,6 +20,6 @@ properties:
   global_coords:
     tag: "tag:sunpy.org:ndcube/global_coords/globalcoords-0.*"
 
-required: [data , wcs]
+required: [data, wcs]
 additionalProperties: true
 ...

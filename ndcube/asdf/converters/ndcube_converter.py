@@ -8,9 +8,7 @@ class NDCubeConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.ndcube import NDCube
 
-        data = node["data"]
-        wcs = node["wcs"]
-        ndcube = NDCube(data, wcs)
+        ndcube = NDCube(node["data"], node["wcs"])
         ndcube._extra_coords = node["extra_coords"]
         ndcube._global_coords = node["global_coords"]
 

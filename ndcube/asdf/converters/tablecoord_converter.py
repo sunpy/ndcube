@@ -8,12 +8,11 @@ class TimeTableCoordConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.extra_coords.table_coord import TimeTableCoordinate
 
-        table = node.get("table")
         names = node.get("names")
         physical_types = node.get("physical_types")
         reference_time = node.get("reference_time")
         timetablecoordinate = TimeTableCoordinate(
-            table, names=names, physical_types=physical_types, reference_time=reference_time)
+            node["table"], names=names, physical_types=physical_types, reference_time=reference_time)
 
         return timetablecoordinate
 
@@ -36,14 +35,12 @@ class QuantityTableCoordinateConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.extra_coords.table_coord import QuantityTableCoordinate
 
-        unit = node.get("unit")
-        table = node.get("table")
         names = node.get("names")
         mesh = node.get("mesh")
         physical_types = node.get("physical_types")
-        quantitytablecoordinate = QuantityTableCoordinate(*table,
+        quantitytablecoordinate = QuantityTableCoordinate(*node["table"],
                                                           names=names, physical_types=physical_types)
-        quantitytablecoordinate.unit = unit
+        quantitytablecoordinate.unit = node["unit"]
         quantitytablecoordinate.mesh = mesh
         return quantitytablecoordinate
 
@@ -66,11 +63,10 @@ class SkyCoordTableCoordinateConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.extra_coords.table_coord import SkyCoordTableCoordinate
 
-        table = node.get("table")
         names = node.get("names")
         mesh = node.get("mesh")
         physical_types = node.get("physical_types")
-        skycoordinatetablecoordinate = SkyCoordTableCoordinate(table, mesh=mesh,
+        skycoordinatetablecoordinate = SkyCoordTableCoordinate(node["table"], mesh=mesh,
                                                                names=names, physical_types=physical_types)
         return skycoordinatetablecoordinate
 

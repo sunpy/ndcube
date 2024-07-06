@@ -39,6 +39,10 @@ console_logger.setLevel('INFO')
 # Helper Functions
 ################################################################################
 
+def time_lut(shape):
+    base_time = Time('2000-01-01', format='fits', scale='utc')
+    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
+    return timestamps
 
 def skycoord_2d_lut(shape):
     total_len = np.prod(shape)
@@ -477,14 +481,24 @@ def ndcube_gwcs_3d_rotated(gwcs_3d_lt_ln_l, simple_extra_coords_3d):
     return cube
 
 @pytest.fixture
-def ndcube_gwcs_3d_ln_lt_l_ec_gc(gwcs_3d_lt_ln_l, simple_extra_coords_3d):
+def ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim(gwcs_3d_lt_ln_l, time_and_simple_extra_coords_2d):
     shape = (2, 3, 4)
+    gwcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
+    cube._extra_coords = time_and_simple_extra_coords_2d[0]
+    return cube
+
+@pytest.fixture
+def ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc(gwcs_3d_lt_ln_l):
+    shape = (3, 3, 4)
     gwcs_3d_lt_ln_l.array_shape = shape
     data_cube = data_nd(shape)
     cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
     coord1 = 1 * u.m
     cube.global_coords.add('name1', 'custom:physical_type1', coord1)
-    cube._extra_coords = simple_extra_coords_3d
+    cube.extra_coords.add("time", 0, time_lut(shape))
+    cube.extra_coords.add("exposure_lut", 1, range(shape[1]) * u.s)
     return cube
 
 @pytest.fixture

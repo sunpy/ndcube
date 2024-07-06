@@ -1,5 +1,3 @@
-from typing import OrderedDict
-
 from asdf.extension import Converter
 
 
@@ -11,8 +9,8 @@ class GlobalCoordsConverter(Converter):
         from ndcube.global_coords import GlobalCoords
 
         globalcoords = GlobalCoords()
-        if node.get("internal_coords") is not None:
-            globalcoords._internal_coords = OrderedDict(node.get("internal_coords"))
+        if "internal_coords" in node:
+            globalcoords._internal_coords = node["internal_coords"]
         globalcoords._ndcube = node["ndcube"]
 
         return globalcoords
@@ -21,6 +19,6 @@ class GlobalCoordsConverter(Converter):
         node = {}
         node["ndcube"] = globalcoords._ndcube
         if globalcoords._internal_coords:
-            node["internal_coords"] = dict(globalcoords._internal_coords)
+            node["internal_coords"] = globalcoords._internal_coords
 
         return node
