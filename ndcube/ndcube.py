@@ -1124,7 +1124,7 @@ class NDCube(NDCubeBase):
         new_unit = new_unit or self.unit
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
-        if all(bin_shape == 1):
+        if np.all(bin_shape == 1):
             return self
         # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
