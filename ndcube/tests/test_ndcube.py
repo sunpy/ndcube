@@ -863,12 +863,13 @@ def test_rebin_dask(ndcube_2d_dask):
     assert isinstance(output.mask, dask_type)
 
 
-def test_rebin_binshape_quantity(ndcube_3d_l_ln_lt_ectime):
-    # Confirm rebin binshape argument handles being a astropy unit
+def test_rebin_bin_shape_quantity(ndcube_3d_l_ln_lt_ectime):
+    # Confirm rebin's bin_shape argument handles being a astropy unit
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
     cube._extra_coords = ExtraCoords(cube)
     bin_shape = (10, 2, 1) * u.pix
-    cube.rebin(bin_shape)
+    output = cube.rebin(bin_shape)
+    np.testing.assert_allclose(output.shape, cube.shape / bin_shape.to_value())
 
 
 def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
