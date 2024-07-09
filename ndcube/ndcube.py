@@ -1019,7 +1019,7 @@ class NDCube(NDCubeBase):
 
         Parameters
         ----------
-        bin_shape : array-like, astropy.units.Quantity
+        bin_shape : array-like, `astropy.units.Quantity`
             The number of pixels in a bin in each dimension.
             Must be the same length as number of dimensions in data.
             Each element must be in int. If they are not they will be rounded
