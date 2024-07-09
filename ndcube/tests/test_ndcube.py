@@ -1,3 +1,4 @@
+import re
 from inspect import signature
 from textwrap import dedent
 
@@ -870,6 +871,8 @@ def test_rebin_bin_shape_quantity(ndcube_3d_l_ln_lt_ectime):
     bin_shape = (10, 2, 1) * u.pix
     output = cube.rebin(bin_shape)
     np.testing.assert_allclose(output.shape, cube.shape / bin_shape.to_value())
+    with pytest.raises(u.UnitConversionError, match=re.escape("'m' (length) and 'pix' are not convertible")):
+        cube.rebin((10, 2, 1) * u.m)
 
 
 def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):

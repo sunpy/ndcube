@@ -1024,7 +1024,7 @@ class NDCube(NDCubeBase):
             Must be the same length as number of dimensions in data.
             Each element must be in int. If they are not they will be rounded
             to the nearest int. If provided as a `~astropy.units.Quantity` the
-            units are ignored, just the values are used as the shape.
+            units have to be convertible to pixels.
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
@@ -1124,7 +1124,7 @@ class NDCube(NDCubeBase):
         # Sanitize input.
         new_unit = new_unit or self.unit
         if isinstance(bin_shape, u.Quantity):
-            bin_shape = bin_shape.to_value()
+            bin_shape = bin_shape.to_value(u.pixel)
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
         if np.all(bin_shape == 1):
