@@ -20,7 +20,6 @@ class TimeTableCoordConverter(Converter):
         node = {}
         node["table"] = timetablecoordinate.table
         node["names"] = timetablecoordinate.names
-        node["mesh"] = timetablecoordinate.mesh
         if timetablecoordinate.physical_types is not None:
             node["physical_types"] = timetablecoordinate.physical_types
         node["reference_time"] = timetablecoordinate.reference_time
