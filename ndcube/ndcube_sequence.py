@@ -122,8 +122,10 @@ class NDCubeSequenceBase:
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
             return self.data[item]
+        # Determine whether meta attribute should be sliced.
+        new_meta = self.meta.slice[item] if self.meta.__ndcube_can_slice else copy.deepcopy(self.meta)
         # Create an empty sequence in which to place the sliced cubes.
-        result = type(self)([], meta=self.meta, common_axis=self._common_axis)
+        result = type(self)([], meta=new_meta, common_axis=self._common_axis)
         if isinstance(item, slice):
             result.data = self.data[item]
         else:

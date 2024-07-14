@@ -168,9 +168,11 @@ class NDCollection(dict):
                 # Since item is not strings, no cube in collection is dropped.
                 # Therefore the collection keys remain unchanged.
                 new_keys = list(self.keys())
+                # Slice meta if sliceable
+                new_meta = self.meta.slice[item] if self.meta.__ndcube_can_slice else copy.deepcopy(self.meta)
 
             return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
-                                  meta=self.meta, sanitize_inputs=False)
+                                  meta=new_meta, sanitize_inputs=False)
 
     def _generate_collection_getitems(self, item):
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
