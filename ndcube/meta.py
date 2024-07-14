@@ -144,9 +144,12 @@ class NDMeta(dict, NDMetaABC):
     __ndcube_can_slice__ = True
     __ndcube_can_rebin__ = True
 
-    def __init__(self, meta=None, key_comments=None, axes=None):
+    def __init__(self, meta=None, key_comments=None, axes=None, data_shape=None):
         self._original_meta = meta
-        self._data_shape = np.array([], dtype=int)
+        if data_shape is None:
+            self._data_shape = np.array([], dtype=int)
+        else:
+            self._data_shape = np.asarray(data_shape).astype(int)
 
         if meta is None:
             meta = {}
