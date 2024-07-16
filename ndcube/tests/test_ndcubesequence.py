@@ -5,7 +5,7 @@ import pytest
 import astropy.units as u
 from astropy.time import Time, TimeDelta
 
-from ndcube import NDCube, NDCubeSequence
+from ndcube import NDCube, NDCubeSequence, NDMeta
 from ndcube.tests import helpers
 
 
@@ -195,3 +195,13 @@ def test_crop_by_values(ndcubesequence_4c_ln_lt_l):
     expected = seq[:, 1:3, 0:2, 0:3]
     output = seq.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubesequences_equal(output, expected)
+
+
+def test_slice_meta(ndcubesequence_4c_ln_lt_l_cax1):
+    seq = ndcubesequence_4c_ln_lt_l_cax1
+    sliced_seq = seq[:, :, 0]
+    expected_meta = NDMeta({"salutation": "hello",
+                            "exposure time": u.Quantity([2] * 4, unit=u.s),
+                            "pixel response": u.Quantity([100] * 4, unit=u.percent)},
+                           axes={"exposure time": 0, "pixel response": 0})
+    helpers.assert_metas_equal(sliced_seq.meta, expected_meta)

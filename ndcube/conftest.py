@@ -16,6 +16,7 @@ from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence, NDMeta
+from . import helpers
 
 # Force MPL to use non-gui backends for testing.
 try:
@@ -312,7 +313,6 @@ def extra_coords_sharing_axis():
                                            list(range(3)) * u.keV,
                                            )
                                           )
-
 
 ################################################################################
 # NDCube Fixtures
@@ -616,7 +616,8 @@ def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
     cube2.data[:] *= 2
     cube3.data[:] *= 3
     cube4.data[:] *= 4
-    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
+    meta = helpers.ndmeta_et0_pr02((4, 2, 3, 4))
+    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1, meta=meta)
 
 
 @pytest.fixture

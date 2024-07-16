@@ -195,3 +195,9 @@ def assert_collections_equal(collection1, collection2, check_data=True):
             assert_cubesequences_equal(cube1, cube2, check_data=check_data)
         else:
             raise TypeError(f"Unsupported Type in NDCollection: {type(cube1)}")
+
+def ndmeta_et0_pr02(shape):
+    return NDMeta({"salutation": "hello",
+                   "exposure time": u.Quantity([2.] * shape[0], unit=u.s)
+                   "pixel response": (100 * np.ones((shape[0], shape[2]), dtype=float)) * u.percent},
+                   axes={"exposure time": 0, "pixel response": (0, 2)})
