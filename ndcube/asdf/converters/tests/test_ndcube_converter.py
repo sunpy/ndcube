@@ -22,6 +22,7 @@ def test_serialization(ndc, tmp_path):
     with asdf.open(file_path) as af:
         assert_cubes_equal(af["ndcube_gwcs"], ndc)
 
+
 @pytest.mark.xfail(reason="Serialization of sliced ndcube not supported")
 def test_serialization_sliced_ndcube(ndcube_gwcs_3d_ln_lt_l, tmp_path):
     sndc = ndcube_gwcs_3d_ln_lt_l[np.s_[0, :, :]]
@@ -32,6 +33,7 @@ def test_serialization_sliced_ndcube(ndcube_gwcs_3d_ln_lt_l, tmp_path):
 
     with asdf.open(file_path) as af:
         assert_cubes_equal(af["ndcube_gwcs"], sndc)
+
 
 @pytest.mark.xfail(reason="Serialization of ndcube with .wcs attribute as astropy.wcs.wcs.WCS not supported")
 def test_serialization_ndcube_wcs(ndcube_3d_ln_lt_l, tmp_path):

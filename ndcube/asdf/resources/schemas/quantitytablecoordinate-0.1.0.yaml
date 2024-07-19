@@ -12,7 +12,9 @@ description:
 type: object
 properties:
   unit:
-    tag: "tag:stsci.edu:asdf/unit/unit-*"
+    anyOf:
+      - tag: "tag:stsci.edu:asdf/unit/unit-*"
+      - tag: "tag:astropy.org:astropy/units/unit-1.*"
   table:
     type: array
     items:
