@@ -55,7 +55,7 @@ jobs:
         - windows: py311
         - macos: py310
         - linux: py310-oldestdeps
-        - linux: schema
+        - linux: asdf_schemas
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
