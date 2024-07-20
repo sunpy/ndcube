@@ -13,6 +13,7 @@ import pytest
 from numpy.testing import assert_equal
 
 import astropy
+import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
@@ -196,8 +197,15 @@ def assert_collections_equal(collection1, collection2, check_data=True):
         else:
             raise TypeError(f"Unsupported Type in NDCollection: {type(cube1)}")
 
+def ndmeta_et0_pr01(shape):
+    return NDMeta({"salutation": "hello",
+                   "exposure time": u.Quantity([2.] * shape[0], unit=u.s),
+                   "pixel response": (100 * np.ones((shape[0], shape[1]), dtype=float)) * u.percent},
+                   axes={"exposure time": 0, "pixel response": (0, 1)}, data_shape=shape)
+
+
 def ndmeta_et0_pr02(shape):
     return NDMeta({"salutation": "hello",
-                   "exposure time": u.Quantity([2.] * shape[0], unit=u.s)
+                   "exposure time": u.Quantity([2.] * shape[0], unit=u.s),
                    "pixel response": (100 * np.ones((shape[0], shape[2]), dtype=float)) * u.percent},
-                   axes={"exposure time": 0, "pixel response": (0, 2)})
+                   axes={"exposure time": 0, "pixel response": (0, 2)}, data_shape=shape)

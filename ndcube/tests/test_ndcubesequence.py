@@ -203,5 +203,5 @@ def test_slice_meta(ndcubesequence_4c_ln_lt_l_cax1):
     expected_meta = NDMeta({"salutation": "hello",
                             "exposure time": u.Quantity([2] * 4, unit=u.s),
                             "pixel response": u.Quantity([100] * 4, unit=u.percent)},
-                           axes={"exposure time": 0, "pixel response": 0})
+                           axes={"exposure time": 0, "pixel response": 0}, data_shape=(4, 2, 4))
     helpers.assert_metas_equal(sliced_seq.meta, expected_meta)

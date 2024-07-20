@@ -1,5 +1,5 @@
-import copy
 import re
+import copy
 from inspect import signature
 from textwrap import dedent
 

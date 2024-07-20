@@ -54,7 +54,7 @@ Types of Axis-aware Metadata: Axis-aligned vs. Grid-aligned
 
 There are two types of axis-aware metadata: axis-aligned and grid-aligned.
 Axis-aligned metadata associates a scalar or string with an array axis.
-It can also assign an array of scalars or strings to mutliple array axes, so long as there is one value per associated axis.
+It can also assign an array of scalars or strings to multiple array axes, so long as there is one value per associated axis.
 For example, the data produced by a scanning slit spectrograph is associated with real world values.
 But each axis also corresponds to features of the instrument: dispersion (spectral), pixels along the slit (spatial), position of the slit in the rastering sequence (spatial and short timescales), and the raster number (longer timescales).
 The axis-aligned metadata concept allows us to avoid ambiguity by assigning each axis with a label (e.g. ``("dispersion", "slit", "slit step", "raster")``).
@@ -102,14 +102,14 @@ To do this, we provide another `~collections.abc.Mapping`, e.g. a `dict`, with t
 
   >>> key_comments = {"name": "Each planet in the solar system has a name."}
   >>> meta = NDMeta(raw_meta, key_comments=key_comments)
-  
+
 We can now access the comments by indexing the `~ndcube.NDMeta.key_comments` property:
 
 .. code-block:: python
 
   >>> meta.key_comments["name"]
   "Each planet in the solar system has a name."
-  
+
 Now let's discuss how to initialize how to `~ndcube.NDMeta` with axis-aware metadata.
 (Here, we will specifically consider grid-aligned metadata.  Axis-aligned metadata is assigned in the same way.  But see the :ref:`assigning_axis_aligned_metadata` section for more details.)
 Similar to ``key_comments``, we assign metadata to axes by providing a `~collections.abc.Mapping`, e.g. a `dict`, via its ``axes`` kwarg.
@@ -135,13 +135,13 @@ It is easy to see which axes a piece of metadata corresponds to by indexing the 
   (0,)
   >>> meta.axes["pixel response"]
   (0, 2)
-  
+
 Finally, it is possible to attach the shape of the associated data to the `~ndcube.NDMeta` instance via the ``data_shape`` kwarg:
 
 .. code-block:: python
 
   >>> meta = NDMeta(raw_meta, axes=axes, key_comments=key_comments, data_shape=(5, 1, 2))
-  
+
 Or by directly setting the ``~ndcube.NDMeta.data_shape`` property after instantiation:
 
 .. code-block:: python
@@ -170,7 +170,7 @@ Let's use this method to add a voltage that varies with time, i.e. the first dat
   >>> meta.add("voltage", u.Quantity([1.]*5, unit=u.V), key_comment="detector bias voltage can vary with time and pixel column.", axes=(0,))
   >>> meta["voltage"]
   <Quantity [1., 1., 1., 1., 1.] V>
-  
+
 If you try to add metadata with a pre-existing key, `~ndcube.NDMeta.add` will error.
 To replace the value, comment, or axes values of pre-existing metadata, set the ``overwrite`` kwarg to ``True``.
 
@@ -179,7 +179,7 @@ To replace the value, comment, or axes values of pre-existing metadata, set the 
   >>> meta.add("voltage", u.Quantity([-300.]*5, unit=u.V), comment="detector bias voltage", axes=(0,), overwrite=True)
   >>> meta["voltage"]
   <Quantity [-300., -300., -300., -300., -300.] V>
-  
+
 Unwanted metadata can be removing by employing the `del` operator.
 
 .. code-block:: python
@@ -187,7 +187,7 @@ Unwanted metadata can be removing by employing the `del` operator.
   >>> del meta["voltage"]
   >>> meta.get("voltage", "deleted")
   "deleted"
-  
+
 Note that the `del` operator also removes associated comments and axes.
 
 .. code-block:: python
@@ -213,7 +213,7 @@ If no axis-aware metadata is present, `~ndcube.NDMeta.data_shape` is empty:
   >>> meta = NDMeta(raw_meta)
   >>> meta.data_shape
   array([], dtype=int64)
-  
+
 If we now add the ``"pixel response"`` metadata that we used, earlier the `~ndcube.NDMeta.data_shape` will be updated.
 
 .. code-block:: python
@@ -233,7 +233,7 @@ For example, if we add a 1-D ``"exposure time"`` and associate it with the 1st a
 .. code-block:: python
 
   >>> meta.add("exposure time", [1.9, 2.1, 5, 2, 2] * u.s, axes=0)
-  
+
 Moreover, if we now directly set the `~ndcube.NDMeta.data_shape` via ``meta.data_shape = new_shape``, we cannot change the length of axes already associated with grid-aligned metadata, without first removing or altering that metadata.
 However, these restrictions do not apply if we want to change the shape of the 2nd axis, or add new metadata to it, because its length is ``0``, and hence considered undefined.
 
@@ -254,7 +254,7 @@ To provide axis-aligned metadata, i.e. where each axis has a single value (see :
 .. code-block:: python
 
   >>> meta.add("axis name", np.array(["a", "b", "c", "d"]), axes=(0, 1, 2, 3))
-  
+
 Note that the length of ``"axis name"`` is the same as the number of its associated axes.
 Also note that we have now indicated that there is 4th axis.
 ``meta.data_shape`` has therefore been automatically updated accordingly.
@@ -282,9 +282,9 @@ It stores the metadata that was originally passed to the `~ndcube.NDMeta` constr
   >>> meta
   ???
   >>> meta.original_meta
-  
+
 Note that, ``meta.original_meta`` does not contain ``"exclamation"``, but still contains ``"name"``.
-This is because these were added and removed after initialzation.
+This is because these were added and removed after initialization.
 Also note that the type of the original metadata object is maintained.
 
 The `~ndcube.NDMeta.original_shape` property is a useful reference back to the original metadata, even after it has been altered via a complex sequence of operations.

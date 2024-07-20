@@ -444,7 +444,7 @@ Therefore, slicing is achieved by applying Python's slicing API to `~ndcube.NDMe
   >>> sliced_meta = meta.slice[0, 1:3]
   >>> sliced_meta.data_shape
   array([2, 5])
-  
+
 Note that by applying the slice item ``[0, 1:3]`` to ``meta``, the shape of the ``sliced_meta`` has been altered accordingly.
 The first axis has been sliced away, the second has been truncated to a length of 2, and the third remains unchanged.
 The shape of ``"pixel response"`` has been altered:
@@ -453,21 +453,21 @@ The shape of ``"pixel response"`` has been altered:
 
   >>> sliced_meta["pixel response"].shape
   (2, 5)
-  
+
 while ``"exposure time"`` has been reduced to a scalar:
 
 .. code-block:: python
 
   >>> sliced_meta["exposure time"]
   <Quantity 2. s>
-  
+
 Moreover, because the first axis has been sliced away, ``"exposure time"`` is no longer associated with a data array axis, and so is no longer present in the ``axes`` property:
 
 .. code-block:: python
 
   >>> list(sliced_meta.axes.keys())
   ["pixel response"]
-  
+
 Finally, note that axis-agnostic metadata is unaltered by the slicing process.
 
 .. code-block:: python
@@ -494,7 +494,7 @@ To demonstrate this, let's reinstantiate the same metadata object as in the abov
   (4, 4, 5)
   >>> my_cube.meta.data_shape
   array([4, 4, 5])
-  
+
 Now let's apply the same slice item to the cube as we applied to ``meta`` in the above section.
 Note that shape of the resultant `~ndcube.NDCube` and its associated `~ndcube.NDMeta` object now have the same new shape consistent with the slice item.
 
@@ -505,7 +505,7 @@ Note that shape of the resultant `~ndcube.NDCube` and its associated `~ndcube.ND
   (2, 5)
   >>> sliced_cube.meta.data_shape
   array([2, 5])
-  
+
 Furthermore, the metadata's values, axis-awareness, etc., have also been altered in line with the slice item.
 In fact, ``sliced_cube.meta`` is equivalent to ``sliced_meta`` from the previous section, because we have applied the same slice item to two equivalent `~ndcube.NDMeta` objects.
 

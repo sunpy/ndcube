@@ -37,7 +37,7 @@ sequence20 = NDCubeSequence([cube2, cube0])
 # Define collections
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
-cube_coll_meta = helpers.ndmeta_et0_pr02((4, 5))
+cube_coll_meta = helpers.ndmeta_et0_pr01((4, 5))
 cube_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes, meta=cube_coll_meta)
 unaligned_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes=None)
 seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
@@ -50,23 +50,23 @@ seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], alig
 
     (slice(1, 3), cube_collection, NDCollection(
         [("cube0", cube0[:, 1:3]), ("cube1", cube1[:, :, 1:3]), ("cube2", cube2[:, 1:3])],
-        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[1:3]))),
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[1:3])),
 
     (slice(-3, -1), cube_collection, NDCollection(
         [("cube0", cube0[:, -3:-1]), ("cube1", cube1[:, :, -3:-1]), ("cube2", cube2[:, -3:-1])],
-        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[-3:-1]))),
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[1:3])),
 
     ((slice(None), slice(1, 2)), cube_collection, NDCollection(
         [("cube0", cube0[:, :, 1:2]), ("cube1", cube1[1:2]), ("cube2", cube2[:, :, 1:2])],
-        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[:, 1:2]))),
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[:, 1:2])),
 
     ((slice(2, 4), slice(-3, -1)), cube_collection, NDCollection(
         [("cube0", cube0[:, 2:4, -3:-1]), ("cube1", cube1[-3:-1, :, 2:4]),
-            ("cube2", cube2[:, 2:4, -3:-1])], aligned_axes=aligned_axes, meta=cube_coll_meta.slice[2:4, -3:-1]))),
+            ("cube2", cube2[:, 2:4, -3:-1])], aligned_axes=aligned_axes, meta=cube_coll_meta.slice[2:4, 2:4])),
 
     ((0, 0), cube_collection, NDCollection(
         [("cube0", cube0[:, 0, 0]), ("cube1", cube1[0, :, 0]), ("cube2", cube2[:, 0, 0])],
-        aligned_axes=None, meta=cube_coll_meta.slice[0, 0]))),
+        aligned_axes=None, meta=cube_coll_meta.slice[0, 0])),
 
     (("cube0", "cube2"), cube_collection, NDCollection(
         [("cube0", cube0), ("cube2", cube2)], aligned_axes=(aligned_axes[0], aligned_axes[2]), meta=cube_coll_meta)),

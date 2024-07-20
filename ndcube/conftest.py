@@ -16,7 +16,7 @@ from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence, NDMeta
-from . import helpers
+from ndcube.tests import helpers
 
 # Force MPL to use non-gui backends for testing.
 try:
