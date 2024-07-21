@@ -90,7 +90,7 @@ We can now access each piece of metadata by indexing ``meta`` as if it were a `d
 .. code-block:: python
 
   >>> meta["name"]
-  "world"
+  'world'
 
 In this example we have provided a very simple set of metadata.
 In fact, it is so simple that there is no practical difference between ``meta`` and a simple `dict`.
@@ -108,7 +108,7 @@ We can now access the comments by indexing the `~ndcube.NDMeta.key_comments` pro
 .. code-block:: python
 
   >>> meta.key_comments["name"]
-  "Each planet in the solar system has a name."
+  'Each planet in the solar system has a name.'
 
 Now let's discuss how to initialize how to `~ndcube.NDMeta` with axis-aware metadata.
 (Here, we will specifically consider grid-aligned metadata.  Axis-aligned metadata is assigned in the same way.  But see the :ref:`assigning_axis_aligned_metadata` section for more details.)
@@ -132,9 +132,9 @@ It is easy to see which axes a piece of metadata corresponds to by indexing the 
 .. code-block:: python
 
   >>> meta.axes["exposure time"]
-  (0,)
+  array([0])
   >>> meta.axes["pixel response"]
-  (0, 2)
+  array([0, 2])
 
 Finally, it is possible to attach the shape of the associated data to the `~ndcube.NDMeta` instance via the ``data_shape`` kwarg:
 
@@ -186,7 +186,7 @@ Unwanted metadata can be removing by employing the `del` operator.
 
   >>> del meta["voltage"]
   >>> meta.get("voltage", "deleted")
-  "deleted"
+  'deleted'
 
 Note that the `del` operator also removes associated comments and axes.
 
@@ -194,9 +194,9 @@ Note that the `del` operator also removes associated comments and axes.
 
   >>> del meta["voltage"]
   >>> meta.key_comments.get("voltage", "deleted")
-  "deleted"
+  'deleted'
   >>> meta.axes.get("voltage", "deleted")
-  "deleted"
+  'deleted'
 
 Data Shape
 ----------

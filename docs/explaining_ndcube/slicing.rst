@@ -436,7 +436,7 @@ Therefore, slicing is achieved by applying Python's slicing API to `~ndcube.NDMe
   >>> from ndcube import NDMeta
   >>> raw_meta = {"salutation": "hello", "name": "world",
   ...             "exposure time": u.Quantity([2] * 4, unit=u.s),
-  ...             "pixel response", np.ones((4, 5))}
+  ...             "pixel response": np.ones((4, 5))}
   >>> axes = {"exposure time": 0, "pixel response": (1, 2)}
   >>> meta = NDMeta(raw_meta, axes=axes, data_shape=(4, 4, 5))
 
@@ -466,16 +466,16 @@ Moreover, because the first axis has been sliced away, ``"exposure time"`` is no
 .. code-block:: python
 
   >>> list(sliced_meta.axes.keys())
-  ["pixel response"]
+  ['pixel response']
 
 Finally, note that axis-agnostic metadata is unaltered by the slicing process.
 
 .. code-block:: python
 
-  >>> sliced_meta["salultation"]
-  "hello"
+  >>> sliced_meta["salutation"]
+  'hello'
   >>> sliced_meta["name"]
-  "world"
+  'world'
 
 
 Automatically Slicing NDMeta Attached to Other ND Objects
@@ -518,8 +518,8 @@ In fact, ``sliced_cube.meta`` is equivalent to ``sliced_meta`` from the previous
   >>> sliced_cube.meta["exposure time"]
   <Quantity 2. s>
   >>> list(sliced_cube.meta.axes.keys())
-  ["pixel response"]
+  ['pixel response']
   >>> sliced_cube.meta["salultation"]
-  "hello"
+  'hello'
   >>> sliced_cube.meta["name"]
-  "world"
+  'world'
