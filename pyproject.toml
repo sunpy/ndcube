@@ -16,10 +16,9 @@ authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=5.3",
-  "gwcs>=0.20",
-  "numpy>=1.23.0",
-  "asdf>=2.14.4"
+  "astropy>=5.0.6,!=5.1.0",
+  "gwcs>=0.18",
+  "numpy>=1.23.0"
 ]
 dynamic = ["version"]
 
@@ -54,11 +53,16 @@ plotting = [
 reproject = [
   "reproject>=0.7.1",
 ]
+asdf = [
+  "asdf>=2.14.4",
+  "astropy>=5.3.0",
+  "gwcs>=0.20"
+]
 all = [
-  "ndcube[plotting,reproject]",
+  "ndcube[plotting,reproject,asdf]",
 ]
 dev = [
-  "ndcube[tests,docs,plotting,reproject]",
+  "ndcube[tests,docs,plotting,reproject,asdf]",
 ]
 [project.urls]
 repository = "https://docs.sunpy.org/projects/ndcube"
