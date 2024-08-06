@@ -19,6 +19,8 @@ properties:
     tag: "tag:sunpy.org:ndcube/extra_coords/extra_coords/extracoords-0.*"
   global_coords:
     tag: "tag:sunpy.org:ndcube/global_coords/globalcoords-0.*"
+  meta:
+    type: object
 
 required: [data, wcs]
 additionalProperties: true
