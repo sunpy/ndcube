@@ -1,0 +1,25 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/Compoundwcs-0.1.0"
+
+title:
+  Represents the ndcube CompoundLowLevelWCS object
+
+description:
+  Represents the ndcube CompoundLowLevelWCS object
+
+type: object
+properties:
+  wcs:
+    type: array
+    items:
+      tag: "tag:stsci.edu:gwcs/wcs-1.*"
+  mapping:
+    type: array
+  atol:
+    type: number
+
+required: [wcs]
+additionalProperties: true
+...
