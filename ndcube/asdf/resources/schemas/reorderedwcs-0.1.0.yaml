@@ -1,0 +1,23 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/resampledwcs-0.1.0"
+
+title:
+  Represents the ndcube ReorderedLowLevelWCS object
+
+description:
+  Represents the ndcube ReorderedLowLevelWCS object
+
+type: object
+properties:
+  wcs:
+    tag: "tag:stsci.edu:gwcs/wcs-1.*"
+  pixel_order:
+    type: array
+  world_order:
+    type: array
+
+required: [wcs]
+additionalProperties: true
+...

@@ -31,9 +31,12 @@ def get_extensions():
     """
     Get the list of extensions.
     """
+    from ndcube.asdf.converters.compoundwcs_converter import CompoundConverter
     from ndcube.asdf.converters.extracoords_converter import ExtraCoordsConverter
     from ndcube.asdf.converters.globalcoords_converter import GlobalCoordsConverter
     from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
+    from ndcube.asdf.converters.reorderedwcs_converter import ReorderedConverter
+    from ndcube.asdf.converters.resampled_converter import ResampledConverter
     from ndcube.asdf.converters.tablecoord_converter import (
         QuantityTableCoordinateConverter,
         SkyCoordTableCoordinateConverter,
@@ -47,6 +50,9 @@ def get_extensions():
         QuantityTableCoordinateConverter(),
         SkyCoordTableCoordinateConverter(),
         GlobalCoordsConverter(),
+        ResampledConverter(),
+        ReorderedConverter(),
+        CompoundConverter(),
         ]
     _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
 
