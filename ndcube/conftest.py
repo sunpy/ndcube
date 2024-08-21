@@ -502,10 +502,15 @@ def ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc(gwcs_3d_lt_ln_l):
     return cube
 
 @pytest.fixture
-def ndcube_gwcs_2d_ln_lt(gwcs_2d_lt_ln):
+def ndcube_gwcs_2d_ln_lt_mask(gwcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
-    return NDCube(data_cube, wcs=gwcs_2d_lt_ln)
+    mask = np.zeros(shape, dtype=bool)
+    mask[1, 1] = True
+    mask[2, 0] = True
+    mask[3, 3] = True
+    mask[4:6, :4] = True
+    return NDCube(data_cube, wcs=gwcs_2d_lt_ln, mask=mask)
 
 @pytest.fixture
 def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):

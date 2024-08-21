@@ -21,6 +21,8 @@ properties:
     tag: "tag:sunpy.org:ndcube/global_coords/globalcoords-0.*"
   meta:
     type: object
+  mask:
+    type: object
 
 required: [data, wcs]
 additionalProperties: true

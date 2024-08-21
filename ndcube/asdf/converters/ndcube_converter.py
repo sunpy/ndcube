@@ -10,7 +10,10 @@ class NDCubeConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.ndcube import NDCube
 
-        ndcube = NDCube(node["data"], node["wcs"], meta=node.get("meta"))
+        ndcube = NDCube(node["data"],
+                        node["wcs"],
+                        meta = node.get("meta"),
+                        mask = node.get("mask"))
         if "extra_coords" in node:
             ndcube._extra_coords = node["extra_coords"]
         if "global_coords" in node:
@@ -41,8 +44,10 @@ class NDCubeConverter(Converter):
         node["extra_coords"] = ndcube.extra_coords
         node["global_coords"] = ndcube.global_coords
         node["meta"] = ndcube.meta
+        if ndcube.mask is not None:
+            node["mask"] = ndcube.mask
 
-        attributes = ['uncertainty', 'mask', 'unit']
+        attributes = ['uncertainty', 'unit']
         for attr in attributes:
             if getattr(ndcube, attr) is not None:
                 warnings.warn(f"Attribute '{attr}' is present but not being saved in ASDF serialization.", UserWarning)
