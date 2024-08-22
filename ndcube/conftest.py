@@ -7,10 +7,14 @@ import logging
 import dask.array
 import numpy as np
 import pytest
+from gwcs import coordinate_frames as cf
+from gwcs import wcs
 
 import astropy.nddata
 import astropy.units as u
+from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
+from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
@@ -35,6 +39,10 @@ console_logger.setLevel('INFO')
 # Helper Functions
 ################################################################################
 
+def time_lut(shape):
+    base_time = Time('2000-01-01', format='fits', scale='utc')
+    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
+    return timestamps
 
 def skycoord_2d_lut(shape):
     total_len = np.prod(shape)
@@ -81,6 +89,136 @@ def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_co
 # WCS Fixtures
 ################################################################################
 
+@pytest.fixture
+def gwcs_4d_t_l_lt_ln():
+    """
+    Creates a 4D GWCS object with time, wavelength, and celestial coordinates.
+
+    - Time: Axis 0
+    - Wavelength: Axis 1
+    - Sky: Axes 2 and 3
+
+    Returns:
+        wcs.WCS: 4D GWCS object.
+    """
+
+    time_model = models.Identity(1)
+    time_frame = cf.TemporalFrame(axes_order=(0, ), unit=u.s,
+                                  reference_frame=Time("2000-01-01T00:00:00"))
+
+    wave_frame = cf.SpectralFrame(axes_order=(1, ), unit=u.m, axes_names=('wavelength',))
+    wave_model = models.Scale(0.2)
+
+    shift  = models.Shift(-5) & models.Shift(0)
+    scale  = models.Scale(5) & models.Scale(20)
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
+    cel_model = shift | scale | tan | celestial_rotation
+    sky_frame = cf.CelestialFrame(axes_order=(2, 3), name='icrs',
+                                    reference_frame=coord.ICRS(),
+                                    axes_names=("longitude", "latitude"))
+
+    transform = time_model & wave_model & cel_model
+
+    frame = cf.CompositeFrame([time_frame, wave_frame, sky_frame])
+    detector_frame = cf.CoordinateFrame(name="detector", naxes=4,
+                                        axes_order=(0, 1, 2, 3),
+                                        axes_type=("pixel", "pixel", "pixel", "pixel"),
+                                        unit=(u.pix, u.pix, u.pix, u.pix))
+
+    return (wcs.WCS(forward_transform=transform, output_frame=frame, input_frame=detector_frame))
+
+@pytest.fixture
+def gwcs_3d_lt_ln_l():
+    """
+    Creates a 3D GWCS object with celestial coordinates and wavelength.
+
+    - Sky: Axes 0 and 1
+    - Wavelength: Axis 2
+
+    Returns:
+        wcs.WCS: 3D GWCS object.
+    """
+
+    shift  = models.Shift(-5) & models.Identity(1)
+    scale  = models.Scale(5) & models.Scale(10)
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
+    cel_model = shift | scale | tan | celestial_rotation
+    sky_frame = cf.CelestialFrame(axes_order=(0, 1), name='icrs',
+                                    reference_frame=coord.ICRS(),
+                                    axes_names=("longitude", "latitude"))
+
+    wave_model = models.Identity(1) | models.Scale(0.2) | models.Shift(10)
+    wave_frame = cf.SpectralFrame(axes_order=(2, ), unit=u.nm, axes_names=("wavelength",))
+
+    transform = cel_model & wave_model
+
+    frame = cf.CompositeFrame([sky_frame, wave_frame])
+    detector_frame = cf.CoordinateFrame(name="detector", naxes=3,
+                                        axes_order=(0, 1, 2),
+                                        axes_type=("pixel", "pixel", "pixel"),
+                                        axes_names=("x", "y", "z"), unit=(u.pix, u.pix, u.pix))
+
+    return (wcs.WCS(forward_transform=transform, output_frame=frame, input_frame=detector_frame))
+
+@pytest.fixture
+def gwcs_3d_ln_lt_t_rotated():
+    """
+    Creates a 3D GWCS object with celestial coordinates and wavelength, including rotation.
+
+    - Sky: Axes 0 and 1
+    - Wavelength: Axis 2
+
+    Returns:
+        wcs.WCS: 3D GWCS object with rotation.
+    """
+    shift  = models.Shift(-5) & models.Identity(1)
+    scale  = models.Scale(5) & models.Scale(10)
+    matrix = np.array([[1.290551569736E-05, 5.9525007864732E-06],
+                    [5.0226382102765E-06 , -1.2644844123757E-05]])
+    rotation = models.AffineTransformation2D(matrix)
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
+    cel_model = shift | scale| rotation | tan | celestial_rotation
+    sky_frame = cf.CelestialFrame(axes_order=(0, 1), name='icrs',
+                                    reference_frame=coord.ICRS(),
+                                    axes_names=("longitude", "latitude"))
+
+    wave_model = models.Identity(1) | models.Scale(0.2) | models.Shift(10)
+    wave_frame = cf.SpectralFrame(axes_order=(2, ), unit=u.nm, axes_names=("wavelength",))
+
+    transform = cel_model & wave_model
+
+    frame = cf.CompositeFrame([sky_frame, wave_frame])
+    detector_frame = cf.CoordinateFrame(name="detector", naxes=3,
+                                        axes_order=(0, 1, 2),
+                                        axes_type=("pixel", "pixel", "pixel"),
+                                        axes_names=("x", "y", "z"), unit=(u.pix, u.pix, u.pix))
+
+    return (wcs.WCS(forward_transform=transform, output_frame=frame, input_frame=detector_frame))
+
+@pytest.fixture
+def gwcs_2d_lt_ln():
+    """
+    Creates a 2D GWCS object with celestial coordinates.
+
+    - Sky: Axes 0 and 1
+
+    Returns:
+        wcs.WCS: 2D GWCS object.
+    """
+    shift  = models.Shift(-5) & models.Shift(-5)
+    scale  = models.Scale(2) & models.Scale(4)
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
+    cel_model = shift | scale | tan | celestial_rotation
+    input_frame = cf.Frame2D(name="detector", axes_names=("x", "y"))
+    sky_frame = cf.CelestialFrame(axes_order=(0, 1), name='icrs',
+                                    reference_frame=coord.ICRS(),
+                                    axes_names=("longitude", "latitude"))
+
+    return (wcs.WCS(forward_transform=cel_model, output_frame=sky_frame, input_frame=input_frame))
 
 @pytest.fixture
 def wcs_4d_t_l_lt_ln():
@@ -317,6 +455,62 @@ def extra_coords_sharing_axis():
 ################################################################################
 # NDCube Fixtures
 ################################################################################
+
+@pytest.fixture
+def ndcube_gwcs_4d_ln_lt_l_t(gwcs_4d_t_l_lt_ln):
+    shape = (5, 8, 10, 12)
+    gwcs_4d_t_l_lt_ln.array_shape = shape
+    data_cube = data_nd(shape)
+    return NDCube(data_cube, wcs=gwcs_4d_t_l_lt_ln)
+
+@pytest.fixture
+def ndcube_gwcs_3d_ln_lt_l(gwcs_3d_lt_ln_l):
+    shape = (2, 3, 4)
+    gwcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    return NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
+
+@pytest.fixture
+def ndcube_gwcs_3d_rotated(gwcs_3d_lt_ln_l, simple_extra_coords_3d):
+    data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
+                             [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]]])
+    cube = NDCube(
+        data_rotated,
+        wcs=gwcs_3d_lt_ln_l)
+    cube._extra_coords = simple_extra_coords_3d
+    return cube
+
+@pytest.fixture
+def ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim(gwcs_3d_lt_ln_l, time_and_simple_extra_coords_2d):
+    shape = (2, 3, 4)
+    gwcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
+    cube._extra_coords = time_and_simple_extra_coords_2d[0]
+    return cube
+
+@pytest.fixture
+def ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc(gwcs_3d_lt_ln_l):
+    shape = (3, 3, 4)
+    gwcs_3d_lt_ln_l.array_shape = shape
+    data_cube = data_nd(shape)
+    cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
+    coord1 = 1 * u.m
+    cube.global_coords.add('name1', 'custom:physical_type1', coord1)
+    cube.extra_coords.add("time", 0, time_lut(shape))
+    cube.extra_coords.add("exposure_lut", 1, range(shape[1]) * u.s)
+    return cube
+
+@pytest.fixture
+def ndcube_gwcs_2d_ln_lt_mask(gwcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape)
+    mask = np.zeros(shape, dtype=bool)
+    mask[1, 1] = True
+    mask[2, 0] = True
+    mask[3, 3] = True
+    mask[4:6, :4] = True
+    return NDCube(data_cube, wcs=gwcs_2d_lt_ln, mask=mask)
 
 @pytest.fixture
 def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
