@@ -100,12 +100,16 @@ jobs:
       if: |
         github.event_name != 'pull_request' && (
           github.ref_name != 'main' ||
-          github.event_name == 'workflow_dispatch' )
+          github.event_name == 'workflow_dispatch'
+        ) || (
+          github.event_name == 'pull_request' &&
+          contains(github.event.pull_request.labels.*.name, 'Run publish')
+        )
       needs: [test, docs]
       uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
       with:
         python-version: '3.10'
-        test_extras: 'tests'
+        test_extras: 'dev'
         test_command: 'pytest -p no:warnings --doctest-rst --pyargs ndcube'
         submodules: false
       secrets:

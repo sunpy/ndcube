@@ -8,7 +8,7 @@ import asdf
 from ndcube.tests.helpers import assert_cubes_equal
 
 
-@pytest.mark.parametrize("ndc",[("ndcube_gwcs_2d_ln_lt"),
+@pytest.mark.parametrize("ndc",[("ndcube_gwcs_2d_ln_lt_mask"),
                                 ("ndcube_gwcs_3d_ln_lt_l"),
                                 ("ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim"),
                                 ("ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc"),
