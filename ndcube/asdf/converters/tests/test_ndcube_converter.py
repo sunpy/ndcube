@@ -8,12 +8,13 @@ import asdf
 from ndcube.tests.helpers import assert_cubes_equal
 
 
-@pytest.mark.parametrize("ndc",[("ndcube_gwcs_2d_ln_lt_mask"),
-                                ("ndcube_gwcs_3d_ln_lt_l"),
-                                ("ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim"),
-                                ("ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc"),
-                                ("ndcube_gwcs_3d_rotated"),
-                                ("ndcube_gwcs_4d_ln_lt_l_t")
+@pytest.mark.parametrize("ndc",["ndcube_gwcs_2d_ln_lt_mask",
+                                "ndcube_gwcs_3d_ln_lt_l",
+                                "ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim",
+                                "ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc",
+                                "ndcube_gwcs_3d_rotated",
+                                "ndcube_gwcs_4d_ln_lt_l_t",
+                                "ndcube_gwcs_4d_ln_lt_l_t_unit",
                                 ], indirect=("ndc",))
 @pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
 def test_serialization(ndc, tmp_path):

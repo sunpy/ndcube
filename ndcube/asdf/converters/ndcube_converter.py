@@ -13,7 +13,8 @@ class NDCubeConverter(Converter):
         ndcube = NDCube(node["data"],
                         node["wcs"],
                         meta = node.get("meta"),
-                        mask = node.get("mask"))
+                        mask = node.get("mask"),
+                        unit = node.get("unit"))
         if "extra_coords" in node:
             ndcube._extra_coords = node["extra_coords"]
         if "global_coords" in node:
@@ -46,8 +47,10 @@ class NDCubeConverter(Converter):
         node["meta"] = ndcube.meta
         if ndcube.mask is not None:
             node["mask"] = ndcube.mask
+        if ndcube.unit is not None:
+            node["unit"] = ndcube.unit
 
-        attributes = ['uncertainty', 'unit']
+        attributes = ['uncertainty', 'psf']
         for attr in attributes:
             if getattr(ndcube, attr) is not None:
                 warnings.warn(f"Attribute '{attr}' is present but not being saved in ASDF serialization.", UserWarning)
