@@ -463,6 +463,15 @@ def ndcube_gwcs_4d_ln_lt_l_t(gwcs_4d_t_l_lt_ln):
     data_cube = data_nd(shape)
     return NDCube(data_cube, wcs=gwcs_4d_t_l_lt_ln)
 
+
+@pytest.fixture
+def ndcube_gwcs_4d_ln_lt_l_t_unit(gwcs_4d_t_l_lt_ln):
+    shape = (5, 8, 10, 12)
+    gwcs_4d_t_l_lt_ln.array_shape = shape
+    data_cube = data_nd(shape)
+    return NDCube(data_cube, wcs=gwcs_4d_t_l_lt_ln, unit=u.DN)
+
+
 @pytest.fixture
 def ndcube_gwcs_3d_ln_lt_l(gwcs_3d_lt_ln_l):
     shape = (2, 3, 4)
