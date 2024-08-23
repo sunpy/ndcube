@@ -14,9 +14,9 @@ properties:
   wcs:
     tag: "tag:stsci.edu:gwcs/wcs-1.*"
   factor:
-    type: object
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
   offset:
-    type: object
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
 
 required: [wcs]
 additionalProperties: true

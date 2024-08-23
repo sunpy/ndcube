@@ -16,6 +16,6 @@ class ReorderedConverter(Converter):
     def to_yaml_tree(self, reorderedwcs, tag, ctx):
         node={}
         node["wcs"] = reorderedwcs._wcs
-        node["pixel_order"] = (reorderedwcs._pixel_order)
-        node["world_order"] = (reorderedwcs._world_order)
+        node["pixel_order"] = reorderedwcs._pixel_order
+        node["world_order"] = reorderedwcs._world_order
         return node
