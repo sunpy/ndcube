@@ -16,6 +16,7 @@ class ResampledConverter(Converter):
     def to_yaml_tree(self, resampledwcs, tag, ctx):
         node={}
         node["wcs"] = resampledwcs._wcs
-        node["factor"] = (resampledwcs._factor)
-        node["offset"] = (resampledwcs._offset)
+        node["factor"] = resampledwcs._factor
+        node["offset"] = resampledwcs._offset
+
         return node
