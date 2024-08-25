@@ -10,6 +10,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
+from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import Tabular1D, Tabular2D, _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
@@ -135,10 +136,17 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
         raise TypeError("lookup_table must be a Quantity.")  # pragma: no cover
 
     ndim = lookup_table.ndim
+
+    # Use existing Tabular1D and Tabular2D classes for 1D and 2D models
+    # to ensure compatibility with asdf-astropy converters and avoid
+    # dynamically generated classes that are not recognized by asdf.
+    # See PR #751 for details on the issue this addresses.
     if ndim == 1:
         TabularND = Tabular1D
     elif ndim == 2:
         TabularND = Tabular2D
+    else:
+        TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
 
     # The integer location is at the centre of the pixel.
     points = [(np.arange(size) - 0) * points_unit for size in lookup_table.shape]
