@@ -10,8 +10,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
-from astropy.modeling.models import tabular_model
-from astropy.modeling.tabular import _Tabular
+from astropy.modeling.tabular import Tabular1D, Tabular2D, _Tabular
 from astropy.time import Time
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
@@ -136,7 +135,10 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
         raise TypeError("lookup_table must be a Quantity.")  # pragma: no cover
 
     ndim = lookup_table.ndim
-    TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
+    if ndim == 1:
+        TabularND = Tabular1D
+    elif ndim == 2:
+        TabularND = Tabular2D
 
     # The integer location is at the centre of the pixel.
     points = [(np.arange(size) - 0) * points_unit for size in lookup_table.shape]
