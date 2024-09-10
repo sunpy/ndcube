@@ -2,7 +2,7 @@
 requires = [
   "setuptools>=62.1",
   "setuptools_scm[toml]>=6.2",
-  "wheel"
+  "wheel",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -67,6 +67,7 @@ zip-safe = false
 include-package-data = true
 
 [tool.setuptools.packages.find]
+include = ["ndcube*"]
 exclude = ["ndcube._dev*"]
 
 [tool.setuptools_scm]
