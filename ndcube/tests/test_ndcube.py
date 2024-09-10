@@ -1,9 +1,11 @@
+import re
 from inspect import signature
 from textwrap import dedent
 
 import dask.array
 import numpy as np
 import pytest
+from specutils import Spectrum1D
 
 import astropy.units as u
 import astropy.wcs
@@ -459,6 +461,15 @@ def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_keepdims(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    point = (None, SpectralCoord([3e-11], unit=u.m), None)
+    output = cube.crop(point, keepdims=True)
+    expected = cube[:, :, 0:1, :]
+    assert output.shape == (5, 8, 1, 12)
+    helpers.assert_cubes_equal(output, expected)
+
+
 def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
@@ -502,6 +513,18 @@ def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     upper_corner[-1] = upper_corner[-1].to(units[-1])
     expected = cube[1:3, 0:2, 0:2, 0:3]
     output = cube.crop_by_values(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_keepdims(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    intervals = list(cube.wcs.array_index_to_world_values([1, 2], [0], [0, 1], [0, 2]))
+    units = [u.min, u.m, u.deg, u.deg]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    expected = cube[1:3, 0:1, 0:2, 0:3]
+    output = cube.crop_by_values(lower_corner, upper_corner, keepdims=True)
+    assert output.shape == (2, 1, 2, 3)
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -841,6 +864,17 @@ def test_rebin_dask(ndcube_2d_dask):
     assert isinstance(output.mask, dask_type)
 
 
+def test_rebin_bin_shape_quantity(ndcube_3d_l_ln_lt_ectime):
+    # Confirm rebin's bin_shape argument handles being a astropy unit
+    cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
+    cube._extra_coords = ExtraCoords(cube)
+    bin_shape = (10, 2, 1) * u.pix
+    output = cube.rebin(bin_shape)
+    np.testing.assert_allclose(output.shape, cube.shape / bin_shape.to_value())
+    with pytest.raises(u.UnitConversionError, match=re.escape("'m' (length) and 'pix' are not convertible")):
+        cube.rebin((10, 2, 1) * u.m)
+
+
 def test_rebin_no_ec(ndcube_3d_l_ln_lt_ectime):
     # Confirm rebin does not try to handle extra coords when there aren't any.
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
@@ -946,6 +980,15 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
+
+
+def test_rebin_specutils():
+    # Tests for https://github.com/sunpy/ndcube/issues/717
+    y = np.arange(4000)*u.ct
+    x = np.arange(200, 4200)*u.nm
+    spec = Spectrum1D(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
+    output = spec.rebin((10,), operation=np.sum, operation_ignores_mask=False)
+    assert output.shape == (400,)
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):

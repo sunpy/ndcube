@@ -24,15 +24,16 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
-  "pytest",
-  "pytest-doctestplus",
-  "pytest-cov",
-  "pytest-xdist",
-  "pytest-astropy",
-  "pytest-mpl>=0.12",
   "dask",
+  "pytest-astropy",
+  "pytest-cov",
+  "pytest-doctestplus",
+  "pytest-mpl>=0.12",
+  "pytest-xdist",
+  "pytest",
   "scipy",
-  "sunpy>=5.0.0"
+  "specutils",
+  "sunpy>=5.0.0",
 ]
 docs = [
   "sphinx",
@@ -43,7 +44,7 @@ docs = [
   "sphinx-gallery",
   "sphinxext-opengraph",
   "sunpy-sphinx-theme",
-  "sunpy>=5.0.0"
+  "sunpy>=5.0.0",
 ]
 plotting = [
   "matplotlib>=3.5.0",

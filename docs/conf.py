@@ -7,7 +7,6 @@ from datetime import datetime
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from matplotlib import MatplotlibDeprecationWarning
 from packaging.version import Version
-from sphinx_gallery.sorting import ExampleTitleSortKey
 
 # -- Read the Docs Specific Configuration
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -26,9 +25,6 @@ release = __version__
 ndcube_version = Version(__version__)
 is_release = not(ndcube_version.is_prerelease or ndcube_version.is_devrelease)
 
-# We want to ignore all warnings in a release version.
-if is_release:
-    warnings.simplefilter("ignore")
 warnings.filterwarnings("error", category=MatplotlibDeprecationWarning)
 warnings.filterwarnings("error", category=AstropyDeprecationWarning)
 
@@ -93,8 +89,7 @@ intersphinx_mapping = {
     }
 
 # -- Options for HTML output
-from sunpy_sphinx_theme.conf import *  # NOQA
-
+html_theme = "sunpy"
 html_logo = png_icon = 'logo/ndcube.png'
 html_favicon = 'logo/favicon.png'
 graphviz_output_format = 'svg'
@@ -113,10 +108,9 @@ sphinx_gallery_conf = {
     'backreferences_dir': os.path.join('generated', 'modules'),
     'filename_pattern': '^((?!skip_).)*$',
     'examples_dirs': os.path.join('..', 'examples'),
-    'within_subsection_order': ExampleTitleSortKey,
+    'within_subsection_order': "ExampleTitleSortKey",
     'gallery_dirs': os.path.join('generated', 'gallery'),
     'matplotlib_animations': True,
-    # Comes from the theme.
     "default_thumb_file": png_icon,
     'abort_on_example_error': False,
     'plot_gallery': 'True',

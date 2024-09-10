@@ -186,7 +186,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
     @abc.abstractmethod
     def crop(self,
              *points: Iterable[Any],
-             wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
+             wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None,
+             keepdims: bool = False,
              ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -215,6 +216,10 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             could be used it is expected that either the ``.wcs`` or
             ``.extra_coords`` properties will be used.
 
+        keepdims: `bool`, optional
+            If `False` and if cropping results in length-1 dimensions, these are sliced away in output cube.
+            If `True`, length-1 dimensions are kept.  Default=False
+
         Returns
         -------
         `~ndcube.ndcube.NDCubeABC`
@@ -231,7 +236,8 @@ class NDCubeABC(astropy.nddata.NDDataBase):
     def crop_by_values(self,
                        *points: Iterable[u.Quantity | float],
                        units: Iterable[str | u.Unit] | None = None,
-                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None
+                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None,
+                       keepdims: bool = False
                        ) -> "NDCubeABC":
         """
         Crop using real world coordinates.
@@ -263,6 +269,10 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             Will default to the ``.wcs`` property if not given. While any valid WCS
             could be used it is expected that either the ``.wcs`` or
             ``.extra_coords`` properties will be used.
+
+        keepdims: `bool`, optional
+            If `False` and if cropping results in length-1 dimensions, these are sliced away in output cube.
+            If `True`, length-1 dimensions are kept.  Default=False
 
         Returns
         -------
@@ -425,7 +435,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         wcs = self.combined_wcs
         world_axis_physical_types = np.array(wcs.world_axis_physical_types)
         axis_correlation_matrix = wcs.axis_correlation_matrix
-        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]])
+        return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]].tolist())
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
     @property
@@ -554,14 +564,14 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         CoordValues = namedtuple("CoordValues", identifiers)
         return CoordValues(*axes_coords[::-1])
 
-    def crop(self, *points, wcs=None):
+    def crop(self, *points, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
-        item = self._get_crop_item(*points, wcs=wcs)
+        item = self._get_crop_item(*points, wcs=wcs, keepdims=keepdims)
         return self[item]
 
     @utils.cube.sanitize_wcs
-    def _get_crop_item(self, *points, wcs=None):
+    def _get_crop_item(self, *points, wcs=None, keepdims=False):
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
@@ -584,16 +594,16 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                         f"incompatible with WCS component {comp[j]} "
                                         f"{classes[j]}.")
-            return utils.cube.get_crop_item_from_points(points, wcs, False)
+            return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
 
-    def crop_by_values(self, *points, units=None, wcs=None):
+    def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
-        item = self._get_crop_by_values_item(*points, units=units, wcs=wcs)
+        item = self._get_crop_by_values_item(*points, units=units, wcs=wcs, keepdims=keepdims)
         return self[item]
 
     @utils.cube.sanitize_wcs
-    def _get_crop_by_values_item(self, *points, units=None, wcs=None):
+    def _get_crop_by_values_item(self, *points, units=None, wcs=None, keepdims=False):
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
@@ -626,7 +636,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
-        return utils.cube.get_crop_item_from_points(points, wcs, True)
+        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
 
     def __str__(self):
         return textwrap.dedent(f"""\
@@ -1009,11 +1019,12 @@ class NDCube(NDCubeBase):
 
         Parameters
         ----------
-        bin_shape : array-like
+        bin_shape : array-like, `astropy.units.Quantity`
             The number of pixels in a bin in each dimension.
             Must be the same length as number of dimensions in data.
             Each element must be in int. If they are not they will be rounded
-            to the nearest int.
+            to the nearest int. If provided as a `~astropy.units.Quantity` the
+            units have to be convertible to pixels.
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
@@ -1112,9 +1123,11 @@ class NDCube(NDCubeBase):
         """
         # Sanitize input.
         new_unit = new_unit or self.unit
+        if isinstance(bin_shape, u.Quantity):
+            bin_shape = bin_shape.to_value(u.pixel)
         # Make sure the input bin dimensions are integers.
         bin_shape = np.rint(bin_shape).astype(int)
-        if all(bin_shape == 1):
+        if np.all(bin_shape == 1):
             return self
         # Ensure bin_size has right number of entries and each entry is an
         # integer fraction of the array shape in each dimension.
@@ -1129,17 +1142,8 @@ class NDCube(NDCubeBase):
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
-        m = None if (self.mask is None or self.mask is False or operation_ignores_mask) else self.mask
-        data = self.data
-        if m is not None:
-            for array_type, masked_type in ARRAY_MASK_MAP.items():
-                if isinstance(self.data, array_type):
-                    break
-            else:
-                masked_type = np.ma.masked_array
-                warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
-            data = masked_type(self.data, m)
-
+        data, sanitized_mask = _create_masked_array_for_rebinning(self.data, self.mask,
+                                                                  operation_ignores_mask)
         reshape = np.empty(len(data_shape) + len(bin_shape), dtype=int)
         new_shape = (data_shape / bin_shape).astype(int)
         reshape[0::2] = new_shape
@@ -1192,7 +1196,7 @@ class NDCube(NDCubeBase):
                 flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
                 flat_uncertainty = flat_uncertainty.reshape(flat_shape)
                 flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
-                if m is not None:
+                if sanitized_mask is not None:
                     reshaped_mask = self.mask.reshape(tuple(reshape))
                     flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
                     flat_mask = flat_mask.reshape(flat_shape)
@@ -1255,3 +1259,17 @@ class NDCube(NDCubeBase):
         if (item == 0).all():
             raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
+
+
+def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
+    m = None if (mask is None or mask is False or operation_ignores_mask) else mask
+    if m is None:
+        return data, m
+    else:
+        for array_type, masked_type in ARRAY_MASK_MAP.items():
+            if isinstance(data, array_type):
+                break
+        else:
+            masked_type = np.ma.masked_array
+            warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
+        return masked_type(data, m), m
