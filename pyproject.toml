@@ -38,6 +38,7 @@ tests = [
 docs = [
   "sphinx",
   "sphinx-automodapi",
+  "packaging",
   "matplotlib",
   "mpl-animators>=1.0",
   "sphinx-changelog>=1.1.0",

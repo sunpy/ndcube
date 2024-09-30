@@ -2,7 +2,7 @@
 # Configuration file for the Sphinx documentation builder.
 import os
 import warnings
-from datetime import datetime
+import datetime
 
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from matplotlib import MatplotlibDeprecationWarning
@@ -13,22 +13,30 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     os.environ['HIDE_PARFIVE_PROGESS'] = 'True'
 
-# -- Project information
-project = 'ndcube'
-author = 'The SunPy Community'
-copyright = f'{datetime.now().year}, {author}'
+# -- Project information -----------------------------------------------------
 
 # The full version, including alpha/beta/rc tags
-from ndcube import __version__  # NOQA
+from ndcube import __version__
 
-release = __version__
-ndcube_version = Version(__version__)
-is_release = not(ndcube_version.is_prerelease or ndcube_version.is_devrelease)
+_version = Version(__version__)
+version = release = str(_version)
+# Avoid "post" appearing in version string in rendered docs
+if _version.is_postrelease:
+    version = release = _version.base_version
+# Avoid long githashes in rendered Sphinx docs
+elif _version.is_devrelease:
+    version = release = f'{_version.base_version}.dev{_version.dev}'
+is_development = _version.is_devrelease
+
+project = "ndcube"
+author = "The SunPy Community"
+copyright = f'{datetime.datetime.now().year}, {author}'  # noqa: A001
 
 warnings.filterwarnings("error", category=MatplotlibDeprecationWarning)
 warnings.filterwarnings("error", category=AstropyDeprecationWarning)
 
-# -- General configuration
+# -- General configuration ---------------------------------------------------
+
 extensions = [
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.autodoc',
