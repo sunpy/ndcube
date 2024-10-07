@@ -25,8 +25,9 @@ if _version.is_postrelease:
     version = release = _version.base_version
 # Avoid long githashes in rendered Sphinx docs
 elif _version.is_devrelease:
-    version = release = f'{_version.base_version}.dev{_version.dev}'
+    version = release = f"{_version.base_version}.dev{_version.dev}"
 is_development = _version.is_devrelease
+is_release = not (_version.is_prerelease or _version.is_devrelease)
 
 project = "ndcube"
 author = "The SunPy Community"
@@ -66,7 +67,8 @@ ogp_custom_meta_tags = [
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 source_suffix = '.rst'
 master_doc = 'index'
-default_role = 'obj'
+# Treat everything in single ` as a Python reference.
+default_role = "py:obj"
 napoleon_use_rtype = False
 napoleon_google_docstring = False
 napoleon_use_param = False
