@@ -27,7 +27,7 @@ if _version.is_postrelease:
 elif _version.is_devrelease:
     version = release = f"{_version.base_version}.dev{_version.dev}"
 is_development = _version.is_devrelease
-is_release = not(_version.is_prerelease or _version.is_devrelease)
+is_release = not (_version.is_prerelease or _version.is_devrelease)
 
 project = "ndcube"
 author = "The SunPy Community"
@@ -37,10 +37,6 @@ warnings.filterwarnings("error", category=MatplotlibDeprecationWarning)
 warnings.filterwarnings("error", category=AstropyDeprecationWarning)
 
 # -- General configuration ---------------------------------------------------
-
-# Treat everything in single ` as a Python reference.
-default_role = "py:obj"
-
 
 extensions = [
     'matplotlib.sphinxext.plot_directive',
@@ -71,7 +67,8 @@ ogp_custom_meta_tags = [
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 source_suffix = '.rst'
 master_doc = 'index'
-default_role = 'obj'
+# Treat everything in single ` as a Python reference.
+default_role = "py:obj"
 napoleon_use_rtype = False
 napoleon_google_docstring = False
 napoleon_use_param = False
