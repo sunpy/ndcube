@@ -36,14 +36,11 @@ copyright = f'{datetime.datetime.now().year}, {author}'  # noqa: A001
 warnings.filterwarnings("error", category=MatplotlibDeprecationWarning)
 warnings.filterwarnings("error", category=AstropyDeprecationWarning)
 
-<<<<<<<
 # -- General configuration ---------------------------------------------------
-=======
+
 # Treat everything in single ` as a Python reference.
 default_role = "py:obj"
 
-# -- Options for intersphinx extension ---------------------------------------
->>>>>>>
 
 extensions = [
     'matplotlib.sphinxext.plot_directive',
