@@ -411,6 +411,9 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             CompoundLowLevelWCS(self.wcs.low_level_wcs, self._extra_coords.wcs, mapping=mapping)
         )
 
+    @property
+    def dimensions(self):
+        return u.Quantity(self.data.shape, unit=u.pix, copy=_NUMPY_COPY_IF_NEEDED)
 
     @property
     def array_axis_physical_types(self):
@@ -420,11 +423,6 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         axis_correlation_matrix = wcs.axis_correlation_matrix
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]].tolist())
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
-
-    @property
-    def quantity(self):
-        """Unitful representation of the NDCube data."""
-        return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
     def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None):
         # Create meshgrid of all pixel coordinates.

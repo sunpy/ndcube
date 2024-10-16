@@ -1,7 +1,12 @@
 repos:
-    # This should be before any formatting hooks like isort
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.6.9"
+# The warnings/errors we check for here are:
+  # E901 - SyntaxError or IndentationError
+  # E902 - IOError
+  # F822 - undefined name in __all__
+  # F823 - local variable name referenced before assignment
+  # Others are taken care of by autopep8
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
     hooks:
       - id: flake8
         args:
