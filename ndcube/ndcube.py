@@ -35,6 +35,7 @@ __all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 # Create mapping to masked array types based on data array type for use in analysis methods.
 ARRAY_MASK_MAP = {}
 ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
+_NUMPY_COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
 try:
     import dask.array
     ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array
@@ -410,9 +411,6 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             CompoundLowLevelWCS(self.wcs.low_level_wcs, self._extra_coords.wcs, mapping=mapping)
         )
 
-    @property
-    def dimensions(self):
-        return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
     def array_axis_physical_types(self):
@@ -423,16 +421,14 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return [tuple(world_axis_physical_types[axis_correlation_matrix[:, i]].tolist())
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
-    def _generate_world_coords(self, pixel_corners, wcs):
-        # TODO: We can improve this by not always generating all coordinates
-        # To make our lives easier here we generate all the coordinates for all
-        # pixels and then choose the ones we want to return to the user based
-        # on the axes argument. We could be smarter by integrating this logic
-        # into the main loop, this would potentially reduce the number of calls
-        # to pixel_to_world_values
+    @property
+    def quantity(self):
+        """Unitful representation of the NDCube data."""
+        return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
+    def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None):
         # Create meshgrid of all pixel coordinates.
-        # If user, wants pixel_corners, set pixel values to pixel pixel_corners.
+        # If user wants pixel_corners, set pixel values to pixel corners.
         # Else make pixel centers.
         pixel_shape = self.data.shape[::-1]
         if pixel_corners:
@@ -448,8 +444,16 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             if wcs is None:
                 return []
 
-        world_coords = [None] * wcs.world_n_dim
+        # This value of zero will be returned as a throwaway for unneeded axes, and a numerical value is
+        # required so values_to_high_level_objects in the calling function doesn't crash or warn
+        world_coords = [0] * wcs.world_n_dim
         for (pixel_axes_indices, world_axes_indices) in _split_matrix(wcs.axis_correlation_matrix):
+            if (needed_axes is not None
+                    and len(needed_axes)
+                    and not any(world_axis in needed_axes for world_axis in world_axes_indices)):
+                # needed_axes indicates which values in world_coords will be used by the calling
+                # function, so skip this iteration if we won't be producing any of those values
+                continue
             # First construct a range of pixel indices for this set of coupled dimensions
             sub_range = [ranges[idx] for idx in pixel_axes_indices]
             # Then get a set of non correlated dimensions
@@ -479,22 +483,15 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     @utils.cube.sanitize_wcs
     def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
-
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
-        axes_coords = self._generate_world_coords(pixel_corners, wcs)
-
+        orig_wcs = wcs
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
                 return tuple()
-
-        axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
-
-        if not axes:
-            return tuple(axes_coords)
 
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
@@ -511,6 +508,13 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             [world_index_to_object_index[world_index] for world_index in world_indices]
         )
 
+        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices)
+
+        axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
+
+        if not axes:
+            return tuple(axes_coords)
+
         return tuple(axes_coords[i] for i in object_indices)
 
     @utils.cube.sanitize_wcs
@@ -519,17 +523,19 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
 
-        axes_coords = self._generate_world_coords(pixel_corners, wcs)
-
+        orig_wcs = wcs
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
+
+        world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
+
+        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices)
 
         world_axis_physical_types = wcs.world_axis_physical_types
 
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
         if axes:
-            world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
             axes_coords = [axes_coords[i] for i in world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
 
