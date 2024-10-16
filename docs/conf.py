@@ -93,8 +93,7 @@ intersphinx_mapping = {
     }
 
 # -- Options for HTML output
-from sunpy_sphinx_theme.conf import *  # NOQA
-
+html_theme = "sunpy"
 html_logo = png_icon = 'logo/ndcube.png'
 html_favicon = 'logo/favicon.png'
 graphviz_output_format = 'svg'
