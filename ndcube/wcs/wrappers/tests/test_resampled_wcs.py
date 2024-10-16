@@ -21,7 +21,7 @@ ResampledLowLevelWCS Transformation
 
 This transformation has 2 pixel and 2 world dimensions
 
-Array shape (Numpy order): (2, 15.0)
+Array shape (Numpy order): (2, 15)
 
 Pixel Dim  Axis Name  Data size  Bounds
         0  None              15  (-2.5, 12.5)
