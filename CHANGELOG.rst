@@ -1,3 +1,20 @@
+2.2.3 (2024-10-17)
+==================
+
+Features
+--------
+
+- When calling :meth:`ndcube.NDCubeBase.axis_world_coords` or :meth:`ndcube.NDCubeBase.axis_world_coords_values` with a
+  specific axis or axes specified, the methods now avoid doing calculations for any other uncorrelated axes, offering
+  significant speedups when those other axes are large. (`#767 <https://github.com/sunpy/ndcube/pull/767>`__)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Added CI support for Python 3.13 (`#768 <https://github.com/sunpy/ndcube/pull/768>`__)
+
+
 2.2.2 (2024-06-18)
 ==================
 
