@@ -16,3 +16,9 @@ py:class a set-like object providing a view on D's keys
 py:class an object providing a view on D's values
 py:class None.  Remove all items from D.
 py:class a shallow copy of D
+# Raised by astropy?
+py:obj BaseLowLevelWCS
+py:obj Quantity
+py:obj HighLevelWCSMixin.pixel_to_world
+py:obj HighLevelWCSMixin.world_to_pixel
+py:obj SkyCoord
