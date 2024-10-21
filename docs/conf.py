@@ -95,7 +95,7 @@ intersphinx_mapping = {
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "{{ cookiecutter._sphinx_theme }}"
+html_theme = "sunpy"
 
 html_logo = png_icon = 'logo/ndcube.png'
 
