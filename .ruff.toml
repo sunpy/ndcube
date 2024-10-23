@@ -62,6 +62,11 @@ extend-ignore = [
 "docs/*.py" = [
   "INP001",  # Implicit-namespace-package. The examples are not a package.
 ]
+"examples/*.py" = [
+  "T201",  # We need print in our examples
+  "E501",  # Line too long
+  "INP001",  # implicit namespace package
+]
 "__init__.py" = ["E402", "F401", "F403"]
 "test_*.py" = ["B011", "D", "E402", "PGH001", "S101"]
 

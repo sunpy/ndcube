@@ -230,8 +230,8 @@ class ExtraCoords(ExtraCoordsABC):
         self._lookup_tables.append((array_dimension, coord))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
-        self._lookup_tables = list(sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0]))
+        self._lookup_tables = sorted(self._lookup_tables,
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])
 
     @property
     def _name_lut_map(self):
@@ -323,8 +323,7 @@ class ExtraCoords(ExtraCoordsABC):
         # docstring in ABC
         if not self._wcs and not self._lookup_tables:
             return True
-        else:
-            return False
+        return False
 
     def _getitem_string(self, item):
         """
@@ -402,7 +401,7 @@ class ExtraCoords(ExtraCoordsABC):
         if self._wcs:
             return self._getitem_wcs(item)
 
-        elif self._lookup_tables:
+        if self._lookup_tables:
             return self._getitem_lookup_tables(item)
 
         # If we get here this object is empty, so just return an empty extra coords

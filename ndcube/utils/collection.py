@@ -9,7 +9,7 @@ def _sanitize_aligned_axes(keys, data, aligned_axes):
     if aligned_axes is None:
         return None
     # If aligned_axes set to "all", assume all axes are aligned in order.
-    elif isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+    if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
         # Check all cubes are of same shape
         cube0_dims = data[0].shape
         cubes_same_shape = all([all([d.shape[i] == dim for i, dim in enumerate(cube0_dims)])

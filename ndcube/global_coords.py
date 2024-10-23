@@ -232,7 +232,7 @@ class GlobalCoords(GlobalCoordsABC):
 
     def __str__(self):
         classname = self.__class__.__name__
-        elements = [f"{name} {[ptype]}:\n{repr(coord)}" for (name, coord), ptype in
+        elements = [f"{name} {[ptype]}:\n{coord!r}" for (name, coord), ptype in
                     zip(self.items(), self.physical_types.values())]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
         if length > np.get_printoptions()['linewidth']:
@@ -243,4 +243,4 @@ class GlobalCoords(GlobalCoordsABC):
         return f"{classname}({joiner.join(elements)})"
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"

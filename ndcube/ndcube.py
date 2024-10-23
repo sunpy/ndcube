@@ -309,7 +309,7 @@ class NDCubeLinkedDescriptor:
 
     def __get__(self, obj, objtype=None):
         if obj is None:
-            return
+            return None
 
         if getattr(obj, self._attribute_name, None) is None and self._default_type is not None:
             self.__set__(obj, self._default_type)
@@ -580,24 +580,23 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Quit out early if we are no-op
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
-        else:
-            comp = [c[0] for c in wcs.world_axis_object_components]
-            # Trim to unique component names - `np.unique(..., return_index=True)
-            # keeps sorting alphabetically, set() seems just nondeterministic.
-            for k, c in enumerate(comp):
-                if comp.count(c) > 1:
-                    comp.pop(k)
-            classes = [wcs.world_axis_object_classes[c][0] for c in comp]
-            for i, point in enumerate(points):
-                if len(point) != len(comp):
-                    raise ValueError(f"{len(point)} components in point {i} do not match "
-                                     f"WCS with {len(comp)} components.")
-                for j, value in enumerate(point):
-                    if not (value is None or isinstance(value, classes[j])):
-                        raise TypeError(f"{type(value)} of component {j} in point {i} is "
-                                        f"incompatible with WCS component {comp[j]} "
-                                        f"{classes[j]}.")
-            return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
+        comp = [c[0] for c in wcs.world_axis_object_components]
+        # Trim to unique component names - `np.unique(..., return_index=True)
+        # keeps sorting alphabetically, set() seems just nondeterministic.
+        for k, c in enumerate(comp):
+            if comp.count(c) > 1:
+                comp.pop(k)
+        classes = [wcs.world_axis_object_classes[c][0] for c in comp]
+        for i, point in enumerate(points):
+            if len(point) != len(comp):
+                raise ValueError(f"{len(point)} components in point {i} do not match "
+                                 f"WCS with {len(comp)} components.")
+            for j, value in enumerate(point):
+                if not (value is None or isinstance(value, classes[j])):
+                    raise TypeError(f"{type(value)} of component {j} in point {i} is "
+                                    f"incompatible with WCS component {comp[j]} "
+                                    f"{classes[j]}.")
+        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
 
     def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
@@ -651,7 +650,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 Data Type: {self.data.dtype}""")
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"
 
     def explode_along_axis(self, axis):
         """
@@ -866,14 +865,13 @@ class NDCube(NDCubeBase):
     def _as_mpl_axes(self):
         if hasattr(self.plotter, "_as_mpl_axes"):
             return self.plotter._as_mpl_axes()
-        else:
-            warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
-                        "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
+        warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
+                    "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
 
-            from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+        from ndcube.visualization.mpl_plotter import MatplotlibPlotter
 
-            plotter = MatplotlibPlotter(self)
-            return plotter._as_mpl_axes()
+        plotter = MatplotlibPlotter(self)
+        return plotter._as_mpl_axes()
 
     def plot(self, *args, **kwargs):
         """
@@ -1268,11 +1266,10 @@ def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
     if m is None:
         return data, m
+    for array_type, masked_type in ARRAY_MASK_MAP.items():
+        if isinstance(data, array_type):
+            break
     else:
-        for array_type, masked_type in ARRAY_MASK_MAP.items():
-            if isinstance(data, array_type):
-                break
-        else:
-            masked_type = np.ma.masked_array
-            warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
-        return masked_type(data, m), m
+        masked_type = np.ma.masked_array
+        warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
+    return masked_type(data, m), m
