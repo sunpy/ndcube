@@ -443,7 +443,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         """Unitful representation of the NDCube data."""
         return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
-    def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None):
+    def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None, *, units):
         # Create meshgrid of all pixel coordinates.
         # If user wants pixel_corners, set pixel values to pixel corners.
         # Else make pixel centers.
@@ -493,8 +493,9 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 tmp_world = world[idx][tuple(array_slice)].T
                 world_coords[idx] = tmp_world
 
-        for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
-            world_coords[i] = coord << u.Unit(unit)
+        if units:
+            for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
+                world_coords[i] = coord << u.Unit(unit)
 
         return world_coords
 
@@ -525,7 +526,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             [world_index_to_object_index[world_index] for world_index in world_indices]
         )
 
-        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices)
+        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices, units=False)
 
         axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
 
@@ -546,7 +547,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
         world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
 
-        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices)
+        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices, units=True)
 
         world_axis_physical_types = wcs.world_axis_physical_types
 

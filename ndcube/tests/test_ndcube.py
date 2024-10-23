@@ -207,7 +207,7 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
     assert awc == tuple()
-    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords)
+    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords, units=True)
     assert awc == tuple()
 
 
