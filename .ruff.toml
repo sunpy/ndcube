@@ -12,20 +12,44 @@ select = [
   "E",
   "F",
   "W",
-  #"UP",
-  #"PT"
+  "N",
+  "UP",
+  "BLE",
+  "A",
+  "C4",
+  "INP",
+  "PIE",
+  "T20",
+  "PT",
+  "RET",
+  "TID",
+  "PTH",
+  "PD",
+  "PLC",
+  "PLE",
+  "TRY",
+  "FLY",
+  "NPY",
+  "PERF",
+  "RUF",
 ]
 extend-ignore = [
   "E712",
   "E721",
-  # pycodestyle (E, W)
-  "E501", # LineTooLong                             # TODO! fix
+   # flake8-pie
+  "PIE808", # Disallow passing 0 as the first argument to range
+  # upgrades
+  "UP038", # Use | in isinstance - not compatible with models and is slower
   # pytest (PT)
   "PT001", # Always use pytest.fixture()
   "PT004", # Fixtures which don't return anything should have leading _
-  "PT007", # Parametrize should be lists of tuples  # TODO! fix
-  "PT011", # Too broad exception assert             # TODO! fix
   "PT023", # Always use () on pytest decorators
+  # flake8-use-pathlib
+  "PTH123", # open() should be replaced by Path.open()
+  # Ruff
+  "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
+  "RUF013",  # PEP 484 prohibits implicit `Optional`
+  "RUF015",  # Prefer `next(iter(...))` over single element slice
 ]
 
 [lint.per-file-ignores]
