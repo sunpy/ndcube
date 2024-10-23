@@ -149,8 +149,8 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables = list()
-        self._dropped_tables = list()
+        self._lookup_tables = []
+        self._dropped_tables = []
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
@@ -243,7 +243,7 @@ class ExtraCoords(ExtraCoordsABC):
     def keys(self):
         # docstring in ABC
         if not self.wcs:
-            return tuple()
+            return ()
 
         return tuple(self.wcs.world_axis_names) if self.wcs.world_axis_names else None
 
@@ -256,7 +256,7 @@ class ExtraCoords(ExtraCoordsABC):
         # If mapping is not set but lookup_tables is empty then the extra
         # coords is empty, so there is no mapping.
         if not self._lookup_tables:
-            return tuple()
+            return ()
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
@@ -292,7 +292,7 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return None
 
-        tcoords = set(lt[1] for lt in self._lookup_tables)
+        tcoords = {lt[1] for lt in self._lookup_tables}
         # created a sorted list of unique items
         _tmp = set()  # a temporary set
         tcoords = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
@@ -424,7 +424,7 @@ class ExtraCoords(ExtraCoordsABC):
 
             return mtc.dropped_world_dimensions
 
-        return dict()
+        return {}
 
     def resample(self, factor, offset=0, ndcube=None, **kwargs):
         """

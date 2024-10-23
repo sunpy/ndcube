@@ -54,9 +54,9 @@ def test_empty_ec(wcs_1d_l):
     # Test slice of an empty EC
     assert ec[0].wcs is None
 
-    assert ec.mapping == tuple()
+    assert ec.mapping == ()
     assert ec.wcs is None
-    assert ec.keys() == tuple()
+    assert ec.keys() == ()
 
     ec.wcs = wcs_1d_l
     assert ec.wcs is wcs_1d_l
@@ -299,7 +299,7 @@ def test_extra_coords_2d_quantity(quantity_2d_lut):
 
 # Extra Coords with NDCube
 def test_add_coord_after_create(time_lut):
-    ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
+    ndc = NDCube(np.random.rand((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
     ndc.extra_coords.add("time", 0, time_lut)
 

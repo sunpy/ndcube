@@ -27,7 +27,6 @@ select = [
   "PD",
   "PLC",
   "PLE",
-  "TRY",
   "FLY",
   "NPY",
   "PERF",
@@ -40,9 +39,12 @@ extend-ignore = [
   "PIE808", # Disallow passing 0 as the first argument to range
   # upgrades
   "UP038", # Use | in isinstance - not compatible with models and is slower
+  # numpy
+  "NPY002", # TODO: migrate from np.random.rand to np.random.Generator
   # pytest (PT)
   "PT001", # Always use pytest.fixture()
   "PT004", # Fixtures which don't return anything should have leading _
+  "PT011",  # except(ValueRaises) is too broad
   "PT023", # Always use () on pytest decorators
   # flake8-use-pathlib
   "PTH123", # open() should be replaced by Path.open()
