@@ -86,13 +86,18 @@ def test_2d(celestial_wcs):
     assert_allclose(wcs.array_shape, (7/3, 15))
     assert_allclose(wcs.pixel_bounds, ((-2.5, 12.5), (1/3, 7/3)))
 
-    pixel_scalar = (2.3, 4.3)
-    world_scalar = (12.16, 13.8)
+    pixel_scalar = (2.3, 1.2)
+    world_scalar = (12.16, -4.8)
     assert_allclose(wcs.pixel_to_world_values(*pixel_scalar), world_scalar)
     assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
-    assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
+    assert_allclose(wcs.world_to_array_index_values(*world_scalar), [1, 2])
 
+    EXPECTED_2D_REPR = EXPECTED_2D_REPR_NUMPY2 if np.__version__ >= '2.0.0' else EXPECTED_2D_REPR_NUMPY1
+    assert str(wcs) == EXPECTED_2D_REPR
+    assert EXPECTED_2D_REPR in repr(wcs)
+
+    celestial_wcs.pixel_bounds = None
     pixel_array = (np.array([2.3, 2.4]),
                    np.array([4.3, 4.4]))
     world_array = (np.array([12.16, 12.08]),
@@ -115,16 +120,13 @@ def test_2d(celestial_wcs):
     assert_quantity_allclose(celestial.ra, world_array[0] * u.deg)
     assert_quantity_allclose(celestial.dec, world_array[1] * u.deg)
 
-    EXPECTED_2D_REPR = EXPECTED_2D_REPR_NUMPY2 if np.__version__ >= '2.0.0' else EXPECTED_2D_REPR_NUMPY1
-    assert str(wcs) == EXPECTED_2D_REPR
-    assert EXPECTED_2D_REPR in repr(wcs)
-
 
 @pytest.mark.parametrize('celestial_wcs',
                          ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
                          indirect=True)
 def test_scalar_factor(celestial_wcs):
 
+    celestial_wcs.pixel_bounds = None
     wcs = ResampledLowLevelWCS(celestial_wcs, 2)
 
     pixel_scalar = (2.3, 4.3)
@@ -139,6 +141,7 @@ def test_scalar_factor(celestial_wcs):
                          ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
                          indirect=True)
 def test_offset(celestial_wcs):
+    celestial_wcs.pixel_bounds = None
     offset = 1
     factor = 2
     wcs = ResampledLowLevelWCS(celestial_wcs, factor, offset=offset)
