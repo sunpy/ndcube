@@ -1,3 +1,12 @@
+2.2.4 (2024-10-23)
+==================
+
+Bug Fixes
+---------
+
+- Fix support for astropy 7.0, this involved a change to ``CompoundLowLevelWCS`` so that in handles ``pixel_bounds`` if only one component WCS sets a pixel bound. (`#772 <https://github.com/sunpy/ndcube/pull/772>`__)
+
+
 2.2.3 (2024-10-17)
 ==================
 
