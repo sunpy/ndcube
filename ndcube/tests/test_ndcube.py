@@ -34,18 +34,15 @@ def test_wcs_object(all_ndcubes):
     assert isinstance(all_ndcubes.wcs, BaseHighLevelWCS)
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[:, :, 0]),
                              ("ndcube_3d_ln_lt_l", np.s_[..., 0]),
-                             ("ndcube_3d_ln_lt_l", np.s_[1:2, 1:2, 0]),
-                             ("ndcube_3d_ln_lt_l", np.s_[..., 0]),
-                             ("ndcube_3d_ln_lt_l", np.s_[:, :, 0]),
                              ("ndcube_3d_ln_lt_l", np.s_[1:2, 1:2, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[:, :, 0, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[..., 0, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[1:2, 1:2, 1, 1]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
@@ -70,18 +67,15 @@ def test_slicing_ln_lt(ndc, item):
     assert np.allclose(sndc.wcs.axis_correlation_matrix, np.ones(2, dtype=bool))
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
-                             ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
-                             ("ndcube_3d_ln_lt_l", np.s_[1, 1, 1:2]),
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
                              ("ndcube_3d_ln_lt_l", np.s_[1, 1, 1:2]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, :, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, ..., 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[1, 1, 1:2, 1]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_slicing_wave(ndc, item):
     sndc = ndc[item]
@@ -105,18 +99,16 @@ def test_slicing_wave(ndc, item):
     assert np.allclose(sndc.wcs.axis_correlation_matrix, np.ones(1, dtype=bool))
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[0, :, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, ...]),
                              ("ndcube_3d_ln_lt_l", np.s_[1, 1:2]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, :, :]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, ...]),
                              ("ndcube_3d_ln_lt_l", np.s_[1, :, 1:2]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, :, :, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, ..., 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[1, 1:2, 1:2, 1]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_slicing_split_celestial(ndc, item):
     sndc = ndc[item]
@@ -206,9 +198,10 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
-    assert awc == tuple()
+    assert awc == ()
     sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords, units=True)
-    assert awc == tuple()
+    assert awc == ()
+
 
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
@@ -230,7 +223,7 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     assert u.allclose(coords[3], data)
 
 
-@pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
+@pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes)
     assert len(coords) == 1
@@ -243,7 +236,7 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
+@pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=True)
     assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
@@ -252,11 +245,11 @@ def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_3d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
@@ -266,11 +259,11 @@ def test_axis_world_coords_sliced_all_3d(ndc, item):
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, :, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, ..., 0]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_4d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
@@ -295,12 +288,12 @@ def test_axis_world_coords_all_4d_split(ndcube_4d_ln_l_t_lt):
                                   1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
 
 
-@pytest.mark.parametrize('wapt', (
+@pytest.mark.parametrize('wapt', [
     ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
     ('custom:pos.helioprojective.lat', 'em.wl'),
     (0, 1),
     (0, 1, 3)
-))
+])
 def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt, wapt):
     coords = ndcube_4d_ln_l_t_lt.axis_world_coords(*wapt)
     assert len(coords) == 2
@@ -334,8 +327,8 @@ def test_axis_world_coords_wave(ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize('wapt', ('custom:pos.helioprojective.lon',
-                                  'custom:pos.helioprojective.lat'))
+@pytest.mark.parametrize('wapt', ['custom:pos.helioprojective.lon',
+                                  'custom:pos.helioprojective.lat'])
 def test_axis_world_coords_sky(ndcube_3d_ln_lt_l, wapt):
     coords = ndcube_3d_ln_lt_l.axis_world_coords(wapt)
     assert len(coords) == 1
@@ -402,7 +395,7 @@ def test_array_axis_physical_types(ndcube_3d_ln_lt_l):
         ('em.wl', 'custom:PIXEL')]
     output = ndcube_3d_ln_lt_l.array_axis_physical_types
     for i in range(len(expected)):
-        assert all([physical_type in expected[i] for physical_type in output[i]])
+        assert all(physical_type in expected[i] for physical_type in output[i])
 
 
 def test_crop(ndcube_4d_ln_lt_l_t):
@@ -550,7 +543,7 @@ def test_crop_by_values_with_equivalent_units(ndcube_2d_ln_lt):
     lower_corner = [(coord[0]*u.deg).to(u.arcsec) for coord in intervals]
     upper_corner = [(coord[-1]*u.deg).to(u.arcsec) for coord in intervals]
     expected = ndcube_2d_ln_lt[0:4, 1:7]
-    output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_corner)
+    output = ndcube_2d_ln_lt.crop_by_values(lower_corner,  upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -791,7 +784,6 @@ def test_reproject_shape_out(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     wcs_4d_lt_t_l_ln.pixel_shape = None
     with pytest.raises(Exception):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln)
-
     # should not raise an exception when shape_out is specified
     shape = (5, 10, 12, 8)
     _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, shape_out=shape)
@@ -826,11 +818,11 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     expected_uncertainty = None
     expected_unit = cube.unit
     expected_meta = cube.meta
-    expected_Tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
+    expected_tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
                              49.99999902, 59.99999831, 69.99999731, 79.99999599],
                             [9.99999999, 19.99999994, 29.99999979, 39.9999995,
                              49.99999902, 59.99999831, 69.99999731, 79.99999599]]) * u.arcsec
-    expected_Ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
+    expected_ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
                              -14.99999953, -14.99999934, -14.99999911, -14.99999885],
                             [-4.99999999, -4.99999998, -4.99999995, -4.9999999,
                              -4.99999985, -4.99999979, -4.99999971, -4.99999962]]) * u.arcsec
@@ -845,8 +837,8 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     assert output.uncertainty == expected_uncertainty
     assert output.unit == expected_unit
     assert output.meta == expected_meta
-    assert u.allclose(output_sc.Tx, expected_Tx)
-    assert u.allclose(output_sc.Ty, expected_Ty)
+    assert u.allclose(output_sc.Tx, expected_tx)
+    assert u.allclose(output_sc.Ty, expected_ty)
     assert u.allclose(output_spec, expected_spec)
     assert output_time.scale == expected_time.scale
     assert output_time.format == expected_time.format
@@ -964,13 +956,15 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     bin_shape = (2, 4)
 
     cube._mask[:] = True
-    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values "
+                                               "are masked and operation_ignores_mask is False."):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
                             operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = True
-    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values "
+                                               "are masked and operation_ignores_mask is False."):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
                             operation_ignores_mask=False)
     assert output.uncertainty is None
@@ -1155,7 +1149,8 @@ def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
 @pytest.mark.parametrize('value', [1, 2, -1])
 def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
-    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty "
+                                               "propagation with correlation. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube =  value / ndcube_4d_unit_uncertainty
             check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
@@ -1194,7 +1189,8 @@ def test_cube_arithmetic_power(ndcube_2d_ln_lt, power):
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, power):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
-    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation "
+                                               "with correlation. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube = ndcube_4d_unit_uncertainty ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
@@ -1203,7 +1199,9 @@ def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, p
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
-    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> "
+                                               r"does not support propagation of uncertainties for power. "
+                                               r"Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube = ndcube_2d_ln_lt_uncert ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
@@ -1237,9 +1235,11 @@ def test_squeeze(ndcube_4d_ln_l_t_lt):
 
 def test_squeeze_error(ndcube_4d_ln_l_t_lt):
     same = ndcube_4d_ln_l_t_lt.squeeze()[0:1,:,:,:]
-    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, as none of them has size equal to one."):
+    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, "
+                                         "as none of them has size equal to one."):
         same.squeeze([0,1])
-    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
+    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become "
+                                         "a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
         same[0:1,0:1,0:1,0:1].squeeze()
 
 

@@ -62,7 +62,8 @@ def test_propagate_rebin_uncertainties_prod(stacked_pixel_data):
 
     # Build expected output
     binned_data = data.prod(axis=0)
-    expected = np.sqrt(((uncertainty.array / data)**2).sum(axis=0)) * binned_data / 2  # Why do I have to divide by a factor 2 here?
+    # TODO: Why do I have to divide by a factor 2 here?
+    expected = np.sqrt(((uncertainty.array / data)**2).sum(axis=0)) * binned_data / 2
     expected = StdDevUncertainty(expected)
 
     # Run function

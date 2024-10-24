@@ -17,7 +17,7 @@ def celestial_wcs(request):
     return request.getfixturevalue(request.param)
 
 
-EXPECTED_2D_REPR_NUMPY2 = """
+expected_2d_repr_numpy2 = """
 ResampledLowLevelWCS Transformation
 
 This transformation has 2 pixel and 2 world dimensions
@@ -39,7 +39,7 @@ World Dim    0    1
         0  yes  yes
         1  yes  yes
 """.strip()
-EXPECTED_2D_REPR_NUMPY1 = """
+expected_2d_repr_numpy1 = """
 ResampledLowLevelWCS Transformation
 
 This transformation has 2 pixel and 2 world dimensions
@@ -93,9 +93,9 @@ def test_2d(celestial_wcs):
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
     assert_allclose(wcs.world_to_array_index_values(*world_scalar), [1, 2])
 
-    EXPECTED_2D_REPR = EXPECTED_2D_REPR_NUMPY2 if np.__version__ >= '2.0.0' else EXPECTED_2D_REPR_NUMPY1
-    assert str(wcs) == EXPECTED_2D_REPR
-    assert EXPECTED_2D_REPR in repr(wcs)
+    expected_2d_repr = expected_2d_repr_numpy2 if np.__version__ >= '2.0.0' else expected_2d_repr_numpy1
+    assert str(wcs) == expected_2d_repr
+    assert expected_2d_repr in repr(wcs)
 
     celestial_wcs.pixel_bounds = None
     pixel_array = (np.array([2.3, 2.4]),

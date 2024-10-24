@@ -70,14 +70,15 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
                 if axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
                     raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if not isinstance(axis_coordinate, ax_coord_types):
-                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}.")
+                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} "
+                                f"or list of those, not {type(axis_coordinate)}.")
 
     if axes_units is not None:
         axes_units = _expand_ellipsis(wcs.world_n_dim, axes_units)
         if len(axes_units) != wcs.world_n_dim:
             raise ValueError(f"The length of the axes_units argument must be {wcs.world_n_dim}.")
         # Convert all non-None elements to astropy units
-        axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
+        axes_units = [u.Unit(x) if x is not None else None for x in axes_units][::-1]
         for i, axis_unit in enumerate(axes_units):
             wau = wcs.world_axis_units[i]
             if axis_unit is not None and not axis_unit.is_equivalent(wau):

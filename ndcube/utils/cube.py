@@ -75,7 +75,7 @@ def sanitize_crop_inputs(points, wcs):
         # Later we will ensure all points have same number of objects.
         n_coords[i] = len(points[i])
         # Confirm whether point contains at least one None entry.
-        if all([coord is None for coord in points[i]]):
+        if all(coord is None for coord in points[i]):
             values_are_none[i] = True
     # If no points contain a coord, i.e. if all entries in all points are None,
     # set no-op flag to True and exit.
@@ -257,7 +257,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
         # TODO: product was renamed to prod for numpy 2.0
-        elif operation in {np.prod, np.nanprod, np.product if hasattr(np, "product") else np.prod}:
+        elif operation in {np.prod, np.nanprod, np.prod if hasattr(np, "product") else np.prod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")

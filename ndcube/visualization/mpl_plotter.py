@@ -79,11 +79,11 @@ class MatplotlibPlotter(BasePlotter):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', AstropyUserWarning)
             if naxis == 1:
-                ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
+                ax = self._plot_1d_cube(plot_wcs, axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
 
             elif naxis == 2 and 'y' in plot_axes:
-                ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
+                ax = self._plot_2d_cube(plot_wcs, axes, plot_axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
             else:
                 ax = self._animate_cube(plot_wcs, plot_axes=plot_axes,
@@ -96,7 +96,7 @@ class MatplotlibPlotter(BasePlotter):
         """
         Based on an axes object and axes_coords, work out which coords should not be visible.
         """
-        visible_coords = set(item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates)
+        visible_coords = {item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates}
         return set(axes.coords._aliases.values()).difference(visible_coords)
 
     def _apply_axes_coordinates(self, axes, axes_coordinates):
@@ -107,7 +107,7 @@ class MatplotlibPlotter(BasePlotter):
             axes.coords[coord_index].set_ticks_visible(False)
             axes.coords[coord_index].set_ticklabel_visible(False)
 
-    def _plot_1D_cube(self, wcs, axes=None, axes_coordinates=None, axes_units=None,
+    def _plot_1d_cube(self, wcs, axes=None, axes_coordinates=None, axes_units=None,
                       data_unit=None, **kwargs):
         if axes is None:
             axes = plt.subplot(projection=wcs)
@@ -153,7 +153,7 @@ class MatplotlibPlotter(BasePlotter):
 
         return axes
 
-    def _plot_2D_cube(self, wcs, axes=None, plot_axes=None, axes_coordinates=None,
+    def _plot_2d_cube(self, wcs, axes=None, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
         if axes is None:
             axes = plt.subplot(projection=wcs, slices=plot_axes)

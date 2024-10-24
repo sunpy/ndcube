@@ -32,8 +32,7 @@ class MatplotlibSequencePlotter(BasePlotter):
         sequence_dims = self._ndcube.shape
         if len(sequence_dims) == 2:
             raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
-        else:
-            return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
+        return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
 
     def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """
@@ -55,7 +54,10 @@ class MatplotlibSequencePlotter(BasePlotter):
             The unit in which the sequence_axis_coordinates should be displayed.
             If None, the default unit will be used.
         """
-        return SequenceAnimator(self._ndcube, sequence_axis_coords=sequence_axis_coords, sequence_axis_unit=sequence_axis_unit, **kwargs)
+        return SequenceAnimator(self._ndcube,
+                                sequence_axis_coords=sequence_axis_coords,
+                                sequence_axis_unit=sequence_axis_unit,
+                                **kwargs)
 
 
 class SequenceAnimator(ArrayAnimatorWCS):

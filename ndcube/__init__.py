@@ -14,4 +14,13 @@ from .ndcube import NDCube, NDCubeBase
 from .ndcube_sequence import NDCubeSequence, NDCubeSequenceBase
 from .version import version as __version__
 
-__all__ = ['NDCube', 'NDCubeSequence', "NDCollection", "ExtraCoords", "GlobalCoords", "ExtraCoordsABC", "GlobalCoordsABC", "NDCubeBase", "NDCubeSequenceBase", "__version__"]
+__all__ = ['NDCube',
+           'NDCubeSequence',
+           "NDCollection",
+           "ExtraCoords",
+           "GlobalCoords",
+           "ExtraCoordsABC",
+           "GlobalCoordsABC",
+           "NDCubeBase",
+           "NDCubeSequenceBase",
+           "__version__"]
