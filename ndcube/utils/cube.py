@@ -75,7 +75,7 @@ def sanitize_crop_inputs(points, wcs):
         # Later we will ensure all points have same number of objects.
         n_coords[i] = len(points[i])
         # Confirm whether point contains at least one None entry.
-        if all([coord is None for coord in points[i]]):
+        if all(coord is None for coord in points[i]):
             values_are_none[i] = True
     # If no points contain a coord, i.e. if all entries in all points are None,
     # set no-op flag to True and exit.

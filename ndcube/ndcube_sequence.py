@@ -56,7 +56,7 @@ class NDCubeSequenceBase:
 
     @property
     def _shape(self):
-        dimensions = [len(self.data)] + list(self.data[0].data.shape)
+        dimensions = [len(self.data), *list(self.data[0].data.shape)]
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
@@ -74,7 +74,7 @@ class NDCubeSequenceBase:
         """
         The physical types associated with each array axis, including the sequence axis.
         """
-        return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
+        return [("meta.obs.sequence",), *self.data[0].array_axis_physical_types]
 
     @property
     def cube_like_dimensions(self):
@@ -92,8 +92,7 @@ class NDCubeSequenceBase:
         else:
             cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis + 1])
         # Combine into single Quantity
-        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
-        return cube_like_dimensions
+        return u.Quantity(cube_like_dimensions, unit=u.pix)
 
     @property
     def cube_like_shape(self):
@@ -208,8 +207,8 @@ class NDCubeSequenceBase:
         # Collect names of global coords common to all cubes.
         global_names = set.intersection(*[set(cube.global_coords.keys()) for cube in self.data])
         # For each coord, combine values from each cube's global coords property.
-        return dict([(name, [cube.global_coords[name] for cube in self.data])
-                     for name in global_names])
+        return {name: [cube.global_coords[name] for cube in self.data]
+                     for name in global_names}
 
     def explode_along_axis(self, axis):
         """
@@ -500,7 +499,7 @@ class _IndexAsCubeSlicer:
         # If common axis item is slice(None), result is trivial as common_axis is not changed.
         if item[common_axis] == slice(None):
             # Create item for slicing through the default API and slice.
-            return self.seq[tuple([slice(None)] + item)]
+            return self.seq[(slice(None), *item)]
         if isinstance(item[common_axis], numbers.Integral):
             # If common_axis item is an int or return an NDCube with dimensionality of N-1
             sequence_index, common_axis_index = \

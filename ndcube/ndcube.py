@@ -474,7 +474,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             # First construct a range of pixel indices for this set of coupled dimensions
             sub_range = [ranges[idx] for idx in pixel_axes_indices]
             # Then get a set of non correlated dimensions
-            non_corr_axes = set(list(range(wcs.pixel_n_dim))) - set(pixel_axes_indices)
+            non_corr_axes = set(range(wcs.pixel_n_dim)) - set(pixel_axes_indices)
             # And inject 0s for those coordinates
             for idx in non_corr_axes:
                 sub_range.insert(idx, 0)
@@ -508,7 +508,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
-                return tuple()
+                return ()
 
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
@@ -954,8 +954,7 @@ class NDCube(NDCubeBase):
         new_data = self.data * value
         new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
-        new_cube = self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
-        return new_cube
+        return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
 
     def __rmul__(self, value):
         return self.__mul__(value)
@@ -1189,7 +1188,7 @@ class NDCube(NDCubeBase):
                 # in each bin can be iterated (all bins being treated in parallel) and
                 # their uncertainties propagated.
                 bin_size = bin_shape.prod()
-                flat_shape = [bin_size] + list(new_shape)
+                flat_shape = [bin_size, *list(new_shape)]
                 dummy_axes = tuple(range(1, len(reshape), 2))
                 flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
                 flat_data = flat_data.reshape(flat_shape)

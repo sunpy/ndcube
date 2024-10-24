@@ -171,6 +171,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
                     raise ValueError(
                         "The pixel shapes of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
             return out_shape
+        return None
 
     @property
     def pixel_bounds(self):
@@ -182,6 +183,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
                     raise ValueError(
                         "The pixel bounds of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
             return out_bounds
+        return None
 
     @property
     def pixel_axis_names(self):
@@ -215,4 +217,4 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
 
     @property
     def serialized_classes(self):
-        return any([w.serialized_classes for w in self._wcs])
+        return any(w.serialized_classes for w in self._wcs)

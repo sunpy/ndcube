@@ -34,18 +34,15 @@ def test_wcs_object(all_ndcubes):
     assert isinstance(all_ndcubes.wcs, BaseHighLevelWCS)
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[:, :, 0]),
                              ("ndcube_3d_ln_lt_l", np.s_[..., 0]),
-                             ("ndcube_3d_ln_lt_l", np.s_[1:2, 1:2, 0]),
-                             ("ndcube_3d_ln_lt_l", np.s_[..., 0]),
-                             ("ndcube_3d_ln_lt_l", np.s_[:, :, 0]),
                              ("ndcube_3d_ln_lt_l", np.s_[1:2, 1:2, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[:, :, 0, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[..., 0, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[1:2, 1:2, 1, 1]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_slicing_ln_lt(ndc, item):
     sndc = ndc[item]
@@ -70,18 +67,15 @@ def test_slicing_ln_lt(ndc, item):
     assert np.allclose(sndc.wcs.axis_correlation_matrix, np.ones(2, dtype=bool))
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
-                             ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
-                             ("ndcube_3d_ln_lt_l", np.s_[1, 1, 1:2]),
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
                              ("ndcube_3d_ln_lt_l", np.s_[1, 1, 1:2]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, :, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, ..., 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[1, 1, 1:2, 1]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_slicing_wave(ndc, item):
     sndc = ndc[item]
@@ -105,18 +99,16 @@ def test_slicing_wave(ndc, item):
     assert np.allclose(sndc.wcs.axis_correlation_matrix, np.ones(1, dtype=bool))
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[0, :, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, ...]),
                              ("ndcube_3d_ln_lt_l", np.s_[1, 1:2]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, :, :]),
-                             ("ndcube_3d_ln_lt_l", np.s_[0, ...]),
                              ("ndcube_3d_ln_lt_l", np.s_[1, :, 1:2]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, :, :, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, ..., 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[1, 1:2, 1:2, 1]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_slicing_split_celestial(ndc, item):
     sndc = ndc[item]
@@ -206,9 +198,9 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
-    assert awc == tuple()
+    assert awc == ()
     sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords)
-    assert awc == tuple()
+    assert awc == ()
 
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
@@ -230,7 +222,7 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     assert u.allclose(coords[3], data)
 
 
-@pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
+@pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes)
     assert len(coords) == 1
@@ -243,7 +235,7 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize("axes", ([-1], [2], ["em"]))
+@pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=True)
     assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
@@ -252,11 +244,11 @@ def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, :]),
                              ("ndcube_3d_ln_lt_l", np.s_[0, 0, ...]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_3d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
@@ -266,11 +258,11 @@ def test_axis_world_coords_sliced_all_3d(ndc, item):
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize("ndc, item",
-                         (
+@pytest.mark.parametrize(("ndc", "item"),
+                         [
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, :, 0]),
                              ("ndcube_4d_ln_lt_l_t", np.s_[0, 0, ..., 0]),
-                         ),
+                         ],
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_4d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
@@ -295,12 +287,12 @@ def test_axis_world_coords_all_4d_split(ndcube_4d_ln_l_t_lt):
                                   1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
 
 
-@pytest.mark.parametrize('wapt', (
+@pytest.mark.parametrize('wapt', [
     ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
     ('custom:pos.helioprojective.lat', 'em.wl'),
     (0, 1),
     (0, 1, 3)
-))
+])
 def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt, wapt):
     coords = ndcube_4d_ln_l_t_lt.axis_world_coords(*wapt)
     assert len(coords) == 2
@@ -334,8 +326,8 @@ def test_axis_world_coords_wave(ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize('wapt', ('custom:pos.helioprojective.lon',
-                                  'custom:pos.helioprojective.lat'))
+@pytest.mark.parametrize('wapt', ['custom:pos.helioprojective.lon',
+                                  'custom:pos.helioprojective.lat'])
 def test_axis_world_coords_sky(ndcube_3d_ln_lt_l, wapt):
     coords = ndcube_3d_ln_lt_l.axis_world_coords(wapt)
     assert len(coords) == 1
@@ -402,7 +394,7 @@ def test_array_axis_physical_types(ndcube_3d_ln_lt_l):
         ('em.wl', 'custom:PIXEL')]
     output = ndcube_3d_ln_lt_l.array_axis_physical_types
     for i in range(len(expected)):
-        assert all([physical_type in expected[i] for physical_type in output[i]])
+        assert all(physical_type in expected[i] for physical_type in output[i])
 
 
 def test_crop(ndcube_4d_ln_lt_l_t):

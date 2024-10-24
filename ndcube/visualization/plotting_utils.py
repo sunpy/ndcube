@@ -77,7 +77,7 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
         if len(axes_units) != wcs.world_n_dim:
             raise ValueError(f"The length of the axes_units argument must be {wcs.world_n_dim}.")
         # Convert all non-None elements to astropy units
-        axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
+        axes_units = [u.Unit(x) if x is not None else None for x in axes_units][::-1]
         for i, axis_unit in enumerate(axes_units):
             wau = wcs.world_axis_units[i]
             if axis_unit is not None and not axis_unit.is_equivalent(wau):

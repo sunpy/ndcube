@@ -96,7 +96,7 @@ class MatplotlibPlotter(BasePlotter):
         """
         Based on an axes object and axes_coords, work out which coords should not be visible.
         """
-        visible_coords = set(item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates)
+        visible_coords = {item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates}
         return set(axes.coords._aliases.values()).difference(visible_coords)
 
     def _apply_axes_coordinates(self, axes, axes_coordinates):

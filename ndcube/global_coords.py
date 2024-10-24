@@ -193,7 +193,7 @@ class GlobalCoords(GlobalCoordsABC):
     @property
     def physical_types(self):
         # Docstring in GlobalCoordsABC
-        return dict((name, value[0]) for name, value in self._all_coords.items())
+        return {name: value[0] for name, value in self._all_coords.items()}
 
     def filter_by_physical_type(self, physical_type):
         """
