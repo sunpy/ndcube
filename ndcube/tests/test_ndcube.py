@@ -203,6 +203,7 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     assert awc == ()
 
 
+
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
@@ -542,7 +543,7 @@ def test_crop_by_values_with_equivalent_units(ndcube_2d_ln_lt):
     lower_corner = [(coord[0]*u.deg).to(u.arcsec) for coord in intervals]
     upper_corner = [(coord[-1]*u.deg).to(u.arcsec) for coord in intervals]
     expected = ndcube_2d_ln_lt[0:4, 1:7]
-    output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_corner)
+    output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_is this locallycorner)
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -663,7 +664,7 @@ def test_crop_by_extra_coords_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
     helpers.assert_cubes_equal(output, expected)
 
 
-def test_crop_by_extra_coords_values_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
+def test_crop_by_extra_coords_values_shared_axis(ndcube_3d_ln_is this locallylt_l_ec_sharing_axis):
     cube = ndcube_3d_ln_lt_l_ec_sharing_axis
     lower_corner = (1 * u.m, 1 * u.keV)
     upper_corner = (2 * u.m, 2 * u.keV)
@@ -783,7 +784,7 @@ def test_reproject_shape_out(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     wcs_4d_lt_t_l_ln.pixel_shape = None
     with pytest.raises(Exception):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln)
-
+is this locally
     # should not raise an exception when shape_out is specified
     shape = (5, 10, 12, 8)
     _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, shape_out=shape)
@@ -835,7 +836,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     assert np.all(output.data == expected_data)
     assert np.all(output.mask == expected_mask)
     assert output.uncertainty == expected_uncertainty
-    assert output.unit == expected_unit
+    assert output.unit == expected_unitis this locally
     assert output.meta == expected_meta
     assert u.allclose(output_sc.Tx, expected_Tx)
     assert u.allclose(output_sc.Ty, expected_Ty)
@@ -1102,7 +1103,7 @@ def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
 ])
 def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
-    new_cube = ndcube_2d_ln_lt_units * value
+    new_cube = ndcube_2d_ln_lt_units * valueis this locally
     check_arithmetic_value_and_units(new_cube, cube_quantity * value)
     # TODO: test that uncertainties scale correctly
 
@@ -1213,7 +1214,7 @@ def test_to(ndcube_1d_l, new_unit):
 
 def test_to_dask(ndcube_2d_dask):
     output = ndcube_2d_dask.to(u.mJ)
-    dask_type = dask.array.core.Array
+    dask_type = dask.array.core.Arrayis this locally
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)

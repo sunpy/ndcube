@@ -111,12 +111,12 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         world_arrays = []
         for w in self._wcs:
             pixel_arrays_sub = pixel_arrays[:w.pixel_n_dim]
-            pixel_arrays = pixel_arrays[w.pixel_n_dim:]
             world_arrays_sub = w.pixel_to_world_values(*pixel_arrays_sub)
             if w.world_n_dim > 1:
                 world_arrays.extend(world_arrays_sub)
             else:
                 world_arrays.append(world_arrays_sub)
+            pixel_arrays = pixel_arrays[w.pixel_n_dim:]
         return tuple(world_arrays)
 
     def world_to_pixel_values(self, *world_arrays):
@@ -175,15 +175,16 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
 
     @property
     def pixel_bounds(self):
-        if not any(w.pixel_bounds is None for w in self._wcs):
-            pixel_bounds = tuplesum(w.pixel_bounds for w in self._wcs)
+        if any(w.pixel_bounds is not None for w in self._wcs):
+            pixel_bounds = tuplesum(w.pixel_bounds or [tuple() for _ in range(w.pixel_n_dim)] for w in self._wcs)
             out_bounds = self.mapping.inverse(*pixel_bounds)
             for i, ix in enumerate(self.mapping.mapping):
-                if out_bounds[ix] != pixel_bounds[i]:
+                if pixel_bounds[i] and (out_bounds[ix] != pixel_bounds[i]):
                     raise ValueError(
                         "The pixel bounds of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
             return out_bounds
         return None
+
 
     @property
     def pixel_axis_names(self):

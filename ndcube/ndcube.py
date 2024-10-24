@@ -443,7 +443,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         """Unitful representation of the NDCube data."""
         return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
-    def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None):
+    def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None, *, units):
         # Create meshgrid of all pixel coordinates.
         # If user wants pixel_corners, set pixel values to pixel corners.
         # Else make pixel centers.
@@ -493,8 +493,9 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 tmp_world = world[idx][tuple(array_slice)].T
                 world_coords[idx] = tmp_world
 
-        for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
-            world_coords[i] = coord << u.Unit(unit)
+        if units:
+            for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
+                world_coords[i] = coord << u.Unit(unit)
 
         return world_coords
 
@@ -525,7 +526,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             [world_index_to_object_index[world_index] for world_index in world_indices]
         )
 
-        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices)
+        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices, units=False)
 
         axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
 
@@ -546,7 +547,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
         world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
 
-        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices)
+        axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices, units=True)
 
         world_axis_physical_types = wcs.world_axis_physical_types
 
@@ -685,7 +686,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, return_footprint=False, **reproject_args):
+    def reproject_to(self,
+                     target_wcs,
+                     algorithm='interpolation',
+                     shape_out=None,
+                     return_footprint=False,
+                     **reproject_args):
         """
         Reprojects the instance to the coordinates described by another WCS object.
 
@@ -719,7 +725,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         Returns
         -------
         reprojected_cube : `ndcube.NDCube`
-            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output `~ndcube.NDCube`.
+            A new resultant NDCube object, the supplied ``target_wcs`` will be
+            the ``.wcs`` attribute of the output `~ndcube.NDCube`.
 
         footprint: `numpy.ndarray`
             Footprint of the input array in the output array.
@@ -742,7 +749,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             from reproject import reproject_adaptive, reproject_exact, reproject_interp
             from reproject.wcs_utils import has_celestial
         except ModuleNotFoundError:
-            raise ImportError(f"The {type(self).__name__}.reproject_to method requires the `reproject` library to be installed.")
+            raise ImportError(f"The {type(self).__name__}.reproject_to method requires "
+                              f"the `reproject` library to be installed.")
 
         algorithms = {
             "interpolation": reproject_interp,
@@ -976,7 +984,8 @@ class NDCube(NDCubeBase):
             except ValueError as e:
                 if "unsupported operation" in e.args[0]:
                     new_uncertainty = None
-                    warn_user(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.")
+                    warn_user(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. "
+                              f"Setting uncertainties to None.")
                 elif "does not support uncertainty propagation" in e.args[0]:
                     new_uncertainty = None
                     warn_user(f"{e.args[0]} Setting uncertainties to None.")
@@ -1169,7 +1178,7 @@ class NDCube(NDCubeBase):
                 warn_user("Uncertainties cannot be propagated as there are no uncertainties, "
                               "i.e., the `uncertainty` keyword was never set on creation of this NDCube.")
             elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-                warn_user("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped. "
+                warn_user("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped."
                               "To create an uncertainty that can propagate, please see "
                               "https://docs.astropy.org/en/stable/uncertainty/index.html")
             elif (not operation_ignores_mask
@@ -1257,7 +1266,8 @@ class NDCube(NDCubeBase):
             item[axis] = 0
         # Scalar NDCubes are not supported, so we raise error as the operation would cause all the axes to be squeezed.
         if (item == 0).all():
-            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
+            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. "
+                             "Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
 
 
