@@ -148,8 +148,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
     def world_axis_object_components(self):
         all_components = []
         for iw, w in enumerate(self._wcs):
-            for component in w.world_axis_object_components:
-                all_components.append((f'{component[0]}_{iw}',) + component[1:])
+            all_components = [(f'{component[0]}_{iw}',) + component[1:] for component in all_components]
         return all_components
 
     @property
@@ -169,19 +168,21 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             for i, ix in enumerate(self.mapping.mapping):
                 if out_shape[ix] != pixel_shape[i]:
                     raise ValueError(
-                        "The pixel shapes of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
+                        "The pixel shapes of the supplied WCSes do not match "
+                        "for the dimensions shared by the supplied mapping.")
             return out_shape
         return None
 
     @property
     def pixel_bounds(self):
         if any(w.pixel_bounds is not None for w in self._wcs):
-            pixel_bounds = tuplesum(w.pixel_bounds or [tuple() for _ in range(w.pixel_n_dim)] for w in self._wcs)
+            pixel_bounds = tuplesum(w.pixel_bounds or [() for _ in range(w.pixel_n_dim)] for w in self._wcs)
             out_bounds = self.mapping.inverse(*pixel_bounds)
             for i, ix in enumerate(self.mapping.mapping):
                 if pixel_bounds[i] and (out_bounds[ix] != pixel_bounds[i]):
                     raise ValueError(
-                        "The pixel bounds of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
+                        "The pixel bounds of the supplied WCSes do not match "
+                        "for the dimensions shared by the supplied mapping.")
             return out_bounds
         return None
 

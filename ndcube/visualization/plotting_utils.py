@@ -70,7 +70,8 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
                 if axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
                     raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if not isinstance(axis_coordinate, ax_coord_types):
-                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}.")
+                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} "
+                                f"or list of those, not {type(axis_coordinate)}.")
 
     if axes_units is not None:
         axes_units = _expand_ellipsis(wcs.world_n_dim, axes_units)

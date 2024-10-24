@@ -45,10 +45,12 @@ extend-ignore = [
   "PT001", # Always use pytest.fixture()
   "PT004", # Fixtures which don't return anything should have leading _
   "PT011",  # except(ValueRaises) is too broad
+  "PT012", # TODO: temporary override for test_global_coords::test_overwrite
   "PT023", # Always use () on pytest decorators
   # flake8-use-pathlib
   "PTH123", # open() should be replaced by Path.open()
   # Ruff
+  "RUF003", # Ignore ambiguous quote marks, doesn't allow ' in comments
   "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
   "RUF013",  # PEP 484 prohibits implicit `Optional`
   "RUF015",  # Prefer `next(iter(...))` over single element slice

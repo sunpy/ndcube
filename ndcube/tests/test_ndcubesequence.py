@@ -93,7 +93,7 @@ def test_index_as_cube(ndc, item, expected_shape):
                                                                     4))
                          ],
                          indirect=("ndc",))
-def test_explode_along_axis_common_axis_None(ndc, axis, expected_shape):
+def test_explode_along_axis_common_axis_none(ndc, axis, expected_shape):
     exploded_sequence = ndc.explode_along_axis(axis)
     assert np.all(exploded_sequence.shape == expected_shape)
     assert exploded_sequence._common_axis is None

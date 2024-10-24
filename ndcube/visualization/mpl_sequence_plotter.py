@@ -54,7 +54,10 @@ class MatplotlibSequencePlotter(BasePlotter):
             The unit in which the sequence_axis_coordinates should be displayed.
             If None, the default unit will be used.
         """
-        return SequenceAnimator(self._ndcube, sequence_axis_coords=sequence_axis_coords, sequence_axis_unit=sequence_axis_unit, **kwargs)
+        return SequenceAnimator(self._ndcube,
+                                sequence_axis_coords=sequence_axis_coords,
+                                sequence_axis_unit=sequence_axis_unit,
+                                **kwargs)
 
 
 class SequenceAnimator(ArrayAnimatorWCS):

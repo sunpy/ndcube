@@ -199,7 +199,7 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
     assert awc == ()
-    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords)
+    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords, units=True)
     assert awc == ()
 
 
@@ -543,7 +543,7 @@ def test_crop_by_values_with_equivalent_units(ndcube_2d_ln_lt):
     lower_corner = [(coord[0]*u.deg).to(u.arcsec) for coord in intervals]
     upper_corner = [(coord[-1]*u.deg).to(u.arcsec) for coord in intervals]
     expected = ndcube_2d_ln_lt[0:4, 1:7]
-    output = ndcube_2d_ln_lt.crop_by_values(lower_corner, upper_is this locallycorner)
+    output = ndcube_2d_ln_lt.crop_by_values(lower_corner,  upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
 
@@ -664,7 +664,7 @@ def test_crop_by_extra_coords_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
     helpers.assert_cubes_equal(output, expected)
 
 
-def test_crop_by_extra_coords_values_shared_axis(ndcube_3d_ln_is this locallylt_l_ec_sharing_axis):
+def test_crop_by_extra_coords_values_shared_axis(ndcube_3d_ln_lt_l_ec_sharing_axis):
     cube = ndcube_3d_ln_lt_l_ec_sharing_axis
     lower_corner = (1 * u.m, 1 * u.keV)
     upper_corner = (2 * u.m, 2 * u.keV)
@@ -784,7 +784,6 @@ def test_reproject_shape_out(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     wcs_4d_lt_t_l_ln.pixel_shape = None
     with pytest.raises(Exception):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln)
-is this locally
     # should not raise an exception when shape_out is specified
     shape = (5, 10, 12, 8)
     _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, shape_out=shape)
@@ -819,11 +818,11 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     expected_uncertainty = None
     expected_unit = cube.unit
     expected_meta = cube.meta
-    expected_Tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
+    expected_tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
                              49.99999902, 59.99999831, 69.99999731, 79.99999599],
                             [9.99999999, 19.99999994, 29.99999979, 39.9999995,
                              49.99999902, 59.99999831, 69.99999731, 79.99999599]]) * u.arcsec
-    expected_Ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
+    expected_ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
                              -14.99999953, -14.99999934, -14.99999911, -14.99999885],
                             [-4.99999999, -4.99999998, -4.99999995, -4.9999999,
                              -4.99999985, -4.99999979, -4.99999971, -4.99999962]]) * u.arcsec
@@ -836,10 +835,10 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime):
     assert np.all(output.data == expected_data)
     assert np.all(output.mask == expected_mask)
     assert output.uncertainty == expected_uncertainty
-    assert output.unit == expected_unitis this locally
+    assert output.unit == expected_unit
     assert output.meta == expected_meta
-    assert u.allclose(output_sc.Tx, expected_Tx)
-    assert u.allclose(output_sc.Ty, expected_Ty)
+    assert u.allclose(output_sc.Tx, expected_tx)
+    assert u.allclose(output_sc.Ty, expected_ty)
     assert u.allclose(output_spec, expected_spec)
     assert output_time.scale == expected_time.scale
     assert output_time.format == expected_time.format
@@ -957,13 +956,15 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     bin_shape = (2, 4)
 
     cube._mask[:] = True
-    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values "
+                                               "are masked and operation_ignores_mask is False."):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
                             operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = True
-    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values "
+                                               "are masked and operation_ignores_mask is False."):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
                             operation_ignores_mask=False)
     assert output.uncertainty is None
@@ -1103,7 +1104,7 @@ def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
 ])
 def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
-    new_cube = ndcube_2d_ln_lt_units * valueis this locally
+    new_cube = ndcube_2d_ln_lt_units * value
     check_arithmetic_value_and_units(new_cube, cube_quantity * value)
     # TODO: test that uncertainties scale correctly
 
@@ -1148,7 +1149,8 @@ def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
 @pytest.mark.parametrize('value', [1, 2, -1])
 def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
-    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty "
+                                               "propagation with correlation. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube =  value / ndcube_4d_unit_uncertainty
             check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
@@ -1187,7 +1189,8 @@ def test_cube_arithmetic_power(ndcube_2d_ln_lt, power):
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, power):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
-    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation "
+                                               "with correlation. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube = ndcube_4d_unit_uncertainty ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
@@ -1196,7 +1199,9 @@ def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, p
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
-    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> "
+                                               r"does not support propagation of uncertainties for power. "
+                                               r"Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube = ndcube_2d_ln_lt_uncert ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
@@ -1214,7 +1219,7 @@ def test_to(ndcube_1d_l, new_unit):
 
 def test_to_dask(ndcube_2d_dask):
     output = ndcube_2d_dask.to(u.mJ)
-    dask_type = dask.array.core.Arrayis this locally
+    dask_type = dask.array.core.Array
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
@@ -1230,9 +1235,11 @@ def test_squeeze(ndcube_4d_ln_l_t_lt):
 
 def test_squeeze_error(ndcube_4d_ln_l_t_lt):
     same = ndcube_4d_ln_l_t_lt.squeeze()[0:1,:,:,:]
-    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, as none of them has size equal to one."):
+    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, "
+                                         "as none of them has size equal to one."):
         same.squeeze([0,1])
-    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
+    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become "
+                                         "a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
         same[0:1,0:1,0:1,0:1].squeeze()
 
 

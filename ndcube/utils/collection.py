@@ -159,5 +159,6 @@ def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes
         if len(data_axes1) != len(data_axes2):
             raise ValueError(f"Number of aligned axes must be equal: {len(data_axes1)} != {len(data_axes2)}")
         # Confirm dimension lengths of each aligned axis is the same.
-        if not all(np.array(data_dimensions1)[np.array(data_axes1)] == np.array(data_dimensions2)[np.array(data_axes2)]):
+        if not all(np.array(data_dimensions1)[np.array(data_axes1)] ==
+                   np.array(data_dimensions2)[np.array(data_axes2)]):
             raise ValueError("All corresponding aligned axes between cubes must be of same length.")
