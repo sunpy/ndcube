@@ -1,29 +1,67 @@
-target-version = "py310"
-line-length = 110
-exclude = [
-  ".git,",
-  "__pycache__",
-  "build",
-  "ndcube/version.py",
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+target-version = "py312"
+line-length = 120
+extend-exclude=[
+    "__pycache__",
+    "build",
+    "tools/**",
 ]
-
-[lint]
-select = [
-  "ALL"
+lint.select = [
+    "ALL",
+]
+lint.extend-ignore = [
+    "ANN001", # Missing type annotation for function argument
+    "ANN002", # Missing type annotation for variable
+    "ANN003", # Missing type annotation for keyword
+    "ANN201", # Missing return type annotation for public function
+    "ANN202", # Missing return type annotation for private function
+    "ANN205", # Missing return type annotation for staticmethod
+    "ANN206", # Missing return type annotation for classmethod
+    "COM812", # May cause conflicts when used with the formatter
+    "CPY001", # Missing copyright notice at top of file
+    "D200", # One-line docstring should fit on one line
+    "D205", # 1 blank line required between summary line and description
+    "D400", # First line should end with a period
+    "D401", # First line should be in imperative mood
+    "D404", # First word of the docstring should not be "This"
+    "E501", # Line too long
+    "FIX002", # Line contains TODO, consider resolving the issue
+    "TD003", # Missing issue link on the line following this TODO
+    "TD002", # Missing author in TODO
+    "ISC001", # May cause conflicts when used with the formatter
+    "PLC0415", # `import` should be at the top-level of a file"
+    "PLR2004", # Magic value used in comparison
+    "S101", # Use of `assert` detected
 ]
 
 [lint.per-file-ignores]
-# Part of configuration, not a package.
-"setup.py" = ["INP001"]
-"conftest.py" = ["INP001"]
+"examples/*.py" = [
+    "B018", # Not print but display
+    "D400", # First line should end with a period, question mark, or exclamation point
+    "ERA001", # Commented out code
+    "INP001", # Implicit namespace package
+    "T201", # Use print
+]
 "docs/conf.py" = [
-  "E402"  # Module imports not at top of file
+    "INP001", # conf.py is part of an implicit namespace package
 ]
-"docs/*.py" = [
-  "INP001",  # Implicit-namespace-package. The examples are not a package.
+"test_*.py" = [
+    "D100", # Missing docstring in public module
+    "D103", # Missing docstring in public function
 ]
-"__init__.py" = ["E402", "F401", "F403"]
-"test_*.py" = ["B011", "D", "E402", "PGH001", "S101"]
+"__init__.py" = [
+    "D104", # Missing docstring in public package
+]
+"conftest.py" = [
+    "D100", # Missing docstring in public module
+    "D103", # Missing docstring in public function
+]
 
 [lint.pydocstyle]
 convention = "numpy"
+
+[format]
+docstring-code-format = true
+indent-style = "space"
+quote-style = "double"
