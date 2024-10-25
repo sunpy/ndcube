@@ -17,7 +17,8 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         using the kwargs returned by ``_slice``.
         """
         if item is None or (isinstance(item, tuple) and None in item):
-            raise IndexError("None indices not supported")
+            msg = "None indices not supported"
+            raise IndexError(msg)
 
         item = tuple(sanitize_slices(item, len(self.shape)))
         sliced_cube = super().__getitem__(item)

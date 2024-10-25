@@ -51,7 +51,7 @@ class ExtraCoordsABC(abc.ABC):
             name: str | Iterable[str],
             array_dimension: int | Iterable[int],
             lookup_table: Any,
-            physical_types: str | Iterable[str] = None,
+            physical_types: str | Iterable[str] | None = None,
             **kwargs):
         """
         Add a coordinate to this `~ndcube.ExtraCoords` based on a lookup table.
@@ -141,7 +141,7 @@ class ExtraCoords(ExtraCoordsABC):
 
     """
 
-    def __init__(self, ndcube=None):
+    def __init__(self, ndcube=None) -> None:
         super().__init__()
 
         # Setup private attributes
@@ -150,8 +150,8 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables = list()
-        self._dropped_tables = list()
+        self._lookup_tables = []
+        self._dropped_tables = []
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
@@ -188,14 +188,16 @@ class ExtraCoords(ExtraCoordsABC):
 
         """
         if len(pixel_dimensions) != len(lookup_tables):
+            msg = "The length of pixel_dimensions and lookup_tables must match."
             raise ValueError(
-                "The length of pixel_dimensions and lookup_tables must match.",
+                msg,
             )
 
         if physical_types is None:
             physical_types = len(lookup_tables) * [physical_types]
         elif len(physical_types) != len(lookup_tables):
-            raise ValueError("The number of physical types and lookup_tables must match.")
+            msg = "The number of physical types and lookup_tables must match."
+            raise ValueError(msg)
 
         extra_coords = cls()
 
@@ -209,11 +211,12 @@ class ExtraCoords(ExtraCoordsABC):
         # docstring in ABC
 
         if self._wcs is not None:
+            msg = "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
             raise ValueError(
-                "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object.",
+                msg,
             )
 
-        kwargs["names"] = [name] if not isinstance(name, (list, tuple)) else name
+        kwargs["names"] = [name] if not isinstance(name, list | tuple) else name
 
         if isinstance(lookup_table, BaseTableCoordinate):
             coord = lookup_table
@@ -221,12 +224,13 @@ class ExtraCoords(ExtraCoordsABC):
             coord = TimeTableCoordinate(lookup_table, physical_types=physical_types, **kwargs)
         elif isinstance(lookup_table, SkyCoord):
             coord = SkyCoordTableCoordinate(lookup_table, physical_types=physical_types, **kwargs)
-        elif isinstance(lookup_table, (list, tuple)):
+        elif isinstance(lookup_table, list | tuple):
             coord = QuantityTableCoordinate(*lookup_table, physical_types=physical_types, **kwargs)
         elif isinstance(lookup_table, u.Quantity):
             coord = QuantityTableCoordinate(lookup_table, physical_types=physical_types, **kwargs)
         else:
-            raise TypeError(f"The input type {type(lookup_table)} isn't supported")
+            msg = f"The input type {type(lookup_table)} isn't supported"
+            raise TypeError(msg)
 
         self._lookup_tables.append((array_dimension, coord))
 
@@ -244,7 +248,7 @@ class ExtraCoords(ExtraCoordsABC):
     def keys(self):
         # docstring in ABC
         if not self.wcs:
-            return tuple()
+            return ()
 
         return tuple(self.wcs.world_axis_names) if self.wcs.world_axis_names else None
 
@@ -257,7 +261,7 @@ class ExtraCoords(ExtraCoordsABC):
         # If mapping is not set but lookup_tables is empty then the extra
         # coords is empty, so there is no mapping.
         if not self._lookup_tables:
-            return tuple()
+            return ()
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
@@ -269,18 +273,20 @@ class ExtraCoords(ExtraCoordsABC):
     @mapping.setter
     def mapping(self, mapping):
         if self._mapping is not None:
-            raise AttributeError("Can't set mapping if a mapping has already been specified.")
+            msg = "Can't set mapping if a mapping has already been specified."
+            raise AttributeError(msg)
 
         if self._lookup_tables:
+            msg = "Can't set mapping manually when ExtraCoords is built from lookup tables."
             raise AttributeError(
-                "Can't set mapping manually when ExtraCoords is built from lookup tables.",
+                msg,
             )
 
-        if self._wcs is not None:
-            if not max(mapping) <= self._wcs.pixel_n_dim - 1:
-                raise ValueError(
-                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS.",
-                )
+        if self._wcs is not None and not max(mapping) <= self._wcs.pixel_n_dim - 1:
+            msg = "Values in the mapping can not be larger than the number of pixel dimensions in the WCS."
+            raise ValueError(
+                msg,
+            )
 
         self._mapping = mapping
 
@@ -293,7 +299,7 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return None
 
-        tcoords = set(lt[1] for lt in self._lookup_tables)
+        tcoords = {lt[1] for lt in self._lookup_tables}
         # created a sorted list of unique items
         _tmp = set()  # a temporary set
         tcoords = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
@@ -302,29 +308,29 @@ class ExtraCoords(ExtraCoordsABC):
     @wcs.setter
     def wcs(self, wcs):
         if self._wcs is not None:
+            msg = "Can't set wcs if a WCS has already been specified."
             raise AttributeError(
-                "Can't set wcs if a WCS has already been specified.",
+                msg,
             )
 
         if self._lookup_tables:
+            msg = "Can't set wcs manually when ExtraCoords is built from lookup tables."
             raise AttributeError(
-                "Can't set wcs manually when ExtraCoords is built from lookup tables.",
+                msg,
             )
 
-        if self._mapping is not None:
-            if not max(self._mapping) <= wcs.pixel_n_dim - 1:
-                raise ValueError(
-                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS.",
-                )
+        if self._mapping is not None and not max(self._mapping) <= wcs.pixel_n_dim - 1:
+            msg = "Values in the mapping can not be larger than the number of pixel dimensions in the WCS."
+            raise ValueError(
+                msg,
+            )
 
         self._wcs = wcs
 
     @property
     def is_empty(self):
         # docstring in ABC
-        if not self._wcs and not self._lookup_tables:
-            return True
-        return False
+        return bool(not self._wcs and not self._lookup_tables)
 
     def _getitem_string(self, item):
         """
@@ -336,7 +342,8 @@ class ExtraCoords(ExtraCoordsABC):
                 new_ec._lookup_tables = [lut]
                 return new_ec
 
-        raise KeyError(f"Can't find the world axis named {item} in this ExtraCoords object.")
+        msg = f"Can't find the world axis named {item} in this ExtraCoords object."
+        raise KeyError(msg)
 
     def _getitem_lookup_tables(self, item):
         """
@@ -413,9 +420,8 @@ class ExtraCoords(ExtraCoordsABC):
         """
         Return an APE-14 like representation of any sliced out world dimensions.
         """
-        if self._wcs:
-            if isinstance(self._wcs, SlicedLowLevelWCS):
-                return self._wcs.dropped_world_dimensions
+        if self._wcs and isinstance(self._wcs, SlicedLowLevelWCS):
+            return self._wcs.dropped_world_dimensions
 
         if self._lookup_tables or self._dropped_tables:
             mtc = MultipleTableCoordinate(*[lt[1] for lt in self._lookup_tables])
@@ -423,7 +429,7 @@ class ExtraCoords(ExtraCoordsABC):
 
             return mtc.dropped_world_dimensions
 
-        return dict()
+        return {}
 
     def resample(self, factor, offset=0, ndcube=None, **kwargs):
         """
@@ -464,22 +470,31 @@ class ExtraCoords(ExtraCoordsABC):
         elif self._wcs is not None:
             ndim = self._wcs.pixel_n_dim
         else:
-            raise NotImplementedError(
+            msg = (
                 "Resampling a lookup-table-based ExtraCoords not yet implemented. "
                 "Please raise an issue at https://github.com/sunpy/ndcube/issues "
-                "if you need this functionality")
+                "if you need this functionality"
+            )
+            raise NotImplementedError(
+                msg)
         if np.isscalar(factor):
             factor = [factor] * ndim
         if len(factor) != ndim:
-            raise ValueError(
+            msg = (
                 "factor must be scalar or an iterable with length equal to number of cube "
-                f"dimensions: len(factor) = {len(factor)}; No. cube dimensions = {ndim}.")
+                f"dimensions: len(factor) = {len(factor)}; No. cube dimensions = {ndim}."
+            )
+            raise ValueError(
+                msg)
         if np.isscalar(offset):
             offset = [offset] * ndim
         if len(offset) != ndim:
-            raise ValueError(
+            msg = (
                 "offset must be scalar or an iterable with length equal to number of cube "
-                f"dimensions: len(offset) = {len(offset)}; No. cube dimensions = {ndim}.")
+                f"dimensions: len(offset) = {len(offset)}; No. cube dimensions = {ndim}."
+            )
+            raise ValueError(
+                msg)
         # If ExtraCoords object built on WCS, resample using WCS insfrastructure
         if self._wcs is not None:
             new_ec.wcs = HighLevelWCSWrapper(ResampledLowLevelWCS(self._wcs.low_level_wcs,
@@ -527,17 +542,14 @@ class ExtraCoords(ExtraCoordsABC):
         """Return the array axes not associated with any extra coord."""
         return set(range(len(self._ndcube.shape))) - set(self.mapping)
 
-    def __str__(self):
+    def __str__(self) -> str:
         classname = self.__class__.__name__
         elements = [f"{', '.join(table.names)} ({axes}) {table.physical_types}: {table}"
                     for axes, table in self._lookup_tables]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
-        if length > np.get_printoptions()["linewidth"]:
-            joiner = ",\n " + len(classname) * " "
-        else:
-            joiner = ", "
+        joiner = ",\n " + len(classname) * " " if length > np.get_printoptions()["linewidth"] else ", "
 
         return f"{classname}({joiner.join(elements)})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self}"

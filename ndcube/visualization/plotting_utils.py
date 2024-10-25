@@ -6,7 +6,8 @@ __all__ = ["prep_plot_kwargs", "set_wcsaxes_format_units"]
 def _expand_ellipsis(ndim, plist):
     if Ellipsis in plist:
         if plist.count(Ellipsis) > 1:
-            raise IndexError("Only single ellipsis ('...') is permitted.")
+            msg = "Only single ellipsis ('...') is permitted."
+            raise IndexError(msg)
 
         # Replace the Ellipsis with the correct number of slice(None)s
         e_ind = plist.index(Ellipsis)
@@ -22,7 +23,8 @@ def _expand_ellipsis(ndim, plist):
 def _expand_ellipsis_axis_coordinates(plist, wapt):
     if Ellipsis in plist:
         if plist.count(Ellipsis) > 1:
-            raise IndexError("Only single ellipsis ('...') is permitted.")
+            msg = "Only single ellipsis ('...') is permitted."
+            raise IndexError(msg)
 
         # Replace the Ellipsis with the correct number of slice(None)s
         e_ind = plist.index(Ellipsis)
@@ -43,11 +45,11 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
     """
     # If plot_axes, axes_coordinates, axes_units are not None and not lists,
     # convert to lists for consistent indexing behaviour.
-    if (not isinstance(plot_axes, (tuple, list))) and (plot_axes is not None):
+    if (not isinstance(plot_axes, tuple | list)) and (plot_axes is not None):
         plot_axes = [plot_axes]
-    if (not isinstance(axes_coordinates, (tuple, list))) and (axes_coordinates is not None):
+    if (not isinstance(axes_coordinates, tuple | list)) and (axes_coordinates is not None):
         axes_coordinates = [axes_coordinates]
-    if (not isinstance(axes_units, (tuple, list))) and (axes_units is not None):
+    if (not isinstance(axes_units, tuple | list)) and (axes_units is not None):
         axes_units = [axes_units]
     # Set default value of plot_axes if not set by user.
     if plot_axes is None:
@@ -58,7 +60,8 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
 
     plot_axes = _expand_ellipsis(naxis, plot_axes)
     if "x" not in plot_axes:
-        raise ValueError("'x' must be in plot_axes.")
+        msg = "'x' must be in plot_axes."
+        raise ValueError(msg)
 
     if axes_coordinates is not None:
         axes_coordinates = _expand_ellipsis_axis_coordinates(axes_coordinates, wcs.world_axis_physical_types)
@@ -68,21 +71,25 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
             if isinstance(axis_coordinate, str):
                 # coordinates can be accessed by either name or type
                 if axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
-                    raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
+                    msg = f"{axis_coordinate} is not one of this cubes world axis physical types."
+                    raise ValueError(msg)
             if not isinstance(axis_coordinate, ax_coord_types):
-                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}.")
+                msg = f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}."
+                raise TypeError(msg)
 
     if axes_units is not None:
         axes_units = _expand_ellipsis(wcs.world_n_dim, axes_units)
         if len(axes_units) != wcs.world_n_dim:
-            raise ValueError(f"The length of the axes_units argument must be {wcs.world_n_dim}.")
+            msg = f"The length of the axes_units argument must be {wcs.world_n_dim}."
+            raise ValueError(msg)
         # Convert all non-None elements to astropy units
-        axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
+        axes_units = [u.Unit(x) if x is not None else None for x in axes_units][::-1]
         for i, axis_unit in enumerate(axes_units):
             wau = wcs.world_axis_units[i]
             if axis_unit is not None and not axis_unit.is_equivalent(wau):
+                msg = f"Specified axis unit '{axis_unit}' is not convertible to world axis unit '{wau}'"
                 raise u.UnitsError(
-                    f"Specified axis unit '{axis_unit}' is not convertible to world axis unit '{wau}'")
+                    msg)
 
     return plot_axes, axes_coordinates, axes_units
 

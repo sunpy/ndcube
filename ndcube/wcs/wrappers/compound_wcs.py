@@ -27,7 +27,7 @@ class Mapping:
 
     """
 
-    def __init__(self, mapping):
+    def __init__(self, mapping) -> None:
         self.mapping = mapping
         self.n_inputs = max(mapping) + 1
         self.n_outputs = len(mapping)
@@ -41,7 +41,7 @@ class Mapping:
                         for idx in range(self.n_inputs))
         return type(self)(mapping)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Mapping({self.mapping})>"
 
 
@@ -69,15 +69,16 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         ``world_to_pixel`` are the same from all WCSes.
     """
 
-    def __init__(self, *wcs, mapping=None, pixel_atol=1e-8):
+    def __init__(self, *wcs, mapping=None, pixel_atol=1e-8) -> None:
         self._wcs = wcs
 
         if not mapping:
             mapping = tuple(range(self._all_pixel_n_dim))
 
-        if not len(mapping) == self._all_pixel_n_dim:
+        if len(mapping) != self._all_pixel_n_dim:
+            msg = "The length of the mapping must equal the total number of pixel dimensions in all input WCSes."
             raise ValueError(
-                "The length of the mapping must equal the total number of pixel dimensions in all input WCSes.")
+                msg)
 
         self.mapping = Mapping(mapping)
         self.atol = pixel_atol
@@ -138,9 +139,12 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
                 for idx_n in idx[1:]:
                     if not np.allclose(pixel_arrays[idx_0], pixel_arrays[idx_n],
                                        atol=self.atol, equal_nan=True):
-                        raise ValueError(
+                        msg = (
                             "The world inputs for shared pixel axes did not result in a pixel "
-                            f"coordinate to within {self.atol} relative accuracy.",
+                            f"coordinate to within {self.atol} relative accuracy."
+                        )
+                        raise ValueError(
+                            msg,
                         )
         return self.mapping.inverse(*pixel_arrays)
 
@@ -168,21 +172,25 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             out_shape = self.mapping.inverse(*pixel_shape)
             for i, ix in enumerate(self.mapping.mapping):
                 if out_shape[ix] != pixel_shape[i]:
+                    msg = "The pixel shapes of the supplied WCSes do not match for the dimensions shared by the supplied mapping."
                     raise ValueError(
-                        "The pixel shapes of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
+                        msg)
             return out_shape
+        return None
 
     @property
     def pixel_bounds(self):
         if any(w.pixel_bounds is not None for w in self._wcs):
-            pixel_bounds = tuplesum(w.pixel_bounds or [tuple() for _ in range(w.pixel_n_dim)] for w in self._wcs)
+            pixel_bounds = tuplesum(w.pixel_bounds or [() for _ in range(w.pixel_n_dim)] for w in self._wcs)
             out_bounds = self.mapping.inverse(*pixel_bounds)
             for i, ix in enumerate(self.mapping.mapping):
                 if pixel_bounds[i] and (out_bounds[ix] != pixel_bounds[i]):
+                    msg = "The pixel bounds of the supplied WCSes do not match for the dimensions shared by the supplied mapping."
                     raise ValueError(
-                        "The pixel bounds of the supplied WCSes do not match for the dimensions shared by the supplied mapping.")
+                        msg)
             iint = np.iinfo(int)
             return tuple(o or (iint.min, iint.max) for o in out_bounds)
+        return None
 
     @property
     def pixel_axis_names(self):
@@ -216,4 +224,4 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
 
     @property
     def serialized_classes(self):
-        return any([w.serialized_classes for w in self._wcs])
+        return any(w.serialized_classes for w in self._wcs)

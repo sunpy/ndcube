@@ -14,7 +14,7 @@ n_cubes = 4
 
 
 @pytest.mark.parametrize(
-    "cube_like_index, common_axis, common_axis_lengths, expected_seq_idx, expected_common_idx",
+    ("cube_like_index", "common_axis", "common_axis_lengths", "expected_seq_idx", "expected_common_idx"),
     [(3, 1, [4, 4], 0, 3),
      (3, 1, [2, 2], 1, 1)],
 )
@@ -28,7 +28,7 @@ def test_cube_like_index_to_sequence_and_common_axis_indices(
 
 
 @pytest.mark.parametrize(
-    "item, common_axis, common_axis_lengths, n_cube_dims, expected_sequence_items", [
+    ("item", "common_axis", "common_axis_lengths", "n_cube_dims", "expected_sequence_items"), [
         ((slice(None), slice(4, 6)), 1, [3, 3], 4,
          [SequenceItem(sequence_index=1, cube_item=slice(1, 3))]),
 

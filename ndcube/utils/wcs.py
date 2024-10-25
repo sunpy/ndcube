@@ -74,18 +74,22 @@ def convert_between_array_and_pixel_axes(axis, naxes):
     """
     # Check type of input.
     if not isinstance(axis, np.ndarray):
-        raise TypeError(f"input must be of array type. Got type: {type(axis)}")
+        msg = f"input must be of array type. Got type: {type(axis)}"
+        raise TypeError(msg)
     if axis.dtype.char not in np.typecodes["AllInteger"]:
-        raise TypeError(f"input dtype must be of int type. Got dtype: {axis.dtype})")
+        msg = f"input dtype must be of int type. Got dtype: {axis.dtype})"
+        raise TypeError(msg)
     # Convert negative indices to positive equivalents.
     axis[axis < 0] += naxes
     if any(axis > naxes - 1):
-        raise IndexError("Axis out of range. "
-                         f"Number of axes = {naxes}; Axis numbers requested = {axis}")
+        msg = (
+            "Axis out of range. "
+                         f"Number of axes = {naxes}; Axis numbers requested = {axis}"
+        )
+        raise IndexError(msg)
     # Reflect axis about center of number of axes.
-    reflected_axis = naxes - 1 - axis
+    return naxes - 1 - axis
 
-    return reflected_axis
 
 
 def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
@@ -200,10 +204,13 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
                 for world_axis_physical_type in world_axis_physical_types]
         widx = np.arange(len(world_axis_physical_types))[widx]
     if len(widx) != 1:
-        raise ValueError(
+        msg = (
             "Input does not uniquely correspond to a physical type."
             f" Expected unique substring of one of {world_axis_physical_types}."
-            f"  Got: {physical_type}",
+            f"  Got: {physical_type}"
+        )
+        raise ValueError(
+            msg,
         )
     # Return axes with duplicates removed.
     return widx[0]
@@ -242,8 +249,7 @@ def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
     # To do this we take a column from the matrix and find if there are
     # any entries in common with all other columns in the matrix.
     world_dep = axis_correlation_matrix[:, pixel_axis:pixel_axis + 1]
-    dependent_pixel_axes = np.sort(np.nonzero((world_dep & axis_correlation_matrix).any(axis=0))[0])
-    return dependent_pixel_axes
+    return np.sort(np.nonzero((world_dep & axis_correlation_matrix).any(axis=0))[0])
 
 
 def get_dependent_array_axes(array_axis, axis_correlation_matrix):
@@ -308,8 +314,7 @@ def get_dependent_world_axes(world_axis, axis_correlation_matrix):
     # To do this we take a row from the matrix and find if there are
     # any entries in common with all other rows in the matrix.
     pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1]
-    dependent_world_axes = np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
-    return dependent_world_axes
+    return np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
 
 
 def get_dependent_physical_types(physical_type, wcs):
@@ -332,8 +337,7 @@ def get_dependent_physical_types(physical_type, wcs):
     world_axis_physical_types = wcs.world_axis_physical_types
     world_axis = physical_type_to_world_axis(physical_type, world_axis_physical_types)
     dependent_world_axes = get_dependent_world_axes(world_axis, wcs.axis_correlation_matrix)
-    dependent_physical_types = np.array(world_axis_physical_types)[dependent_world_axes]
-    return dependent_physical_types
+    return np.array(world_axis_physical_types)[dependent_world_axes]
 
 
 def validate_physical_types(physical_types):
@@ -344,10 +348,13 @@ def validate_physical_types(physical_types):
         low_level_api.validate_physical_types(physical_types)
     except ValueError as e:
         invalid_type = str(e).split(":")[1].strip()
-        raise ValueError(
+        msg = (
             f"'{invalid_type}' is not a valid IOVA UCD1+ physical type. "
             "It must be a string specified in the list (http://www.ivoa.net/documents/latest/UCDlist.html) "
-            "or if no matching type exists it can be any string prepended with 'custom:'.",
+            "or if no matching type exists it can be any string prepended with 'custom:'."
+        )
+        raise ValueError(
+            msg,
         )
 
 
@@ -371,8 +378,11 @@ def calculate_world_indices_from_axes(wcs, axes):
             # If axis is str, it is a physical type or substring of a physical type.
             world_indices.append(physical_type_to_world_axis(axis, wcs.world_axis_physical_types))
         else:
-            raise TypeError(f"Unrecognized axis type: {axis, type(axis)}. "
-                            "Must be of type (numbers.Integral, str)")
+            msg = (
+                f"Unrecognized axis type: {axis, type(axis)}. "
+                            "Must be of type (numbers.Integral, str)"
+            )
+            raise TypeError(msg)
     # Use inferred world axes to extract the desired coord value
     # and corresponding physical types.
     return np.unique(np.array(world_indices, dtype=int))
@@ -408,10 +418,7 @@ def array_indices_for_world_objects(wcs, axes=None):
         coordinates. The array indices will be returned in the sub-tuple in
         array index order, i.e ascending.
     """
-    if axes:
-        world_indices = calculate_world_indices_from_axes(wcs, axes)
-    else:
-        world_indices = np.arange(wcs.world_n_dim)
+    world_indices = calculate_world_indices_from_axes(wcs, axes) if axes else np.arange(wcs.world_n_dim)
     object_names = np.array([wao_comp[0]
                              for wao_comp in wcs.low_level_wcs.world_axis_object_components])
     array_indices = [[]] * len(object_names)
@@ -451,7 +458,8 @@ def get_low_level_wcs(wcs, name="wcs"):
         return wcs.low_level_wcs
     if isinstance(wcs, BaseLowLevelWCS):
         return wcs
-    raise ValueError(f"{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS")
+    msg = f"{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS"
+    raise ValueError(msg)
 
 
 def compare_wcs_physical_types(source_wcs, target_wcs):

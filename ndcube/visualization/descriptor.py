@@ -9,7 +9,7 @@ __all__ = ["PlotterDescriptor", "MISSING_MATPLOTLIB_ERROR_MSG", "MISSING_ANIMATO
 
 
 class PlotterDescriptor:
-    def __init__(self, default_type=None):
+    def __init__(self, default_type=None) -> None:
         self._default_type = default_type
 
     def __set_name__(self, owner, name):
@@ -47,13 +47,13 @@ class PlotterDescriptor:
                 except ImportError as e:
                     if raise_error:
                         raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
+            return None
 
-        elif self._default_type is not None:
+        if self._default_type is not None:
             return self._default_type
 
         # If we have no default type then just return None
-        else:
-            return None
+        return None
 
     def __get__(self, obj, objtype=None):
         if obj is None:
@@ -68,10 +68,11 @@ class PlotterDescriptor:
 
         return getattr(obj, self._attribute_name)
 
-    def __set__(self, obj, value):
+    def __set__(self, obj, value) -> None:
         if not isinstance(value, type):
+            msg = "Plotter attribute can only be set with an uninitialised plotter object."
             raise TypeError(
-                "Plotter attribute can only be set with an uninitialised plotter object.")
+                msg)
 
         setattr(obj, self._attribute_name, value(obj))
         # here obj is the ndcube object and value is the plotter type

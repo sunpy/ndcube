@@ -6,7 +6,7 @@ class BasePlotter(abc.ABC):
     Base class for NDCube plotter objects.
     """
 
-    def __init__(self, ndcube=None):
+    def __init__(self, ndcube=None) -> None:
         self._ndcube = ndcube
 
     @abc.abstractmethod

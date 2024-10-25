@@ -22,7 +22,7 @@ def test_plot_1D_cube(ndcube_1d_l):
 
 @figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
-                         (
+                         [
                              ("ln_lt_l_t", np.s_[0, 0, 0, :], {}),
                              ("ln_lt_l_t", np.s_[0, 0, :, 0], {}),
                              ("ln_lt_l_t", np.s_[0, :, 0, 0], {}),
@@ -31,7 +31,7 @@ def test_plot_1D_cube(ndcube_1d_l):
                              ("uncertainty", np.s_[0, 0, 0, :], {}),
                              ("unit_uncertainty", np.s_[0, 0, 0, :], {"data_unit": u.mJ}),
 
-                             ("mask", np.s_[0, 0, 0, :], {"marker": "o"})),
+                             ("mask", np.s_[0, 0, 0, :], {"marker": "o"})],
                          indirect=["ndcube_4d"])
 def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
     # TODO: The output for the spatial plots is inconsistent between the lat
@@ -80,12 +80,12 @@ def test_plot_2D_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
 
 @figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
-                         (
+                         [
                              ("ln_lt_l_t", np.s_[0, 0, :, :], {}),
                              ("ln_lt_l_t", np.s_[0, :, :, 0], {}),
                              ("ln_lt_l_t", np.s_[:, :, 0, 0], {}),
                              ("unit_uncertainty", np.s_[0, 0, :, :], {"data_unit": u.mJ}),
-                             ("mask", np.s_[0, :, 0, :], {})),
+                             ("mask", np.s_[0, :, 0, :], {})],
                          indirect=["ndcube_4d"])
 def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
     fig = plt.figure()
@@ -108,7 +108,7 @@ def test_animate_2D_cube(ndcube_2d_ln_lt):
 
 @figure_test
 @pytest.mark.parametrize(("ndcube_4d", "cslice", "kwargs"),
-                         (
+                         [
                              ("ln_lt_l_t", np.s_[:, :, 0, :], {}),
                              ("ln_lt_l_t", np.s_[:, :, 0, :], {"plot_axes": [..., "x"]}),
                              ("ln_lt_l_t", None, {}),
@@ -117,13 +117,10 @@ def test_animate_2D_cube(ndcube_2d_ln_lt):
                              ("ln_lt_l_t", np.s_[0, :, :, :], {}),
                              ("ln_lt_l_t", np.s_[:, :, :, :], {}),
                              ("unit_uncertainty", np.s_[0, :, :, :], {"data_unit": u.mJ}),
-                             ("mask", np.s_[:, :, :, :], {})),
+                             ("mask", np.s_[:, :, :, :], {})],
                          indirect=["ndcube_4d"])
 def test_animate_cube_from_slice(ndcube_4d, cslice, kwargs):
-    if cslice:
-        sub = ndcube_4d[cslice]
-    else:
-        sub = ndcube_4d
+    sub = ndcube_4d[cslice] if cslice else ndcube_4d
     ax = sub.plot(**kwargs)
     assert isinstance(ax, mpl_animators.ArrayAnimatorWCS)
 

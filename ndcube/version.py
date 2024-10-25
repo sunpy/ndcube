@@ -14,4 +14,4 @@ except Exception:
     )
     del warnings
 
-    version = '0.0.0'
+    version = "0.0.0"

@@ -75,7 +75,7 @@ class GlobalCoordsABC(Mapping):
         """
 
     @abc.abstractmethod
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Establish the length of the collection.
         """
@@ -84,7 +84,7 @@ class GlobalCoordsABC(Mapping):
 class GlobalCoords(GlobalCoordsABC):
     # Docstring in GlobalCoordsABC
 
-    def __init__(self, ndcube=None):
+    def __init__(self, ndcube=None) -> None:
         super().__init__()
         self._ndcube = ndcube
         self._internal_coords = OrderedDict()
@@ -141,7 +141,8 @@ class GlobalCoords(GlobalCoordsABC):
             elif len(rest) == 1:
                 klass_gen = rest[0]
             else:
-                raise ValueError("Tuples in world_axis_object_classes should have length 3 or 4")
+                msg = "Tuples in world_axis_object_classes should have length 3 or 4"
+                raise ValueError(msg)
 
             high_level_object = klass_gen(*args[key], *ar, **kwargs[key], **kw)
 
@@ -178,9 +179,12 @@ class GlobalCoords(GlobalCoordsABC):
 
     def add(self, name, physical_type, coord):
         # Docstring in GlobalCoordsABC
-        if name in self._internal_coords.keys():
-            raise ValueError("coordinate with same name already exists: "
-                             f"{name}: {self._internal_coords[name]}")
+        if name in self._internal_coords:
+            msg = (
+                "coordinate with same name already exists: "
+                             f"{name}: {self._internal_coords[name]}"
+            )
+            raise ValueError(msg)
 
         # Ensure the physical type is valid
         validate_physical_types((physical_type,))
@@ -194,7 +198,7 @@ class GlobalCoords(GlobalCoordsABC):
     @property
     def physical_types(self):
         # Docstring in GlobalCoordsABC
-        return dict((name, value[0]) for name, value in self._all_coords.items())
+        return {name: value[0] for name, value in self._all_coords.items()}
 
     def filter_by_physical_type(self, physical_type):
         """
@@ -227,21 +231,18 @@ class GlobalCoords(GlobalCoordsABC):
         # Docstring in GlobalCoordsABC
         return iter(self._all_coords)
 
-    def __len__(self):
+    def __len__(self) -> int:
         # Docstring in GlobalCoordsABC
         return len(self._all_coords)
 
-    def __str__(self):
+    def __str__(self) -> str:
         classname = self.__class__.__name__
         elements = [f"{name} {[ptype]}:\n{coord!r}" for (name, coord), ptype in
                     zip(self.items(), self.physical_types.values(), strict=False)]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
-        if length > np.get_printoptions()["linewidth"]:
-            joiner = ",\n " + len(classname) * " "
-        else:
-            joiner = ", "
+        joiner = ",\n " + len(classname) * " " if length > np.get_printoptions()["linewidth"] else ", "
 
         return f"{classname}({joiner.join(elements)})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"

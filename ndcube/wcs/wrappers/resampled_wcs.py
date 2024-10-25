@@ -25,18 +25,20 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         shifted by the same amount in all dimensions.
     """
 
-    def __init__(self, wcs, factor, offset=0):
+    def __init__(self, wcs, factor, offset=0) -> None:
         self._wcs = wcs
         if np.isscalar(factor):
             factor = [factor] * self.pixel_n_dim
         self._factor = np.array(factor)
         if len(self._factor) != self.pixel_n_dim:
-            raise ValueError(f"Length of factor must equal number of dimensions {self.pixel_n_dim}.")
+            msg = f"Length of factor must equal number of dimensions {self.pixel_n_dim}."
+            raise ValueError(msg)
         if np.isscalar(offset):
             offset = [offset] * self.pixel_n_dim
         self._offset = np.array(offset)
         if len(self._offset) != self.pixel_n_dim:
-            raise ValueError(f"Length of offset must equal number of dimensions {self.pixel_n_dim}.")
+            msg = f"Length of offset must equal number of dimensions {self.pixel_n_dim}."
+            raise ValueError(msg)
 
     def _top_to_underlying_pixels(self, top_pixels):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.

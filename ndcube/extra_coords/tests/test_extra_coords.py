@@ -54,9 +54,9 @@ def test_empty_ec(wcs_1d_l):
     # Test slice of an empty EC
     assert ec[0].wcs is None
 
-    assert ec.mapping == tuple()
+    assert ec.mapping == ()
     assert ec.wcs is None
-    assert ec.keys() == tuple()
+    assert ec.keys() == ()
 
     ec.wcs = wcs_1d_l
     assert ec.wcs is wcs_1d_l
@@ -179,7 +179,6 @@ def test_two_1d_from_lookup_tables(time_lut):
     """
     Create ExtraCoords from both tables at once using `from_lookup_tables` with `physical_types`.
     """
-
     exposure_lut = range(10) * u.s
 
     pt = ["custom:time:creation"]

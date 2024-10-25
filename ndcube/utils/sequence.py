@@ -48,10 +48,7 @@ def cube_like_index_to_sequence_and_common_axis_indices(cube_like_index, common_
     """
     cumul_lengths = np.cumsum(common_axis_lengths)
     sequence_index = np.arange(len(cumul_lengths))[cumul_lengths > cube_like_index][0]
-    if sequence_index == 0:
-        common_axis_index = cube_like_index
-    else:
-        common_axis_index = cube_like_index - cumul_lengths[sequence_index - 1]
+    common_axis_index = cube_like_index if sequence_index == 0 else cube_like_index - cumul_lengths[sequence_index - 1]
     return sequence_index, common_axis_index
 
 
@@ -84,26 +81,27 @@ def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_length
         via the cube-like API.
     """
     if not hasattr(item, "__len__"):
-        raise TypeError("item must be an iterable of slices and/or ints.")
+        msg = "item must be an iterable of slices and/or ints."
+        raise TypeError(msg)
     if len(item) <= common_axis:
-        raise ValueError("item must be include an entry for the common axis, "
-                         "i.e. length of item must be > common_axis.")
+        msg = (
+            "item must be include an entry for the common axis, "
+                         "i.e. length of item must be > common_axis."
+        )
+        raise ValueError(msg)
     if not isinstance(item[common_axis], slice):
-        raise TypeError("This function should only be used when the common axis entry "
-                        "of item is a slice object.")
+        msg = (
+            "This function should only be used when the common axis entry "
+                        "of item is a slice object."
+        )
+        raise TypeError(msg)
     # Define default item for slicing the cubes
     default_cube_item = list(item)
     default_cube_item[common_axis] = slice(None)
 
     # Convert start and stop cube-like indices to sequence and cube indices.
-    if item[common_axis].start is None:
-        common_axis_start = 0
-    else:
-        common_axis_start = item[common_axis].start
-    if item[common_axis].stop is None:
-        common_axis_stop = sum(common_axis_lengths)
-    else:
-        common_axis_stop = item[common_axis].stop
+    common_axis_start = 0 if item[common_axis].start is None else item[common_axis].start
+    common_axis_stop = sum(common_axis_lengths) if item[common_axis].stop is None else item[common_axis].stop
     item[common_axis] = slice(common_axis_start, common_axis_stop)
     start_sequence_index, start_common_axis_index = \
         cube_like_index_to_sequence_and_common_axis_indices(

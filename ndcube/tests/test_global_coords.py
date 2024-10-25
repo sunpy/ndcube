@@ -31,7 +31,7 @@ def test_add(gc):
     gc.add("name1", "custom:physical_type1", coord1)
     gc.add("name2", "custom:physical_type2", coord2)
     assert gc.keys() == {"name1", "name2"}
-    assert gc.physical_types == dict((("name1", "custom:physical_type1"), ("name2", "custom:physical_type2")))
+    assert gc.physical_types == {"name1": "custom:physical_type1", "name2": "custom:physical_type2"}
 
 
 def test_remove(gc_coords):
@@ -60,7 +60,7 @@ def test_slicing(gc_coords):
 
 
 def test_physical_types(gc_coords):
-    assert gc_coords.physical_types == dict((("name1", "custom:physical_type1"), ("name2", "custom:physical_type2")))
+    assert gc_coords.physical_types == {"name1": "custom:physical_type1", "name2": "custom:physical_type2"}
 
 
 def test_len(gc_coords):
@@ -177,7 +177,7 @@ def test_serialized_classes():
 
 
 class MultiCoord(list):
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(args)
 
     @property

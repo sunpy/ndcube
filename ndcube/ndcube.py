@@ -292,7 +292,7 @@ class NDCubeLinkedDescriptor:
     A descriptor which gives the property a reference to the cube to which it is attached.
     """
 
-    def __init__(self, default_type):
+    def __init__(self, default_type) -> None:
         self._default_type = default_type
         self._property_name = None
 
@@ -318,15 +318,18 @@ class NDCubeLinkedDescriptor:
 
         return getattr(obj, self._attribute_name)
 
-    def __set__(self, obj, value):
+    def __set__(self, obj, value) -> None:
         if isinstance(value, self._default_type):
             value._ndcube = obj
         elif issubclass(value, self._default_type):
             value = value(obj)
         else:
-            raise ValueError(
+            msg = (
                 f"Unable to set value for {self._property_name} it should "
-                f"be an instance or subclass of {self._default_type}")
+                f"be an instance or subclass of {self._default_type}"
+            )
+            raise ValueError(
+                msg)
 
         setattr(obj, self._attribute_name, value)
 
@@ -379,14 +382,15 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     _global_coords = NDCubeLinkedDescriptor(GlobalCoords)
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
-                 unit=None, copy=False, **kwargs):
+                 unit=None, copy=False, **kwargs) -> None:
 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, **kwargs)
 
         # Enforce that the WCS object is not None
         if self.wcs is None:
-            raise TypeError("The WCS argument can not be None.")
+            msg = "The WCS argument can not be None."
+            raise TypeError(msg)
 
         # Get existing extra_coords if initializing from an NDCube
         if hasattr(data, "extra_coords"):
@@ -477,7 +481,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             # First construct a range of pixel indices for this set of coupled dimensions
             sub_range = [ranges[idx] for idx in pixel_axes_indices]
             # Then get a set of non correlated dimensions
-            non_corr_axes = set(list(range(wcs.pixel_n_dim))) - set(pixel_axes_indices)
+            non_corr_axes = set(range(wcs.pixel_n_dim)) - set(pixel_axes_indices)
             # And inject 0s for those coordinates
             for idx in non_corr_axes:
                 sub_range.insert(idx, 0)
@@ -512,7 +516,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
-                return tuple()
+                return ()
 
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
@@ -593,13 +597,19 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         classes = [wcs.world_axis_object_classes[c][0] for c in comp]
         for i, point in enumerate(points):
             if len(point) != len(comp):
-                raise ValueError(f"{len(point)} components in point {i} do not match "
-                                 f"WCS with {len(comp)} components.")
+                msg = (
+                    f"{len(point)} components in point {i} do not match "
+                                 f"WCS with {len(comp)} components."
+                )
+                raise ValueError(msg)
             for j, value in enumerate(point):
                 if not (value is None or isinstance(value, classes[j])):
-                    raise TypeError(f"{type(value)} of component {j} in point {i} is "
+                    msg = (
+                        f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
-                                    f"{classes[j]}.")
+                                    f"{classes[j]}."
+                    )
+                    raise TypeError(msg)
         return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
 
     def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
@@ -620,31 +630,41 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         if units is None:
             units = [None] * n_coords
         elif len(units) != n_coords:
-            raise ValueError(f"Units must be None or have same length {n_coords} as corner inputs.")
+            msg = f"Units must be None or have same length {n_coords} as corner inputs."
+            raise ValueError(msg)
         types_with_units = (u.Quantity, type(None))
         for i, point in enumerate(points):
             if len(point) != wcs.world_n_dim:
-                raise ValueError(f"{len(point)} dimensions in point {i} do not match "
-                                 f"WCS with {wcs.world_n_dim} world dimensions.")
+                msg = (
+                    f"{len(point)} dimensions in point {i} do not match "
+                                 f"WCS with {wcs.world_n_dim} world dimensions."
+                )
+                raise ValueError(msg)
             for j, (value, unit) in enumerate(zip(point, units, strict=False)):
                 value_is_float = not isinstance(value, types_with_units)
                 if value_is_float:
                     if unit is None:
-                        raise TypeError(
+                        msg = (
                             "If an element of a point is not a Quantity or None, "
                             "the corresponding unit must be a valid astropy Unit or unit string."
-                            f"index: {i}; coord type: {type(value)}; unit: {unit}")
+                            f"index: {i}; coord type: {type(value)}; unit: {unit}"
+                        )
+                        raise TypeError(
+                            msg)
                     points[i][j] = u.Quantity(value, unit=unit)
                 if value is not None:
                     try:
                         points[i][j] = point[j].to(wcs.world_axis_units[j])
                     except UnitsError as err:
-                        raise UnitsError(f"Unit '{point[j].unit}' of coordinate object {j} in point {i} is "
-                                         f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
+                        msg = (
+                            f"Unit '{point[j].unit}' of coordinate object {j} in point {i} is "
+                                         f"incompatible with WCS unit '{wcs.world_axis_units[j]}'"
+                        )
+                        raise UnitsError(msg) from err
 
         return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return textwrap.dedent(f"""\
                 NDCube
                 ------
@@ -653,7 +673,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 Unit: {self.unit}
                 Data Type: {self.data.dtype}""")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"
 
     def explode_along_axis(self, axis):
@@ -745,7 +765,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             from reproject import reproject_adaptive, reproject_exact, reproject_interp
             from reproject.wcs_utils import has_celestial
         except ModuleNotFoundError:
-            raise ImportError(f"The {type(self).__name__}.reproject_to method requires the `reproject` library to be installed.")
+            msg = f"The {type(self).__name__}.reproject_to method requires the `reproject` library to be installed."
+            raise ImportError(msg)
 
         algorithms = {
             "interpolation": reproject_interp,
@@ -754,7 +775,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         }
 
         if algorithm not in algorithms:
-            raise ValueError(f"{algorithm=} is not valid, it must be one of {', '.join(algorithms.keys())}.")
+            msg = f"{algorithm=} is not valid, it must be one of {', '.join(algorithms.keys())}."
+            raise ValueError(msg)
 
         if isinstance(target_wcs, Mapping):
             target_wcs = WCS(header=target_wcs)
@@ -762,16 +784,21 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         low_level_target_wcs = utils.wcs.get_low_level_wcs(target_wcs, "target_wcs")
 
         # 'adaptive' and 'exact' algorithms work only on 2D celestial WCS.
-        if algorithm == "adaptive" or algorithm == "exact":
+        if algorithm in ("adaptive", "exact"):
             if low_level_target_wcs.pixel_n_dim != 2 or low_level_target_wcs.world_n_dim != 2:
-                raise ValueError("For adaptive and exact algorithms, target_wcs must be 2D.")
+                msg = "For adaptive and exact algorithms, target_wcs must be 2D."
+                raise ValueError(msg)
 
             if not has_celestial(target_wcs):
-                raise ValueError("For adaptive and exact algorithms, "
-                                 "target_wcs must contain celestial axes only.")
+                msg = (
+                    "For adaptive and exact algorithms, "
+                                 "target_wcs must contain celestial axes only."
+                )
+                raise ValueError(msg)
 
         if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
-            raise ValueError("Given target_wcs is not compatible with this NDCube, the physical types do not match.")
+            msg = "Given target_wcs is not compatible with this NDCube, the physical types do not match."
+            raise ValueError(msg)
 
         # TODO: Upstream this check into reproject
         # If shape_out is not specified explicitly,
@@ -780,7 +807,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             if hasattr(low_level_target_wcs, "array_shape") and low_level_target_wcs.array_shape is not None:
                 shape_out = low_level_target_wcs.array_shape
             else:
-                raise ValueError("shape_out must be specified if target_wcs does not have the array_shape attribute.")
+                msg = "shape_out must be specified if target_wcs does not have the array_shape attribute."
+                raise ValueError(msg)
 
         data = algorithms[algorithm](self,
                                      output_projection=target_wcs,
@@ -887,9 +915,12 @@ class NDCube(NDCubeBase):
 
         """
         if self.plotter is None:
-            raise NotImplementedError(
+            msg = (
                 "This NDCube object does not have a .plotter defined so "
-                "no default plotting functionality is available.")
+                "no default plotting functionality is available."
+            )
+            raise NotImplementedError(
+                msg)
 
         return self.plotter.plot(*args, **kwargs)
 
@@ -927,7 +958,8 @@ class NDCube(NDCubeBase):
                 # which could carry a different WCS than the NDCube
                 return NotImplemented
         elif self.unit not in (None, u.Unit("")):
-            raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
+            msg = "Cannot add a unitless object to an NDCube with a unit."
+            raise TypeError(msg)
         else:
             new_data = self.data + value
         return self._new_instance(data=new_data)
@@ -958,8 +990,7 @@ class NDCube(NDCubeBase):
         new_data = self.data * value
         new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
-        new_cube = self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
-        return new_cube
+        return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
 
     def __rmul__(self, value):
         return self.__mul__(value)
@@ -986,7 +1017,7 @@ class NDCube(NDCubeBase):
                     new_uncertainty = None
                     warn_user(f"{e.args[0]} Setting uncertainties to None.")
                 else:
-                    raise e
+                    raise
 
         return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
 
@@ -1139,11 +1170,15 @@ class NDCube(NDCubeBase):
         data_shape = self.shape
         naxes = len(data_shape)
         if len(bin_shape) != naxes:
-            raise ValueError("bin_shape must have an entry for each array axis.")
+            msg = "bin_shape must have an entry for each array axis."
+            raise ValueError(msg)
         if (np.mod(data_shape, bin_shape) != 0).any():
-            raise ValueError(
+            msg = (
                 "bin shape must be an integer fraction of the data shape in each dimension. "
-                f"data shape: {data_shape};  bin shape: {bin_shape}")
+                f"data shape: {data_shape};  bin shape: {bin_shape}"
+            )
+            raise ValueError(
+                msg)
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
@@ -1161,7 +1196,7 @@ class NDCube(NDCubeBase):
             new_data = new_data.data
         if handle_mask is None:
             new_mask = None
-        elif isinstance(self.mask, (type(None), bool)):  # Preserve original mask type.
+        elif isinstance(self.mask, type(None) | bool):  # Preserve original mask type.
             new_mask = self.mask
         else:
             reshaped_mask = self.mask.reshape(reshape)
@@ -1193,7 +1228,7 @@ class NDCube(NDCubeBase):
                 # in each bin can be iterated (all bins being treated in parallel) and
                 # their uncertainties propagated.
                 bin_size = bin_shape.prod()
-                flat_shape = [bin_size] + list(new_shape)
+                flat_shape = [bin_size, *list(new_shape)]
                 dummy_axes = tuple(range(1, len(reshape), 2))
                 flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
                 flat_data = flat_data.reshape(flat_shape)
@@ -1258,11 +1293,13 @@ class NDCube(NDCubeBase):
                 axis = (axis,)
             axis = np.asarray(axis)
             if not (shape[axis] == 1).all():
-                raise ValueError("Cannot select any axis to squeeze out, as none of them has size equal to one.")
+                msg = "Cannot select any axis to squeeze out, as none of them has size equal to one."
+                raise ValueError(msg)
             item[axis] = 0
         # Scalar NDCubes are not supported, so we raise error as the operation would cause all the axes to be squeezed.
         if (item == 0).all():
-            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
+            msg = "All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."
+            raise ValueError(msg)
         return self[tuple(item)]
 
 

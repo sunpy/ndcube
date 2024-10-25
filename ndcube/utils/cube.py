@@ -38,15 +38,18 @@ def sanitize_wcs(func):
         if wcs is None:
             wcs = self.wcs
 
-        if not isinstance(wcs, ExtraCoords):
-            if not wcs.pixel_n_dim == self.data.ndim:
-                raise ValueError("The supplied WCS must have the same number of "
-                                 "pixel dimensions as the NDCube object. "
-                                 "If you specified `cube.extra_coords.wcs` "
-                                 "please just pass `cube.extra_coords`.")
+        if not isinstance(wcs, ExtraCoords) and wcs.pixel_n_dim != self.data.ndim:
+            msg = (
+                "The supplied WCS must have the same number of "
+                             "pixel dimensions as the NDCube object. "
+                             "If you specified `cube.extra_coords.wcs` "
+                             "please just pass `cube.extra_coords`."
+            )
+            raise ValueError(msg)
 
-        if not isinstance(wcs, (BaseHighLevelWCS, ExtraCoords)):
-            raise TypeError("wcs argument must be a High Level WCS or an ExtraCoords object.")
+        if not isinstance(wcs, BaseHighLevelWCS | ExtraCoords):
+            msg = "wcs argument must be a High Level WCS or an ExtraCoords object."
+            raise TypeError(msg)
 
         params.arguments["wcs"] = wcs
 
@@ -67,7 +70,7 @@ def sanitize_crop_inputs(points, wcs):
     values_are_none = [False] * n_points
     for i, point in enumerate(points):
         # Ensure each point is a list
-        if isinstance(point, (tuple, list)):
+        if isinstance(point, tuple | list):
             points[i] = list(point)
         else:
             points[i] = [point]
@@ -75,7 +78,7 @@ def sanitize_crop_inputs(points, wcs):
         # Later we will ensure all points have same number of objects.
         n_coords[i] = len(points[i])
         # Confirm whether point contains at least one None entry.
-        if all([coord is None for coord in points[i]]):
+        if all(coord is None for coord in points[i]):
             values_are_none[i] = True
     # If no points contain a coord, i.e. if all entries in all points are None,
     # set no-op flag to True and exit.
@@ -83,8 +86,11 @@ def sanitize_crop_inputs(points, wcs):
         return True, points, wcs
     # Not not all points are of same length, error.
     if len(set(n_coords)) != 1:
-        raise ValueError("All points must have same number of coordinate objects."
-                         f"Number of objects in each point: {n_coords}")
+        msg = (
+            "All points must have same number of coordinate objects."
+                         f"Number of objects in each point: {n_coords}"
+        )
+        raise ValueError(msg)
     # Import must be here to avoid circular import.
     from ndcube.extra_coords.extra_coords import ExtraCoords
     if isinstance(wcs, ExtraCoords):
@@ -200,8 +206,11 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
                 result_is_scalar = False
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
-        raise ValueError("Input points causes cube to be cropped to a single pixel. "
-                         "This is not supported.")
+        msg = (
+            "Input points causes cube to be cropped to a single pixel. "
+                         "This is not supported."
+        )
+        raise ValueError(msg)
     return tuple(item)
 
 
@@ -250,8 +259,8 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         first dimension.
     """
     flat_axis = 0
-    operation_is_mean = True if operation in {np.mean, np.nanmean} else False
-    operation_is_nantype = True if operation in {np.nansum, np.nanmean, np.nanprod} else False
+    operation_is_mean = operation in {np.mean, np.nanmean}
+    operation_is_nantype = operation in {np.nansum, np.nanmean, np.nanprod}
     # If propagation_operation kwarg not set manually, try to set it based on operation kwarg.
     if not propagation_operation:
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
@@ -260,7 +269,8 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         elif operation in {np.prod, np.nanprod, np.prod if hasattr(np, "product") else np.prod}:
             propagation_operation = np.multiply
         else:
-            raise ValueError("propagation_operation not recognized.")
+            msg = "propagation_operation not recognized."
+            raise ValueError(msg)
     # Build mask if not provided.
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
     if operation_ignores_mask or mask is None:

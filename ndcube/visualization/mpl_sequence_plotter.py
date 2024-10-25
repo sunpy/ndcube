@@ -31,7 +31,8 @@ class MatplotlibSequencePlotter(BasePlotter):
         """
         sequence_dims = self._ndcube.shape
         if len(sequence_dims) == 2:
-            raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
+            msg = "Visualizing sequences of 1-D cubes not currently supported."
+            raise NotImplementedError(msg)
         return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
 
     def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
@@ -79,11 +80,13 @@ class SequenceAnimator(ArrayAnimatorWCS):
         The unit in which to display the sequence_axis_coords.
     """
 
-    def __init__(self, sequence, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def __init__(self, sequence, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs) -> None:
         if sequence_axis_coords is not None:
-            raise NotImplementedError("Setting sequence_axis_coords not yet supported.")
+            msg = "Setting sequence_axis_coords not yet supported."
+            raise NotImplementedError(msg)
         if sequence_axis_unit is not None:
-            raise NotImplementedError("Setting sequence_axis_unit not yet supported.")
+            msg = "Setting sequence_axis_unit not yet supported."
+            raise NotImplementedError(msg)
 
         # Store sequence data
         self._cubes = sequence.data

@@ -46,7 +46,7 @@ class NDCollection(dict):
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
 
-    def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
+    def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs) -> None:
         # Enter data and metadata into object.
         super().__init__(key_data_pairs)
         self.meta = meta
@@ -61,8 +61,9 @@ class NDCollection(dict):
             else:
                 aligned_axes = dict(zip(keys, aligned_axes, strict=False))
         if kwargs:
+            msg = f"__init__() got an unexpected keyword argument: '{next(iter(kwargs.keys()))}'"
             raise TypeError(
-                f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'",
+                msg,
             )
         # Attach aligned axes to object.
         self._aligned_axes = aligned_axes
@@ -80,9 +81,9 @@ class NDCollection(dict):
 
     @property
     def _first_key(self):
-        return list(self.keys())[0]
+        return next(iter(self.keys()))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (textwrap.dedent(f"""\
             NDCollection
             ------------
@@ -91,7 +92,7 @@ class NDCollection(dict):
             Aligned dimensions: {self.aligned_dimensions}
             Aligned physical types: {self.aligned_axis_physical_types}"""))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"
 
     @property
@@ -105,6 +106,7 @@ class NDCollection(dict):
             return np.asanyarray(self[self._first_key].shape, dtype=object)[
                 np.array(self.aligned_axes[self._first_key])
             ]
+        return None
 
     @property
     def aligned_axis_physical_types(self):
@@ -144,7 +146,8 @@ class NDCollection(dict):
             item_is_strings = all(item_strings)
             # Ensure strings are not mixed with slices.
             if (not item_is_strings) and (not all(np.invert(item_strings))):
-                raise TypeError("Cannot mix keys and non-keys when indexing instance.")
+                msg = "Cannot mix keys and non-keys when indexing instance."
+                raise TypeError(msg)
 
         # If sequence is all strings, extract the cubes corresponding to the string keys.
         if item_is_strings:
@@ -157,7 +160,8 @@ class NDCollection(dict):
         # However, this can only be done if there are aligned axes.
         else:
             if self.aligned_axes is None:
-                raise IndexError("Cannot slice unless collection has aligned axes.")
+                msg = "Cannot slice unless collection has aligned axes."
+                raise IndexError(msg)
             # Derive item to be applied to each cube in collection and
             # whether any aligned axes are dropped by the slicing.
             collection_items, new_aligned_axes = self._generate_collection_getitems(item)
@@ -202,7 +206,8 @@ class NDCollection(dict):
         elif isinstance(item, tuple):
             # Ensure item is not longer than number of aligned axes
             if len(item) > self.n_aligned_axes:
-                raise IndexError("Too many indices")
+                msg = "Too many indices"
+                raise IndexError(msg)
             for i, axis_item in enumerate(item):
                 if isinstance(axis_item, int):
                     drop_aligned_axes_indices.append(i)
@@ -210,7 +215,8 @@ class NDCollection(dict):
                     collection_items[j][self.aligned_axes[key][i]] = axis_item
 
         else:
-            raise TypeError(f"Unsupported slicing type: {axis_item}")
+            msg = f"Unsupported slicing type: {axis_item}"
+            raise TypeError(msg)
 
         # Use indices of dropped axes determine above to update aligned_axes
         # by removing any that have been dropped.
@@ -227,11 +233,13 @@ class NDCollection(dict):
 
     def setdefault(self):
         """Not supported by `~ndcube.NDCollection`"""
-        raise NotImplementedError("NDCollection does not support setdefault.")
+        msg = "NDCollection does not support setdefault."
+        raise NotImplementedError(msg)
 
     def popitem(self):
         """Not supported by `~ndcube.NDCollection`"""
-        raise NotImplementedError("NDCollection does not support popitem.")
+        msg = "NDCollection does not support popitem."
+        raise NotImplementedError(msg)
 
     def pop(self, key):
         """
@@ -282,10 +290,13 @@ class NDCollection(dict):
         if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
             self.aligned_axes.update(new_aligned_axes)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key) -> None:
         super().__delitem__(key)
         self.aligned_axes.__delitem__(key)
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError("NDCollection does not support __setitem__. "
-                                  "Use NDCollection.update instead")
+    def __setitem__(self, key, value) -> None:
+        msg = (
+            "NDCollection does not support __setitem__. "
+                                  "Use NDCollection.update instead"
+        )
+        raise NotImplementedError(msg)

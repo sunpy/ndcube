@@ -47,7 +47,7 @@ def test_wcs():
 
 
 class WCSTest:
-    def __init__(self):
+    def __init__(self) -> None:
         self.world_axis_physical_types = [
             "custom:pos.helioprojective.lon", "custom:pos.helioprojective.lat", "em.wl", "time"]
         self.axis_correlation_matrix = _axis_correlation_matrix()
@@ -86,7 +86,7 @@ def test_physical_type_to_pixel_axes(test_wcs):
     assert all(output == expected)
 
 
-@pytest.mark.parametrize("test_input,expected", [("wl", 2), ("em.wl", 2)])
+@pytest.mark.parametrize(("test_input", "expected"), [("wl", 2), ("em.wl", 2)])
 def test_physical_type_to_world_axis(test_input, expected):
     world_axis_physical_types = ["custom:pos.helioprojective.lon",
                                  "custom:pos.helioprojective.lat", "em.wl", "time"]

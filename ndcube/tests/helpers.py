@@ -107,7 +107,8 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True):
     assert np.all(test_input.shape == expected_cube.shape)
     assert_metas_equal(test_input.meta, expected_cube.meta)
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
-        raise AssertionError(f"NDCube extra_coords not of same type: {type(test_input.extra_coords)} != {type(expected_cube.extra_coords)}")
+        msg = f"NDCube extra_coords not of same type: {type(test_input.extra_coords)} != {type(expected_cube.extra_coords)}"
+        raise AssertionError(msg)
     if test_input.extra_coords is not None:
         assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
 
@@ -168,4 +169,5 @@ def assert_collections_equal(collection1, collection2, check_data=True):
         elif isinstance(cube1, NDCubeSequence):
             assert_cubesequences_equal(cube1, cube2, check_data=check_data)
         else:
-            raise TypeError(f"Unsupported Type in NDCollection: {type(cube1)}")
+            msg = f"Unsupported Type in NDCollection: {type(cube1)}"
+            raise TypeError(msg)

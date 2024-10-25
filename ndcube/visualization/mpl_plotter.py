@@ -96,7 +96,7 @@ class MatplotlibPlotter(BasePlotter):
         """
         Based on an axes object and axes_coords, work out which coords should not be visible.
         """
-        visible_coords = set(item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates)
+        visible_coords = {item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates}
         return set(axes.coords._aliases.values()).difference(visible_coords)
 
     def _apply_axes_coordinates(self, axes, axes_coordinates):
@@ -122,8 +122,11 @@ class MatplotlibPlotter(BasePlotter):
 
         if self._ndcube.unit is None:
             if data_unit is not None:
-                raise TypeError("Can only set y-axis unit if self._ndcube.unit is set to a "
-                                "compatible unit.")
+                msg = (
+                    "Can only set y-axis unit if self._ndcube.unit is set to a "
+                                "compatible unit."
+                )
+                raise TypeError(msg)
         else:
             if data_unit is not None:
                 ydata = u.Quantity(ydata, unit=self._ndcube.unit).to_value(data_unit)
@@ -169,7 +172,8 @@ class MatplotlibPlotter(BasePlotter):
         if data_unit is not None:
             # If user set data_unit, convert dat to desired unit if self._ndcube.unit set.
             if self._ndcube.unit is None:
-                raise TypeError("Can only set data_unit if NDCube.unit is set.")
+                msg = "Can only set data_unit if NDCube.unit is set."
+                raise TypeError(msg)
             data = u.Quantity(self._ndcube.data, unit=self._ndcube.unit).to_value(data_unit)
 
         if self._ndcube.mask is not None:
@@ -208,10 +212,7 @@ class MatplotlibPlotter(BasePlotter):
 
         # This changes the parameters for future iterations
         for hidden in self._not_visible_coords(ax.axes, axes_coordinates):
-            if hidden in ax.coord_params:
-                param = ax.coord_params[hidden]
-            else:
-                param = {}
+            param = ax.coord_params.get(hidden, {})
 
             param["ticks"] = False
             ax.coord_params[hidden] = param

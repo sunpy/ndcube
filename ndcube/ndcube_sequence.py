@@ -34,7 +34,7 @@ class NDCubeSequenceBase:
         were a single cube concatenated along the common axis.
     """
 
-    def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
+    def __init__(self, data_list, meta=None, common_axis=None, **kwargs) -> None:
         self.data = data_list
         self.meta = meta
         if common_axis is not None:
@@ -56,7 +56,7 @@ class NDCubeSequenceBase:
 
     @property
     def _shape(self):
-        dimensions = [len(self.data)] + list(self.data[0].data.shape)
+        dimensions = [len(self.data), *list(self.data[0].data.shape)]
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
@@ -74,7 +74,7 @@ class NDCubeSequenceBase:
         """
         The physical types associated with each array axis, including the sequence axis.
         """
-        return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
+        return [("meta.obs.sequence",), *self.data[0].array_axis_physical_types]
 
     @property
     def cube_like_dimensions(self):
@@ -83,7 +83,8 @@ class NDCubeSequenceBase:
         """
         warn_deprecated("Replaced by ndcube.NDCubeSequence.cube_like_shape")
         if not isinstance(self._common_axis, int):
-            raise TypeError("Common axis must be set.")
+            msg = "Common axis must be set."
+            raise TypeError(msg)
         dimensions = list(self._dimensions)
         cube_like_dimensions = list(self._shape[1:])
         if dimensions[self._common_axis + 1].isscalar:
@@ -92,8 +93,7 @@ class NDCubeSequenceBase:
         else:
             cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis + 1])
         # Combine into single Quantity
-        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
-        return cube_like_dimensions
+        return u.Quantity(cube_like_dimensions, unit=u.pix)
 
     @property
     def cube_like_shape(self):
@@ -101,7 +101,8 @@ class NDCubeSequenceBase:
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
         if not isinstance(self._common_axis, int):
-            raise TypeError("Common axis must be set.")
+            msg = "Common axis must be set."
+            raise TypeError(msg)
         dimensions = list(self.shape)
         cube_like_shape = list(self._shape[1:])
         if isinstance(dimensions[self._common_axis + 1], numbers.Integral):
@@ -116,7 +117,8 @@ class NDCubeSequenceBase:
         The physical types associated with each array axis, omitting the sequence axis.
         """
         if self._common_axis is None:
-            raise ValueError("Common axis must be set.")
+            msg = "Common axis must be set."
+            raise ValueError(msg)
         return self.data[0].array_axis_physical_types
 
     def __getitem__(self, item):
@@ -158,7 +160,8 @@ class NDCubeSequenceBase:
         >>> cs.index_as_cube[3:6, 0, :] # doctest: +SKIP
         """
         if self._common_axis is None:
-            raise ValueError("common_axis cannot be None")
+            msg = "common_axis cannot be None"
+            raise ValueError(msg)
         return _IndexAsCubeSlicer(self)
 
     @property
@@ -208,8 +211,8 @@ class NDCubeSequenceBase:
         # Collect names of global coords common to all cubes.
         global_names = set.intersection(*[set(cube.global_coords.keys()) for cube in self.data])
         # For each coord, combine values from each cube's global coords property.
-        return dict([(name, [cube.global_coords[name] for cube in self.data])
-                     for name in global_names])
+        return {name: [cube.global_coords[name] for cube in self.data]
+                     for name in global_names}
 
     def explode_along_axis(self, axis):
         """
@@ -387,7 +390,7 @@ class NDCubeSequenceBase:
         return tuple(
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops, strict=False)])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (textwrap.dedent(f"""\
                 NDCubeSequence
                 --------------
@@ -395,10 +398,10 @@ class NDCubeSequenceBase:
                 Physical Types of Axes: {self.array_axis_physical_types}
                 Common Cube Axis: {self._common_axis}"""))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __iter__(self):
@@ -450,20 +453,26 @@ class NDCubeSequence(NDCubeSequenceBase):
 
         """
         if self.plotter is None:
-            raise NotImplementedError(
+            msg = (
                 "This NDCubeSequence object does not have a .plotter defined so "
-                "no default plotting functionality is available.")
+                "no default plotting functionality is available."
+            )
+            raise NotImplementedError(
+                msg)
 
         return self.plotter.plot(*args, **kwargs)
 
     def plot_as_cube(self, *args, **kwargs):
-        raise NotImplementedError(
+        msg = (
             "NDCubeSequence plot_as_cube is no longer supported.\n"
             "To learn why or to tell us why it should be re-instated, "
             "read and comment on issue #315:\n\nhttps://github.com/sunpy/ndcube/issues/315\n\n"
             "To see a introductory guide on how to make your own NDCubeSequence plots, "
             "see the docs:\n\n"
-            "https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting")
+            "https://docs.sunpy.org/projects/ndcube/en/stable/ndcubesequence.html#plotting"
+        )
+        raise NotImplementedError(
+            msg)
 
 
 """
@@ -482,7 +491,7 @@ class _IndexAsCubeSlicer:
         Object of NDCubeSequence.
     """
 
-    def __init__(self, seq):
+    def __init__(self, seq) -> None:
         self.seq = seq
 
     def __getitem__(self, item):
@@ -493,7 +502,7 @@ class _IndexAsCubeSlicer:
         # If item is iint or slice, turn into a tuple, filling in items
         # for unincluded axes with slice(None). This ensures it is
         # treated the same as tuple items.
-        if isinstance(item, (numbers.Integral, slice)):
+        if isinstance(item, numbers.Integral | slice):
             item = [item] + [slice(None)] * n_uncommon_cube_dims
         else:
             # Item must therefore be tuple. Ensure it has an entry for each axis.
@@ -501,7 +510,7 @@ class _IndexAsCubeSlicer:
         # If common axis item is slice(None), result is trivial as common_axis is not changed.
         if item[common_axis] == slice(None):
             # Create item for slicing through the default API and slice.
-            return self.seq[tuple([slice(None)] + item)]
+            return self.seq[(slice(None), *item)]
         if isinstance(item[common_axis], numbers.Integral):
             # If common_axis item is an int or return an NDCube with dimensionality of N-1
             sequence_index, common_axis_index = \

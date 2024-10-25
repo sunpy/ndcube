@@ -5,7 +5,7 @@ from astropy.wcs.wcsapi.conftest import *  # NOQA
 
 
 class Celestial2DLowLevelWCS(ApyCelestial2DLowLevelWCS):
-    def __init__(self):
+    def __init__(self) -> None:
         self._pixel_bounds = (-1, 5), (1, 7)
 
     @property
