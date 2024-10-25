@@ -20,13 +20,13 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 from ndcube import NDCube, NDCubeSequence
 
-__all__ = ['figure_test',
-           'get_hash_library_name',
-           'assert_extra_coords_equal',
-           'assert_metas_equal',
-           'assert_cubes_equal',
-           'assert_cubesequences_equal',
-           'assert_wcs_are_equal']
+__all__ = ["figure_test",
+           "get_hash_library_name",
+           "assert_extra_coords_equal",
+           "assert_metas_equal",
+           "assert_cubes_equal",
+           "assert_cubesequences_equal",
+           "assert_wcs_are_equal"]
 
 
 def get_hash_library_name():
@@ -34,9 +34,9 @@ def get_hash_library_name():
     Generate the hash library name for this env.
     """
     ft2_version = f"{mpl.ft2font.__freetype_version__.replace('.', '')}"
-    animators_version = "dev" if (("dev" in mpl_animators.__version__) or ("rc" in mpl_animators.__version__)) else mpl_animators.__version__.replace('.', '')
-    mpl_version = "dev" if (("dev" in mpl.__version__) or ("rc" in mpl.__version__)) else mpl.__version__.replace('.', '')
-    astropy_version = "dev" if (("dev" in astropy.__version__) or ("rc" in astropy.__version__)) else astropy.__version__.replace('.', '')
+    animators_version = "dev" if (("dev" in mpl_animators.__version__) or ("rc" in mpl_animators.__version__)) else mpl_animators.__version__.replace(".", "")
+    mpl_version = "dev" if (("dev" in mpl.__version__) or ("rc" in mpl.__version__)) else mpl.__version__.replace(".", "")
+    astropy_version = "dev" if (("dev" in astropy.__version__) or ("rc" in astropy.__version__)) else astropy.__version__.replace(".", "")
     return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}_astropy_{astropy_version}_animators_{animators_version}.json"
 
 
@@ -54,8 +54,8 @@ def figure_test(test_function):
 
     @pytest.mark.remote_data
     @pytest.mark.mpl_image_compare(hash_library=hash_library_file.resolve(),
-                                   savefig_kwargs={'metadata': {'Software': None}},
-                                   style='default')
+                                   savefig_kwargs={"metadata": {"Software": None}},
+                                   style="default")
     @wraps(test_function)
     def test_wrapper(*args, **kwargs):
         ret = test_function(*args, **kwargs)
@@ -78,7 +78,7 @@ def assert_extra_coords_equal(test_input, extra_coords):
             if not isinstance(ec_table, tuple):
                 test_table = (test_table,)
                 ec_table = (ec_table,)
-            for test_tab, ec_tab in zip(test_table, ec_table):
+            for test_tab, ec_tab in zip(test_table, ec_table, strict=False):
                 if ec_tab.isscalar:
                     assert test_tab == ec_tab
                 else:
@@ -107,8 +107,7 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True):
     assert np.all(test_input.shape == expected_cube.shape)
     assert_metas_equal(test_input.meta, expected_cube.meta)
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
-        raise AssertionError("NDCube extra_coords not of same type: {0} != {1}".format(
-            type(test_input.extra_coords), type(expected_cube.extra_coords)))
+        raise AssertionError(f"NDCube extra_coords not of same type: {type(test_input.extra_coords)} != {type(expected_cube.extra_coords)}")
     if test_input.extra_coords is not None:
         assert_extra_coords_equal(test_input.extra_coords, expected_cube.extra_coords)
 
@@ -129,7 +128,6 @@ def assert_wcs_are_equal(wcs1, wcs2):
     Also checks if both the wcs objects are instance
     of `~astropy.wcs.wcsapi.SlicedLowLevelWCS`.
     """
-
     if not isinstance(wcs1, BaseLowLevelWCS):
         wcs1 = wcs1.low_level_wcs
     if not isinstance(wcs2, BaseLowLevelWCS):
@@ -154,7 +152,6 @@ def create_sliced_wcs(wcs, item, dim):
     """
     Creates a sliced `SlicedFITSWCS` object from the given slice item
     """
-
     # Sanitize the slices
     item = sanitize_slices(item, dim)
     return SlicedFITSWCS(wcs, item)
@@ -163,7 +160,7 @@ def create_sliced_wcs(wcs, item, dim):
 def assert_collections_equal(collection1, collection2, check_data=True):
     assert collection1.keys() == collection2.keys()
     assert collection1.aligned_axes == collection2.aligned_axes
-    for cube1, cube2 in zip(collection1.values(), collection2.values()):
+    for cube1, cube2 in zip(collection1.values(), collection2.values(), strict=False):
         # Check cubes are same type.
         assert type(cube1) is type(cube2)
         if isinstance(cube1, NDCube):

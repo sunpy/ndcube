@@ -9,23 +9,7 @@ exclude = [
 
 [lint]
 select = [
-  "E",
-  "F",
-  "W",
-  #"UP",
-  #"PT"
-]
-extend-ignore = [
-  "E712",
-  "E721",
-  # pycodestyle (E, W)
-  "E501", # LineTooLong                             # TODO! fix
-  # pytest (PT)
-  "PT001", # Always use pytest.fixture()
-  "PT004", # Fixtures which don't return anything should have leading _
-  "PT007", # Parametrize should be lists of tuples  # TODO! fix
-  "PT011", # Too broad exception assert             # TODO! fix
-  "PT023", # Always use () on pytest decorators
+  "ALL"
 ]
 
 [lint.per-file-ignores]

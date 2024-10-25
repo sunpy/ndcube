@@ -18,17 +18,17 @@ from ndcube.extra_coords import QuantityTableCoordinate, TimeTableCoordinate
 # We aim to create coordinates that are focused around time and energies using astropy quantities.
 
 energy = np.arange(10) * u.keV
-time = Time('2020-01-01 00:00:00') + np.arange(9)*u.s
+time = Time("2020-01-01 00:00:00") + np.arange(9)*u.s
 
 ##############################################################################
 # Then, we need to turn these into lookup tables using
 # `~ndcube.extra_coords.table_coord.QuantityTableCoordinate` and
 # `~ndcube.extra_coords.table_coord.TimeTableCoordinate` to create table coordinates.
 
-energy_coord = QuantityTableCoordinate(energy, names='energy', physical_types='em.energy')
+energy_coord = QuantityTableCoordinate(energy, names="energy", physical_types="em.energy")
 print(energy_coord)
 
-time_coord = TimeTableCoordinate(time, names='time', physical_types='time')
+time_coord = TimeTableCoordinate(time, names="time", physical_types="time")
 print(time_coord)
 
 ##############################################################################

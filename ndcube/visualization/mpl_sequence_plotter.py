@@ -5,7 +5,7 @@ from astropy.wcs.wcsapi import BaseLowLevelWCS
 from .base import BasePlotter
 from .plotting_utils import prep_plot_kwargs
 
-__all__ = ['MatplotlibSequencePlotter', 'SequenceAnimator']
+__all__ = ["MatplotlibSequencePlotter", "SequenceAnimator"]
 
 
 class MatplotlibSequencePlotter(BasePlotter):
@@ -32,8 +32,7 @@ class MatplotlibSequencePlotter(BasePlotter):
         sequence_dims = self._ndcube.shape
         if len(sequence_dims) == 2:
             raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
-        else:
-            return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
+        return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
 
     def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
         """

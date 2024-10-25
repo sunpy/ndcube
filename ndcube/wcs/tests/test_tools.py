@@ -34,7 +34,7 @@ def test_unwrap_wcs_to_fitswcs():
     assert_array_equal(dropped_data_dimensions, np.array([True, True, False, False]))
     assert isinstance(output_wcs, WCS)
     assert output_wcs._naxis == [1, 2, 1, 1]
-    assert list(output_wcs.wcs.ctype) == ['TIME', 'WAVE', 'HPLT-TAN', 'HPLN-TAN']
+    assert list(output_wcs.wcs.ctype) == ["TIME", "WAVE", "HPLT-TAN", "HPLN-TAN"]
     world_values = output_wcs.array_index_to_world_values([0], [0], [0, 1], [0])
     assert_array_almost_equal(world_values[0][0], np.array([2700]))
     assert_array_almost_equal(world_values[1], np.array([1.04e-09, 1.10e-09]))

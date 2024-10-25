@@ -20,7 +20,7 @@ from ndcube import NDCube
 # `~ndcube.NDCube` from data stored in a FITS file.
 # Here we are using an example file from ``astropy``.
 
-image_file = get_pkg_data_filename('tutorials/FITS-images/HorseHead.fits')
+image_file = get_pkg_data_filename("tutorials/FITS-images/HorseHead.fits")
 
 ###########################################################################
 # Lets extract the image data and the header information from the FITS file.

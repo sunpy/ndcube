@@ -17,7 +17,7 @@ from ndcube.extra_coords.table_coord import (
 @pytest.fixture
 def lut_1d_distance():
     lookup_table = u.Quantity(np.arange(10) * u.km)
-    return QuantityTableCoordinate(lookup_table, names='x')
+    return QuantityTableCoordinate(lookup_table, names="x")
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def lut_3d_distance_mesh():
                     u.Quantity(np.arange(10, 20) * u.km),
                     u.Quantity(np.arange(20, 30) * u.km))
 
-    return QuantityTableCoordinate(*lookup_table, names=['x', 'y', 'z'])
+    return QuantityTableCoordinate(*lookup_table, names=["x", "y", "z"])
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def lut_2d_distance_no_mesh():
 @pytest.fixture
 def lut_1d_skycoord_no_mesh():
     sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=False, names=['lon', 'lat'])
+    return SkyCoordTableCoordinate(sc, mesh=False, names=["lon", "lat"])
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def lut_1d_time():
                  "2011-01-01T00:00:10",
                  "2011-01-01T00:00:20",
                  "2011-01-01T00:00:30"], format="isot")
-    return TimeTableCoordinate(data, names='time', physical_types='time')
+    return TimeTableCoordinate(data, names="time", physical_types="time")
 
 
 @pytest.fixture
@@ -85,11 +85,11 @@ def test_exceptions():
     assert "All tables must have equivalent units." in str(ei)
 
     with pytest.raises(ValueError) as ei:
-        QuantityTableCoordinate(u.Quantity([1, 2, 3], u.nm), [1, 2, 3] * u.m, names='x')
+        QuantityTableCoordinate(u.Quantity([1, 2, 3], u.nm), [1, 2, 3] * u.m, names="x")
     assert "The number of names should match the number of world dimensions" in str(ei)
 
     with pytest.raises(ValueError) as ei:
-        QuantityTableCoordinate(u.Quantity([1, 2, 3], u.nm), [1, 2, 3] * u.m, physical_types='x')
+        QuantityTableCoordinate(u.Quantity([1, 2, 3], u.nm), [1, 2, 3] * u.m, physical_types="x")
     assert "The number of physical types should match the number of world dimensions" in str(ei)
 
     # Test two Time
@@ -98,11 +98,11 @@ def test_exceptions():
     assert "single Time object" in str(ei)
 
     with pytest.raises(ValueError) as ei:
-        TimeTableCoordinate(Time("2011-01-01"), names=['a', 'b'])
+        TimeTableCoordinate(Time("2011-01-01"), names=["a", "b"])
     assert "only have one name." in str(ei)
 
     with pytest.raises(ValueError) as ei:
-        TimeTableCoordinate(Time("2011-01-01"), physical_types=['a', 'b'])
+        TimeTableCoordinate(Time("2011-01-01"), physical_types=["a", "b"])
     assert "only have one physical type." in str(ei)
 
     # Test two SkyCoord
@@ -111,11 +111,11 @@ def test_exceptions():
     assert "single SkyCoord object" in str(ei)
 
     with pytest.raises(ValueError) as ei:
-        SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), names='x')
+        SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), names="x")
     assert "The number of names must equal number of components in the input SkyCoord: 2." in str(ei)
 
     with pytest.raises(ValueError) as ei:
-        SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), physical_types='x')
+        SkyCoordTableCoordinate(SkyCoord(10, 10, unit=u.deg), physical_types="x")
     assert "The number of physical types must equal number of components in the input SkyCoord: 2." in str(ei)
 
     with pytest.raises(TypeError) as ei:
@@ -296,12 +296,12 @@ def test_repr_str(lut_1d_time, lut_1d_wave):
 
 
 def test_slicing_quantity_table_coordinate():
-    qtc = QuantityTableCoordinate(range(10)*u.m, names='x', physical_types='pos:x')
+    qtc = QuantityTableCoordinate(range(10)*u.m, names="x", physical_types="pos:x")
 
     assert u.allclose(qtc[2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2].table[0], 2*u.m)
-    assert qtc.names == ['x']
-    assert qtc.physical_types == ['pos:x']
+    assert qtc.names == ["x"]
+    assert qtc.physical_types == ["pos:x"]
 
     qtc = QuantityTableCoordinate(range(10)*u.m)
 
@@ -309,7 +309,7 @@ def test_slicing_quantity_table_coordinate():
     assert u.allclose(qtc[2].table[0], 2*u.m)
 
     qtc = QuantityTableCoordinate(range(10)*u.m, range(10)*u.m,
-                                  names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
+                                  names=["x", "y"], physical_types=["pos:x", "pos:y"])
     assert u.allclose(qtc[2:8, 2:8].table[0], range(2, 8)*u.m)
     assert u.allclose(qtc[2:8, 2:8].table[1], range(2, 8)*u.m)
 
@@ -317,25 +317,25 @@ def test_slicing_quantity_table_coordinate():
     assert len(qtc[2, 2:8].table) == 1
     assert u.allclose(qtc[2, 2:8].table[0], range(2, 8)*u.m)
 
-    assert qtc.names == ['x', 'y']
-    assert qtc.physical_types == ['pos:x', 'pos:y']
+    assert qtc.names == ["x", "y"]
+    assert qtc.physical_types == ["pos:x", "pos:y"]
 
-    assert qtc.frame.axes_names == ('x', 'y')
-    assert qtc.frame.axis_physical_types == ('custom:pos:x', 'custom:pos:y')
+    assert qtc.frame.axes_names == ("x", "y")
+    assert qtc.frame.axis_physical_types == ("custom:pos:x", "custom:pos:y")
 
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_slicing_quantity_table_coordinate_2d():
     qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m,
-                                  names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
+                                  names=["x", "y"], physical_types=["pos:x", "pos:y"])
 
     assert u.allclose(qtc[2:8, 2:8].table[0], (np.mgrid[2:8, 2:8]*u.m)[0])
     assert u.allclose(qtc[2:8, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
-    assert qtc.names == ['x', 'y']
-    assert qtc.physical_types == ['pos:x', 'pos:y']
+    assert qtc.names == ["x", "y"]
+    assert qtc.physical_types == ["pos:x", "pos:y"]
 
-    assert qtc.frame.axes_names == ('x', 'y')
-    assert qtc.frame.axis_physical_types == ('custom:pos:x', 'custom:pos:y')
+    assert qtc.frame.axes_names == ("x", "y")
+    assert qtc.frame.axis_physical_types == ("custom:pos:x", "custom:pos:y")
 
     assert u.allclose(qtc[2, 2:8].table[0], 2*u.m)
     assert u.allclose(qtc[2, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
@@ -349,22 +349,22 @@ def _assert_skycoord_equal(sc1, sc2):
     components1 = tuple(getattr(sc1.data, comp) for comp in sc1.data.components)
     components2 = tuple(getattr(sc2.data, comp) for comp in sc2.data.components)
 
-    for c1, c2 in zip(components1, components2):
+    for c1, c2 in zip(components1, components2, strict=False):
         assert u.allclose(c1, c2)
 
 
 def test_slicing_skycoord_table_coordinate():
     # 1D, no mesh
     sc = SkyCoord(range(10)*u.deg, range(10)*u.deg)
-    stc = SkyCoordTableCoordinate(sc, mesh=False, names=['lon', 'lat'], physical_types=['pos:x', 'pos:y'])
+    stc = SkyCoordTableCoordinate(sc, mesh=False, names=["lon", "lat"], physical_types=["pos:x", "pos:y"])
 
     _assert_skycoord_equal(stc[2:8].table, sc[2:8])
     _assert_skycoord_equal(stc[2].table, sc[2])
-    assert stc.names == ['lon', 'lat']
-    assert stc.physical_types == ['pos:x', 'pos:y']
+    assert stc.names == ["lon", "lat"]
+    assert stc.physical_types == ["pos:x", "pos:y"]
 
-    assert stc.frame.axes_names == ('lon', 'lat')
-    assert stc.frame.axis_physical_types == ('custom:pos:x', 'custom:pos:y')
+    assert stc.frame.axes_names == ("lon", "lat")
+    assert stc.frame.axis_physical_types == ("custom:pos:x", "custom:pos:y")
 
     # 2D, no mesh
     sc = SkyCoord(*np.mgrid[0:10, 0:10]*u.deg)
@@ -715,10 +715,10 @@ def test_quantity_interpolate(lut_3d_distance_mesh):
 
 def test_time_interpolate(lut_1d_time):
     lutc = lut_1d_time
-    new_array_grids = np.arange(1.5, 4,)
+    new_array_grids = np.arange(1.5, 4)
     output = lutc.interpolate(new_array_grids)
-    expected_table = Time(['2011-01-01T00:00:05.000', '2011-01-01T00:00:15.000',
-                           '2011-01-01T00:00:25.000'], scale="utc", format="isot")
+    expected_table = Time(["2011-01-01T00:00:05.000", "2011-01-01T00:00:15.000",
+                           "2011-01-01T00:00:25.000"], scale="utc", format="isot")
     assert np.allclose(output.table.mjd, expected_table.mjd)
     assert_lutc_ancilliary_data_same(output, lutc)
 

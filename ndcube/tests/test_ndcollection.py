@@ -14,15 +14,15 @@ data2 = data0 * 2
 
 # Define WCS object for all cubes.
 wcs_input_dict = {
-    'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-    'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-    'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
+    "CTYPE1": "WAVE    ", "CUNIT1": "Angstrom", "CDELT1": 0.2, "CRPIX1": 0, "CRVAL1": 10, "NAXIS1": 5,
+    "CTYPE2": "HPLT-TAN", "CUNIT2": "deg", "CDELT2": 0.5, "CRPIX2": 2, "CRVAL2": 0.5, "NAXIS2": 4,
+    "CTYPE3": "HPLN-TAN", "CUNIT3": "deg", "CDELT3": 0.4, "CRPIX3": 2, "CRVAL3": 1, "NAXIS3": 3}
 input_wcs = astropy.wcs.WCS(wcs_input_dict)
 
 wcs_input_dict1 = {
-    'CTYPE3': 'WAVE    ', 'CUNIT3': 'Angstrom', 'CDELT3': 0.2, 'CRPIX3': 0, 'CRVAL3': 10, 'NAXIS3': 5,
-    'CTYPE1': 'HPLT-TAN', 'CUNIT1': 'deg', 'CDELT1': 0.5, 'CRPIX1': 2, 'CRVAL1': 0.5, 'NAXIS1': 4,
-    'CTYPE2': 'HPLN-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.4, 'CRPIX2': 2, 'CRVAL2': 1, 'NAXIS2': 3}
+    "CTYPE3": "WAVE    ", "CUNIT3": "Angstrom", "CDELT3": 0.2, "CRPIX3": 0, "CRVAL3": 10, "NAXIS3": 5,
+    "CTYPE1": "HPLT-TAN", "CUNIT1": "deg", "CDELT1": 0.5, "CRPIX1": 2, "CRVAL1": 0.5, "NAXIS1": 4,
+    "CTYPE2": "HPLN-TAN", "CUNIT2": "deg", "CDELT2": 0.4, "CRPIX2": 2, "CRVAL2": 1, "NAXIS2": 3}
 input_wcs1 = astropy.wcs.WCS(wcs_input_dict1)
 
 # Define cubes.
@@ -75,7 +75,7 @@ seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], alig
 
     ((slice(None), 1, slice(1, 3)), seq_collection,
         NDCollection([("seq0", sequence02[:, 1, 1:3]), ("seq1", sequence20[:, 1, 1:3])],
-                     aligned_axes=((0, 1, 2), (0, 1, 2))))
+                     aligned_axes=((0, 1, 2), (0, 1, 2)))),
 ])
 def test_collection_slicing(item, collection, expected):
     helpers.assert_collections_equal(collection[item], expected)
@@ -152,15 +152,15 @@ def test_aligned_dimensions(collection, expected_aligned_dimensions):
 
 
 @pytest.mark.parametrize("collection, expected", [
-    (cube_collection, [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-                       ('em.wl',)]),
-    (seq_collection, [('meta.obs.sequence',),
-                      ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-                      ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-                      ('em.wl',)])])
+    (cube_collection, [("custom:pos.helioprojective.lat", "custom:pos.helioprojective.lon"),
+                       ("em.wl",)]),
+    (seq_collection, [("meta.obs.sequence",),
+                      ("custom:pos.helioprojective.lat", "custom:pos.helioprojective.lon"),
+                      ("custom:pos.helioprojective.lat", "custom:pos.helioprojective.lon"),
+                      ("em.wl",)])])
 def test_aligned_axis_physical_types(collection, expected):
     output = collection.aligned_axis_physical_types
     print(output)
     assert len(output) == len(expected)
-    for output_axis_types, expect_axis_types in zip(output, expected):
+    for output_axis_types, expect_axis_types in zip(output, expected, strict=False):
         assert set(output_axis_types) == set(expect_axis_types)

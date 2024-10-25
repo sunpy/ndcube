@@ -34,12 +34,12 @@ from ndcube import NDCube
 data = np.random.rand(5, 45, 45)
 # Define the WCS
 wcs = astropy.wcs.WCS(naxis=3)
-wcs.wcs.ctype = 'HPLT-TAN', 'HPLN-TAN', "WAVE"
-wcs.wcs.cunit = 'arcsec', 'arcsec', 'Angstrom'
+wcs.wcs.ctype = "HPLT-TAN", "HPLN-TAN", "WAVE"
+wcs.wcs.cunit = "arcsec", "arcsec", "Angstrom"
 wcs.wcs.cdelt = 10, 10, 0.2
 wcs.wcs.crpix = 2, 2, 0
 wcs.wcs.crval = 1, 1, 10
-wcs.wcs.cname = 'HPC lat', 'HPC lon', 'wavelength'
+wcs.wcs.cname = "HPC lat", "HPC lon", "wavelength"
 # Instantiate the `~ndcube.NDCube`
 example_cube = NDCube(data, wcs=wcs)
 

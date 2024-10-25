@@ -2,7 +2,7 @@ import numpy as np
 
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
-__all__ = ['ResampledLowLevelWCS']
+__all__ = ["ResampledLowLevelWCS"]
 
 
 class ResampledLowLevelWCS(BaseWCSWrapper):
@@ -77,7 +77,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
                                   atol=np.finfo(float).resolution)
         pixel_shape = underlying_shape / self._factor
         return tuple(int(np.rint(i)) if is_int else i
-                     for i, is_int in zip(pixel_shape, int_elements))
+                     for i, is_int in zip(pixel_shape, int_elements, strict=False))
 
     @property
     def pixel_bounds(self):

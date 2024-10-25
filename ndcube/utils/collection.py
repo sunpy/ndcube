@@ -2,14 +2,14 @@ import numbers
 
 import numpy as np
 
-__all__ = ['assert_aligned_axes_compatible']
+__all__ = ["assert_aligned_axes_compatible"]
 
 
 def _sanitize_aligned_axes(keys, data, aligned_axes):
     if aligned_axes is None:
         return None
     # If aligned_axes set to "all", assume all axes are aligned in order.
-    elif isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+    if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
         # Check all cubes are of same shape
         cube0_dims = data[0].shape
         cubes_same_shape = all([all([d.shape[i] == dim for i, dim in enumerate(cube0_dims)])
@@ -22,7 +22,7 @@ def _sanitize_aligned_axes(keys, data, aligned_axes):
         # Else, sanitize user-supplied aligned axes.
         sanitized_axes = _sanitize_user_aligned_axes(data, aligned_axes)
 
-    return dict(zip(keys, sanitized_axes))
+    return dict(zip(keys, sanitized_axes, strict=False))
 
 
 def _sanitize_user_aligned_axes(data, aligned_axes):
@@ -102,7 +102,7 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
 
     # Ensure all aligned axes are of same length.
     check_dimensions = set([len(set([cube.shape[cube_aligned_axes[j]]
-                                     for cube, cube_aligned_axes in zip(data, aligned_axes)]))
+                                     for cube, cube_aligned_axes in zip(data, aligned_axes, strict=False)]))
                             for j in range(n_aligned_axes)])
     if check_dimensions != {1}:
         raise ValueError("Aligned axes are not all of same length.")

@@ -1,6 +1,6 @@
 import astropy.units as u
 
-__all__ = ['unique_sorted', 'convert_quantities_to_units']
+__all__ = ["unique_sorted", "convert_quantities_to_units"]
 
 
 def unique_sorted(iterable):
@@ -31,4 +31,4 @@ def convert_quantities_to_units(coords, units):
         Non-quantity types remain.
     """
     return [coord.to(unit) if isinstance(coord, u.Quantity) else coord
-            for coord, unit in zip(coords, units)]
+            for coord, unit in zip(coords, units, strict=False)]

@@ -8,9 +8,9 @@ from collections import namedtuple
 
 import numpy as np
 
-__all__ = ['SequenceItem',
-           'cube_like_index_to_sequence_and_common_axis_indices',
-           'cube_like_tuple_item_to_sequence_items']
+__all__ = ["SequenceItem",
+           "cube_like_index_to_sequence_and_common_axis_indices",
+           "cube_like_tuple_item_to_sequence_items"]
 
 
 SequenceItem = namedtuple("SequenceItem", "sequence_index cube_item")

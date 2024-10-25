@@ -1,3 +1,3 @@
 from .ndslicing import NDCubeSlicingMixin
 
-__all__ = ['NDCubeSlicingMixin']
+__all__ = ["NDCubeSlicingMixin"]

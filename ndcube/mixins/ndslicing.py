@@ -2,7 +2,7 @@
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
-__all__ = ['NDCubeSlicingMixin']
+__all__ = ["NDCubeSlicingMixin"]
 
 
 class NDCubeSlicingMixin(NDSlicingMixin):

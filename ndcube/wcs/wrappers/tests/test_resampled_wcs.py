@@ -62,8 +62,8 @@ World Dim    0    1
         1  yes  yes
 """.strip()
 
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+@pytest.mark.parametrize("celestial_wcs",
+                         ["celestial_2d_ape14_wcs", "celestial_2d_fitswcs"],
                          indirect=True)
 def test_2d(celestial_wcs):
 
@@ -74,11 +74,11 @@ def test_2d(celestial_wcs):
     # The following shouldn't change compared to the original WCS
     assert wcs.pixel_n_dim == 2
     assert wcs.world_n_dim == 2
-    assert tuple(wcs.world_axis_physical_types) == ('pos.eq.ra', 'pos.eq.dec')
-    assert tuple(wcs.world_axis_units) == ('deg', 'deg')
-    assert tuple(wcs.pixel_axis_names) == ('', '')
-    assert tuple(wcs.world_axis_names) == ('Right Ascension',
-                                           'Declination')
+    assert tuple(wcs.world_axis_physical_types) == ("pos.eq.ra", "pos.eq.dec")
+    assert tuple(wcs.world_axis_units) == ("deg", "deg")
+    assert tuple(wcs.pixel_axis_names) == ("", "")
+    assert tuple(wcs.world_axis_names) == ("Right Ascension",
+                                           "Declination")
     assert_equal(wcs.axis_correlation_matrix, np.ones((2, 2)))
 
     # Shapes and bounds should be floating-point if needed
@@ -93,7 +93,7 @@ def test_2d(celestial_wcs):
     assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
     assert_allclose(wcs.world_to_array_index_values(*world_scalar), [1, 2])
 
-    EXPECTED_2D_REPR = EXPECTED_2D_REPR_NUMPY2 if np.__version__ >= '2.0.0' else EXPECTED_2D_REPR_NUMPY1
+    EXPECTED_2D_REPR = EXPECTED_2D_REPR_NUMPY2 if np.__version__ >= "2.0.0" else EXPECTED_2D_REPR_NUMPY1
     assert str(wcs) == EXPECTED_2D_REPR
     assert EXPECTED_2D_REPR in repr(wcs)
 
@@ -121,8 +121,8 @@ def test_2d(celestial_wcs):
     assert_quantity_allclose(celestial.dec, world_array[1] * u.deg)
 
 
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+@pytest.mark.parametrize("celestial_wcs",
+                         ["celestial_2d_ape14_wcs", "celestial_2d_fitswcs"],
                          indirect=True)
 def test_scalar_factor(celestial_wcs):
 
@@ -137,8 +137,8 @@ def test_scalar_factor(celestial_wcs):
     assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
 
 
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+@pytest.mark.parametrize("celestial_wcs",
+                         ["celestial_2d_ape14_wcs", "celestial_2d_fitswcs"],
                          indirect=True)
 def test_offset(celestial_wcs):
     celestial_wcs.pixel_bounds = None
@@ -156,24 +156,24 @@ def test_offset(celestial_wcs):
     assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
 
 
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs'],
+@pytest.mark.parametrize("celestial_wcs",
+                         ["celestial_2d_ape14_wcs"],
                          indirect=True)
 def test_factor_wrong_length_error(celestial_wcs):
     with pytest.raises(ValueError):
         ResampledLowLevelWCS(celestial_wcs, [2] * 3)
 
 
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs'],
+@pytest.mark.parametrize("celestial_wcs",
+                         ["celestial_2d_ape14_wcs"],
                          indirect=True)
 def test_scalar_wrong_length_error(celestial_wcs):
     with pytest.raises(ValueError):
         ResampledLowLevelWCS(celestial_wcs, 2, offset=[1] * 3)
 
 
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+@pytest.mark.parametrize("celestial_wcs",
+                         ["celestial_2d_ape14_wcs", "celestial_2d_fitswcs"],
                          indirect=True)
 def test_int_fraction_pixel_shape(celestial_wcs):
     # Some fractional factors are not representable by exact floats, e.g. 1/3.

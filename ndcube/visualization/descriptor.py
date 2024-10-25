@@ -5,7 +5,7 @@ MISSING_MATPLOTLIB_ERROR_MSG = ("matplotlib cannot be imported, so the default p
 MISSING_ANIMATORS_ERROR_MSG = ("mpl_animators cannot be imported, so the default plotting "
                                "functionality is disabled. Please install mpl_animators")
 
-__all__ = ['PlotterDescriptor', 'MISSING_MATPLOTLIB_ERROR_MSG', 'MISSING_ANIMATORS_ERROR_MSG']
+__all__ = ["PlotterDescriptor", "MISSING_MATPLOTLIB_ERROR_MSG", "MISSING_ANIMATORS_ERROR_MSG"]
 
 
 class PlotterDescriptor:
@@ -53,16 +53,16 @@ class PlotterDescriptor:
 
         # If we have no default type then just return None
         else:
-            return
+            return None
 
     def __get__(self, obj, objtype=None):
         if obj is None:
-            return
+            return None
 
         if getattr(obj, self._attribute_name, None) is None:
             plotter_type = self._resolve_default_type()
             if plotter_type is None:
-                return
+                return None
 
             self.__set__(obj, plotter_type)
 

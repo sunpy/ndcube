@@ -20,7 +20,7 @@ try:
 except ImportError:
     pass
 
-__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate', "BaseTableCoordinate", "MultipleTableCoordinate"]
+__all__ = ["TimeTableCoordinate", "SkyCoordTableCoordinate", "QuantityTableCoordinate", "BaseTableCoordinate", "MultipleTableCoordinate"]
 
 
 class Length1Tabular(_Tabular):
@@ -35,7 +35,7 @@ class Length1Tabular(_Tabular):
     points = np.zeros([1])
 
     def __init__(self, points=None, lookup_table=None, point_width=None, value_width=None,
-                 method='linear', bounds_error=True, fill_value=np.nan, **kwargs):
+                 method="linear", bounds_error=True, fill_value=np.nan, **kwargs):
         """Create a Length-1 1-D Tabular model.
 
         Parameters
@@ -99,7 +99,7 @@ class InverseLength1Tabular(Length1Tabular):
 
     def evaluate(self, x):
         # When calling evaluate with a bounding box, astropy strips the units.
-        x = u.Quantity(x, unit=self.input_units['x'], copy=False)
+        x = u.Quantity(x, unit=self.input_units["x"], copy=False)
         return super().evaluate(x)
 
 
@@ -128,7 +128,7 @@ def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
                               axes_names=names, name=name, axis_physical_types=physical_types)
 
 
-def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
+def _generate_tabular(lookup_table, interpolation="linear", points_unit=u.pix, **kwargs):
     """
     Generate a Tabular model class and instance.
     """
@@ -143,9 +143,9 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
     if len(points) == 1:
         points = points[0]
 
-    kwargs = {'bounds_error': False,
-              'fill_value': np.nan,
-              'method': interpolation,
+    kwargs = {"bounds_error": False,
+              "fill_value": np.nan,
+              "method": interpolation,
               **kwargs}
 
     if len(lookup_table) == 1:
@@ -222,11 +222,10 @@ class BaseTableCoordinate(abc.ABC):
 
     def __str__(self):
         header = f"{self.__class__.__name__} {self.names or ''} {self.physical_types or '[None]'}:"
-        content = str(self.table).lstrip('(').rstrip(',)')
-        if len(header) + len(content) >= np.get_printoptions()['linewidth']:
-            return '\n'.join((header, content))
-        else:
-            return ' '.join((header, content))
+        content = str(self.table).lstrip("(").rstrip(",)")
+        if len(header) + len(content) >= np.get_printoptions()["linewidth"]:
+            return "\n".join((header, content))
+        return " ".join((header, content))
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
@@ -367,7 +366,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         new_components = defaultdict(list)
         new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
 
-        for i, (ele, table) in enumerate(zip(item, self.table)):
+        for i, (ele, table) in enumerate(zip(item, self.table, strict=False)):
             self._slice_table(i, table, ele, new_components, whole_slice=item)
 
         names = new_components["names"] or None
@@ -454,7 +453,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         # Iterate through tables and interpolate each.
         new_tables = [
             np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
-            for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
+            for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table, strict=False)]
         # Rebuild return interpolated coord.
         new_coord = type(self)(*new_tables, names=self.names, physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
@@ -539,16 +538,15 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
                               mesh=False,
                               names=self.names,
                               physical_types=self.physical_types)
-        else:
-            self._slice = [self.combine_slices(a, b) for a, b in zip(sane_item, self._slice)]
-            if all([isinstance(s, Integral) for s in self._slice]):
-                # Here we rebuild the SkyCoord with the slice applied to the individual components.
-                new_sc = SkyCoord(self.table.realize_frame(type(self.table.data)(*self._sliced_components)))
-                return type(self)(new_sc,
-                                  mesh=False,
-                                  names=self.names,
-                                  physical_types=self.physical_types)
-            return self
+        self._slice = [self.combine_slices(a, b) for a, b in zip(sane_item, self._slice, strict=False)]
+        if all([isinstance(s, Integral) for s in self._slice]):
+            # Here we rebuild the SkyCoord with the slice applied to the individual components.
+            new_sc = SkyCoord(self.table.realize_frame(type(self.table.data)(*self._sliced_components)))
+            return type(self)(new_sc,
+                              mesh=False,
+                              names=self.names,
+                              physical_types=self.physical_types)
+        return self
 
     @property
     def frame(self):
@@ -570,7 +568,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     @property
     def _sliced_components(self):
         return tuple(getattr(self.table.data, comp)[slc]
-                     for comp, slc in zip(self.table.data.components, self._slice))
+                     for comp, slc in zip(self.table.data.components, self._slice, strict=False))
 
     @property
     def model(self):
@@ -590,8 +588,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         if self.mesh:
             return len(self.table.data.components)
-        else:
-            return self.table.ndim
+        return self.table.ndim
 
     @property
     def shape(self):
@@ -605,8 +602,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         if self.mesh:
             return tuple(list(self.table.shape) * self.ndim)
-        else:
-            return self.table.shape
+        return self.table.shape
 
     def interpolate(self, *new_array_grids, mesh_output=None, **kwargs):
         """
@@ -655,12 +651,12 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
         # Build old array grids. Note self._slice give the slice item(s) required to
         # make the underlying SkyCoord match the dimensionality of the associated data cube.
-        old_array_grids = [np.arange(d)[slc] for d, slc in zip(shape, self._slice)]
+        old_array_grids = [np.arange(d)[slc] for d, slc in zip(shape, self._slice, strict=False)]
         # Iterate through components and interpolate each.
         if self.mesh:
             new_components = [np.interp(new_grid, old_grid, comp, **kwargs)
                               for new_grid, old_grid, comp
-                              in zip(new_array_grids, old_array_grids, self._sliced_components)]
+                              in zip(new_array_grids, old_array_grids, self._sliced_components, strict=False)]
         elif ndim == 1:
             new_components = [np.interp(*new_array_grids, *old_array_grids, comp, **kwargs)
                               for comp in self._sliced_components]
@@ -819,10 +815,10 @@ class MultipleTableCoordinate(BaseTableCoordinate):
     def __str__(self):
         classname = self.__class__.__name__
         length = len(classname) + sum(len(str(t)) for t in self._table_coords) + 10
-        if length > np.get_printoptions()['linewidth']:
-            joiner = ',\n ' + (len(classname) + 8) * ' '
+        if length > np.get_printoptions()["linewidth"]:
+            joiner = ",\n " + (len(classname) + 8) * " "
         else:
-            joiner = ', '
+            joiner = ", "
 
         return f"{classname}(tables=[{joiner.join([str(t) for t in self._table_coords])}])"
 
@@ -892,19 +888,18 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         """
         if len(self._table_coords) == 1:
             return self._table_coords[0].frame
-        else:
-            frames = [t.frame for t in self._table_coords]
+        frames = [t.frame for t in self._table_coords]
 
-            # We now have to set the axes_order of all the frames so that we
-            # have one consistent WCS with the correct number of pixel
-            # dimensions.
-            ind = 0
-            for f in frames:
-                new_ind = ind + f.naxes
-                f._axes_order = tuple(range(ind, new_ind))
-                ind = new_ind
+        # We now have to set the axes_order of all the frames so that we
+        # have one consistent WCS with the correct number of pixel
+        # dimensions.
+        ind = 0
+        for f in frames:
+            new_ind = ind + f.naxes
+            f._axes_order = tuple(range(ind, new_ind))
+            ind = new_ind
 
-            return cf.CompositeFrame(frames)
+        return cf.CompositeFrame(frames)
 
     @property
     def dropped_world_dimensions(self):

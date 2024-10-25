@@ -24,7 +24,7 @@ from .table_coord import (
     TimeTableCoordinate,
 )
 
-__all__ = ['ExtraCoordsABC', 'ExtraCoords']
+__all__ = ["ExtraCoordsABC", "ExtraCoords"]
 
 
 class ExtraCoordsABC(abc.ABC):
@@ -45,6 +45,7 @@ class ExtraCoordsABC(abc.ABC):
        of length equal to the number of pixel dimensions in the extra coords.
 
     """
+
     @abc.abstractmethod
     def add(self,
             name: str | Iterable[str],
@@ -188,7 +189,7 @@ class ExtraCoords(ExtraCoordsABC):
         """
         if len(pixel_dimensions) != len(lookup_tables):
             raise ValueError(
-                "The length of pixel_dimensions and lookup_tables must match."
+                "The length of pixel_dimensions and lookup_tables must match.",
             )
 
         if physical_types is None:
@@ -199,7 +200,7 @@ class ExtraCoords(ExtraCoordsABC):
         extra_coords = cls()
 
         for name, pixel_dim, lookup_table, physical_type in zip(names, pixel_dimensions,
-                                                                lookup_tables, physical_types):
+                                                                lookup_tables, physical_types, strict=False):
             extra_coords.add(name, pixel_dim, lookup_table, physical_types=physical_type)
 
         return extra_coords
@@ -209,10 +210,10 @@ class ExtraCoords(ExtraCoordsABC):
 
         if self._wcs is not None:
             raise ValueError(
-                "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object."
+                "Can not add a lookup_table to an ExtraCoords which was instantiated with a WCS object.",
             )
 
-        kwargs['names'] = [name] if not isinstance(name, (list, tuple)) else name
+        kwargs["names"] = [name] if not isinstance(name, (list, tuple)) else name
 
         if isinstance(lookup_table, BaseTableCoordinate):
             coord = lookup_table
@@ -230,8 +231,8 @@ class ExtraCoords(ExtraCoordsABC):
         self._lookup_tables.append((array_dimension, coord))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
-        self._lookup_tables = list(sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0]))
+        self._lookup_tables = sorted(self._lookup_tables,
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])
 
     @property
     def _name_lut_map(self):
@@ -272,13 +273,13 @@ class ExtraCoords(ExtraCoordsABC):
 
         if self._lookup_tables:
             raise AttributeError(
-                "Can't set mapping manually when ExtraCoords is built from lookup tables."
+                "Can't set mapping manually when ExtraCoords is built from lookup tables.",
             )
 
         if self._wcs is not None:
             if not max(mapping) <= self._wcs.pixel_n_dim - 1:
                 raise ValueError(
-                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS."
+                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS.",
                 )
 
         self._mapping = mapping
@@ -302,18 +303,18 @@ class ExtraCoords(ExtraCoordsABC):
     def wcs(self, wcs):
         if self._wcs is not None:
             raise AttributeError(
-                "Can't set wcs if a WCS has already been specified."
+                "Can't set wcs if a WCS has already been specified.",
             )
 
         if self._lookup_tables:
             raise AttributeError(
-                "Can't set wcs manually when ExtraCoords is built from lookup tables."
+                "Can't set wcs manually when ExtraCoords is built from lookup tables.",
             )
 
         if self._mapping is not None:
             if not max(self._mapping) <= wcs.pixel_n_dim - 1:
                 raise ValueError(
-                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS."
+                    "Values in the mapping can not be larger than the number of pixel dimensions in the WCS.",
                 )
 
         self._wcs = wcs
@@ -323,14 +324,12 @@ class ExtraCoords(ExtraCoordsABC):
         # docstring in ABC
         if not self._wcs and not self._lookup_tables:
             return True
-        else:
-            return False
+        return False
 
     def _getitem_string(self, item):
         """
         Slice the Extracoords based on axis names.
         """
-
         for names, lut in self._name_lut_map.items():
             if item in names:
                 new_ec = ExtraCoords(ndcube=self._ndcube)
@@ -402,7 +401,7 @@ class ExtraCoords(ExtraCoordsABC):
         if self._wcs:
             return self._getitem_wcs(item)
 
-        elif self._lookup_tables:
+        if self._lookup_tables:
             return self._getitem_lookup_tables(item)
 
         # If we get here this object is empty, so just return an empty extra coords
@@ -414,7 +413,6 @@ class ExtraCoords(ExtraCoordsABC):
         """
         Return an APE-14 like representation of any sliced out world dimensions.
         """
-
         if self._wcs:
             if isinstance(self._wcs, SlicedLowLevelWCS):
                 return self._wcs.dropped_world_dimensions
@@ -490,7 +488,7 @@ class ExtraCoords(ExtraCoordsABC):
         # Else interpolate the lookup table coordinates.
         factor = np.asarray(factor)
         new_grids = []
-        for c, d, f in zip(offset, cube_shape, factor):
+        for c, d, f in zip(offset, cube_shape, factor, strict=False):
             x = np.arange(c, d+f, f)
             x = x[x <= d-1]
             new_grids.append(x)
@@ -534,10 +532,10 @@ class ExtraCoords(ExtraCoordsABC):
         elements = [f"{', '.join(table.names)} ({axes}) {table.physical_types}: {table}"
                     for axes, table in self._lookup_tables]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
-        if length > np.get_printoptions()['linewidth']:
-            joiner = ',\n ' + len(classname) * ' '
+        if length > np.get_printoptions()["linewidth"]:
+            joiner = ",\n " + len(classname) * " "
         else:
-            joiner = ', '
+            joiner = ", "
 
         return f"{classname}({joiner.join(elements)})"
 

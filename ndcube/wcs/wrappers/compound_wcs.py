@@ -4,7 +4,7 @@ import numpy as np
 
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
-__all__ = ['CompoundLowLevelWCS']
+__all__ = ["CompoundLowLevelWCS"]
 
 
 def tuplesum(lists):
@@ -42,7 +42,7 @@ class Mapping:
         return type(self)(mapping)
 
     def __repr__(self):
-        return f'<Mapping({self.mapping})>'
+        return f"<Mapping({self.mapping})>"
 
 
 class CompoundLowLevelWCS(BaseWCSWrapper):
@@ -140,7 +140,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
                                        atol=self.atol, equal_nan=True):
                         raise ValueError(
                             "The world inputs for shared pixel axes did not result in a pixel "
-                            f"coordinate to within {self.atol} relative accuracy."
+                            f"coordinate to within {self.atol} relative accuracy.",
                         )
         return self.mapping.inverse(*pixel_arrays)
 
@@ -149,7 +149,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         all_components = []
         for iw, w in enumerate(self._wcs):
             for component in w.world_axis_object_components:
-                all_components.append((f'{component[0]}_{iw}',) + component[1:])
+                all_components.append((f"{component[0]}_{iw}",) + component[1:])
         return all_components
 
     @property
@@ -158,7 +158,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         all_classes = {}
         for iw, w in enumerate(self._wcs):
             for key, value in w.world_axis_object_classes.items():
-                all_classes[f'{key}_{iw}'] = value
+                all_classes[f"{key}_{iw}"] = value
         return all_classes
 
     @property
@@ -191,7 +191,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
 
         for i, ix in enumerate(self.mapping.mapping):
             if out_names[ix] != pixel_names[i]:
-                out_names[ix] = ' / '.join([out_names[ix], pixel_names[i]])
+                out_names[ix] = " / ".join([out_names[ix], pixel_names[i]])
 
         return out_names
 

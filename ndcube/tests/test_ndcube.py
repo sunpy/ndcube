@@ -146,7 +146,7 @@ def test_slicing_split_celestial(ndc, item):
 
 def test_slicing_preserves_global_coords(ndcube_3d_ln_lt_l):
     ndc = ndcube_3d_ln_lt_l
-    ndc.global_coords.add('distance', 'pos.distance', 1 * u.m)
+    ndc.global_coords.add("distance", "pos.distance", 1 * u.m)
     sndc = ndc[0]
     assert sndc._global_coords._internal_coords == ndc._global_coords._internal_coords
 
@@ -179,7 +179,7 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
 
-    coords = cube.axis_world_coords('em.wl')
+    coords = cube.axis_world_coords("em.wl")
     assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09, 1.10e-09,
                                1.12e-09, 1.14e-09, 1.16e-09, 1.18e-09, 1.20e-09] * u.m)
 
@@ -218,7 +218,7 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     data = np.arange(np.prod(ec_shape)).reshape(ec_shape) * u.m / u.s
 
     # The lookup table has to be in world order so transpose it.
-    cube.extra_coords.add('velocity', (2, 1), data.T)
+    cube.extra_coords.add("velocity", (2, 1), data.T)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1
@@ -295,11 +295,11 @@ def test_axis_world_coords_all_4d_split(ndcube_4d_ln_l_t_lt):
                                   1.2e-10, 1.4e-10, 1.6e-10, 1.8e-10, 2.0e-10] * u.m)
 
 
-@pytest.mark.parametrize('wapt', (
-    ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'em.wl'),
-    ('custom:pos.helioprojective.lat', 'em.wl'),
+@pytest.mark.parametrize("wapt", (
+    ("custom:pos.helioprojective.lon", "custom:pos.helioprojective.lat", "em.wl"),
+    ("custom:pos.helioprojective.lat", "em.wl"),
     (0, 1),
-    (0, 1, 3)
+    (0, 1, 3),
 ))
 def test_axis_world_coords_all_4d_split_sub(ndcube_4d_ln_l_t_lt, wapt):
     coords = ndcube_4d_ln_l_t_lt.axis_world_coords(*wapt)
@@ -328,14 +328,14 @@ def test_axis_world_coords_all(ndcube_3d_ln_lt_l):
 
 
 def test_axis_world_coords_wave(ndcube_3d_ln_lt_l):
-    coords = ndcube_3d_ln_lt_l.axis_world_coords('em.wl')
+    coords = ndcube_3d_ln_lt_l.axis_world_coords("em.wl")
     assert len(coords) == 1
     assert isinstance(coords[0], u.Quantity)
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-@pytest.mark.parametrize('wapt', ('custom:pos.helioprojective.lon',
-                                  'custom:pos.helioprojective.lat'))
+@pytest.mark.parametrize("wapt", ("custom:pos.helioprojective.lon",
+                                  "custom:pos.helioprojective.lat"))
 def test_axis_world_coords_sky(ndcube_3d_ln_lt_l, wapt):
     coords = ndcube_3d_ln_lt_l.axis_world_coords(wapt)
     assert len(coords) == 1
@@ -372,14 +372,14 @@ def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
 
 
 def test_axis_world_coords_values_wave(ndcube_3d_ln_lt_l):
-    coords = ndcube_3d_ln_lt_l.axis_world_coords_values('em.wl')
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values("em.wl")
     assert len(coords) == 1
     assert isinstance(coords[0], u.Quantity)
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
 def test_axis_world_coords_values_lon(ndcube_3d_ln_lt_l):
-    coords = ndcube_3d_ln_lt_l.axis_world_coords_values('custom:pos.helioprojective.lon')
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values("custom:pos.helioprojective.lon")
     assert len(coords) == 1
     assert all(isinstance(c, u.Quantity) for c in coords)
 
@@ -388,7 +388,7 @@ def test_axis_world_coords_values_lon(ndcube_3d_ln_lt_l):
 
 
 def test_axis_world_coords_values_lat(ndcube_3d_ln_lt_l):
-    coords = ndcube_3d_ln_lt_l.axis_world_coords_values('custom:pos.helioprojective.lat')
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values("custom:pos.helioprojective.lat")
     assert len(coords) == 1
     assert all(isinstance(c, u.Quantity) for c in coords)
     assert u.allclose(coords[0], [[-0.00555556, -0.00416667, -0.00277778],
@@ -397,9 +397,9 @@ def test_axis_world_coords_values_lat(ndcube_3d_ln_lt_l):
 
 def test_array_axis_physical_types(ndcube_3d_ln_lt_l):
     expected = [
-        ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'custom:PIXEL'),
-        ('custom:pos.helioprojective.lon', 'custom:pos.helioprojective.lat', 'custom:PIXEL'),
-        ('em.wl', 'custom:PIXEL')]
+        ("custom:pos.helioprojective.lon", "custom:pos.helioprojective.lat", "custom:PIXEL"),
+        ("custom:pos.helioprojective.lon", "custom:pos.helioprojective.lat", "custom:PIXEL"),
+        ("em.wl", "custom:PIXEL")]
     output = ndcube_3d_ln_lt_l.array_axis_physical_types
     for i in range(len(expected)):
         assert all([physical_type in expected[i] for physical_type in output[i]])
@@ -474,7 +474,7 @@ def test_crop_scalar_valuerror(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
     point = SkyCoord(Tx=359.99667, Ty=-0.0011111111, unit="deg", frame=frame)
-    with pytest.raises(ValueError, match=r'Input points causes cube to be cropped to a single pix'):
+    with pytest.raises(ValueError, match=r"Input points causes cube to be cropped to a single pix"):
         cube.crop(point)
 
 
@@ -484,7 +484,7 @@ def test_crop_missing_dimensions(ndcube_4d_ln_lt_l_t):
     interval0 = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
     lower_corner = [interval0[0], None]
     upper_corner = [interval0[-1], None]
-    with pytest.raises(ValueError, match=r'2 components in point 0 do not match WCS with 3'):
+    with pytest.raises(ValueError, match=r"2 components in point 0 do not match WCS with 3"):
         cube.crop(lower_corner, upper_corner)
 
 
@@ -504,8 +504,8 @@ def test_crop_by_values(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     intervals = cube.wcs.array_index_to_world_values([1, 2], [0, 1], [0, 1], [0, 2])
     units = [u.min, u.m, u.deg, u.deg]
-    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
-    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units, strict=False)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units, strict=False)]
     # Ensure some quantities are in units different from each other
     # and those stored in the WCS.
     lower_corner[0] = lower_corner[0].to(units[0])
@@ -520,8 +520,8 @@ def test_crop_by_values_keepdims(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     intervals = list(cube.wcs.array_index_to_world_values([1, 2], [0], [0, 1], [0, 2]))
     units = [u.min, u.m, u.deg, u.deg]
-    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units)]
-    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units)]
+    lower_corner = [coord[0] * unit for coord, unit in zip(intervals, units, strict=False)]
+    upper_corner = [coord[-1] * unit for coord, unit in zip(intervals, units, strict=False)]
     expected = cube[1:3, 0:1, 0:2, 0:3]
     output = cube.crop_by_values(lower_corner, upper_corner, keepdims=True)
     assert output.shape == (2, 1, 2, 3)
@@ -579,19 +579,19 @@ def test_crop_by_values_valueerror1(ndcube_4d_ln_lt_l_t):
     lower_corner[0] = 0.5
     upper_corner = [None] * 4
     upper_corner[0] = 1.1
-    with pytest.raises(ValueError, match=r'Units must be None or have same length 4 as corner inp'):
+    with pytest.raises(ValueError, match=r"Units must be None or have same length 4 as corner inp"):
         ndcube_4d_ln_lt_l_t.crop_by_values(lower_corner, upper_corner, units=["m"])
 
 
 def test_crop_by_values_valueerror2(ndcube_4d_ln_lt_l_t):
     """Test upper and lower coordinates not being the same length"""
-    with pytest.raises(ValueError, match=r'All points must have same number of coordinate objects'):
+    with pytest.raises(ValueError, match=r"All points must have same number of coordinate objects"):
         ndcube_4d_ln_lt_l_t.crop_by_values([0], [1, None])
 
 
 def test_crop_by_values_missing_dimensions(ndcube_4d_ln_lt_l_t):
     """Test bbox coordinates not being the same length as cube WCS"""
-    with pytest.raises(ValueError, match=r'3 dimensions in point 0 do not match WCS with 4'):
+    with pytest.raises(ValueError, match=r"3 dimensions in point 0 do not match WCS with 4"):
         ndcube_4d_ln_lt_l_t.crop_by_values([0, None, None], [1, None, None])
 
 
@@ -727,7 +727,7 @@ def test_crop_rotated_celestial(ndcube_4d_ln_lt_l_t):
 
 def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
-    cube.global_coords.add('distance', 'pos.distance', 1 * u.m)
+    cube.global_coords.add("distance", "pos.distance", 1 * u.m)
     cube2 = NDCube(cube)
 
     assert cube.global_coords is cube2.global_coords
@@ -747,7 +747,7 @@ def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
 
 def test_reproject_interpolation(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
-    target_wcs_header['CDELT3'] = 0.1   # original value = 0.2
+    target_wcs_header["CDELT3"] = 0.1   # original value = 0.2
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
@@ -773,7 +773,7 @@ def test_reproject_with_header(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
 
 def test_reproject_return_footprint(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     target_wcs_header = wcs_4d_lt_t_l_ln.low_level_wcs.to_header()
-    target_wcs_header['CDELT3'] = 0.1   # original value = 0.2
+    target_wcs_header["CDELT3"] = 0.1   # original value = 0.2
     target_wcs = astropy.wcs.WCS(header=target_wcs_header)
     shape_out = (5, 20, 12, 8)
 
@@ -986,14 +986,14 @@ def test_rebin_specutils():
     # Tests for https://github.com/sunpy/ndcube/issues/717
     y = np.arange(4000)*u.ct
     x = np.arange(200, 4200)*u.nm
-    spec = Spectrum1D(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
+    spec = Spectrum1D(flux=y, spectral_axis=x, bin_specification="centers", mask=x > 2000*u.nm)
     output = spec.rebin((10,), operation=np.sum, operation_ignores_mask=False)
     assert output.shape == (400,)
 
 
 def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
-    resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='adaptive',
+    resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm="adaptive",
                                                   shape_out=shape_out)
 
     assert ndcube_2d_ln_lt.data.shape == (10, 12)
@@ -1002,7 +1002,7 @@ def test_reproject_adaptive(ndcube_2d_ln_lt, wcs_2d_lt_ln):
 
 def test_reproject_exact(ndcube_2d_ln_lt, wcs_2d_lt_ln):
     shape_out = (10, 12)
-    resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm='exact',
+    resampled_cube = ndcube_2d_ln_lt.reproject_to(wcs_2d_lt_ln, algorithm="exact",
                                                   shape_out=shape_out)
 
     assert ndcube_2d_ln_lt.data.shape == (10, 12)
@@ -1011,29 +1011,29 @@ def test_reproject_exact(ndcube_2d_ln_lt, wcs_2d_lt_ln):
 
 def test_reproject_invalid_algorithm(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     with pytest.raises(ValueError):
-        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='my_algorithm',
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm="my_algorithm",
                                              shape_out=(5, 10, 12, 8))
 
 
 def test_reproject_adaptive_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
                                              wcs_1d_l, ndcube_1d_l):
     with pytest.raises(ValueError):
-        _ = ndcube_1d_l.reproject_to(wcs_1d_l, algorithm='adaptive',
+        _ = ndcube_1d_l.reproject_to(wcs_1d_l, algorithm="adaptive",
                                      shape_out=(10,))
 
     with pytest.raises(ValueError):
-        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='adaptive',
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm="adaptive",
                                              shape_out=(5, 10, 12, 8))
 
 
 def test_reproject_exact_incompatible_wcs(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln,
                                           wcs_1d_l, ndcube_1d_l):
     with pytest.raises(ValueError):
-        _ = ndcube_1d_l.reproject_to(wcs_1d_l, algorithm='exact',
+        _ = ndcube_1d_l.reproject_to(wcs_1d_l, algorithm="exact",
                                      shape_out=(10,))
 
     with pytest.raises(ValueError):
-        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm='exact',
+        _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln, algorithm="exact",
                                              shape_out=(5, 10, 12, 8))
 
 
@@ -1050,7 +1050,7 @@ def check_arithmetic_value_and_units(cube_new, data_expected):
     assert u.allclose(cube_quantity, data_expected)
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
@@ -1063,7 +1063,7 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
     check_arithmetic_value_and_units(new_cube, cube_quantity + value)
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
@@ -1075,7 +1075,7 @@ def test_cube_arithmetic_radd(ndcube_2d_ln_lt_units, value):
     check_arithmetic_value_and_units(new_cube, value + cube_quantity)
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
@@ -1087,7 +1087,7 @@ def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
     check_arithmetic_value_and_units(new_cube, cube_quantity - value)
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
@@ -1099,7 +1099,7 @@ def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
     check_arithmetic_value_and_units(new_cube, value - cube_quantity)
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
@@ -1115,7 +1115,7 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     # TODO: test that uncertainties scale correctly
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity(np.random.rand(12), u.ct),
@@ -1130,7 +1130,7 @@ def test_cube_arithmetic_rmultiply(ndcube_2d_ln_lt_units, value):
     check_arithmetic_value_and_units(new_cube, value * cube_quantity)
 
 
-@pytest.mark.parametrize('value', [
+@pytest.mark.parametrize("value", [
     10 * u.ct,
     u.Quantity([10], u.ct),
     u.Quantity([2], u.s),
@@ -1145,18 +1145,18 @@ def test_cube_arithmetic_divide(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units / value
     check_arithmetic_value_and_units(new_cube, cube_quantity / value)
 
-@pytest.mark.parametrize('value', [1, 2, -1])
+@pytest.mark.parametrize("value", [1, 2, -1])
 def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide="ignore"):
         new_cube =  value / ndcube_2d_ln_lt_units
         check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
 
-@pytest.mark.parametrize('value', [1, 2, -1])
+@pytest.mark.parametrize("value", [1, 2, -1])
 def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
     with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             new_cube =  value / ndcube_4d_unit_uncertainty
             check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
 
@@ -1183,33 +1183,33 @@ def test_cube_arithmetic_multiply_notimplementederror(ndcube_2d_ln_lt_units):
 
 
 
-@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+@pytest.mark.parametrize("power", [2, -2, 10, 0.5])
 def test_cube_arithmetic_power(ndcube_2d_ln_lt, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt.data, ndcube_2d_ln_lt.unit)
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide="ignore"):
         new_cube = ndcube_2d_ln_lt ** power
         check_arithmetic_value_and_units(new_cube, cube_quantity**power)
 
 
-@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+@pytest.mark.parametrize("power", [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, power):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
     with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             new_cube = ndcube_4d_unit_uncertainty ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
 
 
-@pytest.mark.parametrize('power', [2, -2, 10, 0.5])
+@pytest.mark.parametrize("power", [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
     with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             new_cube = ndcube_2d_ln_lt_uncert ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
 
 
-@pytest.mark.parametrize('new_unit', [u.mJ, 'mJ'])
+@pytest.mark.parametrize("new_unit", [u.mJ, "mJ"])
 def test_to(ndcube_1d_l, new_unit):
     cube = ndcube_1d_l
     expected_factor = 1000

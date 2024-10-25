@@ -78,7 +78,7 @@ def test_exceptions(wcs_1d_l):
         ec.add(None, 0, None)
 
     with pytest.raises(KeyError):
-        ExtraCoords()['empty']
+        ExtraCoords()["empty"]
 
 
 def test_mapping_setter(wcs_1d_l, wave_lut):
@@ -124,12 +124,12 @@ def test_wcs_1d(wcs_1d_l):
     ec.wcs = wcs_1d_l
     ec.mapping = (0,)
 
-    assert ec.keys() == ('spectral',)
+    assert ec.keys() == ("spectral",)
     assert ec.mapping == (0,)
     assert ec.wcs is wcs_1d_l
 
     subec = ec[1:]
-    assert ec.keys() == ('spectral',)
+    assert ec.keys() == ("spectral",)
     assert ec.mapping == (0,)
     assert np.allclose(ec.wcs.pixel_to_world_values(1), subec.wcs.pixel_to_world_values(1))
 
@@ -329,10 +329,10 @@ def test_slice_extra_1d(time_lut, wave_lut):
     sec = ec[:, 3:7]
     assert len(sec._lookup_tables) == 2
 
-    assert u.allclose(sec['wavey'].wcs.pixel_to_world_values(list(range(4))),
-                      ec['wavey'].wcs.pixel_to_world_values(list(range(3, 7))))
-    assert u.allclose(sec['time'].wcs.pixel_to_world_values(list(range(4))),
-                      ec['time'].wcs.pixel_to_world_values(list(range(4))))
+    assert u.allclose(sec["wavey"].wcs.pixel_to_world_values(list(range(4))),
+                      ec["wavey"].wcs.pixel_to_world_values(list(range(3, 7))))
+    assert u.allclose(sec["time"].wcs.pixel_to_world_values(list(range(4))),
+                      ec["time"].wcs.pixel_to_world_values(list(range(4))))
 
 
 def test_slice_extra_2d(time_lut, skycoord_2d_lut):
@@ -343,13 +343,13 @@ def test_slice_extra_2d(time_lut, skycoord_2d_lut):
     sec = ec[1:5, 1:5]
     assert len(sec._lookup_tables) == 2
 
-    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['lat'].wcs.pixel_to_world_values(list(range(1, 3)), list(range(1, 3))))
-    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['lon'].wcs.pixel_to_world_values(list(range(1, 3)), list(range(1, 3))))
+    assert u.allclose(sec["lat"].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
+                      ec["lat"].wcs.pixel_to_world_values(list(range(1, 3)), list(range(1, 3))))
+    assert u.allclose(sec["lon"].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
+                      ec["lon"].wcs.pixel_to_world_values(list(range(1, 3)), list(range(1, 3))))
 
-    assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(0, 3))),
-                      ec['exposure_time'].wcs.pixel_to_world_values(list(range(1, 4))))
+    assert u.allclose(sec["exposure_time"].wcs.pixel_to_world_values(list(range(3))),
+                      ec["exposure_time"].wcs.pixel_to_world_values(list(range(1, 4))))
 
 
 def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
@@ -360,21 +360,21 @@ def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
     sec = ec[0, :]
     assert len(sec._lookup_tables) == 1
 
-    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2))),
-                      ec['lat'].wcs.pixel_to_world_values([0, 0], list(range(2))))
-    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2))),
-                      ec['lon'].wcs.pixel_to_world_values([0, 0], list(range(2))))
+    assert u.allclose(sec["lat"].wcs.pixel_to_world_values(list(range(2))),
+                      ec["lat"].wcs.pixel_to_world_values([0, 0], list(range(2))))
+    assert u.allclose(sec["lon"].wcs.pixel_to_world_values(list(range(2))),
+                      ec["lon"].wcs.pixel_to_world_values([0, 0], list(range(2))))
 
     sec = ec[:, 0]
     assert len(sec._lookup_tables) == 2
 
-    assert u.allclose(sec['lat'].wcs.pixel_to_world_values(list(range(2))),
-                      ec['lat'].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
-    assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2))),
-                      ec['lon'].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
+    assert u.allclose(sec["lat"].wcs.pixel_to_world_values(list(range(2))),
+                      ec["lat"].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
+    assert u.allclose(sec["lon"].wcs.pixel_to_world_values(list(range(2))),
+                      ec["lon"].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
 
-    assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
+    assert u.allclose(sec["exposure_time"].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
+                      ec["exposure_time"].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
 
 
 def test_slice_extra_twice(time_lut, wave_lut):
@@ -385,14 +385,14 @@ def test_slice_extra_twice(time_lut, wave_lut):
     sec = ec[1:, 0]
     assert len(sec._lookup_tables) == 1
 
-    assert u.allclose(sec['time'].wcs.pixel_to_world_values(list(range(0, 2))),
-                      ec['time'].wcs.pixel_to_world_values(list(range(1, 3))))
+    assert u.allclose(sec["time"].wcs.pixel_to_world_values(list(range(2))),
+                      ec["time"].wcs.pixel_to_world_values(list(range(1, 3))))
 
     sec = sec[1:, 0]
     assert len(sec._lookup_tables) == 1
 
-    assert u.allclose(sec['time'].wcs.pixel_to_world_values(list(range(0, 2))),
-                      ec['time'].wcs.pixel_to_world_values(list(range(2, 4))))
+    assert u.allclose(sec["time"].wcs.pixel_to_world_values(list(range(2))),
+                      ec["time"].wcs.pixel_to_world_values(list(range(2, 4))))
 
 
 def test_slice_extra_1d_drop(time_lut, wave_lut):
@@ -403,8 +403,8 @@ def test_slice_extra_1d_drop(time_lut, wave_lut):
     sec = ec[:, 3]
     assert len(sec._lookup_tables) == 1
 
-    assert u.allclose(sec['time'].wcs.pixel_to_world_values(list(range(4))),
-                      ec['time'].wcs.pixel_to_world_values(list(range(4))))
+    assert u.allclose(sec["time"].wcs.pixel_to_world_values(list(range(4))),
+                      ec["time"].wcs.pixel_to_world_values(list(range(4))))
 
     dwd = sec.dropped_world_dimensions
     dwd.pop("world_axis_object_classes")
@@ -420,8 +420,8 @@ def test_slice_extra_1d_drop_alter_mapping_tuple_item(time_lut, wave_lut):
     sec = ec[0, :]
     assert len(sec._lookup_tables) == 1
     assert sec._lookup_tables[0][0] == (0,)
-    assert u.allclose(sec['wavey'].wcs.pixel_to_world_values(list(range(10))),
-                      ec['wavey'].wcs.pixel_to_world_values(list(range(10))))
+    assert u.allclose(sec["wavey"].wcs.pixel_to_world_values(list(range(10))),
+                      ec["wavey"].wcs.pixel_to_world_values(list(range(10))))
 
     dwd = sec.dropped_world_dimensions
     dwd.pop("world_axis_object_classes")
@@ -437,8 +437,8 @@ def test_slice_extra_1d_drop_alter_mapping_int_item(time_lut, wave_lut):
     sec = ec[0]
     assert len(sec._lookup_tables) == 1
     assert sec._lookup_tables[0][0] == (0,)
-    assert u.allclose(sec['wavey'].wcs.pixel_to_world_values(list(range(10))),
-                      ec['wavey'].wcs.pixel_to_world_values(list(range(10))))
+    assert u.allclose(sec["wavey"].wcs.pixel_to_world_values(list(range(10))),
+                      ec["wavey"].wcs.pixel_to_world_values(list(range(10))))
 
     dwd = sec.dropped_world_dimensions
     dwd.pop("world_axis_object_classes")
@@ -449,16 +449,16 @@ def test_slice_extra_1d_drop_alter_mapping_int_item(time_lut, wave_lut):
 def test_dropped_dimension_reordering():
     data = np.ones((3, 4, 5))
     wcs_input_dict = {
-        'CTYPE1': 'WAVE    ', 'CUNIT1': 'Angstrom', 'CDELT1': 0.2, 'CRPIX1': 0, 'CRVAL1': 10, 'NAXIS1': 5,
-        'CTYPE2': 'HPLT-TAN', 'CUNIT2': 'deg', 'CDELT2': 0.5, 'CRPIX2': 2, 'CRVAL2': 0.5, 'NAXIS2': 4,
-        'CTYPE3': 'HPLN-TAN', 'CUNIT3': 'deg', 'CDELT3': 0.4, 'CRPIX3': 2, 'CRVAL3': 1, 'NAXIS3': 3}
+        "CTYPE1": "WAVE    ", "CUNIT1": "Angstrom", "CDELT1": 0.2, "CRPIX1": 0, "CRVAL1": 10, "NAXIS1": 5,
+        "CTYPE2": "HPLT-TAN", "CUNIT2": "deg", "CDELT2": 0.5, "CRPIX2": 2, "CRVAL2": 0.5, "NAXIS2": 4,
+        "CTYPE3": "HPLN-TAN", "CUNIT3": "deg", "CDELT3": 0.4, "CRPIX3": 2, "CRVAL3": 1, "NAXIS3": 3}
     input_wcs = WCS(wcs_input_dict)
 
-    base_time = Time('2000-01-01', format='fits', scale='utc')
-    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(data.shape[0])])
+    base_time = Time("2000-01-01", format="fits", scale="utc")
+    timestamps = Time([base_time + TimeDelta(60 * i, format="sec") for i in range(data.shape[0])])
 
     my_cube = NDCube(data, input_wcs)
-    my_cube.extra_coords.add('time', (0,), timestamps)
+    my_cube.extra_coords.add("time", (0,), timestamps)
 
     # If the argument to extra_coords.add is array index then it should end up
     # in the first element of array_axis_physical_types

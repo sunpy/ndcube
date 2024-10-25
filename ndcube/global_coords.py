@@ -29,6 +29,7 @@ class GlobalCoordsABC(Mapping):
         from the wcs and extra coords of the ndcube. If not specified only
         coordinates explicitly added will be shown.
     """
+
     @abc.abstractmethod
     def add(self, name: str, physical_type: str, coord: Any):
         """
@@ -232,15 +233,15 @@ class GlobalCoords(GlobalCoordsABC):
 
     def __str__(self):
         classname = self.__class__.__name__
-        elements = [f"{name} {[ptype]}:\n{repr(coord)}" for (name, coord), ptype in
-                    zip(self.items(), self.physical_types.values())]
+        elements = [f"{name} {[ptype]}:\n{coord!r}" for (name, coord), ptype in
+                    zip(self.items(), self.physical_types.values(), strict=False)]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
-        if length > np.get_printoptions()['linewidth']:
-            joiner = ',\n ' + len(classname) * ' '
+        if length > np.get_printoptions()["linewidth"]:
+            joiner = ",\n " + len(classname) * " "
         else:
-            joiner = ', '
+            joiner = ", "
 
         return f"{classname}({joiner.join(elements)})"
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"

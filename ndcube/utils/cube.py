@@ -32,8 +32,8 @@ def sanitize_wcs(func):
     def wcs_wrapper(*args, **kwargs):
         sig = inspect.signature(func)
         params = sig.bind(*args, **kwargs)
-        wcs = params.arguments.get('wcs', None)
-        self = params.arguments['self']
+        wcs = params.arguments.get("wcs", None)
+        self = params.arguments["self"]
 
         if wcs is None:
             wcs = self.wcs
@@ -48,7 +48,7 @@ def sanitize_wcs(func):
         if not isinstance(wcs, (BaseHighLevelWCS, ExtraCoords)):
             raise TypeError("wcs argument must be a High Level WCS or an ExtraCoords object.")
 
-        params.arguments['wcs'] = wcs
+        params.arguments["wcs"] = wcs
 
         return func(*params.args, **params.kwargs)
 
@@ -181,7 +181,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             # If returned value is a 0-d array, convert to a length-1 tuple.
             if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
                 point_array_indices = (point_array_indices.item(),)
-        for axis, index in zip(array_axes_with_input, point_array_indices):
+        for axis, index in zip(array_axes_with_input, point_array_indices, strict=False):
             combined_points_array_idx[axis] = combined_points_array_idx[axis] + [index]
     # Define slice item with which to slice cube.
     item = []
@@ -257,7 +257,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
         # TODO: product was renamed to prod for numpy 2.0
-        elif operation in {np.prod, np.nanprod, np.product if hasattr(np, "product") else np.prod}:
+        elif operation in {np.prod, np.nanprod, np.prod if hasattr(np, "product") else np.prod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")

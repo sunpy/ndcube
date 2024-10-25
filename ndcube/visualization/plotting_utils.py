@@ -1,6 +1,6 @@
 import astropy.units as u
 
-__all__ = ['prep_plot_kwargs', 'set_wcsaxes_format_units']
+__all__ = ["prep_plot_kwargs", "set_wcsaxes_format_units"]
 
 
 def _expand_ellipsis(ndim, plist):
@@ -51,13 +51,13 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
         axes_units = [axes_units]
     # Set default value of plot_axes if not set by user.
     if plot_axes is None:
-        plot_axes = [..., 'y', 'x']
+        plot_axes = [..., "y", "x"]
 
     # We flip the plot axes here so they are in the right order for WCSAxes
     plot_axes = plot_axes[::-1]
 
     plot_axes = _expand_ellipsis(naxis, plot_axes)
-    if 'x' not in plot_axes:
+    if "x" not in plot_axes:
         raise ValueError("'x' must be in plot_axes.")
 
     if axes_coordinates is not None:

@@ -120,7 +120,7 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
             raise TypeError("All elements of ``shape`` must be integers. "
                             f"shapes types = {[type(s) for s in shape]}")
     slice_items = list(slice_items)
-    for i, (item, len_axis) in enumerate(zip(slice_items, shape)):
+    for i, (item, len_axis) in enumerate(zip(slice_items, shape, strict=False)):
         if isinstance(item, Integral):
             # Mark axis corresponding to int item as dropped from data array.
             dropped_data_axes[i] = True

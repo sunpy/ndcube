@@ -58,12 +58,12 @@ def test_spectral_cube(spectral_cube_3d_fitswcs):
 
     assert wcs.pixel_n_dim == 3
     assert wcs.world_n_dim == 3
-    assert tuple(wcs.world_axis_physical_types) == ('em.freq', 'pos.eq.ra', 'pos.eq.dec')
-    assert tuple(wcs.world_axis_units) == ('Hz', 'deg', 'deg')
-    assert tuple(wcs.pixel_axis_names) == ('', '', '')
-    assert tuple(wcs.world_axis_names) == ('Frequency',
-                                           'Right Ascension',
-                                           'Declination')
+    assert tuple(wcs.world_axis_physical_types) == ("em.freq", "pos.eq.ra", "pos.eq.dec")
+    assert tuple(wcs.world_axis_units) == ("Hz", "deg", "deg")
+    assert tuple(wcs.pixel_axis_names) == ("", "", "")
+    assert tuple(wcs.world_axis_names) == ("Frequency",
+                                           "Right Ascension",
+                                           "Declination")
     assert_equal(wcs.axis_correlation_matrix, np.array([[0, 1, 0],
                                                         [1, 0, 1],
                                                         [1, 0, 1]]))
@@ -111,15 +111,15 @@ def test_spectral_cube(spectral_cube_3d_fitswcs):
     assert EXPECTED_SPECTRAL_CUBE_REPR in repr(wcs)
 
 
-@pytest.mark.parametrize('order', [(1,), (1, 2, 2), (0, 1, 2, 3)])
+@pytest.mark.parametrize("order", [(1,), (1, 2, 2), (0, 1, 2, 3)])
 def test_invalid(spectral_cube_3d_fitswcs, order):
 
-    with pytest.raises(ValueError, match=re.escape('pixel_order should be a permutation of [0, 1, 2]')):
+    with pytest.raises(ValueError, match=re.escape("pixel_order should be a permutation of [0, 1, 2]")):
         ReorderedLowLevelWCS(spectral_cube_3d_fitswcs,
                              pixel_order=order,
                              world_order=[2, 0, 1])
 
-    with pytest.raises(ValueError, match=re.escape('world_order should be a permutation of [0, 1, 2]')):
+    with pytest.raises(ValueError, match=re.escape("world_order should be a permutation of [0, 1, 2]")):
         ReorderedLowLevelWCS(spectral_cube_3d_fitswcs,
                              pixel_order=[1, 2, 0],
                              world_order=order)

@@ -51,9 +51,9 @@ World Dim    0    1    2
 """.strip()
 
 
-@pytest.mark.parametrize(('spectral_wcs', 'celestial_wcs'),
-                         product(['spectral_1d_ape14_wcs', 'spectral_1d_fitswcs'],
-                                 ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs']),
+@pytest.mark.parametrize(("spectral_wcs", "celestial_wcs"),
+                         product(["spectral_1d_ape14_wcs", "spectral_1d_fitswcs"],
+                                 ["celestial_2d_ape14_wcs", "celestial_2d_fitswcs"]),
                          indirect=True)
 def test_celestial_spectral_ape14(spectral_wcs, celestial_wcs):
 
@@ -61,12 +61,12 @@ def test_celestial_spectral_ape14(spectral_wcs, celestial_wcs):
 
     assert wcs.pixel_n_dim == 3
     assert wcs.world_n_dim == 3
-    assert tuple(wcs.world_axis_physical_types) == ('em.freq', 'pos.eq.ra', 'pos.eq.dec')
-    assert tuple(wcs.world_axis_units) == ('Hz', 'deg', 'deg')
-    assert tuple(wcs.pixel_axis_names) == ('', '', '')
-    assert tuple(wcs.world_axis_names) == ('Frequency',
-                                           'Right Ascension',
-                                           'Declination')
+    assert tuple(wcs.world_axis_physical_types) == ("em.freq", "pos.eq.ra", "pos.eq.dec")
+    assert tuple(wcs.world_axis_units) == ("Hz", "deg", "deg")
+    assert tuple(wcs.pixel_axis_names) == ("", "", "")
+    assert tuple(wcs.world_axis_names) == ("Frequency",
+                                           "Right Ascension",
+                                           "Declination")
     assert_equal(wcs.axis_correlation_matrix, np.array([[1, 0, 0],
                                                         [0, 1, 1],
                                                         [0, 1, 1]]))
@@ -138,7 +138,7 @@ def test_shared_pixel_axis_compound_1d(spectral_1d_fitswcs, time_1d_fitswcs):
 
     assert wcs.pixel_n_dim == 1
     assert wcs.pixel_shape is None
-    assert wcs.pixel_axis_names == ('',)
+    assert wcs.pixel_axis_names == ("",)
     assert wcs.pixel_bounds is None
 
     world = wcs.pixel_to_world_values(0)
@@ -163,7 +163,7 @@ def test_shared_pixel_axis_compound_3d(spectral_cube_3d_fitswcs, time_1d_fitswcs
 
     assert wcs.pixel_n_dim == 3
     np.testing.assert_allclose(wcs.pixel_shape, (10, 20, 30))
-    assert wcs.pixel_axis_names == ('', '', '')
+    assert wcs.pixel_axis_names == ("", "", "")
     assert wcs.pixel_bounds == ((-1, 5), (1, 7), (1, 2.5))
 
     np.testing.assert_allclose(wcs.axis_correlation_matrix, [[True, True, False],

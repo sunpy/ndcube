@@ -10,14 +10,14 @@ import numpy as np
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
-__all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
-           'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
-           'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
-           'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
-           'physical_type_to_world_axis', 'get_dependent_pixel_axes',
-           'get_dependent_array_axes', 'get_dependent_world_axes',
-           'get_dependent_physical_types', 'array_indices_for_world_objects',
-           'validate_physical_types']
+__all__ = ["array_indices_for_world_objects", "convert_between_array_and_pixel_axes",
+           "calculate_world_indices_from_axes", "wcs_ivoa_mapping",
+           "pixel_axis_to_world_axes", "world_axis_to_pixel_axes",
+           "pixel_axis_to_physical_types", "physical_type_to_pixel_axes",
+           "physical_type_to_world_axis", "get_dependent_pixel_axes",
+           "get_dependent_array_axes", "get_dependent_world_axes",
+           "get_dependent_physical_types", "array_indices_for_world_objects",
+           "validate_physical_types"]
 
 
 class TwoWayDict(UserDict):
@@ -49,7 +49,7 @@ wcs_to_ivoa = {
     "HECH": "pos.bodyrc.alt",
 }
 wcs_ivoa_mapping = TwoWayDict()
-for key in wcs_to_ivoa.keys():
+for key in wcs_to_ivoa:
     wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
 
 
@@ -75,7 +75,7 @@ def convert_between_array_and_pixel_axes(axis, naxes):
     # Check type of input.
     if not isinstance(axis, np.ndarray):
         raise TypeError(f"input must be of array type. Got type: {type(axis)}")
-    if axis.dtype.char not in np.typecodes['AllInteger']:
+    if axis.dtype.char not in np.typecodes["AllInteger"]:
         raise TypeError(f"input dtype must be of int type. Got dtype: {axis.dtype})")
     # Convert negative indices to positive equivalents.
     axis[axis < 0] += naxes
@@ -203,7 +203,7 @@ def physical_type_to_world_axis(physical_type, world_axis_physical_types):
         raise ValueError(
             "Input does not uniquely correspond to a physical type."
             f" Expected unique substring of one of {world_axis_physical_types}."
-            f"  Got: {physical_type}"
+            f"  Got: {physical_type}",
         )
     # Return axes with duplicates removed.
     return widx[0]
@@ -343,11 +343,11 @@ def validate_physical_types(physical_types):
     try:
         low_level_api.validate_physical_types(physical_types)
     except ValueError as e:
-        invalid_type = str(e).split(':')[1].strip()
+        invalid_type = str(e).split(":")[1].strip()
         raise ValueError(
             f"'{invalid_type}' is not a valid IOVA UCD1+ physical type. "
             "It must be a string specified in the list (http://www.ivoa.net/documents/latest/UCDlist.html) "
-            "or if no matching type exists it can be any string prepended with 'custom:'."
+            "or if no matching type exists it can be any string prepended with 'custom:'.",
         )
 
 
@@ -431,7 +431,7 @@ def array_indices_for_world_objects(wcs, axes=None):
     return tuple(ai for ai in array_indices if ai)
 
 
-def get_low_level_wcs(wcs, name='wcs'):
+def get_low_level_wcs(wcs, name="wcs"):
     """
     Returns a low level WCS object from a low level or high level WCS.
 
@@ -447,13 +447,11 @@ def get_low_level_wcs(wcs, name='wcs'):
     -------
     wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
     """
-
     if isinstance(wcs, BaseHighLevelWCS):
         return wcs.low_level_wcs
-    elif isinstance(wcs, BaseLowLevelWCS):
+    if isinstance(wcs, BaseLowLevelWCS):
         return wcs
-    else:
-        raise ValueError(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
+    raise ValueError(f"{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS")
 
 
 def compare_wcs_physical_types(source_wcs, target_wcs):
@@ -472,9 +470,8 @@ def compare_wcs_physical_types(source_wcs, target_wcs):
     -------
     result : `bool`
     """
-
-    source_wcs = get_low_level_wcs(source_wcs, 'source_wcs')
-    target_wcs = get_low_level_wcs(target_wcs, 'target_wcs')
+    source_wcs = get_low_level_wcs(source_wcs, "source_wcs")
+    target_wcs = get_low_level_wcs(target_wcs, "target_wcs")
 
     return source_wcs.world_axis_physical_types == target_wcs.world_axis_physical_types
 
@@ -505,10 +502,9 @@ def identify_invariant_axes(source_wcs, target_wcs, input_shape, atol=1e-6, rtol
         A list of booleans denoting whether the axis is invariant or not.
         Follows the WCS ordering.
     """
-
     input_pixel_coords = np.meshgrid(*[np.arange(n) for n in input_shape])
 
     output_pixel_coords = pixel_to_pixel(source_wcs, target_wcs, *input_pixel_coords)
 
     return [np.allclose(input_coord, output_coord, atol=atol, rtol=rtol)
-            for input_coord, output_coord in zip(input_pixel_coords, output_pixel_coords)]
+            for input_coord, output_coord in zip(input_pixel_coords, output_pixel_coords, strict=False)]

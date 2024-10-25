@@ -12,7 +12,7 @@ from . import plotting_utils as utils
 from .base import BasePlotter
 from .descriptor import MISSING_ANIMATORS_ERROR_MSG
 
-__all__ = ['MatplotlibPlotter']
+__all__ = ["MatplotlibPlotter"]
 
 
 class MatplotlibPlotter(BasePlotter):
@@ -77,12 +77,12 @@ class MatplotlibPlotter(BasePlotter):
             len(self._ndcube.shape), plot_wcs, plot_axes, axes_coordinates, axes_units)
 
         with warnings.catch_warnings():
-            warnings.simplefilter('ignore', AstropyUserWarning)
+            warnings.simplefilter("ignore", AstropyUserWarning)
             if naxis == 1:
                 ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
 
-            elif naxis == 2 and 'y' in plot_axes:
+            elif naxis == 2 and "y" in plot_axes:
                 ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
             else:
@@ -175,7 +175,7 @@ class MatplotlibPlotter(BasePlotter):
         if self._ndcube.mask is not None:
             data = np.ma.masked_array(data, self._ndcube.mask)
 
-        if plot_axes.index('x') > plot_axes.index('y'):
+        if plot_axes.index("x") > plot_axes.index("y"):
             data = data.T
 
         # Plot data
@@ -213,7 +213,7 @@ class MatplotlibPlotter(BasePlotter):
             else:
                 param = {}
 
-            param['ticks'] = False
+            param["ticks"] = False
             ax.coord_params[hidden] = param
 
         return ax
@@ -230,10 +230,10 @@ class MatplotlibPlotter(BasePlotter):
         and this will generate a plot with the correct WCS coordinates on the
         axes. See https://wcsaxes.readthedocs.io for more information.
         """
-        kwargs = {'wcs': self._ndcube.wcs}
+        kwargs = {"wcs": self._ndcube.wcs}
         n_dim = len(self._ndcube.shape)
         if n_dim > 2:
-            kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
+            kwargs["slices"] = ["x", "y"] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
 
     def _prep_animate_args(self, wcs, plot_axes, axes_units, data_unit):
@@ -249,14 +249,14 @@ class MatplotlibPlotter(BasePlotter):
 
         coord_params = {}
         if axes_units is not None:
-            for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types):
-                coord_params[coord_name] = {'format_unit': axis_unit}
+            for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types, strict=False):
+                coord_params[coord_name] = {"format_unit": axis_unit}
 
         # TODO: Add support for transposing the array.
-        if 'y' in plot_axes and plot_axes.index('y') < plot_axes.index('x'):
+        if "y" in plot_axes and plot_axes.index("y") < plot_axes.index("x"):
             warn_user(
                 "Animating a NDCube does not support transposing the array. The world axes "
-                "may not display as expected because the array will not be transposed."
+                "may not display as expected because the array will not be transposed.",
             )
         plot_axes = [p if p is not None else 0 for p in plot_axes]
 
