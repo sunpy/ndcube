@@ -10,14 +10,11 @@ extend-exclude=[
 lint.select = [
     "ALL",
 ]
+lint.ignore = [
+    "ANN",
+]
 lint.extend-ignore = [
-    "ANN001", # Missing type annotation for function argument
-    "ANN002", # Missing type annotation for variable
-    "ANN003", # Missing type annotation for keyword
-    "ANN201", # Missing return type annotation for public function
-    "ANN202", # Missing return type annotation for private function
-    "ANN205", # Missing return type annotation for staticmethod
-    "ANN206", # Missing return type annotation for classmethod
+    "ANN", # All annotation
     "COM812", # May cause conflicts when used with the formatter
     "CPY001", # Missing copyright notice at top of file
     "D200", # One-line docstring should fit on one line
@@ -47,8 +44,8 @@ lint.extend-ignore = [
     "INP001", # conf.py is part of an implicit namespace package
 ]
 "test_*.py" = [
-    "D100", # Missing docstring in public module
-    "D103", # Missing docstring in public function
+    "D", # All docs
+    "SLF001", # Access private memeber
 ]
 "__init__.py" = [
     "D104", # Missing docstring in public package
