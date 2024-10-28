@@ -148,7 +148,8 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
     def world_axis_object_components(self):
         all_components = []
         for iw, w in enumerate(self._wcs):
-            all_components = [(f'{component[0]}_{iw}',) + component[1:] for component in all_components]
+            all_components += [(f'{component[0]}_{iw}',) + component[1:] for component
+                               in w.world_axis_object_components]
         return all_components
 
     @property

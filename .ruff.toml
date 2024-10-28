@@ -36,7 +36,7 @@ extend-ignore = [
   "E712",
   "E721",
    # flake8-pie
-  "PIE808", # Disallow passing 0 as the first argument to range
+  "PIE808", # explicit is better than implicit
   # upgrades
   "UP038", # Use | in isinstance - not compatible with models and is slower
   # numpy
