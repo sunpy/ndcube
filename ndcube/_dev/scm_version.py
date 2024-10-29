@@ -1,6 +1,7 @@
 # Try to use setuptools_scm to get the current version; this is only used
 # in development installations from the git repository.
-import Path
+
+from pathlib import Path
 
 try:
     from setuptools_scm import get_version

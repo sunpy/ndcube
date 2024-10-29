@@ -33,20 +33,27 @@ select = [
   "RUF",
 ]
 extend-ignore = [
-  "E712",
-  "E721",
+  # pycodestyle
+  "E501", # ignore line length will use a formatter instead
+  "E712", # Avoid equality comparisons to True; use if {cond}: for truth checks
+  "E721", # type comparison Use is and is not for type comparisons, or isinstance() for isinstance checks
    # flake8-pie
   "PIE808", # explicit is better than implicit
   # upgrades
   "UP038", # Use | in isinstance - not compatible with models and is slower
   # numpy
   "NPY002", # TODO: migrate from np.random.rand to np.random.Generator
+  # upgrades
+  "UP038", # Use | in isinstance - not compatible with models and is slower
   # pytest (PT)
-  "PT001", # Always use pytest.fixture()
-  "PT004", # Fixtures which don't return anything should have leading _
+  "PT001",  # Always use pytest.fixture()
+  "PT004",  # Fixtures which don't return anything should have leading _
   "PT011",  # except(ValueRaises) is too broad
-  "PT012", # TODO: temporary override for test_global_coords::test_overwrite
-  "PT023", # Always use () on pytest decorators
+  "PT012",  # except statement is too lengthy
+  "PT023",  # Always use () on pytest decorators
+  "PT023",  # Always use () on pytest decorators
+  # flake8-pie
+  "PIE808", # Disallow passing 0 as the first argument to range
   # flake8-use-pathlib
   "PTH123", # open() should be replaced by Path.open()
   # Ruff
@@ -70,6 +77,9 @@ extend-ignore = [
   "T201",  # We need print in our examples
   "E501",  # Line too long
   "INP001",  # implicit namespace package
+]
+"ndcube/*.py" = [
+  "T201", # allow use of print in examples
 ]
 "__init__.py" = ["E402", "F401", "F403"]
 "test_*.py" = ["B011", "D", "E402", "PGH001", "S101"]
