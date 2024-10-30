@@ -3,7 +3,7 @@
 import os
 import warnings
 import datetime
-import Path
+from pathlib import Path
 
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from matplotlib import MatplotlibDeprecationWarning

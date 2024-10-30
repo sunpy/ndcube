@@ -184,7 +184,8 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
                     raise ValueError(
                         "The pixel bounds of the supplied WCSes do not match "
                         "for the dimensions shared by the supplied mapping.")
-            return out_bounds
+            iint = np.iinfo(int)
+            return tuple(o or (iint.min, iint.max) for o in out_bounds)
         return None
 
 

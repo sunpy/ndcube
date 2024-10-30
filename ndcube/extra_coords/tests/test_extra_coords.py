@@ -299,7 +299,7 @@ def test_extra_coords_2d_quantity(quantity_2d_lut):
 
 # Extra Coords with NDCube
 def test_add_coord_after_create(time_lut):
-    ndc = NDCube(np.random.rand((10, 10)), wcs=WCS(naxis=2))
+    ndc = NDCube(np.random.random_sample((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
     ndc.extra_coords.add("time", 0, time_lut)
 
@@ -309,7 +309,7 @@ def test_add_coord_after_create(time_lut):
 
 
 def test_combined_wcs(time_lut):
-    ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
+    ndc = NDCube(np.random.random_sample((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
     ndc.extra_coords.add("time", 0, time_lut)
 
