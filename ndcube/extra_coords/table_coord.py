@@ -845,7 +845,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         if not isinstance(other, BaseTableCoordinate) or isinstance(other, MultipleTableCoordinate):
             return NotImplemented
 
-        return type(self)([other, *self._table_coords])
+        return type(self)(*[other, *self._table_coords])
 
     def __getitem__(self, item):
         if isinstance(item, (slice, Integral)):
