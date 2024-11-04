@@ -8,10 +8,10 @@ class CompoundConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
-        return(CompoundLowLevelWCS(*node["wcs"], mapping = node.get("mapping"), pixel_atol = node.get("atol")))
+        return(CompoundLowLevelWCS(*node["wcs"], mapping=node.get("mapping"), pixel_atol=node.get("atol")))
 
     def to_yaml_tree(self, compoundwcs, tag, ctx):
-        node={}
+        node = {}
         node["wcs"] = compoundwcs._wcs
         node["mapping"] = compoundwcs.mapping.mapping
         node["atol"] = compoundwcs.atol

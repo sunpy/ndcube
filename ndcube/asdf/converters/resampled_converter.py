@@ -9,12 +9,12 @@ class ResampledConverter(Converter):
         from ndcube.wcs.wrappers import ResampledLowLevelWCS
 
         resampledwcs = ResampledLowLevelWCS(wcs=node["wcs"],
-                                            offset = node.get("offset"),
-                                            factor = node.get("factor"),
+                                            offset=node.get("offset"),
+                                            factor=node.get("factor"),
                                             )
         return resampledwcs
     def to_yaml_tree(self, resampledwcs, tag, ctx):
-        node={}
+        node = {}
         node["wcs"] = resampledwcs._wcs
         node["factor"] = resampledwcs._factor
         node["offset"] = resampledwcs._offset
