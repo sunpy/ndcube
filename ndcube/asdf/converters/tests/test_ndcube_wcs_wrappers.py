@@ -19,9 +19,9 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS, ReorderedLowLevelWCS, Resam
 @pytest.fixture
 def create_ndcube_resampledwcs(gwcs_3d_lt_ln_l):
     shape = (2, 3, 4)
-    new_wcs = ResampledLowLevelWCS(wcs = gwcs_3d_lt_ln_l, factor=2 ,offset = 1)
+    new_wcs = ResampledLowLevelWCS(wcs=gwcs_3d_lt_ln_l, factor=2 , offset=1)
     data = data_nd(shape)
-    return NDCube(data = data, wcs =new_wcs)
+    return NDCube(data=data, wcs=new_wcs)
 
 
 @pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
@@ -42,13 +42,13 @@ def test_serialization_resampled(create_ndcube_resampledwcs, tmp_path):
 
         assert_cubes_equal(loaded_ndcube, ndc)
 
+
 @pytest.fixture
 def create_ndcube_reorderedwcs(gwcs_3d_lt_ln_l):
     shape = (2, 3, 4)
     new_wcs = ReorderedLowLevelWCS(wcs = gwcs_3d_lt_ln_l, pixel_order=[1, 2, 0] ,world_order=[2, 0, 1])
     data = data_nd(shape)
     return NDCube(data = data, wcs =new_wcs)
-
 
 
 @pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")

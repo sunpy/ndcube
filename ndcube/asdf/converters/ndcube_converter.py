@@ -39,12 +39,12 @@ class NDCubeConverter(Converter):
             This ensures that users are aware of potentially important information
             that is not included in the serialized output.
         """
-        from astropy.wcs.wcsapi import HighLevelWCSWrapper
+        from astropy.wcs.wcsapi import BaseHighLevelWCS
 
         node = {}
         node["data"] = ndcube.data
-        if isinstance(ndcube.wcs, HighLevelWCSWrapper):
-            node["wcs"] = ndcube.wcs._low_level_wcs
+        if isinstance(ndcube.wcs, BaseHighLevelWCS):
+            node["wcs"] = ndcube.wcs.low_level_wcs
         else:
             node["wcs"] = ndcube.wcs
         node["extra_coords"] = ndcube.extra_coords
