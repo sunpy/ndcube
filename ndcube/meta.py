@@ -273,7 +273,7 @@ class NDMeta(dict, NDMetaABC):
                 # If new value represents axes not yet represented in Meta object,
                 # add zero-length axes in their place to be filled in.
                 if len(value_shape) > len(data_shape):
-                    data_shape = np.concantenate(
+                    data_shape = np.concatenate(
                         (data_shape, np.zeros(len(value_shape) - len(data_shape), dtype=int)))
                 idx_data = axes[data_shape[axes] == 0]
                 idx_value, = np.where(value_shape == 0)
