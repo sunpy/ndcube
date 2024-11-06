@@ -20,7 +20,7 @@ from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import ExtraCoords, NDCube
+from ndcube import ExtraCoords, NDCube, NDMeta
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
 
@@ -175,6 +175,32 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     all_coords = sndc.global_coords._all_coords
     assert u.allclose(all_coords[wl_key][1], 1.02e-9 * u.m)
     assert all_coords[wl_key][0] == wl_key
+
+
+def test_slicing_with_meta():
+    # Define meta.
+    raw_meta = {"salutation": "hello", "name": "world",
+                "exposure time": u.Quantity([2] * 4, unit=u.s),
+                "pixel response": np.ones((4, 5))}
+    axes = {"exposure time": 0, "pixel response": (1, 2)}
+    meta = NDMeta(raw_meta, axes=axes)
+    # Define data.
+    data = np.ones((4, 4, 5))
+    # Define WCS transformations in an astropy WCS object.
+    wcs = astropy.wcs.WCS(naxis=3)
+    wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+    wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+    wcs.wcs.cdelt = 0.2, 0.5, 0.4
+    wcs.wcs.crpix = 0, 2, 2
+    wcs.wcs.crval = 10, 0.5, 1
+    cube = NDCube(data, wcs=wcs, meta=meta)
+    sliced_cube = cube[0, 1:3]
+    sliced_meta = sliced_cube.meta
+    assert sliced_meta.keys() == meta.keys()
+    assert tuple(sliced_meta.axes.keys()) == ("pixel response",)
+    assert sliced_meta["salutation"] == meta["salutation"]
+    assert (sliced_meta["pixel response"] == meta["pixel response"][1:3]).all()
+    assert sliced_meta["exposure time"] == 2 * u.s
 
 
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):

@@ -519,7 +519,7 @@ In fact, ``sliced_cube.meta`` is equivalent to ``sliced_meta`` from the previous
   <Quantity 2. s>
   >>> list(sliced_cube.meta.axes.keys())
   ['pixel response']
-  >>> sliced_cube.meta["salultation"]
+  >>> sliced_cube.meta["salutation"]
   'hello'
   >>> sliced_cube.meta["name"]
   'world'
