@@ -97,7 +97,7 @@ class NDMetaABC(collections.abc.Mapping):
         """
 
     @abc.abstractmethod
-    def add(self, name, value, key_comment=None, axis=None, overwrite=False):
+    def add(self, name, value, key_comment=None, axes=None, overwrite=False):
         """
         Add a new piece of metadata to instance.
 
@@ -113,7 +113,7 @@ class NDMetaABC(collections.abc.Mapping):
         key_comment: `str` or `None`
             Any comment associated with this metadata. Set to None if no comment desired.
 
-        axis: `int`, iterable of `int`, or `None`
+        axes: `int`, iterable of `int`, or `None`
             The axis/axes with which the metadata is linked. If not associated with any
             axis, set this to None.
 
@@ -241,24 +241,44 @@ class NDMeta(dict, NDMetaABC):
         new_shape = np.round(new_shape).astype(int)
         if (new_shape < 0).any():
             raise ValueError("new_shape cannot include negative numbers.")
-        # Confirm input shape agrees with shapes of pre-existin metadata.
+        # Confirm input shape agrees with shapes of pre-existing metadata.
         old_shape = self.data_shape
+        if len(new_shape) != len(old_shape) and len(self._axes) > 0:
+            n_meta_axes = max([ax.max() for ax in self._axes.values()]) + 1
+            old_shape = np.zeros(n_meta_axes, dtype=int)
+            for key, ax in self._axes.items():
+                old_shape[ax] = np.asarray(self[key].shape)
+        # Axes of length 0 are deemed to be of unknown length, and so do not have to match.
         idx, = np.where(old_shape > 0)
         if len(idx) > 0 and (old_shape[idx] != new_shape[idx]).any():
             raise ValueError("new_shape not compatible with pre-existing metadata. "
                              f"old shape = {old_shape}, new_shape = {new_shape}")
         self._data_shape = new_shape
 
-    def add(self, name, value, key_comment=None, axis=None, overwrite=False):
+    def add(self, name, value, key_comment=None, axes=None, overwrite=False):
         # Docstring in ABC.
         if name in self.keys() and overwrite is not True:
             raise KeyError(f"'{name}' already exists. "
                            "To update an existing metadata entry set overwrite=True.")
         if key_comment is not None:
             self._key_comments[name] = key_comment
-        if axis is not None:
-            axis = self._sanitize_axis_value(axis, value, name)
-            self._axes[name] = axis
+        if axes is not None:
+            axes = self._sanitize_axis_value(axes, value, name)
+            self._axes[name] = axes
+            # Adjust data shape if not already set.
+            axis_shape = _get_metadata_shape(axes)
+            if _is_grid_aligned(value, axis_shape) and (self._data_shape[self._axes[name]] == 0).any():
+                value_shape = np.asarray(value.shape)
+                data_shape = self._data_shape
+                # If new value represents axes not yet represented in Meta object,
+                # add zero-length axes in their place to be filled in.
+                if len(value_shape) > len(data_shape):
+                    data_shape = np.concantenate(
+                        (data_shape, np.zeros(len(value_shape) - len(data_shape), dtype=int)))
+                idx_data = axes[data_shape[axes] == 0]
+                idx_value, = np.where(value_shape == 0)
+                data_shape[idx_data] = value_shape[idx_value]  # THIS IS WRONG
+                self._data_shape = data_shape
         elif name in self._axes:
             del self._axes[name]
         # This must be done after updating self._axes otherwise it may error.

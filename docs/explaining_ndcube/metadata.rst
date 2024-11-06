@@ -176,7 +176,7 @@ To replace the value, comment, or axes values of pre-existing metadata, set the 
 
 .. code-block:: python
 
-  >>> meta.add("voltage", u.Quantity([-300.]*5, unit=u.V), comment="detector bias voltage", axes=(0,), overwrite=True)
+  >>> meta.add("voltage", u.Quantity([-300.]*5, unit=u.V), key_comment="detector bias voltage", axes=(0,), overwrite=True)
   >>> meta["voltage"]
   <Quantity [-300., -300., -300., -300., -300.] V>
 
@@ -218,7 +218,7 @@ If we now add the ``"pixel response"`` metadata that we used, earlier the `~ndcu
 
 .. code-block:: python
 
-  >>> meta.add("pixel response", np.array([[100., 100., 100., 90., 100.], [85., 100., 90., 100., 100.]]) * u.percent, axes=(0, 2))
+  >>> meta.add("pixel response", np.array([[100., 85], [100., 100], [100., 90], [90., 100.], [100., 100.]]) * u.percent, axes=(0, 2))
   >>> meta.data_shape
   array([5, 0, 2])
 
