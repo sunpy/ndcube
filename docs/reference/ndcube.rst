@@ -6,4 +6,3 @@ ndcube (`ndcube`)
    :inherited-members:
 
 .. automodapi:: ndcube.ndcube
-.. automodapi:: ndcube.meta
