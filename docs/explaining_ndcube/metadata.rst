@@ -1,4 +1,4 @@
-.. _ndmeta:
+.. _metadata:
 
 *****************
 Handling Metadata
@@ -180,7 +180,7 @@ To replace the value, comment, or axes values of pre-existing metadata, set the 
   >>> meta["voltage"]
   <Quantity [-300., -300., -300., -300., -300.] V>
 
-Unwanted metadata can be removing by employing the `del` operator.
+Unwanted metadata can be removing by employing the ``del`` operator.
 
 .. code-block:: python
 
@@ -188,7 +188,7 @@ Unwanted metadata can be removing by employing the `del` operator.
   >>> meta.get("voltage", "deleted")
   'deleted'
 
-Note that the `del` operator also removes associated comments and axes.
+Note that the ``del`` operator also removes associated comments and axes.
 
 .. code-block:: python
 
@@ -197,11 +197,13 @@ Note that the `del` operator also removes associated comments and axes.
   >>> meta.axes.get("voltage", "deleted")
   'deleted'
 
+.. _data_shape:
+
 Data Shape
 ----------
 
 The `~ndcube.NDMeta.data_shape` property tracks the shape of the data with which the metadata is associated.
-We have already seen in the :ref:`initialzing_ndmeta` section, that it can be assigned during initialization or by subsequently setting the `~ndcube.NDMeta.data_shape` property directly.
+We have already seen in the :ref:`initializing_ndmeta` section, that it can be assigned during initialization or by subsequently setting the `~ndcube.NDMeta.data_shape` property directly.
 However, if the ``data_shape`` is not provided, it is inferred from the shapes of axis-aware metadata.
 If no axis-aware metadata is present, `~ndcube.NDMeta.data_shape` is empty:
 
@@ -242,7 +244,7 @@ However, these restrictions do not apply if we want to change the shape of the 2
   >>> meta.data_shape
   array([5, 3, 2])
 
-.. _assigning_axis_aligned_metadata
+.. _assigning_axis_aligned_metadata:
 
 Assigning Axis-aligned Metadata
 -------------------------------
@@ -264,28 +266,3 @@ Also note that we have now indicated that there is 4th axis.
   array([5, 3, 2, 0])
 
 However, because axis-aligned metadata does not tell us about the length of the axes, the 4th axis has been assigned a length of zero.
-
-Original_meta
--------------
-
-As metadata is added, removed, and altered through certain operations, it may still be desirable to refer back to the initial state of the metadata.
-This is the purpose of the `ndcube.NDMeta.original_meta` property.
-It stores the metadata that was originally passed to the `~ndcube.NDMeta` constructor, and it never altered.
-
-.. code-block:: python
-
-  >>> raw_meta = {"salutation": "hello", "name": "world"}
-  >>> meta = NDMeta(raw_meta)
-  >>> del meta["name"]
-  >>> meta.add("exclamation", "!")
-  >>> meta
-  {'salutation': 'hello', 'exclamation': '!'}
-  >>> meta.original_meta
-  mappingproxy({'salutation': 'hello', 'name': 'world'})
-
-Note that, ``meta.original_meta`` does not contain ``"exclamation"``, but still contains ``"name"``.
-This is because these were added and removed after initialization.
-Also note that the type of the original metadata object is maintained.
-
-The `~ndcube.NDMeta.original_shape` property is a useful reference back to the original metadata, even after it has been altered via a complex sequence of operations.
-In the :ref:`meta_slicing` section, we discuss the most common of these, slicing.
