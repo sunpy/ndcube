@@ -6,7 +6,7 @@ from types import MappingProxyType
 
 import numpy as np
 
-__all__ = ["NDMeta", "NDMetaABC"]
+__all__ = ["NDMetaABC", "NDMeta"]
 
 
 class NDMetaABC(collections.abc.Mapping):
