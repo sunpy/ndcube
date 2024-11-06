@@ -6,6 +6,7 @@ import collections.abc
 import numpy as np
 
 import ndcube.utils.collection as collection_utils
+from ndcube.utils.exceptions import warn_deprecated
 
 __all__ = ["NDCollection"]
 
@@ -16,7 +17,7 @@ class NDCollection(dict):
 
     Parameters
     ----------
-    data: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+    key_data_pairs: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
         The names and data cubes/sequences to held in the collection.
 
     aligned_axes: `tuple` of `int`, `tuple` of `tuple` of `int`, 'all', or None, optional
@@ -49,6 +50,12 @@ class NDCollection(dict):
     """
 
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
+        for key, _ in key_data_pairs:
+            if isinstance(key, numbers.Number):
+                warn_deprecated(
+                    "Passing numerical keys to NDCollection is deprecated as they"
+                    " lead to ambiguity when slicing the collection."
+                )
         # Enter data and metadata into object.
         super().__init__(key_data_pairs)
         self.meta = meta
