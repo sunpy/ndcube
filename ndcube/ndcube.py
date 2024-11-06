@@ -1141,13 +1141,14 @@ class NDCube(NDCubeBase):
         naxes = len(data_shape)
         if len(bin_shape) != naxes:
             raise ValueError("bin_shape must have an entry for each array axis.")
-        bin_shape[bin_shape == -1] = data_shape[bin_shape == -1]
+        bin_shape[bin_shape == -1] = np.array(data_shape)[bin_shape == -1]
         if (bin_shape < 0).any():
             raise ValueError("bin_shape should not be less than -1.")
         if (np.mod(data_shape, bin_shape) != 0).any():
             raise ValueError(
                 "bin shape must be an integer fraction of the data shape in each dimension. "
-                f"data shape: {data_shape};  bin shape: {bin_shape}")
+                f"data shape: {data_shape};  bin shape: {bin_shape}"
+            )
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
