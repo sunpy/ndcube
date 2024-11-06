@@ -1,0 +1,1 @@
+Add support for passing ``-1`` as an element of the ``bin_shape`` argument to `.NDCube.rebin` which will not rebin along that dimension (sets the bin shape to equal the data shape).
