@@ -1,0 +1,1 @@
+The ability to create an `.NDCollection` object with numerical keys is deprecated as it leads to ambiguous behavior when slicing the collection.
