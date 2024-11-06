@@ -1,1 +1,1 @@
-Add Sliceable `~ndcube.meta.Meta` class for axis-associated metadata.
+Add Sliceable `~ndcube.meta.NDMeta` class for axis-associated metadata.
