@@ -30,6 +30,8 @@ def test_serialization_cube(create_ndcollection_cube, tmp_path):
 
     with asdf.open(file_path) as af:
         assert_collections_equal(af["ndcube_gwcs"], ndcollection)
+
+
 @pytest.fixture
 def create_ndcollection_sequence(ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim):
 

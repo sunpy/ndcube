@@ -12,9 +12,7 @@ class NDCubeSequenceConverter(Converter):
                               meta=node.get("meta"),
                               common_axis=node.get("common_axis"))
 
-
     def to_yaml_tree(self, ndcseq, tag, ctx):
-
         node = {}
         node["data"] = ndcseq.data
         if ndcseq.meta is not None:
