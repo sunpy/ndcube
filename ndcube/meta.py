@@ -266,7 +266,7 @@ class NDMeta(dict, NDMetaABC):
             axes = self._sanitize_axis_value(axes, value, name)
             self._axes[name] = axes
             # Adjust data shape if not already set.
-            axis_shape = _get_metadata_shape(axes)
+            axis_shape = self._data_shape[np.asarray(axes)]
             if _is_grid_aligned(value, axis_shape) and (self._data_shape[self._axes[name]] == 0).any():
                 value_shape = np.asarray(value.shape)
                 data_shape = self._data_shape
@@ -275,9 +275,8 @@ class NDMeta(dict, NDMetaABC):
                 if len(value_shape) > len(data_shape):
                     data_shape = np.concatenate(
                         (data_shape, np.zeros(len(value_shape) - len(data_shape), dtype=int)))
-                idx_data = axes[data_shape[axes] == 0]
-                idx_value, = np.where(value_shape == 0)
-                data_shape[idx_data] = value_shape[idx_value]  # THIS IS WRONG
+                idx_value, = np.where(data_shape[axes] == 0)
+                data_shape[axes[idx_value]] = value_shape[idx_value]
                 self._data_shape = data_shape
         elif name in self._axes:
             del self._axes[name]

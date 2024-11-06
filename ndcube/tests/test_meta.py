@@ -159,6 +159,18 @@ def test_add2(basic_meta):
     assert meta.axes[name] == np.array([axis])
 
 
+def test_add3():
+    meta = NDMeta(data_shape=[5, 3, 2])
+    name = "axis name"
+    value = np.array(["a", "b", "c", "d"])
+    axis = (0, 1, 2, 3)
+    meta.add(name, value, axes=axis)
+    assert name in meta.keys()
+    assert (meta[name] == value).all()
+    assert (meta.axes[name] == np.array([axis])).all()
+    assert (meta.data_shape == np.array([5, 3, 2, 0])).all()
+
+
 def test_add_overwrite(basic_meta):
     meta = basic_meta
     name = "a"

@@ -192,7 +192,6 @@ Note that the `del` operator also removes associated comments and axes.
 
 .. code-block:: python
 
-  >>> del meta["voltage"]
   >>> meta.key_comments.get("voltage", "deleted")
   'deleted'
   >>> meta.axes.get("voltage", "deleted")
@@ -280,8 +279,9 @@ It stores the metadata that was originally passed to the `~ndcube.NDMeta` constr
   >>> del meta["name"]
   >>> meta.add("exclamation", "!")
   >>> meta
-  ???
+  {'salutation': 'hello', 'exclamation': '!'}
   >>> meta.original_meta
+  mappingproxy({'salutation': 'hello', 'name': 'world'})
 
 Note that, ``meta.original_meta`` does not contain ``"exclamation"``, but still contains ``"name"``.
 This is because these were added and removed after initialization.
