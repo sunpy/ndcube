@@ -14,7 +14,11 @@ properties:
   data:
     description: "Must be compatible with ASDF serialization/deserialization and supported by NDCube."
   wcs:
-    tag: "tag:stsci.edu:gwcs/wcs-1.*"
+    anyOf:
+      - tag: "tag:stsci.edu:gwcs/wcs-1.*"
+      - tag: "tag:sunpy.org:ndcube/resampledwcs-*"
+      - tag: "tag:sunpy.org:ndcube/reorderedwcs-*"
+      - tag: "tag:sunpy.org:ndcube/compoundwcs-*"
   extra_coords:
     tag: "tag:sunpy.org:ndcube/extra_coords/extra_coords/extracoords-0.*"
   global_coords:
