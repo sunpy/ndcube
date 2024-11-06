@@ -2,7 +2,7 @@
 requires = [
   "setuptools>=62.1",
   "setuptools_scm[toml]>=6.2",
-  "wheel"
+  "wheel",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -11,7 +11,7 @@ name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
 requires-python = ">=3.10"
 readme = { file = "README.rst", content-type = "text/x-rst" }
-license = { file = "licenses/LICENSE.rst", content-type = "text/plain" }
+license = { file = "licenses/LICENSE.rst" }
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
@@ -38,6 +38,7 @@ tests = [
 docs = [
   "sphinx",
   "sphinx-automodapi",
+  "packaging",
   "matplotlib",
   "mpl-animators>=1.0",
   "sphinx-changelog>=1.1.0",
@@ -67,6 +68,7 @@ zip-safe = false
 include-package-data = true
 
 [tool.setuptools.packages.find]
+include = ["ndcube*"]
 exclude = ["ndcube._dev*"]
 
 [tool.setuptools_scm]

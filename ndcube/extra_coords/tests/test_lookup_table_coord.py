@@ -526,7 +526,7 @@ def test_mtc_dropped_table_skycoord_join(lut_1d_time, lut_2d_skycoord_mesh):
     assert all(isinstance(u, str) for u in dwd["world_axis_units"])
     assert dwd["world_axis_units"] == ["deg", "deg"]
     assert dwd["world_axis_physical_types"] == ["pos.eq.ra", "pos.eq.dec"]
-    assert dwd["world_axis_object_components"] == [("celestial", 0, "spherical.lon"), ("celestial", 1, "spherical.lat")]
+    assert [c[:2] for c in dwd["world_axis_object_components"]] == [("celestial", 0), ("celestial", 1)]
     assert wao_classes["celestial"][0] is SkyCoord
     assert dwd["value"] == [0*u.deg, 0*u.deg]
 

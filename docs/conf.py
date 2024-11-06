@@ -2,33 +2,42 @@
 # Configuration file for the Sphinx documentation builder.
 import os
 import warnings
-from datetime import datetime
+import datetime
 
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from matplotlib import MatplotlibDeprecationWarning
 from packaging.version import Version
 
-# -- Read the Docs Specific Configuration
+# -- Read the Docs Specific Configuration ------------------------------------
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     os.environ['HIDE_PARFIVE_PROGESS'] = 'True'
 
-# -- Project information
-project = 'ndcube'
-author = 'The SunPy Community'
-copyright = f'{datetime.now().year}, {author}'
+# -- Project information -----------------------------------------------------
 
 # The full version, including alpha/beta/rc tags
-from ndcube import __version__  # NOQA
+from ndcube import __version__
 
-release = __version__
-ndcube_version = Version(__version__)
-is_release = not(ndcube_version.is_prerelease or ndcube_version.is_devrelease)
+_version = Version(__version__)
+version = release = str(_version)
+# Avoid "post" appearing in version string in rendered docs
+if _version.is_postrelease:
+    version = release = _version.base_version
+# Avoid long githashes in rendered Sphinx docs
+elif _version.is_devrelease:
+    version = release = f"{_version.base_version}.dev{_version.dev}"
+is_development = _version.is_devrelease
+is_release = not (_version.is_prerelease or _version.is_devrelease)
+
+project = "ndcube"
+author = "The SunPy Community"
+copyright = f'{datetime.datetime.now().year}, {author}'  # noqa: A001
 
 warnings.filterwarnings("error", category=MatplotlibDeprecationWarning)
 warnings.filterwarnings("error", category=AstropyDeprecationWarning)
 
-# -- General configuration
+# -- General configuration ---------------------------------------------------
+
 extensions = [
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.autodoc',
@@ -48,32 +57,26 @@ extensions = [
     "sphinxext.opengraph",
 ]
 
-# -- Sphinxext Opengraph
-ogp_image = "https://github.com/sunpy/ndcube/raw/main/docs/logo/ndcube.png"
-ogp_use_first_image = True
-ogp_description_length = 160
-ogp_custom_meta_tags = [
-    '<meta property="og:ignore_canonical" content="true" />',
-]
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-source_suffix = '.rst'
-master_doc = 'index'
-default_role = 'obj'
-napoleon_use_rtype = False
-napoleon_google_docstring = False
-napoleon_use_param = False
-# TODO: Enable this in future.
-nitpicky = True
-# This is not used. See docs/nitpick-exceptions file for the actual listing.
-nitpick_ignore = []
-for line in open('nitpick-exceptions'):
-    if line.strip() == "" or line.startswith("#"):
-        continue
-    dtype, target = line.split(None, 1)
-    target = target.strip()
-    nitpick_ignore.append((dtype, target))
+# Add any paths that contain templates here, relative to this directory.
+# templates_path = ["_templates"]  # NOQA: ERA001
 
-# -- Options for intersphinx extension
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+# This pattern also affects html_static_path and html_extra_path.
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+source_suffix = ".rst"
+
+# The master toctree document.
+master_doc = "index"
+
+# Treat everything in single ` as a Python reference.
+default_role = "py:obj"
+
+# -- Options for intersphinx extension ---------------------------------------
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/',
                (None, 'http://data.astropy.org/intersphinx/python3.inv')),
@@ -88,23 +91,60 @@ intersphinx_mapping = {
     'reproject': ("https://reproject.readthedocs.io/en/stable/", None)
     }
 
-# -- Options for HTML output
-from sunpy_sphinx_theme.conf import *  # NOQA
+# -- Options for HTML output -------------------------------------------------
+
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+html_theme = "sunpy"
 
 html_logo = png_icon = 'logo/ndcube.png'
+
 html_favicon = 'logo/favicon.png'
-graphviz_output_format = 'svg'
+
+# Render inheritance diagrams in SVG
+graphviz_output_format = "svg"
+
 graphviz_dot_args = [
-    '-Nfontsize=10',
-    '-Nfontname=Helvetica Neue, Helvetica, Arial, sans-serif',
-    '-Efontsize=10',
-    '-Efontname=Helvetica Neue, Helvetica, Arial, sans-serif',
-    '-Gfontsize=10',
-    '-Gfontname=Helvetica Neue, Helvetica, Arial, sans-serif'
+    "-Nfontsize=10",
+    "-Nfontname=Helvetica Neue, Helvetica, Arial, sans-serif",
+    "-Efontsize=10",
+    "-Efontname=Helvetica Neue, Helvetica, Arial, sans-serif",
+    "-Gfontsize=10",
+    "-Gfontname=Helvetica Neue, Helvetica, Arial, sans-serif",
 ]
 
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+# html_static_path = ["_static"]  # NOQA: ERA001
 
-# -- Sphinx Gallery
+# By default, when rendering docstrings for classes, sphinx.ext.autodoc will
+# make docs with the class-level docstring and the class-method docstrings,
+# but not the __init__ docstring, which often contains the parameters to
+# class constructors across the scientific Python ecosystem. The option below
+# will append the __init__ docstring to the class-level docstring when rendering
+# the docs. For more options, see:
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autoclass_content
+autoclass_content = "both"
+
+# -- Other options ----------------------------------------------------------
+
+napoleon_use_rtype = False
+napoleon_google_docstring = False
+napoleon_use_param = False
+
+nitpicky = True
+# This is not used. See docs/nitpick-exceptions file for the actual listing.
+nitpick_ignore = []
+for line in open('nitpick-exceptions'):
+    if line.strip() == "" or line.startswith("#"):
+        continue
+    dtype, target = line.split(None, 1)
+    target = target.strip()
+    nitpick_ignore.append((dtype, target))
+
+# -- Sphinx Gallery ---------------------------------------------------------
+
 sphinx_gallery_conf = {
     'backreferences_dir': os.path.join('generated', 'modules'),
     'filename_pattern': '^((?!skip_).)*$',
@@ -112,7 +152,6 @@ sphinx_gallery_conf = {
     'within_subsection_order': "ExampleTitleSortKey",
     'gallery_dirs': os.path.join('generated', 'gallery'),
     'matplotlib_animations': True,
-    # Comes from the theme.
     "default_thumb_file": png_icon,
     'abort_on_example_error': False,
     'plot_gallery': 'True',
@@ -120,3 +159,12 @@ sphinx_gallery_conf = {
     'doc_module': ('ndcube'),
     'only_warn_on_example_error': True,
 }
+
+# -- Sphinxext Opengraph ----------------------------------------------------
+
+ogp_image = "https://github.com/sunpy/ndcube/raw/main/docs/logo/ndcube.png"
+ogp_use_first_image = True
+ogp_description_length = 160
+ogp_custom_meta_tags = [
+    '<meta property="og:ignore_canonical" content="true" />',
+]
