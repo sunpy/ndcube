@@ -1,0 +1,30 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/ndcollection-0.1.0"
+
+title:
+  Represents the ndcube.ndcollection.NDCollection object
+
+description:
+  Represents the ndcube ndcube.ndcollection.NDCollection object
+
+type: object
+properties:
+  keys:
+    type: array
+  value:
+    type: array
+    items:
+        - type: object
+          oneOf:
+            - tag: "tag:sunpy.org:ndcube/ndcube/ndcube-0.*"
+            - tag: "tag:sunpy.org:ndcube/ndcube/ndcube_sequence-0.*"
+  aligned_axes:
+    anyOf:
+    - type: object
+    - type: string
+
+required: [keys, value]
+additionalProperties: true
+...
