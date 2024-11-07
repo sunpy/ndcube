@@ -811,9 +811,9 @@ def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
     assert isinstance(cube.wcs, BaseHighLevelWCS)
 
 
-def test_rebin(ndcube_3d_l_ln_lt_ectime):
+@pytest.mark.parametrize("bin_shape", [(10, 2, 1), (-1, 2, 1)])
+def test_rebin(ndcube_3d_l_ln_lt_ectime, bin_shape):
     cube = ndcube_3d_l_ln_lt_ectime[:, 1:]
-    bin_shape = (10, 2, 1)
     with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     output_sc, output_spec = output.axis_world_coords(wcs=output.wcs)

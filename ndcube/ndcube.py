@@ -1029,6 +1029,8 @@ class NDCube(NDCubeBase):
             Each element must be in int. If they are not they will be rounded
             to the nearest int. If provided as a `~astropy.units.Quantity` the
             units have to be convertible to pixels.
+            The sentinel value ``-1`` can be passed for a dimension which means
+            that no rebinning will occur along that dimension.
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
@@ -1139,10 +1141,14 @@ class NDCube(NDCubeBase):
         naxes = len(data_shape)
         if len(bin_shape) != naxes:
             raise ValueError("bin_shape must have an entry for each array axis.")
+        bin_shape[bin_shape == -1] = np.array(data_shape)[bin_shape == -1]
+        if (bin_shape < 0).any():
+            raise ValueError("bin_shape should not be less than -1.")
         if (np.mod(data_shape, bin_shape) != 0).any():
             raise ValueError(
                 "bin shape must be an integer fraction of the data shape in each dimension. "
-                f"data shape: {data_shape};  bin shape: {bin_shape}")
+                f"data shape: {data_shape};  bin shape: {bin_shape}"
+            )
 
         # Reshape array so odd dimensions represent pixels to be binned
         # then apply function over those axes.
