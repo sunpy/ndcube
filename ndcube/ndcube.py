@@ -480,6 +480,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
     def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None, *, units):
+        # LOLOLOLOLOLOLOLO - sHORT cIRCUIT fOR nON-cORRELATED wORLD cOORDINATES
+        if needed_axes is not None and not isinstance(wcs, ExtraCoords) and np.sum(wcs.axis_correlation_matrix[needed_axes]) == 1:
+            world_coords = wcs.pixel_to_world_values(*[0 for _ in range(len(wcs.axis_correlation_matrix[needed_axes][0])-1)], np.arange(self.data.shape[::-1][needed_axes[0]]))
+            if units:
+                world_coords = world_coords << u.Unit(wcs.world_axis_units[needed_axes[0]])
+            return world_coords
         # Create meshgrid of all pixel coordinates.
         # If user wants pixel_corners, set pixel values to pixel corners.
         # Else make pixel centers.
@@ -540,35 +546,27 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
-
         orig_wcs = wcs
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
                 return ()
-
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
         world_axes_for_obj = [np.where(object_names == name)[0] for name in unique_obj_names]
-
         # Create a mapping from world index in the WCS to object index in axes_coords
         world_index_to_object_index = {}
         for object_index, world_axes in enumerate(world_axes_for_obj):
             for world_index in world_axes:
                 world_index_to_object_index[world_index] = object_index
-
         world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
         object_indices = utils.misc.unique_sorted(
             [world_index_to_object_index[world_index] for world_index in world_indices]
         )
-
         axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices, units=False)
-
         axes_coords = values_to_high_level_objects(*axes_coords, low_level_wcs=wcs)
-
         if not axes:
             return tuple(axes_coords)
-
         return tuple(axes_coords[i] for i in object_indices)
 
     @utils.cube.sanitize_wcs
