@@ -481,8 +481,10 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     def _generate_world_coords(self, pixel_corners, wcs, needed_axes=None, *, units):
         # LOLOLOLOLOLOLOLO - sHORT cIRCUIT fOR nON-cORRELATED wORLD cOORDINATES
-        if needed_axes is not None and not isinstance(wcs, ExtraCoords) and np.sum(wcs.axis_correlation_matrix[needed_axes]) == 1:
-            world_coords = wcs.pixel_to_world_values(*[0 for _ in range(len(wcs.axis_correlation_matrix[needed_axes][0])-1)], np.arange(self.data.shape[::-1][needed_axes[0]]))
+        if not pixel_corners and needed_axes is not None and not isinstance(wcs, ExtraCoords) and np.sum(wcs.axis_correlation_matrix[needed_axes]) == 1:
+            indices = [np.arange(self.data.shape[::-1][needed_axes[0]]).tolist() if wanted else 0
+                    for wanted in wcs.axis_correlation_matrix[needed_axes][0]]
+            world_coords = wcs.pixel_to_world_values(*indices)
             if units:
                 world_coords = world_coords << u.Unit(wcs.world_axis_units[needed_axes[0]])
             return world_coords
