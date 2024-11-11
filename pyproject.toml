@@ -45,7 +45,6 @@ docs = [
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
-  "sunpy-sphinx-theme",
   "sunpy>=5.0.0",
 ]
 plotting = [
