@@ -32,47 +32,45 @@ select = [
   "RUF",
 ]
 extend-ignore = [
-  # pycodestyle
+  # pycodestyle (E, W)
   "E501", # ignore line length will use a formatter instead
-  "E712", # Avoid equality comparisons to True; use if {cond}: for truth checks
-  "E721", # type comparison Use is and is not for type comparisons, or isinstance() for isinstance checks
-   # flake8-pie
-  "PIE808", # explicit is better than implicit
-  # upgrades
+  # pyupgrade (UP)
   "UP038", # Use | in isinstance - not compatible with models and is slower
   # numpy
   "NPY002", # TODO: migrate from np.random.rand to np.random.Generator
-  # upgrades
-  "UP038", # Use | in isinstance - not compatible with models and is slower
-  # pytest
-  "PT001",  # Always use pytest.fixture()
-  "PT004",  # Fixtures which don't return anything should have leading _
-  "PT011",  # except(ValueRaises) is too broad
-  "PT012",  # except statement is too lengthy
-  "PT023",  # Always use () on pytest decorators
-  "PT023",  # Always use () on pytest decorators
-  # flake8-use-pathlib
+  # pytest (PT)
+  "PT001", # Always use pytest.fixture()
+  "PT004", # Fixtures which don't return anything should have leading _
+  "PT011", # TODO: except(ValueRaises) is too broad
+  "PT012", # TODO: except statement is too lengthy
+  "PT023", # Always use () on pytest decorators
+  # flake8-pie (PIE)
   "PIE808", # Disallow passing 0 as the first argument to range
-  # flake8-use-pathlib
+  # flake8-use-pathlib (PTH)
   "PTH123", # open() should be replaced by Path.open()
-  # Ruff
+  # Ruff (RUF)
   "RUF003", # Ignore ambiguous quote marks, doesn't allow ' in comments
-  "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
-  "RUF013",  # PEP 484 prohibits implicit `Optional`
-  "RUF015",  # Prefer `next(iter(...))` over single element slice
+  "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
+  "RUF013", # PEP 484 prohibits implicit `Optional`
+  "RUF015", # Prefer `next(iter(...))` over single element slice
 ]
 
 [lint.per-file-ignores]
-# Part of configuration, not a package.
-"setup.py" = ["INP001"]
-"conftest.py" = ["INP001"]
-"docs/conf.py" = [
-  "INP001",  # Implicit namespace package
-  "E402"  # Module imports not at top of file
+"setup.py" = [
+  "INP001", # File is part of an implicit namespace package.
 ]
-"examples/*.py" = [
-  "T201",  # We need print in our examples
-  "INP001",  # Implicit namespace package
+"conftest.py" = [
+  "INP001", # File is part of an implicit namespace package.
+]
+"docs/conf.py" = [
+  "E402" # Module imports not at top of file
+]
+"docs/*.py" = [
+  "INP001", # File is part of an implicit namespace package.
+]
+"examples/**.py" = [
+  "T201", # allow use of print in examples
+  "INP001", # File is part of an implicit namespace package.
 ]
 "__init__.py" = [
   "E402", # Module level import not at top of cell
