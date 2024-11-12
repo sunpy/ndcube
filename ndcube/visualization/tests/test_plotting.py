@@ -13,7 +13,7 @@ from ndcube.visualization import PlotterDescriptor
 
 
 @figure_test
-def test_plot_1d_cube(ndcube_1d_l):
+def test_plot_1D_cube(ndcube_1d_l):
     fig = plt.figure()
     ax = ndcube_1d_l.plot()
     assert isinstance(ax, WCSAxes)
@@ -33,7 +33,7 @@ def test_plot_1d_cube(ndcube_1d_l):
 
                              ("mask", np.s_[0, 0, 0, :], {'marker': 'o'}),],
                          indirect=["ndcube_4d"])
-def test_plot_1d_cube_from_slice(ndcube_4d, cslice, kwargs):
+def test_plot_1D_cube_from_slice(ndcube_4d, cslice, kwargs):
     # TODO: The output for the spatial plots is inconsistent between the lat
     # slice and the lon slice.
     fig = plt.figure()
@@ -46,7 +46,7 @@ def test_plot_1d_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
-def test_plot_2d_cube(ndcube_2d_ln_lt):
+def test_plot_2D_cube(ndcube_2d_ln_lt):
     fig = plt.figure()
     ax = ndcube_2d_ln_lt.plot()
     assert isinstance(ax, WCSAxes)
@@ -54,7 +54,7 @@ def test_plot_2d_cube(ndcube_2d_ln_lt):
 
 
 @figure_test
-def test_plot_2d_cube_colorbar(ndcube_2d_ln_lt):
+def test_plot_2D_cube_colorbar(ndcube_2d_ln_lt):
     fig = plt.figure()
     ax = ndcube_2d_ln_lt.plot()
     assert isinstance(ax, WCSAxes)
@@ -63,7 +63,7 @@ def test_plot_2d_cube_colorbar(ndcube_2d_ln_lt):
 
 
 @figure_test
-def test_plot_2d_cube_custom_axis(ndcube_2d_ln_lt):
+def test_plot_2D_cube_custom_axis(ndcube_2d_ln_lt):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
     ndcube_2d_ln_lt.plot(axes=ax)
@@ -71,7 +71,7 @@ def test_plot_2d_cube_custom_axis(ndcube_2d_ln_lt):
 
 
 @figure_test
-def test_plot_2d_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
+def test_plot_2D_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection=ndcube_2d_ln_lt.wcs)
     ndcube_2d_ln_lt.plot(axes=ax, plot_axes=('x', 'y'))
@@ -87,7 +87,7 @@ def test_plot_2d_cube_custom_axis_plot_axes(ndcube_2d_ln_lt):
                              ("unit_uncertainty", np.s_[0, 0, :, :], {'data_unit': u.mJ}),
                              ("mask", np.s_[0, :, 0, :], {}),],
                          indirect=["ndcube_4d"])
-def test_plot_2d_cube_from_slice(ndcube_4d, cslice, kwargs):
+def test_plot_2D_cube_from_slice(ndcube_4d, cslice, kwargs):
     fig = plt.figure()
 
     sub = ndcube_4d[cslice]
@@ -98,7 +98,7 @@ def test_plot_2d_cube_from_slice(ndcube_4d, cslice, kwargs):
 
 
 @figure_test
-def test_animate_2d_cube(ndcube_2d_ln_lt):
+def test_animate_2D_cube(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     ax = cube.plot(plot_axes=[None, 'x'])
     assert isinstance(ax, mpl_animators.ArrayAnimatorWCS)

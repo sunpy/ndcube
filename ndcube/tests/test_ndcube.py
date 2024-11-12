@@ -203,7 +203,6 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     assert awc == ()
 
 
-
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
@@ -818,11 +817,11 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime, bin_shape):
     expected_uncertainty = None
     expected_unit = cube.unit
     expected_meta = cube.meta
-    expected_tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
+    expected_Tx = np.array([[9.99999999, 19.99999994, 29.99999979, 39.9999995,
                              49.99999902, 59.99999831, 69.99999731, 79.99999599],
                             [9.99999999, 19.99999994, 29.99999979, 39.9999995,
                              49.99999902, 59.99999831, 69.99999731, 79.99999599]]) * u.arcsec
-    expected_ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
+    expected_Ty = np.array([[-14.99999996, -14.9999999, -14.99999981, -14.99999969,
                              -14.99999953, -14.99999934, -14.99999911, -14.99999885],
                             [-4.99999999, -4.99999998, -4.99999995, -4.9999999,
                              -4.99999985, -4.99999979, -4.99999971, -4.99999962]]) * u.arcsec
@@ -837,8 +836,8 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime, bin_shape):
     assert output.uncertainty == expected_uncertainty
     assert output.unit == expected_unit
     assert output.meta == expected_meta
-    assert u.allclose(output_sc.Tx, expected_tx)
-    assert u.allclose(output_sc.Ty, expected_ty)
+    assert u.allclose(output_sc.Tx, expected_Tx)
+    assert u.allclose(output_sc.Ty, expected_Ty)
     assert u.allclose(output_spec, expected_spec)
     assert output_time.scale == expected_time.scale
     assert output_time.format == expected_time.format
@@ -956,15 +955,13 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     bin_shape = (2, 4)
 
     cube._mask[:] = True
-    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values "
-                                               "are masked and operation_ignores_mask is False."):
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
                             operation_ignores_mask=False)
     assert output.uncertainty is None
 
     cube._mask = True
-    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values "
-                                               "are masked and operation_ignores_mask is False."):
+    with pytest.warns(NDCubeUserWarning, match="Uncertainties cannot be propagated as all values are masked and operation_ignores_mask is False."):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True,
                             operation_ignores_mask=False)
     assert output.uncertainty is None
@@ -1149,8 +1146,7 @@ def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
 @pytest.mark.parametrize('value', [1, 2, -1])
 def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
-    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty "
-                                               "propagation with correlation. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube =  value / ndcube_4d_unit_uncertainty
             check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
@@ -1189,8 +1185,7 @@ def test_cube_arithmetic_power(ndcube_2d_ln_lt, power):
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, power):
     cube_quantity = u.Quantity(ndcube_4d_unit_uncertainty.data, ndcube_4d_unit_uncertainty.unit)
-    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation "
-                                               "with correlation. Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match="UnknownUncertainty does not support uncertainty propagation with correlation. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube = ndcube_4d_unit_uncertainty ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
@@ -1199,9 +1194,7 @@ def test_cube_arithmetic_power_unknown_uncertainty(ndcube_4d_unit_uncertainty, p
 @pytest.mark.parametrize('power', [2, -2, 10, 0.5])
 def test_cube_arithmetic_power_std_uncertainty(ndcube_2d_ln_lt_uncert, power):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_uncert.data, ndcube_2d_ln_lt_uncert.unit)
-    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> "
-                                               r"does not support propagation of uncertainties for power. "
-                                               r"Setting uncertainties to None."):
+    with pytest.warns(NDCubeUserWarning, match=r"<class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None."):
         with np.errstate(divide='ignore'):
             new_cube = ndcube_2d_ln_lt_uncert ** power
             check_arithmetic_value_and_units(new_cube, cube_quantity**power)
@@ -1235,11 +1228,9 @@ def test_squeeze(ndcube_4d_ln_l_t_lt):
 
 def test_squeeze_error(ndcube_4d_ln_l_t_lt):
     same = ndcube_4d_ln_l_t_lt.squeeze()[0:1,:,:,:]
-    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, "
-                                         "as none of them has size equal to one."):
+    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, as none of them has size equal to one."):
         same.squeeze([0,1])
-    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become "
-                                         "a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
+    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
         same[0:1,0:1,0:1,0:1].squeeze()
 
 

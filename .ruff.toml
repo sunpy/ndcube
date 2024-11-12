@@ -44,14 +44,14 @@ extend-ignore = [
   "NPY002", # TODO: migrate from np.random.rand to np.random.Generator
   # upgrades
   "UP038", # Use | in isinstance - not compatible with models and is slower
-  # pytest (PT)
+  # pytest
   "PT001",  # Always use pytest.fixture()
   "PT004",  # Fixtures which don't return anything should have leading _
   "PT011",  # except(ValueRaises) is too broad
   "PT012",  # except statement is too lengthy
   "PT023",  # Always use () on pytest decorators
   "PT023",  # Always use () on pytest decorators
-  # flake8-pie
+  # flake8-use-pathlib
   "PIE808", # Disallow passing 0 as the first argument to range
   # flake8-use-pathlib
   "PTH123", # open() should be replaced by Path.open()
@@ -67,22 +67,22 @@ extend-ignore = [
 "setup.py" = ["INP001"]
 "conftest.py" = ["INP001"]
 "docs/conf.py" = [
+  "INP001",  # Implicit namespace package
   "E402"  # Module imports not at top of file
-]
-"docs/*.py" = [
-  "INP001",  # Implicit-namespace-package. The examples are not a package.
 ]
 "examples/*.py" = [
   "T201",  # We need print in our examples
-  "E501",  # Line too long
-  "INP001",  # implicit namespace package
+  "INP001",  # Implicit namespace package
 ]
-"ndcube/*.py" = [
-  "T201", # allow use of print in examples
-  "INP001", # File is part of an implicit namespace package.
+"__init__.py" = [
+  "E402", # Module level import not at top of cell
+  "F401", # Unused import
+  "F403", # from {name} import * used; unable to detect undefined names
+  "F405", # {name} may be undefined, or defined from star imports
 ]
-"__init__.py" = ["E402", "F401", "F403"]
-"test_*.py" = ["B011", "D", "E402", "PGH001", "S101"]
+"test_*.py" = [
+  "E402", # Module level import not at top of cell
+]
 
 [lint.pydocstyle]
 convention = "numpy"

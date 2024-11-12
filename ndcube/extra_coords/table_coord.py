@@ -20,11 +20,7 @@ try:
 except ImportError:
     pass
 
-__all__ = ['TimeTableCoordinate',
-           'SkyCoordTableCoordinate',
-           'QuantityTableCoordinate',
-           'BaseTableCoordinate',
-           'MultipleTableCoordinate']
+__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate', "BaseTableCoordinate", "MultipleTableCoordinate"]
 
 
 class Length1Tabular(_Tabular):
@@ -140,7 +136,7 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
         raise TypeError("lookup_table must be a Quantity.")  # pragma: no cover
 
     ndim = lookup_table.ndim
-    tabular_nd = tabular_model(ndim, name=f"Tabular{ndim}D")
+    TabularND = tabular_model(ndim, name=f"Tabular{ndim}D")
 
     # The integer location is at the centre of the pixel.
     points = [(np.arange(size) - 0) * points_unit for size in lookup_table.shape]
@@ -155,7 +151,7 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
     if len(lookup_table) == 1:
         t = Length1Tabular(points, lookup_table, **kwargs)
     else:
-        t = tabular_nd(points, lookup_table, **kwargs)
+        t = TabularND(points, lookup_table, **kwargs)
 
         # TODO: Remove this when there is a new gWCS release
         # Work around https://github.com/spacetelescope/gwcs/pull/331
@@ -228,8 +224,8 @@ class BaseTableCoordinate(abc.ABC):
         header = f"{self.__class__.__name__} {self.names or ''} {self.physical_types or '[None]'}:"
         content = str(self.table).lstrip('(').rstrip(',)')
         if len(header) + len(content) >= np.get_printoptions()['linewidth']:
-            return f'\n {header} \n {content}'
-        return f' {header}{content} '
+            return f'{header}\n{content}'
+        return f'{header} {content}'
 
     def __repr__(self):
         return f"{object.__repr__(self)}\n{self}"
@@ -352,9 +348,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             dwd["world_axis_physical_types"].append(self.frame.axis_physical_types[i])
             dwd["world_axis_units"].append(table.unit.to_string())
             dwd["world_axis_object_components"].append((f"quantity{i}", 0, "value"))
-            dwd["world_axis_object_classes"].update({f"quantity{i}": (u.Quantity,
-                                                                      (),
-                                                                      {"unit", table.unit.to_string()})})
+            dwd["world_axis_object_classes"].update({f"quantity{i}": (u.Quantity, (), {"unit", table.unit.to_string()})})
             return
 
         new_components["tables"].append(table[item])
@@ -813,8 +807,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
     def __init__(self, *table_coordinates):
         if not all(isinstance(lt, BaseTableCoordinate) and
                    not (isinstance(lt, MultipleTableCoordinate)) for lt in table_coordinates):
-            raise TypeError("All arguments must be BaseTableCoordinate instances, "
-                            "such as QuantityTableCoordinate, "
+            raise TypeError("All arguments must be BaseTableCoordinate instances, such as QuantityTableCoordinate, "
                             "and not instances of MultipleTableCoordinate.")
         self._table_coords = list(table_coordinates)
         self._dropped_coords = []
@@ -845,7 +838,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         if not isinstance(other, BaseTableCoordinate) or isinstance(other, MultipleTableCoordinate):
             return NotImplemented
 
-        return type(self)(*[other, *self._table_coords])
+        return type(self)(*([other, *self._table_coords]))
 
     def __getitem__(self, item):
         if isinstance(item, (slice, Integral)):
@@ -923,16 +916,11 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         dropped_multi_table = MultipleTableCoordinate(*self._dropped_coords)
 
-        dropped_world_dimensions["world_axis_names"] += [name or None for name in
-                                                         dropped_multi_table.frame.axes_names]
-        dropped_world_dimensions["world_axis_physical_types"] += (
-            list(dropped_multi_table.frame.axis_physical_types))
-        dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in
-                                                         dropped_multi_table.frame.unit]
-        dropped_world_dimensions["world_axis_object_components"] += \
-            dropped_multi_table.frame._world_axis_object_components
-        dropped_world_dimensions["world_axis_object_classes"].update(
-            dropped_multi_table.frame._world_axis_object_classes)
+        dropped_world_dimensions["world_axis_names"] += [name or None for name in dropped_multi_table.frame.axes_names]
+        dropped_world_dimensions["world_axis_physical_types"] += list(dropped_multi_table.frame.axis_physical_types)
+        dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in dropped_multi_table.frame.unit]
+        dropped_world_dimensions["world_axis_object_components"] += dropped_multi_table.frame._world_axis_object_components
+        dropped_world_dimensions["world_axis_object_classes"].update(dropped_multi_table.frame._world_axis_object_classes)
 
         for dropped in self._dropped_coords:
             # If the table is a tuple (QuantityTableCoordinate) then we need to

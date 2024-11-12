@@ -65,13 +65,10 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
         # Ensure all elements in axes_coordinates are of correct types.
         ax_coord_types = (str, type(None))
         for axis_coordinate in axes_coordinates:
-            if isinstance(axis_coordinate, str):
-                # coordinates can be accessed by either name or type
-                if axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
-                    raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
+            if isinstance(axis_coordinate, str) and axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
+                raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if not isinstance(axis_coordinate, ax_coord_types):
-                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} "
-                                f"or list of those, not {type(axis_coordinate)}.")
+                raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}.")
 
     if axes_units is not None:
         axes_units = _expand_ellipsis(wcs.world_n_dim, axes_units)

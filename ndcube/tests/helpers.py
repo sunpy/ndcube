@@ -20,13 +20,15 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 
 from ndcube import NDCube, NDCubeSequence
 
-__all__ = ['figure_test',
-           'get_hash_library_name',
-           'assert_extra_coords_equal',
-           'assert_metas_equal',
-           'assert_cubes_equal',
-           'assert_cubesequences_equal',
-           'assert_wcs_are_equal']
+__all__ = [
+    'figure_test',
+    'get_hash_library_name',
+    'assert_extra_coords_equal',
+    'assert_metas_equal',
+    'assert_cubes_equal',
+    'assert_cubesequences_equal',
+    'assert_wcs_are_equal',
+]
 
 
 def get_hash_library_name():
@@ -34,17 +36,10 @@ def get_hash_library_name():
     Generate the hash library name for this env.
     """
     ft2_version = f"{mpl.ft2font.__freetype_version__.replace('.', '')}"
-    animators_version = "dev" if (("dev" in mpl_animators.__version__)
-                                  or ("rc" in mpl_animators.__version__))\
-                                  else mpl_animators.__version__.replace('.', '')
-    mpl_version = "dev" if (("dev" in mpl.__version__)
-                            or ("rc" in mpl.__version__)) \
-                            else mpl.__version__.replace('.', '')
-    astropy_version = "dev" if (("dev" in astropy.__version__)
-                                or ("rc" in astropy.__version__)) \
-                                else astropy.__version__.replace('.', '')
-    return (f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}"
-            f"_astropy_{astropy_version}_animators_{animators_version}.json")
+    animators_version = "dev" if (("dev" in mpl_animators.__version__) or ("rc" in mpl_animators.__version__)) else mpl_animators.__version__.replace('.', '')
+    mpl_version = "dev" if (("dev" in mpl.__version__) or ("rc" in mpl.__version__)) else mpl.__version__.replace('.', '')
+    astropy_version = "dev" if (("dev" in astropy.__version__) or ("rc" in astropy.__version__)) else astropy.__version__.replace('.', '')
+    return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}_astropy_{astropy_version}_animators_{animators_version}.json"
 
 
 def figure_test(test_function):
@@ -155,8 +150,7 @@ def assert_wcs_are_equal(wcs1, wcs2):
         # SlicedLowLevelWCS vs BaseHighLevelWCS don't have the same pixel_to_world method
         low_level_wcs1 = wcs1.low_level_wcs if isinstance(wcs1, BaseHighLevelWCS) else wcs1
         low_level_wcs2 = wcs2.low_level_wcs if isinstance(wcs2, BaseHighLevelWCS) else wcs2
-        np.testing.assert_array_equal(low_level_wcs1.pixel_to_world_values(*random_idx.T),
-                                      low_level_wcs2.pixel_to_world_values(*random_idx.T))
+        np.testing.assert_array_equal(low_level_wcs1.pixel_to_world_values(*random_idx.T), low_level_wcs2.pixel_to_world_values(*random_idx.T))
 
 def create_sliced_wcs(wcs, item, dim):
     """
