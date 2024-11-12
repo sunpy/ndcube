@@ -100,7 +100,7 @@ class NDCollection(dict):
             Aligned physical types: {self.aligned_axis_physical_types}"""))
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"
 
     @property
     def aligned_dimensions(self):
@@ -113,6 +113,7 @@ class NDCollection(dict):
             return np.asanyarray(self[self._first_key].shape, dtype=object)[
                 np.array(self.aligned_axes[self._first_key])
             ]
+        return None
 
     @property
     def aligned_axis_physical_types(self):
@@ -145,40 +146,39 @@ class NDCollection(dict):
             return super().__getitem__(item)
 
         # If item is not a single string...
+        # If item is a sequence, ensure strings and numeric items are not mixed.
+        item_is_strings = False
+        if isinstance(item, collections.abc.Sequence):
+            item_strings = [isinstance(item_, str) for item_ in item]
+            item_is_strings = all(item_strings)
+            # Ensure strings are not mixed with slices.
+            if (not item_is_strings) and (not all(np.invert(item_strings))):
+                raise TypeError("Cannot mix keys and non-keys when indexing instance.")
+
+        # If sequence is all strings, extract the cubes corresponding to the string keys.
+        if item_is_strings:
+            new_data = [self[_item] for _item in item]
+            new_keys = item
+            new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
+
+        # Else, the item is assumed to be a typical slicing item.
+        # Slice each cube in collection using information in this item.
+        # However, this can only be done if there are aligned axes.
         else:
-            # If item is a sequence, ensure strings and numeric items are not mixed.
-            item_is_strings = False
-            if isinstance(item, collections.abc.Sequence):
-                item_strings = [isinstance(item_, str) for item_ in item]
-                item_is_strings = all(item_strings)
-                # Ensure strings are not mixed with slices.
-                if (not item_is_strings) and (not all(np.invert(item_strings))):
-                    raise TypeError("Cannot mix keys and non-keys when indexing instance.")
+            if self.aligned_axes is None:
+                raise IndexError("Cannot slice unless collection has aligned axes.")
+            # Derive item to be applied to each cube in collection and
+            # whether any aligned axes are dropped by the slicing.
+            collection_items, new_aligned_axes = self._generate_collection_getitems(item)
+            # Apply those slice items to each cube in collection.
+            new_data = [self[key][tuple(cube_item)]
+                        for key, cube_item in zip(self, collection_items)]
+            # Since item is not strings, no cube in collection is dropped.
+            # Therefore the collection keys remain unchanged.
+            new_keys = list(self.keys())
 
-            # If sequence is all strings, extract the cubes corresponding to the string keys.
-            if item_is_strings:
-                new_data = [self[_item] for _item in item]
-                new_keys = item
-                new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
-
-            # Else, the item is assumed to be a typical slicing item.
-            # Slice each cube in collection using information in this item.
-            # However, this can only be done if there are aligned axes.
-            else:
-                if self.aligned_axes is None:
-                    raise IndexError("Cannot slice unless collection has aligned axes.")
-                # Derive item to be applied to each cube in collection and
-                # whether any aligned axes are dropped by the slicing.
-                collection_items, new_aligned_axes = self._generate_collection_getitems(item)
-                # Apply those slice items to each cube in collection.
-                new_data = [self[key][tuple(cube_item)]
-                            for key, cube_item in zip(self, collection_items)]
-                # Since item is not strings, no cube in collection is dropped.
-                # Therefore the collection keys remain unchanged.
-                new_keys = list(self.keys())
-
-            return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
-                                  meta=self.meta, sanitize_inputs=False)
+        return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
+                              meta=self.meta, sanitize_inputs=False)
 
     def _generate_collection_getitems(self, item):
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
@@ -288,7 +288,8 @@ class NDCollection(dict):
         )
         # Update collection
         super().update(key_data_pairs)
-        if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
+        # since the above assertion passed, if one aligned axes is not None, both are not None
+        if first_old_aligned_axes is not None:
             self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):

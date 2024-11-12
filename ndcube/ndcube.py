@@ -309,7 +309,7 @@ class NDCubeLinkedDescriptor:
 
     def __get__(self, obj, objtype=None):
         if obj is None:
-            return
+            return None
 
         if getattr(obj, self._attribute_name, None) is None and self._default_type is not None:
             self.__set__(obj, self._default_type)
@@ -474,7 +474,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             # First construct a range of pixel indices for this set of coupled dimensions
             sub_range = [ranges[idx] for idx in pixel_axes_indices]
             # Then get a set of non correlated dimensions
-            non_corr_axes = set(list(range(wcs.pixel_n_dim))) - set(pixel_axes_indices)
+            non_corr_axes = set(range(wcs.pixel_n_dim)) - set(pixel_axes_indices)
             # And inject 0s for those coordinates
             for idx in non_corr_axes:
                 sub_range.insert(idx, 0)
@@ -509,7 +509,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
-                return tuple()
+                return ()
 
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
@@ -581,24 +581,23 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Quit out early if we are no-op
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
-        else:
-            comp = [c[0] for c in wcs.world_axis_object_components]
-            # Trim to unique component names - `np.unique(..., return_index=True)
-            # keeps sorting alphabetically, set() seems just nondeterministic.
-            for k, c in enumerate(comp):
-                if comp.count(c) > 1:
-                    comp.pop(k)
-            classes = [wcs.world_axis_object_classes[c][0] for c in comp]
-            for i, point in enumerate(points):
-                if len(point) != len(comp):
-                    raise ValueError(f"{len(point)} components in point {i} do not match "
-                                     f"WCS with {len(comp)} components.")
-                for j, value in enumerate(point):
-                    if not (value is None or isinstance(value, classes[j])):
-                        raise TypeError(f"{type(value)} of component {j} in point {i} is "
-                                        f"incompatible with WCS component {comp[j]} "
-                                        f"{classes[j]}.")
-            return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
+        comp = [c[0] for c in wcs.world_axis_object_components]
+        # Trim to unique component names - `np.unique(..., return_index=True)
+        # keeps sorting alphabetically, set() seems just nondeterministic.
+        for k, c in enumerate(comp):
+            if comp.count(c) > 1:
+                comp.pop(k)
+        classes = [wcs.world_axis_object_classes[c][0] for c in comp]
+        for i, point in enumerate(points):
+            if len(point) != len(comp):
+                raise ValueError(f"{len(point)} components in point {i} do not match "
+                                 f"WCS with {len(comp)} components.")
+            for j, value in enumerate(point):
+                if not (value is None or isinstance(value, classes[j])):
+                    raise TypeError(f"{type(value)} of component {j} in point {i} is "
+                                    f"incompatible with WCS component {comp[j]} "
+                                    f"{classes[j]}.")
+        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
 
     def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
@@ -652,7 +651,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 Data Type: {self.data.dtype}""")
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"
 
     def explode_along_axis(self, axis):
         """
@@ -687,7 +686,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Creating a new NDCubeSequence with the result_cubes and common axis as axis
         return NDCubeSequence(result_cubes, meta=self.meta)
 
-    def reproject_to(self, target_wcs, algorithm='interpolation', shape_out=None, return_footprint=False, **reproject_args):
+    def reproject_to(self,
+                     target_wcs,
+                     algorithm='interpolation',
+                     shape_out=None,
+                     return_footprint=False,
+                     **reproject_args):
         """
         Reprojects the instance to the coordinates described by another WCS object.
 
@@ -721,7 +725,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         Returns
         -------
         reprojected_cube : `ndcube.NDCube`
-            A new resultant NDCube object, the supplied ``target_wcs`` will be the ``.wcs`` attribute of the output `~ndcube.NDCube`.
+            A new resultant NDCube object, the supplied ``target_wcs`` will be
+            the ``.wcs`` attribute of the output `~ndcube.NDCube`.
 
         footprint: `numpy.ndarray`
             Footprint of the input array in the output array.
@@ -744,7 +749,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             from reproject import reproject_adaptive, reproject_exact, reproject_interp
             from reproject.wcs_utils import has_celestial
         except ModuleNotFoundError:
-            raise ImportError(f"The {type(self).__name__}.reproject_to method requires the `reproject` library to be installed.")
+            raise ImportError(f"The {type(self).__name__}.reproject_to method requires "
+                              f"the `reproject` library to be installed.")
 
         algorithms = {
             "interpolation": reproject_interp,
@@ -867,14 +873,13 @@ class NDCube(NDCubeBase):
     def _as_mpl_axes(self):
         if hasattr(self.plotter, "_as_mpl_axes"):
             return self.plotter._as_mpl_axes()
-        else:
-            warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
-                        "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
+        warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
+                    "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
 
-            from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+        from ndcube.visualization.mpl_plotter import MatplotlibPlotter
 
-            plotter = MatplotlibPlotter(self)
-            return plotter._as_mpl_axes()
+        plotter = MatplotlibPlotter(self)
+        return plotter._as_mpl_axes()
 
     def plot(self, *args, **kwargs):
         """
@@ -957,8 +962,7 @@ class NDCube(NDCubeBase):
         new_data = self.data * value
         new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
-        new_cube = self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
-        return new_cube
+        return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
 
     def __rmul__(self, value):
         return self.__mul__(value)
@@ -980,7 +984,8 @@ class NDCube(NDCubeBase):
             except ValueError as e:
                 if "unsupported operation" in e.args[0]:
                     new_uncertainty = None
-                    warn_user(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. Setting uncertainties to None.")
+                    warn_user(f"{type(self.uncertainty)} does not support propagation of uncertainties for power. "
+                              f"Setting uncertainties to None.")
                 elif "does not support uncertainty propagation" in e.args[0]:
                     new_uncertainty = None
                     warn_user(f"{e.args[0]} Setting uncertainties to None.")
@@ -1179,7 +1184,7 @@ class NDCube(NDCubeBase):
                 warn_user("Uncertainties cannot be propagated as there are no uncertainties, "
                               "i.e., the `uncertainty` keyword was never set on creation of this NDCube.")
             elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-                warn_user("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped. "
+                warn_user("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped."
                               "To create an uncertainty that can propagate, please see "
                               "https://docs.astropy.org/en/stable/uncertainty/index.html")
             elif (not operation_ignores_mask
@@ -1198,7 +1203,7 @@ class NDCube(NDCubeBase):
                 # in each bin can be iterated (all bins being treated in parallel) and
                 # their uncertainties propagated.
                 bin_size = bin_shape.prod()
-                flat_shape = [bin_size] + list(new_shape)
+                flat_shape = [bin_size, *list(new_shape)]
                 dummy_axes = tuple(range(1, len(reshape), 2))
                 flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
                 flat_data = flat_data.reshape(flat_shape)
@@ -1267,7 +1272,8 @@ class NDCube(NDCubeBase):
             item[axis] = 0
         # Scalar NDCubes are not supported, so we raise error as the operation would cause all the axes to be squeezed.
         if (item == 0).all():
-            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze.")
+            raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. "
+                             "Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
 
 
@@ -1275,11 +1281,10 @@ def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
     if m is None:
         return data, m
+    for array_type, masked_type in ARRAY_MASK_MAP.items():
+        if isinstance(data, array_type):
+            break
     else:
-        for array_type, masked_type in ARRAY_MASK_MAP.items():
-            if isinstance(data, array_type):
-                break
-        else:
-            masked_type = np.ma.masked_array
-            warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
-        return masked_type(data, m), m
+        masked_type = np.ma.masked_array
+        warn_user("data and mask arrays of different or unrecognized types. Casting them into a numpy masked array.")
+    return masked_type(data, m), m
