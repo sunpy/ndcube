@@ -3,6 +3,7 @@
 import os
 import warnings
 import datetime
+from pathlib import Path
 
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from matplotlib import MatplotlibDeprecationWarning
@@ -58,7 +59,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ["_templates"]  # NOQA: ERA001
+# templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -116,7 +117,7 @@ graphviz_dot_args = [
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ["_static"]  # NOQA: ERA001
+# html_static_path = ["_static"]
 
 # By default, when rendering docstrings for classes, sphinx.ext.autodoc will
 # make docs with the class-level docstring and the class-method docstrings,
@@ -146,11 +147,11 @@ for line in open('nitpick-exceptions'):
 # -- Sphinx Gallery ---------------------------------------------------------
 
 sphinx_gallery_conf = {
-    'backreferences_dir': os.path.join('generated', 'modules'),
+    'backreferences_dir': Path('generated/modules'),
     'filename_pattern': '^((?!skip_).)*$',
-    'examples_dirs': os.path.join('..', 'examples'),
+    'examples_dirs': Path('../examples'),
     'within_subsection_order': "ExampleTitleSortKey",
-    'gallery_dirs': os.path.join('generated', 'gallery'),
+    'gallery_dirs': Path('generated/gallery'),
     'matplotlib_animations': True,
     "default_thumb_file": png_icon,
     'abort_on_example_error': False,

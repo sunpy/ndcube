@@ -47,22 +47,22 @@ class PlotterDescriptor:
                 except ImportError as e:
                     if raise_error:
                         raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
+            return None
 
-        elif self._default_type is not None:
+        if self._default_type is not None:
             return self._default_type
 
         # If we have no default type then just return None
-        else:
-            return
+        return None
 
     def __get__(self, obj, objtype=None):
         if obj is None:
-            return
+            return None
 
         if getattr(obj, self._attribute_name, None) is None:
             plotter_type = self._resolve_default_type()
             if plotter_type is None:
-                return
+                return None
 
             self.__set__(obj, plotter_type)
 

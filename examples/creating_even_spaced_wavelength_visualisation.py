@@ -34,7 +34,7 @@ aia_files = [sunpy.data.sample.AIA_094_IMAGE,
 # `sequence=True` causes a sequence of maps to be returned, one for each image file.
 sequence_of_maps = sunpy.map.Map(aia_files, sequence=True)
 # Sort the maps in the sequence in order of wavelength.
-sequence_of_maps.maps = list(sorted(sequence_of_maps.maps, key=lambda m: m.wavelength))
+sequence_of_maps.maps = sorted(sequence_of_maps.maps, key=lambda m: m.wavelength)
 
 #############################################################################
 # Using an `astropy.units.Quantity` of the wavelengths of the images, we can construct

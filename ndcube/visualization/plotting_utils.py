@@ -65,10 +65,8 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
         # Ensure all elements in axes_coordinates are of correct types.
         ax_coord_types = (str, type(None))
         for axis_coordinate in axes_coordinates:
-            if isinstance(axis_coordinate, str):
-                # coordinates can be accessed by either name or type
-                if axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
-                    raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
+            if isinstance(axis_coordinate, str) and axis_coordinate not in set(wcs.world_axis_physical_types).union(set(wcs.world_axis_names)):
+                raise ValueError(f"{axis_coordinate} is not one of this cubes world axis physical types.")
             if not isinstance(axis_coordinate, ax_coord_types):
                 raise TypeError(f"axes_coordinates must be one of {ax_coord_types} or list of those, not {type(axis_coordinate)}.")
 
@@ -77,7 +75,7 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
         if len(axes_units) != wcs.world_n_dim:
             raise ValueError(f"The length of the axes_units argument must be {wcs.world_n_dim}.")
         # Convert all non-None elements to astropy units
-        axes_units = list(map(lambda x: u.Unit(x) if x is not None else None, axes_units))[::-1]
+        axes_units = [u.Unit(x) if x is not None else None for x in axes_units][::-1]
         for i, axis_unit in enumerate(axes_units):
             wau = wcs.world_axis_units[i]
             if axis_unit is not None and not axis_unit.is_equivalent(wau):
