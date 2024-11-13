@@ -4,7 +4,7 @@ import pytest
 from ndcube.utils import collection as collection_utils
 
 
-@pytest.mark.parametrize("data_dimensions1,data_dimensions2,data_axes1,data_axes2", [
+@pytest.mark.parametrize(("data_dimensions1", "data_dimensions2", "data_axes1", "data_axes2"), [
     ([3., 4., 5.], [3., 5., 15.], (0, 2), (0, 1))])
 def test_assert_aligned_axes_compatible(data_dimensions1, data_dimensions2,
                                         data_axes1, data_axes2):
@@ -12,7 +12,7 @@ def test_assert_aligned_axes_compatible(data_dimensions1, data_dimensions2,
                                                     data_axes1, data_axes2)
 
 
-@pytest.mark.parametrize("data_dimensions1,data_dimensions2,data_axes1,data_axes2", [
+@pytest.mark.parametrize(("data_dimensions1", "data_dimensions2", "data_axes1", "data_axes2"), [
     ([3., 4., 5.], [3., 5., 15.], (0, 1), (0, 1)),
     ([3., 4., 5.], [3., 5., 15.], (0, 1), (0, 1, 2)),
     ([3., 4., 5.], [3., 5., 15.], (0, 1), None)])

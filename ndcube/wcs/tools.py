@@ -55,13 +55,13 @@ def unwrap_wcs_to_fitswcs(wcs):
     for low_level_wrapper in wrapper_chain[::-1]:
         if isinstance(low_level_wrapper, SlicedLowLevelWCS):
             slice_items = np.array([slice(None)] * fitswcs.naxis)
-            slice_items[dropped_data_axes == False] = low_level_wrapper._slices_array  # numpy order
+            slice_items[dropped_data_axes == False] = low_level_wrapper._slices_array  # numpy order  # NOQA: E712
             fitswcs, dda = _slice_fitswcs(fitswcs, slice_items, numpy_order=True)
             dropped_data_axes[dda] = True
         elif isinstance(low_level_wrapper, ResampledLowLevelWCS):
             factor = np.ones(fitswcs.naxis)
             offset = np.zeros(fitswcs.naxis)
-            kept_wcs_axes = dropped_data_axes[::-1] == False  # WCS-order
+            kept_wcs_axes = dropped_data_axes[::-1] == False  # WCS-order  # NOQA: E712
             factor[kept_wcs_axes] = low_level_wrapper._factor
             offset[kept_wcs_axes] = low_level_wrapper._offset
             fitswcs = _resample_fitswcs(fitswcs, factor, offset)
