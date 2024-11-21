@@ -928,10 +928,11 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         for dropped in self._dropped_coords:
             # If the table is a tuple (QuantityTableCoordinate) then we need to
             # squish the input
+            coord_meth = getattr(dropped.frame, "from_high_level_coordinates", getattr(dropped.frame, "coordinates"))
             if isinstance(dropped.table, tuple):
-                coord = dropped.frame.from_high_level_coordinates(*dropped.table)
+                coord = coord_meth(*dropped.table)
             else:
-                coord = dropped.frame.from_high_level_coordinates(dropped.table)
+                coord = coord_meth(dropped.table)
 
             # We want the value in the output dict to be a flat list of values
             # in the order of world_axis_object_components, so if we get a
