@@ -520,7 +520,6 @@ def test_mtc_dropped_table_skycoord_join(lut_1d_time, lut_2d_skycoord_mesh):
     assert isinstance(dwd, dict)
     wao_classes = dwd.pop("world_axis_object_classes")
     assert all(isinstance(value, list) for value in dwd.values())
-    # assert all(len(value) == 2 for value in dwd.values())
 
     assert dwd["world_axis_names"] == ["lon", "lat"]
     assert all(isinstance(u, str) for u in dwd["world_axis_units"])
