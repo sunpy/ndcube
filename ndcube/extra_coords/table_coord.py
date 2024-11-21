@@ -1,6 +1,7 @@
 import abc
 import copy
 from numbers import Integral
+from functools import partial
 from collections import defaultdict
 
 import gwcs
@@ -13,6 +14,7 @@ from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
+from astropy.utils import isiterable
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
 try:
@@ -901,6 +903,17 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         return cf.CompositeFrame(frames)
 
+    @staticmethod
+    def _from_high_level_coordinates(dropped_frame, *highlevel_coords):
+        """
+        This is a backwards compatibility wrapper for the new
+        from_high_level_coordinates method in gwcs.
+        """
+        quantities = dropped_frame.coordinate_to_quantity(*highlevel_coords)
+        if isiterable(quantities):
+            quantities = tuple(q.value for q in quantities)
+        return quantities
+
     @property
     def dropped_world_dimensions(self):
         dropped_world_dimensions = defaultdict(list)
@@ -932,7 +945,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
             coord_meth = getattr(
                 dropped.frame,
                 "from_high_level_coordinates",
-                getattr(dropped.frame, "coordinate_to_quantity", None)
+                partial(self._from_high_level_coordinates, dropped.frame)
             )
             if isinstance(dropped.table, tuple):
                 coord = coord_meth(*dropped.table)
