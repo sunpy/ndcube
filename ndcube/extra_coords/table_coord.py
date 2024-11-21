@@ -920,15 +920,20 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         dropped_world_dimensions["world_axis_physical_types"] += list(dropped_multi_table.frame.axis_physical_types)
         dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in dropped_multi_table.frame.unit]
         # In gwcs https://github.com/spacetelescope/gwcs/pull/457 the underscore was dropped
-        waocomp = getattr(dropped_multi_table.frame, "world_axis_object_components", getattr(dropped_multi_table.frame, "_world_axis_object_components"))
+        waocomp = getattr(dropped_multi_table.frame, "world_axis_object_components", getattr(dropped_multi_table.frame, "_world_axis_object_components", []))
         dropped_world_dimensions["world_axis_object_components"] += waocomp
-        waocls = getattr(dropped_multi_table.frame, "world_axis_object_classes", getattr(dropped_multi_table.frame, "_world_axis_object_classes"))
+        waocls = getattr(dropped_multi_table.frame, "world_axis_object_classes", getattr(dropped_multi_table.frame, "_world_axis_object_classes", {}))
         dropped_world_dimensions["world_axis_object_classes"].update(waocls)
 
         for dropped in self._dropped_coords:
             # If the table is a tuple (QuantityTableCoordinate) then we need to
             # squish the input
-            coord_meth = getattr(dropped.frame, "from_high_level_coordinates", getattr(dropped.frame, "coordinates"))
+            # In gwcs https://github.com/spacetelescope/gwcs/pull/457 coordinate_to_quantity was removed
+            coord_meth = getattr(
+                dropped.frame,
+                "from_high_level_coordinates",
+                getattr(dropped.frame, "coordinate_to_quantity", None)
+            )
             if isinstance(dropped.table, tuple):
                 coord = coord_meth(*dropped.table)
             else:
