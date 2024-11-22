@@ -483,7 +483,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # This will generate only the coordinates that are needed if there is no correlation within the WCS
         # This bypasses the entire rest of the function below which works out the full set of coordinates
         # This only works for WCS that have the same number of world and pixel dimensions
-        if needed_axes is not None and not isinstance(wcs, ExtraCoords) and np.sum(wcs.axis_correlation_matrix[needed_axes]) == 1 and len(self.data.shape) == wcs.world_n_dim:
+        if needed_axes is not None and not isinstance(wcs, ExtraCoords) and np.sum(wcs.axis_correlation_matrix[needed_axes]) == 1:
             lims = (-0.5, self.data.shape[::-1][needed_axes[0]] + 1) if pixel_corners else (0, self.data.shape[::-1][needed_axes[0]])
             indices = [np.arange(lims[0], lims[1]) if wanted else [0] for wanted in wcs.axis_correlation_matrix[needed_axes][0]]
             world_coords = wcs.pixel_to_world_values(*indices)
@@ -525,7 +525,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             # First construct a range of pixel indices for this set of coupled dimensions
             pixel_ranges_subset = [pixel_ranges[idx] for idx in pixel_axes_indices]
             # Then get a set of non-correlated dimensions
-            non_corr_axes = set(list(range(wcs.pixel_n_dim))) - set(pixel_axes_indices)
+            non_corr_axes = set(range(wcs.pixel_n_dim)) - set(pixel_axes_indices)
             # And inject 0s for those coordinates
             for idx in non_corr_axes:
                 pixel_ranges_subset.insert(idx, 0)
