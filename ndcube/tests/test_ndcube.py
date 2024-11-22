@@ -235,6 +235,20 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
+def test_axis_world_coords_crazy(ndcube_3d_wave_lt_ln_ec_time):
+    # This replicates a specific NDCube test in the visualization.rst
+    coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
+    assert len(coords) == 1
+    assert isinstance(coords[0], Time)
+    assert np.all(coords[0] == Time(['2000-01-01T00:00:00.000', '2000-01-01T00:01:00.000', '2000-01-01T00:02:00.000']))
+
+    # This fails and returns the wrong coords
+    coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords_values('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
+    assert len(coords) == 1
+    assert isinstance(coords.time, Time)
+    assert np.all(coords.time == Time(['2000-01-01T00:00:00.000', '2000-01-01T00:01:00.000', '2000-01-01T00:02:00.000']))
+
+
 @pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
 

@@ -484,11 +484,17 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # This bypasses the entire rest of the function below which works out the full set of coordinates
         # This only works for WCS that have the same number of world and pixel dimensions
         if needed_axes is not None and not isinstance(wcs, ExtraCoords) and np.sum(wcs.axis_correlation_matrix[needed_axes]) == 1:
-            lims = (-0.5, self.data.shape[::-1][needed_axes[0]] + 1) if pixel_corners else (0, self.data.shape[::-1][needed_axes[0]])
-            indices = [np.arange(lims[0], lims[1]) if wanted else [0] for wanted in wcs.axis_correlation_matrix[needed_axes][0]]
+            # Account for non-pixel axes affecting the value of needed_axes
+            # Only works for one axis
+            if np.max(wcs.axis_correlation_matrix[needed_axes][0].shape) == needed_axes[0]:
+                needed_axis = needed_axes[0] - 1
+            else:
+                needed_axis = needed_axes[0]
+            lims = (-0.5, self.data.shape[::-1][needed_axis] + 1) if pixel_corners else (0, self.data.shape[::-1][needed_axis])
+            indices = [np.arange(lims[0], lims[1]) if wanted else [0] for wanted in wcs.axis_correlation_matrix[needed_axis]]
             world_coords = wcs.pixel_to_world_values(*indices)
             if units:
-                world_coords = world_coords << u.Unit(wcs.world_axis_units[needed_axes[0]])
+                world_coords = world_coords << u.Unit(wcs.world_axis_units[needed_axis])
             return world_coords
 
         # Create a meshgrid of all pixel coordinates.
@@ -582,23 +588,19 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
-
         orig_wcs = wcs
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
-
+            if not wcs:
+                return ()
         world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
-
         axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, world_indices, units=True)
-
         world_axis_physical_types = wcs.world_axis_physical_types
-
         # If user has supplied axes, extract only the
         # world coords that correspond to those axes.
         if axes:
             axes_coords = [axes_coords[i] for i in world_indices]
             world_axis_physical_types = tuple(np.array(world_axis_physical_types)[world_indices])
-
         # Return in array order.
         # First replace characters in physical types forbidden for namedtuple identifiers.
         identifiers = []
