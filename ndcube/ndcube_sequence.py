@@ -56,17 +56,17 @@ class NDCubeSequenceBase:
 
     @property
     def _shape(self):
-        dimensions = [len(self.data), *list(self.data[0].data.shape)] 
+        dimensions = [len(self.data), *list(self.data[0].data.shape)]
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
             # represent them as a tuple of all the values, else as an int.
             if self._common_axis is not None:
-                common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data] 
+                common_axis_lengths = [cube.data.shape[self._common_axis] for cube in self.data]
                 if len(np.unique(common_axis_lengths)) != 1:
                     common_axis_dimensions = tuple([cube.shape[self._common_axis]
                                                    for cube in self.data])
-                    dimensions[self._common_axis + 1] = common_axis_dimensions 
+                    dimensions[self._common_axis + 1] = common_axis_dimensions
         return tuple(dimensions)
 
     @property
@@ -82,7 +82,7 @@ class NDCubeSequenceBase:
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
         warn_deprecated("Replaced by ndcube.NDCubeSequence.cube_like_shape")
-        return tuple(u.Quantity(d, unit=u.pix) for d in self.cube_like_shape) 
+        return tuple(u.Quantity(d, unit=u.pix) for d in self.cube_like_shape)
 
     @property
     def cube_like_shape(self):
