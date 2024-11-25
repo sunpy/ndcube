@@ -172,7 +172,7 @@ def test_shared_pixel_axis_compound_3d(spectral_cube_3d_fitswcs, time_1d_fitswcs
                                                              [False, True, False]])
 
     world = wcs.pixel_to_world_values(0, 0, 0)
-    if astropy.__version__ >= "7.0.0.dev":
+    if astropy.__version__ >= "7.0.0":
         np.testing.assert_allclose(world, (14, np.nan, np.nan, -7.0))
         np.testing.assert_allclose(wcs.world_to_pixel_values(*world), (0, np.nan, np.nan))
     else:
