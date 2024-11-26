@@ -235,7 +235,7 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
-def test_axis_world_coords_crazy(ndcube_3d_wave_lt_ln_ec_time):
+def test_axis_world_coords_combined_wcs(ndcube_3d_wave_lt_ln_ec_time):
     # This replicates a specific NDCube test in the visualization.rst
     coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
     assert len(coords) == 1
