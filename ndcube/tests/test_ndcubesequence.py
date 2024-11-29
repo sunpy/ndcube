@@ -134,6 +134,15 @@ def test_cube_like_shape(ndc, expected_shape):
     assert np.all(ndc.cube_like_shape == expected_shape)
 
 
+@pytest.mark.parametrize(("ndc", "expected_dimensions"),
+                         [
+                             ("ndcubesequence_4c_ln_lt_l_cax1", tuple(u.Quantity(d, unit=u.pix) for d in [2. , 12, 4])),
+                         ],
+                         indirect=("ndc",))
+def test_cube_like_dimensions(ndc, expected_dimensions):
+    assert np.all(ndc.cube_like_dimensions == expected_dimensions)
+
+
 @pytest.mark.parametrize("ndc", (["ndcubesequence_4c_ln_lt_l"]), indirect=("ndc",))
 def test_cube_like_shape_error(ndc):
     with pytest.raises(TypeError):
