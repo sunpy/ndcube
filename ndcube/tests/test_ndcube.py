@@ -12,6 +12,7 @@ import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.nddata import UnknownUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.units import UnitsError
 from astropy.wcs import WCS
@@ -236,17 +237,16 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
 
 
 def test_axis_world_coords_combined_wcs(ndcube_3d_wave_lt_ln_ec_time):
-    # This replicates a specific NDCube test in the visualization.rst
+    # This replicates a specific NDCube object in visualization.rst
     coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
     assert len(coords) == 1
     assert isinstance(coords[0], Time)
     assert np.all(coords[0] == Time(['2000-01-01T00:00:00.000', '2000-01-01T00:01:00.000', '2000-01-01T00:02:00.000']))
 
-    # This fails and returns the wrong coords
     coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords_values('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
     assert len(coords) == 1
-    assert isinstance(coords.time, Time)
-    assert np.all(coords.time == Time(['2000-01-01T00:00:00.000', '2000-01-01T00:01:00.000', '2000-01-01T00:02:00.000']))
+    assert isinstance(coords.time, u.Quantity)
+    assert_quantity_allclose(coords.time, [0, 60, 120] * u.second)
 
 
 @pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
@@ -271,10 +271,10 @@ def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_3d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
     coords = ndc[item].axis_world_coords()
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
 @pytest.mark.parametrize(("ndc", "item"),
