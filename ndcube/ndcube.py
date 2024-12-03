@@ -483,6 +483,28 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
 
     def _generate_independent_world_coords(self, pixel_corners, wcs, pixel_axes, units):
+        """
+        Generate world coordinates for independent axes.
+
+        The idea is to workout only the specific grid that is needed for independent axes.
+        This speeds up the calculation of world coordinates and reduces memory usage.
+
+        Parameters
+        ----------
+        pixel_corners : bool
+            If one needs pixel corners, otherwise pixel centers.
+        wcs : astropy.wcs.WCS
+            The WCS.
+        pixel_axes : array-like
+            The pixel axes.
+        units : bool
+            If units are needed.
+
+        Returns
+        -------
+        array-like
+            The world coordinates.
+        """
         naxes = len(self.data.shape)
         pixel_indices = [np.array([0], dtype=int).reshape([1] * naxes).squeeze()] * naxes
         for pixel_axis in pixel_axes:
@@ -506,9 +528,28 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return world_coords
 
     def _generate_dependent_world_coords(self, pixel_corners, wcs, pixel_axes, units):
-        # Create a meshgrid of all pixel coordinates.
-        # If the user wants pixel corners, set pixel values to pixel corners.
-        # Else make pixel centers.
+        """
+        Generate world coordinates for dependent axes.
+
+        This will work out the exact grid that is needed for dependent axes
+        and can be time and memory consuming.
+
+        Parameters
+        ----------
+        pixel_corners : bool
+            If one needs pixel corners, otherwise pixel centers.
+        wcs : astropy.wcs.WCS
+            The WCS.
+        pixel_axes : array-like
+            The pixel axes.
+        units : bool
+            If units are needed.
+
+        Returns
+        -------
+        array-like
+            The world coordinates.
+        """
         pixel_shape = self.data.shape[::-1]
         if pixel_corners:
             pixel_shape = tuple(np.array(pixel_shape) + 1)
@@ -553,6 +594,27 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
 
     def _generate_world_coords(self, pixel_corners, wcs, *, needed_axes=None, units=None):
+        """
+        Private method to generate world coordinates.
+
+        Handles both dependent and independent axes.
+
+        Parameters
+        ----------
+        pixel_corners : bool
+            If one needs pixel corners, otherwise pixel centers.
+        wcs : astropy.wcs.WCS
+            The WCS.
+        needed_axes : array-like
+            The axes that are needed.
+        units : bool
+            If units are needed.
+
+        Returns
+        -------
+        array-like
+            The world coordinates.
+        """
         # TODO: Workout why I need this twice now.
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
