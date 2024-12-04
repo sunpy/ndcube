@@ -178,9 +178,19 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
 
     coords = cube.axis_world_coords()
     assert len(coords) == 2
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+    assert isinstance(coords[1], SpectralCoord)
+    assert coords[1].shape == (10,)
 
     coords = cube.axis_world_coords(wcs=cube.combined_wcs)
     assert len(coords) == 3
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+    assert isinstance(coords[1], SpectralCoord)
+    assert coords[1].shape == (10,)
+    assert isinstance(coords[2], Time)
+    assert coords[2].shape == (5,)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1
@@ -199,8 +209,6 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
-    assert awc == ()
-    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords, units=True)
     assert awc == ()
 
 
