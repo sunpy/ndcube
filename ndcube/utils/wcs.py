@@ -49,8 +49,8 @@ wcs_to_ivoa = {
     "HECH": "pos.bodyrc.alt",
 }
 wcs_ivoa_mapping = TwoWayDict()
-for key in wcs_to_ivoa.keys():
-    wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
+for key, value in wcs_to_ivoa.items():
+    wcs_ivoa_mapping[key] = value
 
 
 def convert_between_array_and_pixel_axes(axis, naxes):
