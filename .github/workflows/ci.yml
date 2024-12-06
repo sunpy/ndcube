@@ -1,7 +1,4 @@
-<<<<<<<
-=======
 # Main CI Workflow
->>>>>>>
 name: CI
 
 on:
