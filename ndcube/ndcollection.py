@@ -101,7 +101,7 @@ class NDCollection(dict):
             Aligned physical types: {self.aligned_axis_physical_types}"""))
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"
 
     @property
     def aligned_dimensions(self):
