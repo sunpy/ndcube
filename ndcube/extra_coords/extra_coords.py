@@ -24,7 +24,7 @@ from .table_coord import (
     TimeTableCoordinate,
 )
 
-__all__ = ['ExtraCoordsABC', 'ExtraCoords']
+__all__ = ['ExtraCoords', 'ExtraCoordsABC']
 
 
 class ExtraCoordsABC(abc.ABC):
