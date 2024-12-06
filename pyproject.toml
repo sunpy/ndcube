@@ -116,7 +116,7 @@ write_to = "ndcube/_version.py"
   package = "ndcube"
   filename = "CHANGELOG.rst"
   directory = "changelog/"
-  issue_format = "`#{issue} https:github.com//changelog/pull/{issue}>`__"
+  issue_format = "`#{issue} <https://github.com/sunpy/ndcube/pull/{issue}>`__"
   title_format = "{version} ({project_date})"
 
   [[tool.towncrier.type]]
