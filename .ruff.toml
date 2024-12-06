@@ -41,7 +41,6 @@ extend-ignore = [
   # pytest (PT)
   "PT001", # Always use pytest.fixture()
   # TODO FIX
-  "PT004", # Fixtures which don't return anything should have leading _
   "PT011", # TODO: except(ValueRaises) is too broad
   "PT012", # TODO: except statement is too lengthy
   #
