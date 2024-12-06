@@ -17,14 +17,14 @@ from .version import version as __version__
 
 
 __all__ = [
-    'NDCube',
-    'NDCubeSequence',
-    "NDCollection",
     "ExtraCoords",
-    "GlobalCoords",
     "ExtraCoordsABC",
+    "GlobalCoords",
     "GlobalCoordsABC",
+    "NDCollection",
+    'NDCube',
     "NDCubeBase",
+    'NDCubeSequence',
     "NDCubeSequenceBase",
     "__version__",
 ]

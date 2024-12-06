@@ -21,13 +21,13 @@ from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
 from ndcube import NDCube, NDCubeSequence
 
 __all__ = [
-    'figure_test',
-    'get_hash_library_name',
-    'assert_extra_coords_equal',
-    'assert_metas_equal',
     'assert_cubes_equal',
     'assert_cubesequences_equal',
+    'assert_extra_coords_equal',
+    'assert_metas_equal',
     'assert_wcs_are_equal',
+    'figure_test',
+    'get_hash_library_name',
 ]
 
 

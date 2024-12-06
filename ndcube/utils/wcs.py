@@ -10,14 +10,23 @@ import numpy as np
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
-__all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
-           'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
-           'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
-           'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
-           'physical_type_to_world_axis', 'get_dependent_pixel_axes',
-           'get_dependent_array_axes', 'get_dependent_world_axes',
-           'get_dependent_physical_types', 'array_indices_for_world_objects',
-           'validate_physical_types']
+__all__ = [
+    'array_indices_for_world_objects',
+    'array_indices_for_world_objects',
+    'calculate_world_indices_from_axes',
+    'convert_between_array_and_pixel_axes',
+    'get_dependent_array_axes',
+    'get_dependent_physical_types',
+    'get_dependent_pixel_axes',
+    'get_dependent_world_axes',
+    'physical_type_to_pixel_axes',
+    'physical_type_to_world_axis',
+    'pixel_axis_to_physical_types',
+    'pixel_axis_to_world_axes',
+    'validate_physical_types',
+    'wcs_ivoa_mapping',
+    'world_axis_to_pixel_axes',
+]
 
 
 class TwoWayDict(UserDict):
