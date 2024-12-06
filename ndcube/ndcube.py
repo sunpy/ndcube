@@ -845,7 +845,7 @@ class NDCube(NDCubeBase):
         Default is None.
 
     extra_coords : iterable of `tuple`, each with three entries
-        (`str`, `int`, `astropy.units.quantity` or array-like)
+        (`str`, `int`, `astropy.units.Quantity` or array-like)
         Gives the name, axis of data, and values of coordinates of a data axis not
         included in the WCS object.
 
