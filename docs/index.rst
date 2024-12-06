@@ -6,7 +6,14 @@
 
 The side bar on the left contains links to the various sections of the documentation.
 
+<<<<<<<
 .. _getting_help:
+=======
+   whatsnew/index
+
+Indices and tables
+==================
+>>>>>>>
 
 Getting help
 ============
