@@ -436,7 +436,7 @@ class _NDMetaSlicer:
                 # Slice metadata value.
                 try:
                     new_value = value[new_item]
-                except Exception:
+                except Exception:  # noqa: BLE001
                     # If value cannot be sliced by fancy slicing, convert it
                     # it to an array, slice it, and then if necessary, convert
                     # it back to its original type.
