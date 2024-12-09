@@ -114,6 +114,7 @@ class NDCollection(dict):
             return np.asanyarray(self[self._first_key].shape, dtype=object)[
                 np.array(self.aligned_axes[self._first_key])
             ]
+        return None
 
     @property
     def aligned_axis_physical_types(self):

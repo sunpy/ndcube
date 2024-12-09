@@ -73,12 +73,12 @@ def test_slice_away_independent_axis(basic_meta):
     meta = basic_meta
     item = 0
     output = meta.slice[item]
-    values = dict([(key, value) for key, value in meta.items()])
+    values = dict(meta.items())
     values["b"] = values["b"][0]
     values["g"] = ["world", "!"]
     del values["f"]
     key_comments = meta.key_comments
-    axes = dict([(key, axis) for key, axis in meta.axes.items()])
+    axes = copy.deepcopy(meta.axes)
     del axes["b"]
     del axes["f"]
     axes["c"] -= 1
@@ -93,14 +93,14 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
     meta = basic_meta
     item = (0, 1)
     output = meta.slice[item]
-    values = dict([(key, value) for key, value in meta.items()])
+    values = dict(meta.items())
     del values["f"]
     values["b"] = values["b"][0]
     values["c"] = values["c"][1]
     values["e"] = values["e"][1]
     values["g"] = "!"
     key_comments = meta.key_comments
-    axes = dict([(key, axis) for key, axis in meta.axes.items()])
+    axes = copy.deepcopy(meta.axes)
     del axes["b"]
     del axes["e"]
     del axes["f"]
@@ -114,13 +114,13 @@ def test_slice_away_independent_and_dependent_axis(basic_meta):
 def test_slice_dependent_axes(basic_meta):
     meta = basic_meta
     output = meta.slice[:, 1:3, :, 1]
-    values = dict([(key, value) for key, value in meta.items()])
+    values = dict(meta.items())
     values["c"] = values["c"][1:3, 1]
     values["d"] = values["d"][1]
     values["e"] = values["e"][1:3]
     values["g"] = values["g"][:2]
     key_comments = meta.key_comments
-    axes = dict([(key, axis) for key, axis in meta.axes.items()])
+    axes = copy.deepcopy(meta.axes)
     del axes["d"]
     axes["c"] = 1
     axes["g"] = (0, 1)

@@ -6,7 +6,7 @@ from types import MappingProxyType
 
 import numpy as np
 
-__all__ = ["NDMetaABC", "NDMeta"]
+__all__ = ["NDMeta", "NDMetaABC"]
 
 
 class NDMetaABC(collections.abc.Mapping):
@@ -157,7 +157,7 @@ class NDMeta(dict, NDMetaABC):
         meta_keys = meta.keys()
 
         if key_comments is None:
-            self._key_comments = dict()
+            self._key_comments = {}
         else:
             if not set(key_comments.keys()).issubset(set(meta_keys)):
                 raise ValueError(
@@ -165,14 +165,14 @@ class NDMeta(dict, NDMetaABC):
             self._key_comments = key_comments
 
         if axes is None:
-            self._axes = dict()
+            self._axes = {}
         else:
             axes = dict(axes)
             if not set(axes.keys()).issubset(set(meta_keys)):
                 raise ValueError(
                     "All axes must correspond to a value in meta under the same key.")
-            self._axes = dict([(key, self._sanitize_axis_value(axis, meta[key], key))
-                               for key, axis in axes.items()])
+            self._axes = {key:self._sanitize_axis_value(axis, meta[key], key)
+                          for key, axis in axes.items()}
 
     def _sanitize_axis_value(self, axis, value, key):
         axis_err_msg = ("Values in axes must be an integer or iterable of integers giving "
@@ -183,7 +183,7 @@ class NDMeta(dict, NDMetaABC):
             return ValueError(axis_err_msg)
         # Verify each entry in axes is an iterable of ints or a scalar.
         if not (isinstance(axis, collections.abc.Iterable)
-                and all([isinstance(i, numbers.Integral) for i in axis])):
+                and all(isinstance(i, numbers.Integral) for i in axis)):
             return ValueError(axis_err_msg)
         # If metadata's axis/axes include axis beyond current data shape, extend it.
         data_shape = self.data_shape
