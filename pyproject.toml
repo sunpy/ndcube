@@ -64,7 +64,11 @@ dev = [
 
 [project.urls]
 Homepage = "https://docs.sunpy.org/projects/ndcube"
+"Source Code" = "https://github.com/sunpy/ndcube"
 Download = "https://pypi.org/project/ndcube"
+Documentation = "https://docs.sunpy.org/projects/ndcube"
+Changelog = "https://docs.sunpy.org/projects/ndcube/en/stable/whatsnew/changelog.html"
+"Issue Tracker" = "https://github.com/sunpy/ndcube/issues"
 
 [tool.setuptools]
 zip-safe = false
@@ -102,6 +106,17 @@ write_to = "ndcube/_version.py"
   enabled = true
   verify_pr_number = true
   changelog_skip_label = "No Changelog Entry Needed"
+<<<<<<<
+=======
+  help_url = "https://github.com/sunpy/ndcube/blob/main/changelog/README.rst"
+
+  changelog_missing_long = "There isn't a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)."
+
+  type_incorrect_long = "The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)"
+
+  number_incorrect_long = "The number in the changelog file you added does not match the number of this pull request. Please rename the file."
+
+>>>>>>>
   help_url = "https://github.com/sunpy/sunpy/blob/main/changelog/README.rst"
   changelog_missing_long = "There isn't a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/sunpy/blob/main/changelog/README.rst)."
   type_incorrect_long = "The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)"
@@ -113,7 +128,11 @@ write_to = "ndcube/_version.py"
   package = "ndcube"
   filename = "CHANGELOG.rst"
   directory = "changelog/"
+<<<<<<<
   issue_format = "`#{issue} <https://github.com/sunpy/ndcube/pull/{issue}>`__"
+=======
+  issue_format = "`#{issue} https:github.com/sunpy/ndcube/changelog/pull/{issue}>`__"
+>>>>>>>
   title_format = "{version} ({project_date})"
 
   [[tool.towncrier.type]]
