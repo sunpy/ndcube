@@ -6,5 +6,10 @@ from .table_coord import (
     TimeTableCoordinate,
 )
 
-__all__ = ['TimeTableCoordinate', "MultipleTableCoordinate",
-           'SkyCoordTableCoordinate', 'QuantityTableCoordinate', "BaseTableCoordinate"]
+__all__ = [
+    "BaseTableCoordinate",
+    "MultipleTableCoordinate",
+    'QuantityTableCoordinate',
+    'SkyCoordTableCoordinate',
+    'TimeTableCoordinate',
+]
