@@ -82,17 +82,7 @@ class NDCubeSequenceBase:
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
         warn_deprecated("Replaced by ndcube.NDCubeSequence.cube_like_shape")
-        if not isinstance(self._common_axis, int):
-            raise TypeError("Common axis must be set.")
-        dimensions = list(self._dimensions)
-        cube_like_dimensions = list(self._shape[1:])
-        if dimensions[self._common_axis + 1].isscalar:
-            cube_like_dimensions[self._common_axis] = u.Quantity(
-                dimensions[0].value * dimensions[self._common_axis + 1].value, unit=u.pix)
-        else:
-            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis + 1])
-        # Combine into single Quantity
-        return u.Quantity(cube_like_dimensions, unit=u.pix)
+        return tuple(u.Quantity(d, unit=u.pix) for d in self.cube_like_shape)
 
     @property
     def cube_like_shape(self):
