@@ -11,6 +11,7 @@ import numpy as np
 
 import astropy.nddata
 import astropy.units as u
+from astropy.nddata import NDData
 from astropy.units import UnitsError
 
 try:
@@ -918,6 +919,37 @@ class NDCube(NDCubeBase):
         return self._new_instance(data=-self.data)
 
     def __add__(self, value):
+        if isinstance(value, NDData) and value.wcs is None:
+            if self.unit is not None and value.unit is not None:
+                    value_data = value.data * value.unit.to(self.unit)
+            elif self.unit is None:
+                value_data = value.data
+            else:
+                raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
+
+            # addition
+            new_data = self.data + value_data
+            # combine the uncertainty
+            new_uncertainty = None
+            if self.uncertainty is not None and value.uncertainty is not None:
+                new_uncertainty = self.uncertainty.propagate(
+                    np.add, value.uncertainty, correlation=0
+                )
+            elif self.uncertainty is not None:
+                new_uncertainty = self.uncertainty
+            elif value.uncertainty is not None:
+                new_uncertainty = value.uncertainty
+
+            # combine mask
+            self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
+            value_ma = np.ma.MaskedArray(value_data, mask=value.mask)
+            result_ma = self_ma + value_ma
+            new_mask = result_ma.mask
+
+            # return the new NDCube instance
+            return self._new_instance(
+                data=new_data, uncertainty=new_uncertainty, mask=new_mask
+            )
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
