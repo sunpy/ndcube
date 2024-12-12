@@ -1286,3 +1286,16 @@ def test_quantity_no_unit_data_setter(ndcube_4d_ln_l_t_lt):
     new_data = np.zeros_like(cube.data) * u.Jy
     with pytest.raises(u.UnitsError, match=f"Unable to set data with unit {u.Jy}.* current unit of None"):
         cube.data = new_data
+
+
+def test_set_data_mask(ndcube_4d_mask):
+    cube = ndcube_4d_mask
+
+    assert isinstance(cube.mask, np.ndarray)
+
+    new_data = np.ones_like(cube.data)
+    new_mask = np.zeros_like(cube.mask)
+    masked_array = np.ma.MaskedArray(new_data, new_mask)
+
+    with pytest.raises(TypeError, match="Can not set the .data .* with a numpy masked array"):
+        cube.data = masked_array

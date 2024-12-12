@@ -401,17 +401,37 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     @property
     def data(self):
+        """
+        `~numpy.ndarray`-like : The stored dataset.
+
+        Notes
+        -----
+        It is possible to set the ``.data`` attribute on a `NDCube` with an
+        array-like object of the same shape. However, this is really only
+        intended for replacing the data with a different object representing
+        the same physical data as no other properties of the cube will be
+        changed, such as uncertainty or unit.
+        """
         return super().data
 
     @data.setter
     def data(self, value):
+        # In an array-agnostic way check the shape is the same
         if not hasattr(value, "shape") or value.shape != self.data.shape:
             raise TypeError(f"Can only set data with an array-like object of the same shape ({self.data.shape})")
-        # If value is a quantity:
-        if hasattr(value, "unit") and hasattr(value, "value"):
-            if value.unit != self.unit:
-                raise u.UnitsError(f"Unable to set data with unit {value.unit} as it doesn't match current unit of {self.unit}")
-            value = value.value
+
+        # Other masked arrays are hard to detect reliably
+        if isinstance(value, np.ma.MaskedArray):
+            raise TypeError("Can not set the .data attribute with a numpy masked array, please set .data and .mask separately.")
+
+        if isinstance(value, u.Quantity):
+            unit_error = f"Unable to set data with unit {value.unit} as it incompatible with the current unit of {self.unit}"
+            if self.unit is None:
+                raise u.UnitsError(unit_error)
+            try:
+                value = value.to_value(self.unit)
+            except u.UnitsError as exc:
+                raise u.UnitsError(unit_error) from exc
 
         self._data = value
 

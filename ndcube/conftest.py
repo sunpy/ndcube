@@ -575,7 +575,6 @@ def ndc(request):
 # NDCubeSequence Fixtures
 ################################################################################
 
-
 @pytest.fixture
 def ndcubesequence_4c_ln_lt_l(ndcube_3d_ln_lt_l):
     cube1 = ndcube_3d_ln_lt_l
