@@ -1238,3 +1238,51 @@ def test_ndcube_quantity(ndcube_2d_ln_lt_units):
     cube = ndcube_2d_ln_lt_units
     expected = u.Quantity(cube.data, cube.unit)
     np.testing.assert_array_equal(cube.quantity, expected)
+
+
+def test_data_setter(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+    assert isinstance(cube.data, np.ndarray)
+
+    new_data = np.zeros_like(cube.data)
+    cube.data = new_data
+    assert cube.data is new_data
+
+    dask_array = dask.array.zeros_like(cube.data)
+    cube.data = dask_array
+    assert cube.data is dask_array
+
+
+def test_invalid_data_setter(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+
+    with pytest.raises(TypeError, match="set data with an array-like"):
+        cube.data = None
+
+    with pytest.raises(TypeError, match="set data with an array-like"):
+        cube.data = np.zeros((100,100))
+
+    with pytest.raises(TypeError, match="set data with an array-like"):
+        cube.data = 10
+
+
+def test_quantity_data_setter(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    assert cube.unit
+
+    new_data = np.zeros_like(cube.data) * cube.unit
+    cube.data = new_data
+
+    assert isinstance(cube.data, np.ndarray)
+
+    new_data = np.zeros_like(cube.data) * u.Jy
+    with pytest.raises(u.UnitsError, match=f"Unable to set data with unit {u.Jy}"):
+        cube.data = new_data
+
+
+def test_quantity_no_unit_data_setter(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+
+    new_data = np.zeros_like(cube.data) * u.Jy
+    with pytest.raises(u.UnitsError, match=f"Unable to set data with unit {u.Jy}.* current unit of None"):
+        cube.data = new_data

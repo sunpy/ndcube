@@ -400,6 +400,22 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             self._global_coords = global_coords
 
     @property
+    def data(self):
+        return super().data
+
+    @data.setter
+    def data(self, value):
+        if not hasattr(value, "shape") or value.shape != self.data.shape:
+            raise TypeError(f"Can only set data with an array-like object of the same shape ({self.data.shape})")
+        # If value is a quantity:
+        if hasattr(value, "unit") and hasattr(value, "value"):
+            if value.unit != self.unit:
+                raise u.UnitsError(f"Unable to set data with unit {value.unit} as it doesn't match current unit of {self.unit}")
+            value = value.value
+
+        self._data = value
+
+    @property
     def extra_coords(self):
         # Docstring in NDCubeABC.
         return self._extra_coords
