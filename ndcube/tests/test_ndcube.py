@@ -1274,6 +1274,7 @@ def test_quantity_data_setter(ndcube_2d_ln_lt_units):
     cube.data = new_data
 
     assert isinstance(cube.data, np.ndarray)
+    np.testing.assert_allclose(cube.data, new_data.value)
 
     new_data = np.zeros_like(cube.data) * u.Jy
     with pytest.raises(u.UnitsError, match=f"Unable to set data with unit {u.Jy}"):
