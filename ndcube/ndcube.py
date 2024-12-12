@@ -550,7 +550,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             ranges = [ranges[i] for i in wcs.mapping]
             wcs = wcs.wcs
             if wcs is None:
-                return []
+                return ()
         # This value of zero will be returned as a throwaway for unneeded axes, and a numerical value is
         # required so values_to_high_level_objects in the calling function doesn't crash or warn
         world_coords = [0] * wcs.world_n_dim
@@ -587,7 +587,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 world_coords[i] = coord << u.Unit(unit)
         return world_coords
 
-    def _generate_world_coords(self, pixel_corners, wcs, *, needed_axes=None, units=None):
+    def _generate_world_coords(self, pixel_corners, wcs, *, needed_axes, units=None):
         """
         Private method to generate world coordinates.
 
@@ -609,8 +609,6 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         array-like
             The world coordinates.
         """
-        if isinstance(wcs, ExtraCoords):
-            wcs = wcs.wcs
         axes_are_independent = []
         pixel_axes = set()
         for world_axis in needed_axes:
