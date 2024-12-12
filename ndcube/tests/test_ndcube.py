@@ -193,7 +193,7 @@ def test_slicing_with_meta():
     assert sliced_meta["salutation"] == meta["salutation"]
     assert (sliced_meta["pixel response"] == meta["pixel response"][1:3]).all()
     assert sliced_meta["exposure time"] == 2 * u.s
-
+    assert cube.meta is meta
 
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime

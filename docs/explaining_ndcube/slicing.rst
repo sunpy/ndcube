@@ -420,7 +420,7 @@ The same result is obtained.
 .. _meta_slicing:
 
 Slicing NDMeta
---------------
+==============
 
 Slicing is arguably the most important of `~ndcube.NDMeta`'s functionalities that sets it apart from a simple `dict`.
 It allows axis-aware metadata to be kept consistent with its associated data.
@@ -479,11 +479,10 @@ Finally, note that axis-agnostic metadata is unaltered by the slicing process.
 
 
 Automatically Slicing NDMeta Attached to Other ND Objects
-*********************************************************
+---------------------------------------------------------
 
 `~ndcube.NDMeta` has a dunder property called ``__ndcube_can_slice__``, which, by default, is set to ``True``.
-When attached to `~ndcube.NDCube`, `~ndcube.NDCubeSequence`, and `~ndcube.NDCollection`, this property lets those classes know that that the metadata object is sliceable.
-Hence, when their ``__getitem__`` methods are called (i.e. when they are sliced), they apply the slice item to ``self.meta.slice`` and attach the result as the meta attribute of the newly sliced ND object.
+When attached to `~ndcube.NDCube`, `~ndcube.NDCubeSequence`, and `~ndcube.NDCollection`, this causes the `~ndcube.NDMeta` to be sliced as part of the overall slicing of the associated data class.
 To demonstrate this, let's reinstantiate the same metadata object as in the above section and attach it to a new instantiation of ``my_cube``.
 
 .. code-block:: python

@@ -43,7 +43,7 @@ coordinates are numeric and strictly monotonic.  Otherwise you have metadata.
 
 The keen-eyed reader may have realised of the above framework that, while not all axis-aligned metadata can be treated as coordinates, all coordinates can be treated like axis-aware metadata.
 This raises the question of why not dispense with coordinates altogether and only have axis-aligned metadata?
-The reason is that the stricter requirements on coordinates have led to a host of powerful coordinate infrastructures that are not valid for generalised axis-aware metadata.
+The reason is that the stricter requirements on coordinates have led to a host of powerful coordinate infrastructure that are not valid for generalised axis-aware metadata.
 These include functional WCS implementations which save memory as well as saving compute time through operations such as interpolation, and `~astropy.visualization.wcsaxes.WCSAxes`, which make complicated coordinate-aware plotting easy.
 Therefore, where appropriate, it is beneficial to store coordinates separately from axis-aware metadata.
 

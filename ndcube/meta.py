@@ -71,6 +71,9 @@ class NDMetaABC(collections.abc.Mapping):
     rebinning, this can be handled by subclasses or mixins.
     """
 
+    __ndcube_can_slice__: bool
+    __ndcube_can_rebin__: bool
+    
     @property
     @abc.abstractmethod
     def axes(self):
@@ -161,7 +164,8 @@ class NDMeta(dict, NDMetaABC):
         else:
             if not set(key_comments.keys()).issubset(set(meta_keys)):
                 raise ValueError(
-                    "All comments must correspond to a value in meta under the same key.")
+                    "All comments must correspond to a value in meta under the same key."
+                )
             self._key_comments = key_comments
 
         if axes is None:
@@ -176,7 +180,7 @@ class NDMeta(dict, NDMetaABC):
 
     def _sanitize_axis_value(self, axis, value, key):
         axis_err_msg = ("Values in axes must be an integer or iterable of integers giving "
-                        f"the data axis/axes associated with the metadata.  axis = {axis}.")
+                        f"the data axis/axes associated with the metadata. axis = {axis}.")
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
         if len(axis) == 0:
