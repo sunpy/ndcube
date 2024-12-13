@@ -73,7 +73,7 @@ class NDMetaABC(collections.abc.Mapping):
 
     __ndcube_can_slice__: bool
     __ndcube_can_rebin__: bool
-    
+
     @property
     @abc.abstractmethod
     def axes(self):
