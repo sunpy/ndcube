@@ -31,6 +31,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         # Slice cube.
         item = tuple(sanitize_slices(item, len(self.shape)))
         sliced_cube = super().__getitem__(item)
+        self.meta = meta  # Add unsliced meta back onto  unsliced cube.
 
         # Add sliced coords back onto sliced cube.
         sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords
