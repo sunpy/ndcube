@@ -12,6 +12,7 @@ import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.nddata import UnknownUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.units import UnitsError
 from astropy.wcs import WCS
@@ -177,9 +178,19 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
 
     coords = cube.axis_world_coords()
     assert len(coords) == 2
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+    assert isinstance(coords[1], SpectralCoord)
+    assert coords[1].shape == (10,)
 
     coords = cube.axis_world_coords(wcs=cube.combined_wcs)
     assert len(coords) == 3
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+    assert isinstance(coords[1], SpectralCoord)
+    assert coords[1].shape == (10,)
+    assert isinstance(coords[2], Time)
+    assert coords[2].shape == (5,)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1
@@ -198,8 +209,6 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
-    assert awc == ()
-    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords, units=True)
     assert awc == ()
 
 
@@ -235,13 +244,31 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
+def test_axis_world_coords_combined_wcs(ndcube_3d_wave_lt_ln_ec_time):
+    # This replicates a specific NDCube object in visualization.rst
+    coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
+    assert len(coords) == 1
+    assert isinstance(coords[0], Time)
+    assert np.all(coords[0] == Time(['2000-01-01T00:00:00.000', '2000-01-01T00:01:00.000', '2000-01-01T00:02:00.000']))
+
+    coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords_values('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
+    assert len(coords) == 1
+    assert isinstance(coords.time, u.Quantity)
+    assert_quantity_allclose(coords.time, [0, 60, 120] * u.second)
+
+
 @pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
+
+    # We go from 4 pixels to 6 pixels when we add pixel corners
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=False)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=True)
-    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
+    assert u.allclose(coords[0], [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] * u.m)
 
     coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, pixel_corners=True)
-    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
+    assert u.allclose(coords[0], [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] * u.m)
 
 
 @pytest.mark.parametrize(("ndc", "item"),
@@ -252,10 +279,10 @@ def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_3d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
     coords = ndc[item].axis_world_coords()
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
 @pytest.mark.parametrize(("ndc", "item"),
