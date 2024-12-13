@@ -1,8 +1,11 @@
 
+import warnings
+
 import numpy as np
 import pytest
 
 import astropy.units as u
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time, TimeDelta
 
 from ndcube import NDCube, NDCubeSequence, NDMeta
@@ -132,6 +135,18 @@ def test_shape(ndc, expected_shape):
                          indirect=("ndc",))
 def test_cube_like_shape(ndc, expected_shape):
     assert np.all(ndc.cube_like_shape == expected_shape)
+
+
+@pytest.mark.parametrize(("ndc", "expected_dimensions"),
+                         [
+                             ("ndcubesequence_4c_ln_lt_l_cax1", tuple(u.Quantity(d, unit=u.pix) for d in [2. , 12, 4])),
+                         ],
+                         indirect=("ndc",))
+def test_cube_like_dimensions(ndc, expected_dimensions):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for ndc_dim, exp_dim in zip(ndc.cube_like_dimensions, expected_dimensions):
+            assert_quantity_allclose(ndc_dim, exp_dim)
 
 
 @pytest.mark.parametrize("ndc", (["ndcubesequence_4c_ln_lt_l"]), indirect=("ndc",))
