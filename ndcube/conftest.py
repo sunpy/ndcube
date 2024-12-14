@@ -15,7 +15,8 @@ from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
-from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence
+from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence, NDMeta
+from ndcube.tests import helpers
 
 # Force MPL to use non-gui backends for testing.
 try:
@@ -337,7 +338,6 @@ def extra_coords_sharing_axis():
                                            )
                                           )
 
-
 ################################################################################
 # NDCube Fixtures
 ################################################################################
@@ -356,6 +356,23 @@ def ndcube_4d_ln_lt_l_t(wcs_4d_t_l_lt_ln):
     wcs_4d_t_l_lt_ln.array_shape = shape
     data_cube = data_nd(shape, dtype=int)
     return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln)
+
+
+@pytest.fixture
+def ndcube_4d_axis_aware_meta(wcs_4d_t_l_lt_ln):
+    shape = (5, 8, 10, 12)
+    wcs_4d_t_l_lt_ln.array_shape = shape
+    data_cube = data_nd(shape, dtype=int)
+    meta = NDMeta({"a": "scalar",
+                   "slit position": np.arange(shape[0], dtype=int),
+                   "pixel label": np.arange(np.prod(shape[:2])).reshape(shape[:2]),
+                   "line": ["Si IV"] * shape[2],
+                   "exposure time": ([2] * shape[-1]) * u.s},
+                  axes={"slit position": 0,
+                        "pixel label": (0, 1),
+                        "line": (2,),
+                        "exposure time": 3})
+    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, meta=meta)
 
 
 @pytest.fixture
@@ -639,7 +656,8 @@ def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
     cube2.data[:] *= 2
     cube3.data[:] *= 3
     cube4.data[:] *= 4
-    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1)
+    meta = helpers.ndmeta_et0_pr02((4, 2, 3, 4))
+    return NDCubeSequence([cube1, cube2, cube3, cube4], common_axis=1, meta=meta)
 
 
 @pytest.fixture

@@ -29,6 +29,7 @@ from astropy.wcs.wcsapi.high_level_api import values_to_high_level_objects
 from ndcube import utils
 from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
+from ndcube.meta import NDMetaABC
 from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.exceptions import warn_deprecated, warn_user
@@ -400,6 +401,10 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             if copy:
                 global_coords = deepcopy(global_coords)
             self._global_coords = global_coords
+
+        # If meta is axis-aware, make it to have same shape as cube.
+        if isinstance(self.meta, NDMetaABC):
+            self.meta.data_shape = self.shape
 
     @property
     def data(self):
@@ -1337,13 +1342,19 @@ class NDCube(NDCubeBase):
         # Resample WCS
         new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
 
+        # If meta is axis-aware, drop axis-awareness for metadata associated with rebinned axes.
+        if hasattr(self.meta, "__ndcube_can_rebin__") and self.meta.__ndcube_can_rebin__:
+            new_meta = self.meta.rebin(bin_shape)
+        else:
+            new_meta = deepcopy(self.meta)
+
         # Reform NDCube.
         new_cube = type(self)(
             data=new_data,
             wcs=new_wcs,
             uncertainty=new_uncertainty,
             mask=new_mask,
-            meta=self.meta,
+            meta=new_meta,
             unit=new_unit
         )
         new_cube._global_coords = self._global_coords

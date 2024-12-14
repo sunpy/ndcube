@@ -1,4 +1,5 @@
 import re
+import copy
 from inspect import signature
 from textwrap import dedent
 
@@ -20,7 +21,7 @@ from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import ExtraCoords, NDCube
+from ndcube import ExtraCoords, NDCube, NDMeta
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
 
@@ -168,6 +169,32 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     assert u.allclose(all_coords[wl_key][1], 1.02e-9 * u.m)
     assert all_coords[wl_key][0] == wl_key
 
+
+def test_slicing_with_meta():
+    # Define meta.
+    raw_meta = {"salutation": "hello", "name": "world",
+                "exposure time": u.Quantity([2] * 4, unit=u.s),
+                "pixel response": np.ones((4, 5))}
+    axes = {"exposure time": 0, "pixel response": (1, 2)}
+    meta = NDMeta(raw_meta, axes=axes)
+    # Define data.
+    data = np.ones((4, 4, 5))
+    # Define WCS transformations in an astropy WCS object.
+    wcs = astropy.wcs.WCS(naxis=3)
+    wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+    wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+    wcs.wcs.cdelt = 0.2, 0.5, 0.4
+    wcs.wcs.crpix = 0, 2, 2
+    wcs.wcs.crval = 10, 0.5, 1
+    cube = NDCube(data, wcs=wcs, meta=meta)
+    sliced_cube = cube[0, 1:3]
+    sliced_meta = sliced_cube.meta
+    assert sliced_meta.keys() == meta.keys()
+    assert tuple(sliced_meta.axes.keys()) == ("pixel response",)
+    assert sliced_meta["salutation"] == meta["salutation"]
+    assert (sliced_meta["pixel response"] == meta["pixel response"][1:3]).all()
+    assert sliced_meta["exposure time"] == 2 * u.s
+    assert cube.meta is meta
 
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
@@ -998,6 +1025,22 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     with pytest.warns(NDCubeUserWarning, match="The uncertainty on this NDCube has no known way to propagate forward"):
         output = cube.rebin(bin_shape, operation=np.sum, propagate_uncertainties=True)
     assert output.uncertainty is None
+
+
+def test_rebin_axis_aware_meta(ndcube_4d_axis_aware_meta):
+    # Execute rebin.
+    cube = ndcube_4d_axis_aware_meta
+    bin_shape = (1, 2, 5, 1)
+    output = cube.rebin(bin_shape, operation=np.sum)
+
+    # Build expected meta
+    expected_meta = copy.deepcopy(cube.meta)
+    del expected_meta._axes["pixel label"]
+    del expected_meta._axes["line"]
+    expected_meta._data_shape = np.array([5, 4, 2, 12], dtype=int)
+
+    # Confirm output meta is as expected.
+    helpers.assert_metas_equal(output.meta, expected_meta)
 
 
 def test_rebin_specutils():
