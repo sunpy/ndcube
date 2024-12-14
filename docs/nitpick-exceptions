@@ -17,4 +17,4 @@ py:class an object providing a view on D's values
 py:class None.  Remove all items from D.
 py:class a shallow copy of D
 py:class v, remove specified key and return the corresponding value.
-py:class Update D from mapping/iterable E and F
+py:class None.  Update D from mapping/iterable E and F.
