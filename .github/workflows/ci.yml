@@ -109,7 +109,7 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
     with:
       python-version: '3.12'
-      test_extras: 'tests'
+      test_extras: 'all,tests'
       test_command: 'pytest -p no:warnings --doctest-rst --pyargs ndcube'
       submodules: false
     secrets:
