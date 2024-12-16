@@ -1,0 +1,1 @@
+It is now possible to set the ``NDCube.data`` property of a cube with an array of the same shape and unit as the current cube.

@@ -1,4 +1,5 @@
 import re
+import copy
 from inspect import signature
 from textwrap import dedent
 
@@ -12,6 +13,7 @@ import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
 from astropy.nddata import UnknownUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.units import UnitsError
 from astropy.wcs import WCS
@@ -19,7 +21,7 @@ from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import ExtraCoords, NDCube
+from ndcube import ExtraCoords, NDCube, NDMeta
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
 
@@ -168,6 +170,32 @@ def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
     assert all_coords[wl_key][0] == wl_key
 
 
+def test_slicing_with_meta():
+    # Define meta.
+    raw_meta = {"salutation": "hello", "name": "world",
+                "exposure time": u.Quantity([2] * 4, unit=u.s),
+                "pixel response": np.ones((4, 5))}
+    axes = {"exposure time": 0, "pixel response": (1, 2)}
+    meta = NDMeta(raw_meta, axes=axes)
+    # Define data.
+    data = np.ones((4, 4, 5))
+    # Define WCS transformations in an astropy WCS object.
+    wcs = astropy.wcs.WCS(naxis=3)
+    wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
+    wcs.wcs.cunit = 'Angstrom', 'deg', 'deg'
+    wcs.wcs.cdelt = 0.2, 0.5, 0.4
+    wcs.wcs.crpix = 0, 2, 2
+    wcs.wcs.crval = 10, 0.5, 1
+    cube = NDCube(data, wcs=wcs, meta=meta)
+    sliced_cube = cube[0, 1:3]
+    sliced_meta = sliced_cube.meta
+    assert sliced_meta.keys() == meta.keys()
+    assert tuple(sliced_meta.axes.keys()) == ("pixel response",)
+    assert sliced_meta["salutation"] == meta["salutation"]
+    assert (sliced_meta["pixel response"] == meta["pixel response"][1:3]).all()
+    assert sliced_meta["exposure time"] == 2 * u.s
+    assert cube.meta is meta
+
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
 
@@ -177,9 +205,19 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
 
     coords = cube.axis_world_coords()
     assert len(coords) == 2
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+    assert isinstance(coords[1], SpectralCoord)
+    assert coords[1].shape == (10,)
 
     coords = cube.axis_world_coords(wcs=cube.combined_wcs)
     assert len(coords) == 3
+    assert isinstance(coords[0], SkyCoord)
+    assert coords[0].shape == (5, 8)
+    assert isinstance(coords[1], SpectralCoord)
+    assert coords[1].shape == (10,)
+    assert isinstance(coords[2], Time)
+    assert coords[2].shape == (5,)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1
@@ -198,8 +236,6 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
 
     # slice the cube so extra_coords is empty, and then try and run axis_world_coords
     awc = sub_cube.axis_world_coords(wcs=sub_cube.extra_coords)
-    assert awc == ()
-    sub_cube._generate_world_coords(pixel_corners=False, wcs=sub_cube.extra_coords, units=True)
     assert awc == ()
 
 
@@ -235,13 +271,31 @@ def test_axis_world_coords_single(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
+def test_axis_world_coords_combined_wcs(ndcube_3d_wave_lt_ln_ec_time):
+    # This replicates a specific NDCube object in visualization.rst
+    coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
+    assert len(coords) == 1
+    assert isinstance(coords[0], Time)
+    assert np.all(coords[0] == Time(['2000-01-01T00:00:00.000', '2000-01-01T00:01:00.000', '2000-01-01T00:02:00.000']))
+
+    coords = ndcube_3d_wave_lt_ln_ec_time.axis_world_coords_values('time', wcs=ndcube_3d_wave_lt_ln_ec_time.combined_wcs)
+    assert len(coords) == 1
+    assert isinstance(coords.time, u.Quantity)
+    assert_quantity_allclose(coords.time, [0, 60, 120] * u.second)
+
+
 @pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
 def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
+
+    # We go from 4 pixels to 6 pixels when we add pixel corners
+    coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=False)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=True)
-    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
+    assert u.allclose(coords[0], [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] * u.m)
 
     coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, pixel_corners=True)
-    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
+    assert u.allclose(coords[0], [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] * u.m)
 
 
 @pytest.mark.parametrize(("ndc", "item"),
@@ -252,10 +306,10 @@ def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
                          indirect=("ndc",))
 def test_axis_world_coords_sliced_all_3d(ndc, item):
     coords = ndc[item].axis_world_coords_values()
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
     coords = ndc[item].axis_world_coords()
-    assert u.allclose(coords, [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
+    assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
 
 @pytest.mark.parametrize(("ndc", "item"),
@@ -973,6 +1027,22 @@ def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
     assert output.uncertainty is None
 
 
+def test_rebin_axis_aware_meta(ndcube_4d_axis_aware_meta):
+    # Execute rebin.
+    cube = ndcube_4d_axis_aware_meta
+    bin_shape = (1, 2, 5, 1)
+    output = cube.rebin(bin_shape, operation=np.sum)
+
+    # Build expected meta
+    expected_meta = copy.deepcopy(cube.meta)
+    del expected_meta._axes["pixel label"]
+    del expected_meta._axes["line"]
+    expected_meta._data_shape = np.array([5, 4, 2, 12], dtype=int)
+
+    # Confirm output meta is as expected.
+    helpers.assert_metas_equal(output.meta, expected_meta)
+
+
 def test_rebin_specutils():
     # Tests for https://github.com/sunpy/ndcube/issues/717
     y = np.arange(4000)*u.ct
@@ -1238,3 +1308,65 @@ def test_ndcube_quantity(ndcube_2d_ln_lt_units):
     cube = ndcube_2d_ln_lt_units
     expected = u.Quantity(cube.data, cube.unit)
     np.testing.assert_array_equal(cube.quantity, expected)
+
+
+def test_data_setter(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+    assert isinstance(cube.data, np.ndarray)
+
+    new_data = np.zeros_like(cube.data)
+    cube.data = new_data
+    assert cube.data is new_data
+
+    dask_array = dask.array.zeros_like(cube.data)
+    cube.data = dask_array
+    assert cube.data is dask_array
+
+
+def test_invalid_data_setter(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+
+    with pytest.raises(TypeError, match="set data with an array-like"):
+        cube.data = None
+
+    with pytest.raises(TypeError, match="set data with an array-like"):
+        cube.data = np.zeros((100,100))
+
+    with pytest.raises(TypeError, match="set data with an array-like"):
+        cube.data = 10
+
+
+def test_quantity_data_setter(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    assert cube.unit
+
+    new_data = np.zeros_like(cube.data) * cube.unit
+    cube.data = new_data
+
+    assert isinstance(cube.data, np.ndarray)
+    np.testing.assert_allclose(cube.data, new_data.value)
+
+    new_data = np.zeros_like(cube.data) * u.Jy
+    with pytest.raises(u.UnitsError, match=f"Unable to set data with unit {u.Jy}"):
+        cube.data = new_data
+
+
+def test_quantity_no_unit_data_setter(ndcube_4d_ln_l_t_lt):
+    cube = ndcube_4d_ln_l_t_lt
+
+    new_data = np.zeros_like(cube.data) * u.Jy
+    with pytest.raises(u.UnitsError, match=f"Unable to set data with unit {u.Jy}.* current unit of None"):
+        cube.data = new_data
+
+
+def test_set_data_mask(ndcube_4d_mask):
+    cube = ndcube_4d_mask
+
+    assert isinstance(cube.mask, np.ndarray)
+
+    new_data = np.ones_like(cube.data)
+    new_mask = np.zeros_like(cube.mask)
+    masked_array = np.ma.MaskedArray(new_data, new_mask)
+
+    with pytest.raises(TypeError, match="Can not set the .data .* with a numpy masked array"):
+        cube.data = masked_array

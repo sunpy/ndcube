@@ -1,1 +1,1 @@
-Fixed a bug which caused `NDCubeSequence.cube_like_dimensions` to break.
+Fixed a bug which caused ``NDCubeSequence.cube_like_dimensions`` to break.

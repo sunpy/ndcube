@@ -1,6 +1,6 @@
 import astropy.units as u
 
-__all__ = ['unique_sorted', 'convert_quantities_to_units']
+__all__ = ['convert_quantities_to_units', 'unique_sorted']
 
 
 def unique_sorted(iterable):
