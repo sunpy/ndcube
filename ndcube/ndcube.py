@@ -930,7 +930,6 @@ class NDCube(NDCubeBase):
             # addition
             new_data = self.data + value_data
             # combine the uncertainty
-            new_uncertainty = None
             if self.uncertainty is not None and value.uncertainty is not None:
                 new_uncertainty = self.uncertainty.propagate(
                     np.add, value.uncertainty, correlation=0
@@ -939,6 +938,8 @@ class NDCube(NDCubeBase):
                 new_uncertainty = self.uncertainty
             elif value.uncertainty is not None:
                 new_uncertainty = value.uncertainty
+            else:
+                new_uncertainty = None
 
             # combine mask
             self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
