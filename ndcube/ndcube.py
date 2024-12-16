@@ -921,7 +921,7 @@ class NDCube(NDCubeBase):
     def __add__(self, value):
         if isinstance(value, NDData) and value.wcs is None:
             if self.unit is not None and value.unit is not None:
-                    value_data = value.data * value.unit.to(self.unit)
+                    value_data = (value.data * value.unit).to_value(self.unit)
             elif self.unit is None:
                 value_data = value.data
             else:
