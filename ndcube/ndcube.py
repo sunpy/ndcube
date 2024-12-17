@@ -535,8 +535,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 sub_range.insert(idx, 0)
             # If we are subsetting world axes, ignore any pixel axes which are not correlated with our requested world axis.
             if any(world_axis in needed_axes for world_axis in world_axes_indices):
-                unneeded_pixel_axes = wcs.axis_correlation_matrix[needed_axes]
-                unneeded_pixel_axes = np.argwhere(unneeded_pixel_axes.sum(axis=0) == 0)[:, 0]
+                needed_pixel_axes = wcs.axis_correlation_matrix[needed_axes]
+                unneeded_pixel_axes = np.argwhere(needed_pixel_axes.sum(axis=0) == 0)[:, 0]
                 for idx in unneeded_pixel_axes:
                     sub_range[idx] = 0
             # Generate a grid of broadcastable pixel indices for all pixel dimensions
