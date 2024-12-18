@@ -9,8 +9,12 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowL
 
 from ndcube.utils import wcs as wcs_utils
 
-__all__ = ["sanitize_wcs", "sanitize_crop_inputs", "get_crop_item_from_points",
-           "propagate_rebin_uncertainties"]
+__all__ = [
+    "get_crop_item_from_points",
+    "propagate_rebin_uncertainties",
+    "sanitize_crop_inputs",
+    "sanitize_wcs",
+]
 
 
 def sanitize_wcs(func):
@@ -75,7 +79,7 @@ def sanitize_crop_inputs(points, wcs):
         # Later we will ensure all points have same number of objects.
         n_coords[i] = len(points[i])
         # Confirm whether point contains at least one None entry.
-        if all([coord is None for coord in points[i]]):
+        if all(coord is None for coord in points[i]):
             values_are_none[i] = True
     # If no points contain a coord, i.e. if all entries in all points are None,
     # set no-op flag to True and exit.
@@ -100,7 +104,7 @@ def sanitize_crop_inputs(points, wcs):
     return False, points, wcs
 
 
-def get_crop_item_from_points(points, wcs, crop_by_values):
+def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     """
     Find slice item that crops to minimum cube in array-space containing specified world points.
 
@@ -120,6 +124,9 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
     crop_by_values : `bool`
         Denotes whether cropping is done using high-level objects or "values",
         i.e. low-level objects.
+
+    keep_dims : `bool`
+        If `False`, returned item will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
 
     Returns
     -------
@@ -190,7 +197,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values):
         else:
             min_idx = min(axis_indices)
             max_idx = max(axis_indices) + 1
-            if max_idx - min_idx == 1:
+            if max_idx - min_idx == 1 and not keepdims:
                 item.append(min_idx)
             else:
                 item.append(slice(min_idx, max_idx))
@@ -253,7 +260,8 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
     if not propagation_operation:
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
-        elif operation in {np.prod, np.nanprod, np.product}:
+        # TODO: product was renamed to prod for numpy 2.0
+        elif operation in {np.prod, np.nanprod, np.prod if hasattr(np, "product") else np.prod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")

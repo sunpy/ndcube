@@ -9,11 +9,11 @@ def _sanitize_aligned_axes(keys, data, aligned_axes):
     if aligned_axes is None:
         return None
     # If aligned_axes set to "all", assume all axes are aligned in order.
-    elif isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
+    if isinstance(aligned_axes, str) and aligned_axes.lower() == "all":
         # Check all cubes are of same shape
         cube0_dims = data[0].shape
-        cubes_same_shape = all([all([d.shape[i] == dim for i, dim in enumerate(cube0_dims)])
-                                for d in data])
+        cubes_same_shape = all(all(d.shape[i] == dim for i, dim in enumerate(cube0_dims))
+                                for d in data)
         if cubes_same_shape is not True:
             raise ValueError(
                 "All cubes in data not of same shape. Please set aligned_axes kwarg.")
@@ -49,8 +49,8 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     if not isinstance(aligned_axes, tuple):
         raise ValueError(aligned_axes_error_message)
     # Check type of each element.
-    axes_all_ints = all([isinstance(axis, numbers.Integral) for axis in aligned_axes])
-    axes_all_tuples = all([isinstance(axis, tuple) for axis in aligned_axes])
+    axes_all_ints = all(isinstance(axis, numbers.Integral) for axis in aligned_axes)
+    axes_all_tuples = all(isinstance(axis, tuple) for axis in aligned_axes)
     # If all elements are int, duplicate tuple so there is one for each cube.
     n_cubes = len(data)
     if axes_all_ints:
@@ -71,7 +71,7 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
         # and the dimensions of the aligned axes in each cube are the same.
         subtuples_are_ints = [False] * n_cubes
         aligned_axes_same_lengths = [False] * n_cubes
-        if not all([len(axes) == n_aligned_axes for axes in aligned_axes]):
+        if not all(len(axes) == n_aligned_axes for axes in aligned_axes):
             raise ValueError("Each element in aligned_axes must have same length.")
         for i in range(n_cubes):
             # Check each cube has at least as many dimensions as there are aligned axes
@@ -101,9 +101,9 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
         raise ValueError(aligned_axes_error_message)
 
     # Ensure all aligned axes are of same length.
-    check_dimensions = set([len(set([cube.shape[cube_aligned_axes[j]]
-                                     for cube, cube_aligned_axes in zip(data, aligned_axes)]))
-                            for j in range(n_aligned_axes)])
+    check_dimensions = {len({cube.shape[cube_aligned_axes[j]]
+                                     for cube, cube_aligned_axes in zip(data, aligned_axes)})
+                            for j in range(n_aligned_axes)}
     if check_dimensions != {1}:
         raise ValueError("Aligned axes are not all of same length.")
 

@@ -1,9 +1,12 @@
+import copy
+import numbers
 import textwrap
 import collections.abc
 
 import numpy as np
 
 import ndcube.utils.collection as collection_utils
+from ndcube.utils.exceptions import warn_deprecated
 
 __all__ = ["NDCollection"]
 
@@ -14,7 +17,7 @@ class NDCollection(dict):
 
     Parameters
     ----------
-    data: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+    key_data_pairs: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
         The names and data cubes/sequences to held in the collection.
 
     aligned_axes: `tuple` of `int`, `tuple` of `tuple` of `int`, 'all', or None, optional
@@ -47,6 +50,12 @@ class NDCollection(dict):
     """
 
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
+        for key, _ in key_data_pairs:
+            if isinstance(key, numbers.Number):
+                warn_deprecated(
+                    "Passing numerical keys to NDCollection is deprecated as they"
+                    " lead to ambiguity when slicing the collection."
+                )
         # Enter data and metadata into object.
         super().__init__(key_data_pairs)
         self.meta = meta
@@ -92,7 +101,7 @@ class NDCollection(dict):
             Aligned physical types: {self.aligned_axis_physical_types}"""))
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"
 
     @property
     def aligned_dimensions(self):
@@ -105,6 +114,7 @@ class NDCollection(dict):
             return np.asanyarray(self[self._first_key].shape, dtype=object)[
                 np.array(self.aligned_axes[self._first_key])
             ]
+        return None
 
     @property
     def aligned_axis_physical_types(self):
@@ -137,40 +147,72 @@ class NDCollection(dict):
             return super().__getitem__(item)
 
         # If item is not a single string...
+        # If item is a sequence, ensure strings and numeric items are not mixed.
+        item_is_strings = False
+        if isinstance(item, collections.abc.Sequence):
+            item_strings = [isinstance(item_, str) for item_ in item]
+            item_is_strings = all(item_strings)
+            # Ensure strings are not mixed with slices.
+            if (not item_is_strings) and (not all(np.invert(item_strings))):
+                raise TypeError("Cannot mix keys and non-keys when indexing instance.")
+
+        # If sequence is all strings, extract the cubes corresponding to the string keys.
+        if item_is_strings:
+            new_data = [self[_item] for _item in item]
+            new_keys = item
+            new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
+            new_meta = copy.deepcopy(self.meta)
+
+        # Else, the item is assumed to be a typical slicing item.
+        # Slice each cube in collection using information in this item.
+        # However, this can only be done if there are aligned axes.
         else:
-            # If item is a sequence, ensure strings and numeric items are not mixed.
-            item_is_strings = False
-            if isinstance(item, collections.abc.Sequence):
-                item_strings = [isinstance(item_, str) for item_ in item]
-                item_is_strings = all(item_strings)
-                # Ensure strings are not mixed with slices.
-                if (not item_is_strings) and (not all(np.invert(item_strings))):
-                    raise TypeError("Cannot mix keys and non-keys when indexing instance.")
-
-            # If sequence is all strings, extract the cubes corresponding to the string keys.
-            if item_is_strings:
-                new_data = [self[_item] for _item in item]
-                new_keys = item
-                new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
-
-            # Else, the item is assumed to be a typical slicing item.
-            # Slice each cube in collection using information in this item.
-            # However, this can only be done if there are aligned axes.
+            if self.aligned_axes is None:
+                raise IndexError("Cannot slice unless collection has aligned axes.")
+            # Derive item to be applied to each cube in collection and
+            # whether any aligned axes are dropped by the slicing.
+            collection_items, new_aligned_axes = self._generate_collection_getitems(item)
+            # Apply those slice items to each cube in collection.
+            new_data = [self[key][tuple(cube_item)]
+                        for key, cube_item in zip(self, collection_items)]
+            # Since item is not strings, no cube in collection is dropped.
+            # Therefore the collection keys remain unchanged.
+            new_keys = list(self.keys())
+            # Slice meta if sliceable
+            if hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__:
+                # Convert negative indices to positive indices as they are not supported by NDMeta.slice
+                sanitized_item = copy.deepcopy(item)
+                aligned_shape = self.aligned_dimensions
+                if isinstance(item, numbers.Integral):
+                    if item < 0:
+                        sanitized_item = int(self.aligned_dimensions[0] + item)
+                elif isinstance(item, slice):
+                    if (item.start is not None and item.start < 0) or (item.stop is not None and item.stop < 0):
+                        new_start = aligned_shape[0] + item.start if item.start < 0 else item.start
+                        new_stop = aligned_shape[0] + item.stop if item.stop < 0 else item.stop
+                        sanitized_item = slice(new_start, new_stop)
+                else:
+                    sanitized_item = list(sanitized_item)
+                    for i, ax_it in enumerate(item):
+                        if isinstance(ax_it, numbers.Integral) and ax_it < 0:
+                            sanitized_item[i] = aligned_shape[i] + ax_it
+                        elif isinstance(ax_it, slice):
+                            if (ax_it.start is not None and ax_it.start < 0) or (ax_it.stop is not None and ax_it.stop < 0):
+                                new_start = aligned_shape[i] + ax_it.start if ax_it.start < 0 else ax_it.start
+                                new_stop = aligned_shape[i] + ax_it.stop if ax_it.stop < 0 else ax_it.stop
+                                sanitized_item[i] = slice(new_start, new_stop)
+                    sanitized_item = tuple(sanitized_item)
+                # Use sanitized item to slice meta.
+                new_meta = self.meta.slice[sanitized_item]
             else:
-                if self.aligned_axes is None:
-                    raise IndexError("Cannot slice unless collection has aligned axes.")
-                # Derive item to be applied to each cube in collection and
-                # whether any aligned axes are dropped by the slicing.
-                collection_items, new_aligned_axes = self._generate_collection_getitems(item)
-                # Apply those slice items to each cube in collection.
-                new_data = [self[key][tuple(cube_item)]
-                            for key, cube_item in zip(self, collection_items)]
-                # Since item is not strings, no cube in collection is dropped.
-                # Therefore the collection keys remain unchanged.
-                new_keys = list(self.keys())
+                new_meta = copy.deepcopy(self.meta)
 
-            return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
-                                  meta=self.meta, sanitize_inputs=False)
+        return self.__class__(
+            list(zip(new_keys, new_data)),
+            aligned_axes=new_aligned_axes,
+            meta=new_meta,
+            sanitize_inputs=False
+        )
 
     def _generate_collection_getitems(self, item):
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.

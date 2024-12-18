@@ -24,7 +24,7 @@ from .table_coord import (
     TimeTableCoordinate,
 )
 
-__all__ = ['ExtraCoordsABC', 'ExtraCoords']
+__all__ = ['ExtraCoords', 'ExtraCoordsABC']
 
 
 class ExtraCoordsABC(abc.ABC):
@@ -149,8 +149,8 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables = list()
-        self._dropped_tables = list()
+        self._lookup_tables = []
+        self._dropped_tables = []
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
@@ -230,8 +230,8 @@ class ExtraCoords(ExtraCoordsABC):
         self._lookup_tables.append((array_dimension, coord))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
-        self._lookup_tables = list(sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0]))
+        self._lookup_tables = sorted(self._lookup_tables,
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])
 
     @property
     def _name_lut_map(self):
@@ -243,7 +243,7 @@ class ExtraCoords(ExtraCoordsABC):
     def keys(self):
         # docstring in ABC
         if not self.wcs:
-            return tuple()
+            return ()
 
         return tuple(self.wcs.world_axis_names) if self.wcs.world_axis_names else None
 
@@ -256,7 +256,7 @@ class ExtraCoords(ExtraCoordsABC):
         # If mapping is not set but lookup_tables is empty then the extra
         # coords is empty, so there is no mapping.
         if not self._lookup_tables:
-            return tuple()
+            return ()
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
@@ -292,7 +292,7 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return None
 
-        tcoords = set(lt[1] for lt in self._lookup_tables)
+        tcoords = {lt[1] for lt in self._lookup_tables}
         # created a sorted list of unique items
         _tmp = set()  # a temporary set
         tcoords = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
@@ -323,8 +323,7 @@ class ExtraCoords(ExtraCoordsABC):
         # docstring in ABC
         if not self._wcs and not self._lookup_tables:
             return True
-        else:
-            return False
+        return False
 
     def _getitem_string(self, item):
         """
@@ -402,7 +401,7 @@ class ExtraCoords(ExtraCoordsABC):
         if self._wcs:
             return self._getitem_wcs(item)
 
-        elif self._lookup_tables:
+        if self._lookup_tables:
             return self._getitem_lookup_tables(item)
 
         # If we get here this object is empty, so just return an empty extra coords
@@ -425,7 +424,7 @@ class ExtraCoords(ExtraCoordsABC):
 
             return mtc.dropped_world_dimensions
 
-        return dict()
+        return {}
 
     def resample(self, factor, offset=0, ndcube=None, **kwargs):
         """

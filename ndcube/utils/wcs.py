@@ -10,14 +10,23 @@ import numpy as np
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, low_level_api
 
-__all__ = ['array_indices_for_world_objects', 'convert_between_array_and_pixel_axes',
-           'calculate_world_indices_from_axes', 'wcs_ivoa_mapping',
-           'pixel_axis_to_world_axes', 'world_axis_to_pixel_axes',
-           'pixel_axis_to_physical_types', 'physical_type_to_pixel_axes',
-           'physical_type_to_world_axis', 'get_dependent_pixel_axes',
-           'get_dependent_array_axes', 'get_dependent_world_axes',
-           'get_dependent_physical_types', 'array_indices_for_world_objects',
-           'validate_physical_types']
+__all__ = [
+    'array_indices_for_world_objects',
+    'array_indices_for_world_objects',
+    'calculate_world_indices_from_axes',
+    'convert_between_array_and_pixel_axes',
+    'get_dependent_array_axes',
+    'get_dependent_physical_types',
+    'get_dependent_pixel_axes',
+    'get_dependent_world_axes',
+    'physical_type_to_pixel_axes',
+    'physical_type_to_world_axis',
+    'pixel_axis_to_physical_types',
+    'pixel_axis_to_world_axes',
+    'validate_physical_types',
+    'wcs_ivoa_mapping',
+    'world_axis_to_pixel_axes',
+]
 
 
 class TwoWayDict(UserDict):
@@ -49,8 +58,8 @@ wcs_to_ivoa = {
     "HECH": "pos.bodyrc.alt",
 }
 wcs_ivoa_mapping = TwoWayDict()
-for key in wcs_to_ivoa.keys():
-    wcs_ivoa_mapping[key] = wcs_to_ivoa[key]
+for key, value in wcs_to_ivoa.items():
+    wcs_ivoa_mapping[key] = value
 
 
 def convert_between_array_and_pixel_axes(axis, naxes):
@@ -83,9 +92,8 @@ def convert_between_array_and_pixel_axes(axis, naxes):
         raise IndexError("Axis out of range. "
                          f"Number of axes = {naxes}; Axis numbers requested = {axis}")
     # Reflect axis about center of number of axes.
-    reflected_axis = naxes - 1 - axis
+    return naxes - 1 - axis
 
-    return reflected_axis
 
 
 def pixel_axis_to_world_axes(pixel_axis, axis_correlation_matrix):
@@ -242,8 +250,7 @@ def get_dependent_pixel_axes(pixel_axis, axis_correlation_matrix):
     # To do this we take a column from the matrix and find if there are
     # any entries in common with all other columns in the matrix.
     world_dep = axis_correlation_matrix[:, pixel_axis:pixel_axis + 1]
-    dependent_pixel_axes = np.sort(np.nonzero((world_dep & axis_correlation_matrix).any(axis=0))[0])
-    return dependent_pixel_axes
+    return np.sort(np.nonzero((world_dep & axis_correlation_matrix).any(axis=0))[0])
 
 
 def get_dependent_array_axes(array_axis, axis_correlation_matrix):
@@ -308,8 +315,7 @@ def get_dependent_world_axes(world_axis, axis_correlation_matrix):
     # To do this we take a row from the matrix and find if there are
     # any entries in common with all other rows in the matrix.
     pixel_dep = axis_correlation_matrix[world_axis:world_axis + 1]
-    dependent_world_axes = np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
-    return dependent_world_axes
+    return np.sort(np.nonzero((pixel_dep & axis_correlation_matrix).any(axis=1))[0])
 
 
 def get_dependent_physical_types(physical_type, wcs):
@@ -332,8 +338,7 @@ def get_dependent_physical_types(physical_type, wcs):
     world_axis_physical_types = wcs.world_axis_physical_types
     world_axis = physical_type_to_world_axis(physical_type, world_axis_physical_types)
     dependent_world_axes = get_dependent_world_axes(world_axis, wcs.axis_correlation_matrix)
-    dependent_physical_types = np.array(world_axis_physical_types)[dependent_world_axes]
-    return dependent_physical_types
+    return np.array(world_axis_physical_types)[dependent_world_axes]
 
 
 def validate_physical_types(physical_types):
@@ -450,10 +455,9 @@ def get_low_level_wcs(wcs, name='wcs'):
 
     if isinstance(wcs, BaseHighLevelWCS):
         return wcs.low_level_wcs
-    elif isinstance(wcs, BaseLowLevelWCS):
+    if isinstance(wcs, BaseLowLevelWCS):
         return wcs
-    else:
-        raise ValueError(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
+    raise ValueError(f'{name} must implement either BaseHighLevelWCS or BaseLowLevelWCS')
 
 
 def compare_wcs_physical_types(source_wcs, target_wcs):

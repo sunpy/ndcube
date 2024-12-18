@@ -135,6 +135,46 @@ This means that these world points are not used in calculating the pixel range t
   >>> upper_left = [None, SkyCoord(Tx=1, Ty=1.5, unit=u.deg, frame=Helioprojective)]
   >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
 
+By default, :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` discard length-1 dimensions to make the resulting cube more wieldy.
+However, there are cases where it is preferable to keep the number of dimensions the same.
+In such cases setting the :code:`keepdims=True` kwarg in either crop or crop_by_values.
+
+  >>> # Use coordinate objects to mark the lower limit of the region of interest.
+  >>> lower_left = [SpectralCoord(1.02e-9, unit=u.m),
+  ...               SkyCoord(Tx=1, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_right = [SpectralCoord(1.03e-9, unit=u.m),
+  ...                SkyCoord(Tx=1.5, Ty=1.5, unit=u.deg, frame=Helioprojective)]
+  >>> lower_right = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_left = [None, SkyCoord(Tx=1, Ty=1.5, unit=u.deg, frame=Helioprojective)]
+  >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
+  >>> my_cube_roi.shape
+  (2, 3)
+  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left,
+  ...                                 keepdims=True)
+  >>> my_cube_roi_keep.shape
+  (2, 3, 1)
+
+One use case for :code:`keepdims=True` is when cropping leads to a cube with only one array element.
+Because cropping an `~ndcube.NDCube` to a scalar is not allowed, such an operation would normally raise an error.
+But if :code:`keepdims=True`, a valid NDCube is returned with N length-1 dimensions.
+
+  >>> # Use coordinate objects to mark the lower limit of the region of interest.
+  >>> lower_left = [SpectralCoord(1.02e-9, unit=u.m),
+  ...               SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_right = [SpectralCoord(1.03e-9, unit=u.m),
+  ...                SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> lower_right = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> upper_left = [None, SkyCoord(Tx=1.5, Ty=0.5, unit=u.deg, frame=Helioprojective)]
+  >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
+  Traceback (most recent call last):
+    ...
+  ValueError: Input points causes cube to be cropped to a single pixel. This is not supported.
+  >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left,
+  ...                                 keepdims=True)
+  >>> my_cube_roi_keep.shape
+  (1, 1, 1)
+
+
 .. _sequence_slicing:
 
 Slicing NDCubeSequences
@@ -225,8 +265,7 @@ If we want our region of interest to only apply to a single sub-cube, and we ind
   >>> single_cube_roi.shape
   (2, 3)
   >>> single_cube_roi.array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 However, as with numpy slicing, we can induce the slicing operation to return an `~ndcube.NDCubeSequence` by supplying a length-1 `slice` to the sequence axis, rather than an `int`.
 This sequence will still represent the same region of interest from the same single sub-cube, but the sequence axis will have a length of 1, rather than be removed.
@@ -237,9 +276,7 @@ This sequence will still represent the same region of interest from the same sin
   >>> roi_length1_sequence.shape
   (1, 2, 3)
   >>> roi_length1_sequence.array_axis_physical_types
-  [('meta.obs.sequence',),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 Cube-like Slicing
 -----------------
@@ -269,8 +306,7 @@ This can be achieved by entering:
   >>> single_cube_roi.shape
   (2, 3)
   >>> single_cube_roi.array_axis_physical_types
-  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 This returns the same `~ndcube.NDCube` as above.
 However, also as above, we can induce the return type to be an `~ndcube.NDCubeSequence` by supplying a length-1 `slice`.
@@ -282,10 +318,7 @@ As before, the same region of interest from the same sub-cube is represented, ju
   >>> roi_length1_sequence.shape
   (1, 1, 2, 3)
   >>> roi_length1_sequence.array_axis_physical_types
-  [('meta.obs.sequence',),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 In the case the entire region came from a single sub-cube.
 However, `~ndcube.NDCubeSequence.index_as_cube` also works when the region of interest spans multiple sub-cubes in the sequence.
@@ -298,10 +331,7 @@ In cube-like indexing this corresponds to slices 3 to 9 along to their 1st cube 
   >>> roi_across_cubes.shape
   (3, (1, 4, 1), 2, 3)
   >>> roi_across_cubes.array_axis_physical_types
-  [('meta.obs.sequence',),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
-   ('em.wl',)]
+  [('meta.obs.sequence',), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 Notice that since the sub-cubes are now of different lengths along the common axis, the corresponding `~astropy.units.Quantity` gives the
 lengths of each cube individually.
@@ -386,3 +416,109 @@ Let's say we axis order of the ``linewidths`` cube was reversed.
   array([2, 1], dtype=object)
 
 The same result is obtained.
+
+.. _meta_slicing:
+
+Slicing NDMeta
+==============
+
+Slicing is arguably the most important of `~ndcube.NDMeta`'s functionalities that sets it apart from a simple `dict`.
+It allows axis-aware metadata to be kept consistent with its associated data.
+
+Because `~ndcube.NDMeta` is a subclass of `dict`, the standard Python slicing API is reserved for accessing the values of keys.
+Therefore, slicing is achieved by applying Python's slicing API to `~ndcube.NDMeta`'s `~ndcube.NDMeta.slice` attribute.
+
+.. code-block:: python
+
+  >>> # Instantiate an NDMeta object with axis-aware and axis-agnostic metadata.
+  >>> import astropy.units as u
+  >>> import numpy as np
+  >>> from ndcube import NDMeta
+  >>> raw_meta = {"salutation": "hello", "name": "world",
+  ...             "exposure time": u.Quantity([2] * 4, unit=u.s),
+  ...             "pixel response": np.ones((4, 5))}
+  >>> axes = {"exposure time": 0, "pixel response": (1, 2)}
+  >>> meta = NDMeta(raw_meta, axes=axes, data_shape=(4, 4, 5))
+
+  >>> # Slice NDMeta object.
+  >>> sliced_meta = meta.slice[0, 1:3]
+  >>> sliced_meta.data_shape
+  array([2, 5])
+
+Note that by applying the slice item ``[0, 1:3]`` to ``meta``, the shape of the ``sliced_meta`` has been altered accordingly.
+The first axis has been sliced away, the second has been truncated to a length of 2, and the third remains unchanged.
+The shape of ``"pixel response"`` has been altered:
+
+.. code-block:: python
+
+  >>> sliced_meta["pixel response"].shape
+  (2, 5)
+
+while ``"exposure time"`` has been reduced to a scalar:
+
+.. code-block:: python
+
+  >>> sliced_meta["exposure time"]
+  <Quantity 2. s>
+
+Moreover, because the first axis has been sliced away, ``"exposure time"`` is no longer associated with a data array axis, and so is no longer present in the ``axes`` property:
+
+.. code-block:: python
+
+  >>> list(sliced_meta.axes.keys())
+  ['pixel response']
+
+Finally, note that axis-agnostic metadata is unaltered by the slicing process.
+
+.. code-block:: python
+
+  >>> sliced_meta["salutation"]
+  'hello'
+  >>> sliced_meta["name"]
+  'world'
+
+
+Automatically Slicing NDMeta Attached to Other ND Objects
+---------------------------------------------------------
+
+`~ndcube.NDMeta` has a dunder property called ``__ndcube_can_slice__``, which, by default, is set to ``True``.
+When attached to `~ndcube.NDCube`, `~ndcube.NDCubeSequence`, and `~ndcube.NDCollection`, this causes the `~ndcube.NDMeta` to be sliced as part of the overall slicing of the associated data class.
+To demonstrate this, let's reinstantiate the same metadata object as in the above section and attach it to a new instantiation of ``my_cube``.
+
+.. code-block:: python
+
+  >>> meta = NDMeta(raw_meta, axes=axes)
+  >>> my_cube = NDCube(data, wcs=wcs, meta=meta)
+  >>> my_cube.shape
+  (4, 4, 5)
+  >>> my_cube.meta.data_shape
+  array([4, 4, 5])
+
+Now let's apply the same slice item to the cube as we applied to ``meta`` in the above section.
+Note that shape of the resultant `~ndcube.NDCube` and its associated `~ndcube.NDMeta` object now have the same new shape consistent with the slice item.
+
+.. code-block:: python
+
+  >>> sliced_cube = my_cube[0, 1:3]
+  >>> sliced_cube.shape
+  (2, 5)
+  >>> sliced_cube.meta.data_shape
+  array([2, 5])
+
+Furthermore, the metadata's values, axis-awareness, etc., have also been altered in line with the slice item.
+In fact, ``sliced_cube.meta`` is equivalent to ``sliced_meta`` from the previous section, because we have applied the same slice item to two equivalent `~ndcube.NDMeta` objects.
+
+.. code-block:: python
+
+  >>> sliced_cube.meta.data_shape
+  array([2, 5])
+  >>> sliced_cube.meta["pixel response"].shape
+  (2, 5)
+  >>> sliced_cube.meta["exposure time"]
+  <Quantity 2. s>
+  >>> list(sliced_cube.meta.axes.keys())
+  ['pixel response']
+  >>> sliced_cube.meta["salutation"]
+  'hello'
+  >>> sliced_cube.meta["name"]
+  'world'
