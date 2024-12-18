@@ -14,8 +14,6 @@ import astropy.units as u
 from astropy.units import UnitsError
 from astropy.wcs.utils import _split_matrix
 
-from ndcube.utils.wcs import world_axis_to_pixel_axes
-
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
     import sunpy.coordinates  # NOQA
@@ -486,12 +484,9 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         """Unitful representation of the NDCube data."""
         return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
-    def _generate_independent_world_coords(self, pixel_corners, wcs, needed_axes, units):
+    def _generate_world_coords(self, pixel_corners, wcs, *, needed_axes, units=None):
         """
-        Generate world coordinates for independent axes.
-
-        The idea is to workout only the specific grid that is needed for independent axes.
-        This speeds up the calculation of world coordinates and reduces memory usage.
+        Private method to generate world coordinates.
 
         Parameters
         ----------
@@ -500,42 +495,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         wcs : astropy.wcs.WCS
             The WCS.
         needed_axes : array-like
-            The required pixel axes.
-        units : bool
-            If units are needed.
-
-        Returns
-        -------
-        array-like
-            The world coordinates.
-        """
-        needed_axes = np.array(needed_axes).squeeze()
-        if self.data.ndim in needed_axes:
-            required_axes = needed_axes - 1
-        else:
-            required_axes = needed_axes
-        lims = (-0.5, self.data.shape[::-1][required_axes] + 1) if pixel_corners else (0, self.data.shape[::-1][required_axes])
-        indices = [np.arange(lims[0], lims[1]) if wanted else [0] for wanted in wcs.axis_correlation_matrix[required_axes]]
-        world_coords = wcs.pixel_to_world_values(*indices)
-        if units:
-            world_coords = world_coords << u.Unit(wcs.world_axis_units[needed_axes])
-        return world_coords
-
-    def _generate_dependent_world_coords(self, pixel_corners, wcs, needed_axes, units):
-        """
-        Generate world coordinates for dependent axes.
-
-        This will work out the exact grid that is needed for dependent axes
-        and can be time and memory consuming.
-
-        Parameters
-        ----------
-        pixel_corners : bool
-            If one needs pixel corners, otherwise pixel centers.
-        wcs : astropy.wcs.WCS
-            The WCS.
-        needed_axes : array-like
-            The required pixel axes.
+            The axes that are needed.
         units : bool
             If units are needed.
 
@@ -573,6 +533,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             # And inject 0s for those coordinates
             for idx in non_corr_axes:
                 sub_range.insert(idx, 0)
+            # If we are subsetting world axes, ignore any pixel axes which are not correlated with our requested world axis.
+            if any(world_axis in needed_axes for world_axis in world_axes_indices):
+                needed_pixel_axes = wcs.axis_correlation_matrix[needed_axes]
+                unneeded_pixel_axes = np.argwhere(needed_pixel_axes.sum(axis=0) == 0)[:, 0]
+                for idx in unneeded_pixel_axes:
+                    sub_range[idx] = 0
             # Generate a grid of broadcastable pixel indices for all pixel dimensions
             grid = np.meshgrid(*sub_range, indexing='ij')
             # Convert to world coordinates
@@ -590,41 +556,6 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         if units:
             for i, (coord, unit) in enumerate(zip(world_coords, wcs.world_axis_units)):
                 world_coords[i] = coord << u.Unit(unit)
-        return world_coords
-
-    def _generate_world_coords(self, pixel_corners, wcs, *, needed_axes, units=None):
-        """
-        Private method to generate world coordinates.
-
-        Handles both dependent and independent axes.
-
-        Parameters
-        ----------
-        pixel_corners : bool
-            If one needs pixel corners, otherwise pixel centers.
-        wcs : astropy.wcs.WCS
-            The WCS.
-        needed_axes : array-like
-            The axes that are needed.
-        units : bool
-            If units are needed.
-
-        Returns
-        -------
-        array-like
-            The world coordinates.
-        """
-        axes_are_independent = []
-        pixel_axes = set()
-        for world_axis in needed_axes:
-            pix_ax = world_axis_to_pixel_axes(world_axis, wcs.axis_correlation_matrix)
-            axes_are_independent.append(len(pix_ax) == 1)
-            pixel_axes = pixel_axes.union(set(pix_ax))
-        pixel_axes = list(pixel_axes)
-        if all(axes_are_independent) and len(pixel_axes) == len(needed_axes) and len(needed_axes) != 0:
-            world_coords = self._generate_independent_world_coords(pixel_corners, wcs, needed_axes, units)
-        else:
-            world_coords = self._generate_dependent_world_coords(pixel_corners, wcs, needed_axes, units)
         return world_coords
 
     @utils.cube.sanitize_wcs
