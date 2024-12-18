@@ -1038,14 +1038,13 @@ class NDCube(NDCubeBase):
         kwargs = {}
         if isinstance(value, NDData) and value.wcs is None:
             if self.unit is not None and value.unit is not None:
-                value_data = value.data * value.unit.to_value(self.unit)
+                    value_data = (value.data * value.unit).to_value(self.unit)
             elif self.unit is None:
                 value_data = value.data
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
 
             # combine the uncertainty
-            new_uncertainty = None
             if self.uncertainty is not None and value.uncertainty is not None:
                 new_uncertainty = self.uncertainty.propagate(
                     np.add, value.uncertainty, result_data = value.data, correlation=0
@@ -1056,7 +1055,6 @@ class NDCube(NDCubeBase):
                 kwargs["uncertainty"] = new_uncertainty
             elif value.uncertainty is not None:
                 new_uncertainty = value.uncertainty
-                kwargs["uncertainty"] = new_uncertainty
             else:
                 new_uncertainty = None
 
