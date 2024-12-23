@@ -1134,13 +1134,17 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
 def test_cube_add_uncertainty_and_mask(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units + value
     # Check uncertainty propagation
-    expected_uncertainty = np.sqrt(
-        ndcube_2d_ln_lt_units.uncertainty.array**2 + value.uncertainty.array**2
+    expected_uncertainty = ndcube_2d_ln_lt_units.uncertainty.propagate(
+                            operation=np.add,
+                            other_nddata=value,
+                            result_data=new_cube.data,
+                            correlation=0,
     )
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
     # Check mask combination
-    expected_mask = np.logical_or(ndcube_2d_ln_lt_units.mask, value.mask)
+    expected_mask = (np.ma.MaskedArray(ndcube_2d_ln_lt_units.data, mask=ndcube_2d_ln_lt_units.mask) + \
+                    np.ma.MaskedArray(ndcube_2d_ln_lt_units.data, mask=ndcube_2d_ln_lt_units.mask)).mask
     assert np.array_equal(new_cube.mask, expected_mask), \
         f"Expected mask: {expected_mask}, but got: {new_cube.mask}"
 
