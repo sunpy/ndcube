@@ -1044,20 +1044,6 @@ class NDCube(NDCubeBase):
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
 
-            # combine the uncertainty
-            if self.uncertainty is not None and value.uncertainty is not None:
-                new_uncertainty = self.uncertainty.propagate(
-                    np.add, value.uncertainty, result_data = value.data, correlation=0
-                )
-                kwargs["uncertainty"] = new_uncertainty
-            elif self.uncertainty is not None:
-                new_uncertainty = self.uncertainty
-                kwargs["uncertainty"] = new_uncertainty
-            elif value.uncertainty is not None:
-                new_uncertainty = value.uncertainty
-            else:
-                new_uncertainty = None
-
             # combine mask
             self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
             value_ma = np.ma.MaskedArray(value_data, mask=value.mask)
@@ -1069,8 +1055,19 @@ class NDCube(NDCubeBase):
             kwargs["mask"] = result_ma.mask
             kwargs["data"] = result_ma.data
 
-            # return the new NDCube instance
-            return self._new_instance(**kwargs)
+            # combine the uncertainty
+            if self.uncertainty is not None and value.uncertainty is not None:
+                new_uncertainty = self.uncertainty.propagate(
+                    np.add, value.uncertainty, result_data = kwargs["data"], correlation=0
+                )
+                kwargs["uncertainty"] = new_uncertainty
+            elif self.uncertainty is not None:
+                new_uncertainty = self.uncertainty
+                kwargs["uncertainty"] = new_uncertainty
+            elif value.uncertainty is not None:
+                new_uncertainty = value.uncertainty
+            else:
+                new_uncertainty = None
 
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
@@ -1079,7 +1076,7 @@ class NDCube(NDCubeBase):
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data + value.to_value(cube_unit)
+                kwargs["data"] = self.data + value.to_value(cube_unit)
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -1087,8 +1084,10 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            new_data = self.data + value
-        return self._new_instance(data=new_data)
+            kwargs["data"] = self.data + value
+
+        # return the new NDCube instance
+        return self._new_instance(**kwargs)
 
     def __radd__(self, value):
         return self.__add__(value)
