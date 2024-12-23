@@ -1127,6 +1127,7 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
 @pytest.mark.parametrize('value', [
     NDData(np.random.rand(10, 12),
            unit=u.ct,
+           wcs=None,
            uncertainty=StdDevUncertainty(np.random.rand(10, 12)),
            mask=np.random.choice([True, False], size=(10, 12))),
 ])
