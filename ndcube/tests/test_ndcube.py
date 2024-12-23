@@ -12,7 +12,7 @@ import astropy.units as u
 import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
-from astropy.nddata import UnknownUncertainty
+from astropy.nddata import NDData, StdDevUncertainty, UnknownUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.units import UnitsError
@@ -1122,6 +1122,26 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
     # Add
     new_cube = ndcube_2d_ln_lt_units + value
     check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+
+
+@pytest.mark.parametrize('value', [
+    NDData(np.random.rand(10, 12),
+           unit=u.ct,
+           uncertainty=StdDevUncertainty(np.random.rand(10, 12)),
+           mask=np.random.choice([True, False], size=(10, 12))),
+])
+def test_cube_add_uncertainty_and_mask(ndcube_2d_ln_lt_units, value):
+    new_cube = ndcube_2d_ln_lt_units + value
+    # Check uncertainty propagation
+    expected_uncertainty = np.sqrt(
+        ndcube_2d_ln_lt_units.uncertainty.array**2 + value.uncertainty.array**2
+    )
+    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty), \
+        f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
+    # Check mask combination
+    expected_mask = np.logical_or(ndcube_2d_ln_lt_units.mask, value.mask)
+    assert np.array_equal(new_cube.mask, expected_mask), \
+        f"Expected mask: {expected_mask}, but got: {new_cube.mask}"
 
 
 @pytest.mark.parametrize('value', [
