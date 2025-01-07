@@ -145,7 +145,8 @@ class MatplotlibPlotter(BasePlotter):
             # We plot against pixel coordinates
             axes.errorbar(np.arange(len(ydata)), ydata, yerr=yerror, **kwargs)
         else:
-            axes.plot(ydata, **kwargs)
+            if not np.isnan(ydata).all().compute():
+                axes.plot(ydata, **kwargs)
 
         axes.set_ylabel(default_ylabel)
 
