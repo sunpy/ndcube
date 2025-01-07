@@ -145,7 +145,8 @@ class MatplotlibPlotter(BasePlotter):
             # We plot against pixel coordinates
             axes.errorbar(np.arange(len(ydata)), ydata, yerr=yerror, **kwargs)
         else:
-            if not np.isnan(ydata).all().compute():
+            # compute() will break on numpy arrays to catch dask arrays by casting to bool instead
+            if not bool(np.isnan(ydata).all()):
                 axes.plot(ydata, **kwargs)
 
         axes.set_ylabel(default_ylabel)
