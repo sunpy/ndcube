@@ -287,14 +287,7 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
 def test_extra_coords_2d_quantity(quantity_2d_lut):
     ec = ExtraCoords()
     ec.add("velocity", (0, 1), quantity_2d_lut)
-
-    ec.wcs.pixel_to_world(0, 0)
-
-# Inspecting an extra coords
-# Should be able to see what tables exists, what axes they account to, and what
-# axes have missing dimensions.
-
-# An additional spatial set (i.e. ICRS on top of HPC)
+    assert ec.wcs.pixel_to_world(0, 0)
 
 
 # Extra Coords with NDCube
