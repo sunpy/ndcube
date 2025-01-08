@@ -230,6 +230,20 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     assert coords[0].shape == (5,)
 
 
+@pytest.mark.limit_memory("12 MB")
+def test_axis_world_coords_wave_coupled_dims(ndcube_3d_coupled):
+    cube = ndcube_3d_coupled
+
+    cube.axis_world_coords('em.wl')
+
+
+@pytest.mark.limit_memory("12 MB")
+def test_axis_world_coords_time_coupled_dims(ndcube_3d_coupled_time):
+    cube = ndcube_3d_coupled_time
+
+    cube.axis_world_coords('time')
+
+
 def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
     sub_cube = cube[:, 0]

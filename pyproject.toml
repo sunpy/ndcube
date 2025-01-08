@@ -32,6 +32,7 @@ tests = [
   "pytest-mpl>=0.12",
   "pytest-xdist",
   "pytest",
+  "pytest-memray",
   "scipy",
   "specutils",
   "sunpy>=5.0.0",
