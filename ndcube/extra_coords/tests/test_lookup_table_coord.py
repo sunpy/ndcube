@@ -418,8 +418,8 @@ def test_2d_skycoord_mesh_slice(lut_2d_skycoord_mesh):
     assert sub_ltc.table.shape == (10,)
     assert sub_ltc._slice == [slice(4, 10, None), slice(5, 10, None)]
 
-    assert sub_ltc.wcs.world_to_pixel(4*u.deg, 5*u.deg) == [0.0, 0.0]
-    assert sub_ltc[1:, 1:].wcs.world_to_pixel(5*u.deg, 6*u.deg) == [0.0, 0.0]
+    assert list(sub_ltc.wcs.world_to_pixel_values(4*u.deg, 5*u.deg)) == [0.0, 0.0]
+    assert list(sub_ltc[1:, 1:].wcs.world_to_pixel_values(5*u.deg, 6*u.deg)) == [0.0, 0.0]
 
 
 def test_2d_skycoord_no_mesh_slice(lut_2d_skycoord_no_mesh):
