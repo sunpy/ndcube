@@ -292,6 +292,86 @@ def wcs_3d_ln_lt_t_rotated():
     return WCS(header=h_rotated)
 
 
+@pytest.fixture
+def wcs_3d_ln_lt_l_coupled():
+    # WCS for a 3D data cube with two celestial axes and one wavelength axis.
+    # The latitudinal dimension is coupled to the third pixel dimension through
+    # a single off diagonal element in the PCij matrix
+    header = {
+        'CTYPE1': 'HPLN-TAN',
+        'CRPIX1': 5,
+        'CDELT1': 5,
+        'CUNIT1': 'arcsec',
+        'CRVAL1': 0.0,
+
+        'CTYPE2': 'HPLT-TAN',
+        'CRPIX2': 5,
+        'CDELT2': 5,
+        'CUNIT2': 'arcsec',
+        'CRVAL2': 0.0,
+
+        'CTYPE3': 'WAVE',
+        'CRPIX3': 1.0,
+        'CDELT3': 1,
+        'CUNIT3': 'Angstrom',
+        'CRVAL3': 1.0,
+
+        'PC1_1': 1,
+        'PC1_2': 0,
+        'PC1_3': 0,
+        'PC2_1': 0,
+        'PC2_2': 1,
+        'PC2_3': -1.0,
+        'PC3_1': 0.0,
+        'PC3_2': 0.0,
+        'PC3_3': 1.0,
+
+        'WCSAXES': 3,
+
+        'DATEREF': "2020-01-01T00:00:00"
+    }
+    return WCS(header=header)
+
+
+@pytest.fixture
+def wcs_3d_ln_lt_t_coupled():
+    # WCS for a 3D data cube with two celestial axes and one time axis.
+    header = {
+        'CTYPE1': 'HPLN-TAN',
+        'CRPIX1': 5,
+        'CDELT1': 5,
+        'CUNIT1': 'arcsec',
+        'CRVAL1': 0.0,
+
+        'CTYPE2': 'HPLT-TAN',
+        'CRPIX2': 5,
+        'CDELT2': 5,
+        'CUNIT2': 'arcsec',
+        'CRVAL2': 0.0,
+
+        'CTYPE3': 'UTC',
+        'CRPIX3': 1.0,
+        'CDELT3': 1,
+        'CUNIT3': 's',
+        'CRVAL3': 1.0,
+
+        'PC1_1': 1,
+        'PC1_2': 0,
+        'PC1_3': 0,
+        'PC2_1': 0,
+        'PC2_2': 1,
+        'PC2_3': 0,
+        'PC3_1': 0,
+        'PC3_2': 1,
+        'PC3_3': 1,
+
+        'WCSAXES': 3,
+
+        'DATEREF': "2020-01-01T00:00:00"
+    }
+    return WCS(header=header)
+
+
 ################################################################################
 # Extra and Global Coords Fixtures
 ################################################################################
@@ -517,6 +597,31 @@ def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
     )
     cube._extra_coords = simple_extra_coords_3d
     return cube
+
+
+@pytest.fixture
+def ndcube_3d_coupled(wcs_3d_ln_lt_l_coupled):
+    shape = (128, 256, 512)
+    wcs_3d_ln_lt_l_coupled.array_shape = shape
+    data = data_nd(shape)
+    mask = data > 0
+    return NDCube(
+        data,
+        wcs_3d_ln_lt_l_coupled,
+        mask=mask,
+        uncertainty=data,
+    )
+
+
+@pytest.fixture
+def ndcube_3d_coupled_time(wcs_3d_ln_lt_t_coupled):
+    shape = (128, 256, 512)
+    wcs_3d_ln_lt_t_coupled.array_shape = shape
+    data = data_nd(shape)
+    return NDCube(
+        data,
+        wcs_3d_ln_lt_t_coupled,
+    )
 
 
 @pytest.fixture
