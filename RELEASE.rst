@@ -20,6 +20,5 @@ The people who have contributed to the code for this release are:
 -  Shane Maloney  *
 -  Stuart Mumford
 -  Will Barnes
--  pre-commit-ci[bot]
 
 Where a * indicates that this release contains their first contribution to ndcube.
