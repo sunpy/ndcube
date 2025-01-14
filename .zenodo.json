@@ -15,6 +15,11 @@
             "affiliation": "Aperio Software Ltd."
         },
         {
+            "name": "Nabil Freij",
+            "orcid": "0000-0002-6253-082X",
+            "affiliation": "1 - Lockheed Martin Solar and Astrophysics Laboratory, USA 2 - Bay Area Environmental Research Institute, USA"
+        },
+        {
             "name": "Yash Sharma",
             "orcid": "0000-0002-7861-9677",
             "affiliation": "Meta Platforms Inc., UK"
@@ -24,14 +29,14 @@
             "affiliation": "Workato Gmbh, Germany"
         },
         {
-            "name": "Nabil Freij",
-            "orcid": "0000-0002-6253-082X",
-            "affiliation": "1 - Lockheed Martin Solar and Astrophysics Laboratory, USA 2 - Bay Area Environmental Research Institute, USA"
-        },
-        {
             "name": "Adwait Bhope",
             "orcid": "0000-0002-7133-8776",
             "affiliation": "Uptycs India Pvt. Ltd., India"
+        },
+        {
+            "name": "Samuel Bennett",
+            "orcid": "0000-0001-6420-4422",
+            "affiliation": "Aperio Software Ltd."
         },
         {
             "name": "Laura Hayes",
@@ -66,9 +71,17 @@
             "affiliation": "Aperio Software Ltd."
         },
         {
+            "name": "JunyanHuo"
+        },
+        {
             "name": "David Stansby",
             "orcid": "0000-0002-1365-1908",
             "affiliation": "Advanced Research Computing Centre, University College London, UK"
+        },
+        {
+            "name": "Shane Maloney",
+            "orcid": "0000-0002-4715-1805",
+            "affiliation": "Trinity College Dublin & Dublin Institute for Advanced Studies"
         },
         {
             "name": "J. Marcus Hughes",
@@ -76,7 +89,12 @@
             "affiliation": "Southwest Research Institute, USA"
         },
         {
-            "name": "Kris Stern"
+            "name": "Kris Akira Stern",
+            "orcid": "0000-0003-1613-8947",
+            "affiliation": "University of Hong Kong & University of London"
+        },
+        {
+            "name": "Andrew Robbertz"
         },
         {
             "name": "Aoife Maria Ryan"
@@ -86,6 +104,21 @@
         },
         {
             "name": "Roy Smart"
+        },
+        {
+            "name": "Mihail Bankov"
+        },
+        {
+            "name": "P. L. Lim",
+            "affiliation": "Space Telescope Science Institute, USA"
+        },
+        {
+            "name": "Samuel J. Van Kooten",
+            "orcid": "0000-0002-4472-8517",
+            "affiliation": "Southwest Research Institute"
+        },
+        {
+            "name": "Sanvi Sharma"
         },
         {
             "name": "Dan F-M"
@@ -99,10 +132,6 @@
             "name": "Matthew J. West",
             "orcid": "0000-0002-0631-2393",
             "affiliation": "Southwest Research Institute, USA"
-        },
-        {
-            "name": "P. L. Lim",
-            "affiliation": "Space Telescope Science Institute, USA"
         },
         {
             "name": "Shelbe Timothy"
