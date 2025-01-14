@@ -1,32 +1,25 @@
-The SunPy project is very happy to announce a new release of "ndcube".
 
-ndcube is a package built for handling, inspecting and visualizing a wide
-variety of data, of any number of dimensions, along with coordinate information
-described by WCS. The `~ndcube.NDCube` provides functionality for slicing
-the data, WCS and other metadata simultaneously, plotting and animating,
-and associating extra coordinate information along any axis.
+This release of ndcube contains 518 commits in 21 merged pull requests closing 5 issues from 12 people, 6 of which are first-time contributors to ndcube.
 
-In addition, the ndcube package provides the `~nddata.NDCubeSequence`
-class for representing sequences of `~ndcube.NDCube` objects where the
-coordinate information may or may not align, and accessing these sequences in a
-way consistent with a singular cube.
-
-This release of ndcube contains 95 commits in 12 merged pull requests closing 5 issues from 5 people, 2 of which are first time contributors to ndcube.
+* 518 commits have been added since 2.2
+* 5 issues have been closed since 2.2
+* 21 pull requests have been merged since 2.2
+* 12 people have contributed since 2.2
+* 6 of which are new contributors
 
 The people who have contributed to the code for this release are:
 
-    Daniel Ryan
-    David Stansby  *
-    Nabil Freij
-    P. L. Lim  *
-    Stuart Mumford (boooooooo)
+-  Daniel Ryan
+-  JunyanHuo  *
+-  Laura Hayes
+-  Mihail Bankov  *
+-  Nabil Freij
+-  Sam Van Kooten  *
+-  Samuel Bennett  *
+-  Sanvi Sharma  *
+-  Shane Maloney  *
+-  Stuart Mumford
+-  Will Barnes
+-  pre-commit-ci[bot]
 
-Where a * indicates their first contribution to ndcube.
-
-For more information about ndcube see the `documentation <http://docs.sunpy.org/projects/ndcube/>`__.
-
-ndcube can be installed from pip or conda using the following commands::
-
-  $ conda install -c conda-forge ndcube
-
-  $ pip install ndcube
+Where a * indicates that this release contains their first contribution to ndcube.
