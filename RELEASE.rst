@@ -10,7 +10,7 @@ This release of ndcube contains 518 commits in 21 merged pull requests closing 5
 The people who have contributed to the code for this release are:
 
 -  Daniel Ryan
--  JunyanHuo  *
+-  Junyan Huo  *
 -  Laura Hayes
 -  Mihail Bankov  *
 -  Nabil Freij
