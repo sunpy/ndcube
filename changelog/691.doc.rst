@@ -1,1 +1,0 @@
-Added a gallery example  (:ref:`sphx_glr_generated_gallery_creating_even_spaced_wavelength_visualisation.py`) showcasing how to create a visualisation of unevenly spaced wavelength data cube using AIA data.

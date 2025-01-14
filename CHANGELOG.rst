@@ -1,3 +1,59 @@
+2.3.0 (2025-01-14)
+==================
+
+Breaking Changes
+----------------
+
+- "dimensions" property on ~ndcube.NDCube` and `~ndcube.NDCubeSequence` have been deprecated and replaced by "shape" (`#684 <https://github.com/sunpy/ndcube/pull/684>`__)
+
+
+Removals
+--------
+
+- The ability to create an `.NDCollection` object with numerical keys is deprecated as it leads to ambiguous behavior when slicing the collection. (`#778 <https://github.com/sunpy/ndcube/pull/778>`__)
+
+
+New Features
+------------
+
+- Add Sliceable `~ndcube.meta.NDMeta` class for axis-associated metadata. (`#455 <https://github.com/sunpy/ndcube/pull/455>`__)
+- Added a new `~ndcube.NDCube.squeeze` method to `ndcube.NDCube`.
+  It will remove all axes of length 1. (`#669 <https://github.com/sunpy/ndcube/pull/669>`__)
+- Added `~ndcube.NDCube.quantity` attribute to `~ndcube.NDCube` to return the data array with in the cube with the physical units stored in the `~ndcube.NDCube.unit` attribute. (`#677 <https://github.com/sunpy/ndcube/pull/677>`__)
+- Enable `~ndcube.NDCube` to be raised to a power. (`#678 <https://github.com/sunpy/ndcube/pull/678>`__)
+- Added `ndcube.NDCube.shape` as a replacement for "dimensions". (`#684 <https://github.com/sunpy/ndcube/pull/684>`__)
+- Enable rtruediv on`~ndcube.NDCube` such that a user can now do 1/`~ndcube.NDCube`. (`#685 <https://github.com/sunpy/ndcube/pull/685>`__)
+- Add a ``keepdims=False`` kwarg to `~ndcube.NDCube.crop` and `~ndcube.NDCube.crop_by_values` setting to true keeps length-1 dimensions default behavior drops these dimensions. (`#732 <https://github.com/sunpy/ndcube/pull/732>`__)
+- When calling :meth:`ndcube.NDCubeBase.axis_world_coords` or :meth:`ndcube.NDCubeBase.axis_world_coords_values` with a
+  specific axis or axes specified, the methods now avoid doing calculations for any other uncorrelated axes, offering
+  significant speedups when those other axes are large. (`#767 <https://github.com/sunpy/ndcube/pull/767>`__)
+- Add support for passing ``-1`` as an element of the ``bin_shape`` argument to `.NDCube.rebin` which will not rebin along that dimension (sets the bin shape to equal the data shape). (`#777 <https://github.com/sunpy/ndcube/pull/777>`__)
+- It is now possible to set the ``NDCube.data`` property of a cube with an array of the same shape and unit as the current cube. (`#795 <https://github.com/sunpy/ndcube/pull/795>`__)
+
+
+Bug Fixes
+---------
+
+- :meth:`ndcube.NDCube.rebin` ``bin_shape`` argument now accepts a `astropy.units.Quantity` as input if the units are convertible to pixels. (`#744 <https://github.com/sunpy/ndcube/pull/744>`__)
+- Fix support for astropy 7.0, this involved a change to ``CompoundLowLevelWCS`` so that in handles ``pixel_bounds`` if only one component WCS sets a pixel bound. (`#772 <https://github.com/sunpy/ndcube/pull/772>`__)
+- Fixed a bug which caused ``NDCubeSequence.cube_like_dimensions`` to break. (`#788 <https://github.com/sunpy/ndcube/pull/788>`__)
+- Added an internal code to shortcut non-correlated axes avoiding the creation of a full coordinate grid, reducing memory use in specific circumstances. (`#798 <https://github.com/sunpy/ndcube/pull/798>`__)
+
+
+Documentation
+-------------
+
+- Added a gallery example  (:ref:`sphx_glr_generated_gallery_creating_even_spaced_wavelength_visualisation.py`) showcasing how to create a visualisation of unevenly spaced wavelength data cube using AIA data. (`#691 <https://github.com/sunpy/ndcube/pull/691>`__)
+- Added a gallery example  (:ref:`sphx_glr_generated_gallery_creating_a_gwcs_from_quantities.py`) showcasing how to create a GWCS from quantities. (`#695 <https://github.com/sunpy/ndcube/pull/695>`__)
+
+
+Internal Changes
+----------------
+
+- Move code creating a masked array for `ndcube.NDCube.rebin` to a private function which is then called by `ndcube.NDCube.rebin`. (`#705 <https://github.com/sunpy/ndcube/pull/705>`__)
+- Added explicit support for numpy 2.0. (`#729 <https://github.com/sunpy/ndcube/pull/729>`__)
+
+
 2.2.0 (2023-11-16)
 ==================
 
