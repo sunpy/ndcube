@@ -1044,21 +1044,21 @@ class NDCube(NDCubeBase):
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
 
-            # combine mask
+            # use the format of the output of np.ma.MaskedArray, for combining mask
             self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
             value_ma = np.ma.MaskedArray(value_data, mask=value.mask)
 
-            # addition
+            # addition, (and combining mask)
             result_ma = self_ma + value_ma
 
             # extract new mask and new data
             kwargs["mask"] = result_ma.mask
-            kwargs["data"] = result_ma.data
+            kwargs["data"] = result_ma
 
             # combine the uncertainty
             if self.uncertainty is not None and value.uncertainty is not None:
                 new_uncertainty = self.uncertainty.propagate(
-                    np.add, value.uncertainty, result_data = kwargs["data"], correlation=0
+                    np.add, value, result_data = kwargs["data"], correlation=0
                 )
                 kwargs["uncertainty"] = new_uncertainty
             elif self.uncertainty is not None:
