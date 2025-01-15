@@ -1,5 +1,6 @@
 import abc
 import copy
+import uuid
 from numbers import Integral
 from functools import partial
 from collections import defaultdict
@@ -111,7 +112,12 @@ def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
     """
     axes_order = tuple(range(naxes))
 
-    name = None
+    if names is None:
+        # Ensure that the frame name is always unique
+        name = f"Frame-{str(uuid.uuid4()).split('-')[1]}"
+    else:
+        # If we have axes names use them as the frame name
+        name = "-".join(names) + " Frame"
     axes_type = "CUSTOM"
 
     if isinstance(unit, (u.Unit, u.IrreducibleUnit, u.CompositeUnit)):
@@ -121,7 +127,6 @@ def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
         axes_type = "SPATIAL"
 
     if all(u.pix.is_equivalent(un) for un in unit):
-        name = "PixelFrame"
         axes_type = "PIXEL"
 
     axes_type = tuple([axes_type] * naxes)

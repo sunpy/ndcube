@@ -34,7 +34,7 @@ def lut_3d_distance_mesh():
 def lut_2d_distance_no_mesh():
     # Fixture is broken and raises: Currently all tables must be 1-D
     lookup_table = np.arange(9).reshape(3, 3) * u.km, np.arange(9, 18).reshape(3, 3) * u.km
-    return QuantityTableCoordinate(*lookup_table)
+    return QuantityTableCoordinate(*lookup_table, mesh=False)
 
 
 @pytest.fixture
@@ -213,6 +213,7 @@ def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
     assert sub_ltc.delayed_models[0].lookup_table[2].shape == (6, )
 
 
+@pytest.mark.xfail(reason="Two dimensional tables are not supported")
 def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
     ltc = lut_2d_skycoord_no_mesh
 
@@ -222,10 +223,8 @@ def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
     pixel_coords = (0, 0)*u.pix
     sc = ltc.wcs.pixel_to_world(*pixel_coords)
 
-    # TODO: Fix
-    with pytest.raises(u.UnitsError, match="could not be converted to required input units of pix"):
-        pix = ltc.wcs.world_to_pixel(sc)
-        assert u.allclose(pix, pixel_coords.value)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
 
 
 def test_1d_time(lut_1d_time):

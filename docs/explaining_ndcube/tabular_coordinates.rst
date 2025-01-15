@@ -54,7 +54,7 @@ is the following temporal axis::
 
   >>> gwcs = TimeTableCoordinate(time_axis).wcs
   >>> gwcs
-  <WCS(output_frame=TemporalFrame, input_frame=PixelFrame, forward_transform=Model: Tabular1D
+  <WCS(output_frame=TemporalFrame, input_frame=Frame..., forward_transform=Model: Tabular1D
   N_inputs: 1
   N_outputs: 1
   Parameters:
@@ -86,7 +86,7 @@ This keyword argument interprets the input to `.SkyCoordTableCoordinate` in a si
 
   >>> gwcs = (TimeTableCoordinate(time_axis) & SkyCoordTableCoordinate(icrs_table, mesh=True)).wcs
   >>> gwcs
-  <WCS(output_frame=CompositeFrame, input_frame=PixelFrame, forward_transform=Model: CompoundModel
+  <WCS(output_frame=CompositeFrame, input_frame=Frame..., forward_transform=Model: CompoundModel
   Inputs: ('x', 'x0', 'x1')
   Outputs: ('y', 'y0', 'y1')
   Model set size: 1
