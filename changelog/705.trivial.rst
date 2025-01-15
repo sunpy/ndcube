@@ -1,1 +1,0 @@
-Move code creating a masked array for `ndcube.NDCube.rebin` to a private function which is then called by `ndcube.NDCube.rebin`.
