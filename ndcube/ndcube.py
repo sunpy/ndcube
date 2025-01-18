@@ -1044,30 +1044,62 @@ class NDCube(NDCubeBase):
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
 
-            # use the format of the output of np.ma.MaskedArray, for combining mask
-            self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
-            value_ma = np.ma.MaskedArray(value_data, mask=value.mask)
+            # Neither self nor value has a mask
+            self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
+            value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
 
-            # addition, (and combining mask)
-            result_ma = self_ma + value_ma
+            # situations in which at least one of the two objects have a meaningful mask
+            if not (self_unmasked and value_unmasked):
+                self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
+                value_ma = np.ma.MaskedArray(value_data, mask=value.mask)
 
-            # extract new mask and new data
-            kwargs["mask"] = result_ma.mask
-            kwargs["data"] = result_ma
+                # addition, (and combining mask)
+                result_ma = self_ma + value_ma
 
-            # combine the uncertainty
-            if self.uncertainty is not None and value.uncertainty is not None:
-                new_uncertainty = self.uncertainty.propagate(
-                    np.add, value, result_data = kwargs["data"], correlation=0
-                )
-                kwargs["uncertainty"] = new_uncertainty
-            elif self.uncertainty is not None:
-                new_uncertainty = self.uncertainty
-                kwargs["uncertainty"] = new_uncertainty
-            elif value.uncertainty is not None:
-                new_uncertainty = value.uncertainty
+                # extract new mask and new data
+                kwargs["mask"] = result_ma.mask
+                kwargs["data"] = result_ma.data # keep the data and mask separate
+
+                # we cannot directly apply the mask on result_ma for further operations on uncertainty, because it does not have it.
+                # we can only handle the uncertainty on self and value individually.
+                # check if the uncertainty is not None, and if it is masked, set it to 0.
+                if hasattr(self, 'uncertainty') and self.uncertainty is not None:
+                    if not self_unmasked:
+                        self.uncertainty.array[self.mask] = 0
+
+                if hasattr(value, 'uncertainty') and value.uncertainty is not None:
+                    if not value_unmasked:
+                        value.uncertainty.array[value.mask] = 0
+
+                # combine the uncertainty
+                if self.uncertainty is not None and value.uncertainty is not None:
+                    kwargs["uncertainty"] = self.uncertainty.propagate(
+                        np.add, value, result_data=kwargs["data"], correlation=0
+                    )
+                elif self.uncertainty is not None:
+                    kwargs["uncertainty"] = self.uncertainty
+                elif value.uncertainty is not None:
+                    kwargs["uncertainty"] = value.uncertainty
+                else:
+                    kwargs["uncertainty"] = None
+
+            # situations in which neither of the two objects has a meaningful mask
             else:
-                new_uncertainty = None
+                kwargs["mask"] = self.mask
+                kwargs["data"] = self.data + value.data
+                # combine the uncertainty
+                if self.uncertainty is not None and value.uncertainty is not None:
+                    new_uncertainty = self.uncertainty.propagate(
+                        np.add, value, result_data = kwargs["data"], correlation=0
+                    )
+                    kwargs["uncertainty"] = new_uncertainty
+                elif self.uncertainty is not None:
+                    new_uncertainty = self.uncertainty
+                    kwargs["uncertainty"] = new_uncertainty
+                elif value.uncertainty is not None:
+                    new_uncertainty = value.uncertainty
+                else:
+                    new_uncertainty = None
 
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
