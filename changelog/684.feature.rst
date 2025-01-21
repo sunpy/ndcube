@@ -1,1 +1,0 @@
-Added `ndcube.NDCube.shape` as a replacement for "dimensions".

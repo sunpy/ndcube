@@ -261,7 +261,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
         # TODO: product was renamed to prod for numpy 2.0
-        elif operation in {np.prod, np.nanprod, np.prod if hasattr(np, "product") else np.prod}:
+        elif operation in {np.prod, np.nanprod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")

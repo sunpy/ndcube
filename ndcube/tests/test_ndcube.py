@@ -230,6 +230,20 @@ def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     assert coords[0].shape == (5,)
 
 
+@pytest.mark.limit_memory("12 MB")
+def test_axis_world_coords_wave_coupled_dims(ndcube_3d_coupled):
+    cube = ndcube_3d_coupled
+
+    cube.axis_world_coords('em.wl')
+
+
+@pytest.mark.limit_memory("12 MB")
+def test_axis_world_coords_time_coupled_dims(ndcube_3d_coupled_time):
+    cube = ndcube_3d_coupled_time
+
+    cube.axis_world_coords('time')
+
+
 def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
     sub_cube = cube[:, 0]
@@ -292,10 +306,10 @@ def test_axis_world_coords_single_pixel_corners(axes, ndcube_3d_ln_lt_l):
     assert u.allclose(coords[0], [1.02e-09, 1.04e-09, 1.06e-09, 1.08e-09] * u.m)
 
     coords = ndcube_3d_ln_lt_l.axis_world_coords_values(*axes, pixel_corners=True)
-    assert u.allclose(coords[0], [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] * u.m)
+    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
     coords = ndcube_3d_ln_lt_l.axis_world_coords(*axes, pixel_corners=True)
-    assert u.allclose(coords[0], [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09, 1.11e-09] * u.m)
+    assert u.allclose(coords, [1.01e-09, 1.03e-09, 1.05e-09, 1.07e-09, 1.09e-09] * u.m)
 
 
 @pytest.mark.parametrize(("ndc", "item"),

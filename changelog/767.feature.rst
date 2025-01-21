@@ -1,3 +1,0 @@
-When calling :meth:`ndcube.NDCubeBase.axis_world_coords` or :meth:`ndcube.NDCubeBase.axis_world_coords_values` with a
-specific axis or axes specified, the methods now avoid doing calculations for any other uncorrelated axes, offering
-significant speedups when those other axes are large.
