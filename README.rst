@@ -48,10 +48,10 @@ Getting Help
 For more information or to ask questions about ndcube, check out:
 
 -  `ndcube Documentation`_
--  `ndcube Element Channel`_
+-  `ndcube Chat Channel`_
 
 .. _ndcube Documentation: https://docs.sunpy.org/projects/ndcube/
-.. _ndcube Element Channel: https://app.element.io/#/room/#ndcube:openastronomy.org
+.. _ndcube Chat Channel: https://app.element.io/#/room/#ndcube:openastronomy.org
 
 Contributing
 ============

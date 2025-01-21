@@ -1,1 +1,0 @@
-:meth:`ndcube.NDCube.rebin` ``bin_shape`` argument now accepts a `astropy.units.Quantity` as input if the units are convertible to pixels.

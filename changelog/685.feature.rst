@@ -1,1 +1,0 @@
-Enable rtruediv on`~ndcube.NDCube` such that a user can now do 1/`~ndcube.NDCube`.
