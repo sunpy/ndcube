@@ -1071,35 +1071,24 @@ class NDCube(NDCubeBase):
                     if not value_unmasked:
                         value.uncertainty.array[value.mask] = 0
 
-                # combine the uncertainty
-                if self.uncertainty is not None and value.uncertainty is not None:
-                    kwargs["uncertainty"] = self.uncertainty.propagate(
-                        np.add, value, result_data=kwargs["data"], correlation=0
-                    )
-                elif self.uncertainty is not None:
-                    kwargs["uncertainty"] = self.uncertainty
-                elif value.uncertainty is not None:
-                    kwargs["uncertainty"] = value.uncertainty
-                else:
-                    kwargs["uncertainty"] = None
-
             # situations in which neither of the two objects has a meaningful mask
             else:
                 kwargs["mask"] = self.mask
                 kwargs["data"] = self.data + value.data
-                # combine the uncertainty
-                if self.uncertainty is not None and value.uncertainty is not None:
-                    new_uncertainty = self.uncertainty.propagate(
-                        np.add, value, result_data = kwargs["data"], correlation=0
-                    )
-                    kwargs["uncertainty"] = new_uncertainty
-                elif self.uncertainty is not None:
-                    new_uncertainty = self.uncertainty
-                    kwargs["uncertainty"] = new_uncertainty
-                elif value.uncertainty is not None:
-                    new_uncertainty = value.uncertainty
-                else:
-                    new_uncertainty = None
+
+            # combine the uncertainty
+            if self.uncertainty is not None and value.uncertainty is not None:
+                new_uncertainty = self.uncertainty.propagate(
+                    np.add, value, result_data = kwargs["data"], correlation=0
+                )
+                kwargs["uncertainty"] = new_uncertainty
+            elif self.uncertainty is not None:
+                new_uncertainty = self.uncertainty
+                kwargs["uncertainty"] = new_uncertainty
+            elif value.uncertainty is not None:
+                new_uncertainty = value.uncertainty
+            else:
+                new_uncertainty = None
 
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
