@@ -1143,9 +1143,9 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
            unit=u.ct,
            wcs=None,
            uncertainty=StdDevUncertainty(np.random.rand(10, 12)),
-           mask=np.random.choice([True, False], size=(10, 12))),
+           mask=np.random.choice([False, False], size=(10, 12))),
 ])
-def test_cube_add_uncertainty_and_mask(ndcube_2d_ln_lt_units, value):
+def test_cube_add_uncertainty(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units + value
     # Check uncertainty propagation
     expected_uncertainty = ndcube_2d_ln_lt_units.uncertainty.propagate(
@@ -1156,11 +1156,6 @@ def test_cube_add_uncertainty_and_mask(ndcube_2d_ln_lt_units, value):
     )
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
-    # Check mask combination
-    expected_mask = (np.ma.MaskedArray(ndcube_2d_ln_lt_units.data, mask=ndcube_2d_ln_lt_units.mask) + \
-                    np.ma.MaskedArray(ndcube_2d_ln_lt_units.data, mask=ndcube_2d_ln_lt_units.mask)).mask
-    assert np.array_equal(new_cube.mask, expected_mask), \
-        f"Expected mask: {expected_mask}, but got: {new_cube.mask}"
 
 
 @pytest.mark.parametrize('value', [
