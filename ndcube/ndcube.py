@@ -965,7 +965,7 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def add(self, value, operation_ignores_mask=False, handle_mask=np.logical_and):
+    def add(self, value, operation_ignores_mask=True, handle_mask=np.logical_and):
         """
         Users are allowed to choose whether they want operation_ignores_mask to be True or False,
         and are allowed to choose whether they want handle_mask to be AND / OR .
