@@ -965,7 +965,11 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def add(self, value, operation_ignores_mask=False, handle_mask=np.logical_and,):
+    def add(self, value, operation_ignores_mask=False, handle_mask=np.logical_and):
+        """
+        Users are allowed to choose whether they want operation_ignores_mask to be True or False,
+        and are allowed to choose whether they want handle_mask to be AND / OR .
+        """
         kwargs = {}
 
         if isinstance(value, NDData) and value.wcs is None:
@@ -981,7 +985,7 @@ class NDCube(NDCubeBase):
             self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
             value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
 
-            if (self_unmasked and value_unmasked):
+            if (self_unmasked and value_unmasked) or operation_ignores_mask is True:
                 # addition
                 kwargs["data"] = self.data + value_data
 
@@ -999,7 +1003,17 @@ class NDCube(NDCubeBase):
                 else:
                     new_uncertainty = None
             else:
-                raise NotImplementedError
+                # TODO
+                # When there is a mask, that is when the two new added parameters (OIM and HM) come into the picture.
+                # Conditional statements to permutate the two different scenarios (when it does not ignore the mask).
+                if operation_ignores_mask is False:
+                    if handle_mask is np.logical_and:
+                        pass
+                    else:
+                        pass
+                else:
+                    raise NotImplementedError
+
 
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
