@@ -966,6 +966,7 @@ class NDCube(NDCubeBase):
         return self._new_instance(data=-self.data)
 
     def add(self, value):
+        # Version at 22/Jan.
         kwargs = {}
         if isinstance(value, NDData) and value.wcs is None:
             if self.unit is not None and value.unit is not None:
