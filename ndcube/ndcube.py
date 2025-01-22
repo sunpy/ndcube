@@ -965,9 +965,9 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def add(self, value):
-        # Version at 22/Jan.
+    def add(self, value, operation_ignores_mask=False, handle_mask=np.logical_and,):
         kwargs = {}
+
         if isinstance(value, NDData) and value.wcs is None:
             if self.unit is not None and value.unit is not None:
                 value_data = (value.data * value.unit).to_value(self.unit)
@@ -976,22 +976,30 @@ class NDCube(NDCubeBase):
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
 
-            # addition, (and combining mask)
-            kwargs["data"] = self.data + value_data
+            # check whether there is a mask.
+            # Neither self nor value has a mask
+            self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
+            value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
 
-            # combine the uncertainty
-            if self.uncertainty is not None and value.uncertainty is not None:
-                new_uncertainty = self.uncertainty.propagate(
-                    np.add, value, result_data = kwargs["data"], correlation=0
-                )
-                kwargs["uncertainty"] = new_uncertainty
-            elif self.uncertainty is not None:
-                new_uncertainty = self.uncertainty
-                kwargs["uncertainty"] = new_uncertainty
-            elif value.uncertainty is not None:
-                new_uncertainty = value.uncertainty
+            if (self_unmasked and value_unmasked):
+                # addition
+                kwargs["data"] = self.data + value_data
+
+                # combine the uncertainty;
+                if self.uncertainty is not None and value.uncertainty is not None:
+                    new_uncertainty = self.uncertainty.propagate(
+                        np.add, value, result_data = kwargs["data"], correlation=0
+                    )
+                    kwargs["uncertainty"] = new_uncertainty
+                elif self.uncertainty is not None:
+                    new_uncertainty = self.uncertainty
+                    kwargs["uncertainty"] = new_uncertainty
+                elif value.uncertainty is not None:
+                    new_uncertainty = value.uncertainty
+                else:
+                    new_uncertainty = None
             else:
-                new_uncertainty = None
+                raise NotImplementedError
 
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
