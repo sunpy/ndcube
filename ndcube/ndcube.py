@@ -965,47 +965,18 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def __add__(self, value):
+    def add(self, value):
         kwargs = {}
         if isinstance(value, NDData) and value.wcs is None:
             if self.unit is not None and value.unit is not None:
-                    value_data = (value.data * value.unit).to_value(self.unit)
+                value_data = (value.data * value.unit).to_value(self.unit)
             elif self.unit is None:
                 value_data = value.data
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
 
-            # Neither self nor value has a mask
-            self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
-            value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
-
-            # situations in which at least one of the two objects have a meaningful mask
-            if not (self_unmasked and value_unmasked):
-                self_ma = np.ma.MaskedArray(self.data, mask=self.mask)
-                value_ma = np.ma.MaskedArray(value_data, mask=value.mask)
-
-                # addition, (and combining mask)
-                result_ma = self_ma + value_ma
-
-                # extract new mask and new data
-                kwargs["mask"] = result_ma.mask
-                kwargs["data"] = result_ma.data # keep the data and mask separate
-
-                # we cannot directly apply the mask on result_ma for further operations on uncertainty, because it does not have it.
-                # we can only handle the uncertainty on self and value individually.
-                # check if the uncertainty is not None, and if it is masked, set it to 0.
-                if hasattr(self, 'uncertainty') and self.uncertainty is not None:
-                    if not self_unmasked:
-                        self.uncertainty.array[self.mask] = 0
-
-                if hasattr(value, 'uncertainty') and value.uncertainty is not None:
-                    if not value_unmasked:
-                        value.uncertainty.array[value.mask] = 0
-
-            # situations in which neither of the two objects has a meaningful mask
-            else:
-                kwargs["mask"] = self.mask
-                kwargs["data"] = self.data + value.data
+            # addition, (and combining mask)
+            kwargs["data"] = self.data + value_data
 
             # combine the uncertainty
             if self.uncertainty is not None and value.uncertainty is not None:
@@ -1040,6 +1011,10 @@ class NDCube(NDCubeBase):
 
         # return the new NDCube instance
         return self._new_instance(**kwargs)
+
+    def __add__(self, value):
+        # when value has a mask, raise error and point user to the add method. TODO
+        pass
 
     def __radd__(self, value):
         return self.__add__(value)
