@@ -1037,7 +1037,21 @@ class NDCube(NDCubeBase):
 
     def __add__(self, value):
         # when value has a mask, raise error and point user to the add method. TODO
-        pass
+        #
+        # check whether there is a mask.
+        # Neither self nor value has a mask
+
+        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
+        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
+
+        # tidying this up.
+        if  value_masked: # value has a mask,
+            # let the users call the add method
+            raise TypeError('Please use the add method.')
+        if (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None):
+            raise TypeError('Please use the add method.')
+
+        return self.add(value) # the mask keywords cannot be given by users.
 
     def __radd__(self, value):
         return self.__add__(value)
