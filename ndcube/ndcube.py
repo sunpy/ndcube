@@ -11,6 +11,7 @@ import numpy as np
 
 import astropy.nddata
 import astropy.units as u
+from astropy.nddata import NDData
 from astropy.units import UnitsError
 from astropy.wcs.utils import _split_matrix
 
@@ -964,7 +965,56 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def __add__(self, value):
+    def add(self, value, operation_ignores_mask=True, handle_mask=np.logical_and):
+        """
+        Users are allowed to choose whether they want operation_ignores_mask to be True or False,
+        and are allowed to choose whether they want handle_mask to be AND / OR .
+        """
+        kwargs = {}
+
+        if isinstance(value, NDData) and value.wcs is None:
+            if self.unit is not None and value.unit is not None:
+                value_data = (value.data * value.unit).to_value(self.unit)
+            elif self.unit is None:
+                value_data = value.data
+            else:
+                raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
+
+            # check whether there is a mask.
+            # Neither self nor value has a mask
+            self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
+            value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
+
+            if (self_unmasked and value_unmasked) or operation_ignores_mask is True:
+                # addition
+                kwargs["data"] = self.data + value_data
+
+                # combine the uncertainty;
+                if self.uncertainty is not None and value.uncertainty is not None:
+                    new_uncertainty = self.uncertainty.propagate(
+                        np.add, value, result_data = kwargs["data"], correlation=0
+                    )
+                    kwargs["uncertainty"] = new_uncertainty
+                elif self.uncertainty is not None:
+                    new_uncertainty = self.uncertainty
+                    kwargs["uncertainty"] = new_uncertainty
+                elif value.uncertainty is not None:
+                    new_uncertainty = value.uncertainty
+                else:
+                    new_uncertainty = None
+            else:
+                # TODO
+                # When there is a mask, that is when the two new added parameters (OIM and HM) come into the picture.
+                # Conditional statements to permutate the two different scenarios (when it does not ignore the mask).
+                if operation_ignores_mask is False:
+                    if handle_mask is np.logical_and:
+                        pass
+                    else:
+                        pass
+                else:
+                    raise NotImplementedError
+
+
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
@@ -972,7 +1022,7 @@ class NDCube(NDCubeBase):
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data + value.to_value(cube_unit)
+                kwargs["data"] = self.data + value.to_value(cube_unit)
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -980,8 +1030,26 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            new_data = self.data + value
-        return self._new_instance(data=new_data)
+            kwargs["data"] = self.data + value
+
+        # return the new NDCube instance
+        return self._new_instance(**kwargs)
+
+    def __add__(self, value):
+        # when value has a mask, raise error and point user to the add method. TODO
+        #
+        # check whether there is a mask.
+        # Neither self nor value has a mask
+
+        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
+        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
+
+        # tidying this up.
+        if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
+            # let the users call the add method
+            raise TypeError('Please use the add method.')
+
+        return self.add(value) # the mask keywords cannot be given by users.
 
     def __radd__(self, value):
         return self.__add__(value)
