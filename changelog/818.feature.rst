@@ -1,1 +1,1 @@
-Added Ellipsis functionality to ndcube.mixins.ndslicing 
+Added Ellipsis functionality to ndcube.mixins.ndslicing

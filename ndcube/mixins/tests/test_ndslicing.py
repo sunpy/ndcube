@@ -1,7 +1,10 @@
-import pytest
 import numpy as np
-from ndcube import NDCube
+import pytest
+
 from astropy.wcs import WCS
+
+from ndcube import NDCube
+
 
 @pytest.fixture
 def sample_ndcube():
