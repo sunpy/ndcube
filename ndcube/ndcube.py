@@ -1015,7 +1015,7 @@ class NDCube(NDCubeBase):
                     raise NotImplementedError
 
 
-        if hasattr(value, 'unit'):
+        elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
                 # perform arithmetic between a unitful quantity.
