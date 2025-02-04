@@ -679,6 +679,15 @@ def ndcube_2d_ln_lt_units(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_with_uncertainty(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    uncertainty = StdDevUncertainty(np.random.rand(*shape), unit=u.ct)
+
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, unit=u.ct)
+
+
+@pytest.fixture
 def ndcube_2d_dask(wcs_2d_lt_ln):
     shape = (8, 4)
     chunks = 2

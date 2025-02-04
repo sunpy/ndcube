@@ -1142,17 +1142,29 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
     NDData(np.random.rand(10, 12),
            unit=u.ct,
            wcs=None,
-           uncertainty=StdDevUncertainty(np.random.rand(10, 12)),
+           uncertainty=StdDevUncertainty(np.random.rand(10, 12), unit=u.ct)),
 ])
-def test_cube_add_uncertainty(ndcube_2d_ln_lt_units, value):
-    new_cube = ndcube_2d_ln_lt_units + value
+def test_cube_add_uncertainty(ndcube_2d_with_uncertainty, value):
+    #print("ndcube_2d_with_uncertainty:", ndcube_2d_with_uncertainty)
+    #print("ndcube_2d_with_uncertainty.uncertainty:", ndcube_2d_with_uncertainty.uncertainty)
+    #print("ndcube_2d_with_uncertainty.uncertainty.unit:", ndcube_2d_with_uncertainty.uncertainty.unit)
+    #print("value:", value)
+    #print("value.uncertainty:", value.uncertainty)
+    #print("value.uncertainty.unit:", value.uncertainty.unit)
+
+    new_cube = ndcube_2d_with_uncertainty + value
     # Check uncertainty propagation
-    expected_uncertainty = ndcube_2d_ln_lt_units.uncertainty.propagate(
+    expected_uncertainty = ndcube_2d_with_uncertainty.uncertainty.propagate(
                             operation=np.add,
                             other_nddata=value,
-                            result_data=new_cube.data,
+                            result_data=new_cube.data * new_cube.unit,
                             correlation=0,
     )
+    if expected_uncertainty.unit is None:
+        expected_uncertainty = StdDevUncertainty(expected_uncertainty.array, unit=new_cube.unit)
+    if isinstance(expected_uncertainty, StdDevUncertainty):
+        expected_uncertainty = expected_uncertainty.array
+
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
 
