@@ -1006,12 +1006,6 @@ class NDCube(NDCubeBase):
                 # TODO
                 # When there is a mask, that is when the two new added parameters (OIM and HM) come into the picture.
                 # Conditional statements to permutate the two different scenarios (when it does not ignore the mask).
-                if operation_ignores_mask is False:
-                    if handle_mask is np.logical_and:
-                        pass
-                    else:
-                        pass
-                else:
                     raise NotImplementedError
 
 
