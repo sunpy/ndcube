@@ -1,14 +1,4 @@
-<<<<<<< HEAD
-import numpy as np
 import pytest
-
-from astropy.wcs import WCS
-=======
-import pytest
->>>>>>> 9f68a49 (Updated test file by using pre defined fixture)
-
-from ndcube import NDCube
-
 
 @pytest.fixture
 def sample_ndcube(ndcube_4d_ln_l_t_lt):
