@@ -1143,7 +1143,6 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
            unit=u.ct,
            wcs=None,
            uncertainty=StdDevUncertainty(np.random.rand(10, 12)),
-           mask=np.random.choice([False, False], size=(10, 12))),
 ])
 def test_cube_add_uncertainty(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units + value

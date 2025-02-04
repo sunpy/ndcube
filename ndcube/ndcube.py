@@ -975,7 +975,7 @@ class NDCube(NDCubeBase):
         if isinstance(value, NDData) and value.wcs is None:
             if self.unit is not None and value.unit is not None:
                 value_data = (value.data * value.unit).to_value(self.unit)
-            elif self.unit is None:
+            elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
                 raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
@@ -1006,16 +1006,10 @@ class NDCube(NDCubeBase):
                 # TODO
                 # When there is a mask, that is when the two new added parameters (OIM and HM) come into the picture.
                 # Conditional statements to permutate the two different scenarios (when it does not ignore the mask).
-                if operation_ignores_mask is False:
-                    if handle_mask is np.logical_and:
-                        pass
-                    else:
-                        pass
-                else:
                     raise NotImplementedError
 
 
-        if hasattr(value, 'unit'):
+        elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
                 # perform arithmetic between a unitful quantity.
