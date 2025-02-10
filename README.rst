@@ -2,19 +2,7 @@
 ndcube
 ******
 
-<<<<<<<
 |Latest Version| |codecov| |matrix| |Powered by NumFOCUS| |Powered by SunPy|
-=======
-Usage of Generative AI
-======================
-
-We expect authentic engagement in our community.
-Be wary of posting output from Large Language Models or similar generative AI as comments on GitHub or any other platform, as such comments tend to be formulaic and low quality content.
-If you use generative AI tools as an aid in developing code or documentation changes, ensure that you fully understand the proposed changes and can explain why they are the correct approach and an improvement to the current state.
-
-License
--------
->>>>>>>
 
 .. |Latest Version| image:: https://img.shields.io/pypi/v/ndcube.svg
    :target: https://pypi.python.org/pypi/ndcube/
@@ -39,6 +27,13 @@ License
 
 It combines data, uncertainties, units, metadata, masking, and coordinate transformations into classes with unified slicing and generic coordinate transformations and plotting/animation capabilities.
 It is designed to handle data of any number of dimensions and axis types (e.g. spatial, temporal, spectral, etc.) whose relationship between the array elements and the real world can be described by World Coordinate System (WCS) translations.
+
+Usage of Generative AI
+======================
+
+We expect authentic engagement in our community.
+Be wary of posting output from Large Language Models or similar generative AI as comments on GitHub or any other platform, as such comments tend to be formulaic and low quality content.
+If you use generative AI tools as an aid in developing code or documentation changes, ensure that you fully understand the proposed changes and can explain why they are the correct approach and an improvement to the current state.
 
 Acknowledging ndcube
 ====================
