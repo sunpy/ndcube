@@ -1145,12 +1145,6 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
            uncertainty=StdDevUncertainty(np.random.rand(10, 12), unit=u.ct)),
 ])
 def test_cube_add_uncertainty(ndcube_2d_with_uncertainty, value):
-    #print("ndcube_2d_with_uncertainty:", ndcube_2d_with_uncertainty)
-    #print("ndcube_2d_with_uncertainty.uncertainty:", ndcube_2d_with_uncertainty.uncertainty)
-    #print("ndcube_2d_with_uncertainty.uncertainty.unit:", ndcube_2d_with_uncertainty.uncertainty.unit)
-    #print("value:", value)
-    #print("value.uncertainty:", value.uncertainty)
-    #print("value.uncertainty.unit:", value.uncertainty.unit)
 
     new_cube = ndcube_2d_with_uncertainty + value
     # Check uncertainty propagation
@@ -1162,10 +1156,8 @@ def test_cube_add_uncertainty(ndcube_2d_with_uncertainty, value):
     )
     if expected_uncertainty.unit is None:
         expected_uncertainty = StdDevUncertainty(expected_uncertainty.array, unit=new_cube.unit)
-    if isinstance(expected_uncertainty, StdDevUncertainty):
-        expected_uncertainty = expected_uncertainty.array
-
-    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty), \
+    assert type(new_cube.uncertainty) is type(expected_uncertainty)
+    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
 
 
