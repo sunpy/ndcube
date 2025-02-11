@@ -1156,6 +1156,8 @@ def test_cube_add_uncertainty(ndcube_2d_with_uncertainty, value):
     )
     if expected_uncertainty.unit is None:
         expected_uncertainty = StdDevUncertainty(expected_uncertainty.array, unit=new_cube.unit)
+    assert np.allclose(new_cube.data, ndcube_2d_with_uncertainty.data + value.data)
+    assert new_cube.unit == u.ct
     assert type(new_cube.uncertainty) is type(expected_uncertainty)
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
