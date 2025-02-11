@@ -12,7 +12,7 @@ import astropy.units as u
 import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
-from astropy.nddata import UnknownUncertainty
+from astropy.nddata import NDData, StdDevUncertainty, UnknownUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.units import UnitsError
@@ -1136,6 +1136,31 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
     # Add
     new_cube = ndcube_2d_ln_lt_units + value
     check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+
+
+@pytest.mark.parametrize('value', [
+    NDData(np.random.rand(10, 12),
+           unit=u.ct,
+           wcs=None,
+           uncertainty=StdDevUncertainty(np.random.rand(10, 12), unit=u.ct)),
+])
+def test_cube_add_uncertainty(ndcube_2d_with_uncertainty, value):
+
+    new_cube = ndcube_2d_with_uncertainty + value
+    # Check uncertainty propagation
+    expected_uncertainty = ndcube_2d_with_uncertainty.uncertainty.propagate(
+                            operation=np.add,
+                            other_nddata=value,
+                            result_data=new_cube.data * new_cube.unit,
+                            correlation=0,
+    )
+    if expected_uncertainty.unit is None:
+        expected_uncertainty = StdDevUncertainty(expected_uncertainty.array, unit=new_cube.unit)
+    assert np.allclose(new_cube.data, ndcube_2d_with_uncertainty.data + value.data)
+    assert new_cube.unit == u.ct
+    assert type(new_cube.uncertainty) is type(expected_uncertainty)
+    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
+        f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"
 
 
 @pytest.mark.parametrize('value', [
