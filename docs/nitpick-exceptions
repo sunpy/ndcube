@@ -18,3 +18,5 @@ py:class None.  Remove all items from D.
 py:class a shallow copy of D
 py:class v, remove specified key and return the corresponding value.
 py:class None.  Update D from mapping/iterable E and F.
+# Comes from astropy? psf
+py:obj ndarray
