@@ -1,3 +1,11 @@
+2.3.1 (2025-02-11)
+==================
+
+Documentation
+-------------
+
+- Fixed a typo in the docstring of `~ndcube.NDCube.data`.
+
 2.3.0 (2025-01-14)
 ==================
 
