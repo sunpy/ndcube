@@ -987,7 +987,7 @@ class NDCube(NDCubeBase):
 
             if (self_unmasked and value_unmasked) or operation_ignores_mask is True:
                 # addition
-                kwargs["data"] = self.data + value_data
+                kwargs["data"] = (self.data + value_data)*self.unit
 
                 # combine the uncertainty;
                 if self.uncertainty is not None and value.uncertainty is not None:
