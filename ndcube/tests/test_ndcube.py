@@ -1152,25 +1152,33 @@ def test_cube_add_unit_none(ndcube_2d_unit_None, value):
                             result_data=new_cube.data,
                             correlation=0,
     )
-    if expected_uncertainty.unit is None:
-        expected_uncertainty = StdDevUncertainty(expected_uncertainty.array)
     assert np.allclose(new_cube.data, ndcube_2d_unit_None.data + value.data) # check value of addition result
-    assert new_cube.unit is None   # check unit
     assert type(new_cube.uncertainty) is type(expected_uncertainty)  # check type of uncertainty
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
 
 
-# The case when NDData has uncertainty, NDCube has uncertainty, but no mask is involved.
+# The case when only one of them has a unit. other attributes such as result value or uncertainty do not matter.
+# An expected typeError should be raised.
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
+           wcs=None,
+           unit=u.m,
+           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
+])
+def test_cube_add_unit(ndcube_2d_unit_None, value):
+    #new_cube = ndcube_2d_with_uncertainty + value # perform the addition
+    with pytest.raises(TypeError, match="Cannot add unitless NDData to a unitful NDCube."):
+        ndcube_2d_unit_None + value  # This should raise a TypeError
+
+# The case when NDData has uncertainty, NDCube has uncertainty, but no mask is involved. NO UNIT.
 @pytest.mark.parametrize('value', [
     NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
            wcs=None,
            uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
 ])
 def test_cube_add_uncertainty(ndcube_2d_with_uncertainty, value):
-    #print('Evidence of entering.')
     new_cube = ndcube_2d_with_uncertainty + value # perform the addition
-    #new_cube.unit = value.unit
     # Check uncertainty propagation
     expected_uncertainty = ndcube_2d_with_uncertainty.uncertainty.propagate(
                             operation=np.add,
