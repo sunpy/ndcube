@@ -987,10 +987,12 @@ class NDCube(NDCubeBase):
 
             if (self_unmasked and value_unmasked) or operation_ignores_mask is True:
                 # addition
-                kwargs["data"] = (self.data + value_data)*self.unit
+                kwargs["data"] = self.data + value_data
 
                 # combine the uncertainty;
                 if self.uncertainty is not None and value.uncertainty is not None:
+                    #new_uncertainty = new_uncertainty.propagate(np.power, self, self.data ** value, correlation=1)
+                    #print(self.unit, value.unit, kwargs['data'])
                     new_uncertainty = self.uncertainty.propagate(
                         np.add, value, result_data = kwargs["data"], correlation=0
                     )
