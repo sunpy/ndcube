@@ -12,7 +12,7 @@ import astropy.units as u
 import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.io import fits
-from astropy.nddata import UnknownUncertainty
+from astropy.nddata import NDData, StdDevUncertainty, UnknownUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.units import UnitsError
@@ -1131,11 +1131,72 @@ def check_arithmetic_value_and_units(cube_new, data_expected):
     u.Quantity(np.random.rand(12), u.ct),
     u.Quantity(np.random.rand(10, 12), u.ct),
 ])
-def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value):
+def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value): # this test methods aims for the special scenario of only integers being added together.
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     # Add
     new_cube = ndcube_2d_ln_lt_units + value
     check_arithmetic_value_and_units(new_cube, cube_quantity + value)
+
+
+# value is an NDData, The case when neither NDData nor NDCube has a unit.
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
+           wcs=None,
+           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
+])
+def test_cube_add_unit_none(ndcube_2d_unit_None, value):
+    new_cube = ndcube_2d_unit_None + value # perform the addition
+    expected_uncertainty = ndcube_2d_unit_None.uncertainty.propagate(
+                            operation=np.add,
+                            other_nddata=value,
+                            result_data=new_cube.data,
+                            correlation=0,
+    )
+    assert np.allclose(new_cube.data, ndcube_2d_unit_None.data + value.data) # check value of addition result
+    assert type(new_cube.uncertainty) is type(expected_uncertainty)  # check type of uncertainty
+    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
+        f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
+
+
+# The case when only one of them has a unit. other attributes such as result value or uncertainty do not matter.
+# An expected typeError should be raised.
+# TODO: another similar case, but NDCube having a unit and NDData has None unit (the other way around).
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
+           wcs=None,
+           unit=u.m,
+           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
+])
+def test_cube_add_one_unit(ndcube_2d_unit_None, value):
+    with pytest.raises(TypeError, match="Cannot add unitless NDData to a unitful NDCube."):
+        ndcube_2d_unit_None + value  # This should raise a TypeError
+
+# The case when NDData has uncertainty, NDCube has uncertainty, but no mask is involved.
+# Both NDData NDCube have a unit.
+# Test different scenarios when units are equivalent and when they are not.
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
+           wcs=None,
+           unit=u.ct,
+           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
+])
+def test_cube_add_both_unit(ndcube_2d_with_unit_uncertainty, value):
+    #print(f"NDCube unit: {ndcube_2d_with_unit_uncertainty.unit}") # Output: NDCube unit: ct
+    #print(f"NDData unit: {value.unit}") # Output: NDData unit: ct
+
+    new_cube = ndcube_2d_with_unit_uncertainty + value # perform the addition
+    # Check uncertainty propagation
+    expected_uncertainty = ndcube_2d_with_unit_uncertainty.uncertainty.propagate(
+                            operation=np.add,
+                            other_nddata=value,
+                            result_data=new_cube.data,
+                            correlation=0,
+    )
+    assert np.allclose(new_cube.data, ndcube_2d_with_unit_uncertainty.data + value.data)
+    assert new_cube.unit == u.ct
+    assert type(new_cube.uncertainty) is type(expected_uncertainty)  # check type of uncertainty
+    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
+        f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
 
 
 @pytest.mark.parametrize('value', [
