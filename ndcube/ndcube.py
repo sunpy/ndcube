@@ -993,6 +993,11 @@ class NDCube(NDCubeBase):
                 if self.uncertainty is not None and value.uncertainty is not None:
                     #new_uncertainty = new_uncertainty.propagate(np.power, self, self.data ** value, correlation=1)
                     #print(self.unit, value.unit, kwargs['data'])
+                    #print(f"Before propagate - NDCube Uncertainty Type: {type(self.uncertainty)}") # Output: <class 'astropy.nddata.nduncertainty.StdDevUncertainty'>
+                    #print(f"Before propagate - NDCube Uncertainty Unit: {getattr(self.uncertainty, 'unit', None)}") # Output: ct
+                    #print(f"Before propagate - NDData Uncertainty Type: {type(value.uncertainty)}") # Output: <class 'astropy.nddata.nduncertainty.StdDevUncertainty'>
+                    #print(f"Before propagate - NDData Uncertainty Unit: {getattr(value.uncertainty, 'unit', None)}") # Output: ct
+
                     new_uncertainty = self.uncertainty.propagate(
                         np.add, value, result_data = kwargs["data"], correlation=0
                     )
