@@ -1171,7 +1171,7 @@ def test_cube_add_one_unit(ndcube_2d_unit_None, value):
     with pytest.raises(TypeError, match="Cannot add unitless NDData to a unitful NDCube."):
         ndcube_2d_unit_None + value  # This should raise a TypeError
 
-# The case when NDData has uncertainty, NDCube has uncertainty, but no mask is involved.
+# The case when both NDData and NDCube have uncertainty. No mask is involved.
 # Both NDData NDCube have a unit.
 # Test different scenarios when units are equivalent and when they are not.
 @pytest.mark.parametrize('value', [
@@ -1195,6 +1195,59 @@ def test_cube_add_both_unit(ndcube_2d_with_unit_uncertainty, value):
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
 
+
+# NDCube has no uncertainty.
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
+           wcs=None,
+           unit=u.ct,
+           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1, unit=u.ct)),
+])
+def test_cube_add_ndcube_uncertainty_none(ndcube_2d_ln_lt_units, value):
+    new_cube = ndcube_2d_ln_lt_units + value # perform the addition
+
+    assert new_cube.unit == u.ct
+    assert np.allclose(new_cube.data, ndcube_2d_ln_lt_units.data + value.data) # check value of addition result
+
+
+# NDData has no uncertainty. Both have units.
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)), unit=u.ct),
+])
+
+def test_cube_add_no_uncertainty(ndcube_2d_ln_lt_units, value):
+    new_cube = ndcube_2d_ln_lt_units + value # perform the addition
+
+    assert new_cube.unit == u.ct
+    assert np.allclose(new_cube.data, ndcube_2d_ln_lt_units.data + value.data) # check value of addition result
+
+
+# Neither NDData nor NDCube has uncertainty or unit.
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12))),  # NDData without unit, without uncertainty
+])
+def test_cube_add_nddata_uncertainty_none(ndcube_2d_ln_lt_no_unit_uncert, value):
+    new_cube = ndcube_2d_ln_lt_no_unit_uncert + value # perform the addition
+
+    assert np.allclose(new_cube.data, ndcube_2d_ln_lt_no_unit_uncert.data + value.data) # check value of addition result
+
+
+# The case when both NDData and NDCube have uncertainty, unit. Also:
+# NDCube has mask
+# Then, NDData has mask (add one new parametrize).
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((10, 12)),
+           wcs=None,
+           uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.1)),
+
+    NDData(np.ones((10, 12)) * 2,
+           wcs=None,
+           uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.05),
+           mask=np.ones((10, 12), dtype=bool))
+])
+def test_cube_add_masked_value(ndcube_2d_ln_lt_mask, value):
+    with pytest.raises(TypeError, match='Please use the add method.'):
+        ndcube_2d_ln_lt_mask + value
 
 @pytest.mark.parametrize('value', [
     10 * u.ct,

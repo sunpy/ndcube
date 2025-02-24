@@ -1041,7 +1041,6 @@ class NDCube(NDCubeBase):
         self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
         value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
 
-        # tidying this up.
         if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
             # let the users call the add method
             raise TypeError('Please use the add method.')

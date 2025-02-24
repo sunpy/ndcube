@@ -679,6 +679,13 @@ def ndcube_2d_ln_lt_units(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_no_unit_uncert(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln)
+
+
+@pytest.fixture
 def ndcube_2d_with_unit_uncertainty(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape).astype(float)
@@ -694,6 +701,14 @@ def ndcube_2d_unit_None(wcs_2d_lt_ln):
     uncertainty = StdDevUncertainty(np.ones(shape)*0.2)
 
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    mask = np.ones(data_cube.shape, dtype=bool)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask)
 
 
 @pytest.fixture
