@@ -1178,18 +1178,15 @@ def test_cube_add_one_unit(ndcube_2d_unit_None, value):
     NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
            wcs=None,
            unit=u.ct,
-           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
+           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1, unit=u.ct)),
 ])
 def test_cube_add_both_unit(ndcube_2d_with_unit_uncertainty, value):
-    #print(f"NDCube unit: {ndcube_2d_with_unit_uncertainty.unit}") # Output: NDCube unit: ct
-    #print(f"NDData unit: {value.unit}") # Output: NDData unit: ct
-
     new_cube = ndcube_2d_with_unit_uncertainty + value # perform the addition
     # Check uncertainty propagation
     expected_uncertainty = ndcube_2d_with_unit_uncertainty.uncertainty.propagate(
                             operation=np.add,
                             other_nddata=value,
-                            result_data=new_cube.data,
+                            result_data=new_cube.data*new_cube.unit,
                             correlation=0,
     )
     assert np.allclose(new_cube.data, ndcube_2d_with_unit_uncertainty.data + value.data)
