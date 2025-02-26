@@ -1158,22 +1158,39 @@ def test_cube_add_unit_none(ndcube_2d_unit_None, value):
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
 
 
+@pytest.fixture
+def cube(request):
+    """Explicitly get fixture values."""
+    return request.getfixturevalue(request.param)
+
 # The case when only one of them has a unit. other attributes such as result value or uncertainty do not matter.
 # An expected typeError should be raised.
-# TODO: another similar case, but NDCube having a unit and NDData has None unit (the other way around).
-@pytest.mark.parametrize('value', [
-    NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
-           wcs=None,
-           unit=u.m,
-           uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1)),
-])
-def test_cube_add_one_unit(ndcube_2d_unit_None, value):
-    with pytest.raises(TypeError, match="Cannot add unitless NDData to a unitful NDCube."):
-        ndcube_2d_unit_None + value  # This should raise a TypeError
+# TODO: both have a unit, neither has a unit, one has a unit.
+# For now, try figuring out how to make the test be able to
+@pytest.mark.parametrize(("cube", "value"),
+                        [
+                            ("ndcube_2d_unit_None", NDData(np.ones((10, 12)),
+                                                            wcs=None,
+                                                            unit=u.m,
+                                                            uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.1))
+                            ),
+                            ("ndcube_2d_ln_lt_units", NDData(np.ones((10, 12)),
+                                                            wcs=None,
+                                                            uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.1))
+                            ),
+                        ],
+                        indirect=["cube"])
+def test_cube_add_one_unit(cube, value):
+    #print(f"cube: {cube}")
+    assert isinstance(cube, NDCube)
+    with pytest.raises(TypeError, match="Adding objects requires both have a unit or neither has a unit."):
+        cube + value
 
 # The case when both NDData and NDCube have uncertainty. No mask is involved.
 # Both NDData NDCube have a unit.
-# Test different scenarios when units are equivalent and when they are not.
+# Test different scenarios when units are equivalent and when they are not. TODO (bc somewhere is checking the units are the same)
+# 1, user input, expected output
+# 2, check the codebase itself
 @pytest.mark.parametrize('value', [
     NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
            wcs=None,
@@ -1190,7 +1207,7 @@ def test_cube_add_both_unit(ndcube_2d_with_unit_uncertainty, value):
                             correlation=0,
     )
     assert np.allclose(new_cube.data, ndcube_2d_with_unit_uncertainty.data + value.data)
-    assert new_cube.unit == u.ct
+    assert new_cube.unit == u.ct # sometimes explicit, in case the other part is also wrong.
     assert type(new_cube.uncertainty) is type(expected_uncertainty)  # check type of uncertainty
     assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
         f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
@@ -1214,7 +1231,6 @@ def test_cube_add_ndcube_uncertainty_none(ndcube_2d_ln_lt_units, value):
 @pytest.mark.parametrize('value', [
     NDData(np.ones((10, 12)), unit=u.ct),
 ])
-
 def test_cube_add_no_uncertainty(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units + value # perform the addition
 
@@ -1248,6 +1264,7 @@ def test_cube_add_nddata_uncertainty_none(ndcube_2d_ln_lt_no_unit_uncert, value)
 def test_cube_add_masked_value(ndcube_2d_ln_lt_mask, value):
     with pytest.raises(TypeError, match='Please use the add method.'):
         ndcube_2d_ln_lt_mask + value
+
 
 @pytest.mark.parametrize('value', [
     10 * u.ct,

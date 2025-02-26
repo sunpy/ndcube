@@ -978,7 +978,7 @@ class NDCube(NDCubeBase):
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
-                raise TypeError("Cannot add unitless NDData to a unitful NDCube.")
+                raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
 
             # check whether there is a mask.
             # Neither self nor value has a mask

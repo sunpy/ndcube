@@ -752,6 +752,7 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_2d_ln_lt_units",
     "ndcube_2d_dask",
     "ndcube_1d_l",
+    "ndcube_2d_unit_None",
 ])
 def all_ndcubes(request):
     """
