@@ -1273,7 +1273,7 @@ def test_cube_add_cube_unc_nddata_unc(ndc, value):
                         [
                             ("ndcube_2d_ln_lt_no_unit_no_unc", NDData(np.ones((10, 12)), # pass in the values to be tested as a set of ones.
                                                                       wcs=None,
-                                                                      uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1, unit=u.ct))
+                                                                      uncertainty=StdDevUncertainty(np.ones((10, 12))*0.1))
                             ),
                         ],
                         indirect=("ndc",))
