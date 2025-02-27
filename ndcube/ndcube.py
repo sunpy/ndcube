@@ -1003,6 +1003,7 @@ class NDCube(NDCubeBase):
                     kwargs["uncertainty"] = new_uncertainty
                 elif value.uncertainty is not None:
                     new_uncertainty = value.uncertainty
+                    kwargs["uncertainty"] = new_uncertainty
                 else:
                     new_uncertainty = None
             else:
