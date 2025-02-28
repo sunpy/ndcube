@@ -23,6 +23,7 @@ from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import ExtraCoords, NDCube, NDMeta
 from ndcube.tests import helpers
+from ndcube.tests.helpers import assert_cubes_equal
 from ndcube.utils.exceptions import NDCubeUserWarning
 
 
@@ -1172,20 +1173,19 @@ def test_cube_add_one_unit(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_unit_unc_nddata_unit_unc(ndc, value):
-    new_cube = ndc + value # perform the addition
-    # Check uncertainty propagation
+    output_cube = ndc + value # perform the addition
+    # Construct expected cube
+    expected_unit = u.ct
+    expected_data = ((ndc.data * ndc.unit) + (value.data * value.unit)).to_value(expected_unit)
     expected_uncertainty = ndc.uncertainty.propagate(
                             operation=np.add,
                             other_nddata=value,
-                            result_data=new_cube.data*new_cube.unit,
+                            result_data=expected_data*expected_unit,
                             correlation=0,
     )
-    assert np.allclose(new_cube.data, ndc.data + value.data)
-    assert new_cube.unit == u.ct
-    assert type(new_cube.uncertainty) is type(expected_uncertainty)  # check type of uncertainty
-    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
-        f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
-
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty, unit=expected_unit)
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
 
 # Both have unit, NDCube has no uncertainty and NDData has uncertainty.
 @pytest.mark.parametrize(("ndc", "value"),
@@ -1198,14 +1198,16 @@ def test_cube_add_cube_unit_unc_nddata_unit_unc(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_unit_nddata_unit_unc(ndc, value):
-    new_cube = ndc + value # perform the addition
+    output_cube = ndc + value # perform the addition
 
-    assert new_cube.unit == u.ct
-    assert type(new_cube.uncertainty) is type(value.uncertainty)  # check type of uncertainty
-    assert np.allclose(new_cube.uncertainty.array, value.uncertainty.array), \
-        f"Expected uncertainty: {value.uncertainty.array}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
+    # Construct expected cube
+    expected_unit = u.ct
+    expected_data = ((ndc.data * ndc.unit) + (value.data * value.unit)).to_value(expected_unit)
+    expected_uncertainty = value.uncertainty
 
-    assert np.allclose(new_cube.data, ndc.data + value.data) # check value of addition result
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty, unit=expected_unit)
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
 
 
 # Both have units, NDData has no uncertainty and NDCube has uncertainty.
@@ -1218,14 +1220,16 @@ def test_cube_add_cube_unit_nddata_unit_unc(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_unit_unc_nddata_unit(ndc, value):
-    new_cube = ndc + value # perform the addition
+    output_cube = ndc + value # perform the addition
 
-    assert new_cube.unit == u.ct
-    assert type(new_cube.uncertainty) is type(ndc.uncertainty)  # check type of uncertainty
-    assert np.allclose(new_cube.uncertainty.array, ndc.uncertainty.array), \
-        f"Expected uncertainty: {ndc.uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
+    # Construct expected cube
+    expected_unit = u.ct
+    expected_data = ((ndc.data * ndc.unit) + (value.data * value.unit)).to_value(expected_unit)
+    expected_uncertainty = ndc.uncertainty
 
-    assert np.allclose(new_cube.data, ndc.data + value.data) # check value of addition result
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty, unit=expected_unit)
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
 
 
 # Both have units, neither has uncertainty.
@@ -1238,9 +1242,15 @@ def test_cube_add_cube_unit_unc_nddata_unit(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_unit_nddata_unit(ndc, value):
-    new_cube = ndc + value # perform the addition
+    output_cube = ndc + value # perform the addition
 
-    assert np.allclose(new_cube.data, ndc.data + value.data) # check value of addition result
+    # Construct expected cube
+    expected_unit = u.ct
+    expected_data = ((ndc.data * ndc.unit) + (value.data * value.unit)).to_value(expected_unit)
+    expected_cube = NDCube(expected_data, ndc.wcs, unit=expected_unit)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 # Neither has a unit, both have uncertainty.
@@ -1253,19 +1263,18 @@ def test_cube_add_cube_unit_nddata_unit(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_unc_nddata_unc(ndc, value):
-    new_cube = ndc + value # perform the addition
-
-    # Check uncertainty propagation
+    output_cube = ndc + value # perform the addition
+    # Construct expected cube
+    expected_data = ndc.data + value.data
     expected_uncertainty = ndc.uncertainty.propagate(
                             operation=np.add,
                             other_nddata=value,
-                            result_data=new_cube.data,
+                            result_data=expected_data,
                             correlation=0,
     )
-    assert np.allclose(new_cube.data, ndc.data + value.data)
-    assert type(new_cube.uncertainty) is type(expected_uncertainty)  # check type of uncertainty
-    assert np.allclose(new_cube.uncertainty.array, expected_uncertainty.array), \
-        f"Expected uncertainty: {expected_uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty)
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
 
 
 # Neither has a unit, NDData has uncertainty and NDCube has no uncertainty.
@@ -1278,12 +1287,15 @@ def test_cube_add_cube_unc_nddata_unc(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_nddata_unc(ndc, value):
-    new_cube = ndc + value # perform the addition
-    assert type(new_cube.uncertainty) is type(value.uncertainty)  # check type of uncertainty
-    assert np.allclose(new_cube.uncertainty.array, value.uncertainty.array), \
-        f"Expected uncertainty: {value.uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
+    output_cube = ndc + value # perform the addition
 
-    assert np.allclose(new_cube.data, ndc.data + value.data) # check value of addition result
+    # Construct expected cube
+    expected_data = ndc.data + value.data
+    expected_uncertainty = value.uncertainty
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 # Neither has a unit, NDData has no uncertainty and NDCube has uncertainty.
@@ -1295,13 +1307,15 @@ def test_cube_add_cube_nddata_unc(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_unc_nddata(ndc, value):
-    new_cube = ndc + value # perform the addition
+    output_cube = ndc + value # perform the addition
 
-    assert type(new_cube.uncertainty) is type(ndc.uncertainty)  # check type of uncertainty
-    assert np.allclose(new_cube.uncertainty.array, ndc.uncertainty.array), \
-        f"Expected uncertainty: {ndc.uncertainty}, but got: {new_cube.uncertainty.array}"  # check value of uncertainty
+    # Construct expected cube
+    expected_data = ndc.data + value.data
+    expected_uncertainty = ndc.uncertainty
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty)
 
-    assert np.allclose(new_cube.data, ndc.data + value.data) # check value of addition result
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 # Neither has unit or uncertainty.
@@ -1313,9 +1327,14 @@ def test_cube_add_cube_unc_nddata(ndc, value):
                         ],
                         indirect=("ndc",))
 def test_cube_add_cube_nddata(ndc, value):
-    new_cube = ndc + value # perform the addition
+    output_cube = ndc + value # perform the addition
 
-    assert np.allclose(new_cube.data, ndc.data + value.data) # check value of addition result
+    # Construct expected cube
+    expected_data = ndc.data + value.data
+    expected_cube = NDCube(expected_data, ndc.wcs)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 # The case when both NDData and NDCube have uncertainty, unit. Also:
