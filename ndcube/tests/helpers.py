@@ -139,8 +139,10 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncerta
         else:
             if test_input.uncertainty is None:
                 assert expected_cube.uncertainty is None, "Expected cube's uncertainty should also be None"
+            elif expected_cube.uncertainty is None:
+                assert test_input.uncertainty is None, "test_input should also be None"
             else:
-                assert expected_cube.uncertainty is not None, "test_input has uncertainty but expected_cube does not"
+                pass
 
     elif test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
