@@ -1154,7 +1154,7 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value): # this test methods 
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_one_unit(ndc, value):
+def test_arithmetic_add_one_unit(ndc, value):
     assert isinstance(ndc, NDCube)
     with pytest.raises(TypeError, match="Adding objects requires both have a unit or neither has a unit."):
         ndc + value
@@ -1172,7 +1172,7 @@ def test_cube_add_one_unit(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_unit_unc_nddata_unit_unc(ndc, value):
+def test_arithmetic_add_cube_unit_unc_nddata_unit_unc(ndc, value):
     output_cube = ndc + value # perform the addition
     # Construct expected cube
     expected_unit = u.ct
@@ -1197,7 +1197,7 @@ def test_cube_add_cube_unit_unc_nddata_unit_unc(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_unit_nddata_unit_unc(ndc, value):
+def test_arithmetic_add_cube_unit_nddata_unit_unc(ndc, value):
     output_cube = ndc + value # perform the addition
 
     # Construct expected cube
@@ -1219,7 +1219,7 @@ def test_cube_add_cube_unit_nddata_unit_unc(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_unit_unc_nddata_unit(ndc, value):
+def test_arithmetic_add_cube_unit_unc_nddata_unit(ndc, value):
     output_cube = ndc + value # perform the addition
 
     # Construct expected cube
@@ -1241,7 +1241,7 @@ def test_cube_add_cube_unit_unc_nddata_unit(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_unit_nddata_unit(ndc, value):
+def test_arithmetic_add_cube_unit_nddata_unit(ndc, value):
     output_cube = ndc + value # perform the addition
 
     # Construct expected cube
@@ -1262,7 +1262,7 @@ def test_cube_add_cube_unit_nddata_unit(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_unc_nddata_unc(ndc, value):
+def test_arithmetic_add_cube_unc_nddata_unc(ndc, value):
     output_cube = ndc + value # perform the addition
     # Construct expected cube
     expected_data = ndc.data + value.data
@@ -1286,7 +1286,7 @@ def test_cube_add_cube_unc_nddata_unc(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_nddata_unc(ndc, value):
+def test_arithmetic_add_cube_nddata_unc(ndc, value):
     output_cube = ndc + value # perform the addition
 
     # Construct expected cube
@@ -1306,7 +1306,7 @@ def test_cube_add_cube_nddata_unc(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_unc_nddata(ndc, value):
+def test_arithmetic_add_cube_unc_nddata(ndc, value):
     output_cube = ndc + value # perform the addition
 
     # Construct expected cube
@@ -1326,7 +1326,7 @@ def test_cube_add_cube_unc_nddata(ndc, value):
                             ),
                         ],
                         indirect=("ndc",))
-def test_cube_add_cube_nddata(ndc, value):
+def test_arithmetic_add_cube_nddata(ndc, value):
     output_cube = ndc + value # perform the addition
 
     # Construct expected cube
@@ -1350,7 +1350,7 @@ def test_cube_add_cube_nddata(ndc, value):
            uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.05),
            mask=np.ones((10, 12), dtype=bool))
 ])
-def test_cube_add_cube_unit_mask_nddata_unc_unit_mask(ndcube_2d_ln_lt_mask, value):
+def test_arithmetic_add_cube_unit_mask_nddata_unc_unit_mask(ndcube_2d_ln_lt_mask, value):
     with pytest.raises(TypeError, match='Please use the add method.'):
         ndcube_2d_ln_lt_mask + value
 
