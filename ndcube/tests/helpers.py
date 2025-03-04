@@ -136,13 +136,12 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncerta
             assert type(test_input.uncertainty) is type(expected_cube.uncertainty)
             assert np.allclose(test_input.uncertainty.array, expected_cube.uncertainty.array), \
                 f"Expected uncertainty: {expected_cube.uncertainty}, but got: {test_input.uncertainty.array}"
-        else:
-            if test_input.uncertainty is None:
-                assert expected_cube.uncertainty is None, "Expected cube's uncertainty should also be None"
-            elif expected_cube.uncertainty is None:
+        elif test_input.uncertainty is None:
+            assert expected_cube.uncertainty is None, "Expected cube's uncertainty should also be None"
+        elif expected_cube.uncertainty is None:
                 assert test_input.uncertainty is None, "test_input should also be None"
-            else:
-                pass
+        else:
+            assert type(test_input.uncertainty) is type(expected_cube.uncertainty)
 
     elif test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
