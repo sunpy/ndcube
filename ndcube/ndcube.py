@@ -1023,6 +1023,8 @@ class NDCube(NDCubeBase):
                         value_data[idx] = no_op_value
                     elif (self_mask is True and value_mask is True):
                         idx = np.logical_and(self_mask, value_mask)
+                        self_data[idx] = no_op_value
+                        value_data[idx] = no_op_value
 
                     #self_data[idx], value_data[idx] = ?, ? # Handle case when both values are masked here. # We are yet to decide the best behaviour here.
                     # if both are F, no operation of setting the values to be 0 needs to be done.
