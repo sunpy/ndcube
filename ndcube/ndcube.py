@@ -1010,8 +1010,31 @@ class NDCube(NDCubeBase):
                 # TODO
                 # When there is a mask, that is when the two new added parameters (OIM and HM) come into the picture.
                 # Conditional statements to permutate the two different scenarios (when it does not ignore the mask).
-                    raise NotImplementedError
+                kwargs["data"] = self.data + value_data
+                self_data, value_data = self.data, value.data # May require a copy
+                self_mask, value_mask = self.mask, value.mask # May require handling/converting of cases when masks aren't boolean arrays but are None, True, or False.
+                if not operation_ignores_mask:
+                    no_op_value = 0 # Value to set masked values since we are doing addition. (Would need to be 1 if we were doing multiplication.)
+                    if (self_mask is True and value_mask is False):
+                        idx = np.logical_and(self_mask, np.logical_not(value_mask))
+                        self_data[idx] = no_op_value
+                    elif (self_mask is False and value_mask is True):
+                        idx = np.logical_and(value_mask, np.logical_not(self_mask))
+                        value_data[idx] = no_op_value
+                    elif (self_mask is True and value_mask is True):
+                        idx = np.logical_and(self_mask, value_mask)
 
+                    #self_data[idx], value_data[idx] = ?, ? # Handle case when both values are masked here. # We are yet to decide the best behaviour here.
+                    # if both are F, no operation of setting the values to be 0 needs to be done.
+                else:
+                    pass # If operation ignores mask, nothing needs to be done. This line not needed in actual code.  Only here for clarity.
+
+                # Perform addition
+                new_data = self_data + value_data
+                # Calculate new mask.
+                new_mask = handle_mask(self_mask, value_mask) if handle_mask else None
+                kwargs["data"] = new_data
+                kwargs['mask'] = new_mask
 
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
