@@ -1330,7 +1330,7 @@ class NDCube(NDCubeBase):
         return self[tuple(item)]
 
 
-def fill(fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
+def fill(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
     """
     Replaces masked data values with input value.
 
@@ -1350,6 +1350,23 @@ def fill(fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=Fa
         with masked values filled.  Default=False.
     """
     # ...code implementation here.
+    kwargs = {}
+    kwargs["data"] = self.data
+    kwargs["mask"] = self.mask
+    kwargs["uncertainty"] = self.uncertainty
+
+    # If there is a not None mask and a not None fill_value, do: change the corresponding data to fill_value.
+    if (fill_value is not None and self.mask is not None):
+        kwargs["data"][self.mask] = fill_value # Boolean indexing in Python.
+    # else, do nothing.
+
+    # if unmask is True, do: change the True mask values to False, otherwise, do nothing to the mask.
+    if (unmask):
+        kwargs["mask"] = False
+
+    if (self.mask is not None and uncertainty_fill_value is not None):
+        kwargs["uncertainty"][self.mask] = uncertainty_fill_value
+
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
