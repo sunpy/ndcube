@@ -11,7 +11,6 @@ import numpy as np
 
 import astropy.nddata
 import astropy.units as u
-from astropy.nddata import NDData
 from astropy.units import UnitsError
 from astropy.wcs.utils import _split_matrix
 
@@ -965,87 +964,15 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def add(self, value, operation_ignores_mask=True, handle_mask=np.logical_and):
-        """
-        Users are allowed to choose whether they want operation_ignores_mask to be True or False,
-        and are allowed to choose whether they want handle_mask to be AND / OR .
-        """
-        kwargs = {}
-
-        if isinstance(value, NDData) and value.wcs is None:
-            if self.unit is not None and value.unit is not None:
-                value_data = (value.data * value.unit).to_value(self.unit)
-            elif self.unit is None and value.unit is None:
-                value_data = value.data
-            else:
-                raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
-
-            # check whether there is a mask.
-            # Neither self nor value has a mask
-            self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
-            value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
-
-            if (self_unmasked and value_unmasked) or operation_ignores_mask is True:
-                # addition
-                kwargs["data"] = self.data + value_data
-
-                # combine the uncertainty;
-                if self.uncertainty is not None and value.uncertainty is not None:
-                    result_data = kwargs["data"]
-                    if self.unit is not None:
-                        result_data *= self.unit
-                    new_uncertainty = self.uncertainty.propagate(
-                        np.add, value, result_data=result_data, correlation=0
-                    )
-                    kwargs["uncertainty"] = new_uncertainty
-                elif self.uncertainty is not None:
-                    new_uncertainty = self.uncertainty
-                    kwargs["uncertainty"] = new_uncertainty
-                elif value.uncertainty is not None:
-                    new_uncertainty = value.uncertainty
-                    kwargs["uncertainty"] = new_uncertainty
-                else:
-                    new_uncertainty = None
-            else:
-                # TODO
-                # When there is a mask, that is when the two new added parameters (OIM and HM) come into the picture.
-                # Conditional statements to permutate the two different scenarios (when it does not ignore the mask).
-                kwargs["data"] = self.data + value_data
-                self_data, value_data = self.data, value.data # May require a copy
-                self_mask, value_mask = self.mask, value.mask # May require handling/converting of cases when masks aren't boolean arrays but are None, True, or False.
-                if not operation_ignores_mask:
-                    no_op_value = 0 # Value to set masked values since we are doing addition. (Would need to be 1 if we were doing multiplication.)
-                    if (self_mask is True and value_mask is False):
-                        idx = np.logical_and(self_mask, np.logical_not(value_mask))
-                        self_data[idx] = no_op_value
-                    elif (self_mask is False and value_mask is True):
-                        idx = np.logical_and(value_mask, np.logical_not(self_mask))
-                        value_data[idx] = no_op_value
-                    elif (self_mask is True and value_mask is True):
-                        idx = np.logical_and(self_mask, value_mask)
-                        self_data[idx] = no_op_value
-                        value_data[idx] = no_op_value
-
-                    #self_data[idx], value_data[idx] = ?, ? # Handle case when both values are masked here. # We are yet to decide the best behaviour here.
-                    # if both are F, no operation of setting the values to be 0 needs to be done.
-                else:
-                    pass # If operation ignores mask, nothing needs to be done. This line not needed in actual code.  Only here for clarity.
-
-                # Perform addition
-                new_data = self_data + value_data
-                # Calculate new mask.
-                new_mask = handle_mask(self_mask, value_mask) if handle_mask else None
-                kwargs["data"] = new_data
-                kwargs["mask"] = new_mask
-
-        elif hasattr(value, 'unit'):
+    def __add__(self, value):
+        if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
                 # perform arithmetic between a unitful quantity.
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                kwargs["data"] = self.data + value.to_value(cube_unit)
+                new_data = self.data + value.to_value(cube_unit)
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -1053,25 +980,8 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            kwargs["data"] = self.data + value
-
-        # return the new NDCube instance
-        return self._new_instance(**kwargs)
-
-    def __add__(self, value):
-        # when value has a mask, raise error and point user to the add method. TODO
-        #
-        # check whether there is a mask.
-        # Neither self nor value has a mask
-
-        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
-        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
-
-        if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
-            # let the users call the add method
-            raise TypeError('Please use the add method.')
-
-        return self.add(value) # the mask keywords cannot be given by users.
+            new_data = self.data + value
+        return self._new_instance(data=new_data)
 
     def __radd__(self, value):
         return self.__add__(value)
