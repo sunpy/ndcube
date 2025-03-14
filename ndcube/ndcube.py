@@ -1036,7 +1036,7 @@ class NDCube(NDCubeBase):
                 # Calculate new mask.
                 new_mask = handle_mask(self_mask, value_mask) if handle_mask else None
                 kwargs["data"] = new_data
-                kwargs['mask'] = new_mask
+                kwargs["mask"] = new_mask
 
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
@@ -1418,6 +1418,28 @@ class NDCube(NDCubeBase):
             raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. "
                              "Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
+
+
+def fill(fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
+    """
+    Replaces masked data values with input value.
+
+    Returns a new instance or alters values in place.
+
+    Parameters
+    ----------
+    fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`
+        The value to replace masked data with.
+    unmask: `bool`, optional
+        If True, the newly filled masked values are unmasked. If False, they remain masked
+        Default=False
+    uncertainty_fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`, optional
+        The value to replace masked uncertainties with.
+    fill_in_place: `bool`, optional
+        If `True`, the masked values are filled in place.  If `False`, a new instance is returned
+        with masked values filled.  Default=False.
+    """
+    # ...code implementation here.
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
