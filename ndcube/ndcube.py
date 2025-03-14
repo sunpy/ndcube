@@ -1355,20 +1355,21 @@ def fill(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_pl
     kwargs["mask"] = self.mask
     kwargs["uncertainty"] = self.uncertainty
 
-    # If there is a not None mask and a not None fill_value, do: change the corresponding data to fill_value.
-    if (fill_value is not None and self.mask is not None):
-        kwargs["data"][self.mask] = fill_value # Boolean indexing in Python.
-    # else, do nothing to the data.
 
-    # if unmask is True, do: change the True mask values to False, otherwise, do nothing to the mask.
-    if (unmask):
-        kwargs["mask"] = False
+    if (fill_in_place is False):
+        # If there is a not None mask and a not None fill_value, do: change the corresponding data to fill_value.
+        if (fill_value is not None and self.mask is not None):
+            kwargs["data"][self.mask] = fill_value # Boolean indexing in Python.
+        # else, do nothing to the data.
 
-    if (self.mask is not None and uncertainty_fill_value is not None):
-        kwargs["uncertainty"][self.mask] = uncertainty_fill_value
+        # if unmask is True, do: change the True mask values to False, otherwise, do nothing to the mask.
+        if (unmask):
+            kwargs["mask"] = False
 
+        if (self.mask is not None and uncertainty_fill_value is not None):
+            kwargs["uncertainty"][self.mask] = uncertainty_fill_value
 
-    # if fill_in_place is True, do: ; otherwise, do:
+    # if fill_in_place is True, then change self directly? without creating kwargs?
 
     return kwargs
 
