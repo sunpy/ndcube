@@ -1,0 +1,2 @@
+Added ``fill`` method to ``NDCube``, a new feature which allows users to replace masked values and uncertainty values with user-given fill values,
+to change the mask values back to False or not (Default),  and to set whether the new instance is returned (Default) or not.

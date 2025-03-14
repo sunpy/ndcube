@@ -1330,6 +1330,50 @@ class NDCube(NDCubeBase):
         return self[tuple(item)]
 
 
+def fill(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
+    """
+    Replaces masked data values with input value.
+
+    Returns a new instance or alters values in place.
+
+    Parameters
+    ----------
+    fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`
+        The value to replace masked data with.
+    unmask: `bool`, optional
+        If True, the newly filled masked values are unmasked. If False, they remain masked
+        Default=False
+    uncertainty_fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`, optional
+        The value to replace masked uncertainties with.
+    fill_in_place: `bool`, optional
+        If `True`, the masked values are filled in place.  If `False`, a new instance is returned
+        with masked values filled.  Default=False.
+    """
+    # ...code implementation here.
+    kwargs = {}
+    kwargs["data"] = self.data
+    kwargs["mask"] = self.mask
+    kwargs["uncertainty"] = self.uncertainty
+
+
+    if (fill_in_place is False):
+        # If there is a not None mask and a not None fill_value, do: change the corresponding data to fill_value.
+        if (fill_value is not None and self.mask is not None):
+            kwargs["data"][self.mask] = fill_value # Boolean indexing in Python.
+        # else, do nothing to the data.
+
+        # if unmask is True, do: change the True mask values to False, otherwise, do nothing to the mask.
+        if (unmask):
+            kwargs["mask"] = False
+
+        if (self.mask is not None and uncertainty_fill_value is not None):
+            kwargs["uncertainty"][self.mask] = uncertainty_fill_value
+
+    # if fill_in_place is True, then change self directly? without creating kwargs?
+
+    return kwargs
+
+
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
     if m is None:
