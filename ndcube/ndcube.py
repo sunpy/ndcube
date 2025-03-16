@@ -1370,7 +1370,7 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         if uncertainty_fill_value is not None:
             if not self.uncertainty:
                 raise TypeError("Cannot fill uncertainty as uncertainty is None.")
-            kwargs["uncertainty"][self.mask] = uncertainty_fill_value
+            new_uncertainty.array[idx_mask] = uncertainty_fill_value
 
     # if fill_in_place is True, then change self directly? without creating kwargs?
 
