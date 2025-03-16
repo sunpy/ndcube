@@ -1349,7 +1349,6 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         If `True`, the masked values are filled in place.  If `False`, a new instance is returned
         with masked values filled.  Default=False.
     """
-    # ...code implementation here.
     kwargs = {}
     kwargs["data"] = self.data
     kwargs["mask"] = self.mask
