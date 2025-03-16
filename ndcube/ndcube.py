@@ -1349,10 +1349,14 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         If `True`, the masked values are filled in place.  If `False`, a new instance is returned
         with masked values filled.  Default=False.
     """
-    kwargs = {}
-    kwargs["data"] = self.data
-    kwargs["mask"] = self.mask
-    kwargs["uncertainty"] = self.uncertainty
+    if fill_in_place:
+        new_data = self.data
+        new_uncertainty = self.uncertainty
+        # Unmasking in-place should be handled later.
+    else:
+        new_data = copy.deepcopy(self.data)
+        new_uncertainty = copy.deepcopy(self.uncertainty)
+        new_mask = False if unmask else copy.deepcopy(self.mask)
 
 
     if (fill_in_place is False):
