@@ -1330,7 +1330,7 @@ class NDCube(NDCubeBase):
         return self[tuple(item)]
 
 
-def fill(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
+def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
     """
     Replaces masked data values with input value.
 
