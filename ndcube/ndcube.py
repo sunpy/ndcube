@@ -1366,8 +1366,6 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         # else, do nothing to the data.
 
         # if unmask is True, do: change the True mask values to False, otherwise, do nothing to the mask.
-        if (unmask):
-            kwargs["mask"] = False
 
         if (self.mask is not None and uncertainty_fill_value is not None):
             kwargs["uncertainty"][self.mask] = uncertainty_fill_value
