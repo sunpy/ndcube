@@ -1359,9 +1359,9 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         new_mask = False if unmask else copy.deepcopy(self.mask)
 
 
-    if (fill_in_place is False):
-        # If there is a not None mask and a not None fill_value, do: change the corresponding data to fill_value.
-        if (fill_value is not None and self.mask is not None):
+    masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
+    if masked:
+            idx_mask = slice(None) is self.mask is True else self.mask # Ensure indexing mask can index the data array.
             kwargs["data"][self.mask] = fill_value # Boolean indexing in Python.
         # else, do nothing to the data.
 
