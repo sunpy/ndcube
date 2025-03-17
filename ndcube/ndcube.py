@@ -1372,9 +1372,10 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
                 raise TypeError("Cannot fill uncertainty as uncertainty is None.")
             new_uncertainty.array[idx_mask] = uncertainty_fill_value
 
-    # if fill_in_place is True, then change self directly? without creating kwargs?
-
-    return kwargs
+    if not fill_in_place:
+        # Create kwargs dictionary and return a new instance.
+    elif unmask:
+        self.mask = False
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
