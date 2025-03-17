@@ -1356,6 +1356,7 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         new_data = self.data
         new_uncertainty = self.uncertainty
         new_mask = False if unmask else self.mask
+        new_unit = self.unit
         # Unmasking in-place should be handled later.
 
     # If fill_in_place is false, do: create new storage place for data and uncertainty and mask.
@@ -1364,6 +1365,7 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         new_data = copy.deepcopy(self.data)
         new_uncertainty = copy.deepcopy(self.uncertainty)
         new_mask = False if unmask else copy.deepcopy(self.mask)
+        new_unit = copy.deepcopy(self.unit)
 
     masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
     if masked:
@@ -1381,6 +1383,7 @@ def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fil
         kwargs['data'] = new_data
         kwargs['uncertainty'] = new_uncertainty
         kwargs['mask'] = new_mask
+        kwargs['unit'] = new_unit
         return kwargs
 
     return None
