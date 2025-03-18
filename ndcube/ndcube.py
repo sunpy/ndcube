@@ -1339,12 +1339,12 @@ class NDCube(NDCubeBase):
 
         Parameters
         ----------
-        fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`
+        fill_value: `numbers.Number` or scalar `~astropy.units.Quantity`
             The value to replace masked data with.
         unmask: `bool`, optional
             If True, the newly filled masked values are unmasked. If False, they remain masked
             Default=False
-        uncertainty_fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`, optional
+        uncertainty_fill_value: `numbers.Number` or scalar `~astropy.units.Quantity`, optional
             The value to replace masked uncertainties with.
         fill_in_place: `bool`, optional
             If `True`, the masked values are filled in place.  If `False`, a new instance is returned
