@@ -1331,62 +1331,62 @@ class NDCube(NDCubeBase):
         return self[tuple(item)]
 
 
-def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
-    """
-    Replaces masked data values with input value.
+    def fill_masked(self, fill_value, unmask=False, uncertainty_fill_value=None, fill_in_place=False):
+        """
+        Replaces masked data values with input value.
 
-    Returns a new instance or alters values in place.
+        Returns a new instance or alters values in place.
 
-    Parameters
-    ----------
-    fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`
-        The value to replace masked data with.
-    unmask: `bool`, optional
-        If True, the newly filled masked values are unmasked. If False, they remain masked
-        Default=False
-    uncertainty_fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`, optional
-        The value to replace masked uncertainties with.
-    fill_in_place: `bool`, optional
-        If `True`, the masked values are filled in place.  If `False`, a new instance is returned
-        with masked values filled.  Default=False.
-    """
-    # variable creations for later use.
-    # If fill_in_place is true, do: assign data and uncertainty to variables.
-    if fill_in_place:
-        new_data = self.data
-        new_uncertainty = self.uncertainty
-        new_mask = False if unmask else self.mask
-        new_unit = self.unit
-        # Unmasking in-place should be handled later.
+        Parameters
+        ----------
+        fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`
+            The value to replace masked data with.
+        unmask: `bool`, optional
+            If True, the newly filled masked values are unmasked. If False, they remain masked
+            Default=False
+        uncertainty_fill_value: `numbers.Number` or scalar `astropy.unit.Quantity`, optional
+            The value to replace masked uncertainties with.
+        fill_in_place: `bool`, optional
+            If `True`, the masked values are filled in place.  If `False`, a new instance is returned
+            with masked values filled.  Default=False.
+        """
+        # variable creations for later use.
+        # If fill_in_place is true, do: assign data and uncertainty to variables.
+        if fill_in_place:
+            new_data = self.data
+            new_uncertainty = self.uncertainty
+            new_mask = False if unmask else self.mask
+            new_unit = self.unit
+            # Unmasking in-place should be handled later.
 
-    # If fill_in_place is false, do: create new storage place for data and uncertainty and mask.
-    # TODO: is the logic repetitive? this else is the same with the if not fill_in_place below? No because the order matters.
-    else:
-        new_data = copy.deepcopy(self.data)
-        new_uncertainty = copy.deepcopy(self.uncertainty)
-        new_mask = False if unmask else copy.deepcopy(self.mask)
-        new_unit = copy.deepcopy(self.unit)
+        # If fill_in_place is false, do: create new storage place for data and uncertainty and mask.
+        # TODO: is the logic repetitive? this else is the same with the if not fill_in_place below? No because the order matters.
+        else:
+            new_data = copy.deepcopy(self.data)
+            new_uncertainty = copy.deepcopy(self.uncertainty)
+            new_mask = False if unmask else copy.deepcopy(self.mask)
+            new_unit = copy.deepcopy(self.unit)
 
-    masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
-    if masked:
-        idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
-        new_data[idx_mask] = fill_value   # Q: can it be None??
+        masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
+        if masked:
+            idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
+            new_data[idx_mask] = fill_value   # Q: can it be None??
 
-        if uncertainty_fill_value is not None: # Q: can it be None??
-            if not self.uncertainty:
-                raise TypeError("Cannot fill uncertainty as uncertainty is None.")
-            new_uncertainty.array[idx_mask] = uncertainty_fill_value
+            if uncertainty_fill_value is not None: # Q: can it be None??
+                if not self.uncertainty:
+                    raise TypeError("Cannot fill uncertainty as uncertainty is None.")
+                new_uncertainty.array[idx_mask] = uncertainty_fill_value
 
-    if not fill_in_place:
-        # Create kwargs dictionary and return a new instance.
-        kwargs = []
-        kwargs['data'] = new_data
-        kwargs['uncertainty'] = new_uncertainty
-        kwargs['mask'] = new_mask
-        kwargs['unit'] = new_unit
-        return kwargs
+        if not fill_in_place:
+            # Create kwargs dictionary and return a new instance.
+            kwargs = {}
+            kwargs['data'] = new_data
+            kwargs['uncertainty'] = new_uncertainty
+            kwargs['mask'] = new_mask
+            kwargs['unit'] = new_unit
+            return kwargs
 
-    return None
+        return None
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
