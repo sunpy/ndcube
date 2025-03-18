@@ -1,5 +1,6 @@
 import re
 import copy
+import importlib
 from inspect import signature
 from textwrap import dedent
 
@@ -21,9 +22,13 @@ from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
+import ndcube.tests.helpers
 from ndcube import ExtraCoords, NDCube, NDMeta
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
+
+importlib.reload(ndcube.tests.helpers)
+
 
 
 def generate_data(shape):
@@ -1384,3 +1389,74 @@ def test_set_data_mask(ndcube_4d_mask):
 
     with pytest.raises(TypeError, match="Can not set the .data .* with a numpy masked array"):
         cube.data = masked_array
+
+@pytest.mark.parametrize(
+    ("fill_value", "uncertainty_fill_value", "unmask", "fill_in_place"),
+    [
+        (1.0, 0.1, False, True),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
+        (1.0, None, False, True), # uncertainty_fill_value is None.
+
+        (1.0, 0.1, False, False), # the same as above, but not in place.
+        (1.0, None, False, False), # uncertainty_fill_value is None.
+
+        (1.0, 0.01, True, False),   # unmask is true
+        (1.0 * u.cm, 0.02, False, False),  # what if the fill_value has a unit??
+    ]
+)
+def test_fill_masked(ndcube_2d_ln_lt_mask_uncert_unit, fill_value, uncertainty_fill_value, unmask, fill_in_place):
+    # What I need to test:
+    # when the fill_masked method is applied on the fixture argument, does it:
+    # 1, give me the correct data value and type?
+    # 2, give me the correct uncertainty?
+    # 3, give me the correct mask?
+    # 4, give me the correct unit?
+    # The above four
+    #
+    # when masked with a fill_value
+    # use assert_cubes_equal?????
+
+    # perform the fill_masked method on the fixture, using parametrized as parameters.
+    ndc = ndcube_2d_ln_lt_mask_uncert_unit
+
+    expected_data = ndc.data.copy()
+    expected_data[ndc.mask] = fill_value
+    expected_uncertainty = ndc.uncertainty.array.copy()
+
+    if uncertainty_fill_value is not None:
+        expected_uncertainty[ndc.mask] = uncertainty_fill_value
+
+    expected_mask = False if unmask else ndc.mask
+
+    expected_ndc = NDCube(
+        expected_data,
+        wcs=ndc.wcs,
+        uncertainty=astropy.nddata.StdDevUncertainty(expected_uncertainty),
+        mask=expected_mask,
+        unit=ndc.unit,
+        meta=ndc.meta
+    )
+
+    # perform the fill_masked operation
+    if fill_in_place:
+        ndc.fill_masked(fill_value, uncertainty_fill_value=uncertainty_fill_value, unmask=unmask, fill_in_place=True)
+
+        # check whether ndc has been masked correctly
+        helpers.assert_cubes_equal(ndc, expected_ndc, check_data=True, check_uncertainty_values=True)
+
+    else:
+        filled_ndc = ndc.fill_masked(fill_value, uncertainty_fill_value=uncertainty_fill_value, unmask=unmask, fill_in_place=False)
+
+        if isinstance(filled_ndc, dict):  # convert it back from dictionary to NDCube
+            filled_ndc = NDCube(
+                data=filled_ndc['data'],
+                uncertainty=filled_ndc.get('uncertainty', None),
+                mask=filled_ndc.get('mask', None),
+                unit=filled_ndc['unit'],
+                wcs=ndc.wcs,
+            )
+
+        # check whether ndc has been masked correctly
+        helpers.assert_cubes_equal(filled_ndc, expected_ndc, check_data=True, check_uncertainty_values=True)
+
+        # ensure the original ndc is not changed
+        helpers.assert_cubes_equal(ndc, ndcube_2d_ln_lt_mask_uncert_unit, check_data=True, check_uncertainty_values=True)
