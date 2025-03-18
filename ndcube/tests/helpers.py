@@ -140,7 +140,6 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncerta
             assert expected_cube.uncertainty is None, "Test uncertainty should not be None."
         elif expected_cube.uncertainty is None:
             assert test_input.uncertainty is None, "Test uncertainty should be None."
-
     elif test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert np.all(test_input.shape == expected_cube.shape)
