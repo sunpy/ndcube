@@ -1383,7 +1383,6 @@ class NDCube(NDCubeBase):
             kwargs['data'] = new_data
             kwargs['uncertainty'] = new_uncertainty
             kwargs['mask'] = new_mask
-            kwargs['unit'] = new_unit
             return self._new_instance(**kwargs)
 
         return None
