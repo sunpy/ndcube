@@ -1,6 +1,5 @@
 import re
 import copy
-import importlib
 from inspect import signature
 from textwrap import dedent
 
@@ -22,13 +21,9 @@ from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-import ndcube.tests.helpers
 from ndcube import ExtraCoords, NDCube, NDMeta
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
-
-importlib.reload(ndcube.tests.helpers)
-
 
 
 def generate_data(shape):
@@ -1418,7 +1413,7 @@ def test_fill_masked(ndcube_2d_ln_lt_mask_uncert_unit, fill_value, uncertainty_f
     # perform the fill_masked method on the fixture, using parametrized as parameters.
     ndc = ndcube_2d_ln_lt_mask_uncert_unit
 
-    expected_data = ndc.data.copy()
+    expected_data = ndc.data.copy() # Put in the value I expect,
     expected_data[ndc.mask] = fill_value
     expected_uncertainty = ndc.uncertainty.array.copy()
 

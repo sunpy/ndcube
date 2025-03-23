@@ -1364,16 +1364,17 @@ class NDCube(NDCubeBase):
         else:
             new_data = copy.deepcopy(self.data)
             new_uncertainty = copy.deepcopy(self.uncertainty)
-            new_mask = False if unmask else copy.deepcopy(self.mask)
+            new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
             new_unit = copy.deepcopy(self.unit)
 
         masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
         if masked:
             idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
-            new_data[idx_mask] = fill_value   # Q: can it be None??
+            new_data[idx_mask] = fill_value   # Q: can it be None??  we want the masked values here.
+                                              # error, data array knows what it can accept.
 
-            if uncertainty_fill_value is not None: # Q: can it be None??
-                if not self.uncertainty:
+            if uncertainty_fill_value is not None: # Q: can it be None?? It must be numerical.
+                if not self.uncertainty:  # or new_uncertainty
                     raise TypeError("Cannot fill uncertainty as uncertainty is None.")
                 new_uncertainty.array[idx_mask] = uncertainty_fill_value
 
