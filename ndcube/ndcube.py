@@ -1384,7 +1384,8 @@ class NDCube(NDCubeBase):
             kwargs['uncertainty'] = new_uncertainty
             kwargs['mask'] = new_mask
             return self._new_instance(**kwargs)
-
+        elif unmask:
+            self.mask = False
         return None
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
