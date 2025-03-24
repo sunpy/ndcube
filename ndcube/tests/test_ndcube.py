@@ -21,7 +21,7 @@ from astropy.wcs.utils import wcs_to_celestial_frame
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import ExtraCoords, NDCube, NDMeta
+from ndcube import ExtraCoords, NDCube, NDMeta, fill_masked
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
 
@@ -1385,73 +1385,64 @@ def test_set_data_mask(ndcube_4d_mask):
     with pytest.raises(TypeError, match="Can not set the .data .* with a numpy masked array"):
         cube.data = masked_array
 
+
 @pytest.mark.parametrize(
-    ("fill_value", "uncertainty_fill_value", "unmask", "fill_in_place"),
+    ("ndc", "fill_value", "uncertainty_fill_value", "unmask", "fill_in_place", "expected_cube"),
     [
-        (1.0, 0.1, False, True),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
-        (1.0, None, False, True), # uncertainty_fill_value is None.
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, True, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0 * u.ct, 0.1, False, True), # fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1 * u.ct, False, True),  # uncertainty_fill_value has a unit
 
-        (1.0, 0.1, False, False), # the same as above, but not in place.
-        (1.0, None, False, False), # uncertainty_fill_value is None.
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, True, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0 * u.ct, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1 * u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # uncertainty_fill_value has a unit
+        # TODO: test unit not aligned??
 
-        (1.0, 0.01, True, False),   # unmask is true
-        (1.0 * u.cm, 0.02, False, False),  # what if the fill_value has a unit??
-    ]
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_false", 1.0, 0.1 * u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_mask_false") # no change.
+
+        # TODO: are there more test cases needed?
+    ],
+    indirect=("ndc", "expected_cube")
 )
-def test_fill_masked(ndcube_2d_ln_lt_mask_uncert_unit, fill_value, uncertainty_fill_value, unmask, fill_in_place):
-    # What I need to test:
-    # when the fill_masked method is applied on the fixture argument, does it:
-    # 1, give me the correct data value and type?
-    # 2, give me the correct uncertainty?
-    # 3, give me the correct mask?
-    # 4, give me the correct unit?
-    # The above four
-    #
-    # when masked with a fill_value
-    # use assert_cubes_equal?????
+def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value, unmask, fill_in_place, expected_cube):
+    # when the fill_masked method is applied on the fixture argument, it should
+    # give me the correct data value and type, uncertainty, mask, unit.
+
+    # original cube: [[0,1,2],[3,4,5]],
+    # original mask: scenario 1, [[T,F,F],[F,F,F]]; scenario 2, T; scenario 3, None.
+    # expected cube: [[1,1,2],[3,4,5]]; [[1,1,1], [1,1,1]]; [[0,1,2],[3,4,5]]
+    # expected mask: when unmask is T, becomes all false, when unmask is F, stays the same.
 
     # perform the fill_masked method on the fixture, using parametrized as parameters.
-    ndc = ndcube_2d_ln_lt_mask_uncert_unit
+    filled_cube = fill_masked(ndc, fill_value, uncertainty_fill_value, unmask, fill_in_place)
+    helpers.assert_cubes_equal(filled_cube, expected_cube)
 
-    expected_data = ndc.data.copy() # Put in the value I expect,
-    expected_data[ndc.mask] = fill_value
-    expected_uncertainty = ndc.uncertainty.array.copy()
 
-    if uncertainty_fill_value is not None:
-        expected_uncertainty[ndc.mask] = uncertainty_fill_value
+@pytest.mark.parametrize(
+    ("ndc", "fill_value", "uncertainty_fill_value", "unmask", "fill_in_place", "expected_cube"),
+    [
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, True, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0 * u.ct, 0.1, False, False), # fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1 * u.ct, False, False),  # uncertainty_fill_value has a unit
 
-    expected_mask = False if unmask else ndc.mask
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, True, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0 * u.ct, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1 * u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # uncertainty_fill_value has a unit
+        #TODO: test unit not aligned??
 
-    expected_ndc = NDCube(
-        expected_data,
-        wcs=ndc.wcs,
-        uncertainty=astropy.nddata.StdDevUncertainty(expected_uncertainty),
-        mask=expected_mask,
-        unit=ndc.unit,
-        meta=ndc.meta
-    )
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_false", 1.0, 0.1 * u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_mask_false") # no change.
 
-    # perform the fill_masked operation
-    if fill_in_place:
-        ndc.fill_masked(fill_value, uncertainty_fill_value=uncertainty_fill_value, unmask=unmask, fill_in_place=True)
+        # TODO: are there more test cases needed?
+    ],
+    indirect=("ndc", "expected_cube")
+)
+def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value, unmask, fill_in_place, expected_cube):
+    # this time, fill_in_placve is wrong, meaning: I should compare the expected cube with the cube saved in the new place
 
-        # check whether ndc has been masked correctly
-        helpers.assert_cubes_equal(ndc, expected_ndc, check_data=True, check_uncertainty_values=True)
-
-    else:
-        filled_ndc = ndc.fill_masked(fill_value, uncertainty_fill_value=uncertainty_fill_value, unmask=unmask, fill_in_place=False)
-
-        if isinstance(filled_ndc, dict):  # convert it back from dictionary to NDCube
-            filled_ndc = NDCube(
-                data=filled_ndc['data'],
-                uncertainty=filled_ndc.get('uncertainty', None),
-                mask=filled_ndc.get('mask', None),
-                unit=filled_ndc['unit'],
-                wcs=ndc.wcs,
-            )
-
-        # check whether ndc has been masked correctly
-        helpers.assert_cubes_equal(filled_ndc, expected_ndc, check_data=True, check_uncertainty_values=True)
-
-        # ensure the original ndc is not changed
-        helpers.assert_cubes_equal(ndc, ndcube_2d_ln_lt_mask_uncert_unit, check_data=True, check_uncertainty_values=True)
+    # perform the fill_masked method on the fixture, using parametrized as parameters.
+    filled_cube = fill_masked(ndc, fill_value, uncertainty_fill_value, unmask, fill_in_place)
+    helpers.assert_cubes_equal(filled_cube, expected_cube)

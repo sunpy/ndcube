@@ -1355,8 +1355,6 @@ class NDCube(NDCubeBase):
         if fill_in_place:
             new_data = self.data
             new_uncertainty = self.uncertainty
-            new_mask = False if unmask else self.mask
-            new_unit = self.unit
             # Unmasking in-place should be handled later.
 
         # If fill_in_place is false, do: create new storage place for data and uncertainty and mask.
@@ -1365,14 +1363,16 @@ class NDCube(NDCubeBase):
             new_data = copy.deepcopy(self.data)
             new_uncertainty = copy.deepcopy(self.uncertainty)
             new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
-            new_unit = copy.deepcopy(self.unit)
 
         masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
         if masked:
             idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
-            new_data[idx_mask] = fill_value   # Q: can it be None??  we want the masked values here.
-                                              # error, data array knows what it can accept.
+            if hasattr(fill_value, "unit"):
+                fill_value = fill_value.to_value(self.unit)
+            new_data[idx_mask] = fill_value   # python will error based on whether data array can accept the passed value.
 
+            if hasattr(uncertainty_fill_value, "unit"):
+                uncertainty_fill_value = uncertainty_fill_value.to_value(self.unit)
             if uncertainty_fill_value is not None: # Q: can it be None?? It must be numerical.
                 if not self.uncertainty:  # or new_uncertainty
                     raise TypeError("Cannot fill uncertainty as uncertainty is None.")
