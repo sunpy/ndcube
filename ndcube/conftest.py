@@ -679,6 +679,39 @@ def ndcube_2d_ln_lt_units(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_no_unit_no_unc(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln)
+
+
+@pytest.fixture
+def ndcube_2d_unit_unc(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    uncertainty = StdDevUncertainty(np.ones(shape)*0.2, unit=u.ct)
+
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, unit=u.ct)
+
+
+@pytest.fixture
+def ndcube_2d_uncertainty_no_unit(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    uncertainty = StdDevUncertainty(np.ones(shape)*0.2)
+
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape).astype(float)
+    mask = np.ones(data_cube.shape, dtype=bool)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask)
+
+
+@pytest.fixture
 def ndcube_2d_dask(wcs_2d_lt_ln):
     shape = (8, 4)
     chunks = 2
@@ -719,6 +752,9 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_2d_ln_lt_units",
     "ndcube_2d_dask",
     "ndcube_1d_l",
+    "ndcube_2d_ln_lt_no_unit_no_unc",
+    "ndcube_2d_uncertainty_no_unit",
+    "ndcube_2d_unit_unc",
 ])
 def all_ndcubes(request):
     """
