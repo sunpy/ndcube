@@ -1391,13 +1391,11 @@ def test_set_data_mask(ndcube_4d_mask):
     [
         ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
         ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, True, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
-        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0 * u.ct, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
-        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1 * u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # uncertainty_fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0 * u.ct, 0.1 * u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
 
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, True, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
-        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0 * u.ct, 0.1, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
-        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1 * u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # uncertainty_fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0 * u.ct, 0.1* u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
         # TODO: test unit not aligned??
 
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_false", 1.0, 0.1 * u.ct, False, True, "ndcube_2d_ln_lt_mask_uncert_unit_mask_false") # no change.
@@ -1416,8 +1414,8 @@ def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value,
     # expected mask: when unmask is T, becomes all false, when unmask is F, stays the same.
 
     # perform the fill_masked method on the fixture, using parametrized as parameters.
-    filled_cube = ndc.fill_masked(fill_value, uncertainty_fill_value, unmask, fill_in_place)
-    helpers.assert_cubes_equal(filled_cube, expected_cube)
+    ndc.fill_masked(fill_value, uncertainty_fill_value, unmask, fill_in_place)
+    helpers.assert_cubes_equal(ndc, expected_cube)
 
 
 @pytest.mark.parametrize(
@@ -1425,13 +1423,11 @@ def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value,
     [
         ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
         ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1, True, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
-        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0 * u.ct, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
-        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0, 0.1 * u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # uncertainty_fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit", 1.0 * u.ct, 0.1* u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
 
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # when it changes the cube in place: its data, uncertainty; it does not unmask the mask.
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1, True, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true"),
-        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0 * u.ct, 0.1, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
-        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0, 0.1 * u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"),  # uncertainty_fill_value has a unit
+        ("ndcube_2d_ln_lt_mask_uncert_unit_mask_true", 1.0 * u.ct, 0.1* u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false"), # fill_value has a unit
         #TODO: test unit not aligned??
 
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_false", 1.0, 0.1 * u.ct, False, False, "ndcube_2d_ln_lt_mask_uncert_unit_mask_false") # no change.

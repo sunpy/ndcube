@@ -1371,7 +1371,7 @@ class NDCube(NDCubeBase):
                 fill_value = fill_value.to_value(self.unit)
             new_data[idx_mask] = fill_value   # python will error based on whether data array can accept the passed value.
 
-            if uncertainty_fill_value is not None: # Q: can it be None?? It must be numerical.
+            if uncertainty_fill_value is not None:
                 if not self.uncertainty:  # or new_uncertainty
                     raise TypeError("Cannot fill uncertainty as uncertainty is None.")
                 if hasattr(uncertainty_fill_value, "unit"):
@@ -1385,7 +1385,7 @@ class NDCube(NDCubeBase):
             kwargs['uncertainty'] = new_uncertainty
             kwargs['mask'] = new_mask
             return self._new_instance(**kwargs)
-        elif unmask:
+        if unmask:
             self.mask = False
         return None
 
