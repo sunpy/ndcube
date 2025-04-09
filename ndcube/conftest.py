@@ -647,6 +647,18 @@ def ndcube_2d_ln_lt_uncert(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_mask(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape)
+    mask = np.zeros(shape, dtype=bool)
+    mask[1, 1] = True
+    mask[2, 0] = True
+    mask[3, 3] = True
+    mask[4:6, :4] = True
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask)
+
+
+@pytest.fixture
 def ndcube_2d_ln_lt_mask_uncert(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)

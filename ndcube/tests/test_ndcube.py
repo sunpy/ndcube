@@ -1415,7 +1415,7 @@ def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value,
 
     # perform the fill_masked method on the fixture, using parametrized as parameters.
     ndc.fill_masked(fill_value, unmask=unmask, uncertainty_fill_value=uncertainty_fill_value, fill_in_place=True)
-    helpers.assert_cubes_equal(ndc, expected_cube)
+    helpers.assert_cubes_equal(ndc, expected_cube, check_uncertainty_values=True)
 
 
 @pytest.mark.parametrize(
@@ -1432,13 +1432,32 @@ def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value,
 
         ("ndcube_2d_ln_lt_mask_uncert_unit_mask_false", 1.0, 0.1 * u.ct, False, "ndcube_2d_ln_lt_mask_uncert_unit_mask_false") # no change.
 
-        # TODO: are there more test cases needed?
+        # TODO: are there more test cases needed? yes: when uncertainty fill is not None but ndc's uncertainty is None.
     ],
     indirect=("ndc", "expected_cube")
 )
 def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value, unmask, expected_cube):
-    # this time, fill_in_placve is wrong, meaning: I should compare the expected cube with the cube saved in the new place
+    # compare the expected cube with the cube saved in the new place
 
     # perform the fill_masked method on the fixture, using parametrized as parameters.
     filled_cube = ndc.fill_masked(fill_value, uncertainty_fill_value, unmask, fill_in_place=False)
-    helpers.assert_cubes_equal(filled_cube, expected_cube)
+    helpers.assert_cubes_equal(filled_cube, expected_cube, check_uncertainty_values=True)
+
+@pytest.mark.parametrize(
+    ("ndc", "fill_value", "uncertainty_fill_value", "unmask"),
+    [
+        # cube has no uncertainty but uncertainty_fill_value has an uncertainty
+        ("ndcube_2d_ln_lt_mask", 1.0, 0.1, False),
+        ("ndcube_2d_ln_lt_mask", 1.0, 0.1 * u.ct, True),
+    ],
+    indirect=("ndc",)
+)
+def test_fill_masked_ndc_uncertainty_none(ndc, fill_value, uncertainty_fill_value, unmask):
+    assert ndc.uncertainty is None
+    with pytest.raises(TypeError,match="Cannot fill uncertainty as uncertainty is None."):
+        ndc.fill_masked(
+            fill_value,
+            unmask=unmask,
+            uncertainty_fill_value=uncertainty_fill_value,
+            fill_in_place=True
+        )
