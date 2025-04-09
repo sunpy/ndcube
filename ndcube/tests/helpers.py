@@ -143,6 +143,7 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncerta
     elif test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert np.all(test_input.shape == expected_cube.shape)
+
     assert_metas_equal(test_input.meta, expected_cube.meta)
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
         raise AssertionError(f"NDCube extra_coords not of same type: "
