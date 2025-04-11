@@ -1364,7 +1364,11 @@ class NDCube(NDCubeBase):
             new_uncertainty = copy.deepcopy(self.uncertainty)
             new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
 
-        masked = False if (self.mask is None or self.mask is False or not self.mask.any()) else True
+        masked = (
+            False if self.mask is None or self.mask is False
+            else self.mask is True if isinstance(self.mask, bool)
+            else self.mask.any()
+        )
         if masked:
             idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
             if hasattr(fill_value, "unit"):

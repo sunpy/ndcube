@@ -124,8 +124,8 @@ def assert_metas_equal(test_input, expected_output):
 
 def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncertainty_values=False):
     assert isinstance(test_input, type(expected_cube))
-    if isinstance(test_input.mask, bool):
-        assert test_input.mask is expected_cube.mask
+    if isinstance(test_input.mask, bool) and isinstance(expected_cube.mask, bool):
+        assert test_input.mask == expected_cube.mask
     else:
         assert np.all(test_input.mask == expected_cube.mask)
     if check_data:
