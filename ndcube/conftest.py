@@ -706,12 +706,11 @@ def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false(wcs_
 
 @pytest.fixture
 def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true(wcs_2d_lt_ln):
-    shape = (2, 3)
     unit = u.ct
     data_cube = np.array([[1.0, 1.0, 2.0],
                           [3.0, 4.0, 5.0]])
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
-    mask = np.zeros(shape, dtype=bool)
+    mask = False
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
 
 
