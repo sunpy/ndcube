@@ -124,7 +124,10 @@ def assert_metas_equal(test_input, expected_output):
 
 def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncertainty_values=False):
     assert isinstance(test_input, type(expected_cube))
-    assert np.all(test_input.mask == expected_cube.mask)
+    if isinstance(test_input.mask, bool) and isinstance(expected_cube.mask, bool):
+        assert test_input.mask == expected_cube.mask
+    else:
+        assert np.all(test_input.mask == expected_cube.mask)
     if check_data:
         np.testing.assert_array_equal(test_input.data, expected_cube.data)
     assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
@@ -137,13 +140,13 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncerta
             assert np.allclose(test_input.uncertainty.array, expected_cube.uncertainty.array), \
                 f"Expected uncertainty: {expected_cube.uncertainty}, but got: {test_input.uncertainty.array}"
         elif test_input.uncertainty is None:
-            assert expected_cube.uncertainty is None, "Test uncertainty should not be None."
+            assert expected_cube.uncertainty is None, "Test uncertainty should not be None." # pragma: no cover
         elif expected_cube.uncertainty is None:
-            assert test_input.uncertainty is None, "Test uncertainty should be None."
-
+            assert test_input.uncertainty is None, "Test uncertainty should be None." # pragma: no cover
     elif test_input.uncertainty:
         assert test_input.uncertainty.array.shape == expected_cube.uncertainty.array.shape
     assert np.all(test_input.shape == expected_cube.shape)
+
     assert_metas_equal(test_input.meta, expected_cube.meta)
     if type(test_input.extra_coords) is not type(expected_cube.extra_coords):
         raise AssertionError(f"NDCube extra_coords not of same type: "
