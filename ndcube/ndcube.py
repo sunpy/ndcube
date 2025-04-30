@@ -993,12 +993,12 @@ class NDCube(NDCubeBase):
                 # combine the uncertainty, it can be propagated without any issue.
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
-            elif (self_unmasked):
+            elif (self_unmasked and not value_unmasked):
                 kwargs["mask"] = value.mask # mask needs to be set.
                 # combine the uncertainty
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
-            elif (value_unmasked):
+            elif (value_unmasked and not self_unmasked):
                 kwargs["mask"] = self.mask
                 # combine the uncertainty
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
