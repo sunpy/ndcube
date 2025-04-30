@@ -968,7 +968,7 @@ class NDCube(NDCubeBase):
 
     def add(self, value, handle_mask=np.logical_and):
         """
-        Users are allowed to choose whether they want handle_mask to be AND / OR .
+        Users are allowed to choose hether they want handle_mask to be AND / OR .
         """
         kwargs = {}
 
@@ -980,32 +980,34 @@ class NDCube(NDCubeBase):
             else:
                 raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
 
+            # addition
+            kwargs["data"] = self.data + value_data
+            result_data = kwargs["data"]
+
             # check whether there is a mask.
             # Neither self nor value has a mask
             self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
             value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
 
             if (self_unmasked and value_unmasked):
-                # addition
-                kwargs["data"] = self.data + value_data
+                # combine the uncertainty, it can be propagated without any issue.
+                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
-                # combine the uncertainty;
-                if self.uncertainty is not None and value.uncertainty is not None:
-                    result_data = kwargs["data"]
-                    if self.unit is not None:
-                        result_data *= self.unit
-                    new_uncertainty = self.uncertainty.propagate(
-                        np.add, value, result_data=result_data, correlation=0
-                    )
-                    kwargs["uncertainty"] = new_uncertainty
-                elif self.uncertainty is not None:
-                    new_uncertainty = self.uncertainty
-                    kwargs["uncertainty"] = new_uncertainty
-                elif value.uncertainty is not None:
-                    new_uncertainty = value.uncertainty
-                    kwargs["uncertainty"] = new_uncertainty
-                else:
-                    new_uncertainty = None
+            elif (self_unmasked):
+                kwargs["mask"] = value.mask # mask needs to be set.
+                # combine the uncertainty
+                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
+
+            elif (value_unmasked):
+                kwargs["mask"] = self.mask
+                # combine the uncertainty
+                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
+
+            else:
+                kwargs["mask"] = handle_mask(self.mask,value.mask)
+                # combine the uncertainty
+                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
+
 
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
@@ -1033,14 +1035,29 @@ class NDCube(NDCubeBase):
         # check whether there is a mask.
         # Neither self nor value has a mask
 
-        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
+        self_masked = not(self.mask is None or self.mask is False or not self.mask.any()) if hasattr(self, "mask") else False
         value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
 
         if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
-            # let the users call the add method
+            # let the users call the add method, since the handle_mask keyword cannot be given by users here.
             raise TypeError('Please use the add method.')
 
-        return self.add(value) # the mask keywords cannot be given by users.
+        return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
+
+    def combine_uncertainty(self, value, result_data):
+        # combine the uncertainty;
+        if self.uncertainty is not None and value.uncertainty is not None:
+            if self.unit is not None:
+                result_data *= self.unit
+            return self.uncertainty.propagate(
+                np.add, value, result_data=result_data, correlation=0
+            )
+
+        if self.uncertainty is not None:
+            return self.uncertainty
+        if value.uncertainty is not None:
+            return value.uncertainty
+        return None
 
     def __radd__(self, value):
         return self.__add__(value)
