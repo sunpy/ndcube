@@ -15,7 +15,6 @@ from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import _Tabular
 from astropy.time import Time
-from astropy.utils import isiterable
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
 
 try:
@@ -915,7 +914,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         from_high_level_coordinates method in gwcs.
         """
         quantities = dropped_frame.coordinate_to_quantity(*highlevel_coords)
-        if isiterable(quantities):
+        if np.iterable(quantities):
             quantities = tuple(q.value for q in quantities)
         return quantities
 
