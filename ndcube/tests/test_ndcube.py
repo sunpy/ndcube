@@ -1338,8 +1338,8 @@ def test_arithmetic_add_cube_nddata(ndc, value):
 
 
 # The case when both NDData and NDCube have uncertainty, unit. Also:
-# NDCube has mask
-# Then, NDData has mask (add one new parametrize).
+# 1, NDCube has mask but NDData does not;
+# 2, Both NDCube and NDData have masks.
 @pytest.mark.parametrize('value', [
     NDData(np.ones((10, 12)),
            wcs=None,
@@ -1353,6 +1353,72 @@ def test_arithmetic_add_cube_nddata(ndc, value):
 def test_arithmetic_add_cube_unit_mask_nddata_unc_unit_mask(ndcube_2d_ln_lt_mask, value):
     with pytest.raises(TypeError, match='Please use the add method.'):
         ndcube_2d_ln_lt_mask + value
+
+
+# Test the three different with-mask scenarios for the add method.
+# 1, both have masks. To test: data, combined mask, uncertainty
+@pytest.mark.parametrize(
+    ("value", "handle_mask"),
+    [(NDData(np.ones((2, 3)),
+            wcs=None,
+            uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05),
+            mask=np.ones((2, 3), dtype=bool)),
+      np.logical_and)]
+)
+def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value, handle_mask):
+    output_cube = ndcube_2d_ln_lt_mask2.add(value, handle_mask)  # perform the addition
+
+    # Construct expected cube
+    expected_data = ndcube_2d_ln_lt_mask2.data + value.data
+    expected_uncertainty = ndcube_2d_ln_lt_mask2.uncertainty
+    expected_mask = np.array([[False, True, True],
+                              [True, True, True]])
+    expected_cube = NDCube(expected_data, ndcube_2d_ln_lt_mask2.wcs, uncertainty=expected_uncertainty, mask=expected_mask)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
+
+
+# Test the three different with-mask scenarios for the add method.
+# 2, The NDCube object has masks. To test: data, combined mask, uncertainty
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((2, 3)),
+           wcs=None,
+           uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05))
+])
+def test_arithmetic_add_cube_mask(ndcube_2d_ln_lt_mask2, value):
+    output_cube = ndcube_2d_ln_lt_mask2.add(value)  # perform the addition
+
+    # Construct expected cube
+    expected_data = ndcube_2d_ln_lt_mask2.data + value.data
+    expected_uncertainty = ndcube_2d_ln_lt_mask2.uncertainty
+    expected_mask = np.array([[False, True, True],
+                              [True, True, True]])
+    expected_cube = NDCube(expected_data, ndcube_2d_ln_lt_mask2.wcs, uncertainty=expected_uncertainty, mask=expected_mask)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
+
+
+# Test the three different with-mask scenarios for the add method.
+# 1, The NDData object has masks. To test: data, combined mask, uncertainty
+@pytest.mark.parametrize('value', [
+    NDData(np.ones((2, 3)),
+           wcs=None,
+           uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05),
+           mask=np.ones((2, 3), dtype=bool))
+])
+def test_arithmetic_add_nddata_mask(ndcube_2d_ln_lt_nomask, value):
+    output_cube = ndcube_2d_ln_lt_nomask.add(value)  # perform the addition
+
+    # Construct expected cube
+    expected_data = ndcube_2d_ln_lt_nomask.data + value.data
+    expected_uncertainty = ndcube_2d_ln_lt_nomask.uncertainty
+    expected_mask = np.ones((2, 3), dtype=bool)
+    expected_cube = NDCube(expected_data, ndcube_2d_ln_lt_nomask.wcs, uncertainty=expected_uncertainty, mask=expected_mask)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 @pytest.mark.parametrize('value', [
