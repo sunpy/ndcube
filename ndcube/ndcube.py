@@ -1044,7 +1044,7 @@ class NDCube(NDCubeBase):
 
         return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
 
-    def combine_uncertainty(self, value, result_data):
+    def _combine_uncertainty(self, value, result_data):
         # combine the uncertainty;
         if self.uncertainty is not None and value.uncertainty is not None:
             if self.unit is not None:
