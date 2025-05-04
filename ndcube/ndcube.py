@@ -983,30 +983,18 @@ class NDCube(NDCubeBase):
             # addition
             kwargs["data"] = self.data + value_data
             result_data = kwargs["data"]
-
-            # check whether there is a mask.
-            # Neither self nor value has a mask
+            kwargs["uncertainty"] = self._combine_uncertainty(value, result_data)
+            # Handle mask.
             self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
             value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
-
-            if (self_unmasked and value_unmasked):
-                # combine the uncertainty, it can be propagated without any issue.
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
-
-            elif (self_unmasked and not value_unmasked):
-                kwargs["mask"] = value.mask # mask needs to be set.
-                # combine the uncertainty
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
-
-            elif (value_unmasked and not self_unmasked):
+            if self_unmasked and value_unmasked:
+                pass
+            elif value_unmasked:
+                kwargs["mask"] = value.mask
+            elif self_unmasked:
                 kwargs["mask"] = self.mask
-                # combine the uncertainty
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
-
             else:
-                kwargs["mask"] = handle_mask(self.mask,value.mask)
-                # combine the uncertainty
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
+                kwargs["mask"] = handle_mask(self.mask, value.mask)
 
 
         elif hasattr(value, 'unit'):
