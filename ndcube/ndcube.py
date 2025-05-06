@@ -983,25 +983,20 @@ class NDCube(NDCubeBase):
             # addition
             kwargs["data"] = self.data + value_data # ignoring the mask here
             result_data = kwargs["data"]
+            kwargs["uncertainty"] = self._combine_uncertainty(value, result_data)
 
             if self.mask is None and value.mask is None:
                 # combine the uncertainty, it can be propagated without any issue.
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
+                pass
 
             elif self.mask is None:
                 kwargs["mask"] = value.mask # mask needs to be set.
-                # combine the uncertainty
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
             elif value.mask is None:
                 kwargs["mask"] = self.mask
-                # combine the uncertainty
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
             else:
                 kwargs["mask"] = handle_mask(self.mask, value.mask)
-                # combine the uncertainty
-                kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
 
         elif hasattr(value, 'unit'):
@@ -1039,7 +1034,7 @@ class NDCube(NDCubeBase):
 
         return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
 
-    def combine_uncertainty(self, value, result_data):
+    def _combine_uncertainty(self, value, result_data):
         # combine the uncertainty;
         if self.uncertainty is not None and value.uncertainty is not None:
             if self.unit is not None:
