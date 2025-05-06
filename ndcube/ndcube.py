@@ -968,7 +968,7 @@ class NDCube(NDCubeBase):
 
     def add(self, value, handle_mask=np.logical_and):
         """
-        Users are allowed to choose hether they want handle_mask to be AND / OR .
+        Users are allowed to choose whether they want handle_mask to be AND / OR .
         """
         kwargs = {}
 
@@ -981,30 +981,25 @@ class NDCube(NDCubeBase):
                 raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
 
             # addition
-            kwargs["data"] = self.data + value_data
+            kwargs["data"] = self.data + value_data # ignoring the mask here
             result_data = kwargs["data"]
 
-            # check whether there is a mask.
-            # Neither self nor value has a mask
-            self_unmasked = self.mask is None or self.mask is False or not self.mask.any()
-            value_unmasked = value.mask is None or value.mask is False or not value.mask.any()
-
-            if (self_unmasked and value_unmasked):
+            if self.mask is None and value.mask is None:
                 # combine the uncertainty, it can be propagated without any issue.
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
-            elif (self_unmasked and not value_unmasked):
+            elif self.mask is None:
                 kwargs["mask"] = value.mask # mask needs to be set.
                 # combine the uncertainty
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
-            elif (value_unmasked and not self_unmasked):
+            elif value.mask is None:
                 kwargs["mask"] = self.mask
                 # combine the uncertainty
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
             else:
-                kwargs["mask"] = handle_mask(self.mask,value.mask)
+                kwargs["mask"] = handle_mask(self.mask, value.mask)
                 # combine the uncertainty
                 kwargs["uncertainty"] = self.combine_uncertainty(value, result_data)
 
@@ -1035,7 +1030,7 @@ class NDCube(NDCubeBase):
         # check whether there is a mask.
         # Neither self nor value has a mask
 
-        self_masked = not(self.mask is None or self.mask is False or not self.mask.any()) if hasattr(self, "mask") else False
+        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
         value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
 
         if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
