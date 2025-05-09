@@ -1,6 +1,1 @@
-Trivial/Internat Changes
-------------------------
-
-- Remove the check for consistent coordinate systems as behaviour controlled in astropy
-
--
+Removed the check for compatible coordinate systems within `~ndcube.NDCube.reproject_to` as it was redundant.
