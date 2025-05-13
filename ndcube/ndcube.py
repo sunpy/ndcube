@@ -1038,7 +1038,7 @@ class NDCube(NDCubeBase):
         self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
         value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
 
-        if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
+        if  (value_masked or self_masked): # value has a mask,
             # let the users call the add method, since the handle_mask keyword cannot be given by users here.
             raise TypeError('Please use the add method.')
 
@@ -1068,11 +1068,11 @@ class NDCube(NDCubeBase):
     def __rsub__(self, value):
         return self.__neg__().__add__(value)
 
-    def multiply(self, operation, value, handle_mask = np.logical_and):
-        return self._operate_arithmetic(operation, value, handle_mask)
-
-    def __mul__(self, value):
-        if hasattr(value, 'unit'):
+    def multiply(self, value, handle_mask=None):
+        kwargs = {}
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("multiply", value, handle_mask)
+        elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, set the unit
                 # to dimensionless such that we can perform arithmetic
@@ -1080,15 +1080,26 @@ class NDCube(NDCubeBase):
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 value_unit = value.unit
                 value = value.to_value()
-                new_unit = cube_unit * value_unit
+                kwargs["unit"] = cube_unit * value_unit
             else:
                 return NotImplemented
         else:
-            new_unit = self.unit
-        new_data = self.data * value
-        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
+            kwargs["unit"] = self.unit
+        kwargs["data"] = self.data * value
+        kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
-        return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
+        return self._new_instance(**kwargs)
+
+    def __mul__(self, value):
+        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
+        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
+
+        if  (value_masked or (self_masked and hasattr(value, 'uncertainty') and value.uncertainty is not None)): # value has a mask,
+            # let the users call the multiply method, since the handle_mask keyword cannot be given by users here.
+            raise TypeError('Please use the multiply method.')
+
+        return self.multiply(value) # without any mask, the multiply method can be called here and will work properly without needing arguments to be passed.
+
 
     def __rmul__(self, value):
         return self.__mul__(value)
