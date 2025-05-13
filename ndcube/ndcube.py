@@ -973,17 +973,12 @@ class NDCube(NDCubeBase):
         return np.logical_and(self_mask, value_mask)
 
     def _arithmetic_operate_with_nddata(self, operation, value, handle_mask):
-        """
-        Users are allowed to choose whether they want handle_mask to be AND / OR .
-        """
         if handle_mask is None:
             handle_mask = self._arithmetic_handle_mask
-
-        kwargs = {}
-
         if value.wcs is not None:
             return TypeError("Cannot add coordinate-aware NDCubes together.")
 
+        kwargs = {}
         if operation == "add":
             # Handle units
             if self.unit is not None and value.unit is not None:
@@ -991,18 +986,24 @@ class NDCube(NDCubeBase):
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
-                raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
+                raise TypeError("Adding objects requires that both have a unit or neither has a unit.") # change the test as well.
             # Handle data and uncertainty
             kwargs["data"] = self.data + value_data
             uncert_op = np.add
+        elif operation == "multiply":
+            # Handle units
+            if self.unit is not None or value.unit is not None:
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                value_unit = u.Unit('') if value.unit is None else value.unit
+                kwargs["unit"] = cube_unit * value_unit
+            kwargs["data"] = self.data * value.data
+            uncert_op = np.multiply
         else:
             raise ValueError("Value of operation argument is not recognized.")
-
         kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
         kwargs["mask"] = handle_mask(self.mask, value.mask)
 
-        # return the new NDCube instance
-        return kwargs
+        return kwargs  # return the new NDCube instance
 
     def add(self, value, handle_mask=None):
         kwargs = {}
