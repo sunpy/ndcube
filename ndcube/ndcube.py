@@ -824,9 +824,6 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 raise ValueError('For adaptive and exact algorithms, '
                                  'target_wcs must contain celestial axes only.')
 
-        if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
-            raise ValueError('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
-
         # TODO: Upstream this check into reproject
         # If shape_out is not specified explicitly,
         # try to extract it from the low level WCS
