@@ -1016,7 +1016,7 @@ class NDCube(NDCubeBase):
         # return the new NDCube instance
         return self._new_instance(**kwargs)
 
-    def add(self, value, handle_mask = np.logical_and):
+    def add(self, value, handle_mask=np.logical_and):
         return self._arithmetic("add", value, handle_mask)
 
     def __add__(self, value):
