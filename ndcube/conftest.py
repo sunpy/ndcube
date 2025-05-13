@@ -647,6 +647,18 @@ def ndcube_2d_ln_lt_uncert(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_mask(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape)
+    mask = np.zeros(shape, dtype=bool)
+    mask[1, 1] = True
+    mask[2, 0] = True
+    mask[3, 3] = True
+    mask[4:6, :4] = True
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask)
+
+
+@pytest.fixture
 def ndcube_2d_ln_lt_mask_uncert(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
@@ -657,6 +669,79 @@ def ndcube_2d_ln_lt_mask_uncert(wcs_2d_lt_ln):
     mask[3, 3] = True
     mask[4:6, :4] = True
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_mask_false(wcs_2d_lt_ln):
+    shape = (2, 3)
+    unit = u.ct
+    data_cube = data_nd(shape)
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = False
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true(wcs_2d_lt_ln):
+    shape = (2, 3)
+    unit = u.ct
+    data_cube = data_nd(shape)
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = np.zeros(shape, dtype=bool)
+    mask[0:1, 0] = True
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false(wcs_2d_lt_ln):
+    shape = (2, 3)
+    unit = u.ct
+    data_cube = np.array([[1.0, 1.0, 2.0],
+                          [3.0, 4.0, 5.0]])
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = np.zeros(shape, dtype=bool)
+    mask[0:1, 0] = True
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true(wcs_2d_lt_ln):
+    unit = u.ct
+    data_cube = np.array([[1.0, 1.0, 2.0],
+                          [3.0, 4.0, 5.0]])
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = False
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_mask_true(wcs_2d_lt_ln):
+    shape = (2, 3)
+    unit = u.ct
+    data_cube = data_nd(shape)
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = True
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_mask_true_expected_unmask_true(wcs_2d_lt_ln):
+    unit = u.ct
+    data_cube = np.array([[1.0, 1.0, 1.0],
+                          [1.0, 1.0, 1.0]])
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = False
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_mask_uncert_unit_mask_true_expected_unmask_false(wcs_2d_lt_ln):
+    unit = u.ct
+    data_cube = np.array([[1.0, 1.0, 1.0],
+                          [1.0, 1.0, 1.0]])
+    uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
+    mask = True
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
 
 
 @pytest.fixture
@@ -729,6 +814,14 @@ def all_ndcubes(request):
 
 @pytest.fixture
 def ndc(request):
+    """
+    A fixture for use with indirect to lookup other fixtures.
+    """
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def expected_cube(request):
     """
     A fixture for use with indirect to lookup other fixtures.
     """

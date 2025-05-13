@@ -1,4 +1,5 @@
 import abc
+import copy
 import inspect
 import numbers
 import textwrap
@@ -1326,6 +1327,68 @@ class NDCube(NDCubeBase):
                              "Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
 
+
+    def fill_masked(self, fill_value, uncertainty_fill_value=None, unmask=False, fill_in_place=False):
+        """
+        Replaces masked data values with input value.
+
+        Returns a new instance or alters values in place.
+
+        Parameters
+        ----------
+        fill_value: `numbers.Number` or scalar `astropy.units.Quantity`
+            The value to replace masked data with.
+        unmask: `bool`, optional
+            If True, the newly filled masked values are unmasked. If False, they remain masked
+            Default=False
+        uncertainty_fill_value: `numbers.Number` or scalar `astropy.units.Quantity`, optional
+            The value to replace masked uncertainties with.
+        fill_in_place: `bool`, optional
+            If `True`, the masked values are filled in place.  If `False`, a new instance is returned
+            with masked values filled.  Default=False.
+        """
+        # variable creations for later use.
+        # If fill_in_place is true, do: assign data and uncertainty to variables.
+        if fill_in_place:
+            new_data = self.data
+            new_uncertainty = self.uncertainty
+            # Unmasking in-place should be handled later.
+
+        # If fill_in_place is false, do: create new storage place for data and uncertainty and mask.
+        # TODO: is the logic repetitive? this else is the same with the if not fill_in_place below? No because the order matters.
+        else:
+            new_data = copy.deepcopy(self.data)
+            new_uncertainty = copy.deepcopy(self.uncertainty)
+            new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
+
+        masked = (
+            False if self.mask is None or self.mask is False
+            else self.mask is True if isinstance(self.mask, bool)
+            else self.mask.any()
+        )
+        if masked:
+            idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
+            if hasattr(fill_value, "unit"):
+                fill_value = fill_value.to_value(self.unit)
+            new_data[idx_mask] = fill_value   # python will error based on whether data array can accept the passed value.
+
+            if uncertainty_fill_value is not None:
+                if not self.uncertainty:  # or new_uncertainty
+                    raise TypeError("Cannot fill uncertainty as uncertainty is None.")
+                if hasattr(uncertainty_fill_value, "unit"):
+                    uncertainty_fill_value = uncertainty_fill_value.to_value(self.unit)
+                new_uncertainty.array[idx_mask] = uncertainty_fill_value
+
+        if not fill_in_place:
+            # Create kwargs dictionary and return a new instance.
+            kwargs = {}
+            kwargs['data'] = new_data
+            kwargs['uncertainty'] = new_uncertainty
+            kwargs['mask'] = new_mask
+            return self._new_instance(**kwargs)
+        if unmask:
+            self.mask = False
+        return None
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
