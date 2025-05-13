@@ -963,7 +963,7 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def add(self, value, handle_mask=np.logical_and):
+    def _arithmetic(self, value, handle_mask=np.logical_and):
         """
         Users are allowed to choose whether they want handle_mask to be AND / OR .
         """
@@ -1015,6 +1015,9 @@ class NDCube(NDCubeBase):
 
         # return the new NDCube instance
         return self._new_instance(**kwargs)
+
+    def add(self, value, handle_mask = np.logical_and):
+        return self._arithmetic("add", value, handle_mask)
 
     def __add__(self, value):
         # when value has a mask, raise error and point user to the add method. TODO
