@@ -963,39 +963,51 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def _operate_arithmetic(self, operation, value, handle_mask=np.logical_and):
+    def _arithmetic_operate_with_nddata(self, operation, value, handle_mask=np.logical_and):
         """
         Users are allowed to choose whether they want handle_mask to be AND / OR .
         """
         kwargs = {}
 
-        if isinstance(value, NDData) and value.wcs is None:
+        if value.wcs is not None:
+            return TypeError("Cannot add coordinate-aware NDCubes together.")
+
+        if operation == "add":
+            # Handle units
             if self.unit is not None and value.unit is not None:
                 value_data = (value.data * value.unit).to_value(self.unit)
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
                 raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
+            # Handle data and uncertainty
+            kwargs["data"] = self.data + value_data
+            uncert_op = np.add
+        else:
+            raise ValueError("Value of operation argument is not recognized.")
 
-            # addition
-            kwargs["data"] = self.data + value_data # ignoring the mask here
-            result_data = kwargs["data"]
-            kwargs["uncertainty"] = self._combine_uncertainty(value, result_data)
+        kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
 
-            if self.mask is None and value.mask is None:
-                # combine the uncertainty, it can be propagated without any issue.
-                pass
+        if self.mask is None and value.mask is None:
+            # combine the uncertainty, it can be propagated without any issue.
+            pass
 
-            elif self.mask is None:
-                kwargs["mask"] = value.mask # mask needs to be set.
+        elif self.mask is None:
+            kwargs["mask"] = value.mask # mask needs to be set.
 
-            elif value.mask is None:
-                kwargs["mask"] = self.mask
+        elif value.mask is None:
+            kwargs["mask"] = self.mask
 
-            else:
-                kwargs["mask"] = handle_mask(self.mask, value.mask)
+        else:
+            kwargs["mask"] = handle_mask(self.mask, value.mask)
 
+        # return the new NDCube instance
+        return kwargs
 
+    def add(self, value, handle_mask=np.logical_and):
+        kwargs = {}
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("add", value, handle_mask)
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
@@ -1016,9 +1028,6 @@ class NDCube(NDCubeBase):
         # return the new NDCube instance
         return self._new_instance(**kwargs)
 
-    def add(self, operation, value, handle_mask = np.logical_and):
-        return self._operate_arithmetic(operation, value, handle_mask)
-
     def __add__(self, value):
         # when value has a mask, raise error and point user to the add method. TODO
         #
@@ -1034,13 +1043,13 @@ class NDCube(NDCubeBase):
 
         return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
 
-    def _combine_uncertainty(self, value, result_data):
+    def _combine_uncertainty(self, operation, value, result_data):
         # combine the uncertainty;
         if self.uncertainty is not None and value.uncertainty is not None:
             if self.unit is not None:
                 result_data *= self.unit
             return self.uncertainty.propagate(
-                np.add, value, result_data=result_data, correlation=0
+                operation, value, result_data=result_data, correlation=0
             )
 
         if self.uncertainty is not None:
