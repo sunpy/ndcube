@@ -963,10 +963,22 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def _arithmetic_operate_with_nddata(self, operation, value, handle_mask=np.logical_and):
+    def _arithmetic_handle_mask(self, self_mask, value_mask):
+        if self_mask is None and value_mask is None:
+            return None
+        if self_mask is None:
+            return value_mask
+        if value_mask is None:
+            return self_mask
+        return np.logical_and(self_mask, value_mask)
+
+    def _arithmetic_operate_with_nddata(self, operation, value, handle_mask):
         """
         Users are allowed to choose whether they want handle_mask to be AND / OR .
         """
+        if handle_mask is None:
+            handle_mask = self._arithmetic_handle_mask
+
         kwargs = {}
 
         if value.wcs is not None:
@@ -987,24 +999,12 @@ class NDCube(NDCubeBase):
             raise ValueError("Value of operation argument is not recognized.")
 
         kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
-
-        if self.mask is None and value.mask is None:
-            # combine the uncertainty, it can be propagated without any issue.
-            pass
-
-        elif self.mask is None:
-            kwargs["mask"] = value.mask # mask needs to be set.
-
-        elif value.mask is None:
-            kwargs["mask"] = self.mask
-
-        else:
-            kwargs["mask"] = handle_mask(self.mask, value.mask)
+        kwargs["mask"] = handle_mask(self.mask, value.mask)
 
         # return the new NDCube instance
         return kwargs
 
-    def add(self, value, handle_mask=np.logical_and):
+    def add(self, value, handle_mask=None):
         kwargs = {}
         if isinstance(value, NDData):
             kwargs = self._arithmetic_operate_with_nddata("add", value, handle_mask)
