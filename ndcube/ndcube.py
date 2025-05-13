@@ -963,7 +963,7 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def _operate_arithmetic(self, value, operation, handle_mask=np.logical_and):
+    def _operate_arithmetic(self, operation, value, handle_mask=np.logical_and):
         """
         Users are allowed to choose whether they want handle_mask to be AND / OR .
         """
