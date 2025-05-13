@@ -1055,6 +1055,9 @@ class NDCube(NDCubeBase):
     def __rsub__(self, value):
         return self.__neg__().__add__(value)
 
+    def multiply(self, value, handle_mask=np.logical_and):
+        pass
+
     def __mul__(self, value):
         if hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
