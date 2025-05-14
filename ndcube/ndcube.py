@@ -971,7 +971,7 @@ class NDCube(NDCubeBase):
             return value_mask
         if value_mask is None:
             return self_mask
-        return np.logical_and(self_mask, value_mask)
+        return np.logical_or(self_mask, value_mask)
 
     def _arithmetic_operate_with_nddata(self, operation, value, handle_mask):
         if handle_mask is None:
