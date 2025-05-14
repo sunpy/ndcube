@@ -409,11 +409,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     @property
     def data(self):
         """
-        `~numpy.ndarray`-like : The stored dataset.
+        `~numpy.ndarray` - like
+            The stored dataset.
 
         Notes
         -----
-        It is possible to set the ``.data`` attribute on a `NDCube` with an
+        It is possible to set the ``.data`` attribute on a `~ndcube.NDCube` with an
         array-like object of the same shape. However, this is really only
         intended for replacing the data with a different object representing
         the same physical data as no other properties of the cube will be
