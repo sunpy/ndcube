@@ -22,7 +22,7 @@ New Features
 - Added `~ndcube.NDCube.quantity` attribute to `~ndcube.NDCube` to return the data array with in the cube with the physical units stored in the `~ndcube.NDCube.unit` attribute. (`#677 <https://github.com/sunpy/ndcube/pull/677>`__)
 - Enable `~ndcube.NDCube` to be raised to a power. (`#678 <https://github.com/sunpy/ndcube/pull/678>`__)
 - Added `ndcube.NDCube.shape` as a replacement for "dimensions". (`#684 <https://github.com/sunpy/ndcube/pull/684>`__)
-- Enable rtruediv on`~ndcube.NDCube` such that a user can now do 1/`~ndcube.NDCube`. (`#685 <https://github.com/sunpy/ndcube/pull/685>`__)
+- Enable rtruediv on `~ndcube.NDCube` such that a user can now do 1/ `~ndcube.NDCube`. (`#685 <https://github.com/sunpy/ndcube/pull/685>`__)
 - Add a ``keepdims=False`` kwarg to `~ndcube.NDCube.crop` and `~ndcube.NDCube.crop_by_values` setting to true keeps length-1 dimensions default behavior drops these dimensions. (`#732 <https://github.com/sunpy/ndcube/pull/732>`__)
 - When calling :meth:`ndcube.NDCubeBase.axis_world_coords` or :meth:`ndcube.NDCubeBase.axis_world_coords_values` with a
   specific axis or axes specified, the methods now avoid doing calculations for any other uncorrelated axes, offering
