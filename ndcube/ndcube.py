@@ -1092,13 +1092,6 @@ class NDCube(NDCubeBase):
         return self._new_instance(**kwargs)
 
     def __mul__(self, value):
-        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
-        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
-
-        if  (value_masked or (self_masked and hasattr(value, 'uncertainty') and value.uncertainty is not None)): # value has a mask,
-            # let the users call the multiply method, since the handle_mask keyword cannot be given by users here.
-            raise TypeError('Please use the multiply method.')
-
         return self.multiply(value) # without any mask, the multiply method can be called here and will work properly without needing arguments to be passed.
 
 
