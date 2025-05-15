@@ -1,6 +1,8 @@
 import abc
 import copy
+import uuid
 from numbers import Integral
+from functools import partial
 from collections import defaultdict
 
 import gwcs
@@ -20,7 +22,7 @@ try:
 except ImportError:
     pass
 
-__all__ = ['TimeTableCoordinate', 'SkyCoordTableCoordinate', 'QuantityTableCoordinate', "BaseTableCoordinate", "MultipleTableCoordinate"]
+__all__ = ["BaseTableCoordinate", "MultipleTableCoordinate", 'QuantityTableCoordinate', 'SkyCoordTableCoordinate', 'TimeTableCoordinate']
 
 
 class Length1Tabular(_Tabular):
@@ -109,7 +111,12 @@ def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
     """
     axes_order = tuple(range(naxes))
 
-    name = None
+    if names is None:
+        # Ensure that the frame name is always unique
+        name = f"Frame-{str(uuid.uuid4()).split('-')[1]}"
+    else:
+        # If we have axes names use them as the frame name
+        name = "-".join(names) + " Frame"
     axes_type = "CUSTOM"
 
     if isinstance(unit, (u.Unit, u.IrreducibleUnit, u.CompositeUnit)):
@@ -119,7 +126,6 @@ def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
         axes_type = "SPATIAL"
 
     if all(u.pix.is_equivalent(un) for un in unit):
-        name = "PixelFrame"
         axes_type = "PIXEL"
 
     axes_type = tuple([axes_type] * naxes)
@@ -911,6 +917,17 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         return cf.CompositeFrame(frames)
 
+    @staticmethod
+    def _from_high_level_coordinates(dropped_frame, *highlevel_coords):
+        """
+        This is a backwards compatibility wrapper for the new
+        from_high_level_coordinates method in gwcs.
+        """
+        quantities = dropped_frame.coordinate_to_quantity(*highlevel_coords)
+        if np.iterable(quantities):
+            quantities = tuple(q.value for q in quantities)
+        return quantities
+
     @property
     def dropped_world_dimensions(self):
         dropped_world_dimensions = defaultdict(list)
@@ -929,22 +946,31 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         dropped_world_dimensions["world_axis_names"] += [name or None for name in dropped_multi_table.frame.axes_names]
         dropped_world_dimensions["world_axis_physical_types"] += list(dropped_multi_table.frame.axis_physical_types)
         dropped_world_dimensions["world_axis_units"] += [u.to_string() for u in dropped_multi_table.frame.unit]
-        dropped_world_dimensions["world_axis_object_components"] += dropped_multi_table.frame._world_axis_object_components
-        dropped_world_dimensions["world_axis_object_classes"].update(dropped_multi_table.frame._world_axis_object_classes)
+        # In gwcs https://github.com/spacetelescope/gwcs/pull/457 the underscore was dropped
+        waocomp = getattr(dropped_multi_table.frame, "world_axis_object_components", getattr(dropped_multi_table.frame, "_world_axis_object_components", []))
+        dropped_world_dimensions["world_axis_object_components"] += waocomp
+        waocls = getattr(dropped_multi_table.frame, "world_axis_object_classes", getattr(dropped_multi_table.frame, "_world_axis_object_classes", {}))
+        dropped_world_dimensions["world_axis_object_classes"].update(waocls)
 
         for dropped in self._dropped_coords:
             # If the table is a tuple (QuantityTableCoordinate) then we need to
             # squish the input
+            # In gwcs https://github.com/spacetelescope/gwcs/pull/457 coordinate_to_quantity was removed
+            coord_meth = getattr(
+                dropped.frame,
+                "from_high_level_coordinates",
+                partial(self._from_high_level_coordinates, dropped.frame)
+            )
             if isinstance(dropped.table, tuple):
-                coord = dropped.frame.coordinate_to_quantity(*dropped.table)
+                coord = coord_meth(*dropped.table)
             else:
-                coord = dropped.frame.coordinate_to_quantity(dropped.table)
+                coord = coord_meth(dropped.table)
 
             # We want the value in the output dict to be a flat list of values
             # in the order of world_axis_object_components, so if we get a
             # tuple of coordinates out of gWCS then append them to the list, if
             # we only get one quantity out then append to the list.
-            if isinstance(coord, tuple):
+            if isinstance(coord, (tuple, list)):
                 dropped_world_dimensions["value"] += list(coord)
             else:
                 dropped_world_dimensions["value"].append(coord)

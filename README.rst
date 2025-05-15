@@ -28,6 +28,13 @@ ndcube
 It combines data, uncertainties, units, metadata, masking, and coordinate transformations into classes with unified slicing and generic coordinate transformations and plotting/animation capabilities.
 It is designed to handle data of any number of dimensions and axis types (e.g. spatial, temporal, spectral, etc.) whose relationship between the array elements and the real world can be described by World Coordinate System (WCS) translations.
 
+Usage of Generative AI
+======================
+
+We expect authentic engagement in our community.
+Be wary of posting output from Large Language Models or similar generative AI as comments on GitHub or any other platform, as such comments tend to be formulaic and low quality content.
+If you use generative AI tools as an aid in developing code or documentation changes, ensure that you fully understand the proposed changes and can explain why they are the correct approach and an improvement to the current state.
+
 Acknowledging ndcube
 ====================
 If you use ``ndcube`` is your work, we kindly ask you to `acknowledge ndcube`_ in your
@@ -48,10 +55,10 @@ Getting Help
 For more information or to ask questions about ndcube, check out:
 
 -  `ndcube Documentation`_
--  `ndcube Element Channel`_
+-  `ndcube Chat Channel`_
 
 .. _ndcube Documentation: https://docs.sunpy.org/projects/ndcube/
-.. _ndcube Element Channel: https://app.element.io/#/room/#ndcube:openastronomy.org
+.. _ndcube Chat Channel: https://app.element.io/#/room/#ndcube:openastronomy.org
 
 Contributing
 ============

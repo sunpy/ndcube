@@ -39,6 +39,12 @@ warnings.filterwarnings("error", category=AstropyDeprecationWarning)
 
 # -- General configuration ---------------------------------------------------
 
+# Wrap large function/method signatures
+maximum_signature_line_length = 80
+
+# Add any Sphinx extension module names here, as strings. They can be
+# extensions coming with Sphinx (named "sphinx.ext.*") or your custom
+# ones.
 extensions = [
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.autodoc',
@@ -49,13 +55,13 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
-    'sphinx.ext.mathjax',
-    'sphinx_automodapi.automodapi',
-    'sphinx_automodapi.smart_resolver',
     'ndcube.utils.sphinx.code_context',
-    'sphinx_changelog',
     'sphinx_gallery.gen_gallery',
     "sphinxext.opengraph",
+    "sphinx.ext.mathjax",
+    "sphinx_automodapi.automodapi",
+    "sphinx_automodapi.smart_resolver",
+    "sphinx_changelog",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

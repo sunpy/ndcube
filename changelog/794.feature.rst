@@ -1,0 +1,1 @@
+Allows addition of an ``NDCube`` and ``NDData`` (with the WCS of ``NDData`` being set to None), and combines their uncertainties and masks.

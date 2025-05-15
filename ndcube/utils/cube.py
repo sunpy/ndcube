@@ -9,8 +9,12 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowL
 
 from ndcube.utils import wcs as wcs_utils
 
-__all__ = ["sanitize_wcs", "sanitize_crop_inputs", "get_crop_item_from_points",
-           "propagate_rebin_uncertainties"]
+__all__ = [
+    "get_crop_item_from_points",
+    "propagate_rebin_uncertainties",
+    "sanitize_crop_inputs",
+    "sanitize_wcs",
+]
 
 
 def sanitize_wcs(func):
@@ -257,7 +261,7 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         if operation in {np.sum, np.nansum, np.mean, np.nanmean}:
             propagation_operation = np.add
         # TODO: product was renamed to prod for numpy 2.0
-        elif operation in {np.prod, np.nanprod, np.prod if hasattr(np, "product") else np.prod}:
+        elif operation in {np.prod, np.nanprod}:
             propagation_operation = np.multiply
         else:
             raise ValueError("propagation_operation not recognized.")

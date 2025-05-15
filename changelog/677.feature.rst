@@ -1,1 +1,0 @@
-Added `~ndcube.NDCube.quantity` attribute to `~ndcube.NDCube` to return the data array with in the cube with the physical units stored in the `~ndcube.NDCube.unit` attribute.

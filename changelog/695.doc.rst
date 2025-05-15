@@ -1,1 +1,0 @@
-Added a gallery example  (:ref:`sphx_glr_generated_gallery_creating_a_gwcs_from_quantities.py`) showcasing how to create a GWCS from quantities.

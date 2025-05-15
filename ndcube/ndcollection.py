@@ -1,3 +1,4 @@
+import copy
 import numbers
 import textwrap
 import collections.abc
@@ -16,7 +17,7 @@ class NDCollection(dict):
 
     Parameters
     ----------
-    key_data_pairs: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+    key_data_pairs: `dict` or sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
         The names and data cubes/sequences to held in the collection.
 
     aligned_axes: `tuple` of `int`, `tuple` of `tuple` of `int`, 'all', or None, optional
@@ -49,6 +50,8 @@ class NDCollection(dict):
     """
 
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
+        if isinstance(key_data_pairs, collections.abc.Mapping):
+            key_data_pairs = tuple(key_data_pairs.items())
         for key, _ in key_data_pairs:
             if isinstance(key, numbers.Number):
                 warn_deprecated(
@@ -160,6 +163,7 @@ class NDCollection(dict):
             new_data = [self[_item] for _item in item]
             new_keys = item
             new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
+            new_meta = copy.deepcopy(self.meta)
 
         # Else, the item is assumed to be a typical slicing item.
         # Slice each cube in collection using information in this item.
@@ -176,9 +180,41 @@ class NDCollection(dict):
             # Since item is not strings, no cube in collection is dropped.
             # Therefore the collection keys remain unchanged.
             new_keys = list(self.keys())
+            # Slice meta if sliceable
+            if hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__:
+                # Convert negative indices to positive indices as they are not supported by NDMeta.slice
+                sanitized_item = copy.deepcopy(item)
+                aligned_shape = self.aligned_dimensions
+                if isinstance(item, numbers.Integral):
+                    if item < 0:
+                        sanitized_item = int(self.aligned_dimensions[0] + item)
+                elif isinstance(item, slice):
+                    if (item.start is not None and item.start < 0) or (item.stop is not None and item.stop < 0):
+                        new_start = aligned_shape[0] + item.start if item.start < 0 else item.start
+                        new_stop = aligned_shape[0] + item.stop if item.stop < 0 else item.stop
+                        sanitized_item = slice(new_start, new_stop)
+                else:
+                    sanitized_item = list(sanitized_item)
+                    for i, ax_it in enumerate(item):
+                        if isinstance(ax_it, numbers.Integral) and ax_it < 0:
+                            sanitized_item[i] = aligned_shape[i] + ax_it
+                        elif isinstance(ax_it, slice):
+                            if (ax_it.start is not None and ax_it.start < 0) or (ax_it.stop is not None and ax_it.stop < 0):
+                                new_start = aligned_shape[i] + ax_it.start if ax_it.start < 0 else ax_it.start
+                                new_stop = aligned_shape[i] + ax_it.stop if ax_it.stop < 0 else ax_it.stop
+                                sanitized_item[i] = slice(new_start, new_stop)
+                    sanitized_item = tuple(sanitized_item)
+                # Use sanitized item to slice meta.
+                new_meta = self.meta.slice[sanitized_item]
+            else:
+                new_meta = copy.deepcopy(self.meta)
 
-        return self.__class__(list(zip(new_keys, new_data)), aligned_axes=new_aligned_axes,
-                              meta=self.meta, sanitize_inputs=False)
+        return self.__class__(
+            list(zip(new_keys, new_data)),
+            aligned_axes=new_aligned_axes,
+            meta=new_meta,
+            sanitize_inputs=False
+        )
 
     def _generate_collection_getitems(self, item):
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
@@ -288,8 +324,7 @@ class NDCollection(dict):
         )
         # Update collection
         super().update(key_data_pairs)
-        # since the above assertion passed, if one aligned axes is not None, both are not None
-        if first_old_aligned_axes is not None:
+        if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
             self.aligned_axes.update(new_aligned_axes)
 
     def __delitem__(self, key):

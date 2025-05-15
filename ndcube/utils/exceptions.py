@@ -6,7 +6,7 @@ but rather in the particular package.
 """
 import warnings
 
-__all__ = ["NDCubeWarning", "NDCubeUserWarning", "NDCubeDeprecationWarning", "warn_user", "warn_deprecated"]
+__all__ = ["NDCubeDeprecationWarning", "NDCubeUserWarning", "NDCubeWarning", "warn_deprecated", "warn_user"]
 
 
 class NDCubeWarning(Warning):

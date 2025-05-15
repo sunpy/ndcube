@@ -1,11 +1,14 @@
 
+import warnings
+
 import numpy as np
 import pytest
 
 import astropy.units as u
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time, TimeDelta
 
-from ndcube import NDCube, NDCubeSequence
+from ndcube import NDCube, NDCubeSequence, NDMeta
 from ndcube.tests import helpers
 
 
@@ -134,6 +137,18 @@ def test_cube_like_shape(ndc, expected_shape):
     assert np.all(ndc.cube_like_shape == expected_shape)
 
 
+@pytest.mark.parametrize(("ndc", "expected_dimensions"),
+                         [
+                             ("ndcubesequence_4c_ln_lt_l_cax1", tuple(u.Quantity(d, unit=u.pix) for d in [2. , 12, 4])),
+                         ],
+                         indirect=("ndc",))
+def test_cube_like_dimensions(ndc, expected_dimensions):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for ndc_dim, exp_dim in zip(ndc.cube_like_dimensions, expected_dimensions):
+            assert_quantity_allclose(ndc_dim, exp_dim)
+
+
 @pytest.mark.parametrize("ndc", (["ndcubesequence_4c_ln_lt_l"]), indirect=("ndc",))
 def test_cube_like_shape_error(ndc):
     with pytest.raises(TypeError):
@@ -195,3 +210,13 @@ def test_crop_by_values(ndcubesequence_4c_ln_lt_l):
     expected = seq[:, 1:3, 0:2, 0:3]
     output = seq.crop_by_values(lower_corner, upper_corner)
     helpers.assert_cubesequences_equal(output, expected)
+
+
+def test_slice_meta(ndcubesequence_4c_ln_lt_l_cax1):
+    seq = ndcubesequence_4c_ln_lt_l_cax1
+    sliced_seq = seq[:, :, 0]
+    expected_meta = NDMeta({"salutation": "hello",
+                            "exposure time": u.Quantity([2] * 4, unit=u.s),
+                            "pixel response": u.Quantity([100] * 4, unit=u.percent)},
+                           axes={"exposure time": 0, "pixel response": 0}, data_shape=(4, 2, 4))
+    helpers.assert_metas_equal(sliced_seq.meta, expected_meta)
