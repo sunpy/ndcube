@@ -192,7 +192,12 @@ def assert_wcs_are_equal(wcs1, wcs2):
         # SlicedLowLevelWCS vs BaseHighLevelWCS don't have the same pixel_to_world method
         low_level_wcs1 = wcs1.low_level_wcs if isinstance(wcs1, BaseHighLevelWCS) else wcs1
         low_level_wcs2 = wcs2.low_level_wcs if isinstance(wcs2, BaseHighLevelWCS) else wcs2
-        np.testing.assert_array_equal(low_level_wcs1.pixel_to_world_values(*random_idx.T), low_level_wcs2.pixel_to_world_values(*random_idx.T))
+        np.testing.assert_allclose(
+            low_level_wcs1.pixel_to_world_values(*random_idx.T),
+            low_level_wcs2.pixel_to_world_values(*random_idx.T),
+            atol=1e-17,
+            rtol=1e-23,
+        )
 
 def create_sliced_wcs(wcs, item, dim):
     """

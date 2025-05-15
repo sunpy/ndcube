@@ -15,7 +15,9 @@ properties:
     description: "Must be compatible with ASDF serialization/deserialization and supported by NDCube."
   wcs:
     anyOf:
-      - tag: "tag:stsci.edu:gwcs/wcs-1.*"
+      - tag: "tag:stsci.edu:gwcs/wcs-*"
+      - tag: "tag:astropy.org:astropy/wcs/wcs-*"
+      - tag: "tag:astropy.org:astropy/wcs/slicedwcs-*"
       - tag: "tag:sunpy.org:ndcube/resampledwcs-*"
       - tag: "tag:sunpy.org:ndcube/reorderedwcs-*"
       - tag: "tag:sunpy.org:ndcube/compoundwcs-*"
@@ -31,6 +33,8 @@ properties:
     anyOf:
      - tag: "tag:stsci.edu:asdf/unit/unit-1.*"
      - tag: "tag:astropy.org:astropy/units/unit-1.*"
+  uncertainty:
+    tag: tag:astropy.org:astropy/nddata/uncertainty-1.*
 
 required: [data, wcs]
 additionalProperties: true

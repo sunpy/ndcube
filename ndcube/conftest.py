@@ -42,8 +42,7 @@ console_logger.setLevel('INFO')
 
 def time_lut(shape):
     base_time = Time('2000-01-01', format='fits', scale='utc')
-    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
-    return timestamps
+    return Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
 
 def skycoord_2d_lut(shape):
     total_len = np.prod(shape)
@@ -1049,6 +1048,13 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_2d_ln_lt_no_unit_no_unc",
     "ndcube_2d_uncertainty_no_unit",
     "ndcube_2d_unit_unc",
+    "ndcube_gwcs_4d_ln_lt_l_t",
+    "ndcube_gwcs_4d_ln_lt_l_t_unit",
+    "ndcube_gwcs_3d_ln_lt_l",
+    "ndcube_gwcs_3d_rotated",
+    "ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim",
+    "ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc",
+    "ndcube_gwcs_2d_ln_lt_mask",
 ])
 def all_ndcubes(request):
     """
