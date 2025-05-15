@@ -10,11 +10,14 @@ class NDCubeConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.ndcube import NDCube
 
-        ndcube = NDCube(node["data"],
-                        node["wcs"],
-                        meta = node.get("meta"),
-                        mask = node.get("mask"),
-                        unit = node.get("unit"))
+        ndcube = NDCube(
+            node["data"],
+            node["wcs"],
+            meta=node.get("meta"),
+            mask=node.get("mask"),
+            unit=node.get("unit"),
+            uncertainty=node.get("uncertainty"),
+        )
         if "extra_coords" in node:
             ndcube._extra_coords = node["extra_coords"]
         if "global_coords" in node:
@@ -34,8 +37,8 @@ class NDCubeConverter(Converter):
         Warnings
         --------
         UserWarning
-            Warns if the NDCube object has attributes 'uncertainty', 'mask',
-            or 'unit' that are present but not being saved in the ASDF serialization.
+            Warns if the NDCube object has a 'psf' attribute that will not be
+            saved in the ASDF serialization.
             This ensures that users are aware of potentially important information
             that is not included in the serialized output.
         """
@@ -54,10 +57,10 @@ class NDCubeConverter(Converter):
             node["mask"] = ndcube.mask
         if ndcube.unit is not None:
             node["unit"] = ndcube.unit
+        if ndcube.uncertainty is not None:
+            node["uncertainty"] = ndcube.uncertainty
 
-        attributes = ['uncertainty', 'psf']
-        for attr in attributes:
-            if getattr(ndcube, attr) is not None:
-                warnings.warn(f"Attribute '{attr}' is present but not being saved in ASDF serialization.", UserWarning)
+        if getattr(ndcube, 'psf') is not None:
+            warnings.warn("Attribute 'psf' is present but not being saved in ASDF serialization.", UserWarning)
 
         return node
