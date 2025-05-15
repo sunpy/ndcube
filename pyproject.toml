@@ -115,6 +115,14 @@ version_file = "ndcube/_version.py"
 
   number_incorrect_long = "The number in the changelog file you added does not match the number of this pull request. Please rename the file."
 
+
+[project.entry-points."asdf.resource_mappings"]
+ndcube = "ndcube.asdf.entry_points:get_resource_mappings"
+
+[project.entry-points."asdf.extensions"]
+ndcube = "ndcube.asdf.entry_points:get_extensions"
+
+
 # TODO: This should be in towncrier.toml but Giles currently only works looks in
 # pyproject.toml we should move this back when it's fixed.
 [tool.towncrier]
