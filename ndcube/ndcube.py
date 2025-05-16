@@ -1031,18 +1031,6 @@ class NDCube(NDCubeBase):
         return self._new_instance(**kwargs)
 
     def __add__(self, value):
-        # when value has a mask, raise error and point user to the add method. TODO
-        #
-        # check whether there is a mask.
-        # Neither self nor value has a mask
-
-        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
-        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
-
-        if  (value_masked or self_masked): # value has a mask,
-            # let the users call the add method, since the handle_mask keyword cannot be given by users here.
-            raise TypeError('Please use the add method.')
-
         return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
 
     def _combine_uncertainty(self, operation, value, result_data):
@@ -1093,7 +1081,6 @@ class NDCube(NDCubeBase):
 
     def __mul__(self, value):
         return self.multiply(value) # without any mask, the multiply method can be called here and will work properly without needing arguments to be passed.
-
 
     def __rmul__(self, value):
         return self.__mul__(value)
