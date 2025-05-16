@@ -1,0 +1,1 @@
+Allow constructing a NDCollection with a dictionary.
