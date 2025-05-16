@@ -1156,7 +1156,7 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value): # this test methods 
                         indirect=("ndc",))
 def test_arithmetic_add_one_unit(ndc, value):
     assert isinstance(ndc, NDCube)
-    with pytest.raises(TypeError, match="Adding objects requires both have a unit or neither has a unit."):
+    with pytest.raises(TypeError, match="Adding objects requires that both have a unit or neither has a unit."):
         ndc + value
 
 
