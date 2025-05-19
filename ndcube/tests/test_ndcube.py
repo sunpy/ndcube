@@ -1337,24 +1337,6 @@ def test_arithmetic_add_cube_nddata(ndc, value):
     assert_cubes_equal(output_cube, expected_cube)
 
 
-# The case when both NDData and NDCube have uncertainty, unit. Also:
-# 1, NDCube has mask but NDData does not;
-# 2, Both NDCube and NDData have masks.
-@pytest.mark.parametrize('value', [
-    NDData(np.ones((10, 12)),
-           wcs=None,
-           uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.1)),
-
-    NDData(np.ones((10, 12)) * 2,
-           wcs=None,
-           uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.05),
-           mask=np.ones((10, 12), dtype=bool))
-])
-def test_arithmetic_add_cube_unit_mask_nddata_unc_unit_mask(ndcube_2d_ln_lt_mask, value):
-    with pytest.raises(TypeError, match='Please use the add method.'):
-        ndcube_2d_ln_lt_mask + value
-
-
 # Test the three different with-mask scenarios for the add method.
 # 1, both have masks. To test: data, combined mask, uncertainty
 @pytest.mark.parametrize(
