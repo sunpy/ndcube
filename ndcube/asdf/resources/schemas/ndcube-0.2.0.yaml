@@ -1,0 +1,37 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/NDCube-0.2.0"
+
+title:
+  Represents the ndcube NDCube object
+
+description:
+  Represents the ndcube NDCube object
+
+type: object
+properties:
+  data:
+    description: "Must be compatible with ASDF serialization/deserialization and supported by NDCube."
+  wcs:
+    anyOf:
+      - tag: "tag:stsci.edu:gwcs/wcs-1.*"
+      - tag: "tag:sunpy.org:ndcube/resampledwcs-*"
+      - tag: "tag:sunpy.org:ndcube/reorderedwcs-*"
+      - tag: "tag:sunpy.org:ndcube/compoundwcs-*"
+  extra_coords:
+    tag: "tag:sunpy.org:ndcube/extra_coords/extra_coords/extracoords-0.*"
+  global_coords:
+    tag: "tag:sunpy.org:ndcube/global_coords/globalcoords-0.*"
+  meta:
+    type: object
+  mask:
+    type: object
+  unit:
+    anyOf:
+     - tag: "tag:stsci.edu:asdf/unit/unit-1.*"
+     - tag: "tag:astropy.org:astropy/units/unit-1.*"
+
+required: [data, wcs]
+additionalProperties: true
+...
