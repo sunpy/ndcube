@@ -973,9 +973,8 @@ class NDCube(NDCubeBase):
             return self_mask
         return np.logical_or(self_mask, value_mask)
 
-    def _arithmetic_operate_with_nddata(self, operation, value, handle_mask):
-        if handle_mask is None:
-            handle_mask = self._arithmetic_handle_mask
+    def _arithmetic_operate_with_nddata(self, operation, value):
+        handle_mask = self._arithmetic_handle_mask
         if value.wcs is not None:
             return TypeError("Cannot add coordinate-aware NDCubes together.")
 
@@ -1006,10 +1005,10 @@ class NDCube(NDCubeBase):
 
         return kwargs  # return the new NDCube instance
 
-    def add(self, value, handle_mask=None):
+    def __add__(self, value):
         kwargs = {}
         if isinstance(value, NDData):
-            kwargs = self._arithmetic_operate_with_nddata("add", value, handle_mask)
+            kwargs = self._arithmetic_operate_with_nddata("add", value)
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
@@ -1029,9 +1028,6 @@ class NDCube(NDCubeBase):
 
         # return the new NDCube instance
         return self._new_instance(**kwargs)
-
-    def __add__(self, value):
-        return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
 
     def _combine_uncertainty(self, operation, value, result_data):
         # combine the uncertainty;
@@ -1057,10 +1053,10 @@ class NDCube(NDCubeBase):
     def __rsub__(self, value):
         return self.__neg__().__add__(value)
 
-    def multiply(self, value, handle_mask=None):
+    def __mul__(self, value):
         kwargs = {}
         if isinstance(value, NDData):
-            kwargs = self._arithmetic_operate_with_nddata("multiply", value, handle_mask)
+            kwargs = self._arithmetic_operate_with_nddata("multiply", value)
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, set the unit
@@ -1078,9 +1074,6 @@ class NDCube(NDCubeBase):
         kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
                            if self.uncertainty is not None else None)
         return self._new_instance(**kwargs)
-
-    def __mul__(self, value):
-        return self.multiply(value) # without any mask, the multiply method can be called here and will work properly without needing arguments to be passed.
 
     def __rmul__(self, value):
         return self.__mul__(value)
