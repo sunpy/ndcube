@@ -2,6 +2,7 @@
 This file contains a set of common fixtures to get a set of different but
 predictable NDCube objects.
 """
+
 import logging
 
 import dask.array
@@ -30,25 +31,28 @@ except ImportError:
     HAVE_MATPLOTLIB = False
 else:
     HAVE_MATPLOTLIB = True
-    matplotlib.use('Agg')
+    matplotlib.use("Agg")
 
 
 console_logger = logging.getLogger()
-console_logger.setLevel('INFO')
+console_logger.setLevel("INFO")
 
 ################################################################################
 # Helper Functions
 ################################################################################
 
+
 def time_lut(shape):
-    base_time = Time('2000-01-01', format='fits', scale='utc')
-    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
-    return timestamps
+    base_time = Time("2000-01-01", format="fits", scale="utc")
+    return Time([base_time + TimeDelta(60 * i, format="sec") for i in range(shape[0])])
+
 
 def skycoord_2d_lut(shape):
     total_len = np.prod(shape)
-    data = (np.arange(total_len).reshape(shape),
-            np.arange(total_len, total_len * 2).reshape(shape))
+    data = (
+        np.arange(total_len).reshape(shape),
+        np.arange(total_len, total_len * 2).reshape(shape),
+    )
     return SkyCoord(*data, unit=u.deg)
 
 
@@ -59,12 +63,15 @@ def data_nd(shape, dtype=float):
 
 def time_extra_coords(shape, axis, base):
     return ExtraCoords.from_lookup_tables(
-        ('time',),
+        ("time",),
         (axis,),
-        (base + TimeDelta([i * 60 for i in range(shape[axis])], format='sec'),))
+        (base + TimeDelta([i * 60 for i in range(shape[axis])], format="sec"),),
+    )
 
 
-def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_coords=None):
+def gen_ndcube_3d_l_ln_lt_ectime(
+    wcs_3d_lt_ln_l, time_axis, time_base, global_coords=None
+):
     shape = (10, 5, 8)
     wcs_3d_lt_ln_l.array_shape = shape
     data_cube = data_nd(shape)
@@ -72,12 +79,14 @@ def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_co
     meta = {"message": "hello world"}
     unit = u.ph
     extra_coords = time_extra_coords(shape, time_axis, time_base)
-    cube = NDCube(data_cube,
-                  wcs_3d_lt_ln_l,
-                  mask=mask,
-                  uncertainty=data_cube,
-                  meta=meta,
-                  unit=unit)
+    cube = NDCube(
+        data_cube,
+        wcs_3d_lt_ln_l,
+        mask=mask,
+        uncertainty=data_cube,
+        meta=meta,
+        unit=unit,
+    )
     cube._extra_coords = extra_coords
 
     if global_coords:
@@ -89,6 +98,7 @@ def gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, time_axis, time_base, global_co
 ################################################################################
 # WCS Fixtures
 ################################################################################
+
 
 @pytest.fixture
 def gwcs_4d_t_l_lt_ln():
@@ -104,30 +114,40 @@ def gwcs_4d_t_l_lt_ln():
     """
 
     time_model = models.Identity(1)
-    time_frame = cf.TemporalFrame(axes_order=(0, ), unit=u.s,
-                                  reference_frame=Time("2000-01-01T00:00:00"))
+    time_frame = cf.TemporalFrame(
+        axes_order=(0,), unit=u.s, reference_frame=Time("2000-01-01T00:00:00")
+    )
 
-    wave_frame = cf.SpectralFrame(axes_order=(1, ), unit=u.m, axes_names=('wavelength',))
+    wave_frame = cf.SpectralFrame(axes_order=(1,), unit=u.m, axes_names=("wavelength",))
     wave_model = models.Scale(0.2)
 
-    shift  = models.Shift(-5) & models.Shift(0)
-    scale  = models.Scale(5) & models.Scale(20)
+    shift = models.Shift(-5) & models.Shift(0)
+    scale = models.Scale(5) & models.Scale(20)
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
     cel_model = shift | scale | tan | celestial_rotation
-    sky_frame = cf.CelestialFrame(axes_order=(2, 3), name='icrs',
-                                    reference_frame=coord.ICRS(),
-                                    axes_names=("longitude", "latitude"))
+    sky_frame = cf.CelestialFrame(
+        axes_order=(2, 3),
+        name="icrs",
+        reference_frame=coord.ICRS(),
+        axes_names=("longitude", "latitude"),
+    )
 
     transform = time_model & wave_model & cel_model
 
     frame = cf.CompositeFrame([time_frame, wave_frame, sky_frame])
-    detector_frame = cf.CoordinateFrame(name="detector", naxes=4,
-                                        axes_order=(0, 1, 2, 3),
-                                        axes_type=("pixel", "pixel", "pixel", "pixel"),
-                                        unit=(u.pix, u.pix, u.pix, u.pix))
+    detector_frame = cf.CoordinateFrame(
+        name="detector",
+        naxes=4,
+        axes_order=(0, 1, 2, 3),
+        axes_type=("pixel", "pixel", "pixel", "pixel"),
+        unit=(u.pix, u.pix, u.pix, u.pix),
+    )
 
-    return (wcs.WCS(forward_transform=transform, output_frame=frame, input_frame=detector_frame))
+    return wcs.WCS(
+        forward_transform=transform, output_frame=frame, input_frame=detector_frame
+    )
+
 
 @pytest.fixture
 def gwcs_3d_lt_ln_l():
@@ -141,27 +161,39 @@ def gwcs_3d_lt_ln_l():
         wcs.WCS: 3D GWCS object.
     """
 
-    shift  = models.Shift(-5) & models.Identity(1)
-    scale  = models.Scale(5) & models.Scale(10)
+    shift = models.Shift(-5) & models.Identity(1)
+    scale = models.Scale(5) & models.Scale(10)
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
     cel_model = shift | scale | tan | celestial_rotation
-    sky_frame = cf.CelestialFrame(axes_order=(0, 1), name='icrs',
-                                    reference_frame=coord.ICRS(),
-                                    axes_names=("longitude", "latitude"))
+    sky_frame = cf.CelestialFrame(
+        axes_order=(0, 1),
+        name="icrs",
+        reference_frame=coord.ICRS(),
+        axes_names=("longitude", "latitude"),
+    )
 
     wave_model = models.Identity(1) | models.Scale(0.2) | models.Shift(10)
-    wave_frame = cf.SpectralFrame(axes_order=(2, ), unit=u.nm, axes_names=("wavelength",))
+    wave_frame = cf.SpectralFrame(
+        axes_order=(2,), unit=u.nm, axes_names=("wavelength",)
+    )
 
     transform = cel_model & wave_model
 
     frame = cf.CompositeFrame([sky_frame, wave_frame])
-    detector_frame = cf.CoordinateFrame(name="detector", naxes=3,
-                                        axes_order=(0, 1, 2),
-                                        axes_type=("pixel", "pixel", "pixel"),
-                                        axes_names=("x", "y", "z"), unit=(u.pix, u.pix, u.pix))
+    detector_frame = cf.CoordinateFrame(
+        name="detector",
+        naxes=3,
+        axes_order=(0, 1, 2),
+        axes_type=("pixel", "pixel", "pixel"),
+        axes_names=("x", "y", "z"),
+        unit=(u.pix, u.pix, u.pix),
+    )
 
-    return (wcs.WCS(forward_transform=transform, output_frame=frame, input_frame=detector_frame))
+    return wcs.WCS(
+        forward_transform=transform, output_frame=frame, input_frame=detector_frame
+    )
+
 
 @pytest.fixture
 def gwcs_3d_ln_lt_t_rotated():
@@ -174,30 +206,46 @@ def gwcs_3d_ln_lt_t_rotated():
     Returns:
         wcs.WCS: 3D GWCS object with rotation.
     """
-    shift  = models.Shift(-5) & models.Identity(1)
-    scale  = models.Scale(5) & models.Scale(10)
-    matrix = np.array([[1.290551569736E-05, 5.9525007864732E-06],
-                    [5.0226382102765E-06 , -1.2644844123757E-05]])
+    shift = models.Shift(-5) & models.Identity(1)
+    scale = models.Scale(5) & models.Scale(10)
+    matrix = np.array(
+        [
+            [1.290551569736e-05, 5.9525007864732e-06],
+            [5.0226382102765e-06, -1.2644844123757e-05],
+        ]
+    )
     rotation = models.AffineTransformation2D(matrix)
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
-    cel_model = shift | scale| rotation | tan | celestial_rotation
-    sky_frame = cf.CelestialFrame(axes_order=(0, 1), name='icrs',
-                                    reference_frame=coord.ICRS(),
-                                    axes_names=("longitude", "latitude"))
+    cel_model = shift | scale | rotation | tan | celestial_rotation
+    sky_frame = cf.CelestialFrame(
+        axes_order=(0, 1),
+        name="icrs",
+        reference_frame=coord.ICRS(),
+        axes_names=("longitude", "latitude"),
+    )
 
     wave_model = models.Identity(1) | models.Scale(0.2) | models.Shift(10)
-    wave_frame = cf.SpectralFrame(axes_order=(2, ), unit=u.nm, axes_names=("wavelength",))
+    wave_frame = cf.SpectralFrame(
+        axes_order=(2,), unit=u.nm, axes_names=("wavelength",)
+    )
 
     transform = cel_model & wave_model
 
     frame = cf.CompositeFrame([sky_frame, wave_frame])
-    detector_frame = cf.CoordinateFrame(name="detector", naxes=3,
-                                        axes_order=(0, 1, 2),
-                                        axes_type=("pixel", "pixel", "pixel"),
-                                        axes_names=("x", "y", "z"), unit=(u.pix, u.pix, u.pix))
+    detector_frame = cf.CoordinateFrame(
+        name="detector",
+        naxes=3,
+        axes_order=(0, 1, 2),
+        axes_type=("pixel", "pixel", "pixel"),
+        axes_names=("x", "y", "z"),
+        unit=(u.pix, u.pix, u.pix),
+    )
 
-    return (wcs.WCS(forward_transform=transform, output_frame=frame, input_frame=detector_frame))
+    return wcs.WCS(
+        forward_transform=transform, output_frame=frame, input_frame=detector_frame
+    )
+
 
 @pytest.fixture
 def gwcs_2d_lt_ln():
@@ -209,46 +257,48 @@ def gwcs_2d_lt_ln():
     Returns:
         wcs.WCS: 2D GWCS object.
     """
-    shift  = models.Shift(-5) & models.Shift(-5)
-    scale  = models.Scale(2) & models.Scale(4)
+    shift = models.Shift(-5) & models.Shift(-5)
+    scale = models.Scale(2) & models.Scale(4)
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(0, 0, 180)
     cel_model = shift | scale | tan | celestial_rotation
     input_frame = cf.Frame2D(name="detector", axes_names=("x", "y"))
-    sky_frame = cf.CelestialFrame(axes_order=(0, 1), name='icrs',
-                                    reference_frame=coord.ICRS(),
-                                    axes_names=("longitude", "latitude"))
+    sky_frame = cf.CelestialFrame(
+        axes_order=(0, 1),
+        name="icrs",
+        reference_frame=coord.ICRS(),
+        axes_names=("longitude", "latitude"),
+    )
 
-    return (wcs.WCS(forward_transform=cel_model, output_frame=sky_frame, input_frame=input_frame))
+    return wcs.WCS(
+        forward_transform=cel_model, output_frame=sky_frame, input_frame=input_frame
+    )
+
 
 @pytest.fixture
 def wcs_4d_t_l_lt_ln():
     header = {
-        'CTYPE1': 'TIME    ',
-        'CUNIT1': 'min',
-        'CDELT1': 0.4,
-        'CRPIX1': 0,
-        'CRVAL1': 0,
-
-        'CTYPE2': 'WAVE    ',
-        'CUNIT2': 'Angstrom',
-        'CDELT2': 0.2,
-        'CRPIX2': 0,
-        'CRVAL2': 0,
-
-        'CTYPE3': 'HPLT-TAN',
-        'CUNIT3': 'arcsec',
-        'CDELT3': 20,
-        'CRPIX3': 0,
-        'CRVAL3': 0,
-
-        'CTYPE4': 'HPLN-TAN',
-        'CUNIT4': 'arcsec',
-        'CDELT4': 5,
-        'CRPIX4': 5,
-        'CRVAL4': 0,
-
-        'DATEREF': "2020-01-01T00:00:00"
+        "CTYPE1": "TIME    ",
+        "CUNIT1": "min",
+        "CDELT1": 0.4,
+        "CRPIX1": 0,
+        "CRVAL1": 0,
+        "CTYPE2": "WAVE    ",
+        "CUNIT2": "Angstrom",
+        "CDELT2": 0.2,
+        "CRPIX2": 0,
+        "CRVAL2": 0,
+        "CTYPE3": "HPLT-TAN",
+        "CUNIT3": "arcsec",
+        "CDELT3": 20,
+        "CRPIX3": 0,
+        "CRVAL3": 0,
+        "CTYPE4": "HPLN-TAN",
+        "CUNIT4": "arcsec",
+        "CDELT4": 5,
+        "CRPIX4": 5,
+        "CRVAL4": 0,
+        "DATEREF": "2020-01-01T00:00:00",
     }
     return WCS(header=header)
 
@@ -256,31 +306,27 @@ def wcs_4d_t_l_lt_ln():
 @pytest.fixture
 def wcs_4d_lt_t_l_ln():
     header = {
-        'CTYPE1': 'HPLT-TAN',
-        'CUNIT1': 'arcsec',
-        'CDELT1': 20,
-        'CRPIX1': 0,
-        'CRVAL1': 0,
-
-        'CTYPE2': 'TIME    ',
-        'CUNIT2': 'min',
-        'CDELT2': 0.4,
-        'CRPIX2': 0,
-        'CRVAL2': 0,
-
-        'CTYPE3': 'WAVE    ',
-        'CUNIT3': 'Angstrom',
-        'CDELT3': 0.2,
-        'CRPIX3': 0,
-        'CRVAL3': 0,
-
-        'CTYPE4': 'HPLN-TAN',
-        'CUNIT4': 'arcsec',
-        'CDELT4': 5,
-        'CRPIX4': 5,
-        'CRVAL4': 0,
-
-        'DATEREF': "2020-01-01T00:00:00"
+        "CTYPE1": "HPLT-TAN",
+        "CUNIT1": "arcsec",
+        "CDELT1": 20,
+        "CRPIX1": 0,
+        "CRVAL1": 0,
+        "CTYPE2": "TIME    ",
+        "CUNIT2": "min",
+        "CDELT2": 0.4,
+        "CRPIX2": 0,
+        "CRVAL2": 0,
+        "CTYPE3": "WAVE    ",
+        "CUNIT3": "Angstrom",
+        "CDELT3": 0.2,
+        "CRPIX3": 0,
+        "CRVAL3": 0,
+        "CTYPE4": "HPLN-TAN",
+        "CUNIT4": "arcsec",
+        "CDELT4": 5,
+        "CRPIX4": 5,
+        "CRVAL4": 0,
+        "DATEREF": "2020-01-01T00:00:00",
     }
     return WCS(header=header)
 
@@ -288,23 +334,21 @@ def wcs_4d_lt_t_l_ln():
 @pytest.fixture
 def wcs_3d_l_lt_ln():
     header = {
-        'CTYPE1': 'WAVE    ',
-        'CUNIT1': 'Angstrom',
-        'CDELT1': 0.2,
-        'CRPIX1': 0,
-        'CRVAL1': 10,
-
-        'CTYPE2': 'HPLT-TAN',
-        'CUNIT2': 'arcsec',
-        'CDELT2': 5,
-        'CRPIX2': 5,
-        'CRVAL2': 0,
-
-        'CTYPE3': 'HPLN-TAN',
-        'CUNIT3': 'arcsec',
-        'CDELT3': 10,
-        'CRPIX3': 0,
-        'CRVAL3': 0,
+        "CTYPE1": "WAVE    ",
+        "CUNIT1": "Angstrom",
+        "CDELT1": 0.2,
+        "CRPIX1": 0,
+        "CRVAL1": 10,
+        "CTYPE2": "HPLT-TAN",
+        "CUNIT2": "arcsec",
+        "CDELT2": 5,
+        "CRPIX2": 5,
+        "CRVAL2": 0,
+        "CTYPE3": "HPLN-TAN",
+        "CUNIT3": "arcsec",
+        "CDELT3": 10,
+        "CRPIX3": 0,
+        "CRVAL3": 0,
     }
 
     return WCS(header=header)
@@ -313,24 +357,21 @@ def wcs_3d_l_lt_ln():
 @pytest.fixture
 def wcs_3d_lt_ln_l():
     header = {
-
-        'CTYPE1': 'HPLN-TAN',
-        'CUNIT1': 'arcsec',
-        'CDELT1': 10,
-        'CRPIX1': 0,
-        'CRVAL1': 0,
-
-        'CTYPE2': 'HPLT-TAN',
-        'CUNIT2': 'arcsec',
-        'CDELT2': 5,
-        'CRPIX2': 5,
-        'CRVAL2': 0,
-
-        'CTYPE3': 'WAVE    ',
-        'CUNIT3': 'Angstrom',
-        'CDELT3': 0.2,
-        'CRPIX3': 0,
-        'CRVAL3': 10,
+        "CTYPE1": "HPLN-TAN",
+        "CUNIT1": "arcsec",
+        "CDELT1": 10,
+        "CRPIX1": 0,
+        "CRVAL1": 0,
+        "CTYPE2": "HPLT-TAN",
+        "CUNIT2": "arcsec",
+        "CDELT2": 5,
+        "CRPIX2": 5,
+        "CRVAL2": 0,
+        "CTYPE3": "WAVE    ",
+        "CUNIT3": "Angstrom",
+        "CDELT3": 0.2,
+        "CRPIX3": 0,
+        "CRVAL3": 10,
     }
 
     return WCS(header=header)
@@ -339,23 +380,21 @@ def wcs_3d_lt_ln_l():
 @pytest.fixture
 def wcs_3d_wave_lt_ln():
     header = {
-        'CTYPE1': 'WAVE    ',
-        'CUNIT1': 'Angstrom',
-        'CDELT1': 0.2,
-        'CRPIX1': 0,
-        'CRVAL1': 10,
-
-        'CTYPE2': 'HPLT-TAN',
-        'CUNIT2': 'deg',
-        'CDELT2': 0.5,
-        'CRPIX2': 2,
-        'CRVAL2': 0.5,
-
-        'CTYPE3': 'HPLN-TAN    ',
-        'CUNIT3': 'deg',
-        'CDELT3': 0.4,
-        'CRPIX3': 2,
-        'CRVAL3': 1,
+        "CTYPE1": "WAVE    ",
+        "CUNIT1": "Angstrom",
+        "CDELT1": 0.2,
+        "CRPIX1": 0,
+        "CRVAL1": 10,
+        "CTYPE2": "HPLT-TAN",
+        "CUNIT2": "deg",
+        "CDELT2": 0.5,
+        "CRPIX2": 2,
+        "CRVAL2": 0.5,
+        "CTYPE3": "HPLN-TAN    ",
+        "CUNIT3": "deg",
+        "CDELT3": 0.4,
+        "CRPIX3": 2,
+        "CRVAL3": 1,
     }
     return WCS(header=header)
 
@@ -363,17 +402,16 @@ def wcs_3d_wave_lt_ln():
 @pytest.fixture
 def wcs_2d_lt_ln():
     spatial = {
-        'CTYPE1': 'HPLT-TAN',
-        'CUNIT1': 'arcsec',
-        'CDELT1': 2,
-        'CRPIX1': 5,
-        'CRVAL1': 0,
-
-        'CTYPE2': 'HPLN-TAN',
-        'CUNIT2': 'arcsec',
-        'CDELT2': 4,
-        'CRPIX2': 5,
-        'CRVAL2': 0,
+        "CTYPE1": "HPLT-TAN",
+        "CUNIT1": "arcsec",
+        "CDELT1": 2,
+        "CRPIX1": 5,
+        "CRVAL1": 0,
+        "CTYPE2": "HPLN-TAN",
+        "CUNIT2": "arcsec",
+        "CDELT2": 4,
+        "CRPIX2": 5,
+        "CRVAL2": 0,
     }
     return WCS(header=spatial)
 
@@ -381,12 +419,12 @@ def wcs_2d_lt_ln():
 @pytest.fixture
 def wcs_1d_l():
     spatial = {
-        'CNAME1': 'spectral',
-        'CTYPE1': 'WAVE',
-        'CUNIT1': 'nm',
-        'CDELT1': 0.5,
-        'CRPIX1': 2,
-        'CRVAL1': 0.5,
+        "CNAME1": "spectral",
+        "CTYPE1": "WAVE",
+        "CUNIT1": "nm",
+        "CDELT1": 0.5,
+        "CRPIX1": 2,
+        "CRVAL1": 0.5,
     }
     return WCS(header=spatial)
 
@@ -394,38 +432,34 @@ def wcs_1d_l():
 @pytest.fixture
 def wcs_3d_ln_lt_t_rotated():
     h_rotated = {
-        'CTYPE1': 'HPLN-TAN',
-        'CUNIT1': 'arcsec',
-        'CDELT1': 0.4,
-        'CRPIX1': 0,
-        'CRVAL1': 0,
-        'NAXIS1': 5,
-
-        'CTYPE2': 'HPLT-TAN',
-        'CUNIT2': 'arcsec',
-        'CDELT2': 0.5,
-        'CRPIX2': 0,
-        'CRVAL2': 0,
-        'NAXIS2': 5,
-
-        'CTYPE3': 'TIME    ',
-        'CUNIT3': 's',
-        'CDELT3': 3,
-        'CRPIX3': 0,
-        'CRVAL3': 0,
-        'NAXIS3': 2,
-
-        'DATEREF': "2020-01-01T00:00:00",
-
-        'PC1_1': 0.714963912964,
-        'PC1_2': -0.699137151241,
-        'PC1_3': 0.0,
-        'PC2_1': 0.699137151241,
-        'PC2_2': 0.714963912964,
-        'PC2_3': 0.0,
-        'PC3_1': 0.0,
-        'PC3_2': 0.0,
-        'PC3_3': 1.0
+        "CTYPE1": "HPLN-TAN",
+        "CUNIT1": "arcsec",
+        "CDELT1": 0.4,
+        "CRPIX1": 0,
+        "CRVAL1": 0,
+        "NAXIS1": 5,
+        "CTYPE2": "HPLT-TAN",
+        "CUNIT2": "arcsec",
+        "CDELT2": 0.5,
+        "CRPIX2": 0,
+        "CRVAL2": 0,
+        "NAXIS2": 5,
+        "CTYPE3": "TIME    ",
+        "CUNIT3": "s",
+        "CDELT3": 3,
+        "CRPIX3": 0,
+        "CRVAL3": 0,
+        "NAXIS3": 2,
+        "DATEREF": "2020-01-01T00:00:00",
+        "PC1_1": 0.714963912964,
+        "PC1_2": -0.699137151241,
+        "PC1_3": 0.0,
+        "PC2_1": 0.699137151241,
+        "PC2_2": 0.714963912964,
+        "PC2_3": 0.0,
+        "PC3_1": 0.0,
+        "PC3_2": 0.0,
+        "PC3_3": 1.0,
     }
     return WCS(header=h_rotated)
 
@@ -436,37 +470,32 @@ def wcs_3d_ln_lt_l_coupled():
     # The latitudinal dimension is coupled to the third pixel dimension through
     # a single off diagonal element in the PCij matrix
     header = {
-        'CTYPE1': 'HPLN-TAN',
-        'CRPIX1': 5,
-        'CDELT1': 5,
-        'CUNIT1': 'arcsec',
-        'CRVAL1': 0.0,
-
-        'CTYPE2': 'HPLT-TAN',
-        'CRPIX2': 5,
-        'CDELT2': 5,
-        'CUNIT2': 'arcsec',
-        'CRVAL2': 0.0,
-
-        'CTYPE3': 'WAVE',
-        'CRPIX3': 1.0,
-        'CDELT3': 1,
-        'CUNIT3': 'Angstrom',
-        'CRVAL3': 1.0,
-
-        'PC1_1': 1,
-        'PC1_2': 0,
-        'PC1_3': 0,
-        'PC2_1': 0,
-        'PC2_2': 1,
-        'PC2_3': -1.0,
-        'PC3_1': 0.0,
-        'PC3_2': 0.0,
-        'PC3_3': 1.0,
-
-        'WCSAXES': 3,
-
-        'DATEREF': "2020-01-01T00:00:00"
+        "CTYPE1": "HPLN-TAN",
+        "CRPIX1": 5,
+        "CDELT1": 5,
+        "CUNIT1": "arcsec",
+        "CRVAL1": 0.0,
+        "CTYPE2": "HPLT-TAN",
+        "CRPIX2": 5,
+        "CDELT2": 5,
+        "CUNIT2": "arcsec",
+        "CRVAL2": 0.0,
+        "CTYPE3": "WAVE",
+        "CRPIX3": 1.0,
+        "CDELT3": 1,
+        "CUNIT3": "Angstrom",
+        "CRVAL3": 1.0,
+        "PC1_1": 1,
+        "PC1_2": 0,
+        "PC1_3": 0,
+        "PC2_1": 0,
+        "PC2_2": 1,
+        "PC2_3": -1.0,
+        "PC3_1": 0.0,
+        "PC3_2": 0.0,
+        "PC3_3": 1.0,
+        "WCSAXES": 3,
+        "DATEREF": "2020-01-01T00:00:00",
     }
     return WCS(header=header)
 
@@ -475,37 +504,32 @@ def wcs_3d_ln_lt_l_coupled():
 def wcs_3d_ln_lt_t_coupled():
     # WCS for a 3D data cube with two celestial axes and one time axis.
     header = {
-        'CTYPE1': 'HPLN-TAN',
-        'CRPIX1': 5,
-        'CDELT1': 5,
-        'CUNIT1': 'arcsec',
-        'CRVAL1': 0.0,
-
-        'CTYPE2': 'HPLT-TAN',
-        'CRPIX2': 5,
-        'CDELT2': 5,
-        'CUNIT2': 'arcsec',
-        'CRVAL2': 0.0,
-
-        'CTYPE3': 'UTC',
-        'CRPIX3': 1.0,
-        'CDELT3': 1,
-        'CUNIT3': 's',
-        'CRVAL3': 1.0,
-
-        'PC1_1': 1,
-        'PC1_2': 0,
-        'PC1_3': 0,
-        'PC2_1': 0,
-        'PC2_2': 1,
-        'PC2_3': 0,
-        'PC3_1': 0,
-        'PC3_2': 1,
-        'PC3_3': 1,
-
-        'WCSAXES': 3,
-
-        'DATEREF': "2020-01-01T00:00:00"
+        "CTYPE1": "HPLN-TAN",
+        "CRPIX1": 5,
+        "CDELT1": 5,
+        "CUNIT1": "arcsec",
+        "CRVAL1": 0.0,
+        "CTYPE2": "HPLT-TAN",
+        "CRPIX2": 5,
+        "CDELT2": 5,
+        "CUNIT2": "arcsec",
+        "CRVAL2": 0.0,
+        "CTYPE3": "UTC",
+        "CRPIX3": 1.0,
+        "CDELT3": 1,
+        "CUNIT3": "s",
+        "CRVAL3": 1.0,
+        "PC1_1": 1,
+        "PC1_2": 0,
+        "PC1_3": 0,
+        "PC2_1": 0,
+        "PC2_2": 1,
+        "PC2_3": 0,
+        "PC3_1": 0,
+        "PC3_2": 1,
+        "PC3_3": 1,
+        "WCSAXES": 3,
+        "DATEREF": "2020-01-01T00:00:00",
     }
     return WCS(header=header)
 
@@ -517,48 +541,57 @@ def wcs_3d_ln_lt_t_coupled():
 
 @pytest.fixture
 def simple_extra_coords_3d():
-    return ExtraCoords.from_lookup_tables(('time', 'hello', 'bye'),
-                                          (0, 1, 2),
-                                          (list(range(2)) * u.pix,
-                                           list(range(3)) * u.pix,
-                                           list(range(4)) * u.pix
-                                           )
-                                          )
+    return ExtraCoords.from_lookup_tables(
+        ("time", "hello", "bye"),
+        (0, 1, 2),
+        (list(range(2)) * u.pix, list(range(3)) * u.pix, list(range(4)) * u.pix),
+    )
 
 
 @pytest.fixture
 def time_and_simple_extra_coords_2d():
-    return ExtraCoords.from_lookup_tables(("time", "hello"),
-                                          (0, 1),
-                                          (Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"],
-                                                scale="utc", format="fits"),
-                                           list(range(3)) * u.pix)
-                                          )
+    return ExtraCoords.from_lookup_tables(
+        ("time", "hello"),
+        (0, 1),
+        (
+            Time(
+                ["2000-01-01T12:00:00", "2000-01-02T12:00:00"],
+                scale="utc",
+                format="fits",
+            ),
+            list(range(3)) * u.pix,
+        ),
+    )
 
 
 @pytest.fixture
 def extra_coords_3d():
-    coord0 = Time(["2000-01-01T12:00:00", "2000-01-02T12:00:00"], scale="utc", format="fits")
+    coord0 = Time(
+        ["2000-01-01T12:00:00", "2000-01-02T12:00:00"], scale="utc", format="fits"
+    )
     coord1 = list(range(3)) * u.pix
     coord2 = list(range(4)) * u.m
-    return ExtraCoords.from_lookup_tables(('time', 'bye', 'hello'),
-                                          (0, 1, 2),
-                                          (coord0, coord1, coord2)
-                                          )
+    return ExtraCoords.from_lookup_tables(
+        ("time", "bye", "hello"), (0, 1, 2), (coord0, coord1, coord2)
+    )
 
 
 @pytest.fixture
 def extra_coords_sharing_axis():
-    return ExtraCoords.from_lookup_tables(('hello', 'bye'),
-                                          (1, 1),
-                                          (list(range(3)) * u.m,
-                                           list(range(3)) * u.keV,
-                                           )
-                                          )
+    return ExtraCoords.from_lookup_tables(
+        ("hello", "bye"),
+        (1, 1),
+        (
+            list(range(3)) * u.m,
+            list(range(3)) * u.keV,
+        ),
+    )
+
 
 ################################################################################
 # NDCube Fixtures
 ################################################################################
+
 
 @pytest.fixture
 def ndcube_gwcs_4d_ln_lt_l_t(gwcs_4d_t_l_lt_ln):
@@ -583,36 +616,44 @@ def ndcube_gwcs_3d_ln_lt_l(gwcs_3d_lt_ln_l):
     data_cube = data_nd(shape)
     return NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
 
+
 @pytest.fixture
 def ndcube_gwcs_3d_rotated(gwcs_3d_lt_ln_l, simple_extra_coords_3d):
-    data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
-                             [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]]])
-    cube = NDCube(
-        data_rotated,
-        wcs=gwcs_3d_lt_ln_l)
+    data_rotated = np.array(
+        [
+            [[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
+            [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]],
+        ]
+    )
+    cube = NDCube(data_rotated, wcs=gwcs_3d_lt_ln_l)
     cube._extra_coords = simple_extra_coords_3d
     return cube
 
+
 @pytest.fixture
-def ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim(gwcs_3d_lt_ln_l, time_and_simple_extra_coords_2d):
+def ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim(
+    gwcs_3d_lt_ln_l, time_and_simple_extra_coords_2d
+):
     shape = (2, 3, 4)
     gwcs_3d_lt_ln_l.array_shape = shape
     data_cube = data_nd(shape)
-    cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
+    cube = NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
     cube._extra_coords = time_and_simple_extra_coords_2d[0]
     return cube
+
 
 @pytest.fixture
 def ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc(gwcs_3d_lt_ln_l):
     shape = (3, 3, 4)
     gwcs_3d_lt_ln_l.array_shape = shape
     data_cube = data_nd(shape)
-    cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
+    cube = NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
     coord1 = 1 * u.m
-    cube.global_coords.add('name1', 'custom:physical_type1', coord1)
+    cube.global_coords.add("name1", "custom:physical_type1", coord1)
     cube.extra_coords.add("time", 0, time_lut(shape))
     cube.extra_coords.add("exposure_lut", 1, range(shape[1]) * u.s)
     return cube
+
 
 @pytest.fixture
 def ndcube_gwcs_2d_ln_lt_mask(gwcs_2d_lt_ln):
@@ -624,6 +665,7 @@ def ndcube_gwcs_2d_ln_lt_mask(gwcs_2d_lt_ln):
     mask[3, 3] = True
     mask[4:6, :4] = True
     return NDCube(data_cube, wcs=gwcs_2d_lt_ln, mask=mask)
+
 
 @pytest.fixture
 def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
@@ -646,15 +688,21 @@ def ndcube_4d_axis_aware_meta(wcs_4d_t_l_lt_ln):
     shape = (5, 8, 10, 12)
     wcs_4d_t_l_lt_ln.array_shape = shape
     data_cube = data_nd(shape, dtype=int)
-    meta = NDMeta({"a": "scalar",
-                   "slit position": np.arange(shape[0], dtype=int),
-                   "pixel label": np.arange(np.prod(shape[:2])).reshape(shape[:2]),
-                   "line": ["Si IV"] * shape[2],
-                   "exposure time": ([2] * shape[-1]) * u.s},
-                  axes={"slit position": 0,
-                        "pixel label": (0, 1),
-                        "line": (2,),
-                        "exposure time": 3})
+    meta = NDMeta(
+        {
+            "a": "scalar",
+            "slit position": np.arange(shape[0], dtype=int),
+            "pixel label": np.arange(np.prod(shape[:2])).reshape(shape[:2]),
+            "line": ["Si IV"] * shape[2],
+            "exposure time": ([2] * shape[-1]) * u.s,
+        },
+        axes={
+            "slit position": 0,
+            "pixel label": (0, 1),
+            "line": (2,),
+            "exposure time": 3,
+        },
+    )
     return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, meta=meta)
 
 
@@ -689,8 +737,7 @@ def ndcube_4d_unit_uncertainty(wcs_4d_t_l_lt_ln):
     shape = (5, 8, 10, 12)
     data_cube = data_nd(shape)
     uncertainty = np.sqrt(data_cube)
-    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln,
-                  unit=u.J, uncertainty=uncertainty)
+    return NDCube(data_cube, wcs=wcs_4d_t_l_lt_ln, unit=u.J, uncertainty=uncertainty)
 
 
 @pytest.fixture
@@ -781,16 +828,22 @@ def ndcube_3d_wave_lt_ln_ec_time(wcs_3d_wave_lt_ln):
         mask=mask,
         uncertainty=data,
     )
-    base_time = Time('2000-01-01', format='fits', scale='utc')
-    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(data.shape[0])])
-    cube.extra_coords.add('time', 0, timestamps)
+    base_time = Time("2000-01-01", format="fits", scale="utc")
+    timestamps = Time(
+        [base_time + TimeDelta(60 * i, format="sec") for i in range(data.shape[0])]
+    )
+    cube.extra_coords.add("time", 0, timestamps)
     return cube
 
 
 @pytest.fixture
 def ndcube_3d_rotated(wcs_3d_ln_lt_t_rotated, simple_extra_coords_3d):
-    data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
-                             [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]]])
+    data_rotated = np.array(
+        [
+            [[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
+            [[2, 4, 5, 1, 3], [1, 5, 2, 2, 4], [2, 3, 4, 0, 5], [0, 1, 2, 3, 4]],
+        ]
+    )
     mask_rotated = data_rotated >= 0
     cube = NDCube(
         data_rotated,
@@ -829,9 +882,9 @@ def ndcube_3d_coupled_time(wcs_3d_ln_lt_t_coupled):
 
 @pytest.fixture
 def ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l):
-    return gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l,
-                                        1,
-                                        Time('2000-01-01', format='fits', scale='utc'))
+    return gen_ndcube_3d_l_ln_lt_ectime(
+        wcs_3d_lt_ln_l, 1, Time("2000-01-01", format="fits", scale="utc")
+    )
 
 
 @pytest.fixture
@@ -869,7 +922,9 @@ def ndcube_2d_ln_lt_mask_uncert_unit_mask_false(wcs_2d_lt_ln):
     data_cube = data_nd(shape)
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = False
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
@@ -880,29 +935,37 @@ def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true(wcs_2d_lt_ln):
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = np.zeros(shape, dtype=bool)
     mask[0:1, 0] = True
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
-def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false(wcs_2d_lt_ln):
+def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false(
+    wcs_2d_lt_ln,
+):
     shape = (2, 3)
     unit = u.ct
-    data_cube = np.array([[1.0, 1.0, 2.0],
-                          [3.0, 4.0, 5.0]])
+    data_cube = np.array([[1.0, 1.0, 2.0], [3.0, 4.0, 5.0]])
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = np.zeros(shape, dtype=bool)
     mask[0:1, 0] = True
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
-def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true(wcs_2d_lt_ln):
+def ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true(
+    wcs_2d_lt_ln,
+):
     unit = u.ct
-    data_cube = np.array([[1.0, 1.0, 2.0],
-                          [3.0, 4.0, 5.0]])
+    data_cube = np.array([[1.0, 1.0, 2.0], [3.0, 4.0, 5.0]])
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = False
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
@@ -912,27 +975,31 @@ def ndcube_2d_ln_lt_mask_uncert_unit_mask_true(wcs_2d_lt_ln):
     data_cube = data_nd(shape)
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = True
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
 def ndcube_2d_ln_lt_mask_uncert_unit_mask_true_expected_unmask_true(wcs_2d_lt_ln):
     unit = u.ct
-    data_cube = np.array([[1.0, 1.0, 1.0],
-                          [1.0, 1.0, 1.0]])
+    data_cube = np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = False
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
 def ndcube_2d_ln_lt_mask_uncert_unit_mask_true_expected_unmask_false(wcs_2d_lt_ln):
     unit = u.ct
-    data_cube = np.array([[1.0, 1.0, 1.0],
-                          [1.0, 1.0, 1.0]])
+    data_cube = np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     mask = True
-    return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit)
+    return NDCube(
+        data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, mask=mask, unit=unit
+    )
 
 
 @pytest.fixture
@@ -942,8 +1009,11 @@ def ndcube_2d_ln_lt_uncert_ec(wcs_2d_lt_ln):
     uncertainty = astropy.nddata.StdDevUncertainty(data_cube * 0.1)
     cube = NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
     cube.extra_coords.add(
-        "time", 0,
-        Time("2000-01-01 00:00", scale="utc") + TimeDelta(np.arange(shape[0])*60, format="sec"))
+        "time",
+        0,
+        Time("2000-01-01 00:00", scale="utc")
+        + TimeDelta(np.arange(shape[0]) * 60, format="sec"),
+    )
     return cube
 
 
@@ -965,7 +1035,7 @@ def ndcube_2d_ln_lt_no_unit_no_unc(wcs_2d_lt_ln):
 def ndcube_2d_unit_unc(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape).astype(float)
-    uncertainty = StdDevUncertainty(np.ones(shape)*0.2, unit=u.ct)
+    uncertainty = StdDevUncertainty(np.ones(shape) * 0.2, unit=u.ct)
 
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty, unit=u.ct)
 
@@ -974,7 +1044,7 @@ def ndcube_2d_unit_unc(wcs_2d_lt_ln):
 def ndcube_2d_uncertainty_no_unit(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape).astype(float)
-    uncertainty = StdDevUncertainty(np.ones(shape)*0.2)
+    uncertainty = StdDevUncertainty(np.ones(shape) * 0.2)
 
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
 
@@ -993,7 +1063,7 @@ def ndcube_2d_ln_lt_mask2(wcs_2d_lt_ln):
     data_cube = data_nd(shape).astype(float)
     mask = np.ones(shape, dtype=bool)
     mask[0:1, 0] = False
-    uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05)
+    uncertainty = StdDevUncertainty(np.ones((2, 3)) * 0.05)
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask, uncertainty=uncertainty)
 
 
@@ -1001,7 +1071,7 @@ def ndcube_2d_ln_lt_mask2(wcs_2d_lt_ln):
 def ndcube_2d_ln_lt_nomask(wcs_2d_lt_ln):
     shape = (2, 3)
     data_cube = data_nd(shape).astype(float)
-    uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05)
+    uncertainty = StdDevUncertainty(np.ones((2, 3)) * 0.05)
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, uncertainty=uncertainty)
 
 
@@ -1030,26 +1100,32 @@ def ndcube_2d(request):
 def ndcube_1d_l(wcs_1d_l):
     shape = (10,)
     data_cube = data_nd(shape)
-    return NDCube(data_cube, wcs=wcs_1d_l,
-                  uncertainty=StdDevUncertainty(data_cube*0.1), unit=u.J)
+    return NDCube(
+        data_cube,
+        wcs=wcs_1d_l,
+        uncertainty=StdDevUncertainty(data_cube * 0.1),
+        unit=u.J,
+    )
 
 
-@pytest.fixture(params=[
-    "ndcube_4d_ln_lt_l_t",
-    "ndcube_4d_uncertainty",
-    "ndcube_4d_mask",
-    "ndcube_4d_extra_coords",
-    "ndcube_4d_unit_uncertainty",
-    "ndcube_3d_ln_lt_l",
-    "ndcube_3d_rotated",
-    "ndcube_2d_ln_lt",
-    "ndcube_2d_ln_lt_units",
-    "ndcube_2d_dask",
-    "ndcube_1d_l",
-    "ndcube_2d_ln_lt_no_unit_no_unc",
-    "ndcube_2d_uncertainty_no_unit",
-    "ndcube_2d_unit_unc",
-])
+@pytest.fixture(
+    params=[
+        "ndcube_4d_ln_lt_l_t",
+        "ndcube_4d_uncertainty",
+        "ndcube_4d_mask",
+        "ndcube_4d_extra_coords",
+        "ndcube_4d_unit_uncertainty",
+        "ndcube_3d_ln_lt_l",
+        "ndcube_3d_rotated",
+        "ndcube_2d_ln_lt",
+        "ndcube_2d_ln_lt_units",
+        "ndcube_2d_dask",
+        "ndcube_1d_l",
+        "ndcube_2d_ln_lt_no_unit_no_unc",
+        "ndcube_2d_uncertainty_no_unit",
+        "ndcube_2d_unit_unc",
+    ]
+)
 def all_ndcubes(request):
     """
     All the above ndcube fixtures in order.
@@ -1107,22 +1183,22 @@ def ndcubesequence_4c_ln_lt_l_cax1(ndcube_3d_ln_lt_l):
 def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
     common_axis = 1
 
-    base_time1 = Time('2000-01-01', format='fits', scale='utc')
+    base_time1 = Time("2000-01-01", format="fits", scale="utc")
     gc1 = GlobalCoords()
-    gc1.add('distance', 'custom:distance', 1*u.m)
+    gc1.add("distance", "custom:distance", 1 * u.m)
     cube1 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time1, gc1)
 
     shape = cube1.data.shape
-    base_time2 = base_time1 + TimeDelta([shape[common_axis] * 60], format='sec')
+    base_time2 = base_time1 + TimeDelta([shape[common_axis] * 60], format="sec")
     gc2 = GlobalCoords()
-    gc2.add('distance', 'custom:distance', 2*u.m)
-    gc2.add('global coord', 'custom:physical_type', 0*u.pix)
+    gc2.add("distance", "custom:distance", 2 * u.m)
+    gc2.add("global coord", "custom:physical_type", 0 * u.pix)
     cube2 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time2, gc2)
     cube2.data[:] *= 2
 
-    base_time3 = base_time2 + TimeDelta([shape[common_axis] * 60], format='sec')
+    base_time3 = base_time2 + TimeDelta([shape[common_axis] * 60], format="sec")
     gc3 = GlobalCoords()
-    gc3.add('distance', 'custom:distance', 3*u.m)
+    gc3.add("distance", "custom:distance", 3 * u.m)
     cube3 = gen_ndcube_3d_l_ln_lt_ectime(wcs_3d_lt_ln_l, 1, base_time3, gc3)
     cube3.data[:] *= 3
 
@@ -1133,6 +1209,8 @@ def pytest_runtest_teardown(item):
     # Clear the pyplot figure stack if it is not empty after the test
     # You can see these log messages by passing "-o log_cli=true" to pytest on the command line
     if HAVE_MATPLOTLIB and plt.get_fignums():
-        console_logger.info(f"Removing {len(plt.get_fignums())} pyplot figure(s) "
-                            f"left open by {item.name}")
-        plt.close('all')
+        console_logger.info(
+            f"Removing {len(plt.get_fignums())} pyplot figure(s) "
+            f"left open by {item.name}"
+        )
+        plt.close("all")
