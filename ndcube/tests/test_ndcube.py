@@ -1340,21 +1340,19 @@ def test_arithmetic_add_cube_nddata(ndc, value):
 # Test the three different with-mask scenarios for the add method.
 # 1, both have masks. To test: data, combined mask, uncertainty
 @pytest.mark.parametrize(
-    ("value", "handle_mask"),
+    ("value"),
     [(NDData(np.ones((2, 3)),
             wcs=None,
             uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05),
-            mask=np.ones((2, 3), dtype=bool)),
-      np.logical_and)]
+            mask=np.ones((2, 3), dtype=bool)))]
 )
-def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value, handle_mask):
-    output_cube = ndcube_2d_ln_lt_mask2.add(value, handle_mask)  # perform the addition
+def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value):
+    output_cube = ndcube_2d_ln_lt_mask2 + value  # perform the addition
 
     # Construct expected cube
     expected_data = ndcube_2d_ln_lt_mask2.data + value.data
     expected_uncertainty = ndcube_2d_ln_lt_mask2.uncertainty
-    expected_mask = np.array([[False, True, True],
-                              [True, True, True]])
+    expected_mask = np.ones((2, 3), dtype=bool)
     expected_cube = NDCube(expected_data, ndcube_2d_ln_lt_mask2.wcs, uncertainty=expected_uncertainty, mask=expected_mask)
 
     # Assert output cube is same as expected cube
@@ -1369,7 +1367,7 @@ def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value, handle_mask):
            uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05))
 ])
 def test_arithmetic_add_cube_mask(ndcube_2d_ln_lt_mask2, value):
-    output_cube = ndcube_2d_ln_lt_mask2.add(value)  # perform the addition
+    output_cube = ndcube_2d_ln_lt_mask2 + value  # perform the addition
 
     # Construct expected cube
     expected_data = ndcube_2d_ln_lt_mask2.data + value.data
@@ -1391,7 +1389,7 @@ def test_arithmetic_add_cube_mask(ndcube_2d_ln_lt_mask2, value):
            mask=np.ones((2, 3), dtype=bool))
 ])
 def test_arithmetic_add_nddata_mask(ndcube_2d_ln_lt_nomask, value):
-    output_cube = ndcube_2d_ln_lt_nomask.add(value)  # perform the addition
+    output_cube = ndcube_2d_ln_lt_nomask + value  # perform the addition
 
     # Construct expected cube
     expected_data = ndcube_2d_ln_lt_nomask.data + value.data
