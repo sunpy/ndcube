@@ -1057,22 +1057,23 @@ class NDCube(NDCubeBase):
         kwargs = {}
         if isinstance(value, NDData):
             kwargs = self._arithmetic_operate_with_nddata("multiply", value)
-        elif hasattr(value, 'unit'):
-            if isinstance(value, u.Quantity):
-                # NOTE: if the cube does not have units, set the unit
-                # to dimensionless such that we can perform arithmetic
-                # between the two.
-                cube_unit = u.Unit('') if self.unit is None else self.unit
-                value_unit = value.unit
-                value = value.to_value()
-                kwargs["unit"] = cube_unit * value_unit
-            else:
-                return NotImplemented
         else:
-            kwargs["unit"] = self.unit
-        kwargs["data"] = self.data * value
-        kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
-                           if self.uncertainty is not None else None)
+            if hasattr(value, 'unit'):
+                if isinstance(value, u.Quantity):
+                    # NOTE: if the cube does not have units, set the unit
+                    # to dimensionless such that we can perform arithmetic
+                    # between the two.
+                    cube_unit = u.Unit('') if self.unit is None else self.unit
+                    value_unit = value.unit
+                    value = value.to_value()
+                    kwargs["unit"] = cube_unit * value_unit
+                else:
+                    return NotImplemented
+            else:
+                kwargs["unit"] = self.unit
+            kwargs["data"] = self.data * value
+            kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
+                            if self.uncertainty is not None else None)
         return self._new_instance(**kwargs)
 
     def __rmul__(self, value):

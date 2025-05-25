@@ -1266,7 +1266,7 @@ def test_arithmetic_add_cube_unc_nddata_unc(ndc, value):
     output_cube = ndc + value # perform the addition
     # Construct expected cube
     expected_data = ndc.data + value.data
-    expected_uncertainty = ndc.uncertainty.propagate(
+    expected_uncertainty = ndc.uncertainty.propagate(  # is this the correct way to test uncertainty? no need to test propagate
                             operation=np.add,
                             other_nddata=value,
                             result_data=expected_data,
@@ -1451,6 +1451,56 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units * value
     check_arithmetic_value_and_units(new_cube, cube_quantity * value)
     # TODO: test that uncertainties scale correctly
+
+
+@pytest.mark.parametrize(("ndc", "value"),
+                        [
+                            ("ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2", NDData(np.ones((2, 3)),
+                                                                                wcs=None) # neither of the two has uncertainty or mask or unit.
+                            ),
+                            ("ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2", NDData(np.ones((2, 3)),
+                                                                                wcs=None,
+                                                                                uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                                                                mask=np.ones((2, 3), dtype=bool),
+                                                                                unit=u.ct) # ndc has no mask no uncertainty no unit, but nddata has all.
+                            ),
+                            ("ndcube_2d_ln_lt_unit_unc_mask", NDData(np.ones((2, 3)),
+                                                                                wcs=None,
+                                                                                uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                                                                mask=np.ones((2, 3), dtype=bool),
+                                                                                unit=u.ct) # both of them have uncertainty and mask and unit.
+                            )
+                        ],
+                        indirect=("ndc",))
+def test_cube_arithmetic_multiply_ndcube_nddata(ndc, value):
+    assert isinstance(value, NDData)
+    output_cube = ndc * value  # perform the multiplication
+
+    # Construct expected cube
+    expected_data = ndc.data * value.data
+    expected_unit = ndc.unit * value.unit
+
+    if ndc.uncertainty is not None and value.uncertainty is not None:
+        expected_uncertainty = ndc.uncertainty.propagate(
+                                operation=np.multiply,
+                                other_nddata=value,
+                                result_data=expected_data,
+                                correlation=0,
+        )
+    if ndc.uncertainty is not None:
+        expected_uncertainty = ndc.uncertainty
+    if value.uncertainty is not None:
+        expected_uncertainty = value.uncertainty
+    expected_uncertainty = None
+
+    if ndc.mask is None and value.mask is None:
+        expected_mask = None
+    else:
+        expected_mask = np.ones((2, 3), dtype=bool)
+    expected_cube = NDCube(expected_data, ndc.wcs, uncertainty=expected_uncertainty, mask=expected_mask, unit=expected_unit)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 @pytest.mark.parametrize('value', [
