@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "asdf://sunpy.org/ndcube/schemas/Compoundwcs-0.1.0"
+id: "asdf://sunpy.org/ndcube/schemas/compoundwcs-0.1.0"
 
 title:
   Represents the ndcube CompoundLowLevelWCS object
@@ -14,7 +14,9 @@ properties:
   wcs:
     type: array
     items:
-      tag: "tag:stsci.edu:gwcs/wcs-1.*"
+      anyOf:
+        - tag: "tag:astropy.org:astropy/wcs/wcs-*"
+        - tag: "tag:stsci.edu:gwcs/wcs-*"
   mapping:
     type: array
   atol:

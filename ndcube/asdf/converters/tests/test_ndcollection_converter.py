@@ -11,7 +11,9 @@ from ndcube.tests.helpers import assert_collections_equal
 
 @pytest.fixture
 def create_ndcollection_cube(
-    ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc, ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim
+    ndcube_gwcs_3d_ln_lt_l,
+    ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc,
+    ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim,
 ):
     aligned_axes = ((1, 2), (1, 2), (1, 2))
     return NDCollection(

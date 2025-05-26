@@ -12,7 +12,9 @@ description:
 type: object
 properties:
   wcs:
-    tag: "tag:stsci.edu:gwcs/wcs-1.*"
+    anyOf:
+      - tag: "tag:astropy.org:astropy/wcs/wcs-*"
+      - tag: "tag:stsci.edu:gwcs/wcs-*"
   pixel_order:
     type: array
   world_order:
