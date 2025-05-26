@@ -1,6 +1,4 @@
 import pytest
-from gwcs import __version__ as gwcs_version
-from packaging.version import Version
 
 import asdf
 
@@ -26,7 +24,6 @@ def create_ndcollection_cube(
     )
 
 
-@pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
 def test_serialization_cube(create_ndcollection_cube, tmp_path):
     ndcollection = create_ndcollection_cube
     file_path = tmp_path / "test.asdf"
@@ -45,7 +42,6 @@ def create_ndcollection_sequence(ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_
     return NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
 
 
-@pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
 def test_serialization_sequence(create_ndcollection_sequence, tmp_path):
     ndcollection = create_ndcollection_sequence
     file_path = tmp_path / "test.asdf"

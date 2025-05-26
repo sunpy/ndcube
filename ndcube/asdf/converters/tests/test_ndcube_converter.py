@@ -1,14 +1,11 @@
-import gwcs
 import numpy as np
 import pytest
-from packaging.version import Version
 
 import asdf
 
 from ndcube.tests.helpers import assert_cubes_equal
 
 
-@pytest.mark.skipif(Version(gwcs.__version__) < Version("0.20"), reason="Requires gwcs>=0.20")
 def test_serialization(all_ndcubes, tmp_path, all_ndcubes_names):
     if all_ndcubes_names in ("ndcube_4d_ln_lt_l_t", "ndcube_3d_ln_lt_l", "ndcube_3d_rotated"):
         pytest.importorskip("asdf_astropy", "0.8.0")

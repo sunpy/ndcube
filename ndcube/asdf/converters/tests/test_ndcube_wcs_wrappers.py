@@ -5,8 +5,6 @@ TODO: Add tests for the roundtrip serialization of NDCube with ResampledLowLevel
 """
 
 import pytest
-from gwcs import __version__ as gwcs_version
-from packaging.version import Version
 
 import asdf
 
@@ -24,7 +22,6 @@ def create_ndcube_resampledwcs(gwcs_3d_lt_ln_l):
     return NDCube(data=data, wcs=new_wcs)
 
 
-@pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
 def test_serialization_resampled(create_ndcube_resampledwcs, tmp_path):
     ndc = create_ndcube_resampledwcs
     file_path = tmp_path / "test.asdf"
@@ -51,7 +48,6 @@ def create_ndcube_reorderedwcs(gwcs_3d_lt_ln_l):
     return NDCube(data = data, wcs =new_wcs)
 
 
-@pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
 def test_serialization_reordered(create_ndcube_reorderedwcs, tmp_path):
     ndc = create_ndcube_reorderedwcs
     file_path = tmp_path / "test.asdf"
@@ -77,7 +73,7 @@ def create_ndcube_compoundwcs(gwcs_2d_lt_ln, time_and_simple_extra_coords_2d):
     data = data_nd(shape)
     return NDCube(data = data, wcs = new_wcs)
 
-@pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
+
 def test_serialization_compoundwcs(create_ndcube_compoundwcs, tmp_path):
     ndc = create_ndcube_compoundwcs
     file_path = tmp_path / "test.asdf"
