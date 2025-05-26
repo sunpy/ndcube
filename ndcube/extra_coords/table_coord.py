@@ -22,7 +22,13 @@ try:
 except ImportError:
     pass
 
-__all__ = ["BaseTableCoordinate", "MultipleTableCoordinate", 'QuantityTableCoordinate', 'SkyCoordTableCoordinate', 'TimeTableCoordinate']
+__all__ = [
+    "BaseTableCoordinate",
+    "MultipleTableCoordinate",
+    "QuantityTableCoordinate",
+    "SkyCoordTableCoordinate",
+    "TimeTableCoordinate",
+]
 
 
 class Length1Tabular(_Tabular):

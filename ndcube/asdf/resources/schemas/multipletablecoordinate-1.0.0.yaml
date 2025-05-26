@@ -1,0 +1,31 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/multipletablecoordinate-1.0.0"
+
+title:
+  Represents the MultipleTableCoordinate class
+
+description:
+  Represents the MultipleTableCoordinate class
+
+type: object
+properties:
+  table_coords:
+    type: array
+    items:
+      anyOf:
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-*"
+  dropped_coords:
+    type: array
+    items:
+      anyOf:
+        - tag: "tag:stsci.edu:asdf/unit/quantity-*"
+        - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
+        - tag: "tag:stsci.edu:asdf/time/time-*"
+
+required: ["table_coords", "dropped_coords"]
+additionalProperties: False
+...

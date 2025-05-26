@@ -77,3 +77,21 @@ class SkyCoordTableCoordinateConverter(Converter):
             node["physical_types"] = skycoordinatetablecoordinate.physical_types
 
         return node
+
+
+class MultipleTableCoordinateConverter(Converter):
+    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/multipletablecoordinate-*"]
+    types = ["ndcube.extra_coords.table_coord.MultipleTableCoordinate"]
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from ndcube.extra_coords.table_coord import MultipleTableCoordinate
+
+        mtc = MultipleTableCoordinate(node["table_coords"])
+        mtc._dropped_coords = node["dropped_coords"]
+        return mtc
+
+    def to_yaml_tree(self, multipletablecoordinate, tag, ctx):
+        node = {}
+        node["table_coords"] = multipletablecoordinate._table_coords
+        node["dropped_coords"] = multipletablecoordinate._dropped_coords
+        return node

@@ -40,6 +40,7 @@ def get_extensions():
     from ndcube.asdf.converters.reorderedwcs_converter import ReorderedConverter
     from ndcube.asdf.converters.resampled_converter import ResampledConverter
     from ndcube.asdf.converters.tablecoord_converter import (
+        MultipleTableCoordinateConverter,
         QuantityTableCoordinateConverter,
         SkyCoordTableCoordinateConverter,
         TimeTableCoordConverter,
@@ -50,6 +51,7 @@ def get_extensions():
         TimeTableCoordConverter(),
         QuantityTableCoordinateConverter(),
         SkyCoordTableCoordinateConverter(),
+        MultipleTableCoordinateConverter(),
         GlobalCoordsConverter(),
         ResampledConverter(),
         ReorderedConverter(),
