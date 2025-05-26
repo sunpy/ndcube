@@ -1,6 +1,6 @@
+import gwcs
 import numpy as np
 import pytest
-from gwcs import __version__ as gwcs_version
 from packaging.version import Version
 
 import asdf
@@ -8,8 +8,11 @@ import asdf
 from ndcube.tests.helpers import assert_cubes_equal
 
 
-@pytest.mark.skipif(Version(gwcs_version) < Version("0.20"), reason="Requires gwcs>=0.20")
-def test_serialization(all_ndcubes, tmp_path):
+@pytest.mark.skipif(Version(gwcs.__version__) < Version("0.20"), reason="Requires gwcs>=0.20")
+def test_serialization(all_ndcubes, tmp_path, all_ndcubes_names):
+    if all_ndcubes_names in ("ndcube_4d_ln_lt_l_t", "ndcube_3d_ln_lt_l", "ndcube_3d_rotated"):
+        pytest.importorskip("asdf_astropy", "0.8.0")
+
     if not isinstance(all_ndcubes.data, np.ndarray):
         pytest.skip("Can't save non-numpy array to ASDF.")
 
@@ -22,8 +25,14 @@ def test_serialization(all_ndcubes, tmp_path):
         assert_cubes_equal(af["ndcube"], all_ndcubes)
 
 
-def test_serialization_sliced_ndcube(ndcube_gwcs_3d_ln_lt_l, tmp_path):
-    sndc = ndcube_gwcs_3d_ln_lt_l[np.s_[0, :, :]]
+@pytest.mark.parametrize("expected_cube",
+                         ["ndcube_gwcs_3d_ln_lt_l", "ndcube_3d_ln_lt_l"],
+                         indirect=True)
+def test_serialization_sliced_ndcube(expected_cube, tmp_path):
+    # This needs 0.8.0 of asdf_astropy to be able to save gwcs and to save array_shape on WCS
+    pytest.importorskip("asdf_astropy", "0.8.0")
+
+    sndc = expected_cube[np.s_[0, :, :]]
     file_path = tmp_path / "test.asdf"
     with asdf.AsdfFile() as af:
         af["ndcube_gwcs"] = sndc
