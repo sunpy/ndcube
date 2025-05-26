@@ -20,6 +20,11 @@ from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence, NDMeta
+from ndcube.extra_coords.table_coord import (
+    QuantityTableCoordinate,
+    SkyCoordTableCoordinate,
+    TimeTableCoordinate,
+)
 from ndcube.tests import helpers
 
 # Force MPL to use non-gui backends for testing.
@@ -1056,11 +1061,15 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc",
     "ndcube_gwcs_2d_ln_lt_mask",
 ])
-def all_ndcubes(request):
+def all_ndcubes_names(request):
+    return request.param
+
+@pytest.fixture
+def all_ndcubes(request, all_ndcubes_names):
     """
     All the above ndcube fixtures in order.
     """
-    return request.getfixturevalue(request.param)
+    return request.getfixturevalue(all_ndcubes_names)
 
 
 @pytest.fixture
@@ -1133,6 +1142,65 @@ def ndcubesequence_3c_l_ln_lt_cax1(wcs_3d_lt_ln_l):
     cube3.data[:] *= 3
 
     return NDCubeSequence([cube1, cube2, cube3], common_axis=common_axis)
+
+################################################################################
+# Table Coordinates
+################################################################################
+
+
+@pytest.fixture
+def lut_1d_distance():
+    lookup_table = u.Quantity(np.arange(10) * u.km)
+    return QuantityTableCoordinate(lookup_table, names='x')
+
+
+@pytest.fixture
+def lut_3d_distance_mesh():
+    lookup_table = (u.Quantity(np.arange(10) * u.km),
+                    u.Quantity(np.arange(10, 20) * u.km),
+                    u.Quantity(np.arange(20, 30) * u.km))
+
+    return QuantityTableCoordinate(*lookup_table, names=['x', 'y', 'z'])
+
+
+@pytest.fixture
+def lut_1d_skycoord_no_mesh():
+    sc = SkyCoord(range(10), range(10), unit=u.deg)
+    return SkyCoordTableCoordinate(sc, mesh=False, names=['lon', 'lat'])
+
+
+@pytest.fixture
+def lut_2d_skycoord_no_mesh():
+    data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
+    sc = SkyCoord(*data, unit=u.deg)
+    return SkyCoordTableCoordinate(sc, mesh=False)
+
+
+@pytest.fixture
+def lut_2d_skycoord_mesh():
+    sc = SkyCoord(range(10), range(10), unit=u.deg)
+    return SkyCoordTableCoordinate(sc, mesh=True)
+
+
+@pytest.fixture
+def lut_3d_skycoord_mesh():
+    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
+    return SkyCoordTableCoordinate(sc, mesh=True)
+
+
+@pytest.fixture
+def lut_1d_time():
+    data = Time(["2011-01-01T00:00:00",
+                 "2011-01-01T00:00:10",
+                 "2011-01-01T00:00:20",
+                 "2011-01-01T00:00:30"], format="isot")
+    return TimeTableCoordinate(data, names='time', physical_types='time')
+
+
+@pytest.fixture
+def lut_1d_wave():
+    # TODO: Make this into a SpectralCoord object
+    return QuantityTableCoordinate(range(10) * u.nm)
 
 
 def pytest_runtest_teardown(item):

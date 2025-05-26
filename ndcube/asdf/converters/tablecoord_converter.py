@@ -21,7 +21,8 @@ class TimeTableCoordConverter(Converter):
     def to_yaml_tree(self, timetablecoordinate, tag, ctx):
         node = {}
         node["table"] = timetablecoordinate.table
-        node["names"] = timetablecoordinate.names
+        if timetablecoordinate.names:
+            node["names"] = timetablecoordinate.names
         if timetablecoordinate.physical_types is not None:
             node["physical_types"] = timetablecoordinate.physical_types
         node["reference_time"] = timetablecoordinate.reference_time
@@ -48,7 +49,8 @@ class QuantityTableCoordinateConverter(Converter):
         node = {}
         node["unit"] = quantitytablecoordinate.unit
         node["table"] = quantitytablecoordinate.table
-        node["names"] = quantitytablecoordinate.names
+        if quantitytablecoordinate.names:
+            node["names"] = quantitytablecoordinate.names
         node["mesh"] = quantitytablecoordinate.mesh
         if quantitytablecoordinate.physical_types is not None:
             node["physical_types"] = quantitytablecoordinate.physical_types
@@ -71,9 +73,28 @@ class SkyCoordTableCoordinateConverter(Converter):
     def to_yaml_tree(self, skycoordinatetablecoordinate, tag, ctx):
         node = {}
         node["table"] = skycoordinatetablecoordinate.table
-        node["names"] = skycoordinatetablecoordinate.names
+        if skycoordinatetablecoordinate.names:
+            node["names"] = skycoordinatetablecoordinate.names
         node["mesh"] = skycoordinatetablecoordinate.mesh
         if skycoordinatetablecoordinate.physical_types is not None:
             node["physical_types"] = skycoordinatetablecoordinate.physical_types
 
+        return node
+
+
+class MultipleTableCoordinateConverter(Converter):
+    tags = ["tag:sunpy.org:ndcube/extra_coords/table_coord/multipletablecoordinate-*"]
+    types = ["ndcube.extra_coords.table_coord.MultipleTableCoordinate"]
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from ndcube.extra_coords.table_coord import MultipleTableCoordinate
+
+        mtc = MultipleTableCoordinate(*node["table_coords"])
+        mtc._dropped_coords = node["dropped_coords"]
+        return mtc
+
+    def to_yaml_tree(self, multipletablecoordinate, tag, ctx):
+        node = {}
+        node["table_coords"] = multipletablecoordinate._table_coords
+        node["dropped_coords"] = multipletablecoordinate._dropped_coords
         return node

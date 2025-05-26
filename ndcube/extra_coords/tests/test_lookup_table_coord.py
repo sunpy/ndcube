@@ -15,68 +15,6 @@ from ndcube.extra_coords.table_coord import (
 )
 
 
-@pytest.fixture
-def lut_1d_distance():
-    lookup_table = u.Quantity(np.arange(10) * u.km)
-    return QuantityTableCoordinate(lookup_table, names='x')
-
-
-@pytest.fixture
-def lut_3d_distance_mesh():
-    lookup_table = (u.Quantity(np.arange(10) * u.km),
-                    u.Quantity(np.arange(10, 20) * u.km),
-                    u.Quantity(np.arange(20, 30) * u.km))
-
-    return QuantityTableCoordinate(*lookup_table, names=['x', 'y', 'z'])
-
-
-@pytest.fixture
-def lut_2d_distance_no_mesh():
-    # Fixture is broken and raises: Currently all tables must be 1-D
-    lookup_table = np.arange(9).reshape(3, 3) * u.km, np.arange(9, 18).reshape(3, 3) * u.km
-    return QuantityTableCoordinate(*lookup_table, mesh=False)
-
-
-@pytest.fixture
-def lut_1d_skycoord_no_mesh():
-    sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=False, names=['lon', 'lat'])
-
-
-@pytest.fixture
-def lut_2d_skycoord_no_mesh():
-    data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
-    sc = SkyCoord(*data, unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=False)
-
-
-@pytest.fixture
-def lut_2d_skycoord_mesh():
-    sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=True)
-
-
-@pytest.fixture
-def lut_3d_skycoord_mesh():
-    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
-    return SkyCoordTableCoordinate(sc, mesh=True)
-
-
-@pytest.fixture
-def lut_1d_time():
-    data = Time(["2011-01-01T00:00:00",
-                 "2011-01-01T00:00:10",
-                 "2011-01-01T00:00:20",
-                 "2011-01-01T00:00:30"], format="isot")
-    return TimeTableCoordinate(data, names='time', physical_types='time')
-
-
-@pytest.fixture
-def lut_1d_wave():
-    # TODO: Make this into a SpectralCoord object
-    return QuantityTableCoordinate(range(10) * u.nm)
-
-
 def test_exceptions():
     with pytest.raises(TypeError) as ei:
         QuantityTableCoordinate(u.Quantity([1, 2, 3], u.nm), [1, 2, 3])

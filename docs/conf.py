@@ -95,7 +95,8 @@ intersphinx_mapping = {
     'sunpy': ('https://docs.sunpy.org/en/stable/', None),
     'mpl_animators': ('https://docs.sunpy.org/projects/mpl-animators/en/stable/', None),
     'gwcs': ('https://gwcs.readthedocs.io/en/stable/', None),
-    'reproject': ("https://reproject.readthedocs.io/en/stable/", None)
+    'reproject': ("https://reproject.readthedocs.io/en/stable/", None),
+    'asdf': ("https://www.asdf-format.org/projects/asdf/en/stable/", None),
     }
 
 # -- Options for HTML output -------------------------------------------------
