@@ -41,7 +41,7 @@ You can save any number of cubes in your ASDF by adding them to the dictionary.
   ...     f.write_to("somefile.asdf")  # doctest:  +SKIP
 
 
-What's Supported and What isn't
+What's Supported and What Isn't
 ===============================
 
 We aim to support all features of `ndcube` when saving and loading to ASDF.
