@@ -1,1 +1,1 @@
-Add support for searlising most `ndcube` objects to ASDF files.
+Add support for serialization most `ndcube` objects to ASDF files.
