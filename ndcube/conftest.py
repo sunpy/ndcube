@@ -1056,11 +1056,15 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc",
     "ndcube_gwcs_2d_ln_lt_mask",
 ])
-def all_ndcubes(request):
+def all_ndcubes_names(request):
+    return request.param
+
+@pytest.fixture
+def all_ndcubes(request, all_ndcubes_names):
     """
     All the above ndcube fixtures in order.
     """
-    return request.getfixturevalue(request.param)
+    return request.getfixturevalue(all_ndcubes_names)
 
 
 @pytest.fixture

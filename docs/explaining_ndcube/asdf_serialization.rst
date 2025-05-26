@@ -17,10 +17,10 @@ You can save any number of cubes in your ASDF by adding them to the dictionary.
   >>> import asdf
   >>> import astropy.wcs
   >>> from ndcube import NDCube
-  >>>
+
   >>> # Define data array.
   >>> data = np.random.rand(4, 4, 5)
-  >>>
+
   >>> # Define WCS transformations in an astropy WCS object.
   >>> wcs = astropy.wcs.WCS(naxis=3)
   >>> wcs.wcs.ctype = 'WAVE', 'HPLT-TAN', 'HPLN-TAN'
@@ -29,7 +29,7 @@ You can save any number of cubes in your ASDF by adding them to the dictionary.
   >>> wcs.wcs.crpix = 0, 2, 2
   >>> wcs.wcs.crval = 10, 0.5, 1
   >>> wcs.wcs.cname = 'wavelength', 'HPC lat', 'HPC lon'
-  >>>
+
   >>> # Now instantiate the NDCube
   >>> my_cube = NDCube(data, wcs=wcs)
 
@@ -37,8 +37,8 @@ You can save any number of cubes in your ASDF by adding them to the dictionary.
 .. code-block:: python
 
   >>> my_tree = {"mycube": my_cube}
-  >>> with asdf.AsdfFile(tree=my_tree) as f:
-  >>>     f.write_to("somefile.asdf")
+  >>> with asdf.AsdfFile(tree=my_tree) as f:  # doctest:  +SKIP
+  ...     f.write_to("somefile.asdf")  # doctest:  +SKIP
 
 
 What's Supported and What isn't
