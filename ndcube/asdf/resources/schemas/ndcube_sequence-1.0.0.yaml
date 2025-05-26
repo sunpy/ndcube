@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "asdf://sunpy.org/ndcube/schemas/ndcube_sequence-0.1.0"
+id: "asdf://sunpy.org/ndcube/schemas/ndcube_sequence-1.0.0"
 
 title:
   Represents the ndcube.ndcube_sequence.NDCubeSequence object
@@ -14,7 +14,7 @@ properties:
   data:
     type: array
     items:
-      tag: "tag:sunpy.org:ndcube/ndcube/ndcube-0.*"
+      tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
   meta:
     type: object
   common_axis:

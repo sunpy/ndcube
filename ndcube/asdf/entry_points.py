@@ -59,7 +59,7 @@ def get_extensions():
         NDCubeSequenceConverter(),
         NDCollectionConverter(),
         ]
-    _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-0.1.0"
+    _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-1.0.0"
 
     return [
         ManifestExtension.from_uri(_manifest_uri, converters=ndcube_converters)

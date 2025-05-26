@@ -2,7 +2,7 @@ from asdf.extension import Converter
 
 
 class CompoundConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/compoundwcs-0.1.0"]
+    tags = ["tag:sunpy.org:ndcube/compoundwcs-*"]
     types = ["ndcube.wcs.wrappers.compound_wcs.CompoundLowLevelWCS"]
 
     def from_yaml_tree(self, node, tag, ctx):
