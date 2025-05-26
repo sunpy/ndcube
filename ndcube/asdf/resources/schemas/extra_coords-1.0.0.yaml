@@ -12,7 +12,9 @@ description:
 type: object
 properties:
   wcs:
-    tag: "tag:stsci.edu:gwcs/wcs-1.*"
+    anyOf:
+      - tag: "tag:stsci.edu:gwcs/wcs-*"
+      - tag: "tag:astropy.org:astropy/wcs/wcs-*"
   mapping:
     type: array
   lookup_tables:
