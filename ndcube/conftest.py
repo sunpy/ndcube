@@ -42,8 +42,7 @@ console_logger.setLevel('INFO')
 
 def time_lut(shape):
     base_time = Time('2000-01-01', format='fits', scale='utc')
-    timestamps = Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
-    return timestamps
+    return Time([base_time + TimeDelta(60 * i, format='sec') for i in range(shape[0])])
 
 def skycoord_2d_lut(shape):
     total_len = np.prod(shape)

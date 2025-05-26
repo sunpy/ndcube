@@ -8,10 +8,11 @@ class ReorderedConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.wcs.wrappers import ReorderedLowLevelWCS
 
-        reorderedwcs = ReorderedLowLevelWCS(wcs=node["wcs"],
-                                            pixel_order=node.get("pixel_order"),
-                                            world_order=node.get("world_order"))
-        return reorderedwcs
+        return ReorderedLowLevelWCS(
+            wcs=node["wcs"],
+            pixel_order=node.get("pixel_order"),
+            world_order=node.get("world_order"),
+        )
 
     def to_yaml_tree(self, reorderedwcs, tag, ctx):
         node = {}

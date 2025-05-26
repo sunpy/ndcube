@@ -11,10 +11,12 @@ class TimeTableCoordConverter(Converter):
         names = node.get("names")
         physical_types = node.get("physical_types")
         reference_time = node.get("reference_time")
-        timetablecoordinate = TimeTableCoordinate(
-            node["table"], names=names, physical_types=physical_types, reference_time=reference_time)
-
-        return timetablecoordinate
+        return TimeTableCoordinate(
+            node["table"],
+            names=names,
+            physical_types=physical_types,
+            reference_time=reference_time,
+        )
 
     def to_yaml_tree(self, timetablecoordinate, tag, ctx):
         node = {}
@@ -37,8 +39,7 @@ class QuantityTableCoordinateConverter(Converter):
         names = node.get("names")
         mesh = node.get("mesh")
         physical_types = node.get("physical_types")
-        quantitytablecoordinate = QuantityTableCoordinate(*node["table"],
-                                                          names=names, physical_types=physical_types)
+        quantitytablecoordinate = QuantityTableCoordinate(*node["table"], names=names, physical_types=physical_types)
         quantitytablecoordinate.unit = node["unit"]
         quantitytablecoordinate.mesh = mesh
         return quantitytablecoordinate
@@ -65,9 +66,7 @@ class SkyCoordTableCoordinateConverter(Converter):
         names = node.get("names")
         mesh = node.get("mesh")
         physical_types = node.get("physical_types")
-        skycoordinatetablecoordinate = SkyCoordTableCoordinate(node["table"], mesh=mesh,
-                                                               names=names, physical_types=physical_types)
-        return skycoordinatetablecoordinate
+        return SkyCoordTableCoordinate(node["table"], mesh=mesh, names=names, physical_types=physical_types)
 
     def to_yaml_tree(self, skycoordinatetablecoordinate, tag, ctx):
         node = {}

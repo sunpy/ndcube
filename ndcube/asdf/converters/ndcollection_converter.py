@@ -11,10 +11,7 @@ class NDCollectionConverter(Converter):
         key_value_pairs = list(zip(node["keys"], node["value"]))
         aligned_axes = list(node.get("aligned_axes").values())
         aligned_axes = tuple(tuple(lst) for lst in aligned_axes)
-        ndcollection = NDCollection(key_value_pairs,
-                                    meta=node.get("meta"),
-                                    aligned_axes = aligned_axes)
-        return ndcollection
+        return NDCollection(key_value_pairs, meta=node.get("meta"), aligned_axes=aligned_axes)
 
     def to_yaml_tree(self, ndcollection, tag, ctx):
         node = {}
