@@ -31,8 +31,7 @@ class NDCubeConverter(Converter):
         -----
         This methods serializes the primary components of the NDCube object,
         including the `data`, `wcs`, `extra_coords`, and `global_coords` attributes.
-        Issues a warning if unsupported attributes (uncertainty, mask, meta, unit) are present,
-        which are not currently serialized to ASDF.
+        Issues a warning if unsupported attributes are present.
 
         Warnings
         --------

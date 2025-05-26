@@ -562,6 +562,7 @@ def extra_coords_sharing_axis():
 
 ################################################################################
 # NDCube Fixtures
+# NOTE: If you add more fixtures please add to the all_ndcubes fixture
 ################################################################################
 
 @pytest.fixture
@@ -587,6 +588,7 @@ def ndcube_gwcs_3d_ln_lt_l(gwcs_3d_lt_ln_l):
     data_cube = data_nd(shape)
     return NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
 
+
 @pytest.fixture
 def ndcube_gwcs_3d_rotated(gwcs_3d_lt_ln_l, simple_extra_coords_3d):
     data_rotated = np.array([[[1, 2, 3, 4, 6], [2, 4, 5, 3, 1], [0, -1, 2, 4, 2], [3, 5, 1, 2, 0]],
@@ -597,6 +599,7 @@ def ndcube_gwcs_3d_rotated(gwcs_3d_lt_ln_l, simple_extra_coords_3d):
     cube._extra_coords = simple_extra_coords_3d
     return cube
 
+
 @pytest.fixture
 def ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim(gwcs_3d_lt_ln_l, time_and_simple_extra_coords_2d):
     shape = (2, 3, 4)
@@ -605,6 +608,7 @@ def ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim(gwcs_3d_lt_ln_l, time_and_simple_extra
     cube =  NDCube(data_cube, wcs=gwcs_3d_lt_ln_l)
     cube._extra_coords = time_and_simple_extra_coords_2d[0]
     return cube
+
 
 @pytest.fixture
 def ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc(gwcs_3d_lt_ln_l):
@@ -618,6 +622,7 @@ def ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc(gwcs_3d_lt_ln_l):
     cube.extra_coords.add("exposure_lut", 1, range(shape[1]) * u.s)
     return cube
 
+
 @pytest.fixture
 def ndcube_gwcs_2d_ln_lt_mask(gwcs_2d_lt_ln):
     shape = (10, 12)
@@ -628,6 +633,7 @@ def ndcube_gwcs_2d_ln_lt_mask(gwcs_2d_lt_ln):
     mask[3, 3] = True
     mask[4:6, :4] = True
     return NDCube(data_cube, wcs=gwcs_2d_lt_ln, mask=mask)
+
 
 @pytest.fixture
 def ndcube_4d_ln_l_t_lt(wcs_4d_lt_t_l_ln):
@@ -1039,20 +1045,6 @@ def ndcube_1d_l(wcs_1d_l):
 
 
 @pytest.fixture(params=[
-    "ndcube_4d_ln_lt_l_t",
-    "ndcube_4d_uncertainty",
-    "ndcube_4d_mask",
-    "ndcube_4d_extra_coords",
-    "ndcube_4d_unit_uncertainty",
-    "ndcube_3d_ln_lt_l",
-    "ndcube_3d_rotated",
-    "ndcube_2d_ln_lt",
-    "ndcube_2d_ln_lt_units",
-    "ndcube_2d_dask",
-    "ndcube_1d_l",
-    "ndcube_2d_ln_lt_no_unit_no_unc",
-    "ndcube_2d_uncertainty_no_unit",
-    "ndcube_2d_unit_unc",
     "ndcube_gwcs_4d_ln_lt_l_t",
     "ndcube_gwcs_4d_ln_lt_l_t_unit",
     "ndcube_gwcs_3d_ln_lt_l",
@@ -1060,6 +1052,42 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim",
     "ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc",
     "ndcube_gwcs_2d_ln_lt_mask",
+    "ndcube_4d_ln_l_t_lt",
+    "ndcube_4d_ln_lt_l_t",
+    "ndcube_4d_axis_aware_meta",
+    "ndcube_4d_uncertainty",
+    "ndcube_4d_mask",
+    "ndcube_4d_extra_coords",
+    "ndcube_4d_unit_uncertainty",
+    "ndcube_3d_ln_lt_l",
+    "ndcube_3d_ln_lt_l_ec_all_axes",
+    "ndcube_3d_ln_lt_l_ec_sharing_axis",
+    "ndcube_3d_ln_lt_l_ec_time",
+    "ndcube_3d_wave_lt_ln_ec_time",
+    "ndcube_3d_rotated",
+    "ndcube_3d_coupled",
+    "ndcube_3d_coupled_time",
+    "ndcube_3d_l_ln_lt_ectime",
+    "ndcube_2d_ln_lt",
+    "ndcube_2d_ln_lt_uncert",
+    "ndcube_2d_ln_lt_mask_uncert",
+    "ndcube_2d_ln_lt_mask_uncert_unit_mask_false",
+    "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true",
+    "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_false",
+    "ndcube_2d_ln_lt_mask_uncert_unit_one_maskele_true_expected_unmask_true",
+    "ndcube_2d_ln_lt_mask_uncert_unit_mask_true",
+    "ndcube_2d_ln_lt_mask_uncert_unit_mask_true_expected_unmask_true",
+    "ndcube_2d_ln_lt_mask_uncert_unit_mask_true_expected_unmask_false",
+    "ndcube_2d_ln_lt_uncert_ec",
+    "ndcube_2d_ln_lt_units",
+    "ndcube_2d_ln_lt_no_unit_no_unc",
+    "ndcube_2d_unit_unc",
+    "ndcube_2d_uncertainty_no_unit",
+    "ndcube_2d_ln_lt_mask",
+    "ndcube_2d_ln_lt_mask2",
+    "ndcube_2d_ln_lt_nomask",
+    "ndcube_2d_dask",
+    "ndcube_1d_l",
 ])
 def all_ndcubes_names(request):
     return request.param
