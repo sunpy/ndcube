@@ -37,6 +37,7 @@ def get_extensions():
     from ndcube.asdf.converters.ndcollection_converter import NDCollectionConverter
     from ndcube.asdf.converters.ndcube_converter import NDCubeConverter
     from ndcube.asdf.converters.ndcubesequence_converter import NDCubeSequenceConverter
+    from ndcube.asdf.converters.ndmeta_converter import NDMetaConverter
     from ndcube.asdf.converters.reorderedwcs_converter import ReorderedConverter
     from ndcube.asdf.converters.resampled_converter import ResampledConverter
     from ndcube.asdf.converters.tablecoord_converter import (
@@ -58,6 +59,7 @@ def get_extensions():
         CompoundConverter(),
         NDCubeSequenceConverter(),
         NDCollectionConverter(),
+        NDMetaConverter(),
         ]
     _manifest_uri = "asdf://sunpy.org/ndcube/manifests/ndcube-1.0.0"
 

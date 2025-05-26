@@ -55,6 +55,7 @@ The only component of the `ndcube.NDCube` class which is never saved is the ``.p
 * `~ndcube.NDCube`
 * `~ndcube.NDCubeSequence`
 * `~ndcube.NDCollection`
+* `~ndcube.NDMeta`
 * `~ndcube.GlobalCoords`
 * `~ndcube.ExtraCoords`
 * `~ndcube.extra_coords.TimeTableCoordinate`

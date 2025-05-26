@@ -107,10 +107,12 @@ def assert_metas_equal(test_input, expected_output):
         else:
             assert np.allclose(test_input.data_shape, expected_output.data_shape)
 
-        for test_value, expected_value in zip(test_input.values(), expected_output.values()):
+        for key in test_input.keys():
+            test_value = test_input[key]
+            expected_value = expected_output[key]
             try:
                 assert test_value == expected_value
-            except ValueError as err:  # noqa: PERF203
+            except ValueError as err:
                 if multi_element_msg in err.args[0]:
                     assert np.allclose(test_value, expected_value)
         for key in test_input.axes.keys():

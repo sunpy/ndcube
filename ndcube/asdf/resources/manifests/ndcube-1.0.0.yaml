@@ -41,3 +41,6 @@ tags:
 
   - tag_uri:  "tag:sunpy.org:ndcube/ndcube/ndcollection-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/ndcollection-1.0.0"
+
+  - tag_uri:  "tag:sunpy.org:ndcube/meta/ndmeta-1.0.0"
+    schema_uri: "asdf://sunpy.org/ndcube/schemas/ndmeta-1.0.0"
