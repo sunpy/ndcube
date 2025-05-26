@@ -60,6 +60,7 @@ The only component of the `ndcube.NDCube` class which is never saved is the ``.p
 * `~ndcube.extra_coords.TimeTableCoordinate`
 * `~ndcube.extra_coords.QuantityTableCoordinate`
 * `~ndcube.extra_coords.SkyCoordTableCoordinate`
+* `~ndcube.extra_coords.MultipleTableCoordinate`
 * `~ndcube.wcs.wrappers.ReorderedLowLevelWCS`
 * `~ndcube.wcs.wrappers.ResampledLowLevelWCS`
 * `~ndcube.wcs.wrappers.CompoundLowLevelWCS`

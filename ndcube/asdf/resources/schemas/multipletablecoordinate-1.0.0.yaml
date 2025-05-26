@@ -22,9 +22,9 @@ properties:
     type: array
     items:
       anyOf:
-        - tag: "tag:stsci.edu:asdf/unit/quantity-*"
-        - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
-        - tag: "tag:stsci.edu:asdf/time/time-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-*"
 
 required: ["table_coords", "dropped_coords"]
 additionalProperties: False
