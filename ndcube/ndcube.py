@@ -1,4 +1,5 @@
 import abc
+import copy
 import inspect
 import numbers
 import textwrap
@@ -11,6 +12,7 @@ import numpy as np
 
 import astropy.nddata
 import astropy.units as u
+from astropy.nddata import NDData
 from astropy.units import UnitsError
 from astropy.wcs.utils import _split_matrix
 
@@ -407,11 +409,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     @property
     def data(self):
         """
-        `~numpy.ndarray`-like : The stored dataset.
+        `~numpy.ndarray` - like
+            The stored dataset.
 
         Notes
         -----
-        It is possible to set the ``.data`` attribute on a `NDCube` with an
+        It is possible to set the ``.data`` attribute on a `~ndcube.NDCube` with an
         array-like object of the same shape. However, this is really only
         intended for replacing the data with a different object representing
         the same physical data as no other properties of the cube will be
@@ -822,9 +825,6 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 raise ValueError('For adaptive and exact algorithms, '
                                  'target_wcs must contain celestial axes only.')
 
-        if not utils.wcs.compare_wcs_physical_types(self.wcs, target_wcs):
-            raise ValueError('Given target_wcs is not compatible with this NDCube, the physical types do not match.')
-
         # TODO: Upstream this check into reproject
         # If shape_out is not specified explicitly,
         # try to extract it from the low level WCS
@@ -964,15 +964,47 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def __add__(self, value):
-        if hasattr(value, 'unit'):
+    def add(self, value, handle_mask=np.logical_and):
+        """
+        Users are allowed to choose whether they want handle_mask to be AND / OR .
+        """
+        kwargs = {}
+
+        if isinstance(value, NDData) and value.wcs is None:
+            if self.unit is not None and value.unit is not None:
+                value_data = (value.data * value.unit).to_value(self.unit)
+            elif self.unit is None and value.unit is None:
+                value_data = value.data
+            else:
+                raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
+
+            # addition
+            kwargs["data"] = self.data + value_data # ignoring the mask here
+            result_data = kwargs["data"]
+            kwargs["uncertainty"] = self._combine_uncertainty(value, result_data)
+
+            if self.mask is None and value.mask is None:
+                # combine the uncertainty, it can be propagated without any issue.
+                pass
+
+            elif self.mask is None:
+                kwargs["mask"] = value.mask # mask needs to be set.
+
+            elif value.mask is None:
+                kwargs["mask"] = self.mask
+
+            else:
+                kwargs["mask"] = handle_mask(self.mask, value.mask)
+
+
+        elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
                 # perform arithmetic between a unitful quantity.
                 # This forces a conversion to a dimensionless quantity
                 # so that an error is thrown if value is not dimensionless
                 cube_unit = u.Unit('') if self.unit is None else self.unit
-                new_data = self.data + value.to_value(cube_unit)
+                kwargs["data"] = self.data + value.to_value(cube_unit)
             else:
                 # NOTE: This explicitly excludes other NDCube objects and NDData objects
                 # which could carry a different WCS than the NDCube
@@ -980,8 +1012,40 @@ class NDCube(NDCubeBase):
         elif self.unit not in (None, u.Unit("")):
             raise TypeError("Cannot add a unitless object to an NDCube with a unit.")
         else:
-            new_data = self.data + value
-        return self._new_instance(data=new_data)
+            kwargs["data"] = self.data + value
+
+        # return the new NDCube instance
+        return self._new_instance(**kwargs)
+
+    def __add__(self, value):
+        # when value has a mask, raise error and point user to the add method. TODO
+        #
+        # check whether there is a mask.
+        # Neither self nor value has a mask
+
+        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
+        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
+
+        if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
+            # let the users call the add method, since the handle_mask keyword cannot be given by users here.
+            raise TypeError('Please use the add method.')
+
+        return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
+
+    def _combine_uncertainty(self, value, result_data):
+        # combine the uncertainty;
+        if self.uncertainty is not None and value.uncertainty is not None:
+            if self.unit is not None:
+                result_data *= self.unit
+            return self.uncertainty.propagate(
+                np.add, value, result_data=result_data, correlation=0
+            )
+
+        if self.uncertainty is not None:
+            return self.uncertainty
+        if value.uncertainty is not None:
+            return value.uncertainty
+        return None
 
     def __radd__(self, value):
         return self.__add__(value)
@@ -1328,6 +1392,69 @@ class NDCube(NDCubeBase):
             raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. "
                              "Use `axis=` keyword to specify a subset of axes to squeeze.")
         return self[tuple(item)]
+
+
+    def fill_masked(self, fill_value, uncertainty_fill_value=None, unmask=False, fill_in_place=False):
+        """
+        Replaces masked data values with input value.
+
+        Returns a new instance or alters values in place.
+
+        Parameters
+        ----------
+        fill_value: `numbers.Number` or scalar `astropy.units.Quantity`
+            The value to replace masked data with.
+        unmask: `bool`, optional
+            If True, the newly filled masked values are unmasked. If False, they remain masked
+            Default=False
+        uncertainty_fill_value: `numbers.Number` or scalar `astropy.units.Quantity`, optional
+            The value to replace masked uncertainties with.
+        fill_in_place: `bool`, optional
+            If `True`, the masked values are filled in place.  If `False`, a new instance is returned
+            with masked values filled.  Default=False.
+        """
+        # variable creations for later use.
+        # If fill_in_place is true, do: assign data and uncertainty to variables.
+        if fill_in_place:
+            new_data = self.data
+            new_uncertainty = self.uncertainty
+            # Unmasking in-place should be handled later.
+
+        # If fill_in_place is false, do: create new storage place for data and uncertainty and mask.
+        # TODO: is the logic repetitive? this else is the same with the if not fill_in_place below? No because the order matters.
+        else:
+            new_data = copy.deepcopy(self.data)
+            new_uncertainty = copy.deepcopy(self.uncertainty)
+            new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
+
+        masked = (
+            False if self.mask is None or self.mask is False
+            else self.mask is True if isinstance(self.mask, bool)
+            else self.mask.any()
+        )
+        if masked:
+            idx_mask = slice(None) if self.mask is True else self.mask # Ensure indexing mask can index the data array.
+            if hasattr(fill_value, "unit"):
+                fill_value = fill_value.to_value(self.unit)
+            new_data[idx_mask] = fill_value   # python will error based on whether data array can accept the passed value.
+
+            if uncertainty_fill_value is not None:
+                if not self.uncertainty:  # or new_uncertainty
+                    raise TypeError("Cannot fill uncertainty as uncertainty is None.")
+                if hasattr(uncertainty_fill_value, "unit"):
+                    uncertainty_fill_value = uncertainty_fill_value.to_value(self.unit)
+                new_uncertainty.array[idx_mask] = uncertainty_fill_value
+
+        if not fill_in_place:
+            # Create kwargs dictionary and return a new instance.
+            kwargs = {}
+            kwargs['data'] = new_data
+            kwargs['uncertainty'] = new_uncertainty
+            kwargs['mask'] = new_mask
+            return self._new_instance(**kwargs)
+        if unmask:
+            self.mask = False
+        return None
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):

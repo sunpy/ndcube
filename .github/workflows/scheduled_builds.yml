@@ -16,6 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: gh workflow run ci.yml --repo sunpy/ndcube --ref main
-      - run: gh workflow run ci.yml --repo sunpy/ndcube --ref 2.1
+      - run: gh workflow run ci.yml --repo sunpy/ndcube --ref 2.3
     env:
       GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}

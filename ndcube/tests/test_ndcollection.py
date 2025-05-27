@@ -43,6 +43,13 @@ unaligned_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2
 seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
 
 
+def test_construct_with_dict():
+    input_dict = dict(cube_collection)
+    new_collection = NDCollection(input_dict)
+
+    assert cube_collection.items() == new_collection.items()
+
+
 @pytest.mark.parametrize(('item', 'collection', 'expected'), [
     (0, cube_collection,
         NDCollection([("cube0", cube0[:, 0]), ("cube1", cube1[:, :, 0]), ("cube2", cube2[:, 0])],

@@ -17,7 +17,7 @@ class NDCollection(dict):
 
     Parameters
     ----------
-    key_data_pairs: sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
+    key_data_pairs: `dict` or sequence of `tuple` of (`str`, `~ndcube.NDCube` or `~ndcube.NDCubeSequence`)
         The names and data cubes/sequences to held in the collection.
 
     aligned_axes: `tuple` of `int`, `tuple` of `tuple` of `int`, 'all', or None, optional
@@ -50,6 +50,8 @@ class NDCollection(dict):
     """
 
     def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
+        if isinstance(key_data_pairs, collections.abc.Mapping):
+            key_data_pairs = tuple(key_data_pairs.items())
         for key, _ in key_data_pairs:
             if isinstance(key, numbers.Number):
                 warn_deprecated(
