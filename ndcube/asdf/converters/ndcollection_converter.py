@@ -8,15 +8,13 @@ class NDCollectionConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.ndcollection import NDCollection
 
-        key_value_pairs = list(zip(node["keys"], node["value"]))
         aligned_axes = list(node.get("aligned_axes").values())
         aligned_axes = tuple(tuple(lst) for lst in aligned_axes)
-        return NDCollection(key_value_pairs, meta=node.get("meta"), aligned_axes=aligned_axes)
+        return NDCollection(node["items"], meta=node.get("meta"), aligned_axes=aligned_axes)
 
     def to_yaml_tree(self, ndcollection, tag, ctx):
         node = {}
-        node["keys"] = tuple(ndcollection.keys())
-        node["value"] = tuple(ndcollection.values())
+        node["items"] = dict(ndcollection)
         if ndcollection.meta is not None:
             node["meta"] = ndcollection.meta
         if ndcollection._aligned_axes is not None:

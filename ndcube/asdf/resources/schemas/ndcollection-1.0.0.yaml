@@ -11,20 +11,18 @@ description:
 
 type: object
 properties:
-  keys:
-    type: array
-  value:
-    type: array
-    items:
-        - type: object
-          oneOf:
-            - tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
-            - tag: "tag:sunpy.org:ndcube/ndcube/ndcube_sequence-1.*"
+  items:
+    type: object
+    patternProperties:
+      ".*":
+        oneOf:
+          - tag: "tag:sunpy.org:ndcube/ndcube/ndcube-*"
+          - tag: "tag:sunpy.org:ndcube/ndcube/ndcube_sequence-*"
   aligned_axes:
     anyOf:
     - type: object
     - type: string
 
-required: [keys, value]
+required: [items]
 additionalProperties: true
 ...
