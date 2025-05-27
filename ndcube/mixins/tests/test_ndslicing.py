@@ -1,6 +1,5 @@
-import pytest
-
 import numpy as np
+import pytest
 
 
 @pytest.mark.parametrize(("ndc","item","expected_shape"),
