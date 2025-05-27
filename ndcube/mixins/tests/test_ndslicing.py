@@ -16,7 +16,7 @@ def sample_ndcube(ndcube_4d_ln_l_t_lt):
                              ("ndcube_4d_ln_l_t_lt", np.s_[1, 1:, ..., 1:], (9, 12, 7)),
                          ],
                          indirect=("ndc",))
-def test_ellipsis_usage(ndc):
+def test_ellipsis_usage(ndc, item, expected_shape):
     sliced_cube = ndc[item]
     assert sliced_cube.data.shape == expected_shape
 
