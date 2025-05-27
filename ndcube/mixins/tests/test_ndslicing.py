@@ -2,9 +2,6 @@ import pytest
 
 import numpy as np
 
-@pytest.fixture
-def sample_ndcube(ndcube_4d_ln_l_t_lt):
-    return ndcube_4d_ln_l_t_lt
 
 @pytest.mark.parametrize(("ndc","item","expected_shape"),
                          [
