@@ -1,27 +1,16 @@
-import re
-import copy
 from inspect import signature
-from textwrap import dedent
 
 import dask.array
 import numpy as np
 import pytest
-from specutils import Spectrum1D
 
 import astropy.units as u
 import astropy.wcs
-from astropy.coordinates import SkyCoord, SpectralCoord
-from astropy.io import fits
-from astropy.nddata import NDData, StdDevUncertainty, UnknownUncertainty
-from astropy.tests.helper import assert_quantity_allclose
-from astropy.time import Time
-from astropy.units import UnitsError
-from astropy.wcs import WCS
-from astropy.wcs.utils import wcs_to_celestial_frame
+from astropy.nddata import NDData, StdDevUncertainty
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import ExtraCoords, NDCube, NDMeta
+from ndcube import NDCube
 from ndcube.tests import helpers
 from ndcube.tests.helpers import assert_cubes_equal
 from ndcube.utils.exceptions import NDCubeUserWarning

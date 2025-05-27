@@ -8,10 +8,11 @@ from specutils import Spectrum1D
 
 import astropy.units as u
 import astropy.wcs
-from astropy.coordinates import SpectralCoord 
+from astropy.coordinates import SpectralCoord
 from astropy.nddata import UnknownUncertainty
 from astropy.time import Time
-from ndcube import ExtraCoords#, NDCube, NDMeta
+
+from ndcube import ExtraCoords
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
 
