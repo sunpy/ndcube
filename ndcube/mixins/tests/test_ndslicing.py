@@ -1,5 +1,7 @@
 import pytest
 
+import numpy as np
+
 @pytest.fixture
 def sample_ndcube(ndcube_4d_ln_l_t_lt):
     return ndcube_4d_ln_l_t_lt
