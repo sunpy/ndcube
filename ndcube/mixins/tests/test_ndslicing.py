@@ -4,7 +4,7 @@ import pytest
 def sample_ndcube(ndcube_4d_ln_l_t_lt):
     return ndcube_4d_ln_l_t_lt
 
-@pytest.mark.parametrize(("ndc","item","expected_shape")
+@pytest.mark.parametrize(("ndc","item","expected_shape"),
                          [
                              ("ndcube_4d_ln_l_t_lt", np.s_[..., 1], (5, 10, 12)),
                              ("ndcube_4d_ln_l_t_lt", np.s_[..., 1:, 1], (5, 10, 11)),
