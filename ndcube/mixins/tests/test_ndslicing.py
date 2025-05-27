@@ -20,5 +20,6 @@ def test_ellipsis_usage(ndc, item, expected_shape):
     sliced_cube = ndc[item]
     assert sliced_cube.data.shape == expected_shape
 
+def test_ellipsis_error(ndcube_4d_ln_l_t_lt):
     with pytest.raises(IndexError, match="An index can only have a single ellipsis"):
-        sample_ndcube[..., ..., 1]
+        ndcube_4d_ln_l_t_lt[..., ..., 1]
