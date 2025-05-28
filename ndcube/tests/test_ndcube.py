@@ -1467,10 +1467,10 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
                              "ndcube_2d_ln_lt_res_nddata_mask_unc_unit"# ndc has no mask no uncertainty no unit, but nddata has all.
                             ),
                             ("ndcube_2d_ln_lt_unit_unc_mask", NDData(np.ones((2, 3)),
-                                                                                wcs=None,
-                                                                                uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
-                                                                                mask=np.ones((2, 3), dtype=bool),
-                                                                                unit=u.ct),
+                                                                     wcs=None,
+                                                                     uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                                                     mask=np.ones((2, 3), dtype=bool),
+                                                                     unit=u.ct),
                              "ndcube_2d_ln_lt_res_both_mask_unc_unit" # both of them have uncertainty and mask and unit.
                             )
                         ],
