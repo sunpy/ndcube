@@ -964,39 +964,51 @@ class NDCube(NDCubeBase):
     def __neg__(self):
         return self._new_instance(data=-self.data)
 
-    def add(self, value, handle_mask=np.logical_and):
-        """
-        Users are allowed to choose whether they want handle_mask to be AND / OR .
-        """
-        kwargs = {}
+    def _arithmetic_handle_mask(self, self_mask, value_mask):
+        if self_mask is None and value_mask is None:
+            return None
+        if self_mask is None:
+            return value_mask
+        if value_mask is None:
+            return self_mask
+        return np.logical_or(self_mask, value_mask)
 
-        if isinstance(value, NDData) and value.wcs is None:
+    def _arithmetic_operate_with_nddata(self, operation, value):
+        handle_mask = self._arithmetic_handle_mask
+        if value.wcs is not None:
+            return TypeError("Cannot add coordinate-aware NDCubes together.")
+
+        kwargs = {}
+        if operation == "add":
+            # Handle units
             if self.unit is not None and value.unit is not None:
                 value_data = (value.data * value.unit).to_value(self.unit)
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
-                raise TypeError("Adding objects requires both have a unit or neither has a unit.") # change the test as well.
+                raise TypeError("Adding objects requires that both have a unit or neither has a unit.") # change the test as well.
+            # Handle data and uncertainty
+            kwargs["data"] = self.data + value_data
+            uncert_op = np.add
+        elif operation == "multiply":
+            # Handle units
+            if self.unit is not None or value.unit is not None:
+                cube_unit = u.Unit('') if self.unit is None else self.unit
+                value_unit = u.Unit('') if value.unit is None else value.unit
+                kwargs["unit"] = cube_unit * value_unit
+            kwargs["data"] = self.data * value.data
+            uncert_op = np.multiply
+        else:
+            raise ValueError("Value of operation argument is not recognized.")
+        kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        kwargs["mask"] = handle_mask(self.mask, value.mask)
 
-            # addition
-            kwargs["data"] = self.data + value_data # ignoring the mask here
-            result_data = kwargs["data"]
-            kwargs["uncertainty"] = self._combine_uncertainty(value, result_data)
+        return kwargs  # return the new NDCube instance
 
-            if self.mask is None and value.mask is None:
-                # combine the uncertainty, it can be propagated without any issue.
-                pass
-
-            elif self.mask is None:
-                kwargs["mask"] = value.mask # mask needs to be set.
-
-            elif value.mask is None:
-                kwargs["mask"] = self.mask
-
-            else:
-                kwargs["mask"] = handle_mask(self.mask, value.mask)
-
-
+    def __add__(self, value):
+        kwargs = {}
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("add", value)
         elif hasattr(value, 'unit'):
             if isinstance(value, u.Quantity):
                 # NOTE: if the cube does not have units, we cannot
@@ -1017,28 +1029,13 @@ class NDCube(NDCubeBase):
         # return the new NDCube instance
         return self._new_instance(**kwargs)
 
-    def __add__(self, value):
-        # when value has a mask, raise error and point user to the add method. TODO
-        #
-        # check whether there is a mask.
-        # Neither self nor value has a mask
-
-        self_masked = not(self.mask is None or self.mask is False or not self.mask.any())
-        value_masked = not(value.mask is None or value.mask is False or not value.mask.any()) if hasattr(value, "mask") else False
-
-        if  (value_masked or (self_masked and hasattr(value,'uncertainty') and value.uncertainty is not None)): # value has a mask,
-            # let the users call the add method, since the handle_mask keyword cannot be given by users here.
-            raise TypeError('Please use the add method.')
-
-        return self.add(value) # without any mask, the add method can be called here and will work properly without needing arguments to be passed.
-
-    def _combine_uncertainty(self, value, result_data):
+    def _combine_uncertainty(self, operation, value, result_data):
         # combine the uncertainty;
         if self.uncertainty is not None and value.uncertainty is not None:
             if self.unit is not None:
                 result_data *= self.unit
             return self.uncertainty.propagate(
-                np.add, value, result_data=result_data, correlation=0
+                operation, value, result_data=result_data, correlation=0
             )
 
         if self.uncertainty is not None:
@@ -1057,23 +1054,27 @@ class NDCube(NDCubeBase):
         return self.__neg__().__add__(value)
 
     def __mul__(self, value):
-        if hasattr(value, 'unit'):
-            if isinstance(value, u.Quantity):
-                # NOTE: if the cube does not have units, set the unit
-                # to dimensionless such that we can perform arithmetic
-                # between the two.
-                cube_unit = u.Unit('') if self.unit is None else self.unit
-                value_unit = value.unit
-                value = value.to_value()
-                new_unit = cube_unit * value_unit
-            else:
-                return NotImplemented
+        kwargs = {}
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("multiply", value)
         else:
-            new_unit = self.unit
-        new_data = self.data * value
-        new_uncertainty = (type(self.uncertainty)(self.uncertainty.array * value)
-                           if self.uncertainty is not None else None)
-        return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
+            if hasattr(value, 'unit'):
+                if isinstance(value, u.Quantity):
+                    # NOTE: if the cube does not have units, set the unit
+                    # to dimensionless such that we can perform arithmetic
+                    # between the two.
+                    cube_unit = u.Unit('') if self.unit is None else self.unit
+                    value_unit = value.unit
+                    value = value.to_value()
+                    kwargs["unit"] = cube_unit * value_unit
+                else:
+                    return NotImplemented
+            else:
+                kwargs["unit"] = self.unit
+            kwargs["data"] = self.data * value
+            kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
+                            if self.uncertainty is not None else None)
+        return self._new_instance(**kwargs)
 
     def __rmul__(self, value):
         return self.__mul__(value)
