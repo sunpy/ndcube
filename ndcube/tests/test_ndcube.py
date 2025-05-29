@@ -109,7 +109,7 @@ def test_cube_arithmetic_add(ndcube_2d_ln_lt_units, value): # this test methods 
                         indirect=("ndc",))
 def test_arithmetic_add_one_unit(ndc, value):
     assert isinstance(ndc, NDCube)
-    with pytest.raises(TypeError, match="Adding objects requires both have a unit or neither has a unit."):
+    with pytest.raises(TypeError, match="Adding objects requires that both have a unit or neither has a unit."):
         ndc + value
 
 
@@ -219,7 +219,7 @@ def test_arithmetic_add_cube_unc_nddata_unc(ndc, value):
     output_cube = ndc + value # perform the addition
     # Construct expected cube
     expected_data = ndc.data + value.data
-    expected_uncertainty = ndc.uncertainty.propagate(
+    expected_uncertainty = ndc.uncertainty.propagate(  # is this the correct way to test uncertainty? no need to test propagate
                             operation=np.add,
                             other_nddata=value,
                             result_data=expected_data,
@@ -290,42 +290,22 @@ def test_arithmetic_add_cube_nddata(ndc, value):
     assert_cubes_equal(output_cube, expected_cube)
 
 
-# The case when both NDData and NDCube have uncertainty, unit. Also:
-# 1, NDCube has mask but NDData does not;
-# 2, Both NDCube and NDData have masks.
-@pytest.mark.parametrize('value', [
-    NDData(np.ones((10, 12)),
-           wcs=None,
-           uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.1)),
-
-    NDData(np.ones((10, 12)) * 2,
-           wcs=None,
-           uncertainty=StdDevUncertainty(np.ones((10, 12)) * 0.05),
-           mask=np.ones((10, 12), dtype=bool))
-])
-def test_arithmetic_add_cube_unit_mask_nddata_unc_unit_mask(ndcube_2d_ln_lt_mask, value):
-    with pytest.raises(TypeError, match='Please use the add method.'):
-        ndcube_2d_ln_lt_mask + value
-
-
 # Test the three different with-mask scenarios for the add method.
 # 1, both have masks. To test: data, combined mask, uncertainty
 @pytest.mark.parametrize(
-    ("value", "handle_mask"),
+    ("value"),
     [(NDData(np.ones((2, 3)),
             wcs=None,
             uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05),
-            mask=np.ones((2, 3), dtype=bool)),
-      np.logical_and)]
+            mask=np.ones((2, 3), dtype=bool)))]
 )
-def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value, handle_mask):
-    output_cube = ndcube_2d_ln_lt_mask2.add(value, handle_mask)  # perform the addition
+def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value):
+    output_cube = ndcube_2d_ln_lt_mask2 + value  # perform the addition
 
     # Construct expected cube
     expected_data = ndcube_2d_ln_lt_mask2.data + value.data
     expected_uncertainty = ndcube_2d_ln_lt_mask2.uncertainty
-    expected_mask = np.array([[False, True, True],
-                              [True, True, True]])
+    expected_mask = np.ones((2, 3), dtype=bool)
     expected_cube = NDCube(expected_data, ndcube_2d_ln_lt_mask2.wcs, uncertainty=expected_uncertainty, mask=expected_mask)
 
     # Assert output cube is same as expected cube
@@ -340,7 +320,7 @@ def test_arithmetic_add_both_mask(ndcube_2d_ln_lt_mask2, value, handle_mask):
            uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05))
 ])
 def test_arithmetic_add_cube_mask(ndcube_2d_ln_lt_mask2, value):
-    output_cube = ndcube_2d_ln_lt_mask2.add(value)  # perform the addition
+    output_cube = ndcube_2d_ln_lt_mask2 + value  # perform the addition
 
     # Construct expected cube
     expected_data = ndcube_2d_ln_lt_mask2.data + value.data
@@ -362,7 +342,7 @@ def test_arithmetic_add_cube_mask(ndcube_2d_ln_lt_mask2, value):
            mask=np.ones((2, 3), dtype=bool))
 ])
 def test_arithmetic_add_nddata_mask(ndcube_2d_ln_lt_nomask, value):
-    output_cube = ndcube_2d_ln_lt_nomask.add(value)  # perform the addition
+    output_cube = ndcube_2d_ln_lt_nomask + value  # perform the addition
 
     # Construct expected cube
     expected_data = ndcube_2d_ln_lt_nomask.data + value.data
@@ -424,6 +404,46 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
     new_cube = ndcube_2d_ln_lt_units * value
     check_arithmetic_value_and_units(new_cube, cube_quantity * value)
     # TODO: test that uncertainties scale correctly
+
+
+@pytest.mark.parametrize(("ndc", "value", "expected_kwargs"),
+                        [
+                            ("ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2", NDData(np.ones((2, 3)),
+                                                                                wcs=None),
+                             {"data": np.array([[0, 1, 2], [3, 4, 5]])} # neither of the two has uncertainty or mask or unit.
+                            ),
+                            ("ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2", NDData(np.ones((2, 3)),
+                                                                                wcs=None,
+                                                                                uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                                                                mask=np.ones((2, 3), dtype=bool),
+                                                                                unit=u.ct),
+                             {"data": np.array([[0, 1, 2], [3, 4, 5]]),
+                              "uncertainty": astropy.nddata.StdDevUncertainty(np.ones((2, 3))*0.1),
+                              "mask": np.ones((2, 3), dtype=bool),
+                              "unit": u.ct
+                             }# ndc has no mask no uncertainty no unit, but nddata has all.
+                            ),
+                            ("ndcube_2d_ln_lt_unit_unc_mask", NDData(np.ones((2, 3)),
+                                                                     wcs=None,
+                                                                     uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                                                     mask=np.ones((2, 3), dtype=bool),
+                                                                     unit=u.ct),
+                             {"unit": u.ct**2,
+                             "data": np.array([[0, 1, 2], [3, 4, 5]]),
+                             "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0.1118034, 0.1118034, 0.1118034],
+                                                                    [0.1118034, 0.1118034, 0.1118034]])),
+                             "mask": np.ones((2, 3), dtype=bool)} # both of them have uncertainty and mask and unit.
+                            )
+                        ],
+                        indirect=("ndc",))
+def test_cube_arithmetic_multiply_ndcube_nddata(ndc, value, expected_kwargs, wcs_2d_lt_ln):
+    output_cube = ndc * value  # perform the multiplication
+
+    expected_kwargs["wcs"] = wcs_2d_lt_ln
+    expected_cube = NDCube(**expected_kwargs)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube)
 
 
 @pytest.mark.parametrize('value', [
