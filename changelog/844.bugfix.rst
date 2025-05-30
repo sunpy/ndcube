@@ -1,0 +1,1 @@
+Fix tests of resultant uncertainty when adding/multiplying `~ndcube.ndcube.NDCube` with `~astropy.nddata.NDData`.
