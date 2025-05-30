@@ -67,6 +67,14 @@ def test_arithmetic_add_one_unit(ndc, value):
                          ), # ndc has no mask no uncertainty no unit, but nddata has all.
                          (
                           "ndcube_2d_ln_lt_unit_unc_mask",
+                          NDData(np.ones((2, 3)), wcs=None, unit=u.ct),
+                          {"data": np.array([[1, 2, 3], [4, 5, 6]]),
+                           "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0, 0.05, 0.1],
+                                                                                     [0.15, 0.2, 0.25]])),
+                           "mask": np.array([[False, True, True], [False, True, True]])}
+                         ), # ndc has mask and uncertainty unit, but nddata doesn't.
+                         (
+                          "ndcube_2d_ln_lt_unit_unc_mask",
                           NDData(np.ones((2, 3)),
                                  wcs=None,
                                  uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
@@ -162,6 +170,14 @@ def test_cube_arithmetic_multiply(ndcube_2d_ln_lt_units, value):
                          ),
                          (
                           "ndcube_2d_ln_lt_unit_unc_mask",
+                          NDData(np.ones((2, 3)) * 2, wcs=None),
+                          {"data": np.array([[0, 2, 4], [6, 8, 10]]),
+                           "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0, 0.05, 0.1],
+                                                                                     [0.15, 0.2, 0.25]])),
+                           "mask": np.array([[False, True, True], [False, True, True]])}
+                         ), # ndc has mask and uncertainty unit, but nddata doesn't.
+                         (
+                         "ndcube_2d_ln_lt_unit_unc_mask",
                           NDData(np.ones((2, 3)) + 1,
                                  wcs=None,
                                  uncertainty=StdDevUncertainty((np.ones((2, 3)) + 1) * 0.1),
