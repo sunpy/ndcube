@@ -15,17 +15,17 @@ properties:
     type: array
     items:
       anyOf:
-        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-*"
-        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-*"
-        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-1.*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-1.*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-1.*"
   dropped_coords:
     type: array
     items:
       anyOf:
-        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-*"
-        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-*"
-        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-1.*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-1.*"
+        - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-1.*"
 
 required: ["table_coords", "dropped_coords"]
-additionalProperties: False
+additionalProperties: false
 ...

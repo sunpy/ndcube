@@ -18,7 +18,7 @@ properties:
       items:
           - type: string
           - type: object
-            oneOf:
+            anyOf:
               - tag: "tag:stsci.edu:asdf/unit/quantity-*"
               - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
   ndcube:

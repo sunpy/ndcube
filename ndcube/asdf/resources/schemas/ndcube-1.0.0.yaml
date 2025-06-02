@@ -29,14 +29,14 @@ properties:
     type: object
   mask:
     anyOf:
-      - tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+      - tag: "tag:stsci.edu:asdf/core/ndarray-*"
       - type: boolean
   unit:
     anyOf:
-     - tag: "tag:stsci.edu:asdf/unit/unit-1.*"
-     - tag: "tag:astropy.org:astropy/units/unit-1.*"
+     - tag: "tag:stsci.edu:asdf/unit/unit-*"
+     - tag: "tag:astropy.org:astropy/units/unit-*"
   uncertainty:
-    tag: tag:astropy.org:astropy/nddata/uncertainty-1.*
+    tag: tag:astropy.org:astropy/nddata/uncertainty-*
 
 required: [data, wcs]
 additionalProperties: true

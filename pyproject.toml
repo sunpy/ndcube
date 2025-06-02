@@ -56,8 +56,12 @@ plotting = [
 reproject = [
   "reproject>=0.11.0",
 ]
+asdf = [
+  "asdf>=2.15.0",
+  "asdf-astropy>=0.7.0",
+]
 all = [
-  "ndcube[plotting,reproject]",
+  "ndcube[plotting,reproject,asdf]",
 ]
 dev = [
   "ndcube[tests,docs,plotting,reproject]",

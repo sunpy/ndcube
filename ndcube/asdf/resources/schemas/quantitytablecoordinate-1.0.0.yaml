@@ -14,7 +14,7 @@ properties:
   unit:
     anyOf:
       - tag: "tag:stsci.edu:asdf/unit/unit-*"
-      - tag: "tag:astropy.org:astropy/units/unit-1.*"
+      - tag: "tag:astropy.org:astropy/units/unit-*"
   table:
     type: array
     items:
@@ -27,5 +27,5 @@ properties:
     type: array
 
 required: ["table", "unit"]
-additionalProperties: False
+additionalProperties: false
 ...

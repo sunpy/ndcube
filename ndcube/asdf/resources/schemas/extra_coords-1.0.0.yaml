@@ -22,10 +22,10 @@ properties:
     items:
         type: array
         items:
-            - oneOf:
+            - anyOf:
               - type: number
               - type: array
-            - oneOf:
+            - anyOf:
               - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-1.*"
               - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-1.*"
               - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-1.*"

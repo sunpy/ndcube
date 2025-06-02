@@ -23,5 +23,5 @@ properties:
     type: number
 
 required: [wcs]
-additionalProperties: true
+additionalProperties: false
 ...
