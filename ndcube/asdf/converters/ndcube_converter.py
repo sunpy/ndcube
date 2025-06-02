@@ -49,9 +49,12 @@ class NDCubeConverter(Converter):
             node["wcs"] = ndcube.wcs.low_level_wcs
         else:
             node["wcs"] = ndcube.wcs
-        node["extra_coords"] = ndcube.extra_coords
-        node["global_coords"] = ndcube.global_coords
-        node["meta"] = ndcube.meta
+        if not ndcube.extra_coords.is_empty:
+            node["extra_coords"] = ndcube.extra_coords
+        if ndcube.global_coords._all_coords:
+            node["global_coords"] = ndcube.global_coords
+        if ndcube.meta:
+            node["meta"] = ndcube.meta
         if ndcube.mask is not None:
             node["mask"] = ndcube.mask
         if ndcube.unit is not None:
