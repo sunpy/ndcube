@@ -14,7 +14,10 @@ properties:
   data:
     type: array
     items:
-      tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
+      anyOf:
+        - tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
+          # Allow any other objects here as we don't want to restrict what people can save
+        - type: object
   meta:
     type: object
   common_axis:

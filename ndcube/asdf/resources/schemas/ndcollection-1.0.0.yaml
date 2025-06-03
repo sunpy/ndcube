@@ -11,6 +11,8 @@ description:
 
 type: object
 properties:
+  meta:
+    type: object
   items:
     type: object
     patternProperties:
@@ -19,7 +21,7 @@ properties:
           - tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
           - tag: "tag:sunpy.org:ndcube/ndcube/ndcube_sequence-1.*"
           # Allow any other objects here as we don't want to restrict what people can save
-          - {}
+          - type: object
   aligned_axes:
     anyOf:
     - type: object
@@ -27,4 +29,5 @@ properties:
 
 required: [items]
 additionalProperties: true
+propertyOrder: ["meta", "aligned_axes", "items"]
 ...
