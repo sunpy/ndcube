@@ -814,8 +814,8 @@ def ndcube_2d_ln_lt_unit_unc_mask(wcs_2d_lt_ln):
     shape = (2, 3)
     data_cube = data_nd(shape).astype(float)
     mask = np.ones(shape, dtype=bool)
-    mask[0:1, 0] = False
-    uncertainty=StdDevUncertainty(np.ones((2, 3)) * 0.05)
+    mask[:, 0] = False
+    uncertainty=StdDevUncertainty(data_cube * 0.05)
     return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask, uncertainty=uncertainty, unit=u.ct)
 
 
