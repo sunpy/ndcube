@@ -112,7 +112,11 @@ def assert_metas_equal(test_input, expected_output):
                 assert test_value == expected_value
             except ValueError as err:  # noqa: PERF203
                 if multi_element_msg in err.args[0]:
-                    assert np.allclose(test_value, expected_value)
+                    if test_value.dtype.kind in ('S', 'U'):
+                        # If the values are strings, we can compare them as arrays.
+                        assert np.array_equal(test_value, expected_value)
+                    else:
+                        assert np.allclose(test_value, expected_value)
         for key in test_input.axes.keys():
             assert all(test_input.axes[key] == expected_output.axes[key])
     else:
