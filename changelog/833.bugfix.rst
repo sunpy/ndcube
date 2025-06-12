@@ -1,1 +1,0 @@
-Removed the check for compatible coordinate systems within `~ndcube.NDCube.reproject_to` as it was redundant.

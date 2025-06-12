@@ -1,3 +1,18 @@
+2.3.2 (2025-06-12)
+==================
+
+Bug Fixes
+---------
+
+- Removed the check for compatible coordinate systems within `~ndcube.NDCube.reproject_to` as it was redundant. (`#833 <https://github.com/sunpy/ndcube/pull/833>`__)
+
+
+Internal Changes
+----------------
+
+- Make `~ndcube.visualization.mpl_plotter.MatplotlibPlotter` only add data to line plots if at least one value of the data is unmasked and finite. (`#802 <https://github.com/sunpy/ndcube/pull/802>`__)
+
+
 2.3.1 (2025-02-11)
 ==================
 
