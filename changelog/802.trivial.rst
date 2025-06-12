@@ -1,0 +1,1 @@
+Make `~ndcube.visualization.mpl_plotter.MatplotlibPlotter` only add data to line plots if at least one value of the data is unmasked and finite.
