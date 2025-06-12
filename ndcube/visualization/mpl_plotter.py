@@ -145,9 +145,9 @@ class MatplotlibPlotter(BasePlotter):
             # We plot against pixel coordinates
             axes.errorbar(np.arange(len(ydata)), ydata, yerr=yerror, **kwargs)
         else:
-            # ydata here might be a dask array or numpy array;
-            # a dask array would need .compute() to evaluate but that would break if it's a numpy array.
-            # So instead we cast to bool, which will force the evaluation if it's dask and is a no-op if numpy
+            # ydata can be either a dask or numpy array
+            # dask array needs .compute() to evaluate but breaks numpy
+            # So instead we cast to bool, which will force the evaluation if dask and is no-op if numpy
             if np.isfinite(ydata).any() and unmasked:
                 axes.plot(ydata, **kwargs)
 
