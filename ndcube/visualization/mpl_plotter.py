@@ -148,7 +148,7 @@ class MatplotlibPlotter(BasePlotter):
             # ydata can be either a dask or numpy array
             # dask array needs .compute() to evaluate but breaks numpy
             # So instead we cast to bool, which will force the evaluation if dask and is no-op if numpy
-            if not bool(np.isnan(ydata).all()):
+            if bool(np.isfinite(ydata).any())::
                 axes.plot(ydata, **kwargs)
 
         axes.set_ylabel(default_ylabel)
