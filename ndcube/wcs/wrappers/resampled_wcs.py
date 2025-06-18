@@ -42,7 +42,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
         factor = self._pad_dims(self._factor, top_pixels.ndim)
         offset = self._pad_dims(self._offset, top_pixels.ndim)
-        return top_pixels * factor + offset
+        return (top_pixels + factor/2) * factor + offset
 
     def _underlying_to_top_pixels(self, underlying_pixels):
         # Convert pixel indices of underlying pixel grid to user-facing grid.
