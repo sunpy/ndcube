@@ -183,3 +183,34 @@ def test_int_fraction_pixel_shape(celestial_wcs):
     assert wcs.pixel_shape == (18, 21)
     for dim in wcs.pixel_shape:
         assert isinstance(dim, numbers.Integral)
+
+@pytest.fixture
+def nine_nine_wcs():
+    from astropy.wcs import WCS
+
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["HPLN-TAN", "HPLT-TAN"]
+    wcs.wcs.cdelt = [2, 2]
+    wcs.wcs.crval = [0, 0]
+    wcs.wcs.crpix = [1, 1]
+
+    wcs.wcs.set()
+    wcs.pixel_shape = [9, 9]
+    return wcs
+
+def test_corner_pixels(nine_nine_wcs):
+    owcs = nine_nine_wcs
+    # original corner
+    ocorner = owcs.pixel_to_world_values(-0.5, -0.5)
+    # one super pixel along (3 original pixels)
+    osone = owcs.pixel_to_world_values(2.5, 2.5)
+
+    wcs = ResampledLowLevelWCS(owcs, 3)
+
+    # resampled corner == original corner
+    corner = wcs.pixel_to_world_values(-0.5, -0.5)
+    # One super pixel along
+    sone = wcs.pixel_to_world_values(0.5, 0.5)
+
+    assert np.allclose(ocorner, corner)
+    assert np.allclose(osone, sone)
