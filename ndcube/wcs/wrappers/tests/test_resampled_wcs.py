@@ -185,7 +185,7 @@ def test_int_fraction_pixel_shape(celestial_wcs):
         assert isinstance(dim, numbers.Integral)
 
 @pytest.fixture
-def nine_nine_wcs():
+def four_five_wcs():
     from astropy.wcs import WCS
 
     wcs = WCS(naxis=2)
@@ -195,22 +195,21 @@ def nine_nine_wcs():
     wcs.wcs.crpix = [1, 1]
 
     wcs.wcs.set()
-    wcs.pixel_shape = [9, 9]
+    wcs.pixel_shape = [4, 5]
     return wcs
 
-def test_corner_pixels(nine_nine_wcs):
-    owcs = nine_nine_wcs
-    # original corner
-    ocorner = owcs.pixel_to_world_values(-0.5, -0.5)
-    # one super pixel along (3 original pixels)
-    osone = owcs.pixel_to_world_values(2.5, 2.5)
+@pytest.mark.parametrize(('factor', 'offset', 'expected_over_pixels'),
+                         [([2, 3], [0, 0], np.meshgrid(np.arange(-0.5, 1.75, 0.25), np.arange(-0.5, 1.2, 1/6))),
+                          ([2, 3], [1, 2], np.meshgrid(np.arange(-1, 1.25, 0.25), np.arange(-7, 4) / 6)),
+                         ])
+def test_resampled_pixel_to_world_values(four_five_wcs, factor, offset, expected_over_pixels):
+    wcs = four_five_wcs
+    # Get world values of original pixel grid.
+    under_pixels = np.meshgrid(np.arange(-0.5, 4, 0.5), np.arange(-0.5, 5, 0.5))
+    expected_world = wcs.pixel_to_world_values(*under_pixels)
 
-    wcs = ResampledLowLevelWCS(owcs, 3)
-
-    # resampled corner == original corner
-    corner = wcs.pixel_to_world_values(-0.5, -0.5)
-    # One super pixel along
-    sone = wcs.pixel_to_world_values(0.5, 0.5)
-
-    assert np.allclose(ocorner, corner)
-    assert np.allclose(osone, sone)
+    # Resample WCS
+    new_wcs = ResampledLowLevelWCS(wcs, factor, offset)
+    # Get expected pixel coords in resampled WCS of same pixel locations as above.
+    output_world = new_wcs.pixel_to_world_values(*expected_over_pixels)
+    assert_allclose(np.asarray(output_world), np.asarray(expected_world), atol=1e-15)
