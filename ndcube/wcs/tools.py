@@ -66,7 +66,7 @@ def unwrap_wcs_to_fitswcs(wcs):
             offset[kept_wcs_axes] = low_level_wrapper._offset
             fitswcs = _resample_fitswcs(fitswcs, factor, offset)
         else:
-            raise TypeError("Unrecognized/unsupported WCS Wrapper type: {type(low_level_wrapper)}")
+            raise TypeError(f"Unrecognized/unsupported WCS Wrapper type: {type(low_level_wrapper)}")
     return fitswcs, dropped_data_axes
 
 
@@ -185,4 +185,13 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
     fitswcs.wcs.cdelt *= factor
     fitswcs.wcs.crpix = (fitswcs.wcs.crpix + offset) / factor
     fitswcs._naxis = list(np.round(np.array(fitswcs._naxis) / factor).astype(int))
+    # TODO: Add some context about why this correction is made
+    if hasattr(fitswcs.wcs, 'pc'):
+        scaling_matrix = np.eye(fitswcs.wcs.naxis)
+        for i in range(fitswcs.wcs.naxis):
+            for j in range(fitswcs.wcs.naxis):
+                scaling_matrix[i,j] = factor[j] / factor[i]
+        fitswcs.wcs.pc *= scaling_matrix
+    if hasattr(fitswcs.wcs, 'cd'):
+        fitswcs.wcs.cd *= factor
     return fitswcs
