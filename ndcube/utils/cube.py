@@ -5,7 +5,10 @@ from itertools import chain
 import numpy as np
 
 import astropy.nddata
-from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
+import astropy.units as u
+from astropy.coordinates import SkyCoord, SpectralCoord
+from astropy.time import Time
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
 
@@ -138,8 +141,16 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # Define a list of lists to hold the array indices of the points
     # where each inner list gives the index of all points for that array axis.
     combined_points_array_idx = [[]] * wcs.pixel_n_dim
+    high_level_wcs = HighLevelWCSWrapper(wcs) if isinstance(wcs, BaseLowLevelWCS) else wcs
+    wcs = high_level_wcs.low_level_wcs
     # For each point compute the corresponding array indices.
     for point in points:
+        # Sanitize input format
+        # Make point a tuple if given as a single high level coord object valid for this WCS.
+        if isinstance(point, tuple(v[0] for v in wcs.world_axis_object_classes.values())):
+            point = (point,)
+        # If point is a length-1 object, convert it to scalar.
+        point = tuple(p.squeeze() if hasattr(p, "squeeze") else p for p in point)
         # Get the arrays axes associated with each element in point.
         if crop_by_values:
             point_inputs_array_axes = []
@@ -150,8 +161,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
                     wcs_utils.convert_between_array_and_pixel_axes(pix_axes, wcs.pixel_n_dim)))
             point_inputs_array_axes = tuple(point_inputs_array_axes)
         else:
-            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(
-                HighLevelWCSWrapper(wcs))
+            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(high_level_wcs)
         # Get indices of array axes which correspond to only None inputs in point
         # as well as those that correspond to a coord.
         point_indices_with_inputs = []
