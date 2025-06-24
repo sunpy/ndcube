@@ -8,7 +8,7 @@ import astropy.nddata
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.time import Time
-from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
 
@@ -141,12 +141,13 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # Define a list of lists to hold the array indices of the points
     # where each inner list gives the index of all points for that array axis.
     combined_points_array_idx = [[]] * wcs.pixel_n_dim
-    high_level_wcs = HighLevelWCSWrapper(wcs)
+    high_level_wcs = HighLevelWCSWrapper(wcs) if isinstance(wcs, BaseLowLevelWCS) else wcs
+    wcs = high_level_wcs.low_level_wcs
     # For each point compute the corresponding array indices.
     for point in points:
         # Sanitize input format
-        # Make point a tuple if not already
-        if isinstance(point, (SkyCoord, Time, u.Quantity, SpectralCoord, np.ndarray)):
+        # Make point a tuple if given as a single high level coord object valid for this WCS.
+        if isinstance(point, tuple(v[0] for v in wcs.world_axis_object_classes.values())):
             point = (point,)
         # If point is a length-1 object, convert it to scalar.
         point = tuple(p.squeeze() if hasattr(p, "squeeze") else p for p in point)
