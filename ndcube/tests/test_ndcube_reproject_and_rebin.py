@@ -4,7 +4,7 @@ import copy
 import dask.array
 import numpy as np
 import pytest
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 import astropy.units as u
 import astropy.wcs
@@ -311,6 +311,6 @@ def test_rebin_specutils():
     # Tests for https://github.com/sunpy/ndcube/issues/717
     y = np.arange(4000)*u.ct
     x = np.arange(200, 4200)*u.nm
-    spec = Spectrum1D(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
+    spec = Spectrum(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
     output = spec.rebin((10,), operation=np.sum, operation_ignores_mask=False)
     assert output.shape == (400,)

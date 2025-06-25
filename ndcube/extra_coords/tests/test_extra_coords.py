@@ -366,8 +366,8 @@ def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
     assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2))),
                       ec['lon'].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
 
-    assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
+    assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(2))),
+                      ec['exposure_time'].wcs.pixel_to_world_values(list(range(2))))
 
 
 def test_slice_extra_twice(time_lut, wave_lut):
