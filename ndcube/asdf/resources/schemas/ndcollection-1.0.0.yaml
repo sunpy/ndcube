@@ -29,5 +29,4 @@ properties:
 
 required: [items]
 additionalProperties: true
-propertyOrder: ["meta", "aligned_axes", "items"]
 ...
