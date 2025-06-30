@@ -1458,6 +1458,25 @@ class NDCube(NDCubeBase):
             self.mask = False
         return None
 
+    @property
+    def crop_input_types_order(self):
+        """
+        Returns types and order of high-level coordinate objects that must be input to .crop()
+        Each point given to .crop() must be a tuple of scalar high-level coordinate objects
+        of these types, in this order.  Note, however, that any of these can be replaced
+        with None if cropping along the axis/axes of that world type in not desired.
+        """
+        return tuple(v[0] for v in self.wcs.world_axis_object_classes.values())
+
+    @property
+    def crop_by_values_input_units_order(self):
+        """
+        Returns units of inputs to .crop_by_values() and their required order.
+        Each point given to .crop_by_values() must be a tuple of scalar Quantity objects
+        with these, or equivalent units.  Note, however, that any of these can be replaced
+        with None if cropping along the axis/axes of that world type in not desired.
+        """
+        return tuple(self.wcs.world_axis_units)
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
