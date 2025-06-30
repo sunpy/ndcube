@@ -81,6 +81,8 @@ def sanitize_crop_inputs(points, wcs):
         # Confirm whether point contains at least one None entry.
         if all(coord is None for coord in points[i]):
             values_are_none[i] = True
+        # Squeeze length-1 coordinate objects to scalars.
+        points[i] = [coord.squeeze() if hasattr(coord, "squeeze") else coord for coord in points[i]]
     # If no points contain a coord, i.e. if all entries in all points are None,
     # set no-op flag to True and exit.
     if all(values_are_none):
@@ -142,12 +144,6 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     wcs = high_level_wcs.low_level_wcs
     # For each point compute the corresponding array indices.
     for point in points:
-        # Sanitize input format
-        # Make point a tuple if given as a single high level coord object valid for this WCS.
-        if isinstance(point, tuple(v[0] for v in wcs.world_axis_object_classes.values())):
-            point = (point,)
-        # If point is a length-1 object, convert it to scalar.
-        point = tuple(p.squeeze() if hasattr(p, "squeeze") else p for p in point)
         # Get the arrays axes associated with each element in point.
         if crop_by_values:
             point_inputs_array_axes = []
