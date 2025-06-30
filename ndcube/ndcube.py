@@ -1133,7 +1133,7 @@ class NDCube(NDCubeBase):
         Downsample array by combining contiguous pixels into bins.
 
         Values in bins are determined by applying a function to the pixel values within it.
-        The number of pixels in each bin in each dimension is given by the bin_shape input.
+        The number of pixels in each bin in each dimension is given by the ``bin_shape`` input.
         This must be an integer fraction of the cube's array size in each dimension.
         If the NDCube instance has uncertainties attached, they are propagated
         depending on binning method chosen.
@@ -1148,6 +1148,7 @@ class NDCube(NDCubeBase):
             units have to be convertible to pixels.
             The sentinel value ``-1`` can be passed for a dimension which means
             that no rebinning will occur along that dimension.
+            Please note the ``bin_shape`` follows array axis (NumPy) ordering of the axes.
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
