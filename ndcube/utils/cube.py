@@ -5,9 +5,6 @@ from itertools import chain
 import numpy as np
 
 import astropy.nddata
-import astropy.units as u
-from astropy.coordinates import SkyCoord, SpectralCoord
-from astropy.time import Time
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
