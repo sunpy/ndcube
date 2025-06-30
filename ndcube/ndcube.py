@@ -691,6 +691,26 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
         return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
 
+    @property
+    def crop_input_types_order(self):
+        """
+        Returns types and order of high-level coordinate object that must be input to .crop()
+
+        Note that any of these can be be replaced with None when input to crop() if
+        cropping along the axis/axes of that world type in not desired.
+        """
+        return tuple(v[0] for v in self.wcs.world_axis_object_classes.values())
+
+    @property
+    def crop_by_values_input_units_order(self):
+        """
+        Returns units of inputs to .crop_by_values() and their required order.
+
+        crop_by_values() also accepts equivalent units so long as they are
+        in the same order as returned here.
+        """
+        return tuple(self.wcs.world_axis_unit)
+
     def __str__(self):
         return textwrap.dedent(f"""\
                 NDCube
