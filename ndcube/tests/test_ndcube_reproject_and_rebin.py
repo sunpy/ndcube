@@ -4,7 +4,11 @@ import copy
 import dask.array
 import numpy as np
 import pytest
-from specutils import Spectrum
+
+try:
+    from specutils import Spectrum
+except ImportError:
+    from specutils import Spectrum1D as Spectrum
 
 import astropy.units as u
 import astropy.wcs

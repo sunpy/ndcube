@@ -694,10 +694,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     @property
     def crop_input_types_order(self):
         """
-        Returns types and order of high-level coordinate object that must be input to .crop()
+        Returns types and order of high-level coordinate objects that must be input to .crop()
 
-        Note that any of these can be be replaced with None when input to crop() if
-        cropping along the axis/axes of that world type in not desired.
+        Each point given to .crop() must be a tuple of scalar high-level coordinate objects
+        of these types, in this order.  Note, however, that any of these can be replaced
+        with None if cropping along the axis/axes of that world type in not desired.
         """
         return tuple(v[0] for v in self.wcs.world_axis_object_classes.values())
 
@@ -706,10 +707,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         """
         Returns units of inputs to .crop_by_values() and their required order.
 
-        crop_by_values() also accepts equivalent units so long as they are
-        in the same order as returned here.
+        Each point given to .crop_by_values() must be a tuple of scalar Quantity objects
+        with these, or equivalent units.  Note, however, that any of these can be replaced
+        with None if cropping along the axis/axes of that world type in not desired.
         """
-        return tuple(self.wcs.world_axis_unit)
+        return tuple(self.wcs.world_axis_units)
 
     def __str__(self):
         return textwrap.dedent(f"""\
