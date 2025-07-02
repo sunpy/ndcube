@@ -127,7 +127,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
         Denotes whether cropping is done using high-level objects or "values",
         i.e. low-level objects.
 
-    keep_dims : `bool`
+    keepdims : `bool`
         If `False`, returned item will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
 
     Returns
@@ -208,7 +208,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
-                         "This is not supported.")
+                         "This is not supported when keepdims=False.")
     return tuple(item)
 
 

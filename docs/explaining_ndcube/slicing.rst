@@ -168,7 +168,7 @@ But if :code:`keepdims=True`, a valid NDCube is returned with N length-1 dimensi
   >>> my_cube_roi = my_cube.crop(lower_left, upper_right, lower_right, upper_left)
   Traceback (most recent call last):
     ...
-  ValueError: Input points causes cube to be cropped to a single pixel. This is not supported.
+  ValueError: Input points causes cube to be cropped to a single pixel. This is not supported when keepdims=False.
   >>> my_cube_roi_keep = my_cube.crop(lower_left, upper_right, lower_right, upper_left,
   ...                                 keepdims=True)
   >>> my_cube_roi_keep.shape
