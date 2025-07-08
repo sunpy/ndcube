@@ -171,20 +171,16 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
         sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
         # Derive the array indices of the input point and place each index
         # in the list corresponding to its axis.
+        # Use the to_pixel methods to preserve fractional indices for future rounding.
         if crop_by_values:
-            point_array_indices = sliced_wcs.world_to_array_index_values(*sliced_point)
-            # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
-                point_array_indices = (point_array_indices.item(),)
-            else:
-                # Convert from scalar arrays to scalars
-                point_array_indices = tuple(a.item() for a in point_array_indices)
+            point_pixel_indices = sliced_wcs.world_to_pixel_values(*sliced_point)
         else:
-            point_array_indices = HighLevelWCSWrapper(sliced_wcs).world_to_array_index(
-                *sliced_point)
-            # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
-                point_array_indices = (point_array_indices.item(),)
+            point_pixel_indices = HighLevelWCSWrapper(sliced_wcs).world_to_pixel(*sliced_point)
+        # Switch from pixel ordering to array ordering
+        if sliced_wcs.pixel_n_dim == 1:
+            point_array_indices = (point_pixel_indices,)
+        else:
+            point_array_indices = point_pixel_indices[::-1]
         for axis, index in zip(array_axes_with_input, point_array_indices):
             combined_points_array_idx[axis] = combined_points_array_idx[axis] + [index]
     # Define slice item with which to slice cube.
@@ -195,8 +191,11 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             result_is_scalar = False
             item.append(slice(None))
         else:
-            min_idx = min(axis_indices)
-            max_idx = max(axis_indices) + 1
+            # Correctly round up/down the fractional indices
+            min_idx = int(np.floor(min(axis_indices) + 0.5))
+            max_idx = int(np.ceil(max(axis_indices) - 0.5)) + 1
+            if min_idx == max_idx:
+                raise ValueError("Input points cause cube to be cropped to zero size along a pixel axis.")
             if max_idx - min_idx == 1 and not keepdims:
                 item.append(min_idx)
             else:
