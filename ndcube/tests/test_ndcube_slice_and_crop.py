@@ -526,3 +526,21 @@ def test_crop_rotated_celestial(ndcube_4d_ln_lt_l_t):
     small = cube.crop(bottom_left, bottom_right, top_left, top_right)
 
     assert small.data.shape == (1652, 1652)
+
+
+def test_crop_1d():
+    # This use case revealed a bug so has been added as a test.
+    # Create NDCube.
+    wcs = astropy.wcs.WCS(naxis=1)
+    wcs.wcs.ctype = 'WAVE',
+    wcs.wcs.cunit = 'nm',
+    wcs.wcs.cdelt = 4,
+    wcs.wcs.crpix = 1,
+    wcs.wcs.crval = 3,
+    cube = NDCube(np.arange(200), wcs=wcs)
+
+    expected = cube[1:4]
+
+    output = cube.crop((7*u.nm,), (15*u.nm,))
+
+    helpers.assert_cubes_equal(output, expected)
