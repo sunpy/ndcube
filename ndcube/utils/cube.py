@@ -173,6 +173,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             sliced_wcs = SlicedLowLevelWCS(low_level_wcs, slices=tuple(wcs_slice))
             sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
         else:
+            # Else, if all axes have at least one crop input, no need to slice the WCS.
             sliced_wcs, sliced_point = low_level_wcs, np.array(point, dtype=object)
         # Derive the array indices of the input point and place each index
         # in the list corresponding to its axis.
