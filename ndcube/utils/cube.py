@@ -8,6 +8,7 @@ import astropy.nddata
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
+from ndcube.utils.exceptions import warn_user
 
 __all__ = [
     "get_crop_item_from_points",
@@ -191,8 +192,9 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             combined_points_array_idx[axis] = combined_points_array_idx[axis] + [index]
     # Define slice item with which to slice cube.
     item = []
+    ambiguous = []
     result_is_scalar = True
-    for axis_indices in combined_points_array_idx:
+    for axis_num, axis_indices in enumerate(combined_points_array_idx):
         if axis_indices == []:
             result_is_scalar = False
             item.append(slice(None))
@@ -201,12 +203,17 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             min_idx = int(np.floor(min(axis_indices) + 0.5))
             max_idx = int(np.ceil(max(axis_indices) - 0.5)) + 1
             if min_idx == max_idx:
-                raise ValueError("Input points cause cube to be cropped to zero size along a pixel axis.")
+                ambiguous.append(axis_num)
+                max_idx += 1
             if max_idx - min_idx == 1 and not keepdims:
                 item.append(min_idx)
             else:
                 item.append(slice(min_idx, max_idx))
                 result_is_scalar = False
+    if ambiguous:
+        warn_user("Input points all lie on the same pixel edge of array "
+                  + (f"axis {ambiguous[0]}, " if len(ambiguous) == 1 else f"axes {ambiguous}, ")
+                  + "so the crop is ambiguous. The pixel 'greater than' each edge is returned.")
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
