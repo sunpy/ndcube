@@ -8,6 +8,7 @@ import astropy.nddata
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
+from ndcube.utils.exceptions import warn_user
 
 __all__ = [
     "get_crop_item_from_points",
@@ -177,37 +178,42 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             sliced_wcs, sliced_point = low_level_wcs, np.array(point, dtype=object)
         # Derive the array indices of the input point and place each index
         # in the list corresponding to its axis.
+        # Use the to_pixel methods to preserve fractional indices for future rounding.
         if crop_by_values:
-            point_array_indices = sliced_wcs.world_to_array_index_values(*sliced_point)
-            # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
-                point_array_indices = (point_array_indices.item(),)
-            else:
-                # Convert from scalar arrays to scalars
-                point_array_indices = tuple(a.item() for a in point_array_indices)
+            point_pixel_indices = sliced_wcs.world_to_pixel_values(*sliced_point)
         else:
-            point_array_indices = HighLevelWCSWrapper(sliced_wcs).world_to_array_index(
-                *sliced_point)
-            # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
-                point_array_indices = (point_array_indices.item(),)
+            point_pixel_indices = HighLevelWCSWrapper(sliced_wcs).world_to_pixel(*sliced_point)
+        # Switch from pixel ordering to array ordering
+        if sliced_wcs.pixel_n_dim == 1:
+            point_array_indices = (point_pixel_indices,)
+        else:
+            point_array_indices = point_pixel_indices[::-1]
         for axis, index in zip(array_axes_with_input, point_array_indices):
             combined_points_array_idx[axis] = combined_points_array_idx[axis] + [index]
     # Define slice item with which to slice cube.
     item = []
+    ambiguous = []
     result_is_scalar = True
-    for axis_indices in combined_points_array_idx:
+    for axis_num, axis_indices in enumerate(combined_points_array_idx):
         if axis_indices == []:
             result_is_scalar = False
             item.append(slice(None))
         else:
-            min_idx = min(axis_indices)
-            max_idx = max(axis_indices) + 1
+            # Correctly round up/down the fractional indices
+            min_idx = int(np.floor(min(axis_indices) + 0.5))
+            max_idx = int(np.ceil(max(axis_indices) - 0.5)) + 1
+            if min_idx == max_idx:
+                ambiguous.append(axis_num)
+                max_idx += 1
             if max_idx - min_idx == 1 and not keepdims:
                 item.append(min_idx)
             else:
                 item.append(slice(min_idx, max_idx))
                 result_is_scalar = False
+    if ambiguous:
+        warn_user("Input points all lie on the same pixel edge of array "
+                  + (f"axis {ambiguous[0]}, " if len(ambiguous) == 1 else f"axes {ambiguous}, ")
+                  + "so the crop is ambiguous. The pixel 'greater than' each edge is returned.")
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
