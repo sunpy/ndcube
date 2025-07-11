@@ -203,10 +203,9 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             # The above max idx conversion will discard right-ward array element if
             # max pixel coord corresponds to a pixel edge.
             if min_array_idx == max_array_idx:
-                warn_user(f"All input points corresponding to array axis {array_axis} corresponds "
-                          f"to the boundary between array elements {min_array_idx} and "
-                          f"{max_array_idx}. The cropped NDCube will only include the array "
-                          "element {max_array_idx}." )
+                warn_user(f"All input points corresponding to array axis {array_axis} lie on the "
+                          f"boundary between array elements {min_array_idx} and {max_array_idx}. "
+                          f"The cropped NDCube will only include array element {max_array_idx}.")
                 max_array_idx += 1
             if max_array_idx - min_array_idx == 1 and not keepdims:
                 item.append(min_array_idx)
