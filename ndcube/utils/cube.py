@@ -200,14 +200,23 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             # Note that integer pixel coordinates correspond to the pixel center,
             # while integer array indices correspond to lower edge of desired array element.
             # Therefore a shift of 0.5 is required in the conversion.
-            min_array_idx = int(np.floor(min(pixel_coords) + 0.5))
-            max_array_idx = int(np.ceil(max(pixel_coords) - 0.5)) + 1
+            min_pixel_coord = min(pixel_coords)
+            max_pixel_coord = max(pixel_coords)
+            min_array_idx = int(np.floor(min_pixel_coord + 0.5))
+            max_array_idx = int(np.ceil(max_pixel_coord - 0.5)) + 1
             # The above max idx conversion will discard right-ward array element if
             # max pixel coord corresponds to a pixel edge.
-            if min_array_idx == max_array_idx:
+            # If the min and max pixel indices both correspond to a pixel edge, raise a
+            # warning noting that the rightward array element will be kept by the cropped cube.
+            if min_pixel_idx == max_pixel_idx and max_pixel_idx + 0.5 % 1 == 0:
                 warn_user(f"All input points corresponding to array axis {array_axis} lie on the "
                           f"boundary between array elements {min_array_idx} and {max_array_idx}. "
                           f"The cropped NDCube will only include array element {max_array_idx}.")
+            if min_array_idx == max_array_idx:
+                # Note this line can't be combined with above if statement as that is only true
+                # when the min and max pixel coords are one the same pixel edge.
+                # By contrast, this operation needs to be done if the min and max pixel coords
+                # lie anywhere within the same pixel. Hence, we compare the array indices here.
                 max_array_idx += 1
             if max_array_idx - min_array_idx == 1 and not keepdims:
                 item.append(min_array_idx)
