@@ -216,7 +216,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
-                         "This is not supported when keepdims=False.")
+                         "This is not supported when keepdims=False. "
+                         "Please set keepdims=True and try again.")
     return tuple(item)
 
 
