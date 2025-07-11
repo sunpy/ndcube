@@ -188,7 +188,6 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # pixel coords for each pixel axis. Therefore, to iterate in array axis order,
     # combined_points_pixel_idx must be reversed.
     item = []
-    ambiguous = []
     result_is_scalar = True
     for array_axis, pixel_coords in enumerate(combined_points_pixel_idx[::-1]):
         if pixel_coords == []:
@@ -203,18 +202,17 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             max_array_idx = int(np.ceil(max(pixel_coords) - 0.5)) + 1
             # The above max idx conversion will discard right-ward array element if
             # max pixel coord corresponds to a pixel edge.
-            if min_idx == max_idx:
-                ambiguous.append(axis_num)
-                max_idx += 1
-            if max_idx - min_idx == 1 and not keepdims:
-                item.append(min_idx)
+            if min_array_idx == max_array_idx:
+                warn_user(f"All input points corresponding to array axis {array_axis} corresponds "
+                          f"to the boundary between array elements {min_array_idx} and "
+                          f"{max_array_idx}. The cropped NDCube will only include the array "
+                          "element {max_array_idx}." )
+                max_array_idx += 1
+            if max_array_idx - min_array_idx == 1 and not keepdims:
+                item.append(min_array_idx)
             else:
-                item.append(slice(min_idx, max_idx))
+                item.append(slice(min_array_idx, max_array_idx))
                 result_is_scalar = False
-    if ambiguous:
-        warn_user("Input points all lie on the same pixel edge of array "
-                  + (f"axis {ambiguous[0]}, " if len(ambiguous) == 1 else f"axes {ambiguous}, ")
-                  + "so the crop is ambiguous. The pixel 'greater than' each edge is returned.")
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
