@@ -140,7 +140,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     """
     # Define a list of lists to hold the pixel coordinates of the points
     # where each inner list gives the pixel coordinates of all points for that pixel axis.
-    # Recall that pixel axis ordering is reversed comapred to array axis ordering.
+    # Recall that pixel axis ordering is reversed compared to array axis ordering.
     combined_points_pixel_idx = [[]] * wcs.pixel_n_dim
     high_level_wcs = HighLevelWCSWrapper(wcs) if isinstance(wcs, BaseLowLevelWCS) else wcs
     low_level_wcs = high_level_wcs.low_level_wcs
@@ -190,6 +190,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # pixel coords for each pixel axis. Therefore, to iterate in array axis order,
     # combined_points_pixel_idx must be reversed.
     item = []
+    ambiguous = []
+    message = ""
     result_is_scalar = True
     for array_axis, pixel_coords in enumerate(combined_points_pixel_idx[::-1]):
         if pixel_coords == []:
@@ -200,29 +202,29 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             # Note that integer pixel coordinates correspond to the pixel center,
             # while integer array indices correspond to lower edge of desired array element.
             # Therefore a shift of 0.5 is required in the conversion.
-            min_pixel_coord = min(pixel_coords)
-            max_pixel_coord = max(pixel_coords)
-            min_array_idx = int(np.floor(min_pixel_coord + 0.5))
-            max_array_idx = int(np.ceil(max_pixel_coord - 0.5)) + 1
-            # The above max idx conversion will discard right-ward array element if
+            # The max idx conversion below will discard right-ward array element if
             # max pixel coord corresponds to a pixel edge.
-            # If the min and max pixel indices both correspond to the same pixel edge, raise a
-            # warning noting that the rightward array element will be kept by the cropped cube.
-            if min_pixel_idx == max_pixel_idx and max_pixel_idx + 0.5 % 1 == 0:
-                warn_user(f"All input points corresponding to array axis {array_axis} lie on the "
-                          f"boundary between array elements {min_array_idx} and {max_array_idx}. "
-                          f"The cropped NDCube will only include array element {max_array_idx}.")
+            min_array_idx = int(np.floor(min(pixel_coords) + 0.5))
+            max_array_idx = int(np.ceil(max(pixel_coords) - 0.5)) + 1
+            # Due to the above calculation, the above min and max array indices can only be
+            # same if the original pixel coords correspond to the same pixel edge.
+            # If this is the case, increment the max array index by 1 so the rightward array
+            # element is kept. Also, build a warning message about this to be raised later.
             if min_array_idx == max_array_idx:
-                # Note this line can't be combined with above if statement as that is only true
-                # when the min and max pixel coords are one the same pixel edge.
-                # By contrast, this operation needs to be done if the min and max pixel coords
-                # lie anywhere within the same pixel. Hence, we compare the array indices here.
+                ambiguous.append(array_axis)
+                message += (f"All input points corresponding to array axis {array_axis} lie on "
+                            f"the boundary between array elements {min_array_idx} and "
+                            f"{max_array_idx}. The cropped NDCube will only include array "
+                            f"element {max_array_idx}.\n")
                 max_array_idx += 1
             if max_array_idx - min_array_idx == 1 and not keepdims:
                 item.append(min_array_idx)
             else:
                 item.append(slice(min_array_idx, max_array_idx))
                 result_is_scalar = False
+    # Raise warning if all world values for any array axes correspond to a pixel edge.
+    if ambiguous:
+        warn_user(message)
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
