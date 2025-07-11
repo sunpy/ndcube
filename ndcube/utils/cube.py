@@ -178,6 +178,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
         # Use the to_pixel methods to preserve fractional indices for future rounding.
         point_pixel_indices = (sliced_wcs.world_to_pixel_values(*sliced_point) if crop_by_values
                                else HighLevelWCSWrapper(sliced_wcs).world_to_pixel(*sliced_point))
+        # For each pixel axis associated with this point, place the pixel coords for
+        # that pixel axis into the corresponding list within combined_points_pixel_idx.
         if sliced_wcs.pixel_n_dim == 1:
             point_pixel_indices = (point_pixel_indices,)
         for axis, index in zip(pixel_axes_with_input, point_pixel_indices):
