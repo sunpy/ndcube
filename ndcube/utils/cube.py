@@ -206,7 +206,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             max_array_idx = int(np.ceil(max_pixel_coord - 0.5)) + 1
             # The above max idx conversion will discard right-ward array element if
             # max pixel coord corresponds to a pixel edge.
-            # If the min and max pixel indices both correspond to a pixel edge, raise a
+            # If the min and max pixel indices both correspond to the same pixel edge, raise a
             # warning noting that the rightward array element will be kept by the cropped cube.
             if min_pixel_idx == max_pixel_idx and max_pixel_idx + 0.5 % 1 == 0:
                 warn_user(f"All input points corresponding to array axis {array_axis} lie on the "
