@@ -167,7 +167,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             array_axes_without_input = wcs_utils.convert_between_array_and_pixel_axes(
                 pixel_axes_without_input, low_level_wcs.pixel_n_dim)
             wcs_slice = np.array([slice(None)] * low_level_wcs.pixel_n_dim)
-            wcs_slice[array_axes_without_input)] = 0
+            wcs_slice[array_axes_without_input] = 0
             sliced_wcs = SlicedLowLevelWCS(low_level_wcs, slices=tuple(wcs_slice))
             sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
         else:
@@ -190,7 +190,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # pixel coords for each pixel axis. Therefore, to iterate in array axis order,
     # combined_points_pixel_idx must be reversed.
     item = []
-    ambiguous = []
+    ambiguous = False
     message = ""
     result_is_scalar = True
     for array_axis, pixel_coords in enumerate(combined_points_pixel_idx[::-1]):
@@ -211,12 +211,12 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             # If this is the case, increment the max array index by 1 so the rightward array
             # element is kept. Also, build a warning message about this to be raised later.
             if min_array_idx == max_array_idx:
-                ambiguous.append(array_axis)
+                ambiguous = True
+                max_array_idx += 1
                 message += (f"All input points corresponding to array axis {array_axis} lie on "
                             f"the boundary between array elements {min_array_idx} and "
                             f"{max_array_idx}. The cropped NDCube will only include array "
                             f"element {max_array_idx}.\n")
-                max_array_idx += 1
             if max_array_idx - min_array_idx == 1 and not keepdims:
                 item.append(min_array_idx)
             else:
