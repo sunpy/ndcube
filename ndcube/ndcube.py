@@ -796,8 +796,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         However, ``meta`` and ``global_coords`` are copied to the output `ndcube.NDCube`.
         """
         try:
-            from reproject import reproject_adaptive, reproject_exact, reproject_interp
-            from reproject.wcs_utils import has_celestial
+            from reproject import reproject_adaptive, reproject_exact, reproject_interp  # noqa: PLC0415
+            from reproject.wcs_utils import has_celestial  # noqa: PLC0415
         except ModuleNotFoundError:
             raise ImportError(f"The {type(self).__name__}.reproject_to method requires "
                               f"the `reproject` library to be installed.")
@@ -923,7 +923,7 @@ class NDCube(NDCubeBase):
         warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
                     "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
 
-        from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+        from ndcube.visualization.mpl_plotter import MatplotlibPlotter  # noqa: PLC0415
 
         plotter = MatplotlibPlotter(self)
         return plotter._as_mpl_axes()
