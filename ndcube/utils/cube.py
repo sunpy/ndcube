@@ -8,6 +8,7 @@ import astropy.nddata
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
+from ndcube.utils.exceptions import warn_user
 
 __all__ = [
     "get_crop_item_from_points",
@@ -137,81 +138,98 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
         will return the minimum cube in array-index-space that contains all the
         input world points.
     """
-    # Define a list of lists to hold the array indices of the points
-    # where each inner list gives the index of all points for that array axis.
-    combined_points_array_idx = [[]] * wcs.pixel_n_dim
+    # Define a list of lists to hold the pixel coordinates of the points
+    # where each inner list gives the pixel coordinates of all points for that pixel axis.
+    # Recall that pixel axis ordering is reversed compared to array axis ordering.
+    combined_points_pixel_idx = [[]] * wcs.pixel_n_dim
     high_level_wcs = HighLevelWCSWrapper(wcs) if isinstance(wcs, BaseLowLevelWCS) else wcs
     low_level_wcs = high_level_wcs.low_level_wcs
     # For each point compute the corresponding array indices.
     for point in points:
-        # Get the arrays axes associated with each element in point.
-        if crop_by_values:
-            point_inputs_array_axes = []
-            for i in range(low_level_wcs.world_n_dim):
-                pix_axes = np.array(
-                    wcs_utils.world_axis_to_pixel_axes(i, low_level_wcs.axis_correlation_matrix))
-                point_inputs_array_axes.append(tuple(
-                    wcs_utils.convert_between_array_and_pixel_axes(pix_axes, low_level_wcs.pixel_n_dim)))
-            point_inputs_array_axes = tuple(point_inputs_array_axes)
-        else:
-            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(high_level_wcs)
-        # Get indices of array axes which correspond to only None inputs in point
+        # Get the pixel axes associated with each element in point.
+        point_inputs_pixel_axes = (
+            tuple(wcs_utils.world_axis_to_pixel_axes(i, low_level_wcs.axis_correlation_matrix)
+                  for i in range(low_level_wcs.world_n_dim)) if crop_by_values
+            else wcs_utils.pixel_indices_for_world_objects(high_level_wcs))
+        # Get indices of pixel axes which correspond to only None inputs in point
         # as well as those that correspond to a coord.
         point_indices_with_inputs = []
-        array_axes_with_input = []
+        pixel_axes_with_input = []
         for i, coord in enumerate(point):
             if coord is not None:
                 point_indices_with_inputs.append(i)
-                array_axes_with_input.append(point_inputs_array_axes[i])
-        array_axes_with_input = set(chain.from_iterable(array_axes_with_input))
-        array_axes_without_input = set(range(low_level_wcs.pixel_n_dim)) - array_axes_with_input
+                pixel_axes_with_input.append(point_inputs_pixel_axes[i])
+        pixel_axes_with_input = set(chain.from_iterable(pixel_axes_with_input))
+        pixel_axes_without_input = set(range(low_level_wcs.pixel_n_dim)) - pixel_axes_with_input
         # Slice out the axes that do not correspond to a coord
         # from the WCS and the input point.
-        if len(array_axes_without_input) > 0:
+        if len(pixel_axes_without_input) > 0:
+            array_axes_without_input = wcs_utils.convert_between_array_and_pixel_axes(
+                pixel_axes_without_input, low_level_wcs.pixel_n_dim)
             wcs_slice = np.array([slice(None)] * low_level_wcs.pixel_n_dim)
-            wcs_slice[np.array(list(array_axes_without_input))] = 0
+            wcs_slice[array_axes_without_input] = 0
             sliced_wcs = SlicedLowLevelWCS(low_level_wcs, slices=tuple(wcs_slice))
             sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
         else:
             # Else, if all axes have at least one crop input, no need to slice the WCS.
             sliced_wcs, sliced_point = low_level_wcs, np.array(point, dtype=object)
-        # Derive the array indices of the input point and place each index
+        # Derive the pixel indices of the input point and place each index
         # in the list corresponding to its axis.
-        if crop_by_values:
-            point_array_indices = sliced_wcs.world_to_array_index_values(*sliced_point)
-            # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
-                point_array_indices = (point_array_indices.item(),)
-            else:
-                # Convert from scalar arrays to scalars
-                point_array_indices = tuple(a.item() for a in point_array_indices)
-        else:
-            point_array_indices = HighLevelWCSWrapper(sliced_wcs).world_to_array_index(
-                *sliced_point)
-            # If returned value is a 0-d array, convert to a length-1 tuple.
-            if isinstance(point_array_indices, np.ndarray) and point_array_indices.ndim == 0:
-                point_array_indices = (point_array_indices.item(),)
-        for axis, index in zip(array_axes_with_input, point_array_indices):
-            combined_points_array_idx[axis] = combined_points_array_idx[axis] + [index]
-    # Define slice item with which to slice cube.
+        # Use the to_pixel methods to preserve fractional indices for future rounding.
+        point_pixel_indices = (sliced_wcs.world_to_pixel_values(*sliced_point) if crop_by_values
+                               else HighLevelWCSWrapper(sliced_wcs).world_to_pixel(*sliced_point))
+        # For each pixel axis associated with this point, place the pixel coords for
+        # that pixel axis into the corresponding list within combined_points_pixel_idx.
+        if sliced_wcs.pixel_n_dim == 1:
+            point_pixel_indices = (point_pixel_indices,)
+        for axis, index in zip(pixel_axes_with_input, point_pixel_indices):
+            combined_points_pixel_idx[axis] = combined_points_pixel_idx[axis] + [index]
+
+    # Iterate through each array axis to determine the min and max pixel coords
+    # and then convert to array indices. Note that combined_points_pixel_idx holds the
+    # pixel coords for each pixel axis. Therefore, to iterate in array axis order,
+    # combined_points_pixel_idx must be reversed.
     item = []
+    ambiguous = False
+    message = ""
     result_is_scalar = True
-    for axis_indices in combined_points_array_idx:
-        if axis_indices == []:
+    for array_axis, pixel_coords in enumerate(combined_points_pixel_idx[::-1]):
+        if pixel_coords == []:
             result_is_scalar = False
             item.append(slice(None))
         else:
-            min_idx = min(axis_indices)
-            max_idx = max(axis_indices) + 1
-            if max_idx - min_idx == 1 and not keepdims:
-                item.append(min_idx)
+            # Calculate the index of the array element containing the pixel coordinate.
+            # Note that integer pixel coordinates correspond to the pixel center,
+            # while integer array indices correspond to lower edge of desired array element.
+            # Therefore a shift of 0.5 is required in the conversion.
+            # The max idx conversion below will discard right-ward array element if
+            # max pixel coord corresponds to a pixel edge.
+            min_array_idx = int(np.floor(min(pixel_coords) + 0.5))
+            max_array_idx = int(np.ceil(max(pixel_coords) - 0.5)) + 1
+            # Due to the above calculation, the above min and max array indices can only be
+            # same if the original pixel coords correspond to the same pixel edge.
+            # If this is the case, increment the max array index by 1 so the rightward array
+            # element is kept. Also, build a warning message about this to be raised later.
+            if min_array_idx == max_array_idx:
+                ambiguous = True
+                max_array_idx += 1
+                message += (f"All input points corresponding to array axis {array_axis} lie on "
+                            f"the boundary between array elements {min_array_idx} and "
+                            f"{max_array_idx}. The cropped NDCube will only include array "
+                            f"element {max_array_idx}.\n")
+            if max_array_idx - min_array_idx == 1 and not keepdims:
+                item.append(min_array_idx)
             else:
-                item.append(slice(min_idx, max_idx))
+                item.append(slice(min_array_idx, max_array_idx))
                 result_is_scalar = False
+    # Raise warning if all world values for any array axes correspond to a pixel edge.
+    if ambiguous:
+        warn_user(message)
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
-                         "This is not supported when keepdims=False.")
+                         "This is not supported when keepdims=False. "
+                         "Please set keepdims=True and try again.")
     return tuple(item)
 
 
