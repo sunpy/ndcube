@@ -183,3 +183,33 @@ def test_int_fraction_pixel_shape(celestial_wcs):
     assert wcs.pixel_shape == (18, 21)
     for dim in wcs.pixel_shape:
         assert isinstance(dim, numbers.Integral)
+
+@pytest.fixture
+def four_five_wcs():
+    from astropy.wcs import WCS
+
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["HPLN-TAN", "HPLT-TAN"]
+    wcs.wcs.cdelt = [2, 2]
+    wcs.wcs.crval = [0, 0]
+    wcs.wcs.crpix = [1, 1]
+
+    wcs.wcs.set()
+    wcs.pixel_shape = [4, 5]
+    return wcs
+
+@pytest.mark.parametrize(('factor', 'offset', 'expected_over_pixels'),
+                         [([2, 3], [0, 0], np.meshgrid(np.arange(-0.5, 1.75, 0.25), np.arange(-0.5, 1.2, 1/6))),
+                          ([2, 3], [1, 2], np.meshgrid(np.arange(-1, 1.25, 0.25), np.arange(-7, 4) / 6)),
+                         ])
+def test_resampled_pixel_to_world_values(four_five_wcs, factor, offset, expected_over_pixels):
+    wcs = four_five_wcs
+    # Get world values of original pixel grid.
+    under_pixels = np.meshgrid(np.arange(-0.5, 4, 0.5), np.arange(-0.5, 5, 0.5))
+    expected_world = wcs.pixel_to_world_values(*under_pixels)
+
+    # Resample WCS
+    new_wcs = ResampledLowLevelWCS(wcs, factor, offset)
+    # Get expected pixel coords in resampled WCS of same pixel locations as above.
+    output_world = new_wcs.pixel_to_world_values(*expected_over_pixels)
+    assert_allclose(np.asarray(output_world), np.asarray(expected_world), atol=1e-15)
