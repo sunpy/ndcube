@@ -546,7 +546,15 @@ def test_crop_1d():
     helpers.assert_cubes_equal(output, expected)
 
 
-def test_crop_at_pixel_edges():
+@pytest.mark.filterwarnings("ignore::Warning")
+@pytest.mark.parametrize(("points", "expected_slice", "crop_by_values", "keepdims"),
+                         [
+                             (((15*u.m,), (45*u.m,)), np.s_[1:4], False, False),
+                             (((15*u.m,), (45*u.m,)), np.s_[1:4], True, False),
+                             (((15*u.m,)), np.s_[1:2], False, True),
+                             (((15*u.m,)), np.s_[1:2], True, True),
+                         ])
+def test_crop_at_pixel_edges(points, expected_slice, crop_by_values, keepdims):
     wcs = astropy.wcs.WCS(naxis=1)
     wcs.wcs.ctype = 'WAVE',
     wcs.wcs.cunit = 'm',
@@ -555,24 +563,8 @@ def test_crop_at_pixel_edges():
     wcs.wcs.crval = 10,
     cube = NDCube(np.arange(10), wcs=wcs)
 
-    expected = cube[1:4]
+    expected = cube[expected_slice]
 
-    output = cube.crop((15*u.m,), (45*u.m,))
-
-    helpers.assert_cubes_equal(output, expected)
-
-
-def test_crop_by_values_at_pixel_edges():
-    wcs = astropy.wcs.WCS(naxis=1)
-    wcs.wcs.ctype = 'WAVE',
-    wcs.wcs.cunit = 'm',
-    wcs.wcs.cdelt = 10,
-    wcs.wcs.crpix = 1,
-    wcs.wcs.crval = 10,
-    cube = NDCube(np.arange(10), wcs=wcs)
-
-    expected = cube[1:4]
-
-    output = cube.crop_by_values((15*u.m,), (45*u.m,))
+    output = cube.crop_by_values(*points, keepdims=keepdims) if crop_by_values else cube.crop(*points, keepdims=keepdims)
 
     helpers.assert_cubes_equal(output, expected)
