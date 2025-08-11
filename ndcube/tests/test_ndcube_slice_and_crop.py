@@ -544,3 +544,35 @@ def test_crop_1d():
     output = cube.crop((7*u.nm,), (15*u.nm,))
 
     helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_at_pixel_edges():
+    wcs = astropy.wcs.WCS(naxis=1)
+    wcs.wcs.ctype = 'WAVE',
+    wcs.wcs.cunit = 'm',
+    wcs.wcs.cdelt = 10,
+    wcs.wcs.crpix = 1,
+    wcs.wcs.crval = 10,
+    cube = NDCube(np.arange(10), wcs=wcs)
+
+    expected = cube[1:4]
+
+    output = cube.crop((15*u.m,), (45*u.m,))
+
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_values_at_pixel_edges():
+    wcs = astropy.wcs.WCS(naxis=1)
+    wcs.wcs.ctype = 'WAVE',
+    wcs.wcs.cunit = 'm',
+    wcs.wcs.cdelt = 10,
+    wcs.wcs.crpix = 1,
+    wcs.wcs.crval = 10,
+    cube = NDCube(np.arange(10), wcs=wcs)
+
+    expected = cube[1:4]
+
+    output = cube.crop_by_values((15*u.m,), (45*u.m,))
+
+    helpers.assert_cubes_equal(output, expected)
