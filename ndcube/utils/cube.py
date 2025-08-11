@@ -161,6 +161,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
                 pixel_axes_with_input.append(point_inputs_pixel_axes[i])
         pixel_axes_with_input = set(chain.from_iterable(pixel_axes_with_input))
         pixel_axes_without_input = set(range(low_level_wcs.pixel_n_dim)) - pixel_axes_with_input
+        pixel_axes_with_input = np.array(list(pixel_axes_with_input))
+        pixel_axes_without_input = np.array(list(pixel_axes_without_input))
         # Slice out the axes that do not correspond to a coord
         # from the WCS and the input point.
         if len(pixel_axes_without_input) > 0:
