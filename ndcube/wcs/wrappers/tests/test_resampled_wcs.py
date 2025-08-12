@@ -199,10 +199,85 @@ def four_five_wcs():
     return wcs
 
 @pytest.mark.parametrize(('factor', 'offset', 'expected_over_pixels'),
-                         [([2, 3], [0, 0], np.meshgrid(np.arange(-0.5, 1.75, 0.25), np.arange(-0.5, 1.2, 1/6))),
-                          ([2, 3], [1, 2], np.meshgrid(np.arange(-1, 1.25, 0.25), np.arange(-7, 4) / 6)),
+                         [([2, 3], [0, 0], np.meshgrid(np.linspace(-0.5, 1.5, 4*2+1), np.linspace(-0.5, 1+1/6, 5*2+1))),
+                          ([2, 3], [1, 2], np.meshgrid(np.linspace(-1, 1, 4*2+1), np.linspace(-1-1/6, 0.5, 5*2+1))),
                          ])
 def test_resampled_pixel_to_world_values(four_five_wcs, factor, offset, expected_over_pixels):
+    """
+    Notes
+    -----
+    Below shows schematics of the two test cases tested in this test of how ResampledLowLevelWCS.
+    The dots show the corners of pixels in a grid before resampling, while the underscores and
+    pipes show the edges the resampled pixels. In the first case, the resampled pixels are
+    obtained by applied resampling factors of 2 along the x-axis and 3 along the y-axis. No
+    offset is applied to either axis. In the second case, the same resampling factors have
+    been applied, but an offsets of 1 and 2 pixels have been applied to the x- and y-axes,
+    respectively. The right column/upper row of numbers along the side of/below the grids denote
+    the edges and centres of the original pixel grid in the original pixel coordinates.
+    The left column and lower row gives the same locations in the pixel coordinates of the
+    resampled grid.
+
+    Test Case 1
+
+    resampled  original
+    factor=3
+    offset=0
+
+    1+1/6       4.5.         .         .         .         .
+                   |                   |                   |
+      1          4 |                   |                   |
+                   |                   |                   |
+     5/6        3.5.         .         .         .         .
+                   |                   |                   |
+     4/6         3 |                   |                   |
+                   |                   |                   |
+                   |                   |                   |
+     0.5        2.5._________._________._________._________.
+                   |                   |                   |
+     2/6         2 |                   |                   |
+                   |                   |                   |
+     1/6        1.5.         .         .         .         .
+                   |                   |                   |
+      0          1 |                   |                   |
+                   |                   |                   |
+    -1/6        0.5.         .         .         .         .
+                   |                   |                   |
+    -2/6         0 |                   |                   |
+                   |                   |                   |
+    -0.5       -0.5._________._________._________._________.
+                 -0.5   0   0.5   1   1.5   2   2.5   3   3.5  original pixel indices
+                 -0.5 -0.25  0  0.25  0.5  0.75  1   1.25 1.5 resampled pixel indices: factor=2, offset=0
+
+    Test Case 2
+
+    resampled  original
+    factor=3
+    offset=2
+
+      0.5      4.5 .___________.___________.___________.___________.
+                               |                       |
+      2/6       4              |                       |
+                               |                       |
+      1/6      3.5 .           .           .           .           .
+                               |                       |
+       0        3              |                       |
+                               |                       |
+     -1/3      2.5 .           .           .           .           .
+                               |                       |
+     -2/6       2              |                       |
+                               |                       |
+     -0.5      1.5 .___________.___________.___________.___________.
+                               |                       |
+     -4/6       1              |                       |
+                               |                       |
+     -5/6      0.5 .           .           .           .           .
+                               |                       |
+      -1        0              |                       |
+                               |                       |
+     -1-1/6   -0.5 .           .           .           .           .
+                 -0.5    0    0.5    1    1.5    2    2.5    3    3.5  original pixel indices
+                  -1   -0.75 -0.5  -0.25   0    0.25  0.5   0.75   1   resampled pixel indices: factor=2, offset=1
+    """
     wcs = four_five_wcs
     # Get world values of original pixel grid.
     under_pixels = np.meshgrid(np.arange(-0.5, 4, 0.5), np.arange(-0.5, 5, 0.5))
