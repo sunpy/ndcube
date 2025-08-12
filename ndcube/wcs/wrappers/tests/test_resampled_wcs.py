@@ -7,6 +7,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.wcs import WCS
 from astropy.wcs.wcsapi import HighLevelWCSWrapper
 
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
@@ -189,8 +190,6 @@ def test_int_fraction_pixel_shape(celestial_wcs):
 
 @pytest.fixture
 def four_five_wcs():
-    from astropy.wcs import WCS
-
     wcs = WCS(naxis=2)
     wcs.wcs.ctype = ["HPLN-TAN", "HPLT-TAN"]
     wcs.wcs.cdelt = [2, 2]
