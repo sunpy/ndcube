@@ -796,8 +796,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         However, ``meta`` and ``global_coords`` are copied to the output `ndcube.NDCube`.
         """
         try:
-            from reproject import reproject_adaptive, reproject_exact, reproject_interp
-            from reproject.wcs_utils import has_celestial
+            from reproject import reproject_adaptive, reproject_exact, reproject_interp  # noqa: PLC0415
+            from reproject.wcs_utils import has_celestial  # noqa: PLC0415
         except ModuleNotFoundError:
             raise ImportError(f"The {type(self).__name__}.reproject_to method requires "
                               f"the `reproject` library to be installed.")
@@ -923,7 +923,7 @@ class NDCube(NDCubeBase):
         warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
                     "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
 
-        from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+        from ndcube.visualization.mpl_plotter import MatplotlibPlotter  # noqa: PLC0415
 
         plotter = MatplotlibPlotter(self)
         return plotter._as_mpl_axes()
@@ -1133,7 +1133,7 @@ class NDCube(NDCubeBase):
         Downsample array by combining contiguous pixels into bins.
 
         Values in bins are determined by applying a function to the pixel values within it.
-        The number of pixels in each bin in each dimension is given by the bin_shape input.
+        The number of pixels in each bin in each dimension is given by the ``bin_shape`` input.
         This must be an integer fraction of the cube's array size in each dimension.
         If the NDCube instance has uncertainties attached, they are propagated
         depending on binning method chosen.
@@ -1148,6 +1148,7 @@ class NDCube(NDCubeBase):
             units have to be convertible to pixels.
             The sentinel value ``-1`` can be passed for a dimension which means
             that no rebinning will occur along that dimension.
+            Please note the ``bin_shape`` follows array axis (NumPy) ordering of the axes.
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`

@@ -5,7 +5,7 @@ from itertools import chain
 import numpy as np
 
 import astropy.nddata
-from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
 
@@ -30,7 +30,7 @@ def sanitize_wcs(func):
     passed is a HighLevelWCS object, or an ExtraCoords object.
     """
     # This needs to be here to prevent a circular import
-    from ndcube.extra_coords.extra_coords import ExtraCoords
+    from ndcube.extra_coords.extra_coords import ExtraCoords  # noqa: PLC0415
 
     @wraps(func)
     def wcs_wrapper(*args, **kwargs):
@@ -81,6 +81,8 @@ def sanitize_crop_inputs(points, wcs):
         # Confirm whether point contains at least one None entry.
         if all(coord is None for coord in points[i]):
             values_are_none[i] = True
+        # Squeeze length-1 coordinate objects to scalars.
+        points[i] = [coord.squeeze() if hasattr(coord, "squeeze") else coord for coord in points[i]]
     # If no points contain a coord, i.e. if all entries in all points are None,
     # set no-op flag to True and exit.
     if all(values_are_none):
@@ -90,7 +92,7 @@ def sanitize_crop_inputs(points, wcs):
         raise ValueError("All points must have same number of coordinate objects."
                          f"Number of objects in each point: {n_coords}")
     # Import must be here to avoid circular import.
-    from ndcube.extra_coords.extra_coords import ExtraCoords
+    from ndcube.extra_coords.extra_coords import ExtraCoords  # noqa: PLC0415
     if isinstance(wcs, ExtraCoords):
         # Determine how many dummy axes are needed
         n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)
@@ -125,7 +127,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
         Denotes whether cropping is done using high-level objects or "values",
         i.e. low-level objects.
 
-    keep_dims : `bool`
+    keepdims : `bool`
         If `False`, returned item will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
 
     Returns
@@ -138,20 +140,21 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # Define a list of lists to hold the array indices of the points
     # where each inner list gives the index of all points for that array axis.
     combined_points_array_idx = [[]] * wcs.pixel_n_dim
+    high_level_wcs = HighLevelWCSWrapper(wcs) if isinstance(wcs, BaseLowLevelWCS) else wcs
+    low_level_wcs = high_level_wcs.low_level_wcs
     # For each point compute the corresponding array indices.
     for point in points:
         # Get the arrays axes associated with each element in point.
         if crop_by_values:
             point_inputs_array_axes = []
-            for i in range(wcs.world_n_dim):
+            for i in range(low_level_wcs.world_n_dim):
                 pix_axes = np.array(
-                    wcs_utils.world_axis_to_pixel_axes(i, wcs.axis_correlation_matrix))
+                    wcs_utils.world_axis_to_pixel_axes(i, low_level_wcs.axis_correlation_matrix))
                 point_inputs_array_axes.append(tuple(
-                    wcs_utils.convert_between_array_and_pixel_axes(pix_axes, wcs.pixel_n_dim)))
+                    wcs_utils.convert_between_array_and_pixel_axes(pix_axes, low_level_wcs.pixel_n_dim)))
             point_inputs_array_axes = tuple(point_inputs_array_axes)
         else:
-            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(
-                HighLevelWCSWrapper(wcs))
+            point_inputs_array_axes = wcs_utils.array_indices_for_world_objects(high_level_wcs)
         # Get indices of array axes which correspond to only None inputs in point
         # as well as those that correspond to a coord.
         point_indices_with_inputs = []
@@ -161,14 +164,17 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
                 point_indices_with_inputs.append(i)
                 array_axes_with_input.append(point_inputs_array_axes[i])
         array_axes_with_input = set(chain.from_iterable(array_axes_with_input))
-        array_axes_without_input = set(range(wcs.pixel_n_dim)) - array_axes_with_input
+        array_axes_without_input = set(range(low_level_wcs.pixel_n_dim)) - array_axes_with_input
         # Slice out the axes that do not correspond to a coord
         # from the WCS and the input point.
-        wcs_slice = np.array([slice(None)] * wcs.pixel_n_dim)
-        if len(array_axes_without_input):
+        if len(array_axes_without_input) > 0:
+            wcs_slice = np.array([slice(None)] * low_level_wcs.pixel_n_dim)
             wcs_slice[np.array(list(array_axes_without_input))] = 0
-        sliced_wcs = SlicedLowLevelWCS(wcs, slices=tuple(wcs_slice))
-        sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
+            sliced_wcs = SlicedLowLevelWCS(low_level_wcs, slices=tuple(wcs_slice))
+            sliced_point = np.array(point, dtype=object)[np.array(point_indices_with_inputs)]
+        else:
+            # Else, if all axes have at least one crop input, no need to slice the WCS.
+            sliced_wcs, sliced_point = low_level_wcs, np.array(point, dtype=object)
         # Derive the array indices of the input point and place each index
         # in the list corresponding to its axis.
         if crop_by_values:
@@ -205,7 +211,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
     # If item will result in a scalar cube, raise an error as this is not currently supported.
     if result_is_scalar:
         raise ValueError("Input points causes cube to be cropped to a single pixel. "
-                         "This is not supported.")
+                         "This is not supported when keepdims=False.")
     return tuple(item)
 
 

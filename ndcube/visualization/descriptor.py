@@ -35,14 +35,15 @@ class PlotterDescriptor:
         if self._default_type in ("mpl_plotter", "mpl_sequence_plotter"):
             if self._default_type == "mpl_plotter":
                 try:
-                    from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+                    from ndcube.visualization.mpl_plotter import MatplotlibPlotter  # noqa: PLC0415
                     return MatplotlibPlotter
                 except ImportError as e:
                     if raise_error:
                         raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
             elif self._default_type == "mpl_sequence_plotter":
                 try:
-                    from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
+                    from ndcube.visualization.mpl_sequence_plotter import \
+                        MatplotlibSequencePlotter  # noqa: PLC0415
                     return MatplotlibSequencePlotter
                 except ImportError as e:
                     if raise_error:

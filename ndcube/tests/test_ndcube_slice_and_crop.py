@@ -218,6 +218,16 @@ def test_crop_tuple_non_tuple_input(ndcube_2d_ln_lt):
     helpers.assert_cubes_equal(cropped_by_tuples, cropped_by_coords)
 
 
+def test_crop_length_1_input(ndcube_2d_ln_lt):
+    cube = ndcube_2d_ln_lt
+    frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
+    lower_corner = SkyCoord(Tx=[0359.99667], Ty=[-0.0011111111], unit="deg", frame=frame)
+    upper_corner = SkyCoord(Tx=[[0.0044444444]], Ty=[[0.0011111111]], unit="deg", frame=frame)
+    cropped_by_shaped = cube.crop(lower_corner, upper_corner)
+    cropped_by_scalars = cube.crop((lower_corner.squeeze(),), (upper_corner.squeeze(),))
+    helpers.assert_cubes_equal(cropped_by_shaped, cropped_by_scalars)
+
+
 def test_crop_with_nones(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     lower_corner = [None] * 3
@@ -516,3 +526,21 @@ def test_crop_rotated_celestial(ndcube_4d_ln_lt_l_t):
     small = cube.crop(bottom_left, bottom_right, top_left, top_right)
 
     assert small.data.shape == (1652, 1652)
+
+
+def test_crop_1d():
+    # This use case revealed a bug so has been added as a test.
+    # Create NDCube.
+    wcs = astropy.wcs.WCS(naxis=1)
+    wcs.wcs.ctype = 'WAVE',
+    wcs.wcs.cunit = 'nm',
+    wcs.wcs.cdelt = 4,
+    wcs.wcs.crpix = 1,
+    wcs.wcs.crval = 3,
+    cube = NDCube(np.arange(200), wcs=wcs)
+
+    expected = cube[1:4]
+
+    output = cube.crop((7*u.nm,), (15*u.nm,))
+
+    helpers.assert_cubes_equal(output, expected)
