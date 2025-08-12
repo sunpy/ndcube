@@ -123,41 +123,28 @@ def test_2d(celestial_wcs):
 
 
 @pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
+                         ['celestial_2d_ape14_wcs',
+                          'celestial_2d_fitswcs'],
                          indirect=True)
-def test_scalar_factor(celestial_wcs):
-
+@pytest.mark.parametrize('factor,offset,over_pixel',
+                         [(2, 0, (0.9, 1.9)),
+                          (2, 1, (0.4, 1.4)),
+                         ])
+def test_scalar_factor_and_offset(celestial_wcs, factor, offset, over_pixel):
     celestial_wcs.pixel_bounds = None
-    wcs = ResampledLowLevelWCS(celestial_wcs, 2)
-
-    pixel_scalar = (2.3, 4.3)
-    world_scalar = (4.8, 5.2)
-    assert_allclose(wcs.pixel_to_world_values(*pixel_scalar), world_scalar)
-    assert_allclose(wcs.array_index_to_world_values(*pixel_scalar[::-1]), world_scalar)
-    assert_allclose(wcs.world_to_pixel_values(*world_scalar), pixel_scalar)
-    assert_allclose(wcs.world_to_array_index_values(*world_scalar), [4, 2])
-
-
-@pytest.mark.parametrize('celestial_wcs',
-                         ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'],
-                         indirect=True)
-def test_offset(celestial_wcs):
-    celestial_wcs.pixel_bounds = None
-    offset = 1
-    factor = 2
     wcs = ResampledLowLevelWCS(celestial_wcs, factor, offset=offset)
-
-    # Define a location in the pixel grid in both the pre- & post-resampled pixel coords...
-    under_pixel, over_pixel = (2.3, 4.3), (0.4, 1.4)
-    # ...and get corresponding world location using original WCS.
+    # Define the pixel coord pre-resampled pixel grid corresponding to
+    # the same location in the resampled grid, as defined in the parameterization.
+    under_pixel = (2.3, 4.3)
+    # Get the corresponding world location using original WCS.
     world = celestial_wcs.pixel_to_world_values(*under_pixel)
-
     # Confirm resampled WCS maps to and from the same world coordinate to the
     # pixel location in the resample pixel coords.
     assert_allclose(wcs.pixel_to_world_values(*over_pixel), world)
     assert_allclose(wcs.array_index_to_world_values(*over_pixel[::-1]), world)
     assert_allclose(wcs.world_to_pixel_values(*world), over_pixel)
-    assert_allclose(wcs.world_to_array_index_values(*world), [1, 0])
+    assert_allclose(wcs.world_to_array_index_values(*world),
+                    np.around(over_pixel[::-1]).astype(int))
 
 
 @pytest.mark.parametrize('celestial_wcs',
