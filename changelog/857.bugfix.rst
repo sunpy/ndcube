@@ -1,0 +1,1 @@
+Fix translations in `~ndcube.wcs.wrappers.resampled_wcs.ResampledLowLevelWCS` between original and resampled pixel grids.
