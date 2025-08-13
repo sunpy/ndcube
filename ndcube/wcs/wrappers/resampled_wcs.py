@@ -31,7 +31,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     Notes
     -----
     Below is a schematic of how ResampledLowLevelWCS works. The asterisks show the
-    corners of pixels in a grid before resampling, while the underscores and
+    corners of pixels in a grid before resampling, while the dashes and
     pipes show the edges of the resampled pixels. The resampling along the
     x-axis has been performed using a factor of 2 and offset of 1, respectively,
     while the resampling of the y-axis uses a factor of 3 and offset of 2.

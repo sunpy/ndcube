@@ -200,7 +200,7 @@ def test_resampled_pixel_to_world_values(four_five_wcs, factor, offset, expected
     Notes
     -----
     Below shows schematics of the two test cases tested in this test of how ResampledLowLevelWCS.
-    The dots show the corners of pixels in a grid before resampling, while the underscores and
+    The asterisks show the corners of pixels in a grid before resampling, while the dashes and
     pipes show the edges the resampled pixels. In the first case, the resampled pixels are
     obtained by applied resampling factors of 2 along the x-axis and 3 along the y-axis. No
     offset is applied to either axis. In the second case, the same resampling factors have
