@@ -21,9 +21,57 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         axis. If a scalar, the same factor is used for all axes.
 
     offset: `int` or `float` or iterable of the same
-        The location on the underlying pixel grid which corresponds
-        to zero on the top level pixel grid. If a scalar, the grid will be
-        shifted by the same amount in all dimensions.
+        The shift of the lower edge of the 0th pixel (i.e. the pixel
+        coordinate -0.5) of the resampled grid relative to the lower
+        edge of the 0th pixel in the original underlying pixel grid,
+        in units of original pixel widths.  (See the schematic in the
+        Notes section for a graphical example.) If a scalar, the grid
+        will be shifted by the same amount in all dimensions.
+
+    Notes
+    -----
+    Below is a schematic of how ResampledLowLevelWCS works. The dots show the
+    corners of pixels in a grid before resampling, while the underscores and
+    pipes show the edges of the resampled pixels. The resampling along the
+    x-axis has been performed using a factor of 2 and offset of 1, respectively,
+    while the resampling of the y-axis uses a factor of 3 and offset of 2.
+    The right column and upper row of numbers along the side and bottom of the
+    grids denote the edges and centres of the original pixel grid in the original
+    pixel coordinates.  The left column and lower row gives the same locations in
+    the pixel coordinates of the resampled grid.  Note that the resampled pixels
+    have an (x, y) shape of (2, 3) relative to the original pixel grid.
+    Also note, the left/lower edge of the 0th pixel in the resampled grid (i.e. pixel
+    coord -0.5) is shifted relative to the left/lower edge of the original 0th pixel,
+    and that shift is given by the offset (+1 in the x-axis and +2 along the y-axis),
+    which is in units of original pixel widths.
+
+    resampled  original
+    factor=3
+    offset=2
+
+      0.5      4.5 .___________.___________.___________.___________.
+                               |                       |
+      2/6       4              |                       |
+                               |                       |
+      1/6      3.5 .           .           .           .           .
+                               |                       |
+       0        3              |                       |
+                               |                       |
+     -1/3      2.5 .           .           .           .           .
+                               |                       |
+     -2/6       2              |                       |
+                               |                       |
+     -0.5      1.5 .___________.___________.___________.___________.
+                               |                       |
+     -4/6       1              |                       |
+                               |                       |
+     -5/6      0.5 .           .           .           .           .
+                               |                       |
+      -1        0              |                       |
+                               |                       |
+     -1-1/6   -0.5 .           .           .           .           .
+                 -0.5    0    0.5    1    1.5    2    2.5    3    3.5  original pixel indices
+                  -1   -0.75 -0.5  -0.25   0    0.25  0.5   0.75   1   resampled pixel indices: factor=2, offset=1
     """
 
     def __init__(self, wcs, factor, offset=0):
