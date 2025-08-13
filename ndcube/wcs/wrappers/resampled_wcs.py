@@ -30,7 +30,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
 
     Notes
     -----
-    Below is a schematic of how ResampledLowLevelWCS works. The dots show the
+    Below is a schematic of how ResampledLowLevelWCS works. The asterisks show the
     corners of pixels in a grid before resampling, while the underscores and
     pipes show the edges of the resampled pixels. The resampling along the
     x-axis has been performed using a factor of 2 and offset of 1, respectively,
@@ -49,27 +49,27 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     factor=3
     offset=2
 
-      0.5      4.5 .___________.___________.___________.___________.
+      0.5      4.5 *___________*___________*___________*___________*
                                |                       |
       2/6       4              |                       |
                                |                       |
-      1/6      3.5 .           .           .           .           .
+      1/6      3.5 *           *           *           *           *
                                |                       |
        0        3              |                       |
                                |                       |
-     -1/3      2.5 .           .           .           .           .
+     -1/3      2.5 *           *           *           *           *
                                |                       |
      -2/6       2              |                       |
                                |                       |
-     -0.5      1.5 .___________.___________.___________.___________.
+     -0.5      1.5 *___________*___________*___________*___________*
                                |                       |
      -4/6       1              |                       |
                                |                       |
-     -5/6      0.5 .           .           .           .           .
+     -5/6      0.5 *           *           *           *           *
                                |                       |
       -1        0              |                       |
                                |                       |
-     -1-1/6   -0.5 .           .           .           .           .
+     -1-1/6   -0.5 *           *           *           *           *
                  -0.5    0    0.5    1    1.5    2    2.5    3    3.5  original pixel indices
                   -1   -0.75 -0.5  -0.25   0    0.25  0.5   0.75   1   resampled pixel indices: factor=2, offset=1
     """
