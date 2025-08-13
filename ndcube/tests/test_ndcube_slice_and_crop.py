@@ -590,4 +590,3 @@ def test_crop_all_points_beyond_cube_extent_error(points):
 
     with pytest.raises(ValueError, match="are outside the range of the NDCube being cropped"):
         cube.crop(*points)
-    
