@@ -130,7 +130,7 @@ def test_2d(celestial_wcs):
                          ['celestial_2d_ape14_wcs',
                           'celestial_2d_fitswcs'],
                          indirect=True)
-@pytest.mark.parametrize('factor,offset,over_pixel',
+@pytest.mark.parametrize(('factor', 'offset', 'over_pixel'),
                          [(2, 0, (0.9, 1.9)),
                           (2, 1, (0.4, 1.4)),
                          ])
