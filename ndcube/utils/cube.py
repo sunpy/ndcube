@@ -107,7 +107,7 @@ def sanitize_crop_inputs(points, wcs):
     return False, points, wcs
 
 
-def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
+def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_shape):
     """
     Find slice item that crops to minimum cube in array-space containing specified world points.
 
@@ -130,6 +130,9 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
 
     keepdims : `bool`
         If `False`, returned item will drop length-1 dimensions otherwise, item will keep length-1 dimensions.
+
+    original_shape: `tuple` of `int`
+        The shape of the data cube before cropping.
 
     Returns
     -------
@@ -200,6 +203,10 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             result_is_scalar = False
             item.append(slice(None))
         else:
+            # Raise error if points all lie below or all lie above array axis's extent.
+            if max(pixel_coords) < 0 or min(pixel_coords) >= original_shape[array_axis]:
+                raise ValueError(f"All world points associated with array axis {array_axis}"
+                                 " are outside the range of the NDCube being cropped.")
             # Calculate the index of the array element containing the pixel coordinate.
             # Note that integer pixel coordinates correspond to the pixel center,
             # while integer array indices correspond to lower edge of desired array element.
@@ -208,6 +215,16 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             # max pixel coord corresponds to a pixel edge.
             min_array_idx = int(np.floor(min(pixel_coords) + 0.5))
             max_array_idx = int(np.ceil(max(pixel_coords) - 0.5)) + 1
+            # world_to_array_index uses negative indices to represent locations to the left
+            # of the 0th pixel, while python slicing uses them to count backwards from the
+            # last element in the array. Therefore, set negative indices to 0.
+            # Note that we've already checked that the max pixel_coord is >= 0.
+            # Also note that there's no need to clip the max array idx, as values above
+            # the array extent does not cause ambiguity in the slicing so long as the
+            # min array idx is below that upper extent, which has also already been checked
+            # by the above error.
+            if min_array_idx < 0:
+                min_array_idx = 0
             # Due to the above calculation, the above min and max array indices can only be
             # same if the original pixel coords correspond to the same pixel edge.
             # If this is the case, increment the max array index by 1 so the rightward array

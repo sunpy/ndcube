@@ -647,7 +647,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
                                     f"{classes[j]}.")
-        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
+        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims,
+                                                    original_shape=self.data.shape)
 
     def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
@@ -689,7 +690,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
-        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
+        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims,
+                                                    original_shape=self.data.shape)
 
     def __str__(self):
         return textwrap.dedent(f"""\
