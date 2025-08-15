@@ -1048,6 +1048,9 @@ class NDCube(NDCubeBase):
         return self.__add__(value)
 
     def __sub__(self, value):
+        if isinstance(value, NDData):
+            value.data[:] = -value.data
+            return self.__add__(value)
         return self.__add__(-value)
 
     def __rsub__(self, value):

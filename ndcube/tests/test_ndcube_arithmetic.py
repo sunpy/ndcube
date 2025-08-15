@@ -122,6 +122,55 @@ def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
     check_arithmetic_value_and_units(new_cube, cube_quantity - value)
 
 
+@pytest.mark.parametrize(("ndc", "value", "expected_kwargs"),
+                        [(
+                          "ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2",
+                          NDData(np.ones((2, 3)), wcs=None),
+                          {"data": np.array([[-1, 0, 1], [2, 3, 4]])}
+                         ),
+                         (
+                          "ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2",
+                          NDData(np.ones((2, 3)),
+                                 wcs=None,
+                                 uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                 mask=np.array([[True, False, False], [False, True, False]])),
+                          {"data": np.array([[-1, 0, 1], [2, 3, 4]]),
+                           "uncertainty": astropy.nddata.StdDevUncertainty(np.ones((2, 3))*0.1),
+                           "mask": np.array([[True, False, False], [False, True, False]])}
+                         ), # ndc has no mask no uncertainty no unit, but nddata has all.
+                         (
+                          "ndcube_2d_ln_lt_unit_unc_mask",
+                          NDData(np.ones((2, 3)), wcs=None, unit=u.ct),
+                          {"data": np.array([[-1, 0, 1], [2, 3, 4]]),
+                           "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0, 0.05, 0.1],
+                                                                                     [0.15, 0.2, 0.25]])),
+                           "mask": np.array([[False, True, True], [False, True, True]])}
+                         ), # ndc has mask and uncertainty unit, but nddata doesn't.
+                         (
+                          "ndcube_2d_ln_lt_unit_unc_mask",
+                          NDData(np.ones((2, 3)),
+                                 wcs=None,
+                                 uncertainty=StdDevUncertainty(np.ones((2, 3))*0.1),
+                                 mask=np.array([[True, False, False], [False, True, False]]),
+                                 unit=u.ct),
+                          {"unit": u.ct,
+                           "data": np.array([[-1, 0, 1], [2, 3, 4]]),
+                           "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0.1       , 0.1118034 , 0.14142136],
+                                                                                     [0.18027756, 0.2236068 , 0.26925824]])),
+                           "mask": np.array([[True, True, True], [False, True, True]])}
+                         ) # both of them have uncertainty and mask and unit.
+                        ],
+                        indirect=("ndc",))
+def test_cube_arithmetic_subtract_nddata(ndc, value, expected_kwargs, wcs_2d_lt_ln):
+    output_cube = ndc - value  # perform the subtraction
+
+    expected_kwargs["wcs"] = wcs_2d_lt_ln
+    expected_cube = NDCube(**expected_kwargs)
+
+    # Assert output cube is same as expected cube
+    assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
+
+
 @pytest.mark.parametrize('value', [
     10 * u.ct,
     u.Quantity([10], u.ct),
