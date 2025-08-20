@@ -234,10 +234,15 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
             if min_array_idx == max_array_idx:
                 ambiguous = True
                 max_array_idx += 1
-                message += (f"All input points corresponding to array axis {array_axis} lie on "
-                            f"the boundary between array elements {min_array_idx} and "
-                            f"{max_array_idx}. The cropped NDCube will only include array "
-                            f"element {max_array_idx}.\n")
+                if min_array_idx == 0:
+                    message += (f"All input points corresponding to array axis {array_axis} lie on "
+                                "the lower boundary of array element 0 (the first element). "
+                                "The cropped NDCube will only include array element 0.\n")
+                else:
+                    message += (f"All input points corresponding to array axis {array_axis} lie on "
+                                f"the boundary between array elements {min_array_idx - 1} and "
+                                f"{min_array_idx}. The cropped NDCube will only include array "
+                                f"element {min_array_idx}.\n")
             if max_array_idx - min_array_idx == 1 and not keepdims:
                 item.append(min_array_idx)
             else:
