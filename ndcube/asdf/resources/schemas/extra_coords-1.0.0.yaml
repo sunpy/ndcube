@@ -32,7 +32,7 @@ properties:
   dropped_tables:
     type: array
   ndcube:
-    tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
+    tag: "tag:sunpy.org:ndcube/ndcube-1.*"
 
 required: [ndcube]
 additionalProperties: false

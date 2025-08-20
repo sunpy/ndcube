@@ -6,7 +6,7 @@ title: NDCube ASDF Manifest
 description: ASDF schemas and tags for NDCube classes.
 
 tags:
-  - tag_uri: "tag:sunpy.org:ndcube/ndcube/ndcube-1.0.0"
+  - tag_uri: "tag:sunpy.org:ndcube/ndcube-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/ndcube-1.0.0"
 
   - tag_uri:  "tag:sunpy.org:ndcube/extra_coords/extra_coords/extracoords-1.0.0"
@@ -30,7 +30,7 @@ tags:
   - tag_uri:  "tag:sunpy.org:ndcube/resampledwcs-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/resampledwcs-1.0.0"
 
-  - tag_uri:  "tag:sunpy.org:ndcube/ndcube/ndcube_sequence-1.0.0"
+  - tag_uri:  "tag:sunpy.org:ndcube_sequence-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/ndcube_sequence-1.0.0"
 
   - tag_uri:  "tag:sunpy.org:ndcube/reorderedwcs-1.0.0"
@@ -39,7 +39,7 @@ tags:
   - tag_uri:  "tag:sunpy.org:ndcube/compoundwcs-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/compoundwcs-1.0.0"
 
-  - tag_uri:  "tag:sunpy.org:ndcube/ndcube/ndcollection-1.0.0"
+  - tag_uri:  "tag:sunpy.org:ndcube/ndcollection-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/ndcollection-1.0.0"
 
   - tag_uri:  "tag:sunpy.org:ndcube/meta/ndmeta-1.0.0"

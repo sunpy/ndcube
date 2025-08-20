@@ -4,11 +4,11 @@ from asdf.extension import Converter
 
 
 class NDCubeConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/ndcube/ndcube-*"]
+    tags = ["tag:sunpy.org:ndcube/ndcube-*"]
     types = ["ndcube.ndcube.NDCube"]
 
     def from_yaml_tree(self, node, tag, ctx):
-        from ndcube.ndcube import NDCube
+        from ndcube.ndcube import NDCube  # noqa: PLC0415
 
         ndcube = NDCube(
             node["data"],
@@ -41,7 +41,7 @@ class NDCubeConverter(Converter):
             This ensures that users are aware of potentially important information
             that is not included in the serialized output.
         """
-        from astropy.wcs.wcsapi import BaseHighLevelWCS
+        from astropy.wcs.wcsapi import BaseHighLevelWCS  # noqa: PLC0415
 
         node = {}
         node["data"] = ndcube.data

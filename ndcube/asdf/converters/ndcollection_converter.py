@@ -2,11 +2,11 @@ from asdf.extension import Converter
 
 
 class NDCollectionConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/ndcube/ndcollection-*"]
+    tags = ["tag:sunpy.org:ndcube/ndcollection-*"]
     types = ["ndcube.ndcollection.NDCollection"]
 
     def from_yaml_tree(self, node, tag, ctx):
-        from ndcube.ndcollection import NDCollection
+        from ndcube.ndcollection import NDCollection  # noqa: PLC0415
 
         aligned_axes = list(node.get("aligned_axes").values())
         aligned_axes = tuple(tuple(lst) for lst in aligned_axes)

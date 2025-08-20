@@ -22,7 +22,7 @@ properties:
               - tag: "tag:stsci.edu:asdf/unit/quantity-*"
               - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
   ndcube:
-    tag: "tag:sunpy.org:ndcube/ndcube/ndcube-1.*"
+    tag: "tag:sunpy.org:ndcube/ndcube-1.*"
 
 required: [ndcube]
 additionalProperties: false
