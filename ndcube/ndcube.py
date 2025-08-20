@@ -979,7 +979,6 @@ class NDCube(NDCubeBase):
         handle_mask = self._arithmetic_handle_mask
         if value.wcs is not None:
             return TypeError("Cannot add coordinate-aware NDCubes together.")
-
         kwargs = {}
         if operation == "add":
             # Handle units
@@ -992,20 +991,36 @@ class NDCube(NDCubeBase):
             # Handle data and uncertainty
             kwargs["data"] = self.data + value_data
             uncert_op = np.add
-        elif operation == "multiply":
+        elif operation in ("multiply", "true_divide"):
             # Handle units
             if self.unit is not None or value.unit is not None:
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 value_unit = u.Unit('') if value.unit is None else value.unit
-                kwargs["unit"] = cube_unit * value_unit
-            kwargs["data"] = self.data * value.data
-            uncert_op = np.multiply
+                kwargs["unit"] = (cube_unit * value_unit if operation == "multiply"
+                                  else cube_unit / value_unit)
+            if operation == "multiply":
+                kwargs["data"] = self.data * value.data
+                uncert_op = np.multiply
+            else:
+                kwargs["data"] = self.data / value.data
+                uncert_op = np.true_divide
         else:
             raise ValueError("Value of operation argument is not recognized.")
-        kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        # Calculate uncertainty.
+        new_uncert = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        if new_uncert:
+            # New uncertainty object must be decoupled from its original
+            # parent_nddata object. Set this to None here, and the parent_nddata
+            # will become the new cube on instantiation.
+            new_uncert.parent_nddata = None
+            uncert_unit = kwargs.get("unit", self.unit)
+            if uncert_unit:
+                # Give uncertainty object the same units as the new NDCube.
+                new_uncert.unit = uncert_unit
+        kwargs["uncertainty"] = new_uncert
         kwargs["mask"] = handle_mask(self.mask, value.mask)
 
-        return kwargs  # return the new NDCube instance
+        return kwargs
 
     def __add__(self, value):
         kwargs = {}
@@ -1050,6 +1065,9 @@ class NDCube(NDCubeBase):
         return self.__add__(value)
 
     def __sub__(self, value):
+        if isinstance(value, NDData):
+            value.data[:] = -value.data
+            return self.__add__(value)
         return self.__add__(-value)
 
     def __rsub__(self, value):
@@ -1082,6 +1100,9 @@ class NDCube(NDCubeBase):
         return self.__mul__(value)
 
     def __truediv__(self, value):
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("true_divide", value)
+            return self._new_instance(**kwargs)
         return self.__mul__(1/value)
 
     def __rtruediv__(self, value):
