@@ -145,7 +145,11 @@ class MatplotlibPlotter(BasePlotter):
             # We plot against pixel coordinates
             axes.errorbar(np.arange(len(ydata)), ydata, yerr=yerror, **kwargs)
         else:
-            axes.plot(ydata, **kwargs)
+            # ydata can be either a dask or numpy array
+            # dask array needs .compute() to evaluate but breaks numpy
+            # So instead we cast to bool, which will force the evaluation if dask and is no-op if numpy
+            if bool(np.isfinite(ydata).any()):
+                axes.plot(ydata, **kwargs)
 
         axes.set_ylabel(default_ylabel)
 
@@ -192,7 +196,7 @@ class MatplotlibPlotter(BasePlotter):
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
         try:
-            from mpl_animators import ArrayAnimatorWCS
+            from mpl_animators import ArrayAnimatorWCS  # noqa: PLC0415
         except ImportError as e:
             raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
 

@@ -28,6 +28,17 @@ class NDCubeSlicingMixin(NDSlicingMixin):
             meta = self.meta
             self.meta = None
 
+        if isinstance(item, tuple) and Ellipsis in item:
+            if item.count(Ellipsis) > 1:
+                raise IndexError("An index can only have a single ellipsis ('...')")
+            expanded_item = []
+            for i in item:
+                if i is Ellipsis:
+                    expanded_item.extend([slice(None)] * (len(self.shape) - len(item) + 1))
+                else:
+                    expanded_item.append(i)
+            item = tuple(expanded_item)
+
         # Slice cube.
         item = tuple(sanitize_slices(item, len(self.shape)))
         sliced_cube = super().__getitem__(item)

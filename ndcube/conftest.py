@@ -1016,6 +1016,23 @@ def ndcube_2d_ln_lt_nomask(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_no_unit_no_unc_no_mask_2(wcs_2d_lt_ln):
+    shape = (2, 3)
+    data_cube = data_nd(shape).astype(float)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln)
+
+
+@pytest.fixture
+def ndcube_2d_ln_lt_unit_unc_mask(wcs_2d_lt_ln):
+    shape = (2, 3)
+    data_cube = data_nd(shape).astype(float)
+    mask = np.ones(shape, dtype=bool)
+    mask[:, 0] = False
+    uncertainty=StdDevUncertainty(data_cube * 0.05)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, mask=mask, uncertainty=uncertainty, unit=u.ct)
+
+
+@pytest.fixture
 def ndcube_2d_dask(wcs_2d_lt_ln):
     shape = (8, 4)
     chunks = 2
