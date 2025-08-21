@@ -1,0 +1,39 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/extra_coords-1.0.0"
+
+title:
+  Represents the ndcube ExtraCoords object
+
+description:
+  Represents the ndcube ExtraCoords object
+
+type: object
+properties:
+  wcs:
+    anyOf:
+      - tag: "tag:stsci.edu:gwcs/wcs-*"
+      - tag: "tag:astropy.org:astropy/wcs/wcs-*"
+  mapping:
+    type: array
+  lookup_tables:
+    type: array
+    items:
+        type: array
+        items:
+            - anyOf:
+              - type: number
+              - type: array
+            - anyOf:
+              - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/quantitytablecoordinate-1.*"
+              - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/skycoordtablecoordinate-1.*"
+              - tag: "tag:sunpy.org:ndcube/extra_coords/table_coord/timetablecoordinate-1.*"
+  dropped_tables:
+    type: array
+  ndcube:
+    tag: "tag:sunpy.org:ndcube/ndcube-1.*"
+
+required: [ndcube]
+additionalProperties: false
+...
