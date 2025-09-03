@@ -45,33 +45,35 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
     and that shift is given by the offset (+1 in the x-axis and +2 along the y-axis),
     which is in units of original pixel widths.
 
-    resampled  original
-    factor=3
-    offset=2
+    ::
 
-      0.5      4.5 *-----------*-----------*-----------*-----------*
-                               |                       |
-      2/6       4              |                       |
-                               |                       |
-      1/6      3.5 *           *           *           *           *
-                               |                       |
-       0        3              |                       |
-                               |                       |
-     -1/3      2.5 *           *           *           *           *
-                               |                       |
-     -2/6       2              |                       |
-                               |                       |
-     -0.5      1.5 *-----------*-----------*-----------*-----------*
-                               |                       |
-     -4/6       1              |                       |
-                               |                       |
-     -5/6      0.5 *           *           *           *           *
-                               |                       |
-      -1        0              |                       |
-                               |                       |
-     -1-1/6   -0.5 *           *           *           *           *
-                 -0.5    0    0.5    1    1.5    2    2.5    3    3.5  original pixel indices
-                  -1   -0.75 -0.5  -0.25   0    0.25  0.5   0.75   1   resampled pixel indices: factor=2, offset=1
+        resampled  original
+        factor=3
+        offset=2
+
+          0.5      4.5 *-----------*-----------*-----------*-----------*
+                                   |                       |
+          2/6       4              |                       |
+                                   |                       |
+          1/6      3.5 *           *           *           *           *
+                                   |                       |
+           0        3              |                       |
+                                   |                       |
+         -1/3      2.5 *           *           *           *           *
+                                   |                       |
+         -2/6       2              |                       |
+                                   |                       |
+         -0.5      1.5 *-----------*-----------*-----------*-----------*
+                                   |                       |
+         -4/6       1              |                       |
+                                   |                       |
+         -5/6      0.5 *           *           *           *           *
+                                   |                       |
+          -1        0              |                       |
+                                   |                       |
+         -1-1/6   -0.5 *           *           *           *           *
+                     -0.5    0    0.5    1    1.5    2    2.5    3    3.5  original pixel indices
+                      -1   -0.75 -0.5  -0.25   0    0.25  0.5   0.75   1   resampled pixel indices: factor=2, offset=1
     """
 
     def __init__(self, wcs, factor, offset=0):
