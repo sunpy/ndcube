@@ -30,8 +30,8 @@ tags:
   - tag_uri:  "tag:sunpy.org:ndcube/resampledwcs-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/resampledwcs-1.0.0"
 
-  - tag_uri:  "tag:sunpy.org:ndcube_sequence-1.0.0"
-    schema_uri: "asdf://sunpy.org/ndcube/schemas/ndcube_sequence-1.0.0"
+  - tag_uri:  "tag:sunpy.org:ndcube/ndcubesequence-1.0.0"
+    schema_uri: "asdf://sunpy.org/ndcube/schemas/ndcubesequence-1.0.0"
 
   - tag_uri:  "tag:sunpy.org:ndcube/reorderedwcs-1.0.0"
     schema_uri: "asdf://sunpy.org/ndcube/schemas/reorderedwcs-1.0.0"

@@ -2,7 +2,7 @@ from asdf.extension import Converter
 
 
 class NDCubeSequenceConverter(Converter):
-    tags = ["tag:sunpy.org:ndcube/ndcube_sequence-*"]
+    tags = ["tag:sunpy.org:ndcube/ndcubesequence-*"]
     types = ["ndcube.ndcube_sequence.NDCubeSequence"]
 
     def from_yaml_tree(self, node, tag, ctx):
