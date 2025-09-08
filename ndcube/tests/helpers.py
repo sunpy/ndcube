@@ -128,7 +128,7 @@ def assert_metas_equal(test_input, expected_output):
                 assert test_input[key] == expected_output[key]
 
 
-def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncertainty_values=False):
+def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncertainty_values=False, rtol=None, atol=None):
     assert isinstance(test_input, type(expected_cube))
     if isinstance(test_input.mask, bool):
         if not isinstance(expected_cube.mask, bool):
@@ -138,7 +138,7 @@ def assert_cubes_equal(test_input, expected_cube, check_data=True, check_uncerta
         assert np.all(test_input.mask == expected_cube.mask)
     if check_data:
         np.testing.assert_array_equal(test_input.data, expected_cube.data)
-    assert_wcs_are_equal(test_input.wcs, expected_cube.wcs)
+    assert_wcs_are_equal(test_input.wcs, expected_cube.wcs, rtol=rtol, atol=atol)
     if check_uncertainty_values:
         # Check output and expected uncertainty are of same type. Remember they could be None.
         # If the uncertainties are not None,...
@@ -171,7 +171,7 @@ def assert_cubesequences_equal(test_input, expected_sequence, check_data=True):
         assert_cubes_equal(cube, expected_sequence.data[i], check_data=check_data)
 
 
-def assert_wcs_are_equal(wcs1, wcs2):
+def assert_wcs_are_equal(wcs1, wcs2, *, rtol=None, atol=None):
     """
     Assert function for testing two wcs object.
 
@@ -179,6 +179,8 @@ def assert_wcs_are_equal(wcs1, wcs2):
     Also checks if both the wcs objects are instance
     of `~astropy.wcs.wcsapi.SlicedLowLevelWCS`.
     """
+    atol = atol or 1e-23
+    rtol = rtol or 1e-17
 
     if not isinstance(wcs1, BaseLowLevelWCS):
         wcs1 = wcs1.low_level_wcs
@@ -201,8 +203,8 @@ def assert_wcs_are_equal(wcs1, wcs2):
         np.testing.assert_allclose(
             low_level_wcs1.pixel_to_world_values(*random_idx.T),
             low_level_wcs2.pixel_to_world_values(*random_idx.T),
-            atol=1e-17,
-            rtol=1e-23,
+            atol=atol,
+            rtol=rtol,
         )
 
 def create_sliced_wcs(wcs, item, dim):

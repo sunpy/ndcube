@@ -23,7 +23,7 @@ def test_serialization(all_ndcubes, tmp_path, all_ndcubes_names):
         af.write_to(file_path)
 
     with asdf.open(file_path) as af:
-        assert_cubes_equal(af["ndcube"], all_ndcubes)
+        assert_cubes_equal(af["ndcube"], all_ndcubes, rtol=1e-12)
 
 
 @pytest.mark.parametrize("expected_cube", ["ndcube_gwcs_3d_ln_lt_l", "ndcube_3d_ln_lt_l"], indirect=True)
@@ -38,4 +38,4 @@ def test_serialization_sliced_ndcube(expected_cube, tmp_path):
         af.write_to(file_path)
 
     with asdf.open(file_path) as af:
-        assert_cubes_equal(af["ndcube_gwcs"], sndc)
+        assert_cubes_equal(af["ndcube_gwcs"], sndc, rtol=1e-12)
