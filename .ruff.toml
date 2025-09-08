@@ -82,6 +82,11 @@ extend-ignore = [
 "test_*.py" = [
   "E402", # Module level import not at top of cell
 ]
+# ASDF converters delay imports for performance reasons
+"ndcube/asdf/**.py" = [
+  "E402", # Module level import not at top of cell
+  "PLC0415", # `import` should be at the top-level of a file
+]
 
 [lint.pydocstyle]
 convention = "numpy"

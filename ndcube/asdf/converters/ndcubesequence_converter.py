@@ -6,7 +6,7 @@ class NDCubeSequenceConverter(Converter):
     types = ["ndcube.ndcube_sequence.NDCubeSequence"]
 
     def from_yaml_tree(self, node, tag, ctx):
-        from ndcube.ndcube_sequence import NDCubeSequence  # noqa: PLC0415
+        from ndcube.ndcube_sequence import NDCubeSequence
 
         return NDCubeSequence(node["data"],
                               meta=node.get("meta"),

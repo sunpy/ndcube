@@ -6,7 +6,7 @@ class NDCollectionConverter(Converter):
     types = ["ndcube.ndcollection.NDCollection"]
 
     def from_yaml_tree(self, node, tag, ctx):
-        from ndcube.ndcollection import NDCollection  # noqa: PLC0415
+        from ndcube.ndcollection import NDCollection
 
         aligned_axes = list(node.get("aligned_axes").values())
         aligned_axes = tuple(tuple(lst) for lst in aligned_axes)
