@@ -24,8 +24,9 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-tests = [
+tests-only = [
   "dask",
+  "pytest-asdf-plugin",
   "pytest-astropy",
   "pytest-cov",
   "pytest-doctestplus",
@@ -33,17 +34,18 @@ tests = [
   "pytest-xdist",
   "pytest",
   "pytest-memray; sys_platform != 'win32'",
-  "scipy",
   "specutils",
   "sunpy>=5.0.0",
 ]
+tests = [
+  "ndcube[plotting,reproject,asdf,tests-only]",
+]
 docs = [
+  "ndcube[plotting]",
   "sphinx",
   "sphinx-automodapi",
   "sunpy-sphinx-theme",
   "packaging",
-  "matplotlib",
-  "mpl-animators>=1.0",
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
@@ -61,10 +63,10 @@ asdf = [
   "asdf-astropy>=0.7.0",
 ]
 all = [
-  "ndcube[plotting,reproject,asdf]",
+  "ndcube[plotting,reproject]",
 ]
 dev = [
-  "ndcube[tests,docs,plotting,reproject]",
+  "ndcube[tests-only,docs,plotting,reproject,asdf]",
 ]
 
 [project.urls]
