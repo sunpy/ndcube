@@ -196,7 +196,7 @@ class MatplotlibPlotter(BasePlotter):
     def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
                       axes_units=None, data_unit=None, **kwargs):
         try:
-            from mpl_animators import ArrayAnimatorWCS
+            from mpl_animators import ArrayAnimatorWCS  # noqa: PLC0415
         except ImportError as e:
             raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
 

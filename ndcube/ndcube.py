@@ -209,7 +209,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             in the data array in real world coordinates.
 
             The coordinates of the points as they are passed to
-            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
+            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_pixel`.
             Therefore their number and order must be compatible with the API
             of that method, i.e. they must be passed in world order.
 
@@ -258,7 +258,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         points: iterable
             Tuples of coordinate values, the length of the tuples must be
             equal to the number of world dimensions. These points are
-            passed to ``wcs.world_to_array_index_values`` so their units
+            passed to ``wcs.world_to_pixel_values`` so their units
             and order must be compatible with that method.
 
         units: `str` or `~astropy.units.Unit`
@@ -647,7 +647,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
                                     f"{classes[j]}.")
-        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
+        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims,
+                                                    original_shape=self.data.shape)
 
     def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
@@ -689,7 +690,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
-        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
+        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims,
+                                                    original_shape=self.data.shape)
 
     def __str__(self):
         return textwrap.dedent(f"""\
@@ -796,8 +798,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         However, ``meta`` and ``global_coords`` are copied to the output `ndcube.NDCube`.
         """
         try:
-            from reproject import reproject_adaptive, reproject_exact, reproject_interp
-            from reproject.wcs_utils import has_celestial
+            from reproject import reproject_adaptive, reproject_exact, reproject_interp  # noqa: PLC0415
+            from reproject.wcs_utils import has_celestial  # noqa: PLC0415
         except ModuleNotFoundError:
             raise ImportError(f"The {type(self).__name__}.reproject_to method requires "
                               f"the `reproject` library to be installed.")
@@ -923,7 +925,7 @@ class NDCube(NDCubeBase):
         warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
                     "The default MatplotlibPlotter._as_mpl_axes method will be used instead.")
 
-        from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+        from ndcube.visualization.mpl_plotter import MatplotlibPlotter  # noqa: PLC0415
 
         plotter = MatplotlibPlotter(self)
         return plotter._as_mpl_axes()
@@ -1133,7 +1135,7 @@ class NDCube(NDCubeBase):
         Downsample array by combining contiguous pixels into bins.
 
         Values in bins are determined by applying a function to the pixel values within it.
-        The number of pixels in each bin in each dimension is given by the bin_shape input.
+        The number of pixels in each bin in each dimension is given by the ``bin_shape`` input.
         This must be an integer fraction of the cube's array size in each dimension.
         If the NDCube instance has uncertainties attached, they are propagated
         depending on binning method chosen.
@@ -1148,6 +1150,7 @@ class NDCube(NDCubeBase):
             units have to be convertible to pixels.
             The sentinel value ``-1`` can be passed for a dimension which means
             that no rebinning will occur along that dimension.
+            Please note the ``bin_shape`` follows array axis (NumPy) ordering of the axes.
         operation : function
             Function applied to the data to derive values of the bins.
             Default is `numpy.mean`
