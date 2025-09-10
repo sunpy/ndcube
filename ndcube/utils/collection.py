@@ -139,9 +139,9 @@ def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes
 
     Parameters
     ----------
-    data_dimensions1: tuple of ints
+    data_dimensions1: `tuple` of `int`
         The dimension lengths of data cube 1.
-    data_dimensions2: tuple of ints
+    data_dimensions2: `tuple` of `int`
         The dimension lengths of data cube 2.
     data_axes1: `tuple` of `int`
         The aligned axes of data cube 1.
