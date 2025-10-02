@@ -1,3 +1,18 @@
+2.3.3 (2025-10-02)
+==================
+
+Bug Fixes
+---------
+
+- Fix conversion in `~ndcube.wcs.wrappers.resampled_wcs.ResampledLowLevelWCS` between original and resampled pixel grids. This fixes an accuracy issue in ``NDCube`` objects which have had the `ndcube.NDCube.rebin` method applied. (`#857 <https://github.com/sunpy/ndcube/pull/857>`__)
+
+
+Documentation
+-------------
+
+- Clarified an error message that cropping to single pixel is not supported only when ``keepdims=False`` (the default value). (`#869 <https://github.com/sunpy/ndcube/pull/869>`__)
+
+
 2.3.2 (2025-06-12)
 ==================
 
