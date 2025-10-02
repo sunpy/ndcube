@@ -171,6 +171,26 @@ def test_cube_arithmetic_subtract_nddata(ndc, value, expected_kwargs, wcs_2d_lt_
     assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
 
 
+@pytest.mark.parametrize("value",
+                        [
+                         NDData(np.ones((8, 4)), wcs=None, unit=u.J)
+                        ])
+def test_cube_dask_arithmetic_subtract_nddata(ndcube_2d_dask, value):
+    ndc = ndcube_2d_dask
+    output_cube = ndc - value
+    assert type(output_cube.data) is type(ndc.data)
+
+
+@pytest.mark.parametrize("value",
+                        [
+                         NDData(np.ones((8, 4)), wcs=None, unit=u.J)
+                        ])
+def test_cube_dask_arithmetic_subtract_nddata(ndcube_2d_dask, value):
+    ndc = ndcube_2d_dask
+    output_cube = ndc - value
+    assert type(output_cube.data) is type(ndc.data)
+
+
 @pytest.mark.parametrize('value', [
     10 * u.ct,
     u.Quantity([10], u.ct),
@@ -330,6 +350,16 @@ def test_cube_arithmetic_divide_nddata(ndc, value, expected_kwargs, wcs_2d_lt_ln
 
     # Assert output cube is same as expected cube
     assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
+
+
+@pytest.mark.parametrize("value",
+                        [
+                         NDData(np.ones((8, 4)) * 2, wcs=None)
+                        ])
+def test_cube_dask_arithmetic_divide_nddata(ndcube_2d_dask, value):
+    ndc = ndcube_2d_dask
+    output_cube = ndc / value
+    assert type(output_cube.data) is type(ndc.data)
 
 
 @pytest.mark.parametrize('value', [1, 2, -1])
