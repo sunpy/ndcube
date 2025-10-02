@@ -3,7 +3,6 @@ import pytest
 
 import astropy.units as u
 import astropy.wcs
-import dask.array
 from astropy.nddata import NDData, StdDevUncertainty
 
 from ndcube import NDCube
@@ -367,16 +366,6 @@ def test_cube_arithmetic_divide_nddata(ndc, value, expected_kwargs, wcs_2d_lt_ln
 
     # Assert output cube is same as expected cube
     assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
-
-
-@pytest.mark.parametrize("value",
-                        [
-                         NDData(np.ones((8, 4)) * 2, wcs=None)
-                        ])
-def test_cube_dask_arithmetic_divide_nddata(ndcube_2d_dask, value):
-    ndc = ndcube_2d_dask
-    output_cube = ndc / value
-    assert type(output_cube.data) is type(ndc.data)
 
 
 def test_cube_dask_arithmetic_divide_nddata(ndcube_2d_dask):
