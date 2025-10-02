@@ -249,9 +249,9 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
 
     Returns
     -------
-    new_uncertainty: same type as uncertainty input.
-        The propagated uncertainty. Same shape as input uncertainty without its
-        first dimension.
+    new_uncertainty: `astropy.nddata.NDUncertainty`
+        The propagated uncertainty.
+        Same shape as input uncertainty without its first dimension.
     """
     flat_axis = 0
     operation_is_mean = True if operation in {np.mean, np.nanmean} else False
