@@ -983,7 +983,7 @@ class NDCube(NDCubeBase):
         if operation == "add":
             # Handle units
             if self.unit is not None and value.unit is not None:
-                value_data = (value.data * value.unit).to_value(self.unit)
+                value_data = value.data * (value.unit / self.unit).to(u.dimensionless_unscaled)
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
