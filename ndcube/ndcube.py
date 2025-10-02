@@ -209,7 +209,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             in the data array in real world coordinates.
 
             The coordinates of the points as they are passed to
-            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_array_index`.
+            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_pixel`.
             Therefore their number and order must be compatible with the API
             of that method, i.e. they must be passed in world order.
 
@@ -258,7 +258,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):
         points: iterable
             Tuples of coordinate values, the length of the tuples must be
             equal to the number of world dimensions. These points are
-            passed to ``wcs.world_to_array_index_values`` so their units
+            passed to ``wcs.world_to_pixel_values`` so their units
             and order must be compatible with that method.
 
         units: `str` or `~astropy.units.Unit`
@@ -359,11 +359,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         that valid data points are marked by `False` and invalid ones with `True`.
         Defaults to `None`.
 
-    meta : dict-like object, optional
+    meta : dict-like, optional
         Additional meta information about the dataset. If no meta is provided
         an empty dictionary is created.
 
-    unit : Unit-like or `str`, optional
+    unit : `astropy.units.Unit` or `str`, optional
         Unit for the dataset. Strings that can be converted to a `~astropy.units.Unit` are allowed.
         Default is `None` which results in dimensionless units.
 
@@ -647,7 +647,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
                                     f"{classes[j]}.")
-        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims)
+        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims,
+                                                    original_shape=self.data.shape)
 
     def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
         # The docstring is defined in NDCubeABC
@@ -689,7 +690,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                         raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
-        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims)
+        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims,
+                                                    original_shape=self.data.shape)
 
     def __str__(self):
         return textwrap.dedent(f"""\
@@ -751,11 +753,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             or `astropy.io.fits.Header`
             The WCS object to which the `ndcube.NDCube` is to be reprojected.
 
-        algorithm: {'interpolation' | 'adaptive' | 'exact'}
+        algorithm: `str`, optional
             The algorithm to use for reprojecting.
-            When set to "interpolation" `~reproject.reproject_interp` is used,
-            when set to "adaptive" `~reproject.reproject_adaptive` is used and
-            when set to "exact" `~reproject.reproject_exact` is used.
+            When set to "interpolation" `~reproject.reproject_interp` is used.
+            When set to "adaptive" `~reproject.reproject_adaptive` is used.
+            When set to "exact" `~reproject.reproject_exact` is used.
 
         shape_out: `tuple`, optional
             The shape of the output data array. The ordering of the dimensions must follow NumPy
@@ -878,11 +880,11 @@ class NDCube(NDCubeBase):
         that valid data points are marked by False and invalid ones with True.
         Defaults to None.
 
-    meta : dict-like object, optional
+    meta : dict-like, optional
         Additional meta information about the dataset. If no meta is provided
         an empty collections.OrderedDict is created. Default is None.
 
-    unit : Unit-like or str, optional
+    unit : `astropy.units.Unit` or str, optional
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
 
@@ -912,7 +914,7 @@ class NDCube(NDCubeBase):
     # last moment.
     plotter = PlotterDescriptor(default_type="mpl_plotter")
     """
-    A `~.MatplotlibPlotter` instance providing visualization methods.
+    A ~ndcube.visualization.mpl_plotter.MatplotlibPlotter` instance providing visualization methods.
 
     The type of this attribute can be changed to provide custom visualization functionality.
     """

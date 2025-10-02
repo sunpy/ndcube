@@ -1,0 +1,1 @@
+Fix conversion in `~ndcube.wcs.wrappers.resampled_wcs.ResampledLowLevelWCS` between original and resampled pixel grids. This fixes an accuracy issue in ``NDCube`` objects which have had the `ndcube.NDCube.rebin` method applied.

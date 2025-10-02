@@ -424,6 +424,12 @@ class NDCubeSequence(NDCubeSequenceBase):
         This enables the "cube_like" methods to be used, e.g.
         `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
         were a single cube concatenated along the common axis.
+
+    Attributes
+    ----------
+    common_axis_extra_coords
+    array_axis_physical_axis_types
+    cube_like_world_axis_physical_axis_types
     """
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
