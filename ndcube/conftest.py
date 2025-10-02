@@ -833,6 +833,13 @@ def ndcube_2d_dask(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def nddata_2d_dask(ndcube_2d_dask):
+    value = astropy.nddata.NDData(ndcube_2d_dask)
+    value._wcs = None
+    return value
+
+
+@pytest.fixture
 def ndcube_2d(request):
     """
     This is a meta fixture for parametrizing all the 2D ndcubes.

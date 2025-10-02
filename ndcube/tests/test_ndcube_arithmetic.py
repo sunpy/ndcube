@@ -3,6 +3,7 @@ import pytest
 
 import astropy.units as u
 import astropy.wcs
+import dask.array
 from astropy.nddata import NDData, StdDevUncertainty
 
 from ndcube import NDCube
@@ -171,14 +172,22 @@ def test_cube_arithmetic_subtract_nddata(ndc, value, expected_kwargs, wcs_2d_lt_
     assert_cubes_equal(output_cube, expected_cube, check_uncertainty_values=True)
 
 
-@pytest.mark.parametrize("value",
-                        [
-                         NDData(np.ones((8, 4)), wcs=None, unit=u.J)
-                        ])
-def test_cube_dask_arithmetic_subtract_nddata(ndcube_2d_dask, value):
+def test_cube_dask_arithmetic_subtract_nddata(ndcube_2d_dask):
     ndc = ndcube_2d_dask
+    value = NDData(np.ones(ndc.data.shape), wcs=None, unit=ndc.unit)
     output_cube = ndc - value
     assert type(output_cube.data) is type(ndc.data)
+    assert type(output_cube.uncertainty.array) is type(ndc.uncertainty.array)
+    assert type(output_cube.mask) is type(ndc.mask)
+
+
+def test_cube_arithmetic_subtract_nddata_dask(wcs_2d_lt_ln, nddata_2d_dask):
+    value = nddata_2d_dask
+    ndc = NDCube(np.ones(value.data.shape), wcs=wcs_2d_lt_ln, unit=value.unit)
+    output_cube = ndc - value
+    assert type(output_cube.data) is type(value.data)
+    assert type(output_cube.uncertainty.array) is type(value.uncertainty.array)
+    assert type(output_cube.mask) is type(value.mask)
 
 
 @pytest.mark.parametrize('value', [
@@ -191,6 +200,24 @@ def test_cube_arithmetic_rsubtract(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
     new_cube = value - ndcube_2d_ln_lt_units
     check_arithmetic_value_and_units(new_cube, value - cube_quantity)
+
+
+def test_cube_dask_arithmetic_rsubtract_nddata(ndcube_2d_dask):
+    ndc = ndcube_2d_dask
+    value = NDData(np.ones(ndc.data.shape), wcs=None, unit=ndc.unit)
+    output_cube = value - ndc
+    assert type(output_cube.data) is type(ndc.data)
+    assert type(output_cube.uncertainty.array) is type(ndc.uncertainty.array)
+    assert type(output_cube.mask) is type(ndc.mask)
+
+
+def test_cube_arithmetic_rsubtract_nddata_dask(wcs_2d_lt_ln, nddata_2d_dask):
+    value = nddata_2d_dask
+    ndc = NDCube(np.ones(value.data.shape), wcs=wcs_2d_lt_ln, unit=value.unit)
+    output_cube = value - ndc
+    assert type(output_cube.data) is type(value.data)
+    assert type(output_cube.uncertainty.array) is type(value.uncertainty.array)
+    assert type(output_cube.mask) is type(value.mask)
 
 
 @pytest.mark.parametrize('value', [
@@ -352,6 +379,24 @@ def test_cube_dask_arithmetic_divide_nddata(ndcube_2d_dask, value):
     assert type(output_cube.data) is type(ndc.data)
 
 
+def test_cube_dask_arithmetic_divide_nddata(ndcube_2d_dask):
+    ndc = ndcube_2d_dask
+    value = NDData(np.ones(ndc.data.shape), wcs=None, unit=ndc.unit)
+    output_cube = ndc / value
+    assert type(output_cube.data) is type(ndc.data)
+    assert type(output_cube.uncertainty.array) is type(ndc.uncertainty.array)
+    assert type(output_cube.mask) is type(ndc.mask)
+
+
+def test_cube_arithmetic_divide_nddata_dask(wcs_2d_lt_ln, nddata_2d_dask):
+    value = nddata_2d_dask
+    ndc = NDCube(np.ones(value.data.shape), wcs=wcs_2d_lt_ln, unit=value.unit)
+    output_cube = ndc / value
+    assert type(output_cube.data) is type(value.data)
+    assert type(output_cube.uncertainty.array) is type(value.uncertainty.array)
+    assert type(output_cube.mask) is type(value.mask)
+
+
 @pytest.mark.parametrize('value', [1, 2, -1])
 def test_cube_arithmetic_rdivide(ndcube_2d_ln_lt_units, value):
     cube_quantity = u.Quantity(ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit)
@@ -368,6 +413,26 @@ def test_cube_arithmetic_rdivide_uncertainty(ndcube_4d_unit_uncertainty, value):
         with np.errstate(divide='ignore'):
             new_cube =  value / ndcube_4d_unit_uncertainty
             check_arithmetic_value_and_units(new_cube,  value / cube_quantity)
+
+
+def test_cube_dask_arithmetic_rdivide_nddata(ndcube_2d_dask):
+    ndc = ndcube_2d_dask
+    value = NDData(np.ones(ndc.data.shape), wcs=None, unit=ndc.unit)
+    match = "does not support propagation of uncertainties for power. Setting uncertainties to None."
+    with pytest.warns(NDCubeUserWarning, match=match):  # noqa: PT031
+        with np.errstate(divide='ignore'):
+            output_cube = value / ndc
+            assert type(output_cube.data) is type(ndc.data)
+            assert type(output_cube.mask) is type(ndc.mask)
+
+
+def test_cube_arithmetic_rdivide_nddata_dask(wcs_2d_lt_ln, nddata_2d_dask):
+    value = nddata_2d_dask
+    ndc = NDCube(np.ones(value.data.shape), wcs=wcs_2d_lt_ln, unit=value.unit)
+    output_cube = value / ndc
+    assert type(output_cube.data) is type(value.data)
+    assert type(output_cube.uncertainty.array) is type(value.uncertainty.array)
+    assert type(output_cube.mask) is type(value.mask)
 
 
 def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
