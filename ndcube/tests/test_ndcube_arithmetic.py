@@ -181,16 +181,6 @@ def test_cube_dask_arithmetic_subtract_nddata(ndcube_2d_dask, value):
     assert type(output_cube.data) is type(ndc.data)
 
 
-@pytest.mark.parametrize("value",
-                        [
-                         NDData(np.ones((8, 4)), wcs=None, unit=u.J)
-                        ])
-def test_cube_dask_arithmetic_subtract_nddata(ndcube_2d_dask, value):
-    ndc = ndcube_2d_dask
-    output_cube = ndc - value
-    assert type(output_cube.data) is type(ndc.data)
-
-
 @pytest.mark.parametrize('value', [
     10 * u.ct,
     u.Quantity([10], u.ct),
