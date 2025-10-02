@@ -14,3 +14,4 @@ Explaining ``ndcube``
    tabular_coordinates
    reproject
    visualization
+   arithmetic_operations
