@@ -1148,8 +1148,9 @@ class NDCube(NDCubeBase):
             Each element must be in int. If they are not they will be rounded
             to the nearest int. If provided as a `~astropy.units.Quantity` the
             units have to be convertible to pixels.
-            The sentinel value ``-1`` can be passed for a dimension which means
-            that no rebinning will occur along that dimension.
+            The sentinel value ``-1`` can be passed for a dimension which sets the
+            bin size equal to the number of pixels along that axis. This results in a
+            pixel size of 1 for this axis in the output (e.g. sum along that axis).
             Please note the ``bin_shape`` follows array axis (NumPy) ordering of the axes.
         operation : function
             Function applied to the data to derive values of the bins.
