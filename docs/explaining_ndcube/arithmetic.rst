@@ -104,7 +104,7 @@ If, however, we have an `~ndcube.NDCube` with a unit assigned,
   >>> cube_unitful = NDCube(cube, unit=u.ct)
 
 then adding or subtracting an array or unitless number will raise an error.
-In such cases, we must use a `~astropy.unit.Quantity` with a compatible unit:
+In such cases, we must use a `~astropy.units.Quantity` with a compatible unit:
 
 .. code-block:: python
 
@@ -135,8 +135,8 @@ An `~ndcube.NDCube` can be multiplied and divided by numbers, arrays, and `~astr
 These work similarly to addition and subtraction with a few minor differences:
 - The uncertainties of the resulting `~ndcube.NDCube` are scaled by the same factor as the data.
 - Classes with different units can be combined.
-  - e.g. an `~ndcube.NDCube` with a unit of counts divided by an `~astropy.units.Quantity` with a unit is seconds will result in an `~ndcube.NDCube` with a unit of counts per second.
-  - This also holds for cases were unitful and unitless classes can be combined.  In such cases, the unit of the resulting `~ndcube.NDCube` will be the same as that of the unitful object.
+  * e.g. an `~ndcube.NDCube` with a unit of counts divided by an `~astropy.units.Quantity` with a unit is seconds will result in an `~ndcube.NDCube` with a unit of counts per second.
+  * This also holds for cases were unitful and unitless classes can be combined.  In such cases, the unit of the resulting `~ndcube.NDCube` will be the same as that of the unitful object.
 
 Below are some examples.
 
