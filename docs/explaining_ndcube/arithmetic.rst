@@ -61,12 +61,12 @@ Let's deomonstrate with an example `~ndcube.NDCube` called ``cube``
 .. code-block:: python
 
   >>> cube.data
-  array([[10., 11., 12.],
-         [13., 14., 15.]])
+  array([[10, 11, 12],
+         [13, 14, 15]])
   >>> new_cube = cube + 1
   >>> new_cube.data
-  array([[11., 12., 13.],
-         [14., 15., 16.]])
+  array([[11, 12, 13],
+         [14, 15, 16]])
 
 Note that all the data values have been increased by 1.
 We can also add an array if we want to add a different number to each data element:
@@ -80,8 +80,8 @@ We can also add an array if we want to add a different number to each data eleme
          [3, 4, 5]])
   >>> new_cube = cube + arr
   >>> new_cube.data
-  array([[10., 12., 14.],
-         [16., 18., 20.]])
+  array([[10, 12, 14],
+         [16, 18, 20]])
 
 Subtraction works in the same way.
 
@@ -89,12 +89,12 @@ Subtraction works in the same way.
 
   >>> new_cube = cube - 1
   >>> new_cube.data
-  array([[ 9., 10., 11.],
-         [12., 13., 14.]])
+  array([[ 9, 10, 11],
+         [12, 13, 14]])
   >>> new_cube = cube - arr
   >>> new_cube.data
-  array([[10., 10., 10.],
-         [10., 10., 10.]])
+  array([[10, 10, 10],
+         [10, 10, 10]])
 
 Note that ``cube`` has no unit, which is why we are able to add and subtract numbers and arrays.
 If, however, we have an `~ndcube.NDCube` with a unit assigned,
@@ -109,8 +109,8 @@ In such cases, we must use a `~astropy.unit.Quantity` with a compatible unit:
 .. code-block:: python
 
   >>> cube_unitful.data
-  array([[10., 11., 12.],
-         [13., 14., 15.]])
+  array([[10, 11, 12],
+         [13, 14, 15]])
   >>> new_cube = cube_unitful + 1 * u.ct  # Adding a scalar quantity
   >>> new_cube.data
   array([[11., 12., 13.],
@@ -144,13 +144,13 @@ Below are some examples.
 
   >>> # See attributes of original cube.
   >>> cube_unitful.data
-  array([[10., 11., 12.],
-         [13., 14., 15.]])
+  array([[10, 11, 12],
+         [13, 14, 15]])
   >>> cube_unitful.unit
   Unit("ct")
   >>> cube_unitful.uncertainty
   StdDevUncertainty([[1. , 1.1, 1.2],
-                   [1.3, 1.4, 1.5]])
+                     [1.3, 1.4, 1.5]])
 
   >>> # Multiply by a unitless array.
   >>> arr = 1 + np.arange(cube_unitful.data.size).reshape(cube_unitful.data.shape)
@@ -161,8 +161,8 @@ Below are some examples.
 
   >>> # Inspect attributes of resultant cube.
   >>> new_cube.data
-  array([[10., 22., 36.],
-         [52., 70., 90.]])
+  array([[10, 22, 36],
+         [52, 70, 90]])
   >>> new_cube.unit
   Unit("ct")
   >>> new_cube.uncertainty
@@ -185,5 +185,53 @@ Below are some examples.
 
 .. _arithmetic_nddata:
 
-Arithmetic Operations with Coordinate-less NDData
-=================================================
+Arithmetic Operations between Coordinate-less NDData
+====================================================
+
+Sometimes more advanced arithmetic operations are required.
+For example, we may want to create a sequence of running difference images which highlight changes between frames, and propagate the uncertainties associated with each image.
+Alternatively, we may want to subtract one image from another, but exclude a certain region of the image with a mask.
+In such cases, numbers, arrays and `~astropy.units.Quantity` are insufficient, and we would like to subtract two `~ndcube.NDCube` objects.
+This is not directly supported, but can still be achieved in practice, as we shall see below.
+
+Why Arithmetic Operations with Coordinate-aware NDData Instances Are Not Directly Supported, and How the Same Result Can Be Achieved
+------------------------------------------------------------------------------------------------------------------------------------
+
+Arithmetic operations between two `~ndcube.NDCube` instances (or equivalently, an `~ndcube.NDCube` and another coordinate-aware object) are not supported because of the possibility of supporting non-sensical operations.
+For example, what does it mean to multiply a spectrum and an image in a coordinate-aware way?
+Getting the difference between two images may make physical sense, but only in certain circumstances.
+For example, subtracting two sequential images of the same region of the Sun is a common step in many solar image analysis workflows.
+However, subtracting images of different parts of the sky, e.g. the Sun and the Crab Nebula, does not result in a physically meaningful image.
+Even when subtracting two images of the Sun, drift in the telescope's pointing may result in the pixels in each image corresponding to different points in the Sun.
+In this case, it is questionable whether this operation makes physical sense after all.
+Moreover, in all of these cases, it is not at all clear what the resulting WCS object should be.
+
+In many cases, a simple solution would be to extract the data (an optionally the unit) of one of the `~ndcube.NDCube` instances and perform the operation as described in the above section on :ref:`arithmetic_standard`:
+
+.. expanding-code-block:: python
+  :summary: Expand to see definition of cube1 and cube2.
+
+  >>> cube1 = cube_unitful
+  >>> cube2 = cube_unitful / 4
+
+.. code-block:: python
+
+  >>> new_cube = cube1 - cube2.data * cube2.unit
+  
+However, this does not allow for the propagation of uncertainties or masks associated with the data in ``cube2``.
+Therefore, `~ndcube.NDCube` does support arithmetic operations with instances of `~astropy.nddata.NDData` subclasses whose ``wcs`` attribute is ``None``.
+This makes users explicitly aware that they are dispensing with coordinate-awareness on one of their operands.
+It also leaves only one WCS involved in the operation, thus removing ambiguity regarding the WCS of the `~ndcube.NDCube` resulting from the operation.
+
+Users who would like to drop coordinate-awareness from an `~ndcube.NDCube` can so so simply by converting it to an `~astropy.nddata.NDData` and setting the ``wcs`` to ``None``:
+
+.. code-block:: python
+
+  >>> from astropy.nddata import NDData
+  
+  >>> cube2_nocoords = NDData(cube2, wcs=None)
+  
+
+Performing Arithmetic Operations with Coordinate-less NDData
+------------------------------------------------------------
+
