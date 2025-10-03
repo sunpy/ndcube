@@ -199,6 +199,28 @@ For example:
 Raising NDCube to a Power
 -------------------------
 
+`~ndcube.NDCube` can be raised to a power.
+
+.. code-block:: python
+
+  >>> cube_with_unit.data
+  array([[10, 11, 12],
+         [13, 14, 15]])
+
+  >>> new_cube = cube_with_unit**2
+
+  >>> new_cube.data
+  array([[100, 121, 144],
+         [169, 196, 225]])
+  >>> new_cube.unit
+  Unit("ct2")
+  >>> (new_cube.mask == cube_with_unit.mask).all()
+  np.True_
+
+Note that error propagation is delegated to the ``cube.uncertainty`` object.
+Therefore, if this class supports error propagation by power, then ``new_cube`` will include uncertainty.
+Otherwise, ``new_cube.uncertainty`` will be set to ``None``.
+
 
 .. _arithmetic_nddata:
 
@@ -211,10 +233,10 @@ Alternatively, we may want to subtract one image from another, but exclude a cer
 In such cases, numbers, arrays and `~astropy.units.Quantity` are insufficient, and we would like to subtract two `~ndcube.NDCube` objects.
 This is not directly supported, but can still be achieved in practice, as we shall see below.
 
-Why Arithmetic Operations with Coordinate-aware NDData Are Not Directly Supported, and How the Same Result Can Be Achieved
---------------------------------------------------------------------------------------------------------------------------
+Why Arithmetic Operations with Coordinate-aware NDData Are Not Directly Supported, and How This Can Be Overcome
+---------------------------------------------------------------------------------------------------------------
 
-Arithmetic operations between two `~ndcube.NDCube` instances (or equivalently, an `~ndcube.NDCube` and another coordinate-aware object) are not supported because of the possibility of supporting non-sensical operations.
+Arithmetic operations between two `~ndcube.NDCube` instances (or equivalently, an `~ndcube.NDCube` and another coordinate-aware `~astropy.nddata.NDData` subclass) are not supported because of the possibility of supporting non-sensical operations.
 For example, what does it mean to multiply a spectrum and an image in a coordinate-aware way?
 Getting the difference between two images may make physical sense, but only in certain circumstances.
 For example, subtracting two sequential images of the same region of the Sun is a common step in many solar image analysis workflows.
@@ -223,7 +245,7 @@ Even when subtracting two images of the Sun, drift in the telescope's pointing m
 In this case, it is questionable whether this operation makes physical sense after all.
 Moreover, in all of these cases, it is not at all clear what the resulting WCS object should be.
 
-In many cases, a simple solution would be to extract the data (an optionally the unit) of one of the `~ndcube.NDCube` instances and perform the operation as described in the above section on :ref:`arithmetic_standard`:
+In many cases, a simple solution would be to extract the data (an optionally the unit) from one of the `~ndcube.NDCube` instances and perform the operation as described in the above section on :ref:`arithmetic_standard`:
 
 .. expanding-code-block:: python
   :summary: Expand to see definition of cube1 and cube2.
@@ -235,7 +257,7 @@ In many cases, a simple solution would be to extract the data (an optionally the
 
   >>> new_cube = cube1 - cube2.data * cube2.unit
 
-However, this does not allow for the propagation of uncertainties or masks associated with the data in ``cube2``.
+However, this does not allow for the propagation of uncertainties or masks associated with ``cube2``.
 Therefore, `~ndcube.NDCube` does support arithmetic operations with instances of `~astropy.nddata.NDData` subclasses whose ``wcs`` attribute is ``None``.
 This makes users explicitly aware that they are dispensing with coordinate-awareness on one of their operands.
 It also leaves only one WCS involved in the operation, thus removing ambiguity regarding the WCS of the `~ndcube.NDCube` resulting from the operation.
@@ -251,3 +273,71 @@ Users who would like to drop coordinate-awareness from an `~ndcube.NDCube` can s
 
 Performing Arithmetic Operations with Coordinate-less NDData
 ------------------------------------------------------------
+
+Addition, subtraction, multiplication and division between `~ndcube.NDCube` and coordinate-less `~astropy.nddata.NDData` classes are all supported via the ``+``, ``-``, ``*``, and ``/`` operators.
+With respect to the ``data`` and ``unit`` attributes, the behaviors are the same as for arrays and `~astropy.units.Quantity`.
+The power of using coordinate-less `~astropy.nddata.NDData` classes is the ability to handle uncertainties and masks.
+
+Uncertainty Propagation
+***********************
+
+The uncertainty associated with the `~ndcube.NDCube` resulting from the arithmetic operation depends on the uncertainty types of the operands:
+
+- ``NDCube.uncertainty`` and ``NDData.uncertainty`` are both ``None`` => ``new_cube.uncertainty`` is ``None``;
+- ``NDCube`` or ``NDData`` have uncertainty, but not both => the existing uncertainty is assigned to ``new_cube`` as is;
+- ``NDCube`` and ``NDData`` both have uncertainty => uncertainty propagation is delegated to the ``NDCube.uncertainty.propagate`` method.
+
+  * Note that not all uncertainty classes support error propagation, e.g. `~astropy.nddata.UnknownUncertainty`.  In such cases, uncertainties are dropped altogether and ``new_cube.uncertainty`` is set to ``None``.
+
+If users would like to remove uncertainty from one of the operands in order to propagate the other without alteration, this can be done before the arithmetic operation via:
+
+.. code-block:: python
+
+  >>> # Remove uncertainty from NDCube
+  >>> cube1_nouncert = NDCube(cube2, wcs=None)
+  >>> new_cube = cube1_nouncert + cube2_nocoords
+
+  >>> # Remove uncertainty from coordinate-less NDData
+  >>> cube2_nocoords_nouncert = NDData(cube2, wcs=None, uncertainty=None)
+  >>> new_cube = cube1 / cube2_nocoords_nouncert
+
+Mask Operations
+***************
+
+The mask associated with the `~ndcube.NDCube` resulting from the arithmetic operation depends on the mask types of the operands:
+
+- ``NDCube.mask`` and ``NDData.mask`` are both ``None`` => ``new_cube.mask`` is ``None``;
+- ``NDCube`` or ``NDData`` have a mask, but not both => the existing mask is assigned to ``new_cube`` as is;
+- ``NDCube`` and ``NDData`` both have masks => The masks are combined via `numpy.logical_or`.
+
+The mask values do not affect the ``data`` values output by the operation.
+However, in some cases, the mask may be used to identify regions of unreliable data that should not be included in the operation.
+This can be achieved by altering the masked data values before the operation via the `ndcube.NDCube.fill_masked` method.
+In the case of addition and subtraction, the ``fill_value`` should be ``0``.
+
+.. code-block:: python
+
+  >>> cube_filled = cube1.fill_masked(0)
+  >>> new_cube = cube_filled + cube2_nocoords
+
+By replacing masked data values with ``0``, these pixels are effectively not included in the addition, and the data values from ``cube2_nocoords`` are passed into ``new_cube`` unchanged.
+In the above example, both operands have uncertainties, which means masked uncertainties are propagated through the addition, even though the masked data values have been set to ``0``.
+Propagation of masked uncertainties can also be suppressed by setting the optional kwarg, ``fill_uncertainty_value=0``.
+By default, the mask of ``cube_filled`` is not changed, and therefore is incorporated into the mask of the output cube.
+However, mask propagation can also be suppressed by setting the optional kwarg, ``unmask=True``, which sets ``cube_filled0.mask`` to ``False``.
+
+In the case of multiplication and division, and ``fill_value`` of ``1`` will prevent masked values being including in the operations:
+
+.. code-block:: python
+
+  >>> cube_filled = cube1.fill_masked(1, fill_uncertainty_value=0, unmask=True)
+  >>> new_cube = cube_filled * cube2_nocoords
+
+By default, `ndcube.NDCube.fill_masked` returns a new `~ndcube.NDCube` instance.
+However, in some case it may be preferable to fill the masked values in-place, e.g. because the data within the `~ndcube.NDCube` is very large and users want to control the number of copies in RAM.
+In this case, the ``fill_in_place`` can be used.
+
+.. code-block:: python
+
+  >>> cube1.fill_masked(0, fill_in_place=True)
+  >>> new_cube = cube1 + cube2_nocoords
