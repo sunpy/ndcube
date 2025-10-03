@@ -217,21 +217,20 @@ In many cases, a simple solution would be to extract the data (an optionally the
 .. code-block:: python
 
   >>> new_cube = cube1 - cube2.data * cube2.unit
-  
+
 However, this does not allow for the propagation of uncertainties or masks associated with the data in ``cube2``.
 Therefore, `~ndcube.NDCube` does support arithmetic operations with instances of `~astropy.nddata.NDData` subclasses whose ``wcs`` attribute is ``None``.
 This makes users explicitly aware that they are dispensing with coordinate-awareness on one of their operands.
 It also leaves only one WCS involved in the operation, thus removing ambiguity regarding the WCS of the `~ndcube.NDCube` resulting from the operation.
 
-Users who would like to drop coordinate-awareness from an `~ndcube.NDCube` can so so simply by converting it to an `~astropy.nddata.NDData` and setting the ``wcs`` to ``None``:
+Users who would like to drop coordinate-awareness from an `~ndcube.NDCube` can so simply by converting it to an `~astropy.nddata.NDData` and setting the ``wcs`` to ``None``:
 
 .. code-block:: python
 
   >>> from astropy.nddata import NDData
-  
+
   >>> cube2_nocoords = NDData(cube2, wcs=None)
-  
+
 
 Performing Arithmetic Operations with Coordinate-less NDData
 ------------------------------------------------------------
-
