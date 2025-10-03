@@ -5,14 +5,14 @@ Arithmetic Operations
 *********************
 
 Arithmetic operations are a crucial tool in n-dimensional data analysis.
-Applications include subtracting a background from a 1-D timeseries or spectrum, scaling an image by a vignetting function, any many others.
+Applications include subtracting a background from a 1-D timeseries or spectrum, scaling an image by a vignetting function, and many others.
 To aid with such workflows, `~ndcube.NDCube` supports addition, subtraction, multiplication, and division with numbers, arrays, `~astropy.units.Quantity`.
 Raising an `~ndcube.NDCube` to a power is also supported.
-These operations return a new `~ndcube.NDCube` with the data array (and where appropriate, the uncertainties) altered in accordance with the arithmetic operation.
+These operations return a new `~ndcube.NDCube` with the data array (and, where appropriate, the uncertainties) altered in accordance with the arithmetic operation.
 Other attributes of the `~ndcube.NDCube` remain unchanged.
 
-In addition, combining `~ndcube.NDCube` with coordinate-less `~astropy.nddata.NDData` subclasses via these operations is important.
-Such operations can be more complicated.  Hence see the :ref:`arithmetic_nddata` section below for a discussion separate, more detailed discussion.
+In addition, combining `~ndcube.NDCube` with coordinate-less `~astropy.nddata.NDData` subclasses via these operations is also supported.
+Such operations can be more complicated.  See the section below on :ref:`arithmetic_nddata` for a discussion separate, more detailed discussion.
 
 .. _arithmetic_standard:
 
@@ -22,12 +22,12 @@ Standard Arithmetic Operations
 Addition and Subtraction with Numbers, Arrays and Quantities
 ------------------------------------------------------------
 
-Numbers, arrays and `~astropy.units.Quantity` can be added to and subtracted from an `~ndcube.NDCube` via the ``+`` and ``-`` operators.
-Note that addition and subtraction only changes the data values of the `~ndcube.NDCube`.
-Let's deomonstrate with an example `~ndcube.NDCube` called ``cube``
+Numbers, arrays and `~astropy.units.Quantity` can be added to and subtracted from `~ndcube.NDCube` via the ``+`` and ``-`` operators.
+Note that addition and subtraction only change the data values of the `~ndcube.NDCube`.
+Let's deomonstrate with an example `~ndcube.NDCube`, ``cube``
 
 .. expanding-code-block:: python
-  :summary: Expand to see my_cube instantiated.
+  :summary: Expand to see cube instantiated.
 
   >>> import astropy.units as u
   >>> import astropy.wcs
@@ -63,6 +63,7 @@ Let's deomonstrate with an example `~ndcube.NDCube` called ``cube``
   >>> cube.data
   array([[10, 11, 12],
          [13, 14, 15]])
+
   >>> new_cube = cube + 1
   >>> new_cube.data
   array([[11, 12, 13],
@@ -78,6 +79,7 @@ We can also add an array if we want to add a different number to each data eleme
   >>> arr
   array([[0, 1, 2],
          [3, 4, 5]])
+
   >>> new_cube = cube + arr
   >>> new_cube.data
   array([[10, 12, 14],
@@ -91,39 +93,45 @@ Subtraction works in the same way.
   >>> new_cube.data
   array([[ 9, 10, 11],
          [12, 13, 14]])
+
   >>> new_cube = cube - arr
   >>> new_cube.data
   array([[10, 10, 10],
          [10, 10, 10]])
 
-Note that ``cube`` has no unit, which is why we are able to add and subtract numbers and arrays.
+Note that int he above examples, ``cube`` has no unit.
+This is why we are able to add and subtract numbers and arrays.
 If, however, we have an `~ndcube.NDCube` with a unit assigned,
 
 .. code-block:: python
 
-  >>> cube_unitful = NDCube(cube, unit=u.ct)
+  >>> cube_with_unit = NDCube(cube, unit=u.ct)
 
 then adding or subtracting an array or unitless number will raise an error.
 In such cases, we must use a `~astropy.units.Quantity` with a compatible unit:
 
 .. code-block:: python
 
-  >>> cube_unitful.data
+  >>> cube_with_unit.data
   array([[10, 11, 12],
          [13, 14, 15]])
-  >>> new_cube = cube_unitful + 1 * u.ct  # Adding a scalar quantity
+
+  >>> new_cube = cube_with_unit + 1 * u.ct  # Adding a scalar quantity
   >>> new_cube.data
   array([[11., 12., 13.],
          [14., 15., 16.]])
-  >>> new_cube = cube_unitful - 1 * u.ct  # Subtracting a scalar quantity
+
+  >>> new_cube = cube_with_unit - 1 * u.ct  # Subtracting a scalar quantity
   >>> new_cube.data
   array([[ 9., 10., 11.],
          [12., 13., 14.]])
-  >>> new_cube = cube_unitful + arr * u.ct  # Adding an array-like quantity
+
+  >>> new_cube = cube_with_unit + arr * u.ct  # Adding an array-like quantity
   >>> new_cube.data
   array([[10., 12., 14.],
          [16., 18., 20.]])
-  >>> new_cube = cube_unitful - arr * u.ct  # Subtracting an array-like quantity
+
+  >>> new_cube = cube_with_unit - arr * u.ct  # Subtracting an array-like quantity
   >>> new_cube.data
   array([[10., 10., 10.],
          [10., 10., 10.]])
@@ -133,8 +141,10 @@ Multiplying and Dividing with Numbers, Arrays and Quantities
 
 An `~ndcube.NDCube` can be multiplied and divided by numbers, arrays, and `~astropy.units.Quantity` via the ``*`` and ``-`` operators.
 These work similarly to addition and subtraction with a few minor differences:
+
 - The uncertainties of the resulting `~ndcube.NDCube` are scaled by the same factor as the data.
 - Classes with different units can be combined.
+
   * e.g. an `~ndcube.NDCube` with a unit of counts divided by an `~astropy.units.Quantity` with a unit is seconds will result in an `~ndcube.NDCube` with a unit of counts per second.
   * This also holds for cases were unitful and unitless classes can be combined.  In such cases, the unit of the resulting `~ndcube.NDCube` will be the same as that of the unitful object.
 
@@ -143,21 +153,22 @@ Below are some examples.
 .. code-block:: python
 
   >>> # See attributes of original cube.
-  >>> cube_unitful.data
+  >>> cube_with_unit.data
   array([[10, 11, 12],
          [13, 14, 15]])
-  >>> cube_unitful.unit
+  >>> cube_with_unit.unit
   Unit("ct")
-  >>> cube_unitful.uncertainty
+  >>> cube_with_unit.uncertainty
   StdDevUncertainty([[1. , 1.1, 1.2],
                      [1.3, 1.4, 1.5]])
 
   >>> # Multiply by a unitless array.
-  >>> arr = 1 + np.arange(cube_unitful.data.size).reshape(cube_unitful.data.shape)
+  >>> arr = 1 + np.arange(cube_with_unit.data.size).reshape(cube_with_unit.data.shape)
   >>> arr
   array([[1, 2, 3],
          [4, 5, 6]])
-  >>> new_cube = cube_unitful * arr
+
+  >>> new_cube = cube_with_unit * arr
 
   >>> # Inspect attributes of resultant cube.
   >>> new_cube.data
@@ -170,7 +181,7 @@ Below are some examples.
                      [5.2, 7. , 9. ]])
 
   >>> # Divide by an astropy Quantity.
-  >>> new_cube = cube_unitful / (2 * u.s)
+  >>> new_cube = cube_with_unit / (2 * u.s)
 
   >>> # Inspect attributes of resultant cube.
   >>> new_cube.data
@@ -182,11 +193,17 @@ Below are some examples.
   StdDevUncertainty([[0.5 , 0.55, 0.6 ],
                      [0.65, 0.7 , 0.75]])
 
+Note that when performing arithmetic operations with `~ndcube.NDCube` and array-like objects, their shapes only have to be broadcastable.
+For example:
+
+Raising NDCube to a Power
+-------------------------
+
 
 .. _arithmetic_nddata:
 
-Arithmetic Operations between Coordinate-less NDData
-====================================================
+Arithmetic Operations with Coordinate-less NDData
+=================================================
 
 Sometimes more advanced arithmetic operations are required.
 For example, we may want to create a sequence of running difference images which highlight changes between frames, and propagate the uncertainties associated with each image.
@@ -194,8 +211,8 @@ Alternatively, we may want to subtract one image from another, but exclude a cer
 In such cases, numbers, arrays and `~astropy.units.Quantity` are insufficient, and we would like to subtract two `~ndcube.NDCube` objects.
 This is not directly supported, but can still be achieved in practice, as we shall see below.
 
-Why Arithmetic Operations with Coordinate-aware NDData Instances Are Not Directly Supported, and How the Same Result Can Be Achieved
-------------------------------------------------------------------------------------------------------------------------------------
+Why Arithmetic Operations with Coordinate-aware NDData Are Not Directly Supported, and How the Same Result Can Be Achieved
+--------------------------------------------------------------------------------------------------------------------------
 
 Arithmetic operations between two `~ndcube.NDCube` instances (or equivalently, an `~ndcube.NDCube` and another coordinate-aware object) are not supported because of the possibility of supporting non-sensical operations.
 For example, what does it mean to multiply a spectrum and an image in a coordinate-aware way?
@@ -211,8 +228,8 @@ In many cases, a simple solution would be to extract the data (an optionally the
 .. expanding-code-block:: python
   :summary: Expand to see definition of cube1 and cube2.
 
-  >>> cube1 = cube_unitful
-  >>> cube2 = cube_unitful / 4
+  >>> cube1 = cube_with_unit
+  >>> cube2 = cube_with_unit / 4
 
 .. code-block:: python
 
