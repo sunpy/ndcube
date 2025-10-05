@@ -978,7 +978,7 @@ class NDCube(NDCubeBase):
     def _arithmetic_operate_with_nddata(self, operation, value):
         handle_mask = self._arithmetic_handle_mask
         if value.wcs is not None:
-            return TypeError("Cannot add coordinate-aware NDCubes together.")
+            raise TypeError("Cannot add coordinate-aware objects to NDCubes.")
         kwargs = {}
         if operation == "add":
             # Handle units
