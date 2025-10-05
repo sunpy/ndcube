@@ -221,6 +221,7 @@ Raising NDCube to a Power
   >>> import warnings
   >>> with warnings.catch_warnings():
   ...     warnings.simplefilter("ignore")  # Catching warnings not needed but keeps docs cleaner.
+  ...
   ...     new_cube = cube_with_unit**2
 
   >>> new_cube.data
@@ -241,15 +242,21 @@ Otherwise, ``new_cube.uncertainty`` will be set to ``None``.
 Arithmetic Operations with Coordinate-less NDData
 =================================================
 
-Sometimes more advanced arithmetic operations are required.
-For example, we may want to create a sequence of running difference images which highlight changes between frames while propagating the uncertainties associated with the image subtraction.
-Alternatively, we may want exclude a certain regions of one or other image from the operation with a mask.
-In such cases, numbers, arrays and `~astropy.units.Quantity` are insufficient.
-Instead it would be better to subtract two `~ndcube.NDCube` objects.
-While this is not directly supported, for reasons we will see below, the operation can still be achieved indirectly, as well shall also see.
+Sometimes more advanced arithmetic operations are required, for which numbers, arrays and `~astropy.units.Quantity` are insufficient.
+These include operations where both operands have:
 
-Why Arithmetic Operations with Coordinate-aware NDData Are Not Directly Supported, and How This Can Be Overcome
----------------------------------------------------------------------------------------------------------------
+- uncertainties which need to be propagated;
+- masks that need to be combined:
+- units and non-`numpy` data arrays unsuitable for representation as an `~astropy.units.Quantity`, e.g. `dask.array`.
+
+To achieve these operations, users may want to perform arithmetic operations between `~ndcube.NDCube` instances.
+While this is not supported, due to ambiguity in combining potentially different coordinate systems, the above use-cases can be achieved via arithmetic operations between `~ndcube.NDCube` and coordinate-less `astropy.nddata.NDData` or subclasses of the same.
+
+In the rest of this section, we will elaborate on why arithmetic operations are not directly supported between `~ndcube.NDCube` instances and show how users can convert `~ndcube.NDCube` to a coordinate-less `~astropy.nddata.NDData` instance.
+We will then discuss how uncertainties and masks are propagated in such operations, and how to control how masked values are treated.
+
+Why Arithmetic Operations between NDCubes Are Not Directly Supported, and Alternatives for Achieving the Same Result
+--------------------------------------------------------------------------------------------------------------------
 
 The purpose of the `ndcube` package is to support N-dimensional coordinate-aware data astronomical data analysis.
 Arithmetic operations between two `~ndcube.NDCube` instances (or equivalently, an `~ndcube.NDCube` and another coordinate-aware `~astropy.nddata.NDData` subclass) are therefore not directly supported because of the possibility of supporting non-sensical operations.
@@ -344,16 +351,16 @@ In the case of addition and subtraction, the ``fill_value`` should be ``0``.
 
 By replacing masked data values with ``0``, these values are effectively not included in the addition, and the data values from ``cube2_nocoords`` are passed into ``new_cube`` unchanged.
 In the above example, both operands have uncertainties, which means masked uncertainties are propagated through the addition, even though the masked data values have been set to ``0``.
-Propagation of masked uncertainties can also be suppressed by setting the optional kwarg, ``fill_uncertainty_value=0``.
+Propagation of masked uncertainties can also be suppressed by setting the optional kwarg, ``uncertainty_fill_value=0``.
 
 By default, the mask of ``cube_filled`` is not changed, and therefore is incorporated into the mask of ``new_cube``.
 However, mask propagation can also be suppressed by setting the optional kwarg, ``unmask=True``, which sets ``cube_filled.mask`` to ``False``.
 
-In the case of multiplication and division, a ``fill_value`` of ``1`` will prevent masked values being including in the operations.  (Also see, below, the optional use of the ``fill_uncertainty_value`` and ``unmask`` kwargs.)
+In the case of multiplication and division, a ``fill_value`` of ``1`` will prevent masked values being including in the operations.  (Also see, below, the optional use of the ``uncertainty_fill_value`` and ``unmask`` kwargs.)
 
 .. code-block:: python
 
-  >>> cube_filled = cube1.fill_masked(1, fill_uncertainty_value=0, unmask=True)
+  >>> cube_filled = cube1.fill_masked(1, uncertainty_fill_value=0, unmask=True)
   >>> new_cube = cube_filled * cube2_nocoords
 
 By default, `ndcube.NDCube.fill_masked` returns a new `~ndcube.NDCube` instance.
