@@ -89,9 +89,9 @@ def test_squeeze(ndcube_4d_ln_l_t_lt):
 
 def test_squeeze_error(ndcube_4d_ln_l_t_lt):
     same = ndcube_4d_ln_l_t_lt.squeeze()[0:1,:,:,:]
-    with pytest.raises(ValueError, match="Cannot select any axis to squeeze out, as none of them has size equal to one."):
+    with pytest.raises(ValueError, match=r"Cannot select any axis to squeeze out, as none of them has size equal to one."):
         same.squeeze([0,1])
-    with pytest.raises(ValueError, match="All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
+    with pytest.raises(ValueError, match=r"All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. Use `axis=` keyword to specify a subset of axes to squeeze."):
         same[0:1,0:1,0:1,0:1].squeeze()
 
 
@@ -159,7 +159,7 @@ def test_set_data_mask(ndcube_4d_mask):
     new_mask = np.zeros_like(cube.mask)
     masked_array = np.ma.MaskedArray(new_data, new_mask)
 
-    with pytest.raises(TypeError, match="Can not set the .data .* with a numpy masked array"):
+    with pytest.raises(TypeError, match=r"Can not set the .data .* with a numpy masked array"):
         cube.data = masked_array
 
 
@@ -231,7 +231,7 @@ def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value
 )
 def test_fill_masked_ndc_uncertainty_none(ndc, fill_value, uncertainty_fill_value, unmask):
     assert ndc.uncertainty is None
-    with pytest.raises(TypeError,match="Cannot fill uncertainty as uncertainty is None."):
+    with pytest.raises(TypeError, match=r"Cannot fill uncertainty as uncertainty is None."):
         ndc.fill_masked(
             fill_value,
             unmask=unmask,
