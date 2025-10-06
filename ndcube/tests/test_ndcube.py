@@ -4,6 +4,7 @@ import dask.array
 import numpy as np
 import pytest
 
+import astropy.nddata
 import astropy.units as u
 import astropy.wcs
 from astropy.wcs.wcsapi import BaseHighLevelWCS
@@ -238,3 +239,11 @@ def test_fill_masked_ndc_uncertainty_none(ndc, fill_value, uncertainty_fill_valu
             uncertainty_fill_value=uncertainty_fill_value,
             fill_in_place=True
         )
+
+
+def test_to_nddata_no_wcs(ndcube_2d_ln_lt):
+    ndc = ndcube_2d_ln_lt
+    output = ndc.to_nddata(wcs=None)
+    assert type(output) is astropy.nddata.NDData
+    assert output.wcs is None
+    assert (output.data == ndc.data).all()
