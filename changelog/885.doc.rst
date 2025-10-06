@@ -1,1 +1,0 @@
-Fix a mistake in the docstring for `ndcube.NDCube.rebin`, which misdescribed the behaviour of the ``-1`` sentinel value.

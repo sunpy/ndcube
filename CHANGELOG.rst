@@ -1,3 +1,12 @@
+2.3.4 (2025-10-06)
+==================
+
+Documentation
+-------------
+
+- Fix a mistake in the docstring for `ndcube.NDCube.rebin`, which misdescribed the behaviour of the ``-1`` sentinel value. (`#885 <https://github.com/sunpy/ndcube/pull/885>`__)
+
+
 2.3.3 (2025-10-02)
 ==================
 
