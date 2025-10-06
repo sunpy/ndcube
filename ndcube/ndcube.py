@@ -1501,7 +1501,7 @@ class NDCube(NDCubeBase):
         # Remove kwargs set to None and add kwargs that don't correspond to NDCube attrs.
         for key, value in kwargs.items():
             if value is None:
-                new_kwargs.pop(key, None)
+                del new_kwargs[key]
             else:
                 new_kwargs[key] = value
         # Inspect call signature of new_nddata class and

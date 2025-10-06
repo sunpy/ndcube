@@ -241,9 +241,10 @@ def test_fill_masked_ndc_uncertainty_none(ndc, fill_value, uncertainty_fill_valu
         )
 
 
-def test_to_nddata_no_wcs(ndcube_2d_ln_lt):
+def test_to_nddata(ndcube_2d_ln_lt):
     ndc = ndcube_2d_ln_lt
-    output = ndc.to_nddata(wcs=None)
+    new_data = ndc.data * 2
+    output = ndc.to_nddata(data=new_data, wcs=None)
     assert type(output) is astropy.nddata.NDData
     assert output.wcs is None
-    assert (output.data == ndc.data).all()
+    assert (output.data == new_data).all()
