@@ -310,7 +310,7 @@ For example:
 
   >>> from astropy.nddata import NDDataRef
   >>> nddataref2 = cube2.to_nddata(wcs=None, nddata_type=NDDataRef)
-  >>> print(type(nd) is NDDataRef)
+  >>> print(type(nddataref2) is NDDataRef)
   True
 
 Requiring users to explicitly remove coordinate-awareness makes it clear that coordinates are not combined as part of arithmetic operations.
@@ -340,7 +340,7 @@ For example:
 
   >>> cube2.meta["more"] = True
   >>> cube2.meta
-  {'Description': 'This is example NDCube metadata.', 'More': True}
+  {'Description': 'This is example NDCube metadata.', 'more': True}
 
   >>> new_cube = cube1 + cube2.to_nddata(wcs=None)
   >>> new_cube.meta
@@ -348,7 +348,7 @@ For example:
 
   >>> new_cube.meta.update(cube2.meta)
   >>> new_cube.meta
-  {'Description': 'This is example NDCube metadata.', 'More': True}
+  {'Description': 'This is example NDCube metadata.', 'more': True}
 
 Handling of Uncertainties
 """""""""""""""""""""""""
