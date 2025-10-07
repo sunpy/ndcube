@@ -1484,6 +1484,56 @@ class NDCube(NDCubeBase):
             self.mask = False
         return None
 
+    def to_nddata(self, *, nddata_type=NDData, **kwargs):
+        """
+        Constructs new type instance with the same attribute values as this `~ndcube.NDCube`.
+
+        Any attributes not supported by the new class (``nddata_type``), will be discarded.
+        Values of supported attributes can be altered on the output object by setting a
+        kwarg with the new value, e.g. ``data=new_data``.
+
+        Parameters
+        ----------
+        nddata_type:
+            The type of the returned object. Must be a subclass of `~astropy.nddata.NDData`
+            or a class that behaves like one.  Default=`~astropy.nddata.NDData`.
+
+        kwargs:
+            Inputs to the ``nddata_type`` constructor that should differ from the values
+            stored in attributes of this instance. For example, to set different data values
+            on the returned object, set a kwarg ``data=new_data``, where ``new_data`` is an
+            an array of compatible shape and dtype.  Note that kwargs given by the user and
+            attributes on this instance that are not supported by the ``nddata_type``
+            constructor are ignored.
+
+        Returns
+        -------
+        new_nddata:
+            A object of class given by ``nddata_type`` with the same attribute values as
+            this `~ndcube.NDCube` instance, except for any alterations specified by the
+            kwargs.
+
+        Examples
+        --------
+        To create an `~astropy.nddata.NDData` instance which is a copy of an `~ndcube.NDCube`
+        (called ``cube``) without a WCS, do:
+
+        >>> nddata_without_coords = cube.to_nddata(wcs=None) # doctest: +SKIP
+        """
+        # Build dictionary of new attribute values from this NDCube instance
+        # and update with user-defined kwargs.
+        new_kwargs = {key.strip("_"): value for key, value in self.__dict__.items()}
+        new_kwargs.update(kwargs)
+        # Inspect call signature of new_nddata class and
+        # remove unsupported items from new_kwargs.
+        nddata_sig = inspect.signature(nddata_type).parameters.keys()
+        new_kwarg_keys = list(new_kwargs.keys())
+        for key in new_kwarg_keys:
+            if key not in nddata_sig:
+                del new_kwargs[key]
+        # Construct and return new instance.
+        return nddata_type(**new_kwargs)
+
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
