@@ -289,7 +289,7 @@ These include cases where both operands have:
 
 - uncertainties which need to be propagated, and/or;
 - masks that need to be combined, and/or;
-- units and non-`numpy` data arrays unsuitable for representation as an `~astropy.units.Quantity`, e.g. `dask.array`.
+- units and non-`numpy` data arrays unsuitable for representation as an `~astropy.units.Quantity`, e.g. ``dask.array``.
 
 To achieve these operations, it would be preferable to perform arithmetic operations directly between the `~ndcube.NDCube` instances.
 While this is not supported, as already outlined, the same result can be achieved by first dropping the coordinate-awareness of one `~ndcube.NDCube` via the `ndcube.NDCube.to_nddata` method.
