@@ -26,6 +26,7 @@ __all__ = [
     'assert_cubes_equal',
     'assert_cubesequences_equal',
     'assert_extra_coords_equal',
+    'assert_global_coords_equal',
     'assert_metas_equal',
     'assert_wcs_are_equal',
     'figure_test',
@@ -91,6 +92,12 @@ def assert_extra_coords_equal(test_input, extra_coords):
         assert test_input._wcs is None
     else:
         assert_wcs_are_equal(test_input._wcs, extra_coords._wcs)
+
+
+
+def assert_global_coords_equal(test_input, global_coords):
+    assert test_input.items() == global_coords.items()
+    assert test_input.physical_types == global_coords.physical_types
 
 
 def assert_metas_equal(test_input, expected_output):

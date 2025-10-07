@@ -248,3 +248,13 @@ def test_to_nddata(ndcube_2d_ln_lt):
     assert type(output) is astropy.nddata.NDData
     assert output.wcs is None
     assert (output.data == new_data).all()
+
+
+def test_to_nddata_type_ndcube(ndcube_2d_ln_lt):
+    ndc = ndcube_2d_ln_lt
+    new_data = ndc.data * 2
+    output = ndc.to_nddata(data=new_data, nddata_type=NDCube)
+    assert type(output) is NDCube
+    assert (output.data == new_data).all()
+    helpers.assert_extra_coords_equal(output.extra_coords, ndc.extra_coords)
+    helpers.assert_global_coords_equal(output.global_coords, ndc.global_coords)
