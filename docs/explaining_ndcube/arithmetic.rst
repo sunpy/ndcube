@@ -389,7 +389,7 @@ For example, in the case of addition and subtraction, the identity ``fill_value`
 
 .. code-block:: python
 
-  >>> new_cube = cube1.fill_masked(0) + cube2_nocoords
+  >>> new_cube = cube1.fill_masked(0) + cube2.to_nddata(wcs=None)
 
 In this example, both operands have uncertainties, which means masked uncertainties are propagated through the operation, even though the masked data values have been set to ``0``.
 Propagation of masked uncertainties can also be suppressed by setting the optional kwarg, ``uncertainty_fill_value`` to ``0``.
@@ -403,7 +403,7 @@ In the case of multiplication and division, the identity ``fill_value`` is ``1``
 .. code-block:: python
 
   >>> cube_filled = cube1.fill_masked(1, uncertainty_fill_value=0, unmask=True)
-  >>> new_cube = cube_filled * cube2_nocoords
+  >>> new_cube = cube_filled * cube2.to_nddata(wcs=None)
 
 Note that irrespective of the arithmetic operation, the ``uncertainty_fill_value`` should always be set to ``0`` to avoid propagating masked uncertainties.
 
@@ -414,4 +414,4 @@ In this case, the ``fill_in_place`` kwarg can be used.
 .. code-block:: python
 
   >>> cube1.fill_masked(0, fill_in_place=True)
-  >>> new_cube = cube1 + cube2_nocoords
+  >>> new_cube = cube1 + cube2.to_nddata(wcs=None)
