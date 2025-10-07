@@ -1,3 +1,5 @@
+from contextlib import nullcontext
+
 import asdf_astropy
 import numpy as np
 import pytest
@@ -17,10 +19,16 @@ def test_serialization(all_ndcubes, tmp_path, all_ndcubes_names):
     if not isinstance(all_ndcubes.data, np.ndarray):
         pytest.skip("Can't save non-numpy array to ASDF.")
 
+    # A warning is thrown if psf is present
+    write_context = nullcontext()
+    if all_ndcubes.psf is not None:
+        write_context = pytest.warns(UserWarning, match="'psf' is present")
+
     file_path = tmp_path / "test.asdf"
     with asdf.AsdfFile() as af:
         af["ndcube"] = all_ndcubes
-        af.write_to(file_path)
+        with write_context:
+            af.write_to(file_path)
 
     with asdf.open(file_path) as af:
         assert_cubes_equal(af["ndcube"], all_ndcubes, rtol=1e-12)

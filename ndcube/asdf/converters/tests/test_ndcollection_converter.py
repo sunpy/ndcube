@@ -35,11 +35,11 @@ def test_serialization_cube(create_ndcollection_cube, tmp_path):
         assert_collections_equal(af["ndcube_gwcs"], ndcollection)
 
 
-@pytest.fixture
-def create_ndcollection_sequence(ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim):
+@pytest.fixture(params=[{"meta": {"hello": "world"}}, {}])
+def create_ndcollection_sequence(ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim, request):
     sequence02 = NDCubeSequence([ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim])
     sequence20 = NDCubeSequence([ndcube_gwcs_3d_ln_lt_l_ec_dropped_dim, ndcube_gwcs_3d_ln_lt_l])
-    return NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
+    return NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all", **request.param)
 
 
 def test_serialization_sequence(create_ndcollection_sequence, tmp_path):

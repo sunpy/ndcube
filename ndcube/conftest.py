@@ -852,6 +852,13 @@ def ndcube_2d_ln_lt(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def ndcube_2d_ln_lt_psf(wcs_2d_lt_ln):
+    shape = (10, 12)
+    data_cube = data_nd(shape)
+    return NDCube(data_cube, wcs=wcs_2d_lt_ln, psf=np.zeros(shape))
+
+
+@pytest.fixture
 def ndcube_2d_ln_lt_uncert(wcs_2d_lt_ln):
     shape = (10, 12)
     data_cube = data_nd(shape)
@@ -1086,6 +1093,7 @@ def ndcube_1d_l(wcs_1d_l):
     "ndcube_3d_coupled_time",
     "ndcube_3d_l_ln_lt_ectime",
     "ndcube_2d_ln_lt",
+    "ndcube_2d_ln_lt_psf",
     "ndcube_2d_ln_lt_uncert",
     "ndcube_2d_ln_lt_mask_uncert",
     "ndcube_2d_ln_lt_mask_uncert_unit_mask_false",
