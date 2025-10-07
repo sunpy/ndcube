@@ -1485,8 +1485,8 @@ class NDCube(NDCubeBase):
 
         Returns
         -------
-        new_nddata:
-            A object of class given by ``nddata_type`` with the same attribute values as
+        :
+            An object of class given by ``nddata_type`` with the same attribute values as
             this `~ndcube.NDCube` instance, except for any alterations specified by the
             kwargs.
 
