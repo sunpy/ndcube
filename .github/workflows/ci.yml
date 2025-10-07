@@ -36,9 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install -U --user build
       - run: python -m build . --sdist
       - run: python -m pip install -U --user twine
@@ -53,9 +53,15 @@ jobs:
       toxdeps: tox-pypi-filter
       posargs: -n auto
       envs: |
-        - windows: py311
+        - linux: py314
+        - windows: py312
         - macos: py312
+<<<<<<<
         - linux: py310-oldestdeps
+=======
+        - linux: py312-oldestdeps
+        - linux: py314-devdeps
+>>>>>>>
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -63,7 +69,7 @@ jobs:
     needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
-      default_python: '3.12'
+      default_python: '3.13'
       submodules: false
       pytest: false
       toxdeps: tox-pypi-filter
@@ -108,8 +114,13 @@ jobs:
     needs: [test, docs]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v2
     with:
+<<<<<<<
       python-version: '3.12'
       test_extras: 'all,tests'
+=======
+      python-version: '3.13'
+      test_extras: 'tests'
+>>>>>>>
       test_command: 'pytest -p no:warnings --doctest-rst --pyargs ndcube'
       submodules: false
     secrets:
