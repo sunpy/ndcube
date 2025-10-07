@@ -103,9 +103,7 @@ intersphinx_mapping = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = "sunpy"
-
 html_logo = png_icon = 'logo/ndcube.png'
-
 html_favicon = 'logo/favicon.png'
 
 # Render inheritance diagrams in SVG
@@ -135,10 +133,6 @@ graphviz_dot_args = [
 autoclass_content = "both"
 
 # -- Other options ----------------------------------------------------------
-
-napoleon_use_rtype = False
-napoleon_google_docstring = False
-napoleon_use_param = False
 
 nitpicky = True
 # This is not used. See docs/nitpick-exceptions file for the actual listing.
@@ -172,6 +166,4 @@ sphinx_gallery_conf = {
 ogp_image = "https://github.com/sunpy/ndcube/raw/main/docs/logo/ndcube.png"
 ogp_use_first_image = True
 ogp_description_length = 160
-ogp_custom_meta_tags = [
-    '<meta property="og:ignore_canonical" content="true" />',
-]
+ogp_custom_meta_tags = ('<meta property="og:ignore_canonical" content="true" />',)

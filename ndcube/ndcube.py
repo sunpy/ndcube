@@ -359,11 +359,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         that valid data points are marked by `False` and invalid ones with `True`.
         Defaults to `None`.
 
-    meta : dict-like object, optional
+    meta : dict-like, optional
         Additional meta information about the dataset. If no meta is provided
         an empty dictionary is created.
 
-    unit : Unit-like or `str`, optional
+    unit : `astropy.units.Unit` or `str`, optional
         Unit for the dataset. Strings that can be converted to a `~astropy.units.Unit` are allowed.
         Default is `None` which results in dimensionless units.
 
@@ -753,11 +753,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             or `astropy.io.fits.Header`
             The WCS object to which the `ndcube.NDCube` is to be reprojected.
 
-        algorithm: {'interpolation' | 'adaptive' | 'exact'}
+        algorithm: `str`, optional
             The algorithm to use for reprojecting.
-            When set to "interpolation" `~reproject.reproject_interp` is used,
-            when set to "adaptive" `~reproject.reproject_adaptive` is used and
-            when set to "exact" `~reproject.reproject_exact` is used.
+            When set to "interpolation" `~reproject.reproject_interp` is used.
+            When set to "adaptive" `~reproject.reproject_adaptive` is used.
+            When set to "exact" `~reproject.reproject_exact` is used.
 
         shape_out: `tuple`, optional
             The shape of the output data array. The ordering of the dimensions must follow NumPy
@@ -880,11 +880,11 @@ class NDCube(NDCubeBase):
         that valid data points are marked by False and invalid ones with True.
         Defaults to None.
 
-    meta : dict-like object, optional
+    meta : dict-like, optional
         Additional meta information about the dataset. If no meta is provided
         an empty collections.OrderedDict is created. Default is None.
 
-    unit : Unit-like or str, optional
+    unit : `astropy.units.Unit` or str, optional
         Unit for the dataset. Strings that can be converted to a Unit are allowed.
         Default is None.
 
@@ -914,7 +914,7 @@ class NDCube(NDCubeBase):
     # last moment.
     plotter = PlotterDescriptor(default_type="mpl_plotter")
     """
-    A `~.MatplotlibPlotter` instance providing visualization methods.
+    A ~ndcube.visualization.mpl_plotter.MatplotlibPlotter` instance providing visualization methods.
 
     The type of this attribute can be changed to provide custom visualization functionality.
     """
@@ -1148,8 +1148,9 @@ class NDCube(NDCubeBase):
             Each element must be in int. If they are not they will be rounded
             to the nearest int. If provided as a `~astropy.units.Quantity` the
             units have to be convertible to pixels.
-            The sentinel value ``-1`` can be passed for a dimension which means
-            that no rebinning will occur along that dimension.
+            The sentinel value ``-1`` can be passed for a dimension which sets the
+            bin size equal to the number of pixels along that axis. This results in a
+            pixel size of 1 for this axis in the output (e.g. sum along that axis).
             Please note the ``bin_shape`` follows array axis (NumPy) ordering of the axes.
         operation : function
             Function applied to the data to derive values of the bins.
