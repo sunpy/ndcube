@@ -1508,7 +1508,7 @@ class NDCube(NDCubeBase):
 
         Returns
         -------
-        :
+        new_nddata: object
             An object of class given by ``nddata_type`` with the same attribute values as
             this `~ndcube.NDCube` instance, except for any alterations specified by the
             kwargs.
@@ -1524,6 +1524,10 @@ class NDCube(NDCubeBase):
         # and update with user-defined kwargs.
         new_kwargs = {key.strip("_"): value for key, value in self.__dict__.items()}
         new_kwargs.update(kwargs)
+        extra_coords, global_coords = None, None
+        if isinstance(nddata_type, NDCube):
+            extra_coords = new_kwargs.pop("extra_coords")
+            global_coords = new_kwargs.pop("global_coords")
         # Inspect call signature of new_nddata class and
         # remove unsupported items from new_kwargs.
         nddata_sig = inspect.signature(nddata_type).parameters.keys()
@@ -1532,7 +1536,13 @@ class NDCube(NDCubeBase):
             if key not in nddata_sig:
                 del new_kwargs[key]
         # Construct and return new instance.
-        return nddata_type(**new_kwargs)
+        new_nddata = nddata_type(**new_kwargs)
+        if extra_coords:
+            extra_coords._ndcube = new_nddata
+            new_nddata._extra_coords = extra_coords
+        if global_coords:
+            new_nddata._global_coords = global_coords
+        return new_nddata
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
