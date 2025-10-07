@@ -1471,7 +1471,7 @@ class NDCube(NDCubeBase):
 
         Parameters
         ----------
-        nddata_type: `class`
+        nddata_type:
             The type of the returned object. Must be a subclass of `~astropy.nddata.NDData`
             or a class that behaves like one.  Default=`~astropy.nddata.NDData`.
 
