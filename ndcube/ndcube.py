@@ -1525,7 +1525,7 @@ class NDCube(NDCubeBase):
         new_kwargs = {key.strip("_"): value for key, value in self.__dict__.items()}
         new_kwargs.update(kwargs)
         extra_coords, global_coords = None, None
-        if isinstance(nddata_type, NDCube):
+        if nddata_type is NDCube:
             extra_coords = new_kwargs.pop("extra_coords")
             global_coords = new_kwargs.pop("global_coords")
         # Inspect call signature of new_nddata class and
