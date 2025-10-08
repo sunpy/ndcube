@@ -24,9 +24,15 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
+# These are truly optional deps or deps only used for testing where we
+# want oldestdeps to test them
+tests-optional = [
+  "dask>=2023.10.0",
+  "specutils>=1.12.0",
+  "sunpy>=7.0.0",
+]
 tests = [
-  "ndcube[all]",
-  "dask",
+  "ndcube[all,tests-optional]",
   "pytest-astropy",
   "pytest-cov",
   "pytest-doctestplus",
@@ -34,29 +40,23 @@ tests = [
   "pytest-xdist",
   "pytest",
   "pytest-memray; sys_platform != 'win32'",
-  "scipy",
-  "specutils",
-  "sunpy>=7.0.0",
 ]
 docs = [
-  "ndcube[all]",
+  "ndcube[all,tests-runtime]",
   "sphinx",
   "sphinx-automodapi",
   "sunpy-sphinx-theme",
   "packaging",
-  "matplotlib",
-  "mpl-animators>=1.0",
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
-  "sunpy>=7.0.0",
 ]
 plotting = [
   "matplotlib>=3.8.0",
   "mpl_animators>=1.0",
 ]
 reproject = [
-  "reproject>=0.7.1",
+  "reproject>=0.13",  # first version with 3.12 support
 ]
 all = [
   "ndcube[plotting,reproject]",
