@@ -25,6 +25,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 tests = [
+  "ndcube[all]",
   "dask",
   "pytest-astropy",
   "pytest-cov",
@@ -38,6 +39,7 @@ tests = [
   "sunpy>=7.0.0",
 ]
 docs = [
+  "ndcube[all]",
   "sphinx",
   "sphinx-automodapi",
   "sunpy-sphinx-theme",
