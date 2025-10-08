@@ -16,10 +16,10 @@ authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=5.0.6,!=5.1.0",
+  "astropy>=6.1.0",
   "gwcs>=0.18",
-  "numpy>=1.23.0",
-  "scipy>=1.8.0",
+  "numpy>=1.26.0",
+  "scipy>=1.12.0",
 ]
 dynamic = ["version"]
 
@@ -35,7 +35,7 @@ tests = [
   "pytest-memray; sys_platform != 'win32'",
   "scipy",
   "specutils",
-  "sunpy>=5.0.0",
+  "sunpy>=7.0.0",
 ]
 docs = [
   "sphinx",
@@ -47,10 +47,10 @@ docs = [
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
-  "sunpy>=5.0.0",
+  "sunpy>=7.0.0",
 ]
 plotting = [
-  "matplotlib>=3.5.0",
+  "matplotlib>=3.8.0",
   "mpl_animators>=1.0",
 ]
 reproject = [
