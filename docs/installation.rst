@@ -4,8 +4,6 @@
 Installing ``ndcube``
 *********************
 
-`ndcube` requires Python >=3.9, ``astropy``>=5.0, ``numpy``>=1.21 and ``gwcs``>=0.18.
-
 Installing the release version
 ------------------------------
 
@@ -91,3 +89,18 @@ Be sure you get the latest updates by regularly doing:
 
 .. _miniforge website: https://github.com/conda-forge/miniforge#download
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
