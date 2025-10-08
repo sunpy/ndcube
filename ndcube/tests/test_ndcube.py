@@ -250,8 +250,9 @@ def test_to_nddata(ndcube_2d_ln_lt):
     assert (output.data == new_data).all()
 
 
-def test_to_nddata_type_ndcube(ndcube_2d_ln_lt):
-    ndc = ndcube_2d_ln_lt
+def test_to_nddata_type_ndcube(ndcube_2d_ln_lt_uncert_ec):
+    ndc = ndcube_2d_ln_lt_uncert_ec
+    ndc.global_coords.add("wavelength", "em.wl", 100*u.nm)
     new_data = ndc.data * 2
     output = ndc.to_nddata(data=new_data, nddata_type=NDCube)
     assert type(output) is NDCube
