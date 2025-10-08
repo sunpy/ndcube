@@ -89,18 +89,3 @@ Be sure you get the latest updates by regularly doing:
 
 .. _miniforge website: https://github.com/conda-forge/miniforge#download
 .. _ndcube GitHub repository: https://github.com/sunpy/ndcube
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
