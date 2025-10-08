@@ -17,7 +17,7 @@
       "changelog_url": "https://docs.sunpy.org/projects/ndcube/en/stable/whatsnew/changelog.html",
       "issue_tracker_url": "https://github.com/sunpy/ndcube/issues",
       "license": "BSD 2-Clause",
-      "minimum_python_version": "3.12",
+      "minimum_python_version": "3.11",
       "use_compiled_extensions": "n",
       "enable_dynamic_dev_versions": "y",
       "include_example_code": "n",
