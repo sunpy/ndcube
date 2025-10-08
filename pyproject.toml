@@ -42,7 +42,7 @@ tests = [
   "pytest-memray; sys_platform != 'win32'",
 ]
 docs = [
-  "ndcube[all,tests-runtime]",
+  "ndcube[all,tests-optional]",
   "sphinx",
   "sphinx-automodapi",
   "sunpy-sphinx-theme",
