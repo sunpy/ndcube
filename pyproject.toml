@@ -9,23 +9,30 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "licenses/LICENSE.rst" }
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=5.0.6,!=5.1.0",
-  "gwcs>=0.18",
-  "numpy>=1.23.0",
-  "scipy>=1.8.0",
+  "astropy>=6.0.0",
+  "gwcs>=0.20.0",
+  "numpy>=1.26.0",
+  "scipy>=1.12.0",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
+# These are truly optional deps or deps only used for testing where we
+# want oldestdeps to test them
+tests-optional = [
+  "dask>=2023.10.0",
+  "specutils>=1.12.0",
+  "sunpy>=6.1.0",
+]
 tests = [
-  "dask",
+  "ndcube[all,tests-optional]",
   "pytest-astropy",
   "pytest-cov",
   "pytest-doctestplus",
@@ -33,28 +40,23 @@ tests = [
   "pytest-xdist",
   "pytest",
   "pytest-memray; sys_platform != 'win32'",
-  "scipy",
-  "specutils",
-  "sunpy>=5.0.0",
 ]
 docs = [
+  "ndcube[all,tests-optional]",
   "sphinx",
   "sphinx-automodapi",
   "sunpy-sphinx-theme",
   "packaging",
-  "matplotlib",
-  "mpl-animators>=1.0",
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
-  "sunpy>=5.0.0",
 ]
 plotting = [
-  "matplotlib>=3.5.0",
+  "matplotlib>=3.8.0",
   "mpl_animators>=1.0",
 ]
 reproject = [
-  "reproject>=0.7.1",
+  "reproject>=0.13",  # first version with 3.12 support
 ]
 all = [
   "ndcube[plotting,reproject]",
