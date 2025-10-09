@@ -10,8 +10,8 @@ class ResampledConverter(Converter):
 
         return ResampledLowLevelWCS(
             wcs=node["wcs"],
-            offset=node.get("offset"),
-            factor=node.get("factor"),
+            offset=node["offset"],
+            factor=node["factor"],
         )
 
     def to_yaml_tree(self, resampledwcs, tag, ctx):

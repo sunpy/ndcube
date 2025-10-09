@@ -10,8 +10,8 @@ class ReorderedConverter(Converter):
 
         return ReorderedLowLevelWCS(
             wcs=node["wcs"],
-            pixel_order=node.get("pixel_order"),
-            world_order=node.get("world_order"),
+            pixel_order=node["pixel_order"],
+            world_order=node["world_order"],
         )
 
     def to_yaml_tree(self, reorderedwcs, tag, ctx):

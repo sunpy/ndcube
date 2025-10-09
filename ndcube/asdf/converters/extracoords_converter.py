@@ -23,6 +23,7 @@ class ExtraCoordsConverter(Converter):
             node["mapping"] = extracoords._mapping
         if extracoords._lookup_tables:
             node["lookup_tables"] = extracoords._lookup_tables
-        node["dropped_tables"] = extracoords._dropped_tables
+        if extracoords._dropped_tables is not None:
+            node["dropped_tables"] = extracoords._dropped_tables
         node["ndcube"] = extracoords._ndcube
         return node

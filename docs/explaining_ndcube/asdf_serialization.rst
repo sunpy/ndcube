@@ -37,8 +37,7 @@ You can save any number of cubes in your ASDF by adding them to the dictionary.
 .. code-block:: python
 
   >>> my_tree = {"mycube": my_cube}
-  >>> with asdf.AsdfFile(tree=my_tree) as f:  # doctest:  +SKIP
-  ...     f.write_to("somefile.asdf")  # doctest:  +SKIP
+  >>> asdf.AsdfFile(tree=my_tree).write_to("somefile.asdf")  # doctest:  +SKIP
 
 
 What's Supported and What Isn't

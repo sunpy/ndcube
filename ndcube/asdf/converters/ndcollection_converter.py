@@ -8,7 +8,7 @@ class NDCollectionConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         from ndcube.ndcollection import NDCollection
 
-        aligned_axes = list(node.get("aligned_axes").values())
+        aligned_axes = list(node.get("aligned_axes", {}).values())
         aligned_axes = tuple(tuple(lst) for lst in aligned_axes)
         return NDCollection(node["items"], meta=node.get("meta"), aligned_axes=aligned_axes)
 

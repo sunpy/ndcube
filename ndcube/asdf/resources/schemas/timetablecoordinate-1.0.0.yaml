@@ -20,6 +20,6 @@ properties:
   reference_time:
     tag: "tag:stsci.edu:asdf/time/time-*"
 
-required: ["table"]
+required: ["table", "reference_time"]
 additionalProperties: false
 ...

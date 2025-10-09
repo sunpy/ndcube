@@ -20,6 +20,6 @@ properties:
   offset:
     tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
 
-required: [wcs]
+required: ["wcs", "factor", "offset"]
 additionalProperties: false
 ...

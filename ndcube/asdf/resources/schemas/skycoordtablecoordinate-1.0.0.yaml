@@ -20,6 +20,6 @@ properties:
   physical_types:
     type: array
 
-required: ["table"]
+required: ["table", "mesh"]
 additionalProperties: false
 ...

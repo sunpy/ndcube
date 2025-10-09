@@ -10,7 +10,7 @@ class TimeTableCoordConverter(Converter):
 
         names = node.get("names")
         physical_types = node.get("physical_types")
-        reference_time = node.get("reference_time")
+        reference_time = node["reference_time"]
         return TimeTableCoordinate(
             node["table"],
             names=names,
