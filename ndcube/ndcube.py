@@ -1506,6 +1506,10 @@ class NDCube(NDCubeBase):
         Attribute values can be altered on the output object by setting a kwarg with the new
         value, e.g. ``data=new_data``.
         Any attributes not supported by the new class (``nddata_type``), will be discarded.
+        A motivating use case for this method is in enabling arithmetic operations between
+        `~ndcube.NDCube` instances by removing coordinate-awareness.  See the section of the
+        ndcube documentation on
+        'Enabling Arithmetic Operations between NDCubes with NDCube.to_nddata'.
 
         Parameters
         ----------
