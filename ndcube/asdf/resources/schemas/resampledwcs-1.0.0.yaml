@@ -1,0 +1,25 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/resampledwcs-1.0.0"
+
+title:
+  Represents the ndcube ResampledLowLevelWCS object
+
+description:
+  Represents the ndcube ResampledLowLevelWCS object
+
+type: object
+properties:
+  wcs:
+    anyOf:
+      - tag: "tag:astropy.org:astropy/wcs/wcs-*"
+      - tag: "tag:stsci.edu:gwcs/wcs-*"
+  factor:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+  offset:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+
+required: ["wcs", "factor", "offset"]
+additionalProperties: false
+...
