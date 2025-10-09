@@ -1540,27 +1540,23 @@ class NDCube(NDCubeBase):
                        "psf": psf,
                        "extra_coords": extra_coords,
                        "global_coords": global_coords}
-        extra_coords = self._extra_coords if user_kwargs["extra_coords"] is COPY else None
-        global_coords = self._global_coords if user_kwargs["global_coords"] is COPY else None
         user_kwargs = {key: value for key, value in user_kwargs.items() if value is not COPY}
         user_kwargs.update(kwargs)
         all_kwargs = {key.strip("_"): value for key, value in self.__dict__.items()}
         all_kwargs.update(user_kwargs)
         # Inspect call signature of new_nddata class and
         # remove unsupported items from new_kwargs.
-        nddata_sig = inspect.signature(nddata_type).parameters.keys()
-        all_kwarg_keys = list(all_kwargs.keys())
-        for key in all_kwarg_keys:
-            if key not in nddata_sig:
-                del all_kwargs[key]
+        all_kwargs = {key: value for key, value in all_kwargs.items()
+                      if key in inspect.signature(nddata_type).parameters.keys()}
         # Construct and return new instance.
         new_nddata = nddata_type(**all_kwargs)
         if isinstance(new_nddata, NDCubeBase):
-            if extra_coords:
+            if extra_coords is COPY:
+                extra_coords = copy.copy(self._extra_coords)
                 extra_coords._ndcube = new_nddata
                 new_nddata._extra_coords = extra_coords
-            if global_coords:
-                new_nddata._global_coords = global_coords
+            if global_coords is COPY:
+                new_nddata._global_coords = copy.copy(self._global_coords)
         return new_nddata
 
 
