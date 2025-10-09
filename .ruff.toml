@@ -34,8 +34,6 @@ select = [
 extend-ignore = [
   # pycodestyle (E, W)
   "E501", # ignore line length will use a formatter instead
-  # pyupgrade (UP)
-  "UP038", # Use | in isinstance - not compatible with models and is slower
   # numpy
   "NPY002", # TODO: migrate from np.random.rand to np.random.Generator
   # pytest (PT)

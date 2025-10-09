@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/sunpy/package-template",
-  "commit": "2d254ec79b0b2d9dfb8d7d08ebd83fa6da234b46",
+  "commit": "bea8060eef60df35f7df61d9db1d56b838bda01a",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -17,7 +17,7 @@
       "changelog_url": "https://docs.sunpy.org/projects/ndcube/en/stable/whatsnew/changelog.html",
       "issue_tracker_url": "https://github.com/sunpy/ndcube/issues",
       "license": "BSD 2-Clause",
-      "minimum_python_version": "3.10",
+      "minimum_python_version": "3.11",
       "use_compiled_extensions": "n",
       "enable_dynamic_dev_versions": "y",
       "include_example_code": "n",
@@ -32,7 +32,7 @@
         ".github/workflows/sub_package_update.yml"
       ],
       "_template": "https://github.com/sunpy/package-template",
-      "_commit": "2d254ec79b0b2d9dfb8d7d08ebd83fa6da234b46"
+      "_commit": "bea8060eef60df35f7df61d9db1d56b838bda01a"
     }
   },
   "directory": null

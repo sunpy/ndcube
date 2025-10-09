@@ -4,6 +4,7 @@ import dask.array
 import numpy as np
 import pytest
 
+import astropy.nddata
 import astropy.units as u
 import astropy.wcs
 from astropy.wcs.wcsapi import BaseHighLevelWCS
@@ -238,3 +239,23 @@ def test_fill_masked_ndc_uncertainty_none(ndc, fill_value, uncertainty_fill_valu
             uncertainty_fill_value=uncertainty_fill_value,
             fill_in_place=True
         )
+
+
+def test_to_nddata(ndcube_2d_ln_lt):
+    ndc = ndcube_2d_ln_lt
+    new_data = ndc.data * 2
+    output = ndc.to_nddata(data=new_data, wcs=None)
+    assert type(output) is astropy.nddata.NDData
+    assert output.wcs is None
+    assert (output.data == new_data).all()
+
+
+def test_to_nddata_type_ndcube(ndcube_2d_ln_lt_uncert_ec):
+    ndc = ndcube_2d_ln_lt_uncert_ec
+    ndc.global_coords.add("wavelength", "em.wl", 100*u.nm)
+    new_data = ndc.data * 2
+    output = ndc.to_nddata(data=new_data, nddata_type=NDCube)
+    assert type(output) is NDCube
+    assert (output.data == new_data).all()
+    helpers.assert_extra_coords_equal(output.extra_coords, ndc.extra_coords)
+    helpers.assert_global_coords_equal(output.global_coords, ndc.global_coords)

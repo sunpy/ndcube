@@ -4,8 +4,6 @@
 Installing ``ndcube``
 *********************
 
-`ndcube` requires Python >=3.9, ``astropy``>=5.0, ``numpy``>=1.21 and ``gwcs``>=0.18.
-
 Installing the release version
 ------------------------------
 
