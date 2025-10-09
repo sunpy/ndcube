@@ -1500,7 +1500,7 @@ class NDCube(NDCubeBase):
             Metadata object of new instance. Default is to use data of this instance.
         psf: Any, optional
             PSF object of new instance. Default is to use data of this instance.
-        extra_coords: `ndcubeextra_coords.ExtraCoordsABC`, optional
+        extra_coords: `ndcube.extra_coords.ExtraCoordsABC`, optional
             Extra coords object of new instance. Default is to use data of this instance.
         global_coords: `ndcube.global_coords.GlobalCoordsABC`, optional
             WCS object of new instance. Default is to use data of this instance.
@@ -1540,14 +1540,12 @@ class NDCube(NDCubeBase):
                        "psf": psf,
                        "extra_coords": extra_coords,
                        "global_coords": global_coords}
+        extra_coords = self._extra_coords if user_kwargs["extra_coords"] is COPY else None
+        global_coords = self._global_coords if user_kwargs["global_coords"] is COPY else None
         user_kwargs = {key: value for key, value in user_kwargs.items() if value is not COPY}
         user_kwargs.update(kwargs)
         all_kwargs = {key.strip("_"): value for key, value in self.__dict__.items()}
         all_kwargs.update(user_kwargs)
-        extra_coords, global_coords = None, None
-        if nddata_type is NDCube:
-            extra_coords = all_kwargs.pop("extra_coords")
-            global_coords = all_kwargs.pop("global_coords")
         # Inspect call signature of new_nddata class and
         # remove unsupported items from new_kwargs.
         nddata_sig = inspect.signature(nddata_type).parameters.keys()
@@ -1557,11 +1555,12 @@ class NDCube(NDCubeBase):
                 del all_kwargs[key]
         # Construct and return new instance.
         new_nddata = nddata_type(**all_kwargs)
-        if extra_coords:
-            extra_coords._ndcube = new_nddata
-            new_nddata._extra_coords = extra_coords
-        if global_coords:
-            new_nddata._global_coords = global_coords
+        if isinstance(new_nddata, NDCubeBase):
+            if extra_coords:
+                extra_coords._ndcube = new_nddata
+                new_nddata._extra_coords = extra_coords
+            if global_coords:
+                new_nddata._global_coords = global_coords
         return new_nddata
 
 
