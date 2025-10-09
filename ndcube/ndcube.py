@@ -1500,9 +1500,9 @@ class NDCube(NDCubeBase):
             Metadata object of new instance. Default is to use data of this instance.
         psf: Any, optional
             PSF object of new instance. Default is to use data of this instance.
-        extra_coords: `ndcube.extra_coords.ExtraCoordsABC`, optional
+        extra_coords: `ndcube.ExtraCoordsABC`, optional
             Extra coords object of new instance. Default is to use data of this instance.
-        global_coords: `ndcube.global_coords.GlobalCoordsABC`, optional
+        global_coords: `ndcube.GlobalCoordsABC`, optional
             WCS object of new instance. Default is to use data of this instance.
         nddata_type: Any, optional
             The type of the returned object. Must be a subclass of `~astropy.nddata.NDData`
