@@ -11,7 +11,7 @@ from astropy.time import Time
 from astropy.units import UnitsError
 from astropy.wcs import WCS
 from astropy.wcs.utils import wcs_to_celestial_frame
-from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import ExtraCoords, NDCube, NDMeta
@@ -437,6 +437,25 @@ def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
     lower_corner = (3 * 60 * 60 * u.s, 0 * u.pix)
     upper_corner = (8 * 60 * 60 * u.s, 2 * u.pix)
     output = cube.crop_by_values(lower_corner, upper_corner, wcs=cube.extra_coords)
+    expected = cube[0]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_using_combined_wcs(ndcube_3d_ln_lt_l_ec_time):
+    cube = ndcube_3d_ln_lt_l_ec_time
+    # ['spectral_0', 'celestial_0', 'temporal_1', 'PIXEL_1']
+    lower_corner = (Time("2000-01-01T15:00:00", scale="utc", format="fits"), None, None)
+    upper_corner = (Time("2000-01-01T20:00:00", scale="utc", format="fits"), None, None)
+    output = cube.crop(lower_corner, upper_corner, wcs=HighLevelWCSWrapper(cube.extra_coords.cube_wcs))
+    expected = cube[0]
+    helpers.assert_cubes_equal(output, expected)
+
+
+def test_crop_by_extra_coords_values_using_combined_wcs(ndcube_3d_ln_lt_l_ec_time):
+    cube = ndcube_3d_ln_lt_l_ec_time
+    lower_corner = (3 * 60 * 60 * u.s, None, None)
+    upper_corner = (8 * 60 * 60 * u.s, None, None)
+    output = cube.crop_by_values(lower_corner, upper_corner, wcs=HighLevelWCSWrapper(cube.extra_coords.cube_wcs))
     expected = cube[0]
     helpers.assert_cubes_equal(output, expected)
 
