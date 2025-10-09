@@ -1,1 +1,1 @@
-Add new method, `ndcube.NDCube.to_nddata`, which allows easy conversion of an `~ndcube.NDCube` to a subclass of `~astropy.nddata.NDData`. Users have the option of changing attribute values when doing so by designated the new values via kwargs.
+Add new method, `ndcube.NDCube.to_nddata`, which allows easy conversion of an `~ndcube.NDCube` to a subclass of `~astropy.nddata.NDData`. Attribute values can be altered during the conversion by supplying the new values via kwargs.
