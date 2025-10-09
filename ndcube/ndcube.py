@@ -980,13 +980,12 @@ class NDCube(NDCubeBase):
     def _arithmetic_operate_with_nddata(self, operation, value):
         handle_mask = self._arithmetic_handle_mask
         if value.wcs is not None:
-            return TypeError("Cannot add coordinate-aware NDCubes together.")
-
+            raise TypeError("Cannot add coordinate-aware objects to NDCubes.")
         kwargs = {}
         if operation == "add":
             # Handle units
             if self.unit is not None and value.unit is not None:
-                value_data = (value.data * value.unit).to_value(self.unit)
+                value_data = value.data * (value.unit / self.unit).to(u.dimensionless_unscaled)
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
@@ -994,20 +993,36 @@ class NDCube(NDCubeBase):
             # Handle data and uncertainty
             kwargs["data"] = self.data + value_data
             uncert_op = np.add
-        elif operation == "multiply":
+        elif operation in ("multiply", "true_divide"):
             # Handle units
             if self.unit is not None or value.unit is not None:
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 value_unit = u.Unit('') if value.unit is None else value.unit
-                kwargs["unit"] = cube_unit * value_unit
-            kwargs["data"] = self.data * value.data
-            uncert_op = np.multiply
+                kwargs["unit"] = (cube_unit * value_unit if operation == "multiply"
+                                  else cube_unit / value_unit)
+            if operation == "multiply":
+                kwargs["data"] = self.data * value.data
+                uncert_op = np.multiply
+            else:
+                kwargs["data"] = self.data / value.data
+                uncert_op = np.true_divide
         else:
             raise ValueError("Value of operation argument is not recognized.")
-        kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        # Calculate uncertainty.
+        new_uncert = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        if new_uncert:
+            # New uncertainty object must be decoupled from its original
+            # parent_nddata object. Set this to None here, and the parent_nddata
+            # will become the new cube on instantiation.
+            new_uncert.parent_nddata = None
+            uncert_unit = kwargs.get("unit", self.unit)
+            if uncert_unit:
+                # Give uncertainty object the same units as the new NDCube.
+                new_uncert.unit = uncert_unit
+        kwargs["uncertainty"] = new_uncert
         kwargs["mask"] = handle_mask(self.mask, value.mask)
 
-        return kwargs  # return the new NDCube instance
+        return kwargs
 
     def __add__(self, value):
         kwargs = {}
@@ -1052,7 +1067,12 @@ class NDCube(NDCubeBase):
         return self.__add__(value)
 
     def __sub__(self, value):
-        return self.__add__(-value)
+        if isinstance(value, NDData):
+            new_value = copy.copy(value)
+            new_value._data = -value.data
+        else:
+            new_value = -value
+        return self.__add__(new_value)
 
     def __rsub__(self, value):
         return self.__neg__().__add__(value)
@@ -1084,6 +1104,9 @@ class NDCube(NDCubeBase):
         return self.__mul__(value)
 
     def __truediv__(self, value):
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("true_divide", value)
+            return self._new_instance(**kwargs)
         return self.__mul__(1/value)
 
     def __rtruediv__(self, value):
@@ -1483,6 +1506,10 @@ class NDCube(NDCubeBase):
         Attribute values can be altered on the output object by setting a kwarg with the new
         value, e.g. ``data=new_data``.
         Any attributes not supported by the new class (``nddata_type``), will be discarded.
+        A motivating use case for this method is in enabling arithmetic operations between
+        `~ndcube.NDCube` instances by removing coordinate-awareness.  See the section of the
+        ndcube documentation on
+        'Enabling Arithmetic Operations between NDCubes with NDCube.to_nddata'.
 
         Parameters
         ----------
