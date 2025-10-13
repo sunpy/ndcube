@@ -441,7 +441,7 @@ def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
     helpers.assert_cubes_equal(output, expected)
 
 
-def test_crop_by_extra_coords_using_combined_wcs(ndcube_3d_ln_lt_l_ec_time):
+def test_crop_with_extra_coords_cube_wcs(ndcube_3d_ln_lt_l_ec_time):
     cube = ndcube_3d_ln_lt_l_ec_time
     # ['spectral_0', 'celestial_0', 'temporal_1', 'PIXEL_1']
     lower_corner = (Time("2000-01-01T15:00:00", scale="utc", format="fits"), None, None)
@@ -451,7 +451,7 @@ def test_crop_by_extra_coords_using_combined_wcs(ndcube_3d_ln_lt_l_ec_time):
     helpers.assert_cubes_equal(output, expected)
 
 
-def test_crop_by_extra_coords_values_using_combined_wcs(ndcube_3d_ln_lt_l_ec_time):
+def test_crop_by_values_with_extra_coords_cube_wcs(ndcube_3d_ln_lt_l_ec_time):
     cube = ndcube_3d_ln_lt_l_ec_time
     lower_corner = (3 * 60 * 60 * u.s, None, None)
     upper_corner = (8 * 60 * 60 * u.s, None, None)
