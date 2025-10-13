@@ -242,7 +242,7 @@ Otherwise, ``new_cube.uncertainty`` will be set to ``None``.
 Arithmetic Operations Between NDCubes
 =====================================
 
-Why Arithmetic Operations between NDCubes Are Not Supported Directly (but Are Indirectly)
+Why Arithmetic Operations between NDCubes Are Not Supported Directly (but are indirectly)
 -----------------------------------------------------------------------------------------
 
 Arithmetic operations between two `~ndcube.NDCube` instances are not supported directly.

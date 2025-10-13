@@ -1,1 +1,1 @@
-Enable subtraction and division of `~ndcube.NDCube` by an `~astropy.nddata.NDData` instance, including uncertainty, mask and unit support.
+Enable subtraction and division of `~ndcube.NDCube` by an `~astropy.nddata.NDData` instance (without a WCS), including uncertainty, mask and unit support.

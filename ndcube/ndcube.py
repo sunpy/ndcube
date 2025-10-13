@@ -1509,7 +1509,7 @@ class NDCube(NDCubeBase):
         A motivating use case for this method is in enabling arithmetic operations between
         `~ndcube.NDCube` instances by removing coordinate-awareness.  See the section of the
         ndcube documentation on
-        'Enabling Arithmetic Operations between NDCubes with NDCube.to_nddata'.
+        :ref:`arithmetic`.
 
         Parameters
         ----------
