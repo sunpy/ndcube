@@ -57,6 +57,7 @@ jobs:
         - windows: py312
         - macos: py312
         - linux: py311-oldestdeps
+        - linux: asdf_schemas
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

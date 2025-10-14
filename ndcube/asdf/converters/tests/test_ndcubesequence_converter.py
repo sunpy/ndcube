@@ -1,0 +1,18 @@
+import pytest
+
+import asdf
+
+from ndcube.ndcube_sequence import NDCubeSequence
+from ndcube.tests.helpers import assert_cubesequences_equal
+
+
+@pytest.mark.parametrize("meta", [None, {"hello": "world"}])
+def test_serialization(meta, ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    ndcseq = NDCubeSequence([ndcube_gwcs_3d_ln_lt_l, ndcube_gwcs_3d_ln_lt_l_ec_q_t_gc], common_axis=1, meta=meta)
+    with asdf.AsdfFile() as af:
+        af["ndcube_gwcs"] = ndcseq
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert_cubesequences_equal(af["ndcube_gwcs"], ndcseq)
