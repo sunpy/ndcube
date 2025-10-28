@@ -1,0 +1,29 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/global_coords-1.0.0"
+
+title:
+  Represents the ndcube GlobalCoords object
+
+description:
+  Represents the ndcube GlobalCoords object
+
+type: object
+properties:
+  internal_coords:
+    type: object
+    additionalProperties:
+      type: array
+      items:
+          - type: string
+          - type: object
+            anyOf:
+              - tag: "tag:stsci.edu:asdf/unit/quantity-*"
+              - tag: "tag:astropy.org:astropy/coordinates/skycoord-*"
+  ndcube:
+    tag: "tag:sunpy.org:ndcube/ndcube-1.*"
+
+required: [ndcube]
+additionalProperties: false
+...

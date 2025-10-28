@@ -1,0 +1,27 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/ndmeta-1.0.0"
+
+title:
+  Represents the ndcube NDMeta object
+
+description:
+  Represents the ndcube NDMeta object
+
+type: object
+properties:
+  meta:
+    type: object
+  key_comments:
+    type: object
+  axes:
+    type: object
+  data_shape:
+    tag: "tag:stsci.edu:asdf/core/ndarray-1.*"
+  original_meta:
+    type: object
+
+required: [meta, key_comments, axes, data_shape, original_meta]
+additionalProperties: true
+...

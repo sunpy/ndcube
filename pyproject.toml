@@ -31,8 +31,7 @@ tests-optional = [
   "specutils>=1.12.0",
   "sunpy>=6.1.0",
 ]
-tests = [
-  "ndcube[all,tests-optional]",
+tests-only = [
   "pytest-astropy",
   "pytest-cov",
   "pytest-doctestplus",
@@ -40,6 +39,9 @@ tests = [
   "pytest-xdist",
   "pytest",
   "pytest-memray; sys_platform != 'win32'",
+]
+tests = [
+  "ndcube[plotting,reproject,tests-only,tests-optional,asdf-tests]",
 ]
 docs = [
   "ndcube[all,tests-optional]",
@@ -53,16 +55,24 @@ docs = [
 ]
 plotting = [
   "matplotlib>=3.8.0",
-  "mpl_animators>=1.0",
+  "mpl_animators>=1.1",
 ]
 reproject = [
   "reproject>=0.13",  # first version with 3.12 support
+]
+asdf = [
+  "asdf>=2.15.0",
+  "asdf-astropy>=0.7.0",
+]
+asdf-tests = [
+  "ndcube[asdf]",
+  "pytest-asdf-plugin",
 ]
 all = [
   "ndcube[plotting,reproject]",
 ]
 dev = [
-  "ndcube[tests,docs,plotting,reproject]",
+  "ndcube[tests-only,docs,plotting,reproject,asdf]",
 ]
 
 [project.urls]
@@ -116,6 +126,14 @@ version_file = "ndcube/_version.py"
   type_incorrect_long = "The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)"
 
   number_incorrect_long = "The number in the changelog file you added does not match the number of this pull request. Please rename the file."
+
+
+[project.entry-points."asdf.resource_mappings"]
+ndcube = "ndcube.asdf.entry_points:get_resource_mappings"
+
+[project.entry-points."asdf.extensions"]
+ndcube = "ndcube.asdf.entry_points:get_extensions"
+
 
 # TODO: This should be in towncrier.toml but Giles currently only works looks in
 # pyproject.toml we should move this back when it's fixed.
