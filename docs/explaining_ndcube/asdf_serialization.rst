@@ -5,7 +5,7 @@ Saving ND objects to ASDF
 *************************
 
 :ref:`asdf` is an extensible format for validating and saving complex scientific data along with its metadata.
-`ndcube` provides schemas and converters for all the ND objects (`~ndcube.NDCube`, `~ndcube.NDCubeSequence` and `~ndcube.NDCollection`) as well as for various WCS and table objects required by them.
+`ndcube` provides schemas and converters for all the ND objects (`~ndcube.NDCube`, `~ndcube.NDCubeSequence`, `~ndcube.NDCollection` and `~ndcube.NDMeta`) as well as for various WCS and table objects required by them.
 To make use of these, simply save an ND object to an ASDF file and it will be correctly serialized.
 ASDF files save a "tree" which is a `dict`.
 You can save any number of cubes in your ASDF by adding them to the dictionary.
