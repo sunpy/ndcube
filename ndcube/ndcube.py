@@ -1465,13 +1465,13 @@ class NDCube(NDCubeBase):
 
     def to_nddata(self,
                   *,
-                  data=True,
-                  wcs=True,
-                  uncertainty=True,
-                  mask=True,
-                  unit=True,
-                  meta=True,
-                  psf=True,
+                  data="copy",
+                  wcs="copy",
+                  uncertainty="copy",
+                  mask="copy",
+                  unit="copy",
+                  meta="copy",
+                  psf="copy",
                   nddata_type=NDData,
                   **kwargs,
                  ):
@@ -1482,7 +1482,7 @@ class NDCube(NDCubeBase):
         this object, values can be altered on the output object by
         setting a kwarg with the new value, e.g. ``data=new_data``.
         Custom attributes on this class can be passed by setting that
-        keyword to `True`, for example ``mycube.to_nddata(spam=True)``
+        keyword to `"copy"`, for example ``mycube.to_nddata(spam="copy")``
         is the equivalent of setting
         ``mycube.to_nddata(spam=mycube.spam)``.
         Any attributes not supported by the new class
@@ -1510,9 +1510,10 @@ class NDCube(NDCubeBase):
         kwargs:
             Additional inputs to the ``nddata_type`` constructor. For example, to
             set different data values on the returned object, set a kwarg ``data=new_data``,
-            where ``new_data`` is an array of compatible shape and dtype. Note that kwargs
-            given by the user and attributes on this instance that are not supported by the
-            ``nddata_type`` constructor are ignored.
+            where ``new_data`` is an array of compatible shape and dtype.
+            Other keyword arguments can be specified to copy custom
+            attributes with the value ``"copy"``, for example
+            ``global_coords="copy"``.
 
         Returns
         -------
@@ -1543,8 +1544,10 @@ class NDCube(NDCubeBase):
                        "meta": meta,
                        "psf": psf,
                        **kwargs}
-        # If any are True then copy by reference
-        user_kwargs = {key: getattr(self, key) if value is True else value for key, value in user_kwargs.items()}
+        # If any are "copy" then copy by reference
+        user_kwargs = {key: getattr(self, key)
+                       if isinstance(value, str) and value == "copy" else value
+                       for key, value in user_kwargs.items()}
         # Construct and return new instance.
         return nddata_type(**user_kwargs)
 

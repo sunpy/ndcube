@@ -272,7 +272,7 @@ def test_to_nddata_type_ndcube(ndcube_2d_ln_lt_uncert_ec):
     ndc = ndcube_2d_ln_lt_uncert_ec
     ndc.global_coords.add("wavelength", "em.wl", 100*u.nm)
     new_data = ndc.data * 2
-    output = ndc.to_nddata(data=new_data, extra_coords=True, global_coords=True, nddata_type=NDCube)
+    output = ndc.to_nddata(data=new_data, extra_coords="copy", global_coords="copy", nddata_type=NDCube)
     assert type(output) is NDCube
     assert (output.data == new_data).all()
     helpers.assert_extra_coords_equal(output.extra_coords, ndc.extra_coords)
@@ -288,7 +288,7 @@ def test_custom_tonddata_type(ndcube_2d_ln_lt):
             super().__init__(data, **kwargs)
             self.spam = spam
 
-    new_ndd = ndc.to_nddata(spam=True, nddata_type=MyNDData)
+    new_ndd = ndc.to_nddata(spam="copy", nddata_type=MyNDData)
     assert new_ndd.spam == "Eggs"
     assert new_ndd.data is ndc.data
     assert new_ndd.wcs is ndc.wcs
