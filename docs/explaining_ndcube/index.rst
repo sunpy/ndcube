@@ -14,4 +14,5 @@ Explaining ``ndcube``
    tabular_coordinates
    reproject
    visualization
+   arithmetic
    asdf_serialization
