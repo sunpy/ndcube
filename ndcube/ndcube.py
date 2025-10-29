@@ -998,13 +998,13 @@ class NDCube(NDCubeBase):
             if self.unit is not None or value.unit is not None:
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 value_unit = u.Unit('') if value.unit is None else value.unit
+                kwargs["unit"] = (cube_unit * value_unit if operation == "multiply"
+                                  else cube_unit / value_unit)
             if operation == "multiply":
                 kwargs["data"] = self.data * value.data
-                kwargs["unit"] = cube_unit * value_unit
                 uncert_op = np.multiply
             else:
                 kwargs["data"] = self.data / value.data
-                kwargs["unit"] = cube_unit / value_unit
                 uncert_op = np.true_divide
         else:
             raise ValueError("Value of operation argument is not recognized.")
