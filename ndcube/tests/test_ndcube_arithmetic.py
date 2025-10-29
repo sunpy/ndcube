@@ -155,8 +155,8 @@ def test_cube_arithmetic_subtract(ndcube_2d_ln_lt_units, value):
                                  unit=u.ct),
                           {"unit": u.ct,
                            "data": np.array([[-1, 0, 1], [2, 3, 4]]),
-                           "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0.1       , 0.1118034 , 0.14142136],
-                                                                                     [0.18027756, 0.2236068 , 0.26925824]])),
+                           "uncertainty": astropy.nddata.StdDevUncertainty(np.array([[0.1       , 0.1118034, 0.14142136],
+                                                                                     [0.18027756, 0.2236068, 0.26925824]])),
                            "mask": np.array([[True, True, True], [False, True, True]])}
                          ) # both of them have uncertainty and mask and unit.
                         ],
