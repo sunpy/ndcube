@@ -1482,7 +1482,7 @@ class NDCube(NDCubeBase):
         this object, values can be altered on the output object by
         setting a kwarg with the new value, e.g. ``data=new_data``.
         Custom attributes on this class can be passed by setting that
-        keyword to `"copy"`, for example ``mycube.to_nddata(spam="copy")``
+        keyword to ``"copy"``, for example ``mycube.to_nddata(spam="copy")``
         is the equivalent of setting
         ``mycube.to_nddata(spam=mycube.spam)``.
         Any attributes not supported by the new class
