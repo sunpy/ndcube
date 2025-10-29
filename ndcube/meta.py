@@ -184,11 +184,11 @@ class NDMeta(dict, NDMetaABC):
         if isinstance(axis, numbers.Integral):
             axis = (axis,)
         if len(axis) == 0:
-            return ValueError(axis_err_msg)
+            raise ValueError(axis_err_msg)
         # Verify each entry in axes is an iterable of ints or a scalar.
         if not (isinstance(axis, collections.abc.Iterable)
                 and all(isinstance(i, numbers.Integral) for i in axis)):
-            return ValueError(axis_err_msg)
+            raise ValueError(axis_err_msg)
         # If metadata's axis/axes include axis beyond current data shape, extend it.
         data_shape = self.data_shape
         if max(axis) >= len(data_shape):

@@ -15,3 +15,4 @@ Explaining ``ndcube``
    reproject
    visualization
    arithmetic
+   asdf_serialization
