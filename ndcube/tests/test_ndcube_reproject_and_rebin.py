@@ -263,12 +263,19 @@ def test_rebin_some_masked_uncerts_exclude_masked_values(ndcube_2d_ln_lt_mask_un
 def test_rebin_errors(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
     # Wrong number of axes in bin_shape)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="bin_shape must have an entry for each"):
         cube.rebin((2,))
 
+    # bin shape shouldn't have any negatives
+    with pytest.raises(ValueError, match="bin_shape should not be less than -1"):
+        cube.rebin((2, -2, 1))
     # bin_shape not integer multiple of data shape.
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="bin_shape must be an integer fraction"):
         cube.rebin((9, 2, 1))
+
+    # bin_shape larger than data shape.
+    with pytest.raises(ValueError, match="bin_shape cannot be larger than data shape"):
+        cube.rebin((20, 2, 1))
 
 
 def test_rebin_no_propagate(ndcube_2d_ln_lt_mask_uncert):
