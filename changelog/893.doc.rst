@@ -1,0 +1,1 @@
+Added an example (:ref:`sphx_glr_generated_gallery_upscaling_resolution_via_reproject.py`) showing how to change resolution of an NDCube using `~ndcube.NDCube.reproject`.
