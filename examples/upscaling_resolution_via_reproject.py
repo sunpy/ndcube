@@ -17,7 +17,7 @@ from sunpy.visualization.colormaps import cm
 from ndcube import NDCube
 
 ############################################################################
-# We start by creating an NDCube from sample solar data provided by `sunpy``.
+# We start by creating an NDCube from sample solar data provided by SunPy.
 # Here we use an AIA 171 image, but the same approach can be applied to other datasets, including those with non celestial axes.
 
 hdul = fits.open(AIA_171_IMAGE)
