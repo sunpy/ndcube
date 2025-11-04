@@ -1,9 +1,9 @@
 """
 =====================================
-Upscaling the resolution of an NDCube
+Changing the resolution of an NDCube
 =====================================
 
-This example shows how to increase the resolution of an NDCube by reprojecting to a finer grid.
+This example shows how to change the resolution of an NDCube by reprojecting to a finer grid.
 """
 
 import matplotlib.pyplot as plt
@@ -20,8 +20,9 @@ from ndcube import NDCube
 # We start by creating an NDCube from sample solar data provided by SunPy.
 # Here we use an AIA 171 image, but the same approach can be applied to other datasets, including those with non celestial axes.
 
-hdul = fits.open(AIA_171_IMAGE)
-cube = NDCube(hdul[1].data, WCS(hdul[1].header))
+image_data = fits.getdata(AIA_171_IMAGE)
+image_header = fits.getheader(AIA_171_IMAGE)
+cube = NDCube(image_data, WCS(image_header))
 
 ###########################################################################
 # Next, we define a new WCS with a finer pixel scale, note that while it is obvious that the CDELT values are changed to reflect the finer scale,
