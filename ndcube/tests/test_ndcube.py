@@ -1,6 +1,5 @@
 from inspect import signature
 
-import dask.array
 import numpy as np
 import pytest
 
@@ -73,8 +72,9 @@ def test_to(ndcube_1d_l, new_unit):
 
 
 def test_to_dask(ndcube_2d_dask):
+    da = pytest.importorskip("dask.array")
     output = ndcube_2d_dask.to(u.mJ)
-    dask_type = dask.array.core.Array
+    dask_type = da.core.Array
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
@@ -103,6 +103,7 @@ def test_ndcube_quantity(ndcube_2d_ln_lt_units):
 
 
 def test_data_setter(ndcube_4d_ln_l_t_lt):
+    da = pytest.importorskip("dask.array")
     cube = ndcube_4d_ln_l_t_lt
     assert isinstance(cube.data, np.ndarray)
 
@@ -110,7 +111,7 @@ def test_data_setter(ndcube_4d_ln_l_t_lt):
     cube.data = new_data
     assert cube.data is new_data
 
-    dask_array = dask.array.zeros_like(cube.data)
+    dask_array = da.zeros_like(cube.data)
     cube.data = dask_array
     assert cube.data is dask_array
 

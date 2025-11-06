@@ -1,14 +1,8 @@
 import re
 import copy
 
-import dask.array
 import numpy as np
 import pytest
-
-try:
-    from specutils import Spectrum
-except ImportError:
-    from specutils import Spectrum1D as Spectrum
 
 import astropy.units as u
 import astropy.wcs
@@ -167,11 +161,12 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime, bin_shape):
 
 
 def test_rebin_dask(ndcube_2d_dask):
+    da = pytest.importorskip("dask.array")
     # Execute rebin.
     cube = ndcube_2d_dask
     bin_shape = (4, 2)
     output = cube.rebin(bin_shape, propagate_uncertainties=True)
-    dask_type = dask.array.core.Array
+    dask_type = da.core.Array
     assert isinstance(output.data, dask_type)
     assert isinstance(output.uncertainty.array, dask_type)
     assert isinstance(output.mask, dask_type)
@@ -312,7 +307,12 @@ def test_rebin_axis_aware_meta(ndcube_4d_axis_aware_meta):
 
 
 def test_rebin_specutils():
+    pytest.importorskip("specutils")
     # Tests for https://github.com/sunpy/ndcube/issues/717
+    try:
+        from specutils import Spectrum  # noqa PLC0415
+    except ImportError:
+        from specutils import Spectrum1D as Spectrum  # noqa PLC0415
     y = np.arange(4000)*u.ct
     x = np.arange(200, 4200)*u.nm
     spec = Spectrum(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)

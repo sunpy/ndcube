@@ -40,6 +40,10 @@ tests-only = [
   "pytest",
   "pytest-memray; sys_platform != 'win32'",
 ]
+tests-minimal = [
+  "ndcube[plotting,reproject,tests-only]",
+  "sunpy>=6.1.0",
+]
 tests = [
   "ndcube[plotting,reproject,tests-only,tests-optional,asdf-tests]",
 ]

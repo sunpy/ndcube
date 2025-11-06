@@ -4,7 +4,6 @@ predictable NDCube objects.
 """
 import logging
 
-import dask.array
 import numpy as np
 import pytest
 from gwcs import coordinate_frames as cf
@@ -1041,15 +1040,16 @@ def ndcube_2d_ln_lt_unit_unc_mask(wcs_2d_lt_ln):
 
 @pytest.fixture
 def ndcube_2d_dask(wcs_2d_lt_ln):
+    da = pytest.importorskip("dask.array")
     shape = (8, 4)
     chunks = 2
     data = data_nd(shape).astype(float)
-    da = dask.array.asarray(data, chunks=chunks)
+    darr = da.asarray(data, chunks=chunks)
     mask = np.zeros(shape, dtype=bool)
-    da_mask = dask.array.asarray(mask, chunks=chunks)
+    da_mask = da.asarray(mask, chunks=chunks)
     uncert = data * 0.1
-    da_uncert = StdDevUncertainty(dask.array.asarray(uncert, chunks=chunks))
-    return NDCube(da, wcs=wcs_2d_lt_ln, uncertainty=da_uncert, mask=da_mask, unit=u.J)
+    da_uncert = StdDevUncertainty(da.asarray(uncert, chunks=chunks))
+    return NDCube(darr, wcs=wcs_2d_lt_ln, uncertainty=da_uncert, mask=da_mask, unit=u.J)
 
 
 @pytest.fixture
