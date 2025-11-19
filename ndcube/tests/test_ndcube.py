@@ -43,6 +43,24 @@ def test_initialize_from_ndcube(ndcube_3d_l_ln_lt_ectime):
     assert ec is not ec3
 
 
+def test_initialize_with_extra_global_coords(ndcube_3d_ln_lt_l_ec_all_axes):
+    ndc = ndcube_3d_ln_lt_l_ec_all_axes[:, :, 0]
+    data = ndc.data
+    wcs = ndc.wcs
+    ec = ndc.extra_coords
+    gc = ndc.global_coords
+
+    new_cube = NDCube(data, wcs=wcs, extra_coords=ec, global_coords=gc)
+    assert new_cube.extra_coords is ec
+    assert new_cube.global_coords is gc
+
+    new_cube_copy = NDCube(data, wcs=wcs, extra_coords=ec, global_coords=gc, copy=True)
+    assert new_cube_copy.extra_coords is not ec
+    assert new_cube_copy.global_coords is not gc
+    helpers.assert_extra_coords_equal(new_cube_copy.extra_coords, ec)
+    helpers.assert_global_coords_equal(new_cube_copy.global_coords, gc)
+
+
 def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
     # Generate a low level WCS
     slices = np.s_[:, :, 0]
@@ -255,8 +273,23 @@ def test_to_nddata_type_ndcube(ndcube_2d_ln_lt_uncert_ec):
     ndc = ndcube_2d_ln_lt_uncert_ec
     ndc.global_coords.add("wavelength", "em.wl", 100*u.nm)
     new_data = ndc.data * 2
-    output = ndc.to_nddata(data=new_data, nddata_type=NDCube)
+    output = ndc.to_nddata(data=new_data, extra_coords="copy", global_coords="copy", nddata_type=NDCube)
     assert type(output) is NDCube
     assert (output.data == new_data).all()
     helpers.assert_extra_coords_equal(output.extra_coords, ndc.extra_coords)
     helpers.assert_global_coords_equal(output.global_coords, ndc.global_coords)
+
+
+def test_custom_tonddata_type(ndcube_2d_ln_lt):
+    ndc = ndcube_2d_ln_lt
+    ndc.spam = "Eggs"
+
+    class MyNDData(astropy.nddata.NDData):
+        def __init__(self, data, *, spam=None, **kwargs):
+            super().__init__(data, **kwargs)
+            self.spam = spam
+
+    new_ndd = ndc.to_nddata(spam="copy", nddata_type=MyNDData)
+    assert new_ndd.spam == "Eggs"
+    assert new_ndd.data is ndc.data
+    assert new_ndd.wcs is ndc.wcs
