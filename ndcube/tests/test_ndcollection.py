@@ -37,38 +37,46 @@ sequence20 = NDCubeSequence([cube2, cube0])
 # Define collections
 aligned_axes = ((1, 2), (2, 0), (1, 2))
 keys = ("cube0", "cube1", "cube2")
-cube_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes)
+cube_coll_meta = helpers.ndmeta_et0_pr01((4, 5))
+cube_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes, meta=cube_coll_meta)
 unaligned_collection = NDCollection([("cube0", cube0), ("cube1", cube1), ("cube2", cube2)], aligned_axes=None)
 seq_collection = NDCollection([("seq0", sequence02), ("seq1", sequence20)], aligned_axes="all")
 
 
-@pytest.mark.parametrize("item,collection,expected", [
+def test_construct_with_dict():
+    input_dict = dict(cube_collection)
+    new_collection = NDCollection(input_dict)
+
+    assert cube_collection.items() == new_collection.items()
+
+
+@pytest.mark.parametrize(('item', 'collection', 'expected'), [
     (0, cube_collection,
         NDCollection([("cube0", cube0[:, 0]), ("cube1", cube1[:, :, 0]), ("cube2", cube2[:, 0])],
-                     aligned_axes=((1,), (0,), (1,)))),
+            aligned_axes=((1,), (0,), (1,)), meta=cube_coll_meta.slice[0])),
 
     (slice(1, 3), cube_collection, NDCollection(
         [("cube0", cube0[:, 1:3]), ("cube1", cube1[:, :, 1:3]), ("cube2", cube2[:, 1:3])],
-        aligned_axes=aligned_axes)),
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[1:3])),
 
     (slice(-3, -1), cube_collection, NDCollection(
         [("cube0", cube0[:, -3:-1]), ("cube1", cube1[:, :, -3:-1]), ("cube2", cube2[:, -3:-1])],
-        aligned_axes=aligned_axes)),
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[1:3])),
 
     ((slice(None), slice(1, 2)), cube_collection, NDCollection(
         [("cube0", cube0[:, :, 1:2]), ("cube1", cube1[1:2]), ("cube2", cube2[:, :, 1:2])],
-        aligned_axes=aligned_axes)),
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[:, 1:2])),
 
     ((slice(2, 4), slice(-3, -1)), cube_collection, NDCollection(
         [("cube0", cube0[:, 2:4, -3:-1]), ("cube1", cube1[-3:-1, :, 2:4]),
-         ("cube2", cube2[:, 2:4, -3:-1])], aligned_axes=aligned_axes)),
+            ("cube2", cube2[:, 2:4, -3:-1])], aligned_axes=aligned_axes, meta=cube_coll_meta.slice[2:4, 2:4])),
 
     ((0, 0), cube_collection, NDCollection(
         [("cube0", cube0[:, 0, 0]), ("cube1", cube1[0, :, 0]), ("cube2", cube2[:, 0, 0])],
-        aligned_axes=None)),
+        aligned_axes=None, meta=cube_coll_meta.slice[0, 0])),
 
     (("cube0", "cube2"), cube_collection, NDCollection(
-        [("cube0", cube0), ("cube2", cube2)], aligned_axes=(aligned_axes[0], aligned_axes[2]))),
+        [("cube0", cube0), ("cube2", cube2)], aligned_axes=(aligned_axes[0], aligned_axes[2]), meta=cube_coll_meta)),
 
     (0, seq_collection, NDCollection([("seq0", sequence02[0]), ("seq1", sequence20[0])],
                                      aligned_axes=((0, 1, 2), (0, 1, 2)))),
@@ -81,7 +89,7 @@ def test_collection_slicing(item, collection, expected):
     helpers.assert_collections_equal(collection[item], expected)
 
 
-@pytest.mark.parametrize("item,collection,expected", [("cube1", cube_collection, cube1)])
+@pytest.mark.parametrize(('item', 'collection', 'expected'), [("cube1", cube_collection, cube1)])
 def test_slice_cube_from_collection(item, collection, expected):
     helpers.assert_cubes_equal(collection[item], expected)
 
@@ -91,7 +99,7 @@ def test_collection_copy():
     helpers.assert_collections_equal(unaligned_collection.copy(), unaligned_collection)
 
 
-@pytest.mark.parametrize("collection,popped_key,expected_popped,expected_collection", [
+@pytest.mark.parametrize(('collection', 'popped_key', 'expected_popped', 'expected_collection'), [
     (cube_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)],
                                                    aligned_axes=aligned_axes[1:])),
     (unaligned_collection, "cube0", cube0, NDCollection([("cube1", cube1), ("cube2", cube2)]))])
@@ -102,7 +110,7 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
     helpers.assert_collections_equal(popped_collection, expected_collection)
 
 
-@pytest.mark.parametrize("collection,key,expected", [
+@pytest.mark.parametrize(('collection', 'key', 'expected'), [
     (cube_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)],
                                             aligned_axes=aligned_axes[1:]))])
 def test_del_collection(collection, key, expected):
@@ -111,7 +119,7 @@ def test_del_collection(collection, key, expected):
     helpers.assert_collections_equal(del_collection, expected)
 
 
-@pytest.mark.parametrize("collection,key,data,aligned_axes,expected", [
+@pytest.mark.parametrize(('collection', 'key', 'data', 'aligned_axes', 'expected'), [
     (cube_collection, "cube1", cube2, aligned_axes[2], NDCollection(
         [("cube0", cube0), ("cube1", cube2), ("cube2", cube2)],
         aligned_axes=((1, 2), (1, 2), (1, 2)))),
@@ -144,14 +152,14 @@ def test_collection_update_without_aligned_axes():
     helpers.assert_collections_equal(orig_collection, expected)
 
 
-@pytest.mark.parametrize("collection, expected_aligned_dimensions", [
+@pytest.mark.parametrize(('collection', 'expected_aligned_dimensions'), [
     (cube_collection, [4, 5]),
     (seq_collection, [2, 3, 4, 5])])
 def test_aligned_dimensions(collection, expected_aligned_dimensions):
     assert np.all(collection.aligned_dimensions == expected_aligned_dimensions)
 
 
-@pytest.mark.parametrize("collection, expected", [
+@pytest.mark.parametrize(('collection', 'expected'), [
     (cube_collection, [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
                        ('em.wl',)]),
     (seq_collection, [('meta.obs.sequence',),
@@ -160,7 +168,6 @@ def test_aligned_dimensions(collection, expected_aligned_dimensions):
                       ('em.wl',)])])
 def test_aligned_axis_physical_types(collection, expected):
     output = collection.aligned_axis_physical_types
-    print(output)
     assert len(output) == len(expected)
     for output_axis_types, expect_axis_types in zip(output, expected):
         assert set(output_axis_types) == set(expect_axis_types)

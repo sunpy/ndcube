@@ -1,3 +1,4 @@
+import gwcs
 import gwcs.coordinate_frames as cf
 import numpy as np
 import pytest
@@ -12,67 +13,6 @@ from ndcube.extra_coords.table_coord import (
     SkyCoordTableCoordinate,
     TimeTableCoordinate,
 )
-
-
-@pytest.fixture
-def lut_1d_distance():
-    lookup_table = u.Quantity(np.arange(10) * u.km)
-    return QuantityTableCoordinate(lookup_table, names='x')
-
-
-@pytest.fixture
-def lut_3d_distance_mesh():
-    lookup_table = (u.Quantity(np.arange(10) * u.km),
-                    u.Quantity(np.arange(10, 20) * u.km),
-                    u.Quantity(np.arange(20, 30) * u.km))
-
-    return QuantityTableCoordinate(*lookup_table, names=['x', 'y', 'z'])
-
-
-@pytest.fixture
-def lut_2d_distance_no_mesh():
-    lookup_table = np.arange(9).reshape(3, 3) * u.km, np.arange(9, 18).reshape(3, 3) * u.km
-    return QuantityTableCoordinate(*lookup_table, mesh=False)
-
-
-@pytest.fixture
-def lut_1d_skycoord_no_mesh():
-    sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=False, names=['lon', 'lat'])
-
-
-@pytest.fixture
-def lut_2d_skycoord_no_mesh():
-    data = np.arange(9).reshape(3, 3), np.arange(9, 18).reshape(3, 3)
-    sc = SkyCoord(*data, unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=False)
-
-
-@pytest.fixture
-def lut_2d_skycoord_mesh():
-    sc = SkyCoord(range(10), range(10), unit=u.deg)
-    return SkyCoordTableCoordinate(sc, mesh=True)
-
-
-@pytest.fixture
-def lut_3d_skycoord_mesh():
-    sc = SkyCoord(range(10), range(10), range(10), unit=(u.deg, u.deg, u.AU))
-    return SkyCoordTableCoordinate(sc, mesh=True)
-
-
-@pytest.fixture
-def lut_1d_time():
-    data = Time(["2011-01-01T00:00:00",
-                 "2011-01-01T00:00:10",
-                 "2011-01-01T00:00:20",
-                 "2011-01-01T00:00:30"], format="isot")
-    return TimeTableCoordinate(data, names='time', physical_types='time')
-
-
-@pytest.fixture
-def lut_1d_wave():
-    # TODO: Make this into a SpectralCoord object
-    return QuantityTableCoordinate(range(10) * u.nm)
 
 
 def test_exceptions():
@@ -191,28 +131,27 @@ def test_2d_skycoord_mesh(lut_2d_skycoord_mesh):
     assert u.allclose(pix, pixel_coords.value)
 
 
+@pytest.mark.xfail(reason="celestial frames assume 2 axes, see https://github.com/spacetelescope/gwcs/issues/120")
 def test_3d_skycoord_mesh(lut_3d_skycoord_mesh):
     ltc = lut_3d_skycoord_mesh
 
     assert ltc.model.n_inputs == 3
     assert ltc.model.n_outputs == 3
 
-    # Known failure due to gwcs#120
+    pixel_coords = (0, 0, 0)*u.pix
+    sc = ltc.wcs.pixel_to_world(*pixel_coords)
+    pix = ltc.wcs.world_to_pixel(sc)
+    assert u.allclose(pix, pixel_coords.value)
 
-    # pixel_coords = (0, 0, 0)*u.pix
-    # sc = ltc.wcs.pixel_to_world(*pixel_coords)
-    # pix = ltc.wcs.world_to_pixel(sc)
-    # assert u.allclose(pix, pixel_coords.value)
+    assert isinstance(ltc.wcs, gwcs.WCS)
 
-    # assert isinstance(ltc.wcs, gwcs.WCS)
-    #
-    # sub_ltc = ltc[0:4, 0:5, 0:6]
-    # assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
-    # assert sub_ltc.delayed_models[0].lookup_table[1].shape == (5, )
-    # assert sub_ltc.delayed_models[0].lookup_table[2].shape == (6, )
+    sub_ltc = ltc[0:4, 0:5, 0:6]
+    assert sub_ltc.delayed_models[0].lookup_table[0].shape == (4, )
+    assert sub_ltc.delayed_models[0].lookup_table[1].shape == (5, )
+    assert sub_ltc.delayed_models[0].lookup_table[2].shape == (6, )
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
+@pytest.mark.xfail(reason="Two dimensional tables are not supported")
 def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
     ltc = lut_2d_skycoord_no_mesh
 
@@ -221,6 +160,7 @@ def test_2d_skycoord_no_mesh(lut_2d_skycoord_no_mesh):
 
     pixel_coords = (0, 0)*u.pix
     sc = ltc.wcs.pixel_to_world(*pixel_coords)
+
     pix = ltc.wcs.world_to_pixel(sc)
     assert u.allclose(pix, pixel_coords.value)
 
@@ -326,9 +266,7 @@ def test_slicing_quantity_table_coordinate():
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
 def test_slicing_quantity_table_coordinate_2d():
-    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m,
-                                  names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
-
+    qtc = QuantityTableCoordinate(*np.mgrid[0:10, 0:10]*u.m, names=['x', 'y'], physical_types=['pos:x', 'pos:y'])
     assert u.allclose(qtc[2:8, 2:8].table[0], (np.mgrid[2:8, 2:8]*u.m)[0])
     assert u.allclose(qtc[2:8, 2:8].table[1], (np.mgrid[2:8, 2:8]*u.m)[1])
     assert qtc.names == ['x', 'y']
@@ -412,17 +350,15 @@ def test_1d_skycoord_no_mesh_slice(lut_1d_skycoord_no_mesh):
     assert sub_ltc.table.shape == (4, )
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_mesh_slice(lut_2d_skycoord_mesh):
     sub_ltc = lut_2d_skycoord_mesh[4:10, 5:10]
     assert sub_ltc.table.shape == (10,)
     assert sub_ltc._slice == [slice(4, 10, None), slice(5, 10, None)]
 
-    assert sub_ltc.wcs.world_to_pixel(4*u.deg, 5*u.deg) == [0.0, 0.0]
-    assert sub_ltc[1:, 1:].wcs.world_to_pixel(5*u.deg, 6*u.deg) == [0.0, 0.0]
+    assert list(sub_ltc.wcs.world_to_pixel_values(4*u.deg, 5*u.deg)) == [0.0, 0.0]
+    assert list(sub_ltc[1:, 1:].wcs.world_to_pixel_values(5*u.deg, 6*u.deg)) == [0.0, 0.0]
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_skycoord_no_mesh_slice(lut_2d_skycoord_no_mesh):
     sub_ltc = lut_2d_skycoord_no_mesh[1:3, 1:2]
     assert sub_ltc.table.shape == (2, 1)
@@ -520,15 +456,14 @@ def test_mtc_dropped_table_skycoord_join(lut_1d_time, lut_2d_skycoord_mesh):
     assert isinstance(dwd, dict)
     wao_classes = dwd.pop("world_axis_object_classes")
     assert all(isinstance(value, list) for value in dwd.values())
-    assert all(len(value) == 2 for value in dwd.values())
 
     assert dwd["world_axis_names"] == ["lon", "lat"]
     assert all(isinstance(u, str) for u in dwd["world_axis_units"])
     assert dwd["world_axis_units"] == ["deg", "deg"]
     assert dwd["world_axis_physical_types"] == ["pos.eq.ra", "pos.eq.dec"]
-    assert dwd["world_axis_object_components"] == [("celestial", 0, "spherical.lon"), ("celestial", 1, "spherical.lat")]
+    assert [c[:2] for c in dwd["world_axis_object_components"]] == [("celestial", 0), ("celestial", 1)]
     assert wao_classes["celestial"][0] is SkyCoord
-    assert dwd["value"] == [0*u.deg, 0*u.deg]
+    assert dwd["value"] == [0, 0]
 
 
 @pytest.mark.xfail(reason=">1D Tables not supported")
@@ -539,7 +474,7 @@ def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
     assert len(sub._table_coords) == 1
     assert len(sub._dropped_coords) == 1
 
-    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+    pytest.importorskip("gwcs", minversion="0.17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
@@ -563,7 +498,7 @@ def test_mtc_dropped_quantity_inside_table(lut_3d_distance_mesh):
 
     assert len(sub.table) == 2
 
-    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+    pytest.importorskip("gwcs", minversion="0.17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
@@ -594,7 +529,7 @@ def test_mtc_dropped_quantity_inside_table_no_mesh(lut_2d_distance_no_mesh):
 
     assert len(sub.table) == 2
 
-    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+    pytest.importorskip("gwcs", minversion="0.17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
@@ -609,7 +544,7 @@ def test_mtc_dropped_quantity_join_drop_table(lut_1d_time, lut_3d_distance_mesh)
     assert len(sub._table_coords) == 2
     assert len(sub._dropped_coords) == 0
 
-    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+    pytest.importorskip("gwcs", minversion="0.17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)
@@ -622,7 +557,7 @@ def test_mtc_dropped_quantity_join_drop_table(lut_1d_time, lut_3d_distance_mesh)
     assert len(sub._table_coords) == 1
     assert len(sub._dropped_coords) == 1
 
-    pytest.importorskip("gwcs", minversion="0.16.2a1.dev17")
+    pytest.importorskip("gwcs", minversion="0.17")
 
     dwd = sub.dropped_world_dimensions
     assert isinstance(dwd, dict)

@@ -8,6 +8,7 @@ API Reference
    :maxdepth: 2
 
    ndcube
+   meta
    extra_coords
    mixins
    visualization

@@ -1,0 +1,28 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "asdf://sunpy.org/ndcube/schemas/ndcubesequence-1.0.0"
+
+title:
+  Represents the ndcube.ndcube_sequence.NDCubeSequence object
+
+description:
+  Represents the ndcube.ndcube_sequence.NDCubeSequence object
+
+type: object
+properties:
+  data:
+    type: array
+    items:
+      anyOf:
+        - tag: "tag:sunpy.org:ndcube/ndcube-1.*"
+          # Allow any other objects here as we don't want to restrict what people can save
+        - type: object
+  meta:
+    type: object
+  common_axis:
+    type: integer
+
+required: [data]
+additionalProperties: true
+...

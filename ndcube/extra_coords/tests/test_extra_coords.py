@@ -54,9 +54,9 @@ def test_empty_ec(wcs_1d_l):
     # Test slice of an empty EC
     assert ec[0].wcs is None
 
-    assert ec.mapping == tuple()
+    assert ec.mapping == ()
     assert ec.wcs is None
-    assert ec.keys() == tuple()
+    assert ec.keys() == ()
 
     ec.wcs = wcs_1d_l
     assert ec.wcs is wcs_1d_l
@@ -287,19 +287,12 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
 def test_extra_coords_2d_quantity(quantity_2d_lut):
     ec = ExtraCoords()
     ec.add("velocity", (0, 1), quantity_2d_lut)
-
-    ec.wcs.pixel_to_world(0, 0)
-
-# Inspecting an extra coords
-# Should be able to see what tables exists, what axes they account to, and what
-# axes have missing dimensions.
-
-# An additional spatial set (i.e. ICRS on top of HPC)
+    assert ec.wcs.pixel_to_world(0, 0)
 
 
 # Extra Coords with NDCube
 def test_add_coord_after_create(time_lut):
-    ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
+    ndc = NDCube(np.random.random_sample((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
     ndc.extra_coords.add("time", 0, time_lut)
 
@@ -309,7 +302,7 @@ def test_add_coord_after_create(time_lut):
 
 
 def test_combined_wcs(time_lut):
-    ndc = NDCube(np.random.random((10, 10)), wcs=WCS(naxis=2))
+    ndc = NDCube(np.random.random_sample((10, 10)), wcs=WCS(naxis=2))
     assert isinstance(ndc.extra_coords, ExtraCoords)
     ndc.extra_coords.add("time", 0, time_lut)
 
@@ -373,8 +366,8 @@ def test_slice_drop_dimensions(time_lut, skycoord_2d_lut):
     assert u.allclose(sec['lon'].wcs.pixel_to_world_values(list(range(2))),
                       ec['lon'].wcs.pixel_to_world_values(list(range(2)), [0, 0]))
 
-    assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))),
-                      ec['exposure_time'].wcs.pixel_to_world_values(list(range(2)), list(range(2))))
+    assert u.allclose(sec['exposure_time'].wcs.pixel_to_world_values(list(range(2))),
+                      ec['exposure_time'].wcs.pixel_to_world_values(list(range(2))))
 
 
 def test_slice_extra_twice(time_lut, wave_lut):

@@ -5,7 +5,7 @@ MISSING_MATPLOTLIB_ERROR_MSG = ("matplotlib cannot be imported, so the default p
 MISSING_ANIMATORS_ERROR_MSG = ("mpl_animators cannot be imported, so the default plotting "
                                "functionality is disabled. Please install mpl_animators")
 
-__all__ = ['PlotterDescriptor', 'MISSING_MATPLOTLIB_ERROR_MSG', 'MISSING_ANIMATORS_ERROR_MSG']
+__all__ = ['MISSING_ANIMATORS_ERROR_MSG', 'MISSING_MATPLOTLIB_ERROR_MSG', 'PlotterDescriptor']
 
 
 class PlotterDescriptor:
@@ -35,34 +35,35 @@ class PlotterDescriptor:
         if self._default_type in ("mpl_plotter", "mpl_sequence_plotter"):
             if self._default_type == "mpl_plotter":
                 try:
-                    from ndcube.visualization.mpl_plotter import MatplotlibPlotter
+                    from ndcube.visualization.mpl_plotter import MatplotlibPlotter  # noqa: PLC0415
                     return MatplotlibPlotter
                 except ImportError as e:
                     if raise_error:
                         raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
             elif self._default_type == "mpl_sequence_plotter":
                 try:
-                    from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter
+                    from ndcube.visualization.mpl_sequence_plotter import \
+                        MatplotlibSequencePlotter  # noqa: PLC0415
                     return MatplotlibSequencePlotter
                 except ImportError as e:
                     if raise_error:
                         raise ImportError(MISSING_ANIMATORS_ERROR_MSG) from e
+            return None
 
-        elif self._default_type is not None:
+        if self._default_type is not None:
             return self._default_type
 
         # If we have no default type then just return None
-        else:
-            return
+        return None
 
     def __get__(self, obj, objtype=None):
         if obj is None:
-            return
+            return None
 
         if getattr(obj, self._attribute_name, None) is None:
             plotter_type = self._resolve_default_type()
             if plotter_type is None:
-                return
+                return None
 
             self.__set__(obj, plotter_type)
 

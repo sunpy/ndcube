@@ -1,18 +1,122 @@
-# Numpy?
+# Prevents sphinx nitpicky mode picking up on optional
+# (see https://github.com/sphinx-doc/sphinx/issues/6861)
+# Even if it was "fixed", still broken
+py:class optional
+# See https://github.com/numpy/numpy/issues/10039
+py:obj numpy.datetime64
+# There's no specific file or function classes to link to
+py:class (Unit('deg'), Unit('pix'))
+py:class (Unit('Mm'), None)
+py:class any type
+py:class array-like
+py:class file object
+py:class function
+py:class path-like
+py:class str-like
+py:class time-like
+py:class Unit
+py:class Unit('%')
+py:class Unit('Angstrom')
+py:class Unit('arcsec / pix')
+py:class Unit('arcsec')
+py:class Unit('deg')
+py:class Unit('pix')
+py:class Unit('s')
+py:class Unit('W / m2')
+py:class Unit('m')
+py:obj function
+py:class iterable
+py:class iterables
+py:obj iterable
+py:obj iterables
+py:obj parfive
+py:mod parfive
+py:obj astropy.io.fits.hdu.base.ExtensionHDU
+
+# Raised by core Python code
+py:class a set-like object providing a view on D's items
+py:class a set-like object providing a view on D's keys
+py:class a shallow copy of D
+py:class an object providing a view on D's values
+py:class D[k] if k in D, else d.  d defaults to None.
+py:class None.  Remove all items from D.
+py:class None.  Update D from mapping/iterable E and F.
+py:class v, remove specified key and return the corresponding value.
+
+# This comes from Map.wcs
+py:class prop
+py:class Maxwell
+
+# These come from astropy.coordinates.baseframe.represent_as
+py:class data
+py:class keyword only
+py:class keyword-only
+py:class string
+py:class subclass of BaseRepresentation
+
+# These come from astropy QTable
+py:class list of lists
+py:class list of list
+py:class numpy ndarray
+py:class numpy ndarray
+py:class Table
+py:class table-like object
+
+# numpy inherited docstrings
+py:obj a
+py:obj a.size == 1
+py:obj args
+py:obj dtype
+py:obj n
+py:obj ndarray
+
+# other classes and functions that cannot be linked to
+py:class astropy.table.column.BaseColumn
+py:class docutils.parsers.rst.Directive
+py:class numpy.core.records.recarray
+py:class numpy.ma.core.MaskedArray
+py:class numpy.ma.mvoid
+py:class numpy.void
+py:class pandas.DataFrame
+py:class xmlrpc.client.Error
+py:class xmlrpc.client.Fault
+py:class xmlrpclib.Error
+py:class xmlrpclib.Fault
+py:obj aiohttp.ClientResponse
+py:obj astropy.visualization.wcsaxes.coordinates_map.CoordinatesMap.grid
+py:obj data
+py:obj numpy.ma.core.MaskedArray
+py:obj pkg_resources.parse_version
+py:obj sunpy.extern.parse.parse
+
+# Pending on python docs links issue #11975
+py:class classmethod
+py:class list
+py:meth list.pop
+py:obj Artist
+py:obj AttributeError
+py:obj BboxBase
+py:obj int
+py:obj list.append
+py:obj list.append
+py:obj list.count
+py:obj list.extend
+py:obj list.index
+py:obj list.insert
+py:obj list.remove
+py:obj NotImplementedError
+py:obj NotImplementedError
+py:obj RendererBase
+py:obj RuntimeError
+py:obj text
+py:obj Text
+
+# like-types
+py:class dict-like
+
+# NDData
 py:obj NDData
 py:class NDDataRef
 py:class NDDataArray
 py:obj NDDataRef
 py:obj NDDataArray
-py:class any type
-# Raised by core Python code
-py:class D[k] if k in D, else d.  d defaults to None.
-py:class a set-like object providing a view on D's items
-py:class a set-like object providing a view on D's keys
-py:class an object providing a view on D's values
-py:class D[k] if k in D, else d.  d defaults to None.
-py:class a set-like object providing a view on D's items
-py:class a set-like object providing a view on D's keys
-py:class an object providing a view on D's values
-py:class None.  Remove all items from D.
-py:class a shallow copy of D

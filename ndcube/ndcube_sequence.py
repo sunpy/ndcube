@@ -56,7 +56,7 @@ class NDCubeSequenceBase:
 
     @property
     def _shape(self):
-        dimensions = [len(self.data)] + list(self.data[0].data.shape)
+        dimensions = [len(self.data), *list(self.data[0].data.shape)]
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
             # be the same. Therefore if the lengths are different,
@@ -74,7 +74,7 @@ class NDCubeSequenceBase:
         """
         The physical types associated with each array axis, including the sequence axis.
         """
-        return [("meta.obs.sequence",)] + self.data[0].array_axis_physical_types
+        return [("meta.obs.sequence",), *self.data[0].array_axis_physical_types]
 
     @property
     def cube_like_dimensions(self):
@@ -82,18 +82,7 @@ class NDCubeSequenceBase:
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
         warn_deprecated("Replaced by ndcube.NDCubeSequence.cube_like_shape")
-        if not isinstance(self._common_axis, int):
-            raise TypeError("Common axis must be set.")
-        dimensions = list(self._dimensions)
-        cube_like_dimensions = list(self._shape[1:])
-        if dimensions[self._common_axis + 1].isscalar:
-            cube_like_dimensions[self._common_axis] = u.Quantity(
-                dimensions[0].value * dimensions[self._common_axis + 1].value, unit=u.pix)
-        else:
-            cube_like_dimensions[self._common_axis] = sum(dimensions[self._common_axis + 1])
-        # Combine into single Quantity
-        cube_like_dimensions = u.Quantity(cube_like_dimensions, unit=u.pix)
-        return cube_like_dimensions
+        return tuple(u.Quantity(d, unit=u.pix) for d in self.cube_like_shape)
 
     @property
     def cube_like_shape(self):
@@ -122,8 +111,10 @@ class NDCubeSequenceBase:
     def __getitem__(self, item):
         if isinstance(item, numbers.Integral):
             return self.data[item]
+        # Determine whether meta attribute should be sliced.
+        new_meta = self.meta.slice[item] if (hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__) else copy.deepcopy(self.meta)
         # Create an empty sequence in which to place the sliced cubes.
-        result = type(self)([], meta=self.meta, common_axis=self._common_axis)
+        result = type(self)([], meta=new_meta, common_axis=self._common_axis)
         if isinstance(item, slice):
             result.data = self.data[item]
         else:
@@ -208,8 +199,8 @@ class NDCubeSequenceBase:
         # Collect names of global coords common to all cubes.
         global_names = set.intersection(*[set(cube.global_coords.keys()) for cube in self.data])
         # For each coord, combine values from each cube's global coords property.
-        return dict([(name, [cube.global_coords[name] for cube in self.data])
-                     for name in global_names])
+        return {name: [cube.global_coords[name] for cube in self.data]
+                     for name in global_names}
 
     def explode_along_axis(self, axis):
         """
@@ -396,7 +387,7 @@ class NDCubeSequenceBase:
                 Common Cube Axis: {self._common_axis}"""))
 
     def __repr__(self):
-        return f"{object.__repr__(self)}\n{str(self)}"
+        return f"{object.__repr__(self)}\n{self!s}"
 
     def __len__(self):
         return len(self.data)
@@ -433,6 +424,12 @@ class NDCubeSequence(NDCubeSequenceBase):
         This enables the "cube_like" methods to be used, e.g.
         `ndcube.NDCubeSequence.index_as_cube` which slices the sequence as though it
         were a single cube concatenated along the common axis.
+
+    Attributes
+    ----------
+    common_axis_extra_coords
+    array_axis_physical_axis_types
+    cube_like_world_axis_physical_axis_types
     """
     # We special case the default mpl plotter here so that we can only import
     # matplotlib when `.plotter` is accessed and raise an ImportError at the
@@ -500,7 +497,7 @@ class _IndexAsCubeSlicer:
         # If common axis item is slice(None), result is trivial as common_axis is not changed.
         if item[common_axis] == slice(None):
             # Create item for slicing through the default API and slice.
-            return self.seq[tuple([slice(None)] + item)]
+            return self.seq[(slice(None), *item)]
         if isinstance(item[common_axis], numbers.Integral):
             # If common_axis item is an int or return an NDCube with dimensionality of N-1
             sequence_index, common_axis_index = \
@@ -510,25 +507,24 @@ class _IndexAsCubeSlicer:
             cube_item = copy.deepcopy(item)
             cube_item[common_axis] = common_axis_index
             return self.seq.data[sequence_index][tuple(cube_item)]
-        else:
-            # item can now only be a tuple whose common axis item is a non-None slice object.
-            # Convert item into iterable of SequenceItems and slice each cube appropriately.
-            # item for common_axis must always be a slice for every cube,
-            # even if it is only a length-1 slice.
-            # Thus NDCubeSequence.index_as_cube can only slice away common axis if
-            # item is int or item's first item is an int.
-            # i.e. NDCubeSequence.index_as_cube cannot cause common_axis to become None
-            # since in all cases where the common_axis is sliced away involve an NDCube
-            # is returned, not an NDCubeSequence.
-            # common_axis of returned sequence must be altered if axes in front of it
-            # are sliced away.
-            sequence_items = utils.sequence.cube_like_tuple_item_to_sequence_items(
-                item, common_axis, common_axis_lengths, n_cube_dims)
-            # Work out new common axis value if axes in front of it are sliced away.
-            new_common_axis = common_axis - sum([isinstance(i, numbers.Integral)
-                                                 for i in item[:common_axis]])
-            # Copy sequence and alter the data and common axis.
-            result = type(self.seq)([], meta=self.seq.meta, common_axis=new_common_axis)
-            result.data = [self.seq.data[sequence_item.sequence_index][sequence_item.cube_item]
-                           for sequence_item in sequence_items]
-            return result
+        # item can now only be a tuple whose common axis item is a non-None slice object.
+        # Convert item into iterable of SequenceItems and slice each cube appropriately.
+        # item for common_axis must always be a slice for every cube,
+        # even if it is only a length-1 slice.
+        # Thus NDCubeSequence.index_as_cube can only slice away common axis if
+        # item is int or item's first item is an int.
+        # i.e. NDCubeSequence.index_as_cube cannot cause common_axis to become None
+        # since in all cases where the common_axis is sliced away involve an NDCube
+        # is returned, not an NDCubeSequence.
+        # common_axis of returned sequence must be altered if axes in front of it
+        # are sliced away.
+        sequence_items = utils.sequence.cube_like_tuple_item_to_sequence_items(
+            item, common_axis, common_axis_lengths, n_cube_dims)
+        # Work out new common axis value if axes in front of it are sliced away.
+        new_common_axis = common_axis - sum([isinstance(i, numbers.Integral)
+                                             for i in item[:common_axis]])
+        # Copy sequence and alter the data and common axis.
+        result = type(self.seq)([], meta=self.seq.meta, common_axis=new_common_axis)
+        result.data = [self.seq.data[sequence_item.sequence_index][sequence_item.cube_item]
+                       for sequence_item in sequence_items]
+        return result

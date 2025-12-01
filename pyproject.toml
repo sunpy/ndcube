@@ -1,144 +1,184 @@
 [build-system]
 requires = [
   "setuptools>=62.1",
-  "setuptools_scm[toml]>=6.2",
-  "wheel"
+  "setuptools_scm[toml]>=8.0.0",
+  "wheel",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = { file = "README.rst", content-type = "text/x-rst" }
-license = { file = "licenses/LICENSE.rst", content-type = "text/plain" }
+license = { file = "licenses/LICENSE.rst" }
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=5.0.6,!=5.1.0",
-  "gwcs>=0.18",
-  "numpy>=1.23.0"
+  "astropy>=6.0.0",
+  "gwcs>=0.20.0",
+  "numpy>=1.26.0",
+  "scipy>=1.12.0",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-tests = [
-  "pytest",
-  "pytest-doctestplus",
-  "pytest-cov",
-  "pytest-xdist",
+# These are truly optional deps or deps only used for testing where we
+# want oldestdeps to test them
+tests-optional = [
+  "dask>=2023.10.0",
+  "specutils>=1.12.0",
+  "sunpy>=6.1.0",
+]
+tests-only = [
   "pytest-astropy",
+  "pytest-cov",
+  "pytest-doctestplus",
   "pytest-mpl>=0.12",
-  "dask",
-  "scipy",
-  "sunpy>=5.0.0"
+  "pytest-xdist",
+  "pytest",
+  "pytest-memray; sys_platform != 'win32'",
+]
+tests-minimal = [
+  "ndcube[plotting,reproject,tests-only]",
+  "sunpy>=6.1.0",
+]
+tests = [
+  "ndcube[plotting,reproject,tests-only,tests-optional,asdf-tests]",
 ]
 docs = [
+  "ndcube[all,tests-optional]",
   "sphinx",
   "sphinx-automodapi",
-  "matplotlib",
-  "mpl-animators>=1.0",
+  "sunpy-sphinx-theme",
+  "packaging",
   "sphinx-changelog>=1.1.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
-  "sunpy-sphinx-theme",
-  "sunpy>=5.0.0"
 ]
 plotting = [
-  "matplotlib>=3.5.0",
-  "mpl_animators>=1.0",
+  "matplotlib>=3.8.0",
+  "mpl_animators>=1.1",
 ]
 reproject = [
-  "reproject>=0.7.1",
+  "reproject>=0.13",  # first version with 3.12 support
+]
+asdf = [
+  "asdf>=2.15.0",
+  "asdf-astropy>=0.7.0",
+]
+asdf-tests = [
+  "ndcube[asdf]",
+  "pytest-asdf-plugin",
 ]
 all = [
   "ndcube[plotting,reproject]",
 ]
 dev = [
-  "ndcube[tests,docs,plotting,reproject]",
+  "ndcube[tests-only,docs,plotting,reproject,asdf]",
 ]
+
 [project.urls]
-repository = "https://docs.sunpy.org/projects/ndcube"
+Homepage = "https://docs.sunpy.org/projects/ndcube"
+"Source Code" = "https://github.com/sunpy/ndcube"
+Download = "https://pypi.org/project/ndcube"
+Documentation = "https://docs.sunpy.org/projects/ndcube"
+Changelog = "https://docs.sunpy.org/projects/ndcube/en/stable/whatsnew/changelog.html"
+"Issue Tracker" = "https://github.com/sunpy/ndcube/issues"
 
 [tool.setuptools]
 zip-safe = false
 include-package-data = true
 
 [tool.setuptools.packages.find]
+include = ["ndcube*"]
 exclude = ["ndcube._dev*"]
 
 [tool.setuptools_scm]
-write_to = "ndcube/_version.py"
+version_file = "ndcube/_version.py"
 
+[tool.gilesbot]
+  [tool.gilesbot.pull_requests]
+  enabled = true
+
+  [tool.gilesbot.milestones]
+  enabled = true
+  missing_message_long = "This pull request does not have a milestone assigned to it. Only maintainers can change this, so you don't need to worry about it. :smile:"
+
+  [tool.gilesbot.circleci_artifacts]
+  enabled = true
+
+  [tool.gilesbot.circleci_artifacts.figure_report]
+  url = ".tmp/py310-figure/figure_test_images/fig_comparison.html"
+  message = "Click details to see the figure test comparisons, for py310-figure."
+  report_on_fail = true
+
+  [tool.gilesbot.circleci_artifacts.figure_report_devdeps]
+  url = ".tmp/py310-figure-devdeps/figure_test_images/fig_comparison.html"
+  message = "Click details to see the figure test comparisons for py310-figure-devdeps."
+  report_on_fail = true
+
+  [tool.gilesbot.towncrier_changelog]
+  enabled = true
+  verify_pr_number = true
+  changelog_skip_label = "No Changelog Entry Needed"
+  help_url = "https://github.com/sunpy/ndcube/blob/main/changelog/README.rst"
+
+  changelog_missing_long = "There isn't a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)."
+
+  type_incorrect_long = "The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)"
+
+  number_incorrect_long = "The number in the changelog file you added does not match the number of this pull request. Please rename the file."
+
+
+[project.entry-points."asdf.resource_mappings"]
+ndcube = "ndcube.asdf.entry_points:get_resource_mappings"
+
+[project.entry-points."asdf.extensions"]
+ndcube = "ndcube.asdf.entry_points:get_extensions"
+
+
+# TODO: This should be in towncrier.toml but Giles currently only works looks in
+# pyproject.toml we should move this back when it's fixed.
 [tool.towncrier]
-    package = "ndcube"
-    filename = "CHANGELOG.rst"
-    directory = "changelog/"
-    issue_format = "`#{issue} <https://github.com/sunpy/ndcube/pull/{issue}>`__"
-    title_format = "{version} ({project_date})"
+  package = "ndcube"
+  filename = "CHANGELOG.rst"
+  directory = "changelog/"
+  issue_format = "`#{issue} <https://github.com/sunpy/ndcube/pull/{issue}>`__"
+  title_format = "{version} ({project_date})"
 
-    [[tool.towncrier.type]]
-        directory = "breaking"
-        name = "Backwards Incompatible Changes"
-        showcontent = true
+  [[tool.towncrier.type]]
+  directory = "breaking"
+  name = "Breaking Changes"
+  showcontent = true
 
-    [[tool.towncrier.type]]
-        directory = "api"
-        name = "API Changes"
-        showcontent = true
+  [[tool.towncrier.type]]
+  directory = "deprecation"
+  name = "Deprecations"
+  showcontent = true
 
-    [[tool.towncrier.type]]
-      directory = "removal"
-      name = "Deprecations and Removals"
-      showcontent = true
+  [[tool.towncrier.type]]
+  directory = "removal"
+  name = "Removals"
+  showcontent = true
 
-    [[tool.towncrier.type]]
-      directory = "feature"
-      name = "Features"
-      showcontent = true
+  [[tool.towncrier.type]]
+  directory = "feature"
+  name = "New Features"
+  showcontent = true
 
-    [[tool.towncrier.type]]
-      directory = "bugfix"
-      name = "Bug Fixes"
-      showcontent = true
+  [[tool.towncrier.type]]
+  directory = "bugfix"
+  name = "Bug Fixes"
+  showcontent = true
 
-    [[tool.towncrier.type]]
-      directory = "doc"
-      name = "Improved Documentation"
-      showcontent = true
+  [[tool.towncrier.type]]
+  directory = "doc"
+  name = "Documentation"
+  showcontent = true
 
-    [[tool.towncrier.type]]
-      directory = "trivial"
-      name = "Trivial/Internal Changes"
-      showcontent = true
-
-[ tool.gilesbot ]
-  [ tool.gilesbot.circleci_artifacts ]
-    enabled = true
-
-  [ tool.gilesbot.circleci_artifacts.figure_report ]
-    url = ".tmp/py310-figure/figure_test_images/fig_comparison.html"
-    message = "Click details to see the figure test comparisons, for py310-figure."
-    report_on_fail = true
-
-  [ tool.gilesbot.circleci_artifacts.figure_report_devdeps ]
-    url = ".tmp/py310-figure-devdeps/figure_test_images/fig_comparison.html"
-    message = "Click details to see the figure test comparisons for py310-figure-devdeps."
-    report_on_fail = true
-
-  [ tool.gilesbot.pull_requests ]
-    enabled = true
-
-  [ tool.gilesbot.towncrier_changelog ]
-    enabled = true
-    verify_pr_number = true
-    changelog_skip_label = "No Changelog Entry Needed"
-    help_url = "https://github.com/sunpy/sunpy/blob/main/changelog/README.rst"
-    changelog_missing_long = "There isn't a changelog file in this pull request. Please add a changelog file to the `changelog/` directory following the instructions in the changelog [README](https://github.com/sunpy/sunpy/blob/main/changelog/README.rst)."
-    type_incorrect_long = "The changelog file you added is not one of the allowed types. Please use one of the types described in the changelog [README](https://github.com/sunpy/ndcube/blob/main/changelog/README.rst)"
-    number_incorrect_long = "The number in the changelog file you added does not match the number of this pull request. Please rename the file."
-
-  [ tool.gilesbot.milestones ]
-    enabled = true
-    missing_message_long = "This pull request does not have a milestone assigned to it. Only maintainers can change this, so you don't need to worry about it. :smile:"
+  [[tool.towncrier.type]]
+  directory = "trivial"
+  name = "Internal Changes"
+  showcontent = true

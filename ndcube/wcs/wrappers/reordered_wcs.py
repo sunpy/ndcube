@@ -54,14 +54,12 @@ class ReorderedLowLevelWCS(BaseWCSWrapper):
     def pixel_to_world_values(self, *pixel_arrays):
         pixel_arrays = [pixel_arrays[idx] for idx in self._pixel_order_inv]
         world_arrays = self._wcs.pixel_to_world_values(*pixel_arrays)
-        world_arrays = [world_arrays[idx] for idx in self._world_order]
-        return world_arrays
+        return [world_arrays[idx] for idx in self._world_order]
 
     def world_to_pixel_values(self, *world_arrays):
         world_arrays = [world_arrays[idx] for idx in self._world_order_inv]
         pixel_arrays = self._wcs.world_to_pixel_values(*world_arrays)
-        pixel_arrays = [pixel_arrays[idx] for idx in self._pixel_order]
-        return pixel_arrays
+        return [pixel_arrays[idx] for idx in self._pixel_order]
 
     @property
     def world_axis_object_components(self):
@@ -71,11 +69,13 @@ class ReorderedLowLevelWCS(BaseWCSWrapper):
     def pixel_shape(self):
         if self._wcs.pixel_shape:
             return tuple([self._wcs.pixel_shape[idx] for idx in self._pixel_order])
+        return None
 
     @property
     def pixel_bounds(self):
         if self._wcs.pixel_bounds:
             return tuple([self._wcs.pixel_bounds[idx] for idx in self._pixel_order])
+        return None
 
     @property
     def axis_correlation_matrix(self):
