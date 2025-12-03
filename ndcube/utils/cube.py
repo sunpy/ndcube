@@ -195,8 +195,8 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims):
             result_is_scalar = False
             item.append(slice(None))
         else:
-            min_idx = min(axis_indices)
-            max_idx = max(axis_indices) + 1
+            min_idx = int(min(axis_indices))
+            max_idx = int(max(axis_indices)) + 1
             if max_idx - min_idx == 1 and not keepdims:
                 item.append(min_idx)
             else:
