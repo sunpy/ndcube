@@ -1,1 +1,0 @@
-Cast slice start and stop values to integer to avoid dask throwing up an error due to new output from astropy.

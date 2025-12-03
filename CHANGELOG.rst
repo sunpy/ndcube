@@ -1,3 +1,12 @@
+2.3.5 (2025-12-03)
+==================
+
+Bug Fixes
+---------
+
+- Cast slice start and stop values to integer to avoid dask throwing up an error due to new output from astropy. (`#898 <https://github.com/sunpy/ndcube/pull/898>`__)
+
+
 2.3.4 (2025-10-06)
 ==================
 
