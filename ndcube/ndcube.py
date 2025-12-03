@@ -1583,48 +1583,56 @@ class NDCube(NDCubeBase):
           >>> cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta)
 
         To create an `~astropy.nddata.NDData` instance which is a copy of an `~ndcube.NDCube`
-        (called ``cube``) without a WCS, do::
+        (called ``cube``) without a WCS, do:
 
-        >>> nddata_without_coords = cube.to_nddata(wcs=None)
-        >>> nddata_without_coords
-        NDData([[——, ——, ——],
-                [13, 14, 15]])
+        .. code-block:: python
+
+          >>> nddata_without_coords = cube.to_nddata(wcs=None)
+          >>> nddata_without_coords
+          NDData([[——, ——, ——],
+                  [13, 14, 15]])
 
         To create a new `~ndcube.NDCube` instance which is a copy of
         an `~ndcube.NDCube` (called ``cube``) without an uncertainty,
-        but with ``global_coords`` and ``extra_coords`` do::
+        but with ``global_coords`` and ``extra_coords`` do:
 
-        >>> ndcube_without_uncertainty = cube.to_nddata(
-        ...     uncertainty=None,
-        ...     global_coords="copy",
-        ...     extra_coords="copy",
-        ...     nddata_type=NDCube,
-        ...     )
-        >>> ndcube_without_uncertainty
-        <ndcube.ndcube.NDCube object at ...>
-        NDCube
-        ------
-        Shape: (2, 3)
-        Physical Types of Axes: [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
-        Unit: None
-        Data Type: int64
+        .. code-block:: python
 
-        To create a different type of ``NDData`` object do::
+          >>> ndcube_without_uncertainty = cube.to_nddata(
+          ...     uncertainty=None,
+          ...     global_coords="copy",
+          ...     extra_coords="copy",
+          ...     nddata_type=NDCube,
+          ...     )
+          >>> ndcube_without_uncertainty
+          <ndcube.ndcube.NDCube object at ...>
+          NDCube
+          ------
+          Shape: (2, 3)
+          Physical Types of Axes: [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
+          Unit: None
+          Data Type: int64
 
-        >>> from astropy.nddata import NDDataRef
-        >>> nddataref = cube.to_nddata(wcs=None, nddata_type=NDDataRef)
-        >>> nddataref
-        NDDataRef([[——, ——, ——],
-                   [13, 14, 15]])
+        To create a different type of ``NDData`` object do:
+
+        .. code-block:: python
+
+          >>> from astropy.nddata import NDDataRef
+          >>> nddataref = cube.to_nddata(wcs=None, nddata_type=NDDataRef)
+          >>> nddataref
+          NDDataRef([[——, ——, ——],
+                     [13, 14, 15]])
 
         The value of any input supported by the ``nddata_type``'s
         constructor can be altered by setting a kwarg for that input,
-        e.g.::
+        e.g.:
 
-        >>> nddata_ones = cube.to_nddata(data=np.ones(cube.data.shape))
-        >>> nddata_ones.data
-        array([[1., 1., 1.],
-               [1., 1., 1.]])
+        .. code-block:: python
+
+          >>> nddata_ones = cube.to_nddata(data=np.ones(cube.data.shape))
+          >>> nddata_ones.data
+          array([[1., 1., 1.],
+                 [1., 1., 1.]])
         """
         # Put all NDData kwargs in a dict
         user_kwargs = {"data": data,
