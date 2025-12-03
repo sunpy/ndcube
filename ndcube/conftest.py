@@ -1053,6 +1053,11 @@ def ndcube_2d_dask(wcs_2d_lt_ln):
 
 
 @pytest.fixture
+def nddata_2d_dask(ndcube_2d_dask):
+    return ndcube_2d_dask.to_nddata(wcs=None)
+
+
+@pytest.fixture
 def ndcube_2d(request):
     """
     This is a meta fixture for parametrizing all the 2D ndcubes.

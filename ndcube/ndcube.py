@@ -980,13 +980,12 @@ class NDCube(NDCubeBase):
     def _arithmetic_operate_with_nddata(self, operation, value):
         handle_mask = self._arithmetic_handle_mask
         if value.wcs is not None:
-            return TypeError("Cannot add coordinate-aware NDCubes together.")
-
+            raise TypeError("Cannot add coordinate-aware objects to NDCubes.")
         kwargs = {}
         if operation == "add":
             # Handle units
             if self.unit is not None and value.unit is not None:
-                value_data = (value.data * value.unit).to_value(self.unit)
+                value_data = value.data * (value.unit / self.unit).to(u.dimensionless_unscaled)
             elif self.unit is None and value.unit is None:
                 value_data = value.data
             else:
@@ -994,20 +993,36 @@ class NDCube(NDCubeBase):
             # Handle data and uncertainty
             kwargs["data"] = self.data + value_data
             uncert_op = np.add
-        elif operation == "multiply":
+        elif operation in ("multiply", "true_divide"):
             # Handle units
             if self.unit is not None or value.unit is not None:
                 cube_unit = u.Unit('') if self.unit is None else self.unit
                 value_unit = u.Unit('') if value.unit is None else value.unit
-                kwargs["unit"] = cube_unit * value_unit
-            kwargs["data"] = self.data * value.data
-            uncert_op = np.multiply
+                kwargs["unit"] = (cube_unit * value_unit if operation == "multiply"
+                                  else cube_unit / value_unit)
+            if operation == "multiply":
+                kwargs["data"] = self.data * value.data
+                uncert_op = np.multiply
+            else:
+                kwargs["data"] = self.data / value.data
+                uncert_op = np.true_divide
         else:
             raise ValueError("Value of operation argument is not recognized.")
-        kwargs["uncertainty"] = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        # Calculate uncertainty.
+        new_uncert = self._combine_uncertainty(uncert_op, value, kwargs["data"])
+        if new_uncert:
+            # New uncertainty object must be decoupled from its original
+            # parent_nddata object. Set this to None here, and the parent_nddata
+            # will become the new cube on instantiation.
+            new_uncert.parent_nddata = None
+            uncert_unit = kwargs.get("unit", self.unit)
+            if uncert_unit:
+                # Give uncertainty object the same units as the new NDCube.
+                new_uncert.unit = uncert_unit
+        kwargs["uncertainty"] = new_uncert
         kwargs["mask"] = handle_mask(self.mask, value.mask)
 
-        return kwargs  # return the new NDCube instance
+        return kwargs
 
     def __add__(self, value):
         kwargs = {}
@@ -1052,7 +1067,12 @@ class NDCube(NDCubeBase):
         return self.__add__(value)
 
     def __sub__(self, value):
-        return self.__add__(-value)
+        if isinstance(value, NDData):
+            new_value = copy.copy(value)
+            new_value._data = -value.data
+        else:
+            new_value = -value
+        return self.__add__(new_value)
 
     def __rsub__(self, value):
         return self.__neg__().__add__(value)
@@ -1084,6 +1104,9 @@ class NDCube(NDCubeBase):
         return self.__mul__(value)
 
     def __truediv__(self, value):
+        if isinstance(value, NDData):
+            kwargs = self._arithmetic_operate_with_nddata("true_divide", value)
+            return self._new_instance(**kwargs)
         return self.__mul__(1/value)
 
     def __rtruediv__(self, value):
@@ -1485,8 +1508,11 @@ class NDCube(NDCubeBase):
         keyword to ``"copy"``, for example ``mycube.to_nddata(spam="copy")``
         is the equivalent of setting
         ``mycube.to_nddata(spam=mycube.spam)``.
-        Any attributes not supported by the new class
-        (``nddata_type``), will be discarded.
+
+        A motivating use case for this method is in enabling arithmetic operations between
+        `~ndcube.NDCube` instances by removing coordinate-awareness.  See the section of the
+        ndcube documentation on
+        :ref:`arithmetic`.
 
         Parameters
         ----------
@@ -1524,16 +1550,89 @@ class NDCube(NDCubeBase):
 
         Examples
         --------
-        To create an `~astropy.nddata.NDData` instance which is a copy of an `~ndcube.NDCube`
-        (called ``cube``) without a WCS, do::
+        .. expanding-code-block:: python
+          :summary: Expand to see cube instantiated.
 
-        >>> nddata_without_coords = cube.to_nddata(wcs=None) # doctest: +SKIP
+          >>> import astropy.units as u
+          >>> import astropy.wcs
+          >>> import numpy as np
+          >>> from astropy.nddata import StdDevUncertainty
+
+          >>> from ndcube import NDCube
+
+          >>> # Define data array.
+          >>> data = np.arange(2*3).reshape((2, 3)) + 10
+
+          >>> # Define WCS transformations in an astropy WCS object.
+          >>> wcs = astropy.wcs.WCS(naxis=2)
+          >>> wcs.wcs.ctype = 'HPLT-TAN', 'HPLN-TAN'
+          >>> wcs.wcs.cunit = 'deg', 'deg'
+          >>> wcs.wcs.cdelt = 0.5, 0.4
+          >>> wcs.wcs.crpix = 2, 2
+          >>> wcs.wcs.crval = 0.5, 1
+
+          >>> # Define mask. Initially set all elements unmasked.
+          >>> mask = np.zeros_like(data, dtype=bool)
+          >>> mask[0, :] = True  # Now mask some values.
+          >>> # Define uncertainty, metadata and unit.
+          >>> uncertainty = StdDevUncertainty(np.abs(data) * 0.1)
+          >>> meta = {"Description": "This is example NDCube metadata."}
+          >>> unit = u.ct
+
+          >>> # Instantiate NDCube with supporting data.
+          >>> cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta)
+
+        To create an `~astropy.nddata.NDData` instance which is a copy of an `~ndcube.NDCube`
+        (called ``cube``) without a WCS, do:
+
+        .. code-block:: python
+
+          >>> nddata_without_coords = cube.to_nddata(wcs=None)
+          >>> nddata_without_coords
+          NDData([[——, ——, ——],
+                  [13, 14, 15]])
 
         To create a new `~ndcube.NDCube` instance which is a copy of
         an `~ndcube.NDCube` (called ``cube``) without an uncertainty,
-        but with ``global_coords`` and ``extra_coords`` do::
+        but with ``global_coords`` and ``extra_coords`` do:
 
-        >>> nddata_without_coords = cube.to_nddata(uncertainty=None, global_coords=True, extra_coords=True) # doctest: +SKIP
+        .. code-block:: python
+
+          >>> ndcube_without_uncertainty = cube.to_nddata(
+          ...     uncertainty=None,
+          ...     global_coords="copy",
+          ...     extra_coords="copy",
+          ...     nddata_type=NDCube,
+          ...     )
+          >>> ndcube_without_uncertainty
+          <ndcube.ndcube.NDCube object at ...>
+          NDCube
+          ------
+          Shape: (2, 3)
+          Physical Types of Axes: [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
+          Unit: None
+          Data Type: int64
+
+        To create a different type of ``NDData`` object do:
+
+        .. code-block:: python
+
+          >>> from astropy.nddata import NDDataRef
+          >>> nddataref = cube.to_nddata(wcs=None, nddata_type=NDDataRef)
+          >>> nddataref
+          NDDataRef([[——, ——, ——],
+                     [13, 14, 15]])
+
+        The value of any input supported by the ``nddata_type``'s
+        constructor can be altered by setting a kwarg for that input,
+        e.g.:
+
+        .. code-block:: python
+
+          >>> nddata_ones = cube.to_nddata(data=np.ones(cube.data.shape))
+          >>> nddata_ones.data
+          array([[1., 1., 1.],
+                 [1., 1., 1.]])
         """
         # Put all NDData kwargs in a dict
         user_kwargs = {"data": data,
