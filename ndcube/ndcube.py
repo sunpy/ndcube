@@ -48,8 +48,6 @@ try:
 except ImportError:
     pass
 
-COPY = object()
-
 
 class NDCubeABC(astropy.nddata.NDDataBase):
 
@@ -381,25 +379,27 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     _global_coords = NDCubeLinkedDescriptor(GlobalCoords)
 
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
-                 unit=None, copy=False, **kwargs):
+                 unit=None, copy=False, psf=None, *, extra_coords=None, global_coords=None, **kwargs):
 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
-                         meta=meta, unit=unit, copy=copy, **kwargs)
+                         meta=meta, unit=unit, copy=copy, psf=psf, **kwargs)
 
         # Enforce that the WCS object is not None
         if self.wcs is None:
             raise TypeError("The WCS argument can not be None.")
 
         # Get existing extra_coords if initializing from an NDCube
-        if hasattr(data, "extra_coords"):
+        if extra_coords is None and getattr(data, "extra_coords", None) is not None:
             extra_coords = data.extra_coords
+        if extra_coords is not None:
             if copy:
                 extra_coords = deepcopy(extra_coords)
             self._extra_coords = extra_coords
 
         # Get existing global_coords if initializing from an NDCube
-        if hasattr(data, "global_coords"):
+        if global_coords is None and getattr(data, "global_coords", None) is not None:
             global_coords = data._global_coords
+        if global_coords is not None:
             if copy:
                 global_coords = deepcopy(global_coords)
             self._global_coords = global_coords
@@ -1488,24 +1488,27 @@ class NDCube(NDCubeBase):
 
     def to_nddata(self,
                   *,
-                  data=COPY,
-                  wcs=COPY,
-                  uncertainty=COPY,
-                  mask=COPY,
-                  unit=COPY,
-                  meta=COPY,
-                  psf=COPY,
-                  extra_coords=COPY,
-                  global_coords=COPY,
+                  data="copy",
+                  wcs="copy",
+                  uncertainty="copy",
+                  mask="copy",
+                  unit="copy",
+                  meta="copy",
+                  psf="copy",
                   nddata_type=NDData,
                   **kwargs,
                  ):
         """
-        Constructs new type instance with the same attribute values as this `~ndcube.NDCube`.
+        Constructs a new `~astropy.nddata.NDData` instance from this object.
 
-        Attribute values can be altered on the output object by setting a kwarg with the new
-        value, e.g. ``data=new_data``.
-        Any attributes not supported by the new class (``nddata_type``), will be discarded.
+        By default all known ``NDData`` attributes are copied (by reference) from
+        this object, values can be altered on the output object by
+        setting a kwarg with the new value, e.g. ``data=new_data``.
+        Custom attributes on this class can be passed by setting that
+        keyword to ``"copy"``, for example ``mycube.to_nddata(spam="copy")``
+        is the equivalent of setting
+        ``mycube.to_nddata(spam=mycube.spam)``.
+
         A motivating use case for this method is in enabling arithmetic operations between
         `~ndcube.NDCube` instances by removing coordinate-awareness.  See the section of the
         ndcube documentation on
@@ -1527,20 +1530,16 @@ class NDCube(NDCubeBase):
             Metadata object of new instance. Default is to use data of this instance.
         psf: Any, optional
             PSF object of new instance. Default is to use data of this instance.
-        extra_coords: `ndcube.ExtraCoordsABC`, optional
-            Extra coords object of new instance. Default is to use data of this instance.
-        global_coords: `ndcube.GlobalCoordsABC`, optional
-            WCS object of new instance. Default is to use data of this instance.
         nddata_type: Any, optional
             The type of the returned object. Must be a subclass of `~astropy.nddata.NDData`
             or a class that behaves like one.  Default=`~astropy.nddata.NDData`.
         kwargs:
-            Additional inputs to the ``nddata_type`` constructor that should differ from,
-            or are not represented by, the  attributes of this instance. For example, to
+            Additional inputs to the ``nddata_type`` constructor. For example, to
             set different data values on the returned object, set a kwarg ``data=new_data``,
-            where ``new_data`` is an array of compatible shape and dtype. Note that kwargs
-            given by the user and attributes on this instance that are not supported by the
-            ``nddata_type`` constructor are ignored.
+            where ``new_data`` is an array of compatible shape and dtype.
+            Other keyword arguments can be specified to copy custom
+            attributes with the value ``"copy"``, for example
+            ``global_coords="copy"``.
 
         Returns
         -------
@@ -1552,12 +1551,17 @@ class NDCube(NDCubeBase):
         Examples
         --------
         To create an `~astropy.nddata.NDData` instance which is a copy of an `~ndcube.NDCube`
-        (called ``cube``) without a WCS, do:
+        (called ``cube``) without a WCS, do::
 
         >>> nddata_without_coords = cube.to_nddata(wcs=None) # doctest: +SKIP
+
+        To create a new `~ndcube.NDCube` instance which is a copy of
+        an `~ndcube.NDCube` (called ``cube``) without an uncertainty,
+        but with ``global_coords`` and ``extra_coords`` do::
+
+        >>> nddata_without_coords = cube.to_nddata(uncertainty=None, global_coords=True, extra_coords=True) # doctest: +SKIP
         """
-        # Build dictionary of new attribute values from this NDCube instance
-        # and update with user-defined kwargs. Remove any kwargs not set by user.
+        # Put all NDData kwargs in a dict
         user_kwargs = {"data": data,
                        "wcs": wcs,
                        "uncertainty": uncertainty,
@@ -1565,26 +1569,13 @@ class NDCube(NDCubeBase):
                        "unit": unit,
                        "meta": meta,
                        "psf": psf,
-                       "extra_coords": extra_coords,
-                       "global_coords": global_coords}
-        user_kwargs = {key: value for key, value in user_kwargs.items() if value is not COPY}
-        user_kwargs.update(kwargs)
-        all_kwargs = {key.strip("_"): value for key, value in self.__dict__.items()}
-        all_kwargs.update(user_kwargs)
-        # Inspect call signature of new_nddata class and
-        # remove unsupported items from new_kwargs.
-        all_kwargs = {key: value for key, value in all_kwargs.items()
-                      if key in inspect.signature(nddata_type).parameters.keys()}
+                       **kwargs}
+        # If any are "copy" then copy by reference
+        user_kwargs = {key: getattr(self, key)
+                       if isinstance(value, str) and value == "copy" else value
+                       for key, value in user_kwargs.items()}
         # Construct and return new instance.
-        new_nddata = nddata_type(**all_kwargs)
-        if isinstance(new_nddata, NDCubeBase):
-            if extra_coords is COPY:
-                extra_coords = copy.copy(self._extra_coords)
-                extra_coords._ndcube = new_nddata
-                new_nddata._extra_coords = extra_coords
-            if global_coords is COPY:
-                new_nddata._global_coords = copy.copy(self._global_coords)
-        return new_nddata
+        return nddata_type(**user_kwargs)
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
