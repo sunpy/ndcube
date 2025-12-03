@@ -1550,16 +1550,81 @@ class NDCube(NDCubeBase):
 
         Examples
         --------
+        .. expanding-code-block:: python
+          :summary: Expand to see cube instantiated.
+
+          >>> import astropy.units as u
+          >>> import astropy.wcs
+          >>> import numpy as np
+          >>> from astropy.nddata import StdDevUncertainty
+
+          >>> from ndcube import NDCube
+
+          >>> # Define data array.
+          >>> data = np.arange(2*3).reshape((2, 3)) + 10
+
+          >>> # Define WCS transformations in an astropy WCS object.
+          >>> wcs = astropy.wcs.WCS(naxis=2)
+          >>> wcs.wcs.ctype = 'HPLT-TAN', 'HPLN-TAN'
+          >>> wcs.wcs.cunit = 'deg', 'deg'
+          >>> wcs.wcs.cdelt = 0.5, 0.4
+          >>> wcs.wcs.crpix = 2, 2
+          >>> wcs.wcs.crval = 0.5, 1
+
+          >>> # Define mask. Initially set all elements unmasked.
+          >>> mask = np.zeros_like(data, dtype=bool)
+          >>> mask[0, :] = True  # Now mask some values.
+          >>> # Define uncertainty, metadata and unit.
+          >>> uncertainty = StdDevUncertainty(np.abs(data) * 0.1)
+          >>> meta = {"Description": "This is example NDCube metadata."}
+          >>> unit = u.ct
+
+          >>> # Instantiate NDCube with supporting data.
+          >>> cube = NDCube(data, wcs=wcs, uncertainty=uncertainty, mask=mask, meta=meta)
+
         To create an `~astropy.nddata.NDData` instance which is a copy of an `~ndcube.NDCube`
         (called ``cube``) without a WCS, do::
 
-        >>> nddata_without_coords = cube.to_nddata(wcs=None) # doctest: +SKIP
+        >>> nddata_without_coords = cube.to_nddata(wcs=None)
+        >>> nddata_without_coords
+        NDData([[——, ——, ——],
+                [13, 14, 15]])
 
         To create a new `~ndcube.NDCube` instance which is a copy of
         an `~ndcube.NDCube` (called ``cube``) without an uncertainty,
         but with ``global_coords`` and ``extra_coords`` do::
 
-        >>> nddata_without_coords = cube.to_nddata(uncertainty=None, global_coords=True, extra_coords=True) # doctest: +SKIP
+        >>> ndcube_without_uncertainty = cube.to_nddata(
+        ...     uncertainty=None,
+        ...     global_coords="copy",
+        ...     extra_coords="copy",
+        ...     nddata_type=NDCube,
+        ...     )
+        >>> ndcube_without_uncertainty
+        <ndcube.ndcube.NDCube object at ...>
+        NDCube
+        ------
+        Shape: (2, 3)
+        Physical Types of Axes: [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon')]
+        Unit: None
+        Data Type: int64
+
+        To create a different type of ``NDData`` object do::
+
+        >>> from astropy.nddata import NDDataRef
+        >>> nddataref = cube.to_nddata(wcs=None, nddata_type=NDDataRef)
+        >>> nddataref
+        NDDataRef([[——, ——, ——],
+                   [13, 14, 15]])
+
+        The value of any input supported by the ``nddata_type``'s
+        constructor can be altered by setting a kwarg for that input,
+        e.g.::
+
+        >>> nddata_ones = cube.to_nddata(data=np.ones(cube.data.shape))
+        >>> nddata_ones.data
+        array([[1., 1., 1.],
+               [1., 1., 1.]])
         """
         # Put all NDData kwargs in a dict
         user_kwargs = {"data": data,

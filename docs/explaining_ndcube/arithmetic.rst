@@ -217,13 +217,7 @@ Raising NDCube to a Power
   >>> cube_with_unit.data
   array([[10, 11, 12],
          [13, 14, 15]])
-
-  >>> import warnings
-  >>> with warnings.catch_warnings():
-  ...     warnings.simplefilter("ignore")  # Catching warnings not needed but keeps docs cleaner.
-  ...
-  ...     new_cube = cube_with_unit**2
-
+  >>> new_cube = cube_with_unit**2
   >>> new_cube.data
   array([[100, 121, 144],
          [169, 196, 225]])
@@ -303,28 +297,8 @@ Therefore, arithmetic operations between `~ndcube.NDCube` instances via:
 
 where addition, subtraction, multiplication and division are all enabled by the ``+``, ``-``, ``*``, and ``/`` operators, respectively.
 
-Note that `~ndcube.NDCube` attributes not supported by the constructor of the output type employed by `ndcube.NDCube.to_nddata` are dropped by the conversion.
-Therefore, since `ndcube.NDCube.to_nddata` converts to `~astropy.nddata.NDData` by default, there was no need in the above example to explicitly set `~ndcube.NDCube.extra_coords` and `~ndcube.NDCube.global_coords` to ``None``.
-Note that the output type of `ndcube.NDCube.to_nddata` can be controlled via the ``nddata_type`` kwarg.
-For example:
-
-  >>> from astropy.nddata import NDDataRef
-  >>> nddataref2 = cube2.to_nddata(wcs=None, nddata_type=NDDataRef)
-  >>> print(type(nddataref2) is NDDataRef)
-  True
-
 Requiring users to explicitly remove coordinate-awareness makes it clear that coordinates are not combined as part of arithmetic operations.
 It also makes it unambiguous which operand's coordinates are maintained through the operation.
-
-`ndcube.NDCube.to_nddata` is not limited to changing/removing the WCS.
-The value of any input supported by the ``nddata_type``'s constructor can be altered by setting a kwarg for that input, e.g.:
-
-.. code-block:: python
-
-  >>> nddata_ones = cube2.to_nddata(data=np.ones(cube2.data.shape))
-  >>> nddata_ones.data
-  array([[1., 1., 1.],
-         [1., 1., 1.]])
 
 Handling of Data, Units and Meta
 """"""""""""""""""""""""""""""""
