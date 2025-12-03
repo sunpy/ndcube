@@ -1290,9 +1290,11 @@ class NDCube(NDCubeBase):
         bin_shape[bin_shape == -1] = np.array(data_shape)[bin_shape == -1]
         if (bin_shape < 0).any():
             raise ValueError("bin_shape should not be less than -1.")
+        if np.any(bin_shape > data_shape):
+            raise ValueError("bin_shape cannot be larger than data shape in any dimension.")
         if (np.mod(data_shape, bin_shape) != 0).any():
             raise ValueError(
-                "bin shape must be an integer fraction of the data shape in each dimension. "
+                "bin_shape must be an integer fraction of the data shape in each dimension. "
                 f"data shape: {data_shape};  bin shape: {bin_shape}"
             )
 
