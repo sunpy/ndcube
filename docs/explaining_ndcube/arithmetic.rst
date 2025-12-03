@@ -217,7 +217,8 @@ Raising NDCube to a Power
   >>> cube_with_unit.data
   array([[10, 11, 12],
          [13, 14, 15]])
-  >>> new_cube = cube_with_unit**2
+  >>> new_cube = cube_with_unit**2  # doctest: +SHOW_WARNINGS
+  NDCubeUserWarning: <class 'astropy.nddata.nduncertainty.StdDevUncertainty'> does not support propagation of uncertainties for power. Setting uncertainties to None.
   >>> new_cube.data
   array([[100, 121, 144],
          [169, 196, 225]])
@@ -228,7 +229,7 @@ Raising NDCube to a Power
 
 Note that error propagation is delegated to the ``cube.uncertainty`` object.
 Therefore, if this class supports error propagation by power, then ``new_cube`` will include uncertainty.
-Otherwise, ``new_cube.uncertainty`` will be set to ``None``.
+Otherwise, ``new_cube.uncertainty`` will be set to ``None``, and a warning shown.
 
 
 .. _arithmetic_nddata:
