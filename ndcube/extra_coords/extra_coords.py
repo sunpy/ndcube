@@ -104,7 +104,7 @@ class ExtraCoordsABC(abc.ABC):
         """
 
     @property
-    @abc.abstractproperty
+    @abc.abstractmethod
     def is_empty(self):
         """Return True if no extra coords present, else return False."""
 
