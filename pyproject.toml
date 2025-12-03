@@ -16,9 +16,9 @@ authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=6.0.0",
-  "gwcs>=0.20.0",
-  "numpy>=1.26.0",
+  "astropy>=6.1.0",
+  "gwcs>=0.21.0",
+  "numpy>=1.26.0",  # Keeping numpy at 1.26 for a while longer
   "scipy>=1.12.0",
 ]
 dynamic = ["version"]
@@ -27,8 +27,8 @@ dynamic = ["version"]
 # These are truly optional deps or deps only used for testing where we
 # want oldestdeps to test them
 tests-optional = [
-  "dask>=2023.10.0",
-  "specutils>=1.12.0",
+  "dask>=2024.1.0",
+  "specutils>=1.13.0",
   "sunpy>=6.1.0",
 ]
 tests-only = [
@@ -53,19 +53,19 @@ docs = [
   "sphinx-automodapi",
   "sunpy-sphinx-theme",
   "packaging",
-  "sphinx-changelog>=1.1.0",
+  "sphinx-changelog>=1.5.0",
   "sphinx-gallery",
   "sphinxext-opengraph",
 ]
 plotting = [
-  "matplotlib>=3.8.0",
-  "mpl_animators>=1.1",
+  "matplotlib>=3.9.0",
+  "mpl_animators>=1.2",
 ]
 reproject = [
-  "reproject>=0.13",  # first version with 3.12 support
+  "reproject>=0.14",  # first version with 3.12 support
 ]
 asdf = [
-  "asdf>=2.15.0",
+  "asdf>=3.1.0",
   "asdf-astropy>=0.7.0",
 ]
 asdf-tests = [
