@@ -53,7 +53,7 @@ cube_wcs = CompoundLowLevelWCS(wavelengths_wcs, sequence_of_maps[0].wcs)
 # This is due to the convention that WCS axis ordering is reversed
 # compared to data array axis ordering.
 
-my_cube = NDCube(sequence_of_maps.as_array(), wcs=cube_wcs)
+my_cube = NDCube(data=sequence_of_maps.data, mask=sequence_of_maps.mask, wcs=cube_wcs)
 # Produce an interactive plot of the spectral-image stack.
 my_cube.plot(plot_axes=['y', 'x', None])
 
