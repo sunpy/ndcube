@@ -7,13 +7,13 @@ Breaking Changes
 - The minimum supported version of some dependencies has increased:
 
   * python >= 3.11
-  * astropy >= 6.0
-  * gwcs >= 0.20
+  * astropy >= 6.1
+  * gwcs >= 0.21
   * numpy >= 1.26
   * scipy >= 1.12
-  * matplotlib >= 3.8
-  * mpl_animators >= 1.1
-  * reproject >= 0.11 (`#776 <https://github.com/sunpy/ndcube/pull/776>`__, `#889 <https://github.com/sunpy/ndcube/pull/889>`__)
+  * matplotlib >= 3.9
+  * mpl_animators >= 1.2
+  * reproject >= 0.14 (`#776 <https://github.com/sunpy/ndcube/pull/776>`__, `#889 <https://github.com/sunpy/ndcube/pull/889>`__)
 - Make `ndcube.NDCube.crop` exclude rightward pixel when upper limit determined from world points falls exactly on a pixel edge. (`#874 <https://github.com/sunpy/ndcube/pull/874>`__)
 
 
