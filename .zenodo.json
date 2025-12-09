@@ -20,6 +20,11 @@
             "affiliation": "SETI Institute & Lockheed Martin Solar and Astrophysics Laboratory"
         },
         {
+            "name": "Junyan Huo",
+            "orcid": "0000-0002-5469-7697",
+            "affiliation": "University College London"
+        },
+        {
             "name": "Yash Sharma",
             "orcid": "0000-0002-7861-9677",
             "affiliation": "Meta Platforms Inc., UK"
@@ -44,6 +49,9 @@
             "affiliation": "Dublin Institute of Advanced Studies (DIAS)"
         },
         {
+            "name": "Piyush Sharma"
+        },
+        {
             "name": "Ricky O'Steen",
             "orcid": "A0000-0002-2432-8946",
             "affiliation": "Space Telescope Science Institute, USA"
@@ -53,14 +61,14 @@
             "affiliation": "1 - Claude Bernard Lyon 1 University, France 2 - Institute of Theoretical Astrophysics, Norway"
         },
         {
+            "name": "Andrew Leonard",
+            "orcid": "0000-0001-5270-7487",
+            "affiliation": "Aperio Software Ltd."
+        },
+        {
             "name": "Will Barnes",
             "orcid": "0000-0001-9642-6089",
             "affiliation": "1 - NASA Goddard Space Flight Center, USA 2 - American University, USA"
-        },
-        {
-            "name": "Drew Leonard",
-            "orcid": "0000-0001-5270-7487",
-            "affiliation": "Aperio Software Ltd."
         },
         {
             "name": "Mateo Inchaurrandieta"
@@ -69,11 +77,6 @@
             "name": "Derek Homeier",
             "orcid": "0000-0002-8546-9128",
             "affiliation": "Aperio Software Ltd."
-        },
-        {
-            "name": "Junyan Huo",
-            "orcid": "0000-0002-5469-7697",
-            "affiliation": "University College London"
         },
         {
             "name": "David Stansby",
@@ -89,6 +92,14 @@
             "name": "J. Marcus Hughes",
             "orcid": "0000-0003-3410-7650",
             "affiliation": "Southwest Research Institute, USA"
+        },
+        {
+            "name": "Albert Y. Shih",
+            "orcid": "0000-0001-6874-2594",
+            "affiliation": "NASA Goddard Space Flight Center"
+        },
+        {
+            "name": "Diya Khetarpal"
         },
         {
             "name": "Kris Akira Stern",
@@ -127,6 +138,11 @@
         },
         {
             "name": "Dan F-M"
+        },
+        {
+            "name": "Eero Vaher",
+            "orcid": "0000-0001-8736-1762",
+            "affiliation": "Lund Observatory"
         },
         {
             "name": "Kritika Ranjan",
