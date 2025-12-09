@@ -1,1 +1,0 @@
-Fixed adding unitful `~ndcube.NDCube` and ``astropy.nddata.NDData`` objects backed by ``dask`` not preserving underlying arrays as ``dask`` arrays.

@@ -1,9 +1,0 @@
-The minimum supported version of some dependencies has increased:
-
-* astropy >= 5.3
-* gwcs >= 0.20
-* numpy >= 1.25
-* scipy >= 1.11
-* matplotlib >= 3.8
-* mpl_animators >= 1.1
-* reproject >= 0.11

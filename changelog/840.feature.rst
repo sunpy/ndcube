@@ -1,1 +1,0 @@
-Allows multiplication of an ``NDCube`` and ``NDData`` (with the WCS of ``NDData`` being set to None), and handles their units, uncertainties and masks.

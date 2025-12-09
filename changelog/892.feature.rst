@@ -1,1 +1,0 @@
-`~ndcube.NDCube` now accepts ``global_coords=`` and ``extra_coords=`` in the constructor of the class.

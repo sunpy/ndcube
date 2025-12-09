@@ -1,1 +1,0 @@
-Fix bug in `ndcube.NDCube.crop` revealed by trying to crop a 1-D cube. It was caused by the code creating a `~astropy.wcs.wcsapi.SlicedLowLevelWCS` object with a ``slice(None)`` slice item.

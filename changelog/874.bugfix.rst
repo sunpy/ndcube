@@ -1,1 +1,0 @@
-Prevent `~ndcube.NDCube.crop` cropping array axes of a cube to length 0 when: 1, an input point is below the extent of the cube due to misinterpreting negative array indices; 2, all point lie above the extent of the cube.

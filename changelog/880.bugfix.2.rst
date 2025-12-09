@@ -1,1 +1,0 @@
-Fix bug where error was returned rather than raised with trying to perform arithmetic operation between `~ndcube.NDCube` and an object whose WCS attribute is not ``None``.

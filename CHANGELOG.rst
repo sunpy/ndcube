@@ -1,3 +1,63 @@
+v2.4.0 (2025-12-09)
+===================
+
+Breaking Changes
+----------------
+
+- The minimum supported version of some dependencies has increased:
+
+  * python >= 3.11
+  * astropy >= 6.0
+  * gwcs >= 0.20
+  * numpy >= 1.26
+  * scipy >= 1.12
+  * matplotlib >= 3.8
+  * mpl_animators >= 1.1
+  * reproject >= 0.11 (`#776 <https://github.com/sunpy/ndcube/pull/776>`__, `#889 <https://github.com/sunpy/ndcube/pull/889>`__)
+- Make `ndcube.NDCube.crop` exclude rightward pixel when upper limit determined from world points falls exactly on a pixel edge. (`#874 <https://github.com/sunpy/ndcube/pull/874>`__)
+
+
+New Features
+------------
+
+- Add support for serialization of most `ndcube` objects to ASDF files. (`#776 <https://github.com/sunpy/ndcube/pull/776>`__)
+- Allows addition of an ``NDCube`` and ``NDData`` (with the WCS of ``NDData`` being set to None), and combines their uncertainties and masks. (`#794 <https://github.com/sunpy/ndcube/pull/794>`__)
+- Added Ellipsis functionality to ndcube.mixins.ndslicing (`#818 <https://github.com/sunpy/ndcube/pull/818>`__)
+- Added ``fill_masked`` method to ``NDCube``, a new feature which allows users to replace masked values and uncertainty values with user-given fill values,
+  to change the mask values back to False or not (Default),  and to set whether the new instance is returned (Default) or not. (`#829 <https://github.com/sunpy/ndcube/pull/829>`__)
+- Allows multiplication of an ``NDCube`` and ``NDData`` (with the WCS of ``NDData`` being set to None), and handles their units, uncertainties and masks. (`#840 <https://github.com/sunpy/ndcube/pull/840>`__)
+- Allow constructing a NDCollection with a dictionary. (`#841 <https://github.com/sunpy/ndcube/pull/841>`__)
+- Enable subtraction and division of `~ndcube.NDCube` by an `~astropy.nddata.NDData` instance (without a WCS), including uncertainty, mask and unit support. (`#880 <https://github.com/sunpy/ndcube/pull/880>`__)
+- Add new method, `ndcube.NDCube.to_nddata`, which allows easy conversion of an `~ndcube.NDCube` to a subclass of `~astropy.nddata.NDData`. Attribute values can be altered during the conversion by supplying the new values via kwargs. (`#887 <https://github.com/sunpy/ndcube/pull/887>`__)
+- `~ndcube.NDCube` now accepts ``global_coords=`` and ``extra_coords=`` in the constructor of the class. (`#892 <https://github.com/sunpy/ndcube/pull/892>`__)
+
+
+Bug Fixes
+---------
+
+- Removed the check for compatible coordinate systems within `~ndcube.NDCube.reproject_to` as it was redundant. (`#833 <https://github.com/sunpy/ndcube/pull/833>`__)
+- Fix conversion in `~ndcube.wcs.wrappers.resampled_wcs.ResampledLowLevelWCS` between original and resampled pixel grids. This fixes an accuracy issue in ``NDCube`` objects which have had the `ndcube.NDCube.rebin` method applied. (`#857 <https://github.com/sunpy/ndcube/pull/857>`__)
+- Enable length-1 inputs to `ndcube.NDCube.crop`, not only scalars. (`#863 <https://github.com/sunpy/ndcube/pull/863>`__)
+- Fix bug in `ndcube.NDCube.crop` revealed by trying to crop a 1-D cube. It was caused by the code creating a `~astropy.wcs.wcsapi.SlicedLowLevelWCS` object with a ``slice(None)`` slice item. (`#872 <https://github.com/sunpy/ndcube/pull/872>`__)
+- Prevent `~ndcube.NDCube.crop` cropping array axes of a cube to length 0 when: 1, an input point is below the extent of the cube due to misinterpreting negative array indices; 2, all point lie above the extent of the cube. (`#874 <https://github.com/sunpy/ndcube/pull/874>`__)
+- Fixed adding unitful `~ndcube.NDCube` and ``astropy.nddata.NDData`` objects backed by ``dask`` not preserving underlying arrays as ``dask`` arrays. (`#880 <https://github.com/sunpy/ndcube/pull/880>`__)
+- Fix bug where error was returned rather than raised with trying to perform arithmetic operation between `~ndcube.NDCube` and an object whose WCS attribute is not ``None``. (`#880 <https://github.com/sunpy/ndcube/pull/880>`__)
+
+
+Documentation
+-------------
+
+- Clarified an error message that cropping to single pixel is not supported only when ``keepdims=False`` (the default value). (`#869 <https://github.com/sunpy/ndcube/pull/869>`__)
+- Fix a mistake in the docstring for `ndcube.NDCube.rebin`, which misdescribed the behaviour of the ``-1`` sentinel value. (`#885 <https://github.com/sunpy/ndcube/pull/885>`__)
+
+
+Internal Changes
+----------------
+
+- Make `~ndcube.visualization.mpl_plotter.MatplotlibPlotter` only add data to line plots if at least one value of the data is unmasked and finite. (`#802 <https://github.com/sunpy/ndcube/pull/802>`__)
+- Breaks ``test_ndcube`` module into multiple to make development and maintenance easier. (`#844 <https://github.com/sunpy/ndcube/pull/844>`__)
+
+
 2.3.0 (2025-01-14)
 ==================
 

@@ -1,1 +1,0 @@
-Make `ndcube.NDCube.crop` exclude rightward pixel when upper limit determined from world points falls exactly on a pixel edge.

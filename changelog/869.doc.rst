@@ -1,1 +1,0 @@
-Clarified an error message that cropping to single pixel is not supported only when ``keepdims=False`` (the default value).
