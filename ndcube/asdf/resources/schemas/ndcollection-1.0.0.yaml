@@ -21,7 +21,7 @@ properties:
           - tag: "tag:sunpy.org:ndcube/ndcube-1.*"
           - tag: "tag:sunpy.org:ndcube/ndcubesequence-1.*"
           # Allow any other objects here as we don't want to restrict what people can save
-          - {}
+          - type: object
   aligned_axes:
     anyOf:
     - type: object
