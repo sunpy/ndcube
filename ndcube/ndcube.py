@@ -1550,8 +1550,7 @@ class NDCube(NDCubeBase):
 
         Examples
         --------
-        .. expanding-code-block:: python
-          :summary: Expand to see cube instantiated.
+        .. testsetup::
 
           >>> import astropy.units as u
           >>> import astropy.wcs
