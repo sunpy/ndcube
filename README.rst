@@ -1,6 +1,5 @@
-******
 ndcube
-******
+======
 
 |Latest Version| |codecov| |matrix| |Powered by NumFOCUS| |Powered by SunPy|
 
@@ -29,38 +28,30 @@ It combines data, uncertainties, units, metadata, masking, and coordinate transf
 It is designed to handle data of any number of dimensions and axis types (e.g. spatial, temporal, spectral, etc.) whose relationship between the array elements and the real world can be described by World Coordinate System (WCS) translations.
 
 Usage of Generative AI
-======================
+----------------------
 
 We expect authentic engagement in our community.
 **Do not post the output from Large Language Models or similar generative AI as code, issues or comments on GitHub or any other platform.**
 If you use generative AI tools as an aid in developing code or documentation changes, ensure that you fully understand the proposed changes and can explain why they are the correct approach and an improvement to the current state.
 For more information see our documentation on fair and appropriate `AI usage <https://docs.sunpy.org/en/latest/dev_guide/contents/ai_usage.html>`__.
 
-License
-=======
-
-This project is Copyright (c) The SunPy Community and licensed under
-the terms of the BSD 2-Clause license. This package is based upon
-the `Openastronomy packaging guide <https://github.com/OpenAstronomy/packaging-guide>`__
-which is licensed under the BSD 3-clause licence. See the licenses folder for
-more information.
-
 Acknowledging ndcube
-====================
+--------------------
+
 If you use ``ndcube`` is your work, we kindly ask you to `acknowledge ndcube`_ in your
 publications and presentations.
 
 .. _acknowledge ndcube: https://docs.sunpy.org/projects/ndcube/en/stable/acknowledging.html
 
 Installation
-============
+------------
 
 For detailed installation instructions, see the `installation guide`_ in the ndcube docs.
 
 .. _installation guide: https://docs.sunpy.org/projects/ndcube/en/stable/installation.html
 
 Getting Help
-============
+------------
 
 For more information or to ask questions about ndcube, check out:
 
@@ -71,7 +62,7 @@ For more information or to ask questions about ndcube, check out:
 .. _ndcube Chat Channel: https://app.element.io/#/room/#ndcube:openastronomy.org
 
 Contributing
-============
+------------
 
 If you would like to get involved, check out the `Newcomers Guide`_ section of the sunpy docs.
 This shows how to get setup with a "sunpy" workflow but the same applies for ndcube, you will just need to replace sunpy with ndcube.
@@ -82,7 +73,7 @@ Help is always welcome so let us know what you like to work on, or check out the
 .. _issues page: https://github.com/sunpy/ndcube/issues
 
 Code of Conduct
-===============
+---------------
 
 When you are interacting with the SunPy community you are asked to follow our `Code of Conduct`_.
 
