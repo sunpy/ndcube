@@ -28,28 +28,22 @@ ndcube
 It combines data, uncertainties, units, metadata, masking, and coordinate transformations into classes with unified slicing and generic coordinate transformations and plotting/animation capabilities.
 It is designed to handle data of any number of dimensions and axis types (e.g. spatial, temporal, spectral, etc.) whose relationship between the array elements and the real world can be described by World Coordinate System (WCS) translations.
 
-<<<<<<<
 Usage of Generative AI
 ======================
 
-We expect authentic engagement in our community.
-Be wary of posting output from Large Language Models or similar generative AI as comments on GitHub or any other platform, as such comments tend to be formulaic and low quality content.
-If you use generative AI tools as an aid in developing code or documentation changes, ensure that you fully understand the proposed changes and can explain why they are the correct approach and an improvement to the current state.
-=======
 We expect authentic engagement in our community.
 **Do not post the output from Large Language Models or similar generative AI as code, issues or comments on GitHub or any other platform.**
 If you use generative AI tools as an aid in developing code or documentation changes, ensure that you fully understand the proposed changes and can explain why they are the correct approach and an improvement to the current state.
 For more information see our documentation on fair and appropriate `AI usage <https://docs.sunpy.org/en/latest/dev_guide/contents/ai_usage.html>`__.
 
 License
--------
+=======
 
 This project is Copyright (c) The SunPy Community and licensed under
 the terms of the BSD 2-Clause license. This package is based upon
 the `Openastronomy packaging guide <https://github.com/OpenAstronomy/packaging-guide>`__
 which is licensed under the BSD 3-clause licence. See the licenses folder for
 more information.
->>>>>>>
 
 Acknowledging ndcube
 ====================
@@ -90,16 +84,6 @@ Help is always welcome so let us know what you like to work on, or check out the
 Code of Conduct
 ===============
 
-<<<<<<<
 When you are interacting with the SunPy community you are asked to follow our `Code of Conduct`_.
 
 .. _Code of Conduct: https://sunpy.org/coc
-=======
-the errors and assumptions that seasoned contributors have glossed over.
-
-Note: This disclaimer was originally written by
-`Adrienne Lowe <https://github.com/adriennefriend>`__ for a
-`PyCon talk <https://www.youtube.com/watch?v=6Uj746j9Heo>`__, and was adapted by
-ndcube based on its use in the README file for the
-`MetPy project <https://github.com/Unidata/MetPy>`__.
->>>>>>>
