@@ -1,35 +1,56 @@
 repos:
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.23.1
+    hooks:
+      - id: zizmor
     # This should be before any formatting hooks like isort
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.15.4"
     hooks:
       - id: ruff
         args: ["--fix"]
+        types: [python]
+        # Define here once and then reference using YAML anchor
+        exclude: &exclude_dirs ^ndcube/(data|extern)/
   - repo: https://github.com/PyCQA/isort
     rev: 8.0.1
     hooks:
       - id: isort
-        exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*|extern.*|ndcube/extern)$"
+        types: [python]
+        exclude: *exclude_dirs
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: check-ast
+        types: [python]
+        exclude: *exclude_dirs
       - id: check-case-conflict
+        types: [python]
+        exclude: *exclude_dirs
       - id: trailing-whitespace
-        exclude: ".*(.fits|.fts|.fit|.header|.txt)$"
+        types_or: [python, rst]
       - id: check-yaml
+        types: [yaml]
+        exclude: *exclude_dirs
+      - id: check-toml
+        types: [toml]
+        exclude: *exclude_dirs
       - id: debug-statements
+        types: [python]
+        exclude: *exclude_dirs
       - id: check-added-large-files
         args: ["--enforce-all", "--maxkb=1054"]
       - id: end-of-file-fixer
-        exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*|.json)$|^CITATION.rst$"
+        types_or: [python, rst]
       - id: mixed-line-ending
-        exclude: ".*(.fits|.fts|.fit|.header|.txt|tca.*)$"
+        types_or: [python, rst]
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
       - id: codespell
         args: [ "--write-changes" ]
+        types_or: [python, rst]
+        exclude: *exclude_dirs
 ci:
   autofix_prs: false
   autoupdate_schedule: "quarterly"
