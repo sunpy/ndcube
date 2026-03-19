@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/sunpy/package-template",
-  "commit": "4268346dead7b529a3d53df19bcf374bb2bbef34",
+  "commit": "93c8bc491584f214226a039a35d0cbebe305cd31",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -23,6 +23,7 @@
       "include_example_code": "n",
       "include_cruft_update_github_workflow": "y",
       "use_extended_ruff_linting": "y",
+      "matrix_room_id": "!TWSJXVpyflnZOzmSQz:matrix.org",
       "_sphinx_theme": "sunpy",
       "_parent_project": "",
       "_install_requires": "",
@@ -32,7 +33,7 @@
         ".github/workflows/sub_package_update.yml"
       ],
       "_template": "https://github.com/sunpy/package-template",
-      "_commit": "4268346dead7b529a3d53df19bcf374bb2bbef34"
+      "_commit": "93c8bc491584f214226a039a35d0cbebe305cd31"
     }
   },
   "directory": null

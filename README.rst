@@ -61,20 +61,22 @@ For more information or to ask questions about ndcube, check out:
 .. _ndcube Documentation: https://docs.sunpy.org/projects/ndcube/
 .. _ndcube Chat Channel: https://app.element.io/#/room/#ndcube:openastronomy.org
 
+
 Contributing
 ------------
 
-If you would like to get involved, check out the `Newcomers Guide`_ section of the sunpy docs.
-This shows how to get setup with a "sunpy" workflow but the same applies for ndcube, you will just need to replace sunpy with ndcube.
+We love contributions! ndcube is open source,
+built on open source, and we'd love to have you hang out in our community.
 
+If you would like to get involved, check out the `Developers Guide`_ section of the SunPy docs.
+Stop by our chat room `#ndcube:openastronomy.org`_ if you have any questions.
 Help is always welcome so let us know what you like to work on, or check out the `issues page`_ for the list of known outstanding items.
 
-.. _Newcomers Guide: https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html
+For more information on contributing to SunPy, please read our `Newcomers' guide`_.
+
+.. _Developers Guide: https://docs.sunpy.org/en/latest/dev_guide/index.html
+.. _`#ndcube:openastronomy.org`: https://app.element.io/#/room/#ndcube:openastronomy.org
 .. _issues page: https://github.com/sunpy/ndcube/issues
+.. _Newcomers' guide: https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html
 
-Code of Conduct
----------------
-
-When you are interacting with the SunPy community you are asked to follow our `Code of Conduct`_.
-
-.. _Code of Conduct: https://sunpy.org/coc
+When you are interacting with the SunPy community you are asked at to follow our `code of conduct <https://sunpy.org/coc>`__.
