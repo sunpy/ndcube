@@ -1,4 +1,4 @@
-name: Scheduled builds
+name: Scheduled build triggerer
 
 on:
   # Allow manual runs through the web UI
@@ -9,13 +9,31 @@ on:
     #        │ │ ┌───────── day of the month (1 - 31)
     #        │ │ │ ┌───────── month (1 - 12 or JAN-DEC)
     #        │ │ │ │ ┌───────── day of the week (0 - 6 or SUN-SAT)
-    - cron: '0 7 * * 1'  # Every day at 07:00 UTC
+    - cron: '0 7 * * 3'  # Every Wed at 07:00 UTC
+
+permissions: {}
 
 jobs:
-  dispatch_workflows:
+  dispatch_release_branches:
+    if: github.repository == 'sunpy/ndcube'
+    permissions:
+      actions: write
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - branch: "main"
+          - branch: "2.3"
     steps:
-      - run: gh workflow run ci.yml --repo sunpy/ndcube --ref main
-      - run: gh workflow run ci.yml --repo sunpy/ndcube --ref 2.3
-    env:
-      GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+      - name: Trigger workflow dispatch for CI workflow
+        uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4 # v1.3.1
+        with:
+          workflow: CI
+          ref: "${{ matrix.branch }}"
+
+      - name: Trigger workflow dispatch for Cron workflow
+        uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4 # v1.3.1
+        with:
+          workflow: Cron
+          ref: "${{ matrix.branch }}"
