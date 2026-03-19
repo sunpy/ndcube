@@ -91,7 +91,7 @@ jobs:
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.labels.*.name, 'Run cron CI')
       )
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2  # zizmor: ignore[unpinned-uses]
     with:
       default_python: '3.13'
       submodules: false
@@ -118,23 +118,6 @@ jobs:
       test_extras: 'all,tests'
       test_command: 'pytest -p no:warnings --doctest-rst --pyargs ndcube'
       submodules: false
-<<<<<<<
-    secrets:
-      pypi_token: ${{ secrets.pypi_token }}
-
-  notify:
-    if: always() && github.event_name == 'workflow_dispatch'
-    needs: [publish, cron]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Cadair/matrix-notify-action@main
-        with:
-          matrix_token: ${{ secrets.matrix_access_token }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          homeserver: ${{ secrets.matrix_homeserver }}
-          roomid: '!TWSJXVpyflnZOzmSQz:matrix.org'
-          ignore_pattern: '.*Load tox.*'
-=======
       save_artifacts: true
       upload_to_pypi: false
 
@@ -159,4 +142,18 @@ jobs:
 
       - name: Run upload
         uses: pypa/gh-action-pypi-publish@v1  # zizmor: ignore[unpinned-uses]
->>>>>>>
+
+  notify:
+    if: always() && github.event_name == 'workflow_dispatch'
+    needs: [build_dists, cron]
+    runs-on: ubuntu-latest
+    environment:
+      name: matrix
+    steps:
+      - uses: Cadair/matrix-notify-action@main  # zizmor: ignore[unpinned-uses]
+        with:
+          matrix_token: ${{ secrets.MATRIX_ACCESS_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          homeserver: ${{ secrets.MATRIX_HOMESERVER }}
+          roomid: '!TWSJXVpyflnZOzmSQz:matrix.org'
+          ignore_pattern: '.*(Load|report overall).*'
