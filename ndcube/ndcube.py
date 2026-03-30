@@ -687,7 +687,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                     points[i][j] = u.Quantity(value, unit=unit)
                 if value is not None:
                     try:
-                        points[i][j] = points[i][j].to(wcs.world_axis_units[j])
+                        target_unit = wcs.world_axis_units[j]
+                        points[i][j] = points[i][j].to_value(target_unit) if target_unit else points[i][j].value
                     except UnitsError as err:
                         raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
