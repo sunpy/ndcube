@@ -1,5 +1,12 @@
+<<<<<<<
 ndcube
 ======
+=======
+``ndcube``
+==========
+
+A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays.
+>>>>>>>
 
 |Latest Version| |codecov| |matrix| |Powered by NumFOCUS| |Powered by SunPy|
 
