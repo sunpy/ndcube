@@ -5,7 +5,9 @@ from itertools import chain
 import numpy as np
 
 import astropy.nddata
+import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
+from astropy.wcs.wcsapi.high_level_api import high_level_objects_to_values
 
 from ndcube.utils import wcs as wcs_utils
 from ndcube.utils.exceptions import warn_user
@@ -107,6 +109,33 @@ def sanitize_crop_inputs(points, wcs):
     return False, points, wcs
 
 
+def _high_level_objects_to_pixel_values(low_level_wcs, *world_objects):
+    """
+    Convert high-level world objects to pixel values.
+
+    Astropy's high-level WCS path can hand low-level WCSes celestial values in
+    degrees even when the low-level WCS advertises angular world units such as
+    arcsec. Normalize any string-based component units to the WCS world-axis
+    units before calling the low-level inverse transform.
+    """
+    world_values = list(high_level_objects_to_values(*world_objects, low_level_wcs=low_level_wcs))
+    for i, (_, _, attr) in enumerate(low_level_wcs.world_axis_object_components):
+        if not isinstance(attr, str):
+            continue
+        source_unit_name = attr.rsplit(".", 1)[-1]
+        target_unit_name = low_level_wcs.world_axis_units[i]
+        if not target_unit_name:
+            continue
+        try:
+            source_unit = u.Unit(source_unit_name)
+            target_unit = u.Unit(target_unit_name)
+        except Exception:  # NOQA: BLE001
+            continue
+        if source_unit != target_unit and source_unit.is_equivalent(target_unit):
+            world_values[i] = (world_values[i] * source_unit).to_value(target_unit)
+    return low_level_wcs.world_to_pixel_values(*world_values)
+
+
 def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_shape):
     """
     Find slice item that crops to minimum cube in array-space containing specified world points.
@@ -182,7 +211,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
         # in the list corresponding to its axis.
         # Use the to_pixel methods to preserve fractional indices for future rounding.
         point_pixel_indices = (sliced_wcs.world_to_pixel_values(*sliced_point) if crop_by_values
-                               else HighLevelWCSWrapper(sliced_wcs).world_to_pixel(*sliced_point))
+                               else _high_level_objects_to_pixel_values(sliced_wcs, *sliced_point))
         # For each pixel axis associated with this point, place the pixel coords for
         # that pixel axis into the corresponding list within combined_points_pixel_idx.
         if sliced_wcs.pixel_n_dim == 1:

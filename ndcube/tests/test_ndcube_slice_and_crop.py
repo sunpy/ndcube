@@ -2,7 +2,9 @@ from textwrap import dedent
 
 import numpy as np
 import pytest
+from packaging.version import Version
 
+import astropy
 import astropy.units as u
 import astropy.wcs
 from astropy.coordinates import SkyCoord, SpectralCoord
@@ -204,6 +206,33 @@ def test_crop(ndcube_4d_ln_lt_l_t):
     lower_corner = [coord[0] for coord in intervals]
     upper_corner = [coord[-1] for coord in intervals]
     expected = cube[1:3, 0:2, 0:2, 0:3]
+    output = cube.crop(lower_corner, upper_corner)
+    helpers.assert_cubes_equal(output, expected)
+
+
+@pytest.mark.skipif(Version(astropy.__version__) < Version("7.2"), reason="requires astropy>=7.2 for preserve_units")
+def test_crop_high_level_coords_with_non_degree_celestial_units():
+    data = np.arange(10000).reshape(100, 100)
+    header = fits.Header()
+    header["NAXIS"] = 2
+    header["NAXIS1"] = 100
+    header["NAXIS2"] = 100
+    header["CTYPE1"] = "RA---TAN"
+    header["CTYPE2"] = "DEC--TAN"
+    header["CUNIT1"] = "arcsec"
+    header["CUNIT2"] = "arcsec"
+    header["CRPIX1"] = 1
+    header["CRPIX2"] = 1
+    header["CRVAL1"] = 0
+    header["CRVAL2"] = 0
+    header["CDELT1"] = 1
+    header["CDELT2"] = 1
+    cube = NDCube(data, wcs=WCS(header, preserve_units=True))
+
+    lower_corner = cube.wcs.pixel_to_world(0, 56)
+    upper_corner = cube.wcs.pixel_to_world(99, 58)
+
+    expected = cube[56:59, 0:100]
     output = cube.crop(lower_corner, upper_corner)
     helpers.assert_cubes_equal(output, expected)
 
