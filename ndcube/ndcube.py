@@ -26,7 +26,7 @@ from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS, HighLevelWCSWrapper
 from astropy.wcs.wcsapi.high_level_api import values_to_high_level_objects
 
-from ndcube import utils
+from ndcube import analysis, utils
 from ndcube.extra_coords.extra_coords import ExtraCoords, ExtraCoordsABC
 from ndcube.global_coords import GlobalCoords, GlobalCoordsABC
 from ndcube.meta import NDMetaABC
@@ -34,7 +34,7 @@ from ndcube.mixins import NDCubeSlicingMixin
 from ndcube.ndcube_sequence import NDCubeSequence
 from ndcube.utils.exceptions import warn_deprecated, warn_user
 from ndcube.visualization import PlotterDescriptor
-from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
+from ndcube.wcs.wrappers import CompoundLowLevelWCS
 
 __all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 
@@ -1154,8 +1154,7 @@ class NDCube(NDCubeBase):
         new_unit = u.Unit(new_unit)
         return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
 
-    def rebin(self, bin_shape, operation=np.mean, operation_ignores_mask=False, handle_mask=np.all,
-              propagate_uncertainties=False, new_unit=None, **kwargs):
+    def rebin(self, *args, **kwargs):
         """
         Downsample array by combining contiguous pixels into bins.
 
@@ -1273,121 +1272,7 @@ class NDCube(NDCubeBase):
                  # Alternatively: new_uncerts = uncertainty.array.sum(axis=0)
                  return type(uncertainty)(new_uncert)  # Convert to original uncert type and return.
         """
-        # Sanitize input.
-        new_unit = new_unit or self.unit
-        if isinstance(bin_shape, u.Quantity):
-            bin_shape = bin_shape.to_value(u.pixel)
-        # Make sure the input bin dimensions are integers.
-        bin_shape = np.rint(bin_shape).astype(int)
-        if np.all(bin_shape == 1):
-            return self
-        # Ensure bin_size has right number of entries and each entry is an
-        # integer fraction of the array shape in each dimension.
-        data_shape = self.shape
-        naxes = len(data_shape)
-        if len(bin_shape) != naxes:
-            raise ValueError("bin_shape must have an entry for each array axis.")
-        bin_shape[bin_shape == -1] = np.array(data_shape)[bin_shape == -1]
-        if (bin_shape < 0).any():
-            raise ValueError("bin_shape should not be less than -1.")
-        if (np.mod(data_shape, bin_shape) != 0).any():
-            raise ValueError(
-                "bin shape must be an integer fraction of the data shape in each dimension. "
-                f"data shape: {data_shape};  bin shape: {bin_shape}"
-            )
-
-        # Reshape array so odd dimensions represent pixels to be binned
-        # then apply function over those axes.
-        data, sanitized_mask = _create_masked_array_for_rebinning(self.data, self.mask,
-                                                                  operation_ignores_mask)
-        reshape = np.empty(len(data_shape) + len(bin_shape), dtype=int)
-        new_shape = (data_shape / bin_shape).astype(int)
-        reshape[0::2] = new_shape
-        reshape[1::2] = bin_shape
-        reshape = tuple(reshape)
-        reshaped_data = data.reshape(reshape)
-        operation_axes = tuple(range(len(reshape) - 1, 0, -2))
-        new_data = operation(reshaped_data, axis=operation_axes)
-        if isinstance(new_data, ARRAY_MASK_MAP[np.ndarray]):
-            new_data = new_data.data
-        if handle_mask is None:
-            new_mask = None
-        elif isinstance(self.mask, (type(None), bool)):  # Preserve original mask type.
-            new_mask = self.mask
-        else:
-            reshaped_mask = self.mask.reshape(reshape)
-            new_mask = handle_mask(reshaped_mask, axis=operation_axes)
-
-        # Propagate uncertainties if propagate_uncertainties kwarg set.
-        new_uncertainty = None
-        if propagate_uncertainties:
-            if self.uncertainty is None:
-                warn_user("Uncertainties cannot be propagated as there are no uncertainties, "
-                              "i.e., the `uncertainty` keyword was never set on creation of this NDCube.")
-            elif isinstance(self.uncertainty, astropy.nddata.UnknownUncertainty):
-                warn_user("The uncertainty on this NDCube has no known way to propagate forward and so will be dropped."
-                              "To create an uncertainty that can propagate, please see "
-                              "https://docs.astropy.org/en/stable/uncertainty/index.html")
-            elif (not operation_ignores_mask
-                  and (self.mask is True or (self.mask is not None
-                                             and not isinstance(self.mask, bool)
-                                             and self.mask.all()))):
-                warn_user("Uncertainties cannot be propagated as all values are masked and "
-                              "operation_ignores_mask is False.")
-            else:
-                if propagate_uncertainties is True:
-                    propagate_uncertainties = utils.cube.propagate_rebin_uncertainties
-                # If propagate_uncertainties, use astropy's infrastructure.
-                # For this the data and uncertainty must be reshaped
-                # so the first dimension represents the flattened size of a single bin
-                # while the rest represent the shape of the new data. Then the elements
-                # in each bin can be iterated (all bins being treated in parallel) and
-                # their uncertainties propagated.
-                bin_size = bin_shape.prod()
-                flat_shape = [bin_size, *list(new_shape)]
-                dummy_axes = tuple(range(1, len(reshape), 2))
-                flat_data = np.moveaxis(reshaped_data, dummy_axes, tuple(range(naxes)))
-                flat_data = flat_data.reshape(flat_shape)
-                reshaped_uncertainty = self.uncertainty.array.reshape(tuple(reshape))
-                flat_uncertainty = np.moveaxis(reshaped_uncertainty, dummy_axes, tuple(range(naxes)))
-                flat_uncertainty = flat_uncertainty.reshape(flat_shape)
-                flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
-                if sanitized_mask is not None:
-                    reshaped_mask = self.mask.reshape(tuple(reshape))
-                    flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
-                    flat_mask = flat_mask.reshape(flat_shape)
-                else:
-                    flat_mask = None
-                # Propagate uncertainties.
-                new_uncertainty = propagate_uncertainties(
-                    flat_uncertainty, flat_data, flat_mask,
-                    operation=operation, operation_ignores_mask=operation_ignores_mask,
-                    handle_mask=handle_mask, new_unit=new_unit, **kwargs)
-
-        # Resample WCS
-        new_wcs = ResampledLowLevelWCS(self.wcs.low_level_wcs, bin_shape[::-1])
-
-        # If meta is axis-aware, drop axis-awareness for metadata associated with rebinned axes.
-        if hasattr(self.meta, "__ndcube_can_rebin__") and self.meta.__ndcube_can_rebin__:
-            new_meta = self.meta.rebin(bin_shape)
-        else:
-            new_meta = deepcopy(self.meta)
-
-        # Reform NDCube.
-        new_cube = type(self)(
-            data=new_data,
-            wcs=new_wcs,
-            uncertainty=new_uncertainty,
-            mask=new_mask,
-            meta=new_meta,
-            unit=new_unit
-        )
-        new_cube._global_coords = self._global_coords
-        # Reconstitute extra coords
-        if not self.extra_coords.is_empty:
-            new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
-
-        return new_cube
+        return analysis.rebin.rebin(self, *args, **kwargs)
 
     def squeeze(self, axis=None):
         """
