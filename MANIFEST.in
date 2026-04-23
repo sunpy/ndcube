@@ -2,16 +2,21 @@
 # All files which are tracked by git and not explicitly excluded here are included by setuptools_scm
 exclude .codecov.yaml
 exclude .mailmap
-exclude .gitignore
-exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
+exclude .coveragerc
+exclude .cruft.json
+exclude .gitignore
+exclude .isort.cfg
+exclude .pre-commit-config.yaml
+exclude .readthedocs.yaml
+exclude .rtd-environment.yml
+exclude .ruff.toml
 
 # Prune folders
+prune .github
 prune build
-prune docs/_build
-prune docs/api
+prune changelog
 global-exclude *.pyc *.o
-
 # This subpackage is only used in development checkouts
 # and should not be included in built tarballs
 prune ndcube/_dev
