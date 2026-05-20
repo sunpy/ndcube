@@ -4,6 +4,8 @@ omit =
   ndcube/*setup_package*
   ndcube/extern/*
   ndcube/version*
+  ndcube/_dev/*
+  */ndcube/_dev/*
   */ndcube/conftest.py
   */ndcube/*setup_package*
   */ndcube/extern/*
