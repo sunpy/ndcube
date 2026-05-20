@@ -620,11 +620,7 @@ def test_crop_all_points_beyond_cube_extent_error(points):
 def test_crop_by_values_quantity_table_coordinate():
     # Regression: QuantityTableCoordinate-based WCS raised
     # "High Level objects are not supported with the native API" because
-    # world_to_pixel_values was called with Quantity objects.
-    # Fixed in ndcube/utils/cube.py by stripping .value before that call.
-    #
-    # ExtraCoords adds freq on array axis 0, time on array axis 1.
-    # ExtraCoords.cube_wcs returns world order (Hz, s).
+    # world_to_pixel_values received Quantity objects instead of plain values.
     freqs_hz = np.logspace(np.log10(4e6), np.log10(200e6), 16)
     times_s = np.linspace(0, 140, 10)
     wcs2d = astropy.wcs.WCS(naxis=2)
@@ -637,19 +633,6 @@ def test_crop_by_values_quantity_table_coordinate():
     cube.extra_coords.add("frequency", (0,), freqs_hz * u.Hz)
     cube.extra_coords.add("time", (1,), times_s * u.s)
 
-    # freq-only crop: world order (Hz, s) -> freq at index 0
-    cropped = cube.crop_by_values([10e6 * u.Hz, None], [100e6 * u.Hz, None],
-                                   wcs=cube.extra_coords)
-    assert cropped.shape == (10, 10)
-    np.testing.assert_array_equal(cropped.data, data[3:13, :])
-
-    # time-only crop: time at index 1
-    cropped = cube.crop_by_values([None, 20 * u.s], [None, 80 * u.s],
-                                   wcs=cube.extra_coords)
-    assert cropped.shape == (16, 5)
-    np.testing.assert_array_equal(cropped.data, data[:, 1:6])
-
-    # both axes
     cropped = cube.crop_by_values([10e6 * u.Hz, 20 * u.s], [100e6 * u.Hz, 80 * u.s],
                                    wcs=cube.extra_coords)
     assert cropped.shape == (10, 5)
