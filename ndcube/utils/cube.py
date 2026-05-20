@@ -182,12 +182,13 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
         # in the list corresponding to its axis.
         # Use the to_pixel methods to preserve fractional indices for future rounding.
         if crop_by_values:
-            # world_to_pixel_values is the APE14 low-level API and expects plain
-            # floats, not Quantity objects.  Strip units here; the values are
+            # world_to_pixel_values is APE14 low-level API and expects plain
+            # floats, not Quantity objects. So we need to strip units here; the values are
             # already in the correct units because _get_crop_by_values_item called
             # .to(wcs.world_axis_units[j]) before reaching this point.
+            #
             # Passing Quantity objects raises TypeError in gWCS when the WCS's
-            # declared high-level type is itself Quantity (e.g. a WCS built from
+            # declared high-level type is itself Quantity (e.g., a WCS built from
             # QuantityTableCoordinate), because gWCS cannot distinguish such inputs
             # from an accidental high-level API call.
             stripped_point = [p.value if hasattr(p, "value") else p for p in sliced_point]

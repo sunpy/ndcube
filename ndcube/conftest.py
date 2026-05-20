@@ -230,12 +230,6 @@ def gwcs_2d_t_f_linear():
     """
     2D gWCS for a dynamic spectrum: uniform time (array axis 1 / X) and linear
     frequency (array axis 0 / Y).
-
-    Convention: array shape (n_freq, n_time) so frequency varies along rows
-    (Y axis) and time along columns (X axis) when plotted.
-
-    - Pixel axis 0 -> time (14 s/pixel via Scale)
-    - Pixel axis 1 -> frequency (1 MHz/pixel via Scale)
     """
     time_model = models.Scale(14.0)
     freq_model = models.Scale(1e6)
@@ -259,15 +253,6 @@ def gwcs_2d_t_f_log():
     """
     2D gWCS for a dynamic spectrum: irregularly-spaced time (array axis 1 / X)
     and log-spaced frequency (array axis 0 / Y) via Tabular1D lookup tables.
-
-    Synthetic metric-range grid (~4-978 MHz, 16 channels, ~14 s irregular
-    cadence over 10 time steps).
-
-    Convention: array shape (n_freq, n_time) so frequency varies along rows
-    (Y axis) and time along columns (X axis) when plotted.
-
-    - Pixel axis 0 -> time (Tabular1D, irregular seconds since reference)
-    - Pixel axis 1 -> frequency (Tabular1D, log-spaced 3.992-978.572 MHz)
     """
     times_s = np.array([0.0, 14.0, 27.4, 41.1, 55.2, 67.8, 82.3, 95.9, 109.1, 122.5])
     freqs_hz = np.logspace(np.log10(3.992e6), np.log10(978.572e6), 16)
