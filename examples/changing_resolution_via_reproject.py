@@ -20,8 +20,8 @@ from ndcube import NDCube
 # We start by creating an NDCube from sample solar data provided by SunPy.
 # Here we use an AIA 171 image, but the same approach can be applied to other datasets, including those with non celestial axes.
 
-image_data = fits.getdata(AIA_171_IMAGE)
-image_header = fits.getheader(AIA_171_IMAGE)
+image_data = fits.getdata(AIA_171_IMAGE, ext=1)
+image_header = fits.getheader(AIA_171_IMAGE, ext=1)
 cube = NDCube(image_data, WCS(image_header))
 
 ###########################################################################
