@@ -3,7 +3,15 @@
 Changing the resolution of an NDCube
 =====================================
 
-This example shows how to change the resolution of an NDCube by reprojecting to a finer grid.
+This example shows how to change the sampling of an NDCube by reprojecting to a different grid.
+
+Reprojecting is useful when you need a new WCS or a non-integer change in pixel scale.
+
+.. warning::
+
+    Reprojecting resamples the data, but it does not make the underlying data intrinsically higher resolution.
+    If you only need to combine aligned pixels by an integer factor to reduce resolution,
+    `~ndcube.NDCube.rebin` is usually a better choice because it operates directly on contiguous input pixels.
 """
 
 import matplotlib.pyplot as plt
@@ -18,15 +26,15 @@ from ndcube import NDCube
 
 ############################################################################
 # We start by creating an NDCube from sample solar data provided by SunPy.
-# Here we use an AIA 171 image, but the same approach can be applied to other datasets, including those with non celestial axes.
+# Here we use an AIA 171 image, but the same approach can be applied to other datasets, including those with non-celestial axes.
 
 image_data = fits.getdata(AIA_171_IMAGE, ext=1)
 image_header = fits.getheader(AIA_171_IMAGE, ext=1)
 cube = NDCube(image_data, WCS(image_header))
 
 ###########################################################################
-# Next, we define a new WCS with a finer pixel scale, note that while it is obvious that the CDELT values are changed to reflect the finer scale,
-# the CRPIX values also need to be adjusted as the reference pixel position is different on the new pixel scale.
+# Next, we define a new WCS with a finer pixel scale. This changes the sampling of the output array, but it does not make the underlying data intrinsically higher resolution.
+# Note that while it is obvious that the CDELT values are changed to reflect the finer scale, the CRPIX values also need to be adjusted as the reference pixel position is different on the new pixel scale.
 # You can scale the axes by any amount, including non-integer values, greater or less than 1.
 # You can also scale each axis independently.
 # Here we scale both spatial axes by a factor of 1.5.
@@ -43,7 +51,7 @@ new_shape = tuple(int(s * scale_factor) for s in cube.data.shape)
 reprojected_cube = cube.reproject_to(new_wcs, shape_out=new_shape)
 
 ###########################################################################
-# Our new NDCube now has a higher resolution.
+# Our new NDCube now has finer sampling.
 print(cube.data.shape, reprojected_cube.data.shape)
 
 ###########################################################################
@@ -57,7 +65,7 @@ ax1.set_xlabel('X [pixel]')
 ax1.set_ylabel('Y [pixel]')
 
 ax2.imshow(reprojected_cube.data, origin='lower', cmap=cm.sdoaia171, vmin=10, vmax=10000)
-ax2.set_title('Reprojected (Upscaled)')
+ax2.set_title('Reprojected to New Resolution')
 ax2.set_xlabel('X [pixel]')
 ax2.set_ylabel('Y [pixel]')
 plt.tight_layout()
