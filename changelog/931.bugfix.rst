@@ -1,0 +1,1 @@
+Fix compatibility with gwcs >=1.0, bump minimum supported gwcs to 0.24.
