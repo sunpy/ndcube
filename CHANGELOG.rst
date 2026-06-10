@@ -1,3 +1,20 @@
+2.4.1 (2026-06-10)
+==================
+
+Bug Fixes
+---------
+
+- Fix compatibility with gwcs >=1.0.
+
+  This required bumping minimum supported gwcs to 0.24, and concequenty asdf to >=3.3.0 and scipy to >=1.14.1. (`#931 <https://github.com/sunpy/ndcube/pull/931>`__)
+
+
+Documentation
+-------------
+
+- Added an example (:ref:`sphx_glr_generated_gallery_changing_resolution_via_reproject.py`) showing how to change resolution of an NDCube using `~ndcube.NDCube.reproject_to`. (`#893 <https://github.com/sunpy/ndcube/pull/893>`__)
+
+
 v2.4.0 (2026-01-14)
 ===================
 
