@@ -17,9 +17,9 @@ authors = [
 ]
 dependencies = [
   "astropy>=6.1.0",
-  "gwcs>=0.21.0",
+  "gwcs>=0.24.0",
   "numpy>=1.26.0",  # Keeping numpy at 1.26 for a while longer
-  "scipy>=1.12.0",
+  "scipy>=1.14.1",
 ]
 dynamic = ["version"]
 
@@ -65,7 +65,7 @@ reproject = [
   "reproject>=0.14",  # first version with 3.12 support
 ]
 asdf = [
-  "asdf>=3.1.0",
+  "asdf>=3.3.0",
   "asdf-astropy>=0.7.0",
 ]
 asdf-tests = [
