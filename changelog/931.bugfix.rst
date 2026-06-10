@@ -1,0 +1,3 @@
+Fix compatibility with gwcs >=1.0.
+
+This required bumping minimum supported gwcs to 0.24, and concequenty asdf to >=3.3.0 and scipy to >=1.14.1.

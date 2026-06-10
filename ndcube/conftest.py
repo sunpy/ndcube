@@ -224,6 +224,57 @@ def gwcs_2d_lt_ln():
 
     return (wcs.WCS(forward_transform=cel_model, output_frame=sky_frame, input_frame=input_frame))
 
+
+@pytest.fixture
+def gwcs_2d_t_f_linear():
+    """
+    2D gWCS for a dynamic spectrum: uniform time (array axis 1 / X) and linear
+    frequency (array axis 0 / Y).
+    """
+    time_model = models.Scale(14.0)
+    freq_model = models.Scale(1e6)
+
+    time_frame = cf.TemporalFrame(axes_order=(0,), unit=u.s,
+                                  reference_frame=Time("2024-03-23T00:03:23"))
+    freq_frame = cf.SpectralFrame(axes_order=(1,), unit=u.Hz, axes_names=('frequency',))
+
+    transform = time_model & freq_model
+    frame = cf.CompositeFrame([time_frame, freq_frame])
+    detector_frame = cf.CoordinateFrame(name="detector", naxes=2,
+                                        axes_order=(0, 1),
+                                        axes_type=("pixel", "pixel"),
+                                        unit=(u.pix, u.pix))
+    return wcs.WCS(forward_transform=transform, output_frame=frame,
+                   input_frame=detector_frame)
+
+
+@pytest.fixture
+def gwcs_2d_t_f_log():
+    """
+    2D gWCS for a dynamic spectrum: irregularly-spaced time (array axis 1 / X)
+    and log-spaced frequency (array axis 0 / Y) via Tabular1D lookup tables.
+    """
+    times_s = np.array([0.0, 14.0, 27.4, 41.1, 55.2, 67.8, 82.3, 95.9, 109.1, 122.5])
+    freqs_hz = np.logspace(np.log10(3.992e6), np.log10(978.572e6), 16)
+
+    time_model = models.Tabular1D(points=np.arange(10), lookup_table=times_s,
+                                  method='linear', bounds_error=False)
+    freq_model = models.Tabular1D(points=np.arange(16), lookup_table=freqs_hz,
+                                  method='linear', bounds_error=False)
+
+    time_frame = cf.TemporalFrame(axes_order=(0,), unit=u.s,
+                                  reference_frame=Time("2024-03-23T00:03:23"))
+    freq_frame = cf.SpectralFrame(axes_order=(1,), unit=u.Hz, axes_names=('frequency',))
+
+    transform = time_model & freq_model
+    frame = cf.CompositeFrame([time_frame, freq_frame])
+    detector_frame = cf.CoordinateFrame(name="detector", naxes=2,
+                                        axes_order=(0, 1),
+                                        axes_type=("pixel", "pixel"),
+                                        unit=(u.pix, u.pix))
+    return wcs.WCS(forward_transform=transform, output_frame=frame,
+                   input_frame=detector_frame)
+
 @pytest.fixture
 def wcs_4d_t_l_lt_ln():
     header = {
@@ -563,6 +614,20 @@ def extra_coords_sharing_axis():
 # NDCube Fixtures
 # NOTE: If you add more fixtures please add to the all_ndcubes fixture
 ################################################################################
+
+@pytest.fixture
+def ndcube_gwcs_2d_t_f_linear(gwcs_2d_t_f_linear):
+    shape = (16, 10)  # (n_freq, n_time): freq on Y axis, time on X axis
+    gwcs_2d_t_f_linear.array_shape = shape
+    return NDCube(data_nd(shape), wcs=gwcs_2d_t_f_linear)
+
+
+@pytest.fixture
+def ndcube_gwcs_2d_t_f_log(gwcs_2d_t_f_log):
+    shape = (16, 10)  # (n_freq, n_time): freq on Y axis, time on X axis
+    gwcs_2d_t_f_log.array_shape = shape
+    return NDCube(data_nd(shape), wcs=gwcs_2d_t_f_log)
+
 
 @pytest.fixture
 def ndcube_gwcs_4d_ln_lt_l_t(gwcs_4d_t_l_lt_ln):
@@ -1074,6 +1139,8 @@ def ndcube_1d_l(wcs_1d_l):
 
 
 @pytest.fixture(params=[
+    "ndcube_gwcs_2d_t_f_linear",
+    "ndcube_gwcs_2d_t_f_log",
     "ndcube_gwcs_4d_ln_lt_l_t",
     "ndcube_gwcs_4d_ln_lt_l_t_unit",
     "ndcube_gwcs_3d_ln_lt_l",
