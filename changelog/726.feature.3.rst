@@ -1,0 +1,1 @@
+Add a function  :func:`~ndcube.analysis.rebin.rebin_by_edges` for rebinning `~ndcube.NDCube` objects into irregularly sized bins along axes.
