@@ -260,9 +260,17 @@ class ExtraCoords(ExtraCoordsABC):
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
-        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
         converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.shape))
-        pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
+        pixel_indicies = []
+        for lut_axis, lut in self._lookup_tables:
+            ids = [lut_axis] if isinstance(lut_axis, Integral) else list(lut_axis)
+            pixel_ids = list(converter(np.array(ids)))
+            if getattr(lut, "_model_inputs_are_pixel_ordered", False):
+                # Single N-D tables expose their model inputs in pixel order,
+                # i.e. reversed with respect to the array-ordered axes given
+                # to `add`.
+                pixel_ids = pixel_ids[::-1]
+            pixel_indicies.append(pixel_ids)
         return tuple(reduce(list.__add__, pixel_indicies))
 
     @mapping.setter
@@ -360,7 +368,6 @@ class ExtraCoords(ExtraCoordsABC):
             n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
             lut_slice = tuple(item[i] for i in lut_axes)
             if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
@@ -370,6 +377,13 @@ class ExtraCoords(ExtraCoordsABC):
             if sliced_lut.is_scalar():
                 dropped_tables.add(sliced_lut)
             else:
+                kept_axes = lut_axes
+                if sliced_lut.n_inputs < len(lut_axes):
+                    # The sliced table lost pixel dimensions (e.g. an N-D
+                    # table sliced with an integer), so drop the
+                    # integer-sliced axes from the table's axes.
+                    kept_axes = tuple(ax for ax in lut_axes if not isinstance(item[ax], Integral))
+                new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in kept_axes)
                 new_lookup_tables.add((new_lut_axes, sliced_lut))
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = list(new_lookup_tables)

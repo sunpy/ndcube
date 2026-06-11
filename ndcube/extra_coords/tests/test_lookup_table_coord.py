@@ -722,3 +722,96 @@ def assert_lutc_ancilliary_data_same(lutc1, lutc2):
     assert lutc1.names == lutc2.names
     assert lutc1.physical_types == lutc2.physical_types
     assert lutc1._dropped_world_dimensions == lutc2._dropped_world_dimensions
+
+
+@pytest.fixture
+def timetable_2d():
+    times = Time("2020-01-01T00:00:00") + np.arange(12).reshape(3, 4) * u.min
+    return TimeTableCoordinate(times, names="time", physical_types="time")
+
+
+@pytest.fixture
+def quantitytable_2d():
+    return QuantityTableCoordinate(np.arange(12).reshape(3, 4) * u.km,
+                                   names="distance", physical_types="pos.distance")
+
+
+def test_2d_time_table(timetable_2d):
+    assert timetable_2d.n_inputs == 2
+    assert not timetable_2d.is_scalar()
+
+    twcs = timetable_2d.wcs
+    assert twcs.pixel_n_dim == 2
+    assert twcs.world_n_dim == 1
+    # Model inputs are in pixel order, i.e. reversed array order.
+    assert twcs.pixel_to_world(1, 2) == timetable_2d.table[2, 1]
+
+
+def test_2d_time_table_slicing(timetable_2d):
+    sub = timetable_2d[1:3, 0:2]
+    assert isinstance(sub, TimeTableCoordinate)
+    assert sub.table.shape == (2, 2)
+    assert sub.n_inputs == 2
+    assert (sub.table == timetable_2d.table[1:3, 0:2]).all()
+    # Reference time must be preserved through slicing.
+    assert sub.reference_time == timetable_2d.reference_time
+
+    row = timetable_2d[1, :]
+    assert row.table.shape == (4,)
+    assert row.n_inputs == 1
+
+    scalar = timetable_2d[1, 2]
+    assert scalar.is_scalar()
+
+    with pytest.raises(ValueError, match="Can not slice with incorrect length"):
+        timetable_2d[1]
+
+
+def test_2d_time_table_interpolate(timetable_2d):
+    new_grid0 = np.array([0.5, 1.5])
+    new_grid1 = np.array([1.0, 2.0])
+    new_coord = timetable_2d.interpolate(new_grid0, new_grid1)
+    assert isinstance(new_coord, TimeTableCoordinate)
+    expected = timetable_2d.table.mjd[0:2, 1:3].diagonal() + 0.5 * (1 * u.min).to_value(u.day) * 4
+    np.testing.assert_allclose(new_coord.table.mjd, expected)
+
+
+def test_2d_quantity_table(quantitytable_2d):
+    assert quantitytable_2d.n_inputs == 2
+    assert quantitytable_2d.ndim == 2
+    assert quantitytable_2d.shape == (3, 4)
+    assert not quantitytable_2d.is_scalar()
+
+    qwcs = quantitytable_2d.wcs
+    assert qwcs.pixel_n_dim == 2
+    assert qwcs.world_n_dim == 1
+    # Model inputs are in pixel order, i.e. reversed array order.
+    assert qwcs.pixel_to_world(1, 2) == quantitytable_2d.table[0][2, 1]
+
+
+def test_2d_quantity_table_slicing(quantitytable_2d):
+    sub = quantitytable_2d[0:2, 1:3]
+    assert isinstance(sub, QuantityTableCoordinate)
+    assert sub.table[0].shape == (2, 2)
+    assert sub.n_inputs == 2
+    assert (sub.table[0] == quantitytable_2d.table[0][0:2, 1:3]).all()
+
+    row = quantitytable_2d[0, :]
+    assert row.table[0].shape == (4,)
+    assert row.n_inputs == 1
+
+    scalar = quantitytable_2d[0, 1]
+    assert scalar.is_scalar()
+
+
+def test_2d_quantity_table_interpolate(quantitytable_2d):
+    new_grid0 = np.array([0.0, 1.0])
+    new_grid1 = np.array([1.0, 2.0])
+    new_coord = quantitytable_2d.interpolate(new_grid0, new_grid1)
+    assert isinstance(new_coord, QuantityTableCoordinate)
+    np.testing.assert_allclose(new_coord.table[0].to_value(u.km), [1.0, 6.0])
+
+
+def test_multiple_nd_tables_rejected():
+    with pytest.raises(ValueError, match="Multiple tables can only be provided if they are all 1-D"):
+        QuantityTableCoordinate(np.ones((2, 2)) * u.km, np.ones((2, 2)) * u.km)
