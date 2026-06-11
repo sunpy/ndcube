@@ -640,15 +640,18 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             if comp.count(c) > 1:
                 comp.pop(k)
         classes = [wcs.world_axis_object_classes[c][0] for c in comp]
+        expected = ", ".join(f"{name} ({cls.__name__})" for name, cls in zip(comp, classes))
         for i, point in enumerate(points):
             if len(point) != len(comp):
                 raise ValueError(f"{len(point)} components in point {i} do not match "
-                                 f"WCS with {len(comp)} components.")
+                                 f"WCS with {len(comp)} components. Each point must "
+                                 "have one entry per world object (use None for a "
+                                 f"component that should not be cropped), in order: {expected}.")
             for j, value in enumerate(point):
                 if not (value is None or isinstance(value, classes[j])):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
-                                    f"{classes[j]}.")
+                                    f"{classes[j]}. Expected order: {expected}.")
         return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims,
                                                     original_shape=self.data.shape)
 
