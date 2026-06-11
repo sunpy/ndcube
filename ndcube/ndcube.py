@@ -378,6 +378,15 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     _extra_coords = NDCubeLinkedDescriptor(ExtraCoords)
     _global_coords = NDCubeLinkedDescriptor(GlobalCoords)
 
+    # Names of additional instance attributes which subclasses want propagated
+    # (by reference) to instances derived through `_new_instance` (e.g.
+    # arithmetic operations) and `to_nddata` when the target type carries the
+    # same attributes. Subclasses should override this with a tuple of
+    # attribute names. Note these attributes are not automatically modified
+    # when a cube is sliced; subclasses with shape-dependent attributes must
+    # handle slicing themselves.
+    _extra_attrs_to_copy = ()
+
     def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
                  unit=None, copy=False, psf=None, *, extra_coords=None, global_coords=None, **kwargs):
 
@@ -642,8 +651,13 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         classes = [wcs.world_axis_object_classes[c][0] for c in comp]
         for i, point in enumerate(points):
             if len(point) != len(comp):
+                component_names = ", ".join(
+                    f"{name} ({cls.__name__})" for name, cls in zip(comp, classes))
                 raise ValueError(f"{len(point)} components in point {i} do not match "
-                                 f"WCS with {len(comp)} components.")
+                                 f"WCS with {len(comp)} components. Each point must "
+                                 "have one entry per world object (use None for a "
+                                 "component that should not be cropped), in order: "
+                                 f"{component_names}.")
             for j, value in enumerate(point):
                 if not (value is None or isinstance(value, classes[j])):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
@@ -963,6 +977,9 @@ class NDCube(NDCubeBase):
             new_cube._extra_coords = deepcopy(self.extra_coords)
         if self.global_coords is not None:
             new_cube._global_coords = deepcopy(self.global_coords)
+        for attr in self._extra_attrs_to_copy:
+            if hasattr(self, attr):
+                setattr(new_cube, attr, getattr(self, attr))
         return new_cube
 
     def __neg__(self):
@@ -1635,6 +1652,12 @@ class NDCube(NDCubeBase):
           array([[1., 1., 1.],
                  [1., 1., 1.]])
         """
+        # If the target type carries the same subclass-specific attributes as
+        # this cube, copy them by default unless explicitly overridden.
+        if isinstance(nddata_type, type) and issubclass(nddata_type, type(self)):
+            for attr in self._extra_attrs_to_copy:
+                if hasattr(self, attr):
+                    kwargs.setdefault(attr, "copy")
         # Put all NDData kwargs in a dict
         user_kwargs = {"data": data,
                        "wcs": wcs,

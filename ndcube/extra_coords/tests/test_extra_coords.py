@@ -560,3 +560,35 @@ def test_length1_extra_coord(wave_lut):
     sec = ec[item]
     assert (sec.wcs.pixel_to_world(0) == wave_lut[item]).all()
     assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()
+
+
+def test_2d_time_extra_coord_through_cube(wcs_3d_lt_ln_l):
+    cube = NDCube(np.zeros((3, 4, 5)), wcs=wcs_3d_lt_ln_l)
+    times = Time("2020-01-01T00:00:00") + np.arange(12).reshape(3, 4) * u.s
+    cube.extra_coords.add("time", (0, 1), times, physical_types="time")
+
+    (world_times,) = cube.axis_world_coords("time", wcs=cube.extra_coords)
+    assert world_times.shape == (3, 4)
+    assert (world_times == times).all()
+
+    # Slicing with ranges keeps the table 2-D.
+    sub = cube[1:3, 0:2]
+    (sub_times,) = sub.axis_world_coords("time", wcs=sub.extra_coords)
+    assert sub_times.shape == (2, 2)
+    assert (sub_times == times[1:3, 0:2]).all()
+
+    # Integer slicing drops the corresponding table dimension.
+    row = cube[1]
+    (row_times,) = row.axis_world_coords("time", wcs=row.extra_coords)
+    assert row_times.shape == (4,)
+    assert (row_times == times[1]).all()
+
+    column = cube[:, 2]
+    (column_times,) = column.axis_world_coords("time", wcs=column.extra_coords)
+    assert column_times.shape == (3,)
+    assert (column_times == times[:, 2]).all()
+
+    # Slicing away both table dimensions drops the coordinate.
+    point = cube[1, 2]
+    assert point.extra_coords.is_empty
+    assert len(point.extra_coords._dropped_tables) == 1
