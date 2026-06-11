@@ -16,7 +16,7 @@ authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=6.1.1",
+  "astropy>=7.0.2",
   "gwcs>=0.24.0",
   "numpy>=2.1.0",
   "scipy>=1.15.0",
