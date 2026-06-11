@@ -58,9 +58,9 @@ jobs:
       posargs: -n auto
       envs: |
         - linux: py314
-        - windows: py312
+        - windows: py313
         - macos: py312
-        - linux: py311-oldestdeps
+        - linux: py312-oldestdeps
         - linux: asdf_schemas
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
