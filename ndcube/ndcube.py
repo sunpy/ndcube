@@ -801,10 +801,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         """
         try:
             from reproject import reproject_adaptive, reproject_exact, reproject_interp  # noqa: PLC0415
-            from reproject.wcs_utils import has_celestial  # noqa: PLC0415
-        except ModuleNotFoundError:
-            raise ImportError(f"The {type(self).__name__}.reproject_to method requires "
-                              f"the `reproject` library to be installed.")
+            from reproject._wcs_utils import has_celestial  # noqa: PLC0415
+        except ModuleNotFoundError as e:
+            raise ImportError(
+                f"The {type(self).__name__}.reproject_to method requires "
+                f"the `reproject` library to be installed."
+            ) from e
 
         algorithms = {
             "interpolation": reproject_interp,
