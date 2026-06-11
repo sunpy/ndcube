@@ -287,7 +287,8 @@ def test_crop_missing_dimensions(ndcube_4d_ln_lt_l_t):
     interval0 = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
     lower_corner = [interval0[0], None]
     upper_corner = [interval0[-1], None]
-    with pytest.raises(ValueError, match=r'2 components in point 0 do not match WCS with 3'):
+    with pytest.raises(ValueError, match=r'2 components in point 0 do not match WCS with 3 .* in order: '
+                                         r'time \(Time\), spectral \(Quantity\), celestial \(SkyCoord\)\.$'):
         cube.crop(lower_corner, upper_corner)
 
 
@@ -299,7 +300,8 @@ def test_crop_mismatch_class(ndcube_4d_ln_lt_l_t):
     lower_corner = [coord[0] for coord in intervals]
     upper_corner = [coord[-1] for coord in intervals]
     with pytest.raises(TypeError, match=r"<class .*.SpectralCoord'> of component 0 in point 0 is "
-                                        r"incompatible with WCS component time"):
+                                        r"incompatible with WCS component time .* Expected order: "
+                                        r"time \(Time\), spectral \(Quantity\), celestial \(SkyCoord\)\.$"):
         cube.crop(lower_corner, upper_corner)
 
 
