@@ -1,0 +1,1 @@
+The error raised by `~ndcube.NDCube.crop` when a point has the wrong number of components now lists the expected world objects and their order.
