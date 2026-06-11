@@ -1,0 +1,5 @@
+The minimum supported version of Python and some dependencies has increased:
+
+* python >= 3.12
+* astropy >= 7.0
+* matplotlib >= 3.10

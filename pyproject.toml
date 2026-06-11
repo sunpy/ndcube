@@ -8,14 +8,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license-files = ["licenses/LICENSE.rst"]
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
 dependencies = [
-  "astropy>=6.1.0",
+  "astropy>=7.0.0",
   "gwcs>=0.24.0",
   "numpy>=1.26.0",  # Keeping numpy at 1.26 for a while longer
   "scipy>=1.14.1",
@@ -26,8 +26,8 @@ dynamic = ["version"]
 # These are truly optional deps or deps only used for testing where we
 # want oldestdeps to test them
 tests-optional = [
-  "dask>=2024.1.0",
-  "specutils>=1.13.0",
+  "dask>=2024.6.0",
+  "specutils>=1.16.0",
   "sunpy>=6.1.0",
 ]
 tests-only = [
@@ -57,7 +57,7 @@ docs = [
   "sphinxext-opengraph",
 ]
 plotting = [
-  "matplotlib>=3.9.0",
+  "matplotlib>=3.10.0",
   "mpl_animators>=1.2",
 ]
 reproject = [
@@ -109,13 +109,13 @@ version_file = "ndcube/_version.py"
   enabled = true
 
   [tool.gilesbot.circleci_artifacts.figure_report]
-  url = ".tmp/py310-figure/figure_test_images/fig_comparison.html"
-  message = "Click details to see the figure test comparisons, for py310-figure."
+  url = ".tmp/py314-figure/figure_test_images/fig_comparison.html"
+  message = "Click details to see the figure test comparisons, for py314-figure."
   report_on_fail = true
 
   [tool.gilesbot.circleci_artifacts.figure_report_devdeps]
-  url = ".tmp/py310-figure-devdeps/figure_test_images/fig_comparison.html"
-  message = "Click details to see the figure test comparisons for py310-figure-devdeps."
+  url = ".tmp/py314-figure-devdeps/figure_test_images/fig_comparison.html"
+  message = "Click details to see the figure test comparisons for py314-figure-devdeps."
   report_on_fail = true
 
   [tool.gilesbot.towncrier_changelog]
