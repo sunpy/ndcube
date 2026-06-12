@@ -1,0 +1,1 @@
+`~ndcube.extra_coords.TimeTableCoordinate` and `~ndcube.extra_coords.QuantityTableCoordinate` now accept a single N-D table, representing one coordinate that varies over several pixel dimensions. This allows, for example, a 2-D ``Time`` table indexed by (raster scan, raster step) to be attached to an `~ndcube.NDCube` via ``extra_coords.add`` and sliced along either axis.

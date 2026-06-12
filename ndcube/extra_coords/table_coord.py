@@ -170,7 +170,7 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
               'method': interpolation,
               **kwargs}
 
-    if len(lookup_table) == 1:
+    if lookup_table.shape == (1,):
         t = Length1Tabular(points, lookup_table, **kwargs)
     else:
         t = TabularND(points, lookup_table, **kwargs)
@@ -283,6 +283,25 @@ class BaseTableCoordinate(abc.ABC):
         """
 
     @property
+    def _model_inputs_are_pixel_ordered(self):
+        """
+        True when this coordinate's model inputs are in pixel order.
+
+        Single N-D tables span several pixel dimensions with one model. Their
+        model inputs are exposed in pixel order (reversed array order) so the
+        resulting WCS follows the APE-14 convention expected by
+        `~ndcube.NDCube`.
+        """
+        return False
+
+    @staticmethod
+    def _reorder_inputs_to_pixel(model):
+        """
+        Reverse a model's inputs from array order to pixel order.
+        """
+        return models.Mapping(tuple(range(model.n_inputs))[::-1]) | model
+
+    @property
     def wcs(self):
         """
         A gWCS object representing all the coordinates.
@@ -301,15 +320,19 @@ class QuantityTableCoordinate(BaseTableCoordinate):
     """
     A lookup table up built on `~astropy.units.Quantity`.
 
-    Quantities must be 1-D but more than one can be provided to represent
-    different dimensions of an N-D coordinate.
+    Either a single N-D Quantity, or multiple 1-D Quantities can be provided.
+    A single N-D Quantity represents one physical coordinate which varies over
+    N pixel dimensions. Multiple 1-D Quantities represent the different
+    dimensions of an N-D coordinate, with each table corresponding to one
+    pixel dimension.
 
     Parameters
     ----------
     tables: one or more `~astropy.units.Quantity`
-        The coordinates. Must be 1 dimensionsal. If coordinate system is >1D,
-        multiple 1-D Quantities can be provided representing the different
-        dimensions
+        The coordinates. Either a single Quantity of any dimensionality
+        representing one coordinate varying over that many pixel dimensions,
+        or multiple 1-D Quantities representing the different dimensions of
+        an N-D coordinate system.
 
     names: `str` or `list` of `str`
         Custom names for the components of the QuantityTableCoord. If provided,
@@ -329,10 +352,10 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             raise u.UnitsError("All tables must have equivalent units.")
         ndim = len(tables)
         dims = np.array([t.ndim for t in tables])
-        if any(dims > 1):
+        if len(tables) > 1 and any(dims > 1):
             raise ValueError(
-                "Currently all tables must be 1-D. If you need >1D support, please "
-                "raise an issue at https://github.con/sunpy/ndcube/issues")
+                "Multiple tables can only be provided if they are all 1-D. "
+                "A single N-D table representing one coordinate is also supported.")
 
         if isinstance(names, str):
             names = [names]
@@ -379,11 +402,25 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         if self.physical_types:
             new_components["physical_types"].append(self.physical_types[i])
 
+    @property
+    def _single_nd_table(self):
+        return len(self.table) == 1 and self.table[0].ndim > 1
+
     def __getitem__(self, item):
         if isinstance(item, (slice, Integral)):
             item = (item,)
         if not (len(item) == len(self.table) or len(item) == self.table[0].ndim):
             raise ValueError("Can not slice with incorrect length")
+
+        if self._single_nd_table:
+            # A single N-D table represents one world coordinate, so slicing
+            # reduces the table but never splits or drops individual world
+            # components.
+            ret_table = type(self)(self.table[0][item],
+                                   names=self.names,
+                                   physical_types=self.physical_types)
+            ret_table._dropped_world_dimensions = copy.deepcopy(self._dropped_world_dimensions)
+            return ret_table
 
         new_components = defaultdict(list)
         new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
@@ -400,7 +437,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
     @property
     def n_inputs(self):
-        return len(self.table)
+        return self.ndim
 
     def is_scalar(self):
         return all(t.shape == () for t in self.table)
@@ -413,11 +450,19 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         return _generate_generic_frame(len(self.table), self.unit, self.names, self.physical_types)
 
     @property
+    def _model_inputs_are_pixel_ordered(self):
+        # Docstring inherited.
+        return self._single_nd_table
+
+    @property
     def model(self):
         """
         Generate the Astropy Model for this LookupTable.
         """
-        return _model_from_quantity(self.table, True)
+        model = _model_from_quantity(self.table, True)
+        if self._single_nd_table:
+            model = self._reorder_inputs_to_pixel(model)
+        return model
 
     @property
     def ndim(self):
@@ -427,6 +472,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         Note this may be different from the number of the dimensions in the
         underlying table(s) if different tables represent different dimensions.
         """
+        if self._single_nd_table:
+            return self.table[0].ndim
         return len(self.table)
 
     @property
@@ -437,6 +484,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         Note this may be different from the shape of the underlying table(s)
         if different tables represent a different dimensions.
         """
+        if self._single_nd_table:
+            return self.table[0].shape
         return tuple(len(t) for t in self.table)
 
     def interpolate(self, *new_array_grids, **kwargs):
@@ -472,10 +521,16 @@ class QuantityTableCoordinate(BaseTableCoordinate):
             raise ValueError("New array grids must all be same shape.")
         # Build array grids for non-interpolated table.
         old_array_grids = tuple(np.arange(d) for d in self.shape)
-        # Iterate through tables and interpolate each.
-        new_tables = [
-            np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
-            for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
+        if self._single_nd_table:
+            table = self.table[0]
+            new_values = scipy.interpolate.interpn(
+                old_array_grids, table.value, np.stack(new_array_grids, axis=-1), **kwargs)
+            new_tables = [new_values * table.unit]
+        else:
+            # Iterate through tables and interpolate each.
+            new_tables = [
+                np.interp(new_grid, old_grid, t.value, **kwargs) * t.unit
+                for new_grid, old_grid, t in zip(new_array_grids, old_array_grids, self.table)]
         # Rebuild return interpolated coord.
         new_coord = type(self)(*new_tables, names=self.names, physical_types=self.physical_types)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
@@ -699,12 +754,16 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
 class TimeTableCoordinate(BaseTableCoordinate):
     """
-    A lookup table based on a `~astropy.time.Time`, will always be one dimensional.
+    A lookup table based on a `~astropy.time.Time`.
+
+    The table represents a single time coordinate which can vary over one or
+    more pixel dimensions, i.e. the input `~astropy.time.Time` can be N-D.
 
     Parameters
     ----------
     table: `~astropy.time.Time`
-        Time coordinates. Only one can be provided and must be 1D.
+        Time coordinates. Only one can be provided. An N-D table corresponds
+        to N pixel dimensions.
 
     names: `str` or `list` of `str`
         Custom names for the components of the SkyCoord. If provided, a name must
@@ -735,11 +794,15 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         super().__init__(*tables, mesh=False, names=names, physical_types=physical_types)
         self.table = self.table[0]
-        self.reference_time = reference_time or self.table[0]
+        self.reference_time = reference_time or self.table.ravel()[0]
 
     def __getitem__(self, item):
-        if not (isinstance(item, (slice, Integral)) or len(item) == 1):
+        if isinstance(item, (slice, Integral)):
+            item = (item,)
+        if len(item) != max(self.table.ndim, 1):
             raise ValueError("Can not slice with incorrect length")
+        if len(item) == 1:
+            item = item[0]
 
         return type(self)(self.table[item],
                           names=self.names,
@@ -748,7 +811,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
     @property
     def n_inputs(self):
-        return 1  # The time table has to be one dimensional
+        return max(self.table.ndim, 1)
 
     def is_scalar(self):
         return self.table.shape == ()
@@ -764,6 +827,11 @@ class TimeTableCoordinate(BaseTableCoordinate):
                                 name="TemporalFrame")
 
     @property
+    def _model_inputs_are_pixel_ordered(self):
+        # Docstring inherited.
+        return self.table.ndim > 1
+
+    @property
     def model(self):
         """
         Generate the Astropy Model for this LookupTable.
@@ -771,9 +839,12 @@ class TimeTableCoordinate(BaseTableCoordinate):
         time = self.table
         deltas = (time - self.reference_time).to(u.s)
 
-        return _model_from_quantity((deltas,), mesh=False)
+        model = _model_from_quantity((deltas,), mesh=False)
+        if deltas.ndim > 1:
+            model = self._reorder_inputs_to_pixel(model)
+        return model
 
-    def interpolate(self, new_array_grids, **kwargs):
+    def interpolate(self, *new_array_grids, **kwargs):
         """
         Interpolate TimeTableCoordinate to new array index grids.
 
@@ -794,10 +865,18 @@ class TimeTableCoordinate(BaseTableCoordinate):
         """
         if self.is_scalar():
             raise ValueError("Cannot interpolate a scalar TimeTableCoordinate.")
-        # Build pixel grids for current TimeTableCoord.
-        old_array_grids = np.arange(len(self.table))
+        if len(new_array_grids) != self.table.ndim:
+            raise ValueError(
+                f"A new array grid must be given for each array axis, i.e. {self.table.ndim}")
         # Interpolate using MJD format and convert back to a Time object.
-        new_table = np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs)
+        if self.table.ndim == 1:
+            # Build pixel grids for current TimeTableCoord.
+            old_array_grids = np.arange(len(self.table))
+            new_table = np.interp(new_array_grids[0], old_array_grids, self.table.mjd, **kwargs)
+        else:
+            old_array_grids = tuple(np.arange(d) for d in self.table.shape)
+            new_table = scipy.interpolate.interpn(
+                old_array_grids, self.table.mjd, np.stack(new_array_grids, axis=-1), **kwargs)
         new_table = Time(new_table, scale=self.table.scale, format="mjd")
         new_table.format = self.table.format
         # Rebuild new TimeTableCoord and return.
