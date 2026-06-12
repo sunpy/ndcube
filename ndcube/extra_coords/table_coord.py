@@ -294,6 +294,13 @@ class BaseTableCoordinate(abc.ABC):
         """
         return False
 
+    @staticmethod
+    def _reorder_inputs_to_pixel(model):
+        """
+        Reverse a model's inputs from array order to pixel order.
+        """
+        return models.Mapping(tuple(range(model.n_inputs))[::-1]) | model
+
     @property
     def wcs(self):
         """
@@ -430,9 +437,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
     @property
     def n_inputs(self):
-        if self._single_nd_table:
-            return self.table[0].ndim
-        return len(self.table)
+        return self.ndim
 
     def is_scalar(self):
         return all(t.shape == () for t in self.table)
@@ -456,9 +461,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         """
         model = _model_from_quantity(self.table, True)
         if self._single_nd_table:
-            # Expose the inputs of the N-D table in pixel order, i.e. reversed
-            # with respect to the table's (array-ordered) dimensions.
-            model = models.Mapping(tuple(range(model.n_inputs))[::-1]) | model
+            model = self._reorder_inputs_to_pixel(model)
         return model
 
     @property
@@ -838,9 +841,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         model = _model_from_quantity((deltas,), mesh=False)
         if deltas.ndim > 1:
-            # Expose the inputs of the N-D table in pixel order, i.e. reversed
-            # with respect to the table's (array-ordered) dimensions.
-            model = models.Mapping(tuple(range(model.n_inputs))[::-1]) | model
+            model = self._reorder_inputs_to_pixel(model)
         return model
 
     def interpolate(self, *new_array_grids, **kwargs):
@@ -864,7 +865,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
         """
         if self.is_scalar():
             raise ValueError("Cannot interpolate a scalar TimeTableCoordinate.")
-        if len(new_array_grids) != max(self.table.ndim, 1):
+        if len(new_array_grids) != self.table.ndim:
             raise ValueError(
                 f"A new array grid must be given for each array axis, i.e. {self.table.ndim}")
         # Interpolate using MJD format and convert back to a Time object.

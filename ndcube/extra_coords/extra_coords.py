@@ -265,7 +265,7 @@ class ExtraCoords(ExtraCoordsABC):
         for lut_axis, lut in self._lookup_tables:
             ids = [lut_axis] if isinstance(lut_axis, Integral) else list(lut_axis)
             pixel_ids = list(converter(np.array(ids)))
-            if getattr(lut, "_model_inputs_are_pixel_ordered", False):
+            if lut._model_inputs_are_pixel_ordered:
                 # Single N-D tables expose their model inputs in pixel order,
                 # i.e. reversed with respect to the array-ordered axes given
                 # to `add`.
