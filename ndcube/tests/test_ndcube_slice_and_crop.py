@@ -637,3 +637,28 @@ def test_crop_by_values_quantity_table_coordinate():
                                    wcs=cube.extra_coords)
     assert cropped.shape == (10, 5)
     np.testing.assert_array_equal(cropped.data, data[3:13, 1:6])
+
+
+def test_slice_custom_state_hook(ndcube_3d_ln_lt_l):
+    class StatefulCube(NDCube):
+        def _slice_custom_state(self, sliced_cube, item):
+            sliced_cube.seen_items = [*getattr(self, "seen_items", []), item]
+
+    cube = StatefulCube(ndcube_3d_ln_lt_l.data, ndcube_3d_ln_lt_l.wcs)
+
+    # The hook receives the sanitized item: one int/slice per data axis.
+    assert cube[0].seen_items == [(0, slice(None), slice(None))]
+    assert cube[..., 1:3].seen_items == [(slice(None), slice(None), slice(1, 3))]
+    assert cube[:, 1, 1:3].seen_items == [(slice(None), 1, slice(1, 3))]
+
+    # Slicing a sliced cube calls the hook again on the new cube.
+    chained = cube[..., 1:3][1:2]
+    assert chained.seen_items == [
+        (slice(None), slice(None), slice(1, 3)),
+        (slice(1, 2), slice(None), slice(None)),
+    ]
+
+
+def test_slice_custom_state_default_is_noop(ndcube_3d_ln_lt_l):
+    sliced = ndcube_3d_ln_lt_l[0]
+    assert not hasattr(sliced, "seen_items")
