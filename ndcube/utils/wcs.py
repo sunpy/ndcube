@@ -89,7 +89,7 @@ def convert_between_array_and_pixel_axes(axis: npt.NDArray[np.integer[Any]], nax
         The axis number(s) after reflection.
     """
     # Check type of input.
-    if not isinstance(axis, np.ndarray):
+    if not isinstance(axis, np.ndarray):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"input must be of array type. Got type: {type(axis)}")
     if axis.dtype.char not in np.typecodes['AllInteger']:
         raise TypeError(f"input dtype must be of int type. Got dtype: {axis.dtype})")

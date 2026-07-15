@@ -3,13 +3,24 @@ import copy
 import numbers
 import collections.abc
 from types import MappingProxyType
+from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
 
 __all__ = ["NDMeta", "NDMetaABC"]
 
+Axes = npt.NDArray[np.integer[Any]]
+# The axis/axes with which a piece of metadata is associated, either as
+# supplied by a caller (a scalar int, a sequence of them, or an array of
+# them) or as stored internally once sanitized (always an array of ints).
+AxisSpec = int | collections.abc.Sequence[int] | Axes
+# A data shape, either as stored internally (an array of ints) or as an
+# arbitrary sequence of ints handed in by a caller.
+ShapeLike = collections.abc.Sequence[int] | Axes
 
-class NDMetaABC(collections.abc.Mapping):
+
+class NDMetaABC(collections.abc.Mapping[str, Any]):
     """
     A sliceable object for storing metadata.
 
@@ -76,7 +87,7 @@ class NDMetaABC(collections.abc.Mapping):
 
     @property
     @abc.abstractmethod
-    def axes(self):
+    def axes(self) -> collections.abc.Mapping[str, Axes]:
         """
         Mapping from metadata keys to axes with which they are associated.
 
@@ -85,7 +96,7 @@ class NDMetaABC(collections.abc.Mapping):
 
     @property
     @abc.abstractmethod
-    def key_comments(self):
+    def key_comments(self) -> collections.abc.Mapping[str, str]:
         """
         Mapping from metadata keys to associated comments.
 
@@ -94,13 +105,20 @@ class NDMetaABC(collections.abc.Mapping):
 
     @property
     @abc.abstractmethod
-    def data_shape(self):
+    def data_shape(self) -> Axes:
         """
         The shape of the data with which the metadata is associated.
         """
 
     @abc.abstractmethod
-    def add(self, name, value, key_comment=None, axes=None, overwrite=False):
+    def add(
+        self,
+        name: str,
+        value: Any,
+        key_comment: str | None = None,
+        axes: AxisSpec | None = None,
+        overwrite: bool = False,
+    ) -> None:
         """
         Add a new piece of metadata to instance.
 
@@ -126,7 +144,7 @@ class NDMetaABC(collections.abc.Mapping):
 
     @property
     @abc.abstractmethod
-    def slice(self):
+    def slice(self) -> "_NDMetaSlicer":
         """
         A helper class which, when sliced, returns a new NDMeta with axis- and grid-aligned metadata sliced.
 
@@ -136,40 +154,45 @@ class NDMetaABC(collections.abc.Mapping):
         """
 
     @abc.abstractmethod
-    def rebin(self, rebinned_axes, new_shape):
+    def rebin(self, bin_shape: collections.abc.Sequence[int]) -> "NDMetaABC":
         """
         Adjusts grid-aware metadata to stay consistent with rebinned data.
         """
 
 
-class NDMeta(dict, NDMetaABC):
+class NDMeta(dict[str, Any], NDMetaABC):
     # Docstring in ABC
     __ndcube_can_slice__ = True
     __ndcube_can_rebin__ = True
 
-    def __init__(self, meta=None, key_comments=None, axes=None, data_shape=None):
-        self._original_meta = meta
-        if data_shape is None:
-            self._data_shape = np.array([], dtype=int)
-        else:
-            self._data_shape = np.asarray(data_shape).astype(int)
+    def __init__(
+        self,
+        meta: collections.abc.Mapping[str, Any] | None = None,
+        key_comments: collections.abc.Mapping[str, str] | None = None,
+        axes: collections.abc.Mapping[str, AxisSpec] | None = None,
+        data_shape: collections.abc.Sequence[int] | None = None,
+    ) -> None:
+        self._data_shape: Axes = (
+            np.array([], dtype=int) if data_shape is None else np.asarray(data_shape).astype(int)
+        )
 
         if meta is None:
             meta = {}
+        self._original_meta: collections.abc.Mapping[str, Any] = meta
         super().__init__(meta.items())
         meta_keys = meta.keys()
 
         if key_comments is None:
-            self._key_comments = {}
+            self._key_comments: dict[str, str] = {}
         else:
             if not set(key_comments.keys()).issubset(set(meta_keys)):
                 raise ValueError(
                     "All comments must correspond to a value in meta under the same key."
                 )
-            self._key_comments = key_comments
+            self._key_comments = dict(key_comments)
 
         if axes is None:
-            self._axes = {}
+            self._axes: dict[str, Axes] = {}
         else:
             axes = dict(axes)
             if not set(axes.keys()).issubset(set(meta_keys)):
@@ -178,60 +201,61 @@ class NDMeta(dict, NDMetaABC):
             self._axes = {key:self._sanitize_axis_value(axis, meta[key], key)
                           for key, axis in axes.items()}
 
-    def _sanitize_axis_value(self, axis, value, key):
+    def _sanitize_axis_value(self, axis: AxisSpec, value: Any, key: str) -> Axes:
         axis_err_msg = ("Values in axes must be an integer or iterable of integers giving "
                         f"the data axis/axes associated with the metadata. axis = {axis}.")
         if isinstance(axis, numbers.Integral):
-            axis = (axis,)
-        if len(axis) == 0:
+            axis_seq: collections.abc.Sequence[int] | Axes = (int(axis),)
+        else:
+            axis_seq = cast("collections.abc.Sequence[int] | Axes", axis)
+        if len(axis_seq) == 0:
             raise ValueError(axis_err_msg)
-        # Verify each entry in axes is an iterable of ints or a scalar.
-        if not (isinstance(axis, collections.abc.Iterable)
-                and all(isinstance(i, numbers.Integral) for i in axis)):
+        # Verify each entry in axes is an integer.
+        if not all(isinstance(i, numbers.Integral) for i in axis_seq):
             raise ValueError(axis_err_msg)
         # If metadata's axis/axes include axis beyond current data shape, extend it.
         data_shape = self.data_shape
-        if max(axis) >= len(data_shape):
+        if max(axis_seq) >= len(data_shape):
             data_shape = np.concatenate((data_shape,
-                                         np.zeros(max(axis) + 1 - len(data_shape), dtype=int)))
+                                         np.zeros(max(axis_seq) + 1 - len(data_shape), dtype=int)))
         # Check whether metadata is compatible with data shape based on shapes
         # of metadata already present.
-        axis = np.asarray(axis)
+        axis_arr: Axes = np.asarray(axis_seq)
         if _not_scalar(value):
-            axis_shape = data_shape[axis]
+            axis_shape = data_shape[axis_arr]
             if not _is_axis_aligned(value, axis_shape):
                 # If metadata corresponds to previously unconstrained axis, update data_shape.
                 idx0 = axis_shape == 0
                 if idx0.any():
                     axis_shape[idx0] = np.array(_get_metadata_shape(value))[idx0]
-                    data_shape[axis] = axis_shape
+                    data_shape[axis_arr] = axis_shape
                 # Confirm metadata is compatible with data shape.
                 if not _is_grid_aligned(value, axis_shape):
                     raise ValueError(
-                        f"{key} must have same shape {tuple(data_shape[axis])} "
-                        f"as its associated axes {axis}, ",
-                        f"or same length as number of associated axes ({len(axis)}). "
+                        f"{key} must have same shape {tuple(data_shape[axis_arr])} "
+                        f"as its associated axes {axis_arr}, ",
+                        f"or same length as number of associated axes ({len(axis_arr)}). "
                         f"Has shape {value.shape if hasattr(value, 'shape') else len(value)}")
-        elif len(axis) != 1:
+        elif len(axis_arr) != 1:
             raise ValueError("Scalar and str metadata can only be assigned to one axis. "
-                             f"key = {key}; value = {value}; axes = {axis}")
+                             f"key = {key}; value = {value}; axes = {axis_arr}")
         self._data_shape = data_shape
-        return axis
+        return axis_arr
 
     @property
-    def key_comments(self):
+    def key_comments(self) -> dict[str, str]:
         return self._key_comments
 
     @property
-    def axes(self):
+    def axes(self) -> dict[str, Axes]:
         return self._axes
 
     @property
-    def data_shape(self):
+    def data_shape(self) -> Axes:
         return self._data_shape
 
     @data_shape.setter
-    def data_shape(self, new_shape):
+    def data_shape(self, new_shape: collections.abc.Sequence[int]) -> None:
         """
         Set data shape to new shape.
 
@@ -242,24 +266,31 @@ class NDMeta(dict, NDMetaABC):
         new_shape: array-like
             The new shape of the data. Elements must of of type `int`.
         """
-        new_shape = np.round(new_shape).astype(int)
-        if (new_shape < 0).any():
+        shape_arr: Axes = np.round(new_shape).astype(int)
+        if (shape_arr < 0).any():
             raise ValueError("new_shape cannot include negative numbers.")
         # Confirm input shape agrees with shapes of pre-existing metadata.
         old_shape = self.data_shape
-        if len(new_shape) != len(old_shape) and len(self._axes) > 0:
+        if len(shape_arr) != len(old_shape) and len(self._axes) > 0:
             n_meta_axes = max([ax.max() for ax in self._axes.values()]) + 1
             old_shape = np.zeros(n_meta_axes, dtype=int)
             for key, ax in self._axes.items():
                 old_shape[ax] = np.asarray(self[key].shape)
         # Axes of length 0 are deemed to be of unknown length, and so do not have to match.
         idx, = np.where(old_shape > 0)
-        if len(idx) > 0 and (old_shape[idx] != new_shape[idx]).any():
+        if len(idx) > 0 and (old_shape[idx] != shape_arr[idx]).any():
             raise ValueError("new_shape not compatible with pre-existing metadata. "
-                             f"old shape = {old_shape}, new_shape = {new_shape}")
-        self._data_shape = new_shape
+                             f"old shape = {old_shape}, new_shape = {shape_arr}")
+        self._data_shape = shape_arr
 
-    def add(self, name, value, key_comment=None, axes=None, overwrite=False):
+    def add(
+        self,
+        name: str,
+        value: Any,
+        key_comment: str | None = None,
+        axes: AxisSpec | None = None,
+        overwrite: bool = False,
+    ) -> None:
         # Docstring in ABC.
         if name in self.keys() and overwrite is not True:
             raise KeyError(f"'{name}' already exists. "
@@ -287,14 +318,14 @@ class NDMeta(dict, NDMetaABC):
         # This must be done after updating self._axes otherwise it may error.
         self.__setitem__(name, value)
 
-    def __delitem__(self, name):
+    def __delitem__(self, name: str) -> None:
         if name in self._key_comments:
             del self._key_comments[name]
         if name in self._axes:
             del self._axes[name]
         super().__delitem__(name)
 
-    def __setitem__(self, key, val):
+    def __setitem__(self, key: str, val: Any) -> None:
         axis = self.axes.get(key, None)
         if axis is not None:
             if _not_scalar(val):
@@ -309,15 +340,15 @@ class NDMeta(dict, NDMetaABC):
         super().__setitem__(key, val)
 
     @property
-    def original_meta(self):
+    def original_meta(self) -> MappingProxyType[str, Any]:
         return MappingProxyType(self._original_meta)
 
     @property
-    def slice(self):
+    def slice(self) -> "_NDMetaSlicer":
         # Docstring in ABC.
         return _NDMetaSlicer(self)
 
-    def rebin(self, bin_shape):
+    def rebin(self, bin_shape: collections.abc.Sequence[int]) -> "NDMeta":
         """
         Adjusts axis-aware metadata to stay consistent with a rebinned `~ndcube.NDCube`.
 
@@ -332,21 +363,21 @@ class NDMeta(dict, NDMetaABC):
             The number of pixels in a bin in each dimension.
         """
         # Sanitize input
-        bin_shape = np.round(bin_shape).astype(int)
+        bin_shape_arr: Axes = np.round(bin_shape).astype(int)
         data_shape = self.data_shape
-        bin_shape = bin_shape[:len(data_shape)]  # Drop info on axes not defined by NDMeta.
-        if (np.mod(data_shape, bin_shape) != 0).any():
+        bin_shape_arr = bin_shape_arr[:len(data_shape)]  # Drop info on axes not defined by NDMeta.
+        if (np.mod(data_shape, bin_shape_arr) != 0).any():
             raise ValueError("bin_shape must be integer factors of their associated axes.")
         # Remove axis-awareness from grid-aligned metadata associated with rebinned axes.
-        rebinned_axes = set(np.where(bin_shape != 1)[0])
+        rebinned_axes = set(np.where(bin_shape_arr != 1)[0])
         new_meta = copy.deepcopy(self)
-        null_set = set()
+        null_set: set[np.integer[Any]] = set()
         for name, axes in self.axes.items():
             if (_is_grid_aligned(self[name], data_shape[axes])
                 and set(axes).intersection(rebinned_axes) != null_set):
                 del new_meta._axes[name]
         # Update data shape.
-        new_meta._data_shape = new_meta._data_shape // bin_shape
+        new_meta._data_shape = new_meta._data_shape // bin_shape_arr
         return new_meta
 
 
@@ -356,13 +387,13 @@ class _NDMetaSlicer:
 
     Parameters
     ----------
-    meta: `NDMetaABC`
+    meta: `NDMeta`
         The metadata object to slice.
     """
-    def __init__(self, meta):
+    def __init__(self, meta: "NDMeta") -> None:
         self.meta = meta
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> "NDMeta":
         data_shape = self.meta.data_shape
         if len(data_shape) == 0:
             raise TypeError("NDMeta object does not have a shape and so cannot be sliced.")
@@ -407,7 +438,7 @@ class _NDMetaSlicer:
                 raise TypeError("Unrecognized slice type. "
                                 "Must be an int, slice and tuple of the same.")
         kept_axes = np.invert(dropped_axes)
-        new_meta._data_shape = new_shape[kept_axes]
+        new_meta._data_shape = new_shape[kept_axes]  # pyright: ignore[reportPrivateUsage]
 
         # Slice all metadata associated with axes.
         for key, value in self.meta.items():
@@ -460,7 +491,7 @@ class _NDMetaSlicer:
         return new_meta
 
 
-def _not_scalar(value):
+def _not_scalar(value: Any) -> bool:
     return (
         (
          hasattr(value, "shape")
@@ -472,14 +503,14 @@ def _not_scalar(value):
         ))
 
 
-def _is_scalar(value):
+def _is_scalar(value: Any) -> bool:
     return not _not_scalar(value)
 
 
-def _get_metadata_shape(value):
+def _get_metadata_shape(value: Any) -> tuple[int, ...]:
     return value.shape if hasattr(value, "shape") else (len(value),)
 
-def _is_grid_aligned(value, axis_shape):
+def _is_grid_aligned(value: Any, axis_shape: ShapeLike) -> bool:
     if _is_scalar(value):
         return False
     value_shape = _get_metadata_shape(value)
@@ -488,6 +519,6 @@ def _is_grid_aligned(value, axis_shape):
     return True
 
 
-def _is_axis_aligned(value, axis_shape):
+def _is_axis_aligned(value: Any, axis_shape: ShapeLike) -> bool:
     len_value = len(value) if _not_scalar(value) else 1
     return not _is_grid_aligned(value, axis_shape) and len_value == len(axis_shape)
