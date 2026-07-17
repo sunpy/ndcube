@@ -108,6 +108,13 @@ class ExtraCoordsABC(abc.ABC):
     def is_empty(self):
         """Return True if no extra coords present, else return False."""
 
+    @property
+    @abc.abstractmethod
+    def dropped_world_dimensions(self) -> dict[str, Any]:
+        """
+        Return an APE-14 like representation of any sliced out world dimensions.
+        """
+
     @abc.abstractmethod
     def __getitem__(self, item: str | int | slice | Iterable[str | int | slice]) -> "ExtraCoordsABC":
         """
