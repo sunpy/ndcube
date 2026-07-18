@@ -1,14 +1,22 @@
 import inspect
+from typing import TYPE_CHECKING, Any, TypeAlias
 from functools import wraps
 from itertools import chain
+from collections.abc import Callable, Iterable
 
 import numpy as np
+import numpy.typing as npt
 
 import astropy.nddata
 from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, HighLevelWCSWrapper, SlicedLowLevelWCS
 
 from ndcube.utils import wcs as wcs_utils
 from ndcube.utils.exceptions import warn_user
+
+if TYPE_CHECKING:
+    from ndcube.extra_coords.extra_coords import ExtraCoordsABC
+
+WCSType: TypeAlias = BaseHighLevelWCS | BaseLowLevelWCS
 
 __all__ = [
     "get_crop_item_from_points",
@@ -18,7 +26,7 @@ __all__ = [
 ]
 
 
-def sanitize_wcs(func):
+def sanitize_wcs(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     A wrapper for NDCube methods to sanitise the wcs argument.
 
@@ -34,7 +42,7 @@ def sanitize_wcs(func):
     from ndcube.extra_coords.extra_coords import ExtraCoords  # noqa: PLC0415
 
     @wraps(func)
-    def wcs_wrapper(*args, **kwargs):
+    def wcs_wrapper(*args: Any, **kwargs: Any) -> Any:
         sig = inspect.signature(func)
         params = sig.bind(*args, **kwargs)
         wcs = params.arguments.get('wcs', None)
@@ -60,7 +68,8 @@ def sanitize_wcs(func):
     return wcs_wrapper
 
 
-def sanitize_crop_inputs(points, wcs):
+def sanitize_crop_inputs(points: Iterable[Any], wcs: 'WCSType | ExtraCoordsABC'
+                         ) -> tuple[bool, list[Any], 'WCSType | ExtraCoordsABC']:
     """Sanitize inputs to NDCube crop methods.
 
     First arg returned signifies whether the inputs imply that cropping
@@ -68,7 +77,7 @@ def sanitize_crop_inputs(points, wcs):
     """
     points = list(points)
     n_points = len(points)
-    n_coords = [None] * n_points
+    n_coords: list[int | None] = [None] * n_points
     values_are_none = [False] * n_points
     for i, point in enumerate(points):
         # Ensure each point is a list
@@ -96,18 +105,19 @@ def sanitize_crop_inputs(points, wcs):
     from ndcube.extra_coords.extra_coords import ExtraCoords  # noqa: PLC0415
     if isinstance(wcs, ExtraCoords):
         # Determine how many dummy axes are needed
-        n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)
+        n_dummy_axes = len(wcs._cube_array_axes_without_extra_coords)  # pyright: ignore[reportPrivateUsage]
         if n_dummy_axes > 0:
             points = [point + [None] * n_dummy_axes for point in points]
         # Convert extra coords to WCS describing whole cube.
         wcs = wcs.cube_wcs
     # Ensure WCS is low level.
     if isinstance(wcs, BaseHighLevelWCS):
-        wcs = wcs.low_level_wcs
+        wcs = wcs.low_level_wcs  # pyright: ignore[reportAttributeAccessIssue]
     return False, points, wcs
 
 
-def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_shape):
+def get_crop_item_from_points(points: Iterable[Iterable[Any]], wcs: WCSType, crop_by_values: bool,
+                              keepdims: bool, original_shape: tuple[int, ...]) -> tuple[int | slice, ...]:
     """
     Find slice item that crops to minimum cube in array-space containing specified world points.
 
@@ -144,7 +154,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
     # Define a list of lists to hold the pixel coordinates of the points
     # where each inner list gives the pixel coordinates of all points for that pixel axis.
     # Recall that pixel axis ordering is reversed compared to array axis ordering.
-    combined_points_pixel_idx = [[]] * wcs.pixel_n_dim
+    combined_points_pixel_idx: list[list[Any]] = [[]] * wcs.pixel_n_dim
     high_level_wcs = HighLevelWCSWrapper(wcs) if isinstance(wcs, BaseLowLevelWCS) else wcs
     low_level_wcs = high_level_wcs.low_level_wcs
     # For each point compute the corresponding array indices.
@@ -206,7 +216,7 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
     # and then convert to array indices. Note that combined_points_pixel_idx holds the
     # pixel coords for each pixel axis. Therefore, to iterate in array axis order,
     # combined_points_pixel_idx must be reversed.
-    item = []
+    item: list[int | slice] = []
     ambiguous = False
     message = ""
     result_is_scalar = True
@@ -270,8 +280,11 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
     return tuple(item)
 
 
-def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_ignores_mask=False,
-                                  propagation_operation=None, correlation=0, **kwargs):
+def propagate_rebin_uncertainties(uncertainty: astropy.nddata.NDUncertainty, data: npt.NDArray[Any],
+                                  mask: npt.NDArray[np.bool_] | bool | None, operation: Callable[..., Any],
+                                  operation_ignores_mask: bool = False,
+                                  propagation_operation: Callable[..., Any] | None = None,
+                                  correlation: int = 0, **kwargs: Any) -> astropy.nddata.NDUncertainty:
     """
     Default algorithm for uncertainty propagation in :meth:`~ndcube.NDCube.rebin`.
 
@@ -328,40 +341,47 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
             raise ValueError("propagation_operation not recognized.")
     # Build mask if not provided.
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
+    # idx and n_pix_per_bin are each only read below in the branch correlated
+    # with the code path that sets so the None defaults are never read.
+    idx: npt.NDArray[np.bool_] | None = None
+    n_pix_per_bin: int | None = None
     if operation_ignores_mask or mask is None:
         mask = False
     if mask is False:
-        if operation_is_nantype:
-            nan_mask = np.isnan(data)
-            if nan_mask.any():
-                mask = nan_mask
-                idx = np.logical_not(mask)
-                mask1 = mask[1:]
+        nan_mask = np.isnan(data) if operation_is_nantype else None
+        if nan_mask is not None and nan_mask.any():
+            mask = nan_mask
+            idx = np.logical_not(mask)
+            mask1 = mask[1:]
         else:
-            # If there is no mask and operation is not nan-type, build generator
-            # so non-mask can still be iterated.
+            # If there is no mask and operation is not nan-type (or no NaNs are
+            # actually present), build a generator so non-mask can still be iterated.
             n_pix_per_bin = data.shape[flat_axis]
-            mask1 = (False for i in range(1, n_pix_per_bin))
+            # n_pix_per_bin is provably an int here, but pyright can't narrow
+            # it through the generator's closure.
+            mask1 = (False for _ in range(1, n_pix_per_bin))  # pyright: ignore[reportArgumentType]
     else:
         # Mask uncertainties corresponding to nan data if operation is nantype.
+        # mask is guaranteed to be an array here (not the `False` sentinel above),
+        # since callers only pass array-like masks or None per the docstring.
         if operation_is_nantype:
-            mask[np.isnan(data)] = True
+            mask[np.isnan(data)] = True  # type: ignore[index]
         # Set masked uncertainties in first mask to 0
         # as they shouldn't count towards final uncertainty.
-        mask1 = mask[1:]
+        mask1 = mask[1:]  # type: ignore[index]
         idx = np.logical_not(mask)
         uncertainty.array[mask] = 0
-        new_uncertainty.array[mask[0]] = 0
+        new_uncertainty.array[mask[0]] = 0  # type: ignore[index]
     # Propagate uncertainties.
     # Note uncertainty must be associated with a parent nddata for some propagations.
     cumul_data = data[0]
     if mask is not False and operation_ignores_mask is False:
-        cumul_data[idx[0]] = 0
+        cumul_data[idx[0]] = 0  # type: ignore[index]
     parent_nddata = astropy.nddata.NDData(cumul_data, uncertainty=new_uncertainty)
     new_uncertainty.parent_nddata = parent_nddata
     for j, mask_slice in enumerate(mask1):
         i = j + 1
-        cumul_data = operation(data[:i+1]) if mask is False else operation(data[:i+1][idx[:i+1]])
+        cumul_data = operation(data[:i+1]) if mask is False else operation(data[:i+1][idx[:i+1]])  # type: ignore[index]
         data_slice = astropy.nddata.NDData(data=data[i], mask=mask_slice,
                                            uncertainty=uncertainty[i])
         new_uncertainty = new_uncertainty.propagate(propagation_operation, data_slice,
