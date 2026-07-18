@@ -1,17 +1,20 @@
 import abc
 import copy
 import uuid
+from typing import Any
 from numbers import Integral
 from functools import partial
 from collections import defaultdict
+from collections.abc import Iterable, Sequence
 
 import gwcs
 import gwcs.coordinate_frames as cf
 import numpy as np
+import numpy.typing as npt
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from astropy.modeling import models
+from astropy.modeling import Model, models
 from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import Tabular1D, Tabular2D, _Tabular
 from astropy.time import Time
@@ -22,6 +25,10 @@ try:
 except ImportError:
     pass
 
+# Names/physical types are usually given as a single `str` but can be a
+# `list` of `str` when a coordinate has multiple components (e.g. SkyCoord).
+NamesType = str | list[str] | None
+
 __all__ = [
     "BaseTableCoordinate",
     "MultipleTableCoordinate",
@@ -31,7 +38,7 @@ __all__ = [
 ]
 
 
-class Length1Tabular(_Tabular):
+class Length1Tabular(_Tabular):  # type: ignore[misc]
     _input_units_allow_dimensionless = True
     _has_inverse_bounding_box = True
     _separable = True
@@ -39,11 +46,13 @@ class Length1Tabular(_Tabular):
     n_inputs = 1
     n_outputs = 1
 
-    lookup_table = np.zeros([1])
-    points = np.zeros([1])
+    lookup_table: u.Quantity = np.zeros([1])
+    points: u.Quantity = np.zeros([1])
 
-    def __init__(self, points=None, lookup_table=None, point_width=None, value_width=None,
-                 method='linear', bounds_error=True, fill_value=np.nan, **kwargs):
+    def __init__(self, points: u.Quantity | None = None, lookup_table: u.Quantity | None = None,
+                 point_width: u.Quantity | None = None, value_width: u.Quantity | None = None,
+                 method: str = 'linear', bounds_error: bool = True, fill_value: u.Quantity | float = np.nan,
+                 **kwargs: Any) -> None:
         """Create a Length-1 1-D Tabular model.
 
         Parameters
@@ -60,18 +69,16 @@ class Length1Tabular(_Tabular):
 
         Other parameters are defined by the parent class.
         """
-        if len(lookup_table) != 1:
+        if lookup_table is None or len(lookup_table) != 1:
             raise ValueError("lookup_table must have length 1.")
         super().__init__(points=points, lookup_table=lookup_table, method=method,
                          bounds_error=bounds_error, fill_value=fill_value, **kwargs)
-        self._value_width = value_width  # Width of point in world units.
-        if self._value_width is None:
-            self._value_width = 0 * self.lookup_table.unit
-        self._point_width = point_width  # Width of point in point units.
-        if self._point_width is None:
-            self._point_width = 1 * self.points[0].unit
+        # Width of point in world units.
+        self._value_width: u.Quantity = value_width if value_width is not None else 0 * self.lookup_table.unit
+        # Width of point in point units.
+        self._point_width: u.Quantity = point_width if point_width is not None else 1 * self.points[0].unit
 
-    def evaluate(self, x):
+    def evaluate(self, x: u.Quantity) -> u.Quantity:
         output = np.full(x.shape, self.fill_value)
         diff = abs(x - self.points[0])
         margin = self._point_width / 2
@@ -83,7 +90,7 @@ class Length1Tabular(_Tabular):
         return output * self.lookup_table.unit
 
     @property
-    def inverse(self):
+    def inverse(self) -> "InverseLength1Tabular":
         return InverseLength1Tabular(points=self.points[0], lookup_table=self.lookup_table,
                                      point_width=self._point_width, value_width=self._value_width,
                                      method=self.method, bounds_error=self.bounds_error,
@@ -96,7 +103,7 @@ class InverseLength1Tabular(Length1Tabular):
     This is the opposite direction to Length1Tabular.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         # Same inputs as Length1Tabular
         points = kwargs.pop("points", None)
         lookup_table = kwargs.pop("lookup_table", None)
@@ -105,13 +112,14 @@ class InverseLength1Tabular(Length1Tabular):
         super().__init__(points=lookup_table, lookup_table=points,
                          point_width=value_width, value_width=point_width, **kwargs)
 
-    def evaluate(self, x):
+    def evaluate(self, x: u.Quantity) -> u.Quantity:
         # When calling evaluate with a bounding box, astropy strips the units.
         x = u.Quantity(x, unit=self.input_units['x'], copy=False)
         return super().evaluate(x)
 
 
-def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
+def _generate_generic_frame(naxes: int, unit: u.UnitBase | Iterable[u.UnitBase],
+                            names: NamesType = None, physical_types: NamesType = None) -> cf.CoordinateFrame:
     """
     Generate a simple frame, where all axes have the same type and unit.
     """
@@ -140,7 +148,8 @@ def _generate_generic_frame(naxes, unit, names=None, physical_types=None):
                               axes_names=names, name=name, axis_physical_types=physical_types)
 
 
-def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, **kwargs):
+def _generate_tabular(lookup_table: u.Quantity, interpolation: str = 'linear',
+                      points_unit: u.UnitBase = u.pix, **kwargs: Any) -> Model:
     """
     Generate a Tabular model class and instance.
     """
@@ -182,7 +191,7 @@ def _generate_tabular(lookup_table, interpolation='linear', points_unit=u.pix, *
     return t
 
 
-def _generate_compound_model(*lookup_tables, mesh=True):
+def _generate_compound_model(*lookup_tables: u.Quantity, mesh: bool = True) -> Model:
     """
     Takes a set of quantities and returns a ND compound model.
     """
@@ -198,7 +207,7 @@ def _generate_compound_model(*lookup_tables, mesh=True):
     return models.Mapping(mapping) | model
 
 
-def _model_from_quantity(lookup_tables, mesh=False):
+def _model_from_quantity(lookup_tables: Sequence[u.Quantity], mesh: bool = False) -> Model:
     if len(lookup_tables) > 1:
         return _generate_compound_model(*lookup_tables, mesh=mesh)
 
@@ -218,19 +227,22 @@ class BaseTableCoordinate(abc.ABC):
     coordinates, meaning it can have multiple gWCS frames.
     """
 
-    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
-        self.table = tables
+    def __init__(self, *tables: Any, mesh: bool = False, names: NamesType = None,
+                 physical_types: NamesType = None) -> None:
+        self.table: Any = tables
         self.mesh = mesh
-        self.names = names if not isinstance(names, str) else [names]
-        self.physical_types = physical_types if not isinstance(physical_types, str) else [physical_types]
-        self._dropped_world_dimensions = defaultdict(list)
+        self.names: list[str] | None = names if not isinstance(names, str) else [names]
+        self.physical_types: list[str] | None = (
+            physical_types if not isinstance(physical_types, str) else [physical_types]
+        )
+        self._dropped_world_dimensions: defaultdict[str, Any] = defaultdict(list)
         self._dropped_world_dimensions["world_axis_object_classes"] = {}
 
     @abc.abstractmethod
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> "BaseTableCoordinate":
         pass  # pragma: no cover
 
-    def __and__(self, other):
+    def __and__(self, other: Any) -> "BaseTableCoordinate":
         if not isinstance(other, BaseTableCoordinate):
             return NotImplemented
 
@@ -242,25 +254,25 @@ class BaseTableCoordinate(abc.ABC):
 
         return MultipleTableCoordinate(self, other)
 
-    def __str__(self):
+    def __str__(self) -> str:
         header = f"{self.__class__.__name__} {self.names or ''} {self.physical_types or '[None]'}:"
         content = str(self.table).lstrip('(').rstrip(',)')
         if len(header) + len(content) >= np.get_printoptions()['linewidth']:
             return f'{header}\n{content}'
         return f'{header} {content}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self}"
 
     @property
     @abc.abstractmethod
-    def n_inputs(self):
+    def n_inputs(self) -> int:
         """
         Number of pixel dimensions in this table.
         """
 
     @abc.abstractmethod
-    def is_scalar(self):
+    def is_scalar(self) -> bool:
         """
         Return a boolean if this coordinate is a scalar.
 
@@ -270,20 +282,20 @@ class BaseTableCoordinate(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def frame(self):
+    def frame(self) -> cf.CoordinateFrame:
         """
         Generate the Frame for this LookupTable.
         """
 
     @property
     @abc.abstractmethod
-    def model(self):
+    def model(self) -> Model:
         """
         Generate the Astropy Model for this LookupTable.
         """
 
     @property
-    def wcs(self):
+    def wcs(self) -> gwcs.WCS:
         """
         A gWCS object representing all the coordinates.
         """
@@ -293,8 +305,14 @@ class BaseTableCoordinate(abc.ABC):
                         output_frame=self.frame)
 
     @property
-    def dropped_world_dimensions(self):
+    def dropped_world_dimensions(self) -> dict[str, Any]:
         return self._dropped_world_dimensions
+
+    @abc.abstractmethod
+    def interpolate(self, *new_array_grids: npt.NDArray[Any], **kwargs: Any) -> "BaseTableCoordinate":
+        """
+        Interpolate this coordinate to new array index grids.
+        """
 
 
 class QuantityTableCoordinate(BaseTableCoordinate):
@@ -322,7 +340,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         a physical type must be given for each component.
     """
 
-    def __init__(self, *tables, names=None, physical_types=None):
+    def __init__(self, *tables: u.Quantity, names: NamesType = None, physical_types: NamesType = None) -> None:
         if not all(isinstance(t, u.Quantity) for t in tables):
             raise TypeError("All tables must be astropy Quantity objects")
         if not all(t.unit.is_equivalent(tables[0].unit) for t in tables):
@@ -347,7 +365,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
 
         super().__init__(*tables, mesh=True, names=names, physical_types=physical_types)
 
-    def _slice_table(self, i, table, item, new_components, whole_slice):
+    def _slice_table(self, i: int, table: u.Quantity, item: Any,
+                     new_components: "defaultdict[str, Any]", whole_slice: Any) -> None:
         """
         Apply a slice, or part of a slice to one of the quantity arrays.
 
@@ -379,13 +398,13 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         if self.physical_types:
             new_components["physical_types"].append(self.physical_types[i])
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> "QuantityTableCoordinate":
         if isinstance(item, (slice, Integral)):
             item = (item,)
         if not (len(item) == len(self.table) or len(item) == self.table[0].ndim):
             raise ValueError("Can not slice with incorrect length")
 
-        new_components = defaultdict(list)
+        new_components: defaultdict[str, Any] = defaultdict(list)
         new_components["dropped_world_dimensions"] = copy.deepcopy(self._dropped_world_dimensions)
 
         for i, (ele, table) in enumerate(zip(item, self.table)):
@@ -399,28 +418,28 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         return ret_table
 
     @property
-    def n_inputs(self):
+    def n_inputs(self) -> int:
         return len(self.table)
 
-    def is_scalar(self):
+    def is_scalar(self) -> bool:
         return all(t.shape == () for t in self.table)
 
     @property
-    def frame(self):
+    def frame(self) -> cf.CoordinateFrame:
         """
         Generate the Frame for this LookupTable.
         """
         return _generate_generic_frame(len(self.table), self.unit, self.names, self.physical_types)
 
     @property
-    def model(self):
+    def model(self) -> Model:
         """
         Generate the Astropy Model for this LookupTable.
         """
         return _model_from_quantity(self.table, True)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         """
         Number of array dimensions to which this TableCoordinate corresponds.
 
@@ -430,7 +449,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         return len(self.table)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int, ...]:
         """
         Shape of the array grid to which this TableCoordinate corresponds.
 
@@ -439,7 +458,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         """
         return tuple(len(t) for t in self.table)
 
-    def interpolate(self, *new_array_grids, **kwargs):
+    def interpolate(self, *new_array_grids: npt.NDArray[Any], **kwargs: Any) -> "QuantityTableCoordinate":
         """
         Interpolate QuantityTableCoordinate to new array index grids.
 
@@ -510,7 +529,8 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     same length.
     """
 
-    def __init__(self, *tables, mesh=False, names=None, physical_types=None):
+    def __init__(self, *tables: SkyCoord, mesh: bool = False, names: NamesType = None,
+                 physical_types: NamesType = None) -> None:
         if not len(tables) == 1 and isinstance(tables[0], SkyCoord):
             raise ValueError("SkyCoordLookupTable can only be constructed from a single SkyCoord object")
         if mesh and tables[0].ndim > 1:
@@ -533,14 +553,14 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         self._slice = sanitize_slices(np.s_[...], self.n_inputs)
 
     @property
-    def n_inputs(self):
+    def n_inputs(self) -> int:
         return len(self.table.data.components)
 
-    def is_scalar(self):
-        return self.table.shape == ()
+    def is_scalar(self) -> bool:
+        return bool(self.table.shape == ())
 
     @staticmethod
-    def combine_slices(slice1, slice2):
+    def combine_slices(slice1: Any, slice2: Any) -> Any:
         ints = [isinstance(s, Integral) for s in (slice1, slice2)]
         if all(ints):
             raise ValueError("Can not combine two integers")
@@ -548,7 +568,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
             return (slice1, slice2)[ints.index(True)]
         return combine_slices(slice1, slice2)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> "SkyCoordTableCoordinate":
         # override the error for consistency
         try:
             sane_item = sanitize_slices(item, self.n_inputs)
@@ -571,7 +591,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         return self
 
     @property
-    def frame(self):
+    def frame(self) -> cf.CoordinateFrame:
         """
         Generate the Frame for this LookupTable.
         """
@@ -588,19 +608,19 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
                                  name="CelestialFrame")
 
     @property
-    def _sliced_components(self):
+    def _sliced_components(self) -> tuple[Any, ...]:
         return tuple(getattr(self.table.data, comp)[slc]
                      for comp, slc in zip(self.table.data.components, self._slice))
 
     @property
-    def model(self):
+    def model(self) -> Model:
         """
         Generate the Astropy Model for this LookupTable.
         """
         return _model_from_quantity(self._sliced_components, mesh=self.mesh)
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         """
         Number of array dimensions to which this TableCoordinate corresponds.
 
@@ -610,10 +630,10 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         if self.mesh:
             return len(self.table.data.components)
-        return self.table.ndim
+        return int(self.table.ndim)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int, ...]:
         """
         Shape of the array grid to which this TableCoordinate corresponds.
 
@@ -624,9 +644,10 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         """
         if self.mesh:
             return tuple(list(self.table.shape) * self.ndim)
-        return self.table.shape
+        return tuple(self.table.shape)
 
-    def interpolate(self, *new_array_grids, mesh_output=None, **kwargs):
+    def interpolate(self, *new_array_grids: npt.NDArray[Any], mesh_output: bool | None = None,
+                    **kwargs: Any) -> "SkyCoordTableCoordinate":
         """
         Interpolate SkyCoordTableCoordinate to new array index grids.
 
@@ -680,11 +701,11 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
                               for new_grid, old_grid, comp
                               in zip(new_array_grids, old_array_grids, self._sliced_components)]
         elif ndim == 1:
-            new_components = [np.interp(*new_array_grids, *old_array_grids, comp, **kwargs)
+            new_components = [np.interp(*new_array_grids, *old_array_grids, comp, **kwargs)  # type: ignore[call-overload]
                               for comp in self._sliced_components]
         else:
             new_components = [
-                scipy.interpolate.interpn(old_array_grids, component, new_array_grids, **kwargs)
+                scipy.interpolate.interpn(old_array_grids, component, new_array_grids, **kwargs)  # pyright: ignore[reportPossiblyUnboundVariable]
                 for component in self._sliced_components]
 
         # Build new SkyCoord and return new TableCoordinate based on it.
@@ -719,7 +740,8 @@ class TimeTableCoordinate(BaseTableCoordinate):
         Default is first time coordinate in table input.
     """
 
-    def __init__(self, *tables, names=None, physical_types=None, reference_time=None):
+    def __init__(self, *tables: Time, names: NamesType = None, physical_types: NamesType = None,
+                 reference_time: Time | None = None) -> None:
         if not len(tables) == 1 and isinstance(tables[0], Time):
             raise ValueError("TimeLookupTable can only be constructed from a single Time object.")
 
@@ -737,7 +759,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
         self.table = self.table[0]
         self.reference_time = reference_time or self.table[0]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> "TimeTableCoordinate":
         if not (isinstance(item, (slice, Integral)) or len(item) == 1):
             raise ValueError("Can not slice with incorrect length")
 
@@ -747,14 +769,14 @@ class TimeTableCoordinate(BaseTableCoordinate):
                           reference_time=self.reference_time)
 
     @property
-    def n_inputs(self):
+    def n_inputs(self) -> int:
         return 1  # The time table has to be one dimensional
 
-    def is_scalar(self):
-        return self.table.shape == ()
+    def is_scalar(self) -> bool:
+        return bool(self.table.shape == ())
 
     @property
-    def frame(self):
+    def frame(self) -> cf.CoordinateFrame:
         """
         Generate the Frame for this LookupTable.
         """
@@ -764,7 +786,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
                                 name="TemporalFrame")
 
     @property
-    def model(self):
+    def model(self) -> Model:
         """
         Generate the Astropy Model for this LookupTable.
         """
@@ -773,7 +795,9 @@ class TimeTableCoordinate(BaseTableCoordinate):
 
         return _model_from_quantity((deltas,), mesh=False)
 
-    def interpolate(self, new_array_grids, **kwargs):
+    # Deliberately takes a single grid (not *args like the base class) since a
+    # Time coordinate is always 1-D.
+    def interpolate(self, new_array_grids: npt.NDArray[Any], **kwargs: Any) -> "TimeTableCoordinate":  # type: ignore[override]
         """
         Interpolate TimeTableCoordinate to new array index grids.
 
@@ -826,15 +850,17 @@ class MultipleTableCoordinate(BaseTableCoordinate):
     operator.
     """
 
-    def __init__(self, *table_coordinates):
-        if not all(isinstance(lt, BaseTableCoordinate) and
+    def __init__(self, *table_coordinates: BaseTableCoordinate) -> None:
+        # Runtime guard against callers not respecting the type hints, so isinstance
+        # isn't required as is statically implied by the annotation above
+        if not all(isinstance(lt, BaseTableCoordinate) and  # pyright: ignore[reportUnnecessaryIsInstance]
                    not (isinstance(lt, MultipleTableCoordinate)) for lt in table_coordinates):
             raise TypeError("All arguments must be BaseTableCoordinate instances, such as QuantityTableCoordinate, "
                             "and not instances of MultipleTableCoordinate.")
-        self._table_coords = list(table_coordinates)
-        self._dropped_coords = []
+        self._table_coords: list[BaseTableCoordinate] = list(table_coordinates)
+        self._dropped_coords: list[BaseTableCoordinate] = []
 
-    def __str__(self):
+    def __str__(self) -> str:
         classname = self.__class__.__name__
         length = len(classname) + sum(len(str(t)) for t in self._table_coords) + 10
         if length > np.get_printoptions()['linewidth']:
@@ -844,7 +870,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         return f"{classname}(tables=[{joiner.join([str(t) for t in self._table_coords])}])"
 
-    def __and__(self, other):
+    def __and__(self, other: Any) -> "MultipleTableCoordinate":
         if not isinstance(other, BaseTableCoordinate):
             return NotImplemented
 
@@ -855,14 +881,14 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         return type(self)(*(self._table_coords + others))
 
-    def __rand__(self, other):
+    def __rand__(self, other: Any) -> "MultipleTableCoordinate":
         # This method should never be called if the left hand operand is a MultipleTableCoordinate
         if not isinstance(other, BaseTableCoordinate) or isinstance(other, MultipleTableCoordinate):
             return NotImplemented
 
         return type(self)(*([other, *self._table_coords]))
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> "MultipleTableCoordinate":
         if isinstance(item, (slice, Integral)):
             item = (item,)
 
@@ -887,14 +913,14 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         return new
 
     @property
-    def n_inputs(self):
+    def n_inputs(self) -> int:
         return sum(t.n_inputs for t in self._table_coords)
 
-    def is_scalar(self):
+    def is_scalar(self) -> bool:
         return False
 
     @property
-    def model(self):
+    def model(self) -> Model:
         """
         The combined astropy model for all the lookup tables.
         """
@@ -904,7 +930,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         return model
 
     @property
-    def frame(self):
+    def frame(self) -> cf.CoordinateFrame:
         """
         The gWCS coordinate frame for all the lookup tables.
         """
@@ -924,7 +950,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         return cf.CompositeFrame(frames)
 
     @staticmethod
-    def _from_high_level_coordinates(dropped_frame, *highlevel_coords):
+    def _from_high_level_coordinates(dropped_frame: Any, *highlevel_coords: Any) -> Any:
         """
         This is a backwards compatibility wrapper for the new
         from_high_level_coordinates method in gwcs.
@@ -935,8 +961,8 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         return quantities
 
     @property
-    def dropped_world_dimensions(self):
-        dropped_world_dimensions = defaultdict(list)
+    def dropped_world_dimensions(self) -> dict[str, Any]:
+        dropped_world_dimensions: defaultdict[str, Any] = defaultdict(list)
         dropped_world_dimensions["world_axis_object_classes"] = {}
 
         # Combine the dicts on the tables with our dict
@@ -983,7 +1009,9 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         return dropped_world_dimensions
 
-    def interpolate(self, new_array_grids, **kwargs):
+    # Deliberately takes a single grid (not *args like the base class); it is
+    # forwarded unchanged to each sub-coordinate's own interpolate().
+    def interpolate(self, new_array_grids: npt.NDArray[Any], **kwargs: Any) -> "MultipleTableCoordinate":  # type: ignore[override]
         """
         Interpolate MultipleTableCoordinate to new array index grids.
 
@@ -1003,7 +1031,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
 
         """
         new_table_coordinates = [coord.interpolate(new_array_grids, **kwargs)
-                                 for coord in self.table_coords]
+                                 for coord in self._table_coords]
         new_obj = type(self)(*new_table_coordinates)
         new_obj._dropped_coords = self._dropped_coords
         return new_obj
