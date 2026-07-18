@@ -1,9 +1,11 @@
 from numbers import Integral
+from collections.abc import Iterable, Sequence
 
 import numpy as np
+import numpy.typing as npt
 
 from astropy.wcs import WCS
-from astropy.wcs.wcsapi import SlicedLowLevelWCS
+from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
@@ -11,7 +13,7 @@ from ndcube.wcs.wrappers import ResampledLowLevelWCS
 __all__ = ["unwrap_wcs_to_fitswcs"]
 
 
-def unwrap_wcs_to_fitswcs(wcs):
+def unwrap_wcs_to_fitswcs(wcs: BaseLowLevelWCS) -> tuple[WCS, npt.NDArray[np.bool_]]:
     """
     Create FITS-WCS equivalent to (nested) WCS wrapper object.
 
@@ -62,15 +64,16 @@ def unwrap_wcs_to_fitswcs(wcs):
             factor = np.ones(fitswcs.naxis)
             offset = np.zeros(fitswcs.naxis)
             kept_wcs_axes = dropped_data_axes[::-1] == False  # WCS-order  # NOQA: E712
-            factor[kept_wcs_axes] = low_level_wrapper._factor
-            offset[kept_wcs_axes] = low_level_wrapper._offset
+            factor[kept_wcs_axes] = low_level_wrapper._factor  # pyright: ignore[reportPrivateUsage]
+            offset[kept_wcs_axes] = low_level_wrapper._offset  # pyright: ignore[reportPrivateUsage]
             fitswcs = _resample_fitswcs(fitswcs, factor, offset)
         else:
             raise TypeError("Unrecognized/unsupported WCS Wrapper type: {type(low_level_wrapper)}")
     return fitswcs, dropped_data_axes
 
 
-def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
+def _slice_fitswcs(fitswcs: WCS, slice_items: Iterable[slice | int], numpy_order: bool = True,
+                   shape: Sequence[int] | None = None) -> tuple[WCS, npt.NDArray[np.bool_]]:
     """
     Slice a FITS-WCS.
 
@@ -102,16 +105,16 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
         Denotes which axes must have been dropped from the data array by slicing wrappers.
         Order of axes (numpy or WCS) is dictated by ``numpy_order`` kwarg.
     """
-    def negative_index_error_msg(x): return (
+    def negative_index_error_msg(x: int) -> str: return (
         f"Negative indexing not supported as {x}th axis length is 0 in "
         "underlying FITS-WCS. Supply axes lengths via shape kwarg.")
     naxis = fitswcs.naxis
     dropped_data_axes = np.zeros(naxis, dtype=bool)
     # Sanitize inputs
     if shape is None:
-        shape = fitswcs._naxis
+        axis_shape = fitswcs._naxis
         if numpy_order:
-            shape = shape[::-1]
+            axis_shape = axis_shape[::-1]
     else:
         if len(shape) != naxis:
             raise ValueError("shape kwarg must be same length as number of pixel axes "
@@ -119,8 +122,9 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
         if not all(isinstance(s, Integral) for s in shape):
             raise TypeError("All elements of ``shape`` must be integers. "
                             f"shapes types = {[type(s) for s in shape]}")
+        axis_shape = shape
     slice_items = list(slice_items)
-    for i, (item, len_axis) in enumerate(zip(slice_items, shape)):
+    for i, (item, len_axis) in enumerate(zip(slice_items, axis_shape)):
         if isinstance(item, Integral):
             # Mark axis corresponding to int item as dropped from data array.
             dropped_data_axes[i] = True
@@ -138,8 +142,9 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
             if start_neg or stop_neg:
                 if len_axis == 0:
                     raise ValueError(negative_index_error_msg(i))
-                start = len_axis + item.start if start_neg else item.start
-                stop = len_axis + item.stop if stop_neg else item.stop
+                # start_neg/stop_neg guarantee item.start/item.stop aren't None here.
+                start = len_axis + item.start if start_neg else item.start  # pyright: ignore[reportOperatorIssue]
+                stop = len_axis + item.stop if stop_neg else item.stop  # pyright: ignore[reportOperatorIssue]
                 slice_items[i] = slice(start, stop, item.step)
         else:
             raise TypeError("All slice_items must be a slice or an int. "
@@ -149,7 +154,7 @@ def _slice_fitswcs(fitswcs, slice_items, numpy_order=True, shape=None):
     return sliced_wcs, dropped_data_axes
 
 
-def _resample_fitswcs(fitswcs, factor, offset=0):
+def _resample_fitswcs(fitswcs: WCS, factor: npt.ArrayLike, offset: npt.ArrayLike = 0) -> WCS:
     """
     Resample the plate scale of a FITS-WCS by a given factor.
 
