@@ -1,4 +1,5 @@
 import functools
+from typing import Any, Literal
 
 MISSING_MATPLOTLIB_ERROR_MSG = ("matplotlib cannot be imported, so the default plotting "
                                 "functionality is disabled. Please install matplotlib")
@@ -9,10 +10,10 @@ __all__ = ['MISSING_ANIMATORS_ERROR_MSG', 'MISSING_MATPLOTLIB_ERROR_MSG', 'Plott
 
 
 class PlotterDescriptor:
-    def __init__(self, default_type=None):
+    def __init__(self, default_type: 'Literal["mpl_plotter", "mpl_sequence_plotter"] | type[Any] | None' = None) -> None:
         self._default_type = default_type
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: type, name: str) -> None:
         """
         This function is called when the class the descriptor is attached to is initialized.
 
@@ -26,9 +27,9 @@ class PlotterDescriptor:
         self._attribute_name = f"_{name}"
         plotter = self._resolve_default_type(raise_error=False)
         if plotter is not None and hasattr(plotter, "plot"):
-            functools.update_wrapper(owner.plot, plotter.plot)
+            functools.update_wrapper(owner.plot, plotter.plot)  # type: ignore[attr-defined]
 
-    def _resolve_default_type(self, raise_error=True):
+    def _resolve_default_type(self, raise_error: bool = True) -> "type[Any] | None":
         # We special case the default MatplotlibPlotter so that we can
         # delay the import of matplotlib until the plotter is first
         # accessed.
@@ -52,12 +53,14 @@ class PlotterDescriptor:
             return None
 
         if self._default_type is not None:
-            return self._default_type
+            # `in` doesn't narrow Literal types like `==` does, but the block above
+            # always returns when self._default_type is one of the two literal strings.
+            return self._default_type  # type: ignore[return-value]  # pyright: ignore[reportReturnType]
 
         # If we have no default type then just return None
         return None
 
-    def __get__(self, obj, objtype=None):
+    def __get__(self, obj: Any, objtype: type | None = None) -> Any:
         if obj is None:
             return None
 
@@ -70,8 +73,9 @@ class PlotterDescriptor:
 
         return getattr(obj, self._attribute_name)
 
-    def __set__(self, obj, value):
-        if not isinstance(value, type):
+    def __set__(self, obj: Any, value: "type[Any]") -> None:
+        # Runtime guard against callers not respecting the type hints.
+        if not isinstance(value, type):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise TypeError(
                 "Plotter attribute can only be set with an uninitialised plotter object.")
 
