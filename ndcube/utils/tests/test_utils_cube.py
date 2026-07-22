@@ -4,7 +4,7 @@ import pytest
 
 from astropy.nddata import StdDevUncertainty
 
-from ndcube.utils.cube import propagate_rebin_uncertainties
+from ndcube.utils.cube import propagate_rebin_uncertainties, sanitize_crop_inputs
 
 
 @pytest.fixture
@@ -99,3 +99,18 @@ def test_propagate_rebin_uncertainties_nan(stacked_pixel_data):
                                            np.nanmean, operation_ignores_mask=False)
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)
+
+
+def test_sanitize_crop_inputs_no_op_unwraps_extra_coords(ndcube_3d_ln_lt_l_ec_time):
+    # Regression test: on the no-op (all-points-None, including zero points)
+    # early-exit path, sanitize_crop_inputs used to return the wcs argument
+    # completely unprocessed, so if it was passed an ExtraCoords object it
+    # would still be an ExtraCoords object rather than being unwrapped to a
+    # low-level WCS like on the normal path. Callers (e.g. NDCube._get_crop_item)
+    # immediately use low-level WCS attributes like `.pixel_n_dim` on the
+    # returned value, which ExtraCoords does not have.
+    cube = ndcube_3d_ln_lt_l_ec_time
+    no_op, points, wcs = sanitize_crop_inputs((), cube.extra_coords)
+    assert no_op is True
+    assert points == []
+    assert hasattr(wcs, "pixel_n_dim")

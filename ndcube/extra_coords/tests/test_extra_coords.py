@@ -560,3 +560,21 @@ def test_length1_extra_coord(wave_lut):
     sec = ec[item]
     assert (sec.wcs.pixel_to_world(0) == wave_lut[item]).all()
     assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()
+
+
+def test_str_with_unnamed_table_coordinate(wave_lut):
+    # Regression test: ExtraCoords.__str__ used to do ', '.join(table.names),
+    # which crashes with TypeError if `names` is None. This happens whenever a
+    # BaseTableCoordinate instance is passed directly to `.add()`, since `add`
+    # only sets names via its own `name` argument when it constructs the
+    # coordinate itself, not when an already-built coordinate is passed in.
+    from ndcube.extra_coords.table_coord import QuantityTableCoordinate  # NOQA
+
+    ec = ExtraCoords()
+    coord = QuantityTableCoordinate(wave_lut)
+    assert coord.names is None
+    ec.add("wave", 0, coord)
+
+    # Should not raise.
+    str(ec)
+    repr(ec)
