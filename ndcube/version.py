@@ -15,3 +15,5 @@ except Exception:
     del warnings
 
     version = '0.0.0'
+
+__all__ = ["version"]

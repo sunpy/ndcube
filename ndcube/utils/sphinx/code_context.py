@@ -3,6 +3,8 @@ A sphinx directive to execute a code block with context, and to provide the
 user a way to see that context.
 """
 
+from typing import Any
+
 from docutils import nodes
 from docutils.parsers.rst import directives
 from sphinx.directives.code import CodeBlock
@@ -31,7 +33,7 @@ class ExpandingCodeBlock(CodeBlock):
         'summary': directives.unchanged_required,
     }
 
-    def run(self):
+    def run(self) -> list[Any]:
         source, lineno = self.state_machine.get_source_and_line(self.lineno)
 
         summary_text = self.options.get('summary', 'Show setup code')
@@ -51,7 +53,7 @@ class ExpandingCodeBlock(CodeBlock):
         return [open_raw_node, literal, close_raw_node]
 
 
-def setup(app):
+def setup(app: Any) -> dict[str, bool]:
     app.add_directive('expanding-code-block', ExpandingCodeBlock)
 
     return {'parallel_read_safe': True, 'parallel_write_safe': True}

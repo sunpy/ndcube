@@ -8,7 +8,7 @@ import numpy.typing as npt
 __all__ = ['assert_aligned_axes_compatible']
 
 
-def _sanitize_aligned_axes(keys: Sequence[Any], data: Sequence[Any],
+def _sanitize_aligned_axes(keys: Sequence[Any], data: Sequence[Any],  # pyright: ignore[reportUnusedFunction]
                            aligned_axes: str | tuple[Any, ...] | int | None) -> dict[Any, tuple[Any, ...]] | None:
     if aligned_axes is None:
         return None
@@ -114,7 +114,7 @@ def _sanitize_user_aligned_axes(data: Sequence[Any], aligned_axes: Any) -> tuple
     return aligned_axes
 
 
-def _update_aligned_axes(drop_aligned_axes_indices: npt.NDArray[Any], aligned_axes: dict[Any, Any],
+def _update_aligned_axes(drop_aligned_axes_indices: npt.NDArray[Any], aligned_axes: dict[Any, Any],  # pyright: ignore[reportUnusedFunction]
                          first_key: Any) -> tuple[Any, ...] | None:
     # Remove dropped axes from aligned_axes. MUST BE A BETTER WAY TO DO THIS.
     if len(drop_aligned_axes_indices) <= 0:
