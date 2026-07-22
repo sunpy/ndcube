@@ -69,7 +69,7 @@ def sanitize_wcs(func: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def sanitize_crop_inputs(points: Iterable[Any], wcs: 'WCSType | ExtraCoordsABC'
-                         ) -> tuple[bool, list[Any], 'WCSType | ExtraCoordsABC']:
+                         ) -> tuple[bool, list[Any], WCSType]:
     """Sanitize inputs to NDCube crop methods.
 
     First arg returned signifies whether the inputs imply that cropping
@@ -93,14 +93,6 @@ def sanitize_crop_inputs(points: Iterable[Any], wcs: 'WCSType | ExtraCoordsABC'
             values_are_none[i] = True
         # Squeeze length-1 coordinate objects to scalars.
         points[i] = [coord.squeeze() if hasattr(coord, "squeeze") else coord for coord in points[i]]
-    # If no points contain a coord, i.e. if all entries in all points are None,
-    # set no-op flag to True and exit.
-    if all(values_are_none):
-        return True, points, wcs
-    # Not not all points are of same length, error.
-    if len(set(n_coords)) != 1:
-        raise ValueError("All points must have same number of coordinate objects."
-                         f"Number of objects in each point: {n_coords}")
     # Import must be here to avoid circular import.
     from ndcube.extra_coords.extra_coords import ExtraCoords  # noqa: PLC0415
     if isinstance(wcs, ExtraCoords):
@@ -113,6 +105,14 @@ def sanitize_crop_inputs(points: Iterable[Any], wcs: 'WCSType | ExtraCoordsABC'
     # Ensure WCS is low level.
     if isinstance(wcs, BaseHighLevelWCS):
         wcs = wcs.low_level_wcs  # pyright: ignore[reportAttributeAccessIssue]
+    # If no points contain a coord, i.e. if all entries in all points are None,
+    # set no-op flag to True and exit.
+    if all(values_are_none):
+        return True, points, wcs
+    # Not not all points are of same length, error.
+    if len(set(n_coords)) != 1:
+        raise ValueError("All points must have same number of coordinate objects."
+                         f"Number of objects in each point: {n_coords}")
     return False, points, wcs
 
 

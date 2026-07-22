@@ -132,6 +132,15 @@ class ExtraCoordsABC(abc.ABC):
         not supported.
         """
 
+    @abc.abstractmethod
+    def resample(self, factor: float | Iterable[float], offset: float | Iterable[float] = 0,
+                ndcube: Any = None, **kwargs: Any) -> "ExtraCoordsABC":
+        """
+        Resample all extra coords by given factors in array-index-space.
+
+        One resample factor must be supplied for each array axis in array-axis order.
+        """
+
 
 class ExtraCoords(ExtraCoordsABC):
     """

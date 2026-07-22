@@ -110,6 +110,13 @@ class NDMetaABC(collections.abc.Mapping[str, Any]):
         The shape of the data with which the metadata is associated.
         """
 
+    @data_shape.setter
+    @abc.abstractmethod
+    def data_shape(self, new_shape: collections.abc.Sequence[int]) -> None:
+        """
+        Set the shape of the data with which the metadata is associated.
+        """
+
     @abc.abstractmethod
     def add(
         self,

@@ -18,7 +18,7 @@ from astropy.wcs.utils import _split_matrix
 
 try:
     # Import sunpy coordinates if available to register the frames and WCS functions with astropy
-    import sunpy.coordinates  # NOQA
+    import sunpy.coordinates  # NOQA  # pyright: ignore[reportUnusedImport]
 except ImportError:
     pass
 
@@ -39,17 +39,17 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 __all__ = ['NDCubeABC', 'NDCubeLinkedDescriptor']
 
 # Create mapping to masked array types based on data array type for use in analysis methods.
-ARRAY_MASK_MAP = {}
+ARRAY_MASK_MAP: dict[type, Any] = {}
 ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
 _NUMPY_COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
 try:
     import dask.array
-    ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array
+    ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array  # pyright: ignore[reportAttributeAccessIssue, reportPrivateImportUsage]
 except ImportError:
     pass
 
 
-class NDCubeABC(astropy.nddata.NDDataBase):
+class NDCubeABC(astropy.nddata.NDDataBase):  # type: ignore[misc]
 
     @property
     @abc.abstractmethod
@@ -293,11 +293,11 @@ class NDCubeLinkedDescriptor:
     A descriptor which gives the property a reference to the cube to which it is attached.
     """
 
-    def __init__(self, default_type):
+    def __init__(self, default_type: type) -> None:
         self._default_type = default_type
-        self._property_name = None
+        self._property_name: str | None = None
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: type, name: str) -> None:
         """
         This function is called when the class the descriptor is attached to is initialized.
 
@@ -310,18 +310,18 @@ class NDCubeLinkedDescriptor:
         # the data is stored.
         self._attribute_name = f"_{name}"
 
-    def __get__(self, obj, objtype=None):
+    def __get__(self, obj: Any, objtype: type | None = None) -> Any:
         if obj is None:
             return None
 
-        if getattr(obj, self._attribute_name, None) is None and self._default_type is not None:
+        if getattr(obj, self._attribute_name, None) is None and self._default_type is not None:  # pyright: ignore[reportUnnecessaryComparison]
             self.__set__(obj, self._default_type)
 
         return getattr(obj, self._attribute_name)
 
-    def __set__(self, obj, value):
+    def __set__(self, obj: Any, value: Any) -> None:
         if isinstance(value, self._default_type):
-            value._ndcube = obj
+            value._ndcube = obj  # type: ignore[attr-defined]
         elif issubclass(value, self._default_type):
             value = value(obj)
         else:
@@ -332,7 +332,7 @@ class NDCubeLinkedDescriptor:
         setattr(obj, self._attribute_name, value)
 
 
-class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
+class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):  # type: ignore[misc]
     """
     Class representing N-D data described by a single array and set of WCS transformations.
 
@@ -377,9 +377,13 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
     # Instances of Extra and Global coords are managed through descriptors
     _extra_coords = NDCubeLinkedDescriptor(ExtraCoords)
     _global_coords = NDCubeLinkedDescriptor(GlobalCoords)
+    # Inherited from astropy.nddata.NDData; declared here so mypy can resolve its type
+    # (NDData is unstubbed, and self.mask is both read and reassigned in this class).
+    mask: Any
 
-    def __init__(self, data, wcs=None, uncertainty=None, mask=None, meta=None,
-                 unit=None, copy=False, psf=None, *, extra_coords=None, global_coords=None, **kwargs):
+    def __init__(self, data: Any, wcs: Any = None, uncertainty: Any = None, mask: Any = None, meta: Any = None,
+                 unit: Any = None, copy: bool = False, psf: Any = None, *, extra_coords: Any = None,
+                 global_coords: Any = None, **kwargs: Any) -> None:
 
         super().__init__(data, wcs=wcs, uncertainty=uncertainty, mask=mask,
                          meta=meta, unit=unit, copy=copy, psf=psf, **kwargs)
@@ -409,7 +413,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             self.meta.data_shape = self.shape
 
     @property
-    def data(self):
+    def data(self) -> Any:
         """
         `~numpy.ndarray` - like
             The stored dataset.
@@ -425,7 +429,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return super().data
 
     @data.setter
-    def data(self, value):
+    def data(self, value: Any) -> None:
         # In an array-agnostic way check the shape is the same
         if not hasattr(value, "shape") or value.shape != self.data.shape:
             raise TypeError(f"Can only set data with an array-like object of the same shape ({self.data.shape})")
@@ -446,37 +450,37 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         self._data = value
 
     @property
-    def extra_coords(self):
+    def extra_coords(self) -> ExtraCoordsABC:  # type: ignore[override]
         # Docstring in NDCubeABC.
-        return self._extra_coords
+        return self._extra_coords  # type: ignore[no-any-return]
 
     @property
-    def global_coords(self):
+    def global_coords(self) -> GlobalCoordsABC:  # type: ignore[override]
         # Docstring in NDCubeABC.
-        return self._global_coords
+        return self._global_coords  # type: ignore[no-any-return]
 
     @property
-    def combined_wcs(self):
+    def combined_wcs(self) -> BaseHighLevelWCS:
         # Docstring in NDCubeABC.
         if not self.extra_coords.wcs:
             return self.wcs
 
-        mapping = list(range(self.wcs.pixel_n_dim)) + list(self.extra_coords.mapping)
+        mapping = tuple(range(self.wcs.pixel_n_dim)) + tuple(self.extra_coords.mapping)
         return HighLevelWCSWrapper(
             CompoundLowLevelWCS(self.wcs.low_level_wcs, self._extra_coords.wcs, mapping=mapping)
         )
 
     @property
-    def shape(self):
-        return self.data.shape
+    def shape(self) -> tuple[int, ...]:  # type: ignore[override]
+        return self.data.shape  # type: ignore[no-any-return]
 
     @property
-    def dimensions(self):
+    def dimensions(self) -> u.Quantity:
         warn_deprecated("Replaced by ndcube.NDCube.shape")
         return u.Quantity(self.data.shape, unit=u.pix)
 
     @property
-    def array_axis_physical_types(self):
+    def array_axis_physical_types(self) -> list[tuple[str, ...]]:
         # Docstring in NDCubeABC.
         wcs = self.combined_wcs
         world_axis_physical_types = np.array(wcs.world_axis_physical_types)
@@ -485,11 +489,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 for i in range(axis_correlation_matrix.shape[1])][::-1]
 
     @property
-    def quantity(self):
+    def quantity(self) -> u.Quantity:
         """Unitful representation of the NDCube data."""
         return u.Quantity(self.data, self.unit, copy=_NUMPY_COPY_IF_NEEDED)
 
-    def _generate_world_coords(self, pixel_corners, wcs, *, needed_axes, units=None):
+    def _generate_world_coords(self, pixel_corners: bool, wcs: Any, *, needed_axes: Any,
+                               units: bool | None = None) -> Any:
         """
         Private method to generate world coordinates.
 
@@ -564,7 +569,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return world_coords
 
     @utils.cube.sanitize_wcs
-    def axis_world_coords(self, *axes, pixel_corners=False, wcs=None):
+    def axis_world_coords(self, *axes: int | str, pixel_corners: bool = False, wcs: Any = None) -> Any:
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
@@ -592,7 +597,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return tuple(axes_coords[i] for i in object_indices)
 
     @utils.cube.sanitize_wcs
-    def axis_world_coords_values(self, *axes, pixel_corners=False, wcs=None):
+    def axis_world_coords_values(self, *axes: int | str, pixel_corners: bool = False, wcs: Any = None) -> Any:
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
             wcs = wcs.low_level_wcs
@@ -617,19 +622,19 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             identifier = identifier.replace(".", "_")
             identifier = identifier.replace("-", "__")
             identifiers.append(identifier)
-        CoordValues = namedtuple("CoordValues", identifiers)
+        CoordValues = namedtuple("CoordValues", identifiers)  # type: ignore[misc]
         return CoordValues(*axes_coords[::-1])
 
-    def crop(self, *points, wcs=None, keepdims=False):
+    def crop(self, *points: Any, wcs: Any = None, keepdims: bool = False) -> "NDCubeBase":
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_item(*points, wcs=wcs, keepdims=keepdims)
-        return self[item]
+        return self[item]  # type: ignore[no-any-return]
 
     @utils.cube.sanitize_wcs
-    def _get_crop_item(self, *points, wcs=None, keepdims=False):
+    def _get_crop_item(self, *points: Any, wcs: Any = None, keepdims: bool = False) -> Any:
         # Sanitize inputs.
-        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        no_op, sanitized_points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
@@ -640,7 +645,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
             if comp.count(c) > 1:
                 comp.pop(k)
         classes = [wcs.world_axis_object_classes[c][0] for c in comp]
-        for i, point in enumerate(points):
+        for i, point in enumerate(sanitized_points):
             if len(point) != len(comp):
                 raise ValueError(f"{len(point)} components in point {i} do not match "
                                  f"WCS with {len(comp)} components.")
@@ -649,30 +654,30 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
                                     f"{classes[j]}.")
-        return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims,
+        return utils.cube.get_crop_item_from_points(sanitized_points, wcs, False, keepdims=keepdims,
                                                     original_shape=self.data.shape)
 
-    def crop_by_values(self, *points, units=None, wcs=None, keepdims=False):
+    def crop_by_values(self, *points: Any, units: Any = None, wcs: Any = None, keepdims: bool = False) -> "NDCubeBase":
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_by_values_item(*points, units=units, wcs=wcs, keepdims=keepdims)
-        return self[item]
+        return self[item]  # type: ignore[no-any-return]
 
     @utils.cube.sanitize_wcs
-    def _get_crop_by_values_item(self, *points, units=None, wcs=None, keepdims=False):
+    def _get_crop_by_values_item(self, *points: Any, units: Any = None, wcs: Any = None, keepdims: bool = False) -> Any:
         # Sanitize inputs.
-        no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
+        no_op, sanitized_points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
         # Convert float inputs to quantities using units.
-        n_coords = len(points[0])
+        n_coords = len(sanitized_points[0])
         if units is None:
             units = [None] * n_coords
         elif len(units) != n_coords:
             raise ValueError(f"Units must be None or have same length {n_coords} as corner inputs.")
         types_with_units = (u.Quantity, type(None))
-        for i, point in enumerate(points):
+        for i, point in enumerate(sanitized_points):
             if len(point) != wcs.world_n_dim:
                 raise ValueError(f"{len(point)} dimensions in point {i} do not match "
                                  f"WCS with {wcs.world_n_dim} world dimensions.")
@@ -684,18 +689,18 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                             "If an element of a point is not a Quantity or None, "
                             "the corresponding unit must be a valid astropy Unit or unit string."
                             f"index: {i}; coord type: {type(value)}; unit: {unit}")
-                    points[i][j] = u.Quantity(value, unit=unit)
+                    sanitized_points[i][j] = u.Quantity(value, unit=unit)
                 if value is not None:
                     try:
-                        points[i][j] = points[i][j].to(wcs.world_axis_units[j])
+                        sanitized_points[i][j] = sanitized_points[i][j].to(wcs.world_axis_units[j])
                     except UnitsError as err:
-                        raise UnitsError(f"Unit '{points[i][j].unit}' of coordinate object {j} in point {i} is "
+                        raise UnitsError(f"Unit '{sanitized_points[i][j].unit}' of coordinate object {j} in point {i} is "
                                          f"incompatible with WCS unit '{wcs.world_axis_units[j]}'") from err
 
-        return utils.cube.get_crop_item_from_points(points, wcs, True, keepdims=keepdims,
+        return utils.cube.get_crop_item_from_points(sanitized_points, wcs, True, keepdims=keepdims,
                                                     original_shape=self.data.shape)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return textwrap.dedent(f"""\
                 NDCube
                 ------
@@ -704,10 +709,10 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                 Unit: {self.unit}
                 Data Type: {self.data.dtype}""")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"
 
-    def explode_along_axis(self, axis):
+    def explode_along_axis(self, axis: int) -> "NDCubeSequence":
         """
         Separates slices of NDCubes along a given axis into an NDCubeSequence of (N-1)DCubes.
 
@@ -726,7 +731,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
-        cube_slices = [slice(None, None, None)] * self.data.ndim
+        cube_slices: list[Any] = [slice(None, None, None)] * self.data.ndim
         # Slicing the cube inside result_cube
         for i in range(self.data.shape[axis]):
             # Setting the slice value to the index so that the slices are done correctly.
@@ -741,11 +746,11 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         return NDCubeSequence(result_cubes, meta=self.meta)
 
     def reproject_to(self,
-                     target_wcs,
-                     algorithm='interpolation',
-                     shape_out=None,
-                     return_footprint=False,
-                     **reproject_args):
+                     target_wcs: Any,
+                     algorithm: str = 'interpolation',
+                     shape_out: tuple[int, ...] | None = None,
+                     return_footprint: bool = False,
+                     **reproject_args: Any) -> Any:
         """
         Reprojects the instance to the coordinates described by another WCS object.
 
@@ -849,6 +854,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                                      return_footprint=return_footprint,
                                      **reproject_args)
 
+        footprint = None
         if return_footprint:
             data, footprint = data
 
@@ -926,7 +932,7 @@ class NDCube(NDCubeBase):
     The type of this attribute can be changed to provide custom visualization functionality.
     """
 
-    def _as_mpl_axes(self):
+    def _as_mpl_axes(self) -> Any:
         if hasattr(self.plotter, "_as_mpl_axes"):
             return self.plotter._as_mpl_axes()
         warn_user(f"The current plotter {self.plotter} does not have a '_as_mpl_axes' method. "
@@ -935,9 +941,9 @@ class NDCube(NDCubeBase):
         from ndcube.visualization.mpl_plotter import MatplotlibPlotter  # noqa: PLC0415
 
         plotter = MatplotlibPlotter(self)
-        return plotter._as_mpl_axes()
+        return plotter._as_mpl_axes()  # pyright: ignore[reportPrivateUsage]
 
-    def plot(self, *args, **kwargs):
+    def plot(self, *args: Any, **kwargs: Any) -> Any:
         """
         A convenience function for the plotters default ``plot()`` method.
 
@@ -953,7 +959,7 @@ class NDCube(NDCubeBase):
 
         return self.plotter.plot(*args, **kwargs)
 
-    def _new_instance(self, **kwargs):
+    def _new_instance(self, **kwargs: Any) -> "NDCube":
         keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
         new_kwargs = {k: deepcopy(getattr(self, k, None)) for k in keys}
         # To support old versions of astropy, we need to make sure
@@ -963,17 +969,17 @@ class NDCube(NDCubeBase):
         # We Explicitly DO NOT deepcopy any data
         full_kwargs['data'] = self.data
         full_kwargs.update(kwargs)
-        new_cube = type(self)(**full_kwargs)
-        if self.extra_coords is not None:
+        new_cube = type(self)(**full_kwargs)  # type: ignore[arg-type]
+        if self.extra_coords is not None:  # pyright: ignore[reportUnnecessaryComparison]
             new_cube._extra_coords = deepcopy(self.extra_coords)
-        if self.global_coords is not None:
+        if self.global_coords is not None:  # pyright: ignore[reportUnnecessaryComparison]
             new_cube._global_coords = deepcopy(self.global_coords)
         return new_cube
 
-    def __neg__(self):
+    def __neg__(self) -> "NDCube":
         return self._new_instance(data=-self.data)
 
-    def _arithmetic_handle_mask(self, self_mask, value_mask):
+    def _arithmetic_handle_mask(self, self_mask: Any, value_mask: Any) -> Any:
         if self_mask is None and value_mask is None:
             return None
         if self_mask is None:
@@ -982,11 +988,11 @@ class NDCube(NDCubeBase):
             return self_mask
         return np.logical_or(self_mask, value_mask)
 
-    def _arithmetic_operate_with_nddata(self, operation, value):
+    def _arithmetic_operate_with_nddata(self, operation: str, value: Any) -> dict[str, Any]:
         handle_mask = self._arithmetic_handle_mask
         if value.wcs is not None:
             raise TypeError("Cannot add coordinate-aware objects to NDCubes.")
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if operation == "add":
             # Handle units
             if self.unit is not None and value.unit is not None:
@@ -1029,8 +1035,8 @@ class NDCube(NDCubeBase):
 
         return kwargs
 
-    def __add__(self, value):
-        kwargs = {}
+    def __add__(self, value: Any) -> "NDCube":
+        kwargs: dict[str, Any] = {}
         if isinstance(value, NDData):
             kwargs = self._arithmetic_operate_with_nddata("add", value)
         elif hasattr(value, 'unit'):
@@ -1053,7 +1059,7 @@ class NDCube(NDCubeBase):
         # return the new NDCube instance
         return self._new_instance(**kwargs)
 
-    def _combine_uncertainty(self, operation, value, result_data):
+    def _combine_uncertainty(self, operation: Any, value: Any, result_data: Any) -> Any:
         # combine the uncertainty;
         if self.uncertainty is not None and value.uncertainty is not None:
             if self.unit is not None:
@@ -1068,10 +1074,10 @@ class NDCube(NDCubeBase):
             return value.uncertainty
         return None
 
-    def __radd__(self, value):
+    def __radd__(self, value: Any) -> "NDCube":
         return self.__add__(value)
 
-    def __sub__(self, value):
+    def __sub__(self, value: Any) -> "NDCube":
         if isinstance(value, NDData):
             new_value = copy.copy(value)
             new_value._data = -value.data
@@ -1079,11 +1085,11 @@ class NDCube(NDCubeBase):
             new_value = -value
         return self.__add__(new_value)
 
-    def __rsub__(self, value):
+    def __rsub__(self, value: Any) -> "NDCube":
         return self.__neg__().__add__(value)
 
-    def __mul__(self, value):
-        kwargs = {}
+    def __mul__(self, value: Any) -> "NDCube":
+        kwargs: dict[str, Any] = {}
         if isinstance(value, NDData):
             kwargs = self._arithmetic_operate_with_nddata("multiply", value)
         else:
@@ -1105,19 +1111,19 @@ class NDCube(NDCubeBase):
                             if self.uncertainty is not None else None)
         return self._new_instance(**kwargs)
 
-    def __rmul__(self, value):
+    def __rmul__(self, value: Any) -> "NDCube":
         return self.__mul__(value)
 
-    def __truediv__(self, value):
+    def __truediv__(self, value: Any) -> "NDCube":
         if isinstance(value, NDData):
             kwargs = self._arithmetic_operate_with_nddata("true_divide", value)
             return self._new_instance(**kwargs)
         return self.__mul__(1/value)
 
-    def __rtruediv__(self, value):
+    def __rtruediv__(self, value: Any) -> "NDCube":
         return self.__pow__(-1).__mul__(value)
 
-    def __pow__(self, value):
+    def __pow__(self, value: Any) -> "NDCube":
         new_data = self.data ** value
         new_unit = self.unit if self.unit is None else self.unit ** value
         new_uncertainty = self.uncertainty
@@ -1138,7 +1144,7 @@ class NDCube(NDCubeBase):
 
         return self._new_instance(data=new_data, unit=new_unit, uncertainty=new_uncertainty)
 
-    def to(self, new_unit, **kwargs):
+    def to(self, new_unit: Any, **kwargs: Any) -> "NDCube":
         """Convert instance to another unit.
 
         Converts the data, uncertainty and unit and returns a new instance
@@ -1157,10 +1163,11 @@ class NDCube(NDCubeBase):
             A new instance with the new unit and data and uncertainties scales accordingly.
         """
         new_unit = u.Unit(new_unit)
-        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)
+        return self * (self.unit.to(new_unit, **kwargs) * new_unit / self.unit)  # type: ignore[no-any-return]
 
-    def rebin(self, bin_shape, operation=np.mean, operation_ignores_mask=False, handle_mask=np.all,
-              propagate_uncertainties=False, new_unit=None, **kwargs):
+    def rebin(self, bin_shape: Any, operation: Any = np.mean, operation_ignores_mask: bool = False,
+             handle_mask: Any = np.all, propagate_uncertainties: bool | Any = False,
+             new_unit: Any = None, **kwargs: Any) -> "NDCube":
         """
         Downsample array by combining contiguous pixels into bins.
 
@@ -1360,7 +1367,7 @@ class NDCube(NDCubeBase):
                 flat_uncertainty = flat_uncertainty.reshape(flat_shape)
                 flat_uncertainty = type(self.uncertainty)(flat_uncertainty)
                 if sanitized_mask is not None:
-                    reshaped_mask = self.mask.reshape(tuple(reshape))
+                    reshaped_mask = self.mask.reshape(tuple(reshape))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
                     flat_mask = np.moveaxis(reshaped_mask, dummy_axes, tuple(range(naxes)))
                     flat_mask = flat_mask.reshape(flat_shape)
                 else:
@@ -1396,7 +1403,7 @@ class NDCube(NDCubeBase):
 
         return new_cube
 
-    def squeeze(self, axis=None):
+    def squeeze(self, axis: Any = None) -> "NDCube":
         """
         Removes all axes with a length of 1.
 
@@ -1428,10 +1435,11 @@ class NDCube(NDCubeBase):
         if (item == 0).all():
             raise ValueError("All axes are of length 1, therefore we will not squeeze NDCube to become a scalar. "
                              "Use `axis=` keyword to specify a subset of axes to squeeze.")
-        return self[tuple(item)]
+        return self[tuple(item)]  # type: ignore[no-any-return]
 
 
-    def fill_masked(self, fill_value, uncertainty_fill_value=None, unmask=False, fill_in_place=False):
+    def fill_masked(self, fill_value: Any, uncertainty_fill_value: Any = None, unmask: bool = False,
+                    fill_in_place: bool = False) -> "NDCube | None":
         """
         Replaces masked data values with input value.
 
@@ -1484,10 +1492,11 @@ class NDCube(NDCubeBase):
 
         if not fill_in_place:
             # Create kwargs dictionary and return a new instance.
-            kwargs = {}
+            # new_mask is set above whenever fill_in_place is False.
+            kwargs: dict[str, Any] = {}
             kwargs['data'] = new_data
             kwargs['uncertainty'] = new_uncertainty
-            kwargs['mask'] = new_mask
+            kwargs['mask'] = new_mask  # pyright: ignore[reportPossiblyUnboundVariable]
             return self._new_instance(**kwargs)
         if unmask:
             self.mask = False
@@ -1495,16 +1504,16 @@ class NDCube(NDCubeBase):
 
     def to_nddata(self,
                   *,
-                  data="copy",
-                  wcs="copy",
-                  uncertainty="copy",
-                  mask="copy",
-                  unit="copy",
-                  meta="copy",
-                  psf="copy",
-                  nddata_type=NDData,
-                  **kwargs,
-                 ):
+                  data: Any = "copy",
+                  wcs: Any = "copy",
+                  uncertainty: Any = "copy",
+                  mask: Any = "copy",
+                  unit: Any = "copy",
+                  meta: Any = "copy",
+                  psf: Any = "copy",
+                  nddata_type: type = NDData,
+                  **kwargs: Any,
+                 ) -> Any:
         """
         Constructs a new `~astropy.nddata.NDData` instance from this object.
 
@@ -1657,7 +1666,7 @@ class NDCube(NDCubeBase):
         return nddata_type(**user_kwargs)
 
 
-def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
+def _create_masked_array_for_rebinning(data: Any, mask: Any, operation_ignores_mask: bool) -> tuple[Any, Any]:
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
     if m is None:
         return data, m
