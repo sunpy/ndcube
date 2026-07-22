@@ -392,7 +392,8 @@ class ExtraCoords(ExtraCoordsABC):
 
     def _getitem_wcs(self, item: Any) -> "ExtraCoords":
         # Only called from __getitem__ when self._wcs is truthy, so self.wcs is not None here.
-        assert self.wcs is not None
+        if self.wcs is None:
+            raise RuntimeError("wcs must not be None here.")
         item = sanitize_slices(item, self.wcs.pixel_n_dim)
 
         # It's valid to slice down the EC such that there is nothing left,

@@ -160,7 +160,8 @@ def assert_aligned_axes_compatible(data_dimensions1: tuple[int, ...] | None, dat
     # Aligned_axes are being used for both collections
     if data_axes1 is not None:
         # Guaranteed by the check above: if data_axes1 is not None, data_axes2 isn't either.
-        assert data_axes2 is not None
+        if data_axes2 is None:
+            raise RuntimeError("data_axes2 must not be None here.")
         # Confirm same number of aligned axes.
         if len(data_axes1) != len(data_axes2):
             raise ValueError(f"Number of aligned axes must be equal: {len(data_axes1)} != {len(data_axes2)}")

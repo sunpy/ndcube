@@ -490,7 +490,8 @@ class _IndexAsCubeSlicer:
     def __getitem__(self, item: Any) -> Any:
         # _IndexAsCubeSlicer is only constructed by NDCubeSequenceBase.index_as_cube,
         # which already guarantees _common_axis is not None.
-        assert self.seq._common_axis is not None  # pyright: ignore[reportPrivateUsage]
+        if self.seq._common_axis is None:  # pyright: ignore[reportPrivateUsage]
+            raise RuntimeError("common_axis must not be None here.")
         common_axis = self.seq._common_axis  # pyright: ignore[reportPrivateUsage]
         common_axis_lengths = [int(cube.shape[common_axis]) for cube in self.seq.data]
         n_cube_dims = len(self.seq.cube_like_shape)
