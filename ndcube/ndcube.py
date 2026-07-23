@@ -44,7 +44,7 @@ ARRAY_MASK_MAP[np.ndarray] = np.ma.masked_array
 _NUMPY_COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
 try:
     import dask.array
-    ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array  # pyright: ignore[reportAttributeAccessIssue, reportPrivateImportUsage]
+    ARRAY_MASK_MAP[dask.array.core.Array] = dask.array.ma.masked_array  # pyright: ignore[reportAttributeAccessIssue, reportPrivateImportUsage, reportFunctionMemberAccess]
 except ImportError:
     pass
 
