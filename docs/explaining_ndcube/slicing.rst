@@ -267,7 +267,7 @@ If we want our region of interest to only apply to a single sub-cube, and we ind
   >>> single_cube_roi.array_axis_physical_types
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
-However, as with numpy slicing, we can induce the slicing operation to return an `~ndcube.NDCubeSequence` by supplying a length-1 `slice` to the sequence axis, rather than an `int`.
+However, as with numpy slicing, we can induce the slicing operation to return an `~ndcube.NDCubeSequence` by supplying a length-1 ``slice`` to the sequence axis, rather than an `int`.
 This sequence will still represent the same region of interest from the same single sub-cube, but the sequence axis will have a length of 1, rather than be removed.
 
 .. code-block:: python
@@ -309,7 +309,7 @@ This can be achieved by entering:
   [('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'), ('em.wl',)]
 
 This returns the same `~ndcube.NDCube` as above.
-However, also as above, we can induce the return type to be an `~ndcube.NDCubeSequence` by supplying a length-1 `slice`.
+However, also as above, we can induce the return type to be an `~ndcube.NDCubeSequence` by supplying a length-1 ``slice``.
 As before, the same region of interest from the same sub-cube is represented, just with sequence and common axes of length 1.
 
 .. code-block:: python

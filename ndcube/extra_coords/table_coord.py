@@ -1023,7 +1023,7 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         new_array_grids: array-like
             A single array grid, forwarded unchanged to every sub-coordinate's
             own ``interpolate`` method (not one grid per axis like
-            `BaseTableCoordinate.interpolate`).
+            `~ndcube.extra_coords.table_coord.BaseTableCoordinate.interpolate`).
 
         Returns
         -------

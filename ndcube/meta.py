@@ -461,7 +461,7 @@ class _NDMetaSlicer:
             # Calculate new axis indices.
             new_axis = np.asarray(list(
                 set(axis).intersection(set(np.arange(naxes)[kept_axes]))
-                ))
+                ), dtype=int)
             if len(new_axis) == 0:
                 new_axis = None
             else:

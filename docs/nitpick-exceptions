@@ -41,6 +41,7 @@ py:class an object providing a view on D's values
 py:class D[k] if k in D, else d.  d defaults to None.
 py:class None.  Remove all items from D.
 py:class None.  Update D from mapping/iterable E and F.
+py:class None.  Update D from dict/iterable E and F.
 py:class v, remove specified key and return the corresponding value.
 
 # This comes from Map.wcs
@@ -77,6 +78,14 @@ py:class numpy.core.records.recarray
 py:class numpy.ma.core.MaskedArray
 py:class numpy.ma.mvoid
 py:class numpy.void
+
+# numpy.typing.NDArray's real __module__ is this private path, not the
+# public numpy.typing name, so autodoc can't resolve it via intersphinx
+py:class numpy._typing._array_like.NDArray
+
+# ndcube.utils.cube.WCSType is an internal typing.TypeAlias, not a
+# documented public class
+py:class WCSType
 py:class pandas.DataFrame
 py:class xmlrpc.client.Error
 py:class xmlrpc.client.Fault

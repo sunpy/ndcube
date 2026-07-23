@@ -85,7 +85,7 @@ def _slice_fitswcs(fitswcs: WCS, slice_items: Iterable[slice | int], numpy_order
     ----------
     fitswcs: `astropy.wcs.WCS`
         The FITS-WCS object to be sliced.
-    slice_items: iterable of `slice` objects or `int`
+    slice_items: iterable of ``slice`` objects or `int`
         The slices to by applied to each axis. If an `int` is provided, the axis
         is sliced to length-1, but not dropped. However, its corresponding entry
         in the ``dropped_data_axes`` output is marked True.

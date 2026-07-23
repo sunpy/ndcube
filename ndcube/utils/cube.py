@@ -146,11 +146,11 @@ def get_crop_item_from_points(points: Iterable[Iterable[Any]], wcs: WCSType, cro
 
     Returns
     -------
-    item : `tuple` of `int` or `slice`
+    item : `tuple` of `int` or ``slice``
         The slice item for each axis of the cube which, when applied to the cube,
         will return the minimum cube in array-index-space that contains all the
         input world points. An axis collapsed to a single element (when
-        ``keepdims=False``) is given as an `int` rather than a length-1 `slice`.
+        ``keepdims=False``) is given as an `int` rather than a length-1 ``slice``.
     """
     # Define a list of lists to hold the pixel coordinates of the points
     # where each inner list gives the pixel coordinates of all points for that pixel axis.
