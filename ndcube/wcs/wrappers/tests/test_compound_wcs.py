@@ -52,8 +52,8 @@ World Dim    0    1    2
 
 
 @pytest.mark.parametrize(('spectral_wcs', 'celestial_wcs'),
-                         product(['spectral_1d_ape14_wcs', 'spectral_1d_fitswcs'],
-                                 ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs']),
+                         list(product(['spectral_1d_ape14_wcs', 'spectral_1d_fitswcs'],
+                                 ['celestial_2d_ape14_wcs', 'celestial_2d_fitswcs'])),
                          indirect=True)
 def test_celestial_spectral_ape14(spectral_wcs, celestial_wcs):
 
