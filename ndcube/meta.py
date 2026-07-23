@@ -46,6 +46,12 @@ class NDMetaABC(collections.abc.Mapping[str, Any]):
         number of associated axes (axis-aligned), or same shape as the associated
         data array's axes (grid-aligned).
 
+    data_shape: sequence of `int`, optional
+        The shape of the data array associated with the metadata, used to
+        validate grid-aligned metadata. If not given, is derived from the
+        shapes of any grid-aligned metadata already present, and otherwise
+        left empty until set explicitly.
+
     Notes
     -----
     **Axis-aware Metadata**

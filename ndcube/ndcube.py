@@ -114,7 +114,7 @@ class NDCubeABC(astropy.nddata.NDDataBase):  # type: ignore[misc]
             If `True` then instead of returning the coordinates at the centers of the pixels,
             the coordinates at the pixel corners will be returned. This
             increases the size of the output by 1 in all dimensions as all corners are returned.
-        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS`, optional
+        wcs: `astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`, optional
             The WCS object to used to calculate the world coordinates.
             Although technically this can be any valid WCS, it will typically be
             ``self.wcs``, ``self.extra_coords``, or ``self.combined_wcs`` combining both
@@ -1546,7 +1546,7 @@ class NDCube(NDCubeBase):
             Metadata object of new instance. Default is to use data of this instance.
         psf: Any, optional
             PSF object of new instance. Default is to use data of this instance.
-        nddata_type: Any, optional
+        nddata_type: `type`, optional
             The type of the returned object. Must be a subclass of `~astropy.nddata.NDData`
             or a class that behaves like one.  Default=`~astropy.nddata.NDData`.
         kwargs:

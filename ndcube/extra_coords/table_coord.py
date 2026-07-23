@@ -333,7 +333,7 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         Custom names for the components of the QuantityTableCoord. If provided,
         a name must be given for each input Quantity.
 
-    physical_types: str` or `list` of `str`
+    physical_types: `str` or `list` of `str`
         Physical types for the components of the QuantityTableCoord. If provided,
         a physical type must be given for each input Quantity.
         Physical types of the components of the SkyCoord. If provided,
@@ -518,7 +518,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
         Custom names for the components of the SkyCoord. If provided, a name must
         be given for each component.
 
-    physical_types: str` or `list` of `str`
+    physical_types: `str` or `list` of `str`
         Physical types of the components of the SkyCoord. If provided,
         a physical type must be given for each component.
 
@@ -731,7 +731,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
         Custom names for the components of the SkyCoord. If provided, a name must
         be given for each component.
 
-    physical_types: str` or `list` of `str`
+    physical_types: `str` or `list` of `str`
         Physical types of the components of the SkyCoord. If provided,
         a physical type must be given for each component.
 
@@ -806,9 +806,10 @@ class TimeTableCoordinate(BaseTableCoordinate):
         Parameters
         ----------
         new_array_grids: array-like
-            The array index values at which the the new values of the
-            coords are desired. A grid must be supplied for each pixel
-            axis (in array-axis order). All grids must be the same shape.
+            The array index values at which the new values of the coords are
+            desired. Since a TimeTableCoordinate is always 1-D, a single
+            array grid is given (not one per axis like the other
+            TableCoordinate classes' ``interpolate`` methods).
 
         Returns
         -------
@@ -1020,9 +1021,9 @@ class MultipleTableCoordinate(BaseTableCoordinate):
         Parameters
         ----------
         new_array_grids: array-like
-            The array index values at which the the new values of the
-            coords are desired. A grid must be supplied for each pixel
-            axis (in array-axis order). All grids must be the same shape.
+            A single array grid, forwarded unchanged to every sub-coordinate's
+            own ``interpolate`` method (not one grid per axis like
+            `BaseTableCoordinate.interpolate`).
 
         Returns
         -------

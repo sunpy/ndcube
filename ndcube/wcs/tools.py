@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 
 from astropy.wcs import WCS
-from astropy.wcs.wcsapi import BaseLowLevelWCS, SlicedLowLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS, SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 from ndcube.wcs.wrappers import ResampledLowLevelWCS
@@ -13,7 +13,7 @@ from ndcube.wcs.wrappers import ResampledLowLevelWCS
 __all__ = ["unwrap_wcs_to_fitswcs"]
 
 
-def unwrap_wcs_to_fitswcs(wcs: BaseLowLevelWCS) -> tuple[WCS, npt.NDArray[np.bool_]]:
+def unwrap_wcs_to_fitswcs(wcs: BaseLowLevelWCS | BaseHighLevelWCS) -> tuple[WCS, npt.NDArray[np.bool_]]:
     """
     Create FITS-WCS equivalent to (nested) WCS wrapper object.
 
@@ -26,8 +26,8 @@ def unwrap_wcs_to_fitswcs(wcs: BaseLowLevelWCS) -> tuple[WCS, npt.NDArray[np.boo
 
     Parameters
     ----------
-    wcs: `~astropy.wcs.wcsapi.BaseWCSWrapper`
-        The WCS Wrapper object.
+    wcs: `~astropy.wcs.wcsapi.BaseLowLevelWCS` or `~astropy.wcs.wcsapi.BaseHighLevelWCS`
+        The (possibly wrapped) WCS object, low- or high-level.
         Base level WCS implementation must be FITS-WCS.
 
     Returns

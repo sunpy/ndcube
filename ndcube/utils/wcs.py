@@ -177,8 +177,8 @@ def physical_type_to_pixel_axes(physical_type: str, wcs: BaseLowLevelWCS) -> npt
 
     Parameters
     ----------
-    physical_type: `int`
-        The pixel axis number(s) for which the world axis numbers are desired.
+    physical_type: `str`
+        The physical type or a substring unique to a physical type.
 
     wcs: `astropy.wcs.wcsapi.BaseLowLevelWCS`
         The WCS object defining the relationship between pixel and world axes.
@@ -354,7 +354,7 @@ def get_dependent_physical_types(physical_type: str, wcs: BaseLowLevelWCS) -> np
     return cast("npt.NDArray[np.str_]", np.array(world_axis_physical_types)[dependent_world_axes])
 
 
-def validate_physical_types(physical_types: Sequence[str]) -> None:
+def validate_physical_types(physical_types: Sequence[str | None]) -> None:
     """
     Validate a list of physical types against the UCD1+ standard
     """
@@ -420,12 +420,12 @@ def pixel_indices_for_world_objects(
 
     Returns
     -------
-    pixel_indices : `tuple` of `tuple` of `int`
-        For each world object, a tuple of pixel axes identified by their
-        number. Pixel indices in each sub-tuple are not guaranteed to be
+    pixel_indices : `tuple` of `numpy.ndarray` of `int`
+        For each world object, an array of pixel axes identified by their
+        number. Pixel indices in each sub-array are not guaranteed to be
         ordered with respect to the arrays in the object, as the object could
         be an object like ``SkyCoord`` where there is a separation of the two
-        coordinates. The pixel indices will be returned in the sub-tuple in
+        coordinates. The pixel indices will be returned in the sub-array in
         pixel index order.
     """
     if axes:

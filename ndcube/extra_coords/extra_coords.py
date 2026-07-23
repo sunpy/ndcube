@@ -472,8 +472,9 @@ class ExtraCoords(ExtraCoordsABC):
             for each dimension. If a scalar, the grid will be
             shifted by the same amount in all dimensions.
 
-        ndcube: `~ndcube.NDCube`
+        ndcube: `~ndcube.NDCube`, optional
             The NDCube instance with which the output ExtraCoords object is associated.
+            Defaults to `None`.
 
         kwargs
             All remaining kwargs are passed to `numpy.interp`.

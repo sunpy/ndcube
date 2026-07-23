@@ -136,7 +136,7 @@ def _update_aligned_axes(drop_aligned_axes_indices: npt.NDArray[Any], aligned_ax
     return tuple(new_aligned_axes)
 
 
-def assert_aligned_axes_compatible(data_dimensions1: tuple[int, ...] | None, data_dimensions2: tuple[int, ...] | None,
+def assert_aligned_axes_compatible(data_dimensions1: tuple[int, ...], data_dimensions2: tuple[int, ...],
                                    data_axes1: tuple[int, ...] | None, data_axes2: tuple[int, ...] | None) -> None:
     """
     Checks whether two sets of aligned axes are compatible.
@@ -147,10 +147,12 @@ def assert_aligned_axes_compatible(data_dimensions1: tuple[int, ...] | None, dat
         The dimension lengths of data cube 1.
     data_dimensions2: `tuple` of `int`
         The dimension lengths of data cube 2.
-    data_axes1: `tuple` of `int`
-        The aligned axes of data cube 1.
-    data_axes2: `tuple` of `int`
-        The aligned axes of data cube 2.
+    data_axes1: `tuple` of `int` or `None`
+        The aligned axes of data cube 1. `None` if cube 1's collection has no
+        aligned axes.
+    data_axes2: `tuple` of `int` or `None`
+        The aligned axes of data cube 2. `None` if cube 2's collection has no
+        aligned axes.
     """
     # If one set of aligned axes is None and the other isn't, they are defined as not compatible.
     if (data_axes1 is None and data_axes2 is not None) or (data_axes1 is not None and data_axes2 is None):
