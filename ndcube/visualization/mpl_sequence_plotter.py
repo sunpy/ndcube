@@ -1,3 +1,5 @@
+from typing import Any
+
 from mpl_animators import ArrayAnimatorWCS
 
 from astropy.wcs.wcsapi import BaseLowLevelWCS
@@ -16,7 +18,7 @@ class MatplotlibSequencePlotter(BasePlotter):
     which is assumed to employ the `~ndcube.visualization.mpl_plotter.MatplotlibPlotter`.
     """
 
-    def plot(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def plot(self, sequence_axis_coords: Any = None, sequence_axis_unit: Any = None, **kwargs: Any) -> Any:
         """
         Visualize the `~ndcube.NDCubeSequence`.
 
@@ -34,7 +36,7 @@ class MatplotlibSequencePlotter(BasePlotter):
             raise NotImplementedError("Visualizing sequences of 1-D cubes not currently supported.")
         return self.animate(sequence_axis_coords, sequence_axis_unit, **kwargs)
 
-    def animate(self, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def animate(self, sequence_axis_coords: Any = None, sequence_axis_unit: Any = None, **kwargs: Any) -> "SequenceAnimator":
         """
         Animate the `~ndcube.NDCubeSequence` with the sequence axis as a slider.
 
@@ -57,7 +59,7 @@ class MatplotlibSequencePlotter(BasePlotter):
         return SequenceAnimator(self._ndcube, sequence_axis_coords=sequence_axis_coords, sequence_axis_unit=sequence_axis_unit, **kwargs)
 
 
-class SequenceAnimator(ArrayAnimatorWCS):
+class SequenceAnimator(ArrayAnimatorWCS):  # type: ignore[misc]
     """
     Animate an NDCubeSequence of NDCubes with >1 dimension.
 
@@ -79,7 +81,8 @@ class SequenceAnimator(ArrayAnimatorWCS):
         The unit in which to display the sequence_axis_coords.
     """
 
-    def __init__(self, sequence, sequence_axis_coords=None, sequence_axis_unit=None, **kwargs):
+    def __init__(self, sequence: Any, sequence_axis_coords: Any = None, sequence_axis_unit: Any = None,
+                 **kwargs: Any) -> None:
         if sequence_axis_coords is not None:
             raise NotImplementedError("Setting sequence_axis_coords not yet supported.")
         if sequence_axis_unit is not None:
@@ -100,7 +103,7 @@ class SequenceAnimator(ArrayAnimatorWCS):
             n_cube_dims, init_wcs, plot_axes, axes_coordinates, axes_units)
 
         # Define sequence axis slider properties and add to kwargs.
-        base_kwargs = {"slider_functions": [self._sequence_slider_function],
+        base_kwargs: dict[str, Any] = {"slider_functions": [self._sequence_slider_function],
                        "slider_ranges": [[0, len(self._cubes)]]}
         base_kwargs.update(kwargs)
 
@@ -111,7 +114,7 @@ class SequenceAnimator(ArrayAnimatorWCS):
             wcs = wcs.low_level_wcs
         super().__init__(data, wcs, plot_axes, coord_params=coord_params, **base_kwargs)
 
-    def _sequence_slider_function(self, val, artist, slider):
+    def _sequence_slider_function(self, val: Any, artist: Any, slider: Any) -> None:
         self._sequence_idx = int(val)
         self.data, self.wcs, _, _ = self._cubes[self._sequence_idx].plotter._prep_animate_args(
             self._cubes[self._sequence_idx].wcs, self._plot_axes, self._axes_units, self._data_unit)

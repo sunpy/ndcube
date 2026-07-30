@@ -2,12 +2,14 @@
 This file contains the entry points for asdf.
 """
 import importlib.resources as importlib_resources
+from typing import Any
+from collections.abc import Sequence
 
 from asdf.extension import ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
 
-def get_resource_mappings():
+def get_resource_mappings() -> Sequence[Any]:
     """
     Get the resource mapping instances for myschemas
     and manifests.  This method is registered with the
@@ -17,7 +19,7 @@ def get_resource_mappings():
     -------
     list of collections.abc.Mapping
     """
-    from ndcube.asdf import resources
+    from ndcube.asdf import resources  # pyright: ignore[reportAttributeAccessIssue]
     resources_root = importlib_resources.files(resources)
     return [
         DirectoryResourceMapping(
@@ -27,7 +29,7 @@ def get_resource_mappings():
     ]
 
 
-def get_extensions():
+def get_extensions() -> list[Any]:
     """
     Get the list of extensions.
     """

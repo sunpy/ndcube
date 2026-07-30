@@ -1,15 +1,29 @@
 
+from typing import TYPE_CHECKING, Any
+
 from astropy.nddata.mixins.ndslicing import NDSlicingMixin
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import sanitize_slices
+
+if TYPE_CHECKING:
+    from ndcube.extra_coords.extra_coords import ExtraCoordsABC
+    from ndcube.global_coords import GlobalCoordsABC
 
 __all__ = ['NDCubeSlicingMixin']
 
 
-class NDCubeSlicingMixin(NDSlicingMixin):
+class NDCubeSlicingMixin(NDSlicingMixin):  # type: ignore[misc]
     # Inherit docstring from parent class
     __doc__ = NDSlicingMixin.__doc__
 
-    def __getitem__(self, item):
+    # Attributes expected to be provided by the class this is mixed into
+    # (e.g. NDCubeBase, which combines this with astropy.nddata.NDData and NDCubeABC).
+    if TYPE_CHECKING:
+        meta: Any
+        shape: tuple[int, ...]
+        global_coords: GlobalCoordsABC
+        extra_coords: ExtraCoordsABC
+
+    def __getitem__(self, item: Any) -> Any:
         """
         Override the parent class method to explicitly catch `None` indices.
 
@@ -23,6 +37,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         # This is to prevent the shapes of the data and metadata getting out of
         # sync part way through the slicing process.
         meta_is_sliceable = False
+        meta: Any = None
         if hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__:
             meta_is_sliceable = True
             meta = self.meta
@@ -46,7 +61,7 @@ class NDCubeSlicingMixin(NDSlicingMixin):
             self.meta = meta  # Add unsliced meta back onto unsliced cube.
 
         # Add sliced coords back onto sliced cube.
-        sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords
+        sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords  # type: ignore[attr-defined]  # pyright: ignore[reportAttributeAccessIssue]
         sliced_cube._extra_coords = self.extra_coords[item]
 
         # If metadata sliceable, slice and add back onto sliced cube.

@@ -2,16 +2,23 @@ import copy
 import numbers
 import textwrap
 import collections.abc
+from typing import TYPE_CHECKING, Any
+from collections.abc import Mapping, Collection
 
 import numpy as np
 
 import ndcube.utils.collection as collection_utils
+from ndcube.utils.collection import AlignedAxesInput
 from ndcube.utils.exceptions import warn_deprecated
+
+if TYPE_CHECKING:
+    from ndcube.ndcube import NDCube
+    from ndcube.ndcube_sequence import NDCubeSequence
 
 __all__ = ["NDCollection"]
 
 
-class NDCollection(dict):
+class NDCollection(dict[Any, Any]):
     """
     Class for holding and manipulating an unordered collection of NDCubes or NDCubeSequences.
 
@@ -49,51 +56,59 @@ class NDCollection(dict):
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
 
-    def __init__(self, key_data_pairs, aligned_axes=None, meta=None, **kwargs):
+    def __init__(self,
+                 key_data_pairs: "Mapping[str, NDCube | NDCubeSequence] | Collection[tuple[str, NDCube | NDCubeSequence]]",
+                 aligned_axes: AlignedAxesInput = None, meta: Any = None, **kwargs: Any) -> None:
         if isinstance(key_data_pairs, collections.abc.Mapping):
-            key_data_pairs = tuple(key_data_pairs.items())
-        for key, _ in key_data_pairs:
+            pairs = tuple(key_data_pairs.items())
+        else:
+            pairs = key_data_pairs
+        for key, _ in pairs:
             if isinstance(key, numbers.Number):
                 warn_deprecated(
                     "Passing numerical keys to NDCollection is deprecated as they"
                     " lead to ambiguity when slicing the collection."
                 )
         # Enter data and metadata into object.
-        super().__init__(key_data_pairs)
+        super().__init__(pairs)
         self.meta = meta
 
         # Convert aligned axes to required format.
         sanitize_inputs = kwargs.pop("sanitize_inputs", True)
+        keys: tuple[Any, ...] = ()
+        sanitized_axes: dict[Any, tuple[int, ...]] | None = None
         if aligned_axes is not None:
-            keys, data = zip(*key_data_pairs)
+            keys, data = zip(*pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
             if sanitize_inputs:
-                aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)
+                sanitized_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)  # pyright: ignore[reportPrivateUsage]
             else:
-                aligned_axes = dict(zip(keys, aligned_axes))
+                # Only reachable internally (copy(), __getitem__, etc.), always with
+                # an already-sanitised tuple[tuple[int, ...], ...] of per-cube axes.
+                sanitized_axes = dict(zip(keys, aligned_axes))  # type: ignore[arg-type]
         if kwargs:
             raise TypeError(
                 f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'"
             )
         # Attach aligned axes to object.
-        self._aligned_axes = aligned_axes
+        self._aligned_axes = sanitized_axes
         if self._aligned_axes is None:
             self.n_aligned_axes = 0
         else:
-            self.n_aligned_axes = len(self.aligned_axes[keys[0]])
+            self.n_aligned_axes = len(self._aligned_axes[keys[0]])
 
     @property
-    def aligned_axes(self):
+    def aligned_axes(self) -> dict[Any, tuple[int, ...]] | None:
         """
         The axes of each array that are aligned in numpy order.
         """
         return self._aligned_axes
 
     @property
-    def _first_key(self):
+    def _first_key(self) -> Any:
         return list(self.keys())[0]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (textwrap.dedent(f"""\
             NDCollection
             ------------
@@ -102,11 +117,11 @@ class NDCollection(dict):
             Aligned dimensions: {self.aligned_dimensions}
             Aligned physical types: {self.aligned_axis_physical_types}"""))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"
 
     @property
-    def aligned_dimensions(self):
+    def aligned_dimensions(self) -> Any:
         """
         The lengths of all aligned axes.
 
@@ -119,7 +134,7 @@ class NDCollection(dict):
         return None
 
     @property
-    def aligned_axis_physical_types(self):
+    def aligned_axis_physical_types(self) -> list[tuple[Any, ...]] | None:
         """
         The physical types common to all members that are associated with each aligned axis.
 
@@ -138,7 +153,7 @@ class NDCollection(dict):
         return [tuple(set.intersection(*[set(cube_types[i]) for cube_types in collection_types]))
                 for i in range(self.n_aligned_axes)]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Any:
         # There are two ways to slice:
         # by key or sequence of keys, i.e. slice out given cubes in the collection, or
         # by typical python numeric slicing API,
@@ -162,7 +177,8 @@ class NDCollection(dict):
         if item_is_strings:
             new_data = [self[_item] for _item in item]
             new_keys = item
-            new_aligned_axes = tuple([self.aligned_axes[item_] for item_ in item])
+            new_aligned_axes = (tuple([self.aligned_axes[item_] for item_ in item])
+                               if self.aligned_axes is not None else None)
             new_meta = copy.deepcopy(self.meta)
 
         # Else, the item is assumed to be a typical slicing item.
@@ -189,9 +205,11 @@ class NDCollection(dict):
                     if item < 0:
                         sanitized_item = int(self.aligned_dimensions[0] + item)
                 elif isinstance(item, slice):
-                    if (item.start is not None and item.start < 0) or (item.stop is not None and item.stop < 0):
-                        new_start = aligned_shape[0] + item.start if item.start < 0 else item.start
-                        new_stop = aligned_shape[0] + item.stop if item.stop < 0 else item.stop
+                    start_neg = item.start is not None and item.start < 0
+                    stop_neg = item.stop is not None and item.stop < 0
+                    if start_neg or stop_neg:
+                        new_start = aligned_shape[0] + item.start if start_neg else item.start
+                        new_stop = aligned_shape[0] + item.stop if stop_neg else item.stop
                         sanitized_item = slice(new_start, new_stop)
                 else:
                     sanitized_item = list(sanitized_item)
@@ -199,9 +217,11 @@ class NDCollection(dict):
                         if isinstance(ax_it, numbers.Integral) and ax_it < 0:
                             sanitized_item[i] = aligned_shape[i] + ax_it
                         elif isinstance(ax_it, slice):
-                            if (ax_it.start is not None and ax_it.start < 0) or (ax_it.stop is not None and ax_it.stop < 0):
-                                new_start = aligned_shape[i] + ax_it.start if ax_it.start < 0 else ax_it.start
-                                new_stop = aligned_shape[i] + ax_it.stop if ax_it.stop < 0 else ax_it.stop
+                            start_neg = ax_it.start is not None and ax_it.start < 0
+                            stop_neg = ax_it.stop is not None and ax_it.stop < 0
+                            if start_neg or stop_neg:
+                                new_start = aligned_shape[i] + ax_it.start if start_neg else ax_it.start
+                                new_stop = aligned_shape[i] + ax_it.stop if stop_neg else ax_it.stop
                                 sanitized_item[i] = slice(new_start, new_stop)
                     sanitized_item = tuple(sanitized_item)
                 # Use sanitized item to slice meta.
@@ -216,15 +236,19 @@ class NDCollection(dict):
             sanitize_inputs=False
         )
 
-    def _generate_collection_getitems(self, item):
+    def _generate_collection_getitems(self, item: Any) -> tuple[list[list[Any]], Any]:
         # There are 3 supported cases of the slice item: int, slice, tuple of ints and/or slices.
         # Compile appropriate slice items for each cube in the collection and
         # and drop any aligned axes that are sliced out.
 
+        # Only called from __getitem__ after it has confirmed aligned_axes is not None.
+        if self.aligned_axes is None:
+            raise RuntimeError("aligned_axes must not be None to generate collection getitems.")
+
         # First, define empty lists of slice items to be applied to each cube in collection.
-        collection_items = [[slice(None)] * len(self[key].shape) for key in self]
+        collection_items: list[list[Any]] = [[slice(None)] * len(self[key].shape) for key in self]
         # Define empty list to hold aligned axes dropped by the slicing.
-        drop_aligned_axes_indices = []
+        drop_aligned_axes_indices: list[Any] = []
 
         # Case 1: int
         # First aligned axis is dropped.
@@ -255,30 +279,30 @@ class NDCollection(dict):
                     collection_items[j][self.aligned_axes[key][i]] = axis_item
 
         else:
-            raise TypeError(f"Unsupported slicing type: {axis_item}")
+            raise TypeError(f"Unsupported slicing type: {item}")
 
         # Use indices of dropped axes determine above to update aligned_axes
         # by removing any that have been dropped.
-        drop_aligned_axes_indices = np.array(drop_aligned_axes_indices)
-        new_aligned_axes = collection_utils._update_aligned_axes(
-            drop_aligned_axes_indices, self.aligned_axes, self._first_key)
+        drop_aligned_axes_indices_arr = np.array(drop_aligned_axes_indices)
+        new_aligned_axes = collection_utils._update_aligned_axes(  # pyright: ignore[reportPrivateUsage]
+            drop_aligned_axes_indices_arr, self.aligned_axes, self._first_key)
 
         return collection_items, new_aligned_axes
 
-    def copy(self):
+    def copy(self) -> "NDCollection":
         # Aligned axes is not a required parameter and may be None
         aligned_axes = None if self.aligned_axes is None else tuple(self.aligned_axes.values())
         return self.__class__(self.items(), aligned_axes, meta=self.meta, sanitize_inputs=False)
 
-    def setdefault(self):
+    def setdefault(self) -> Any:  # type: ignore[override]
         """Not supported by `~ndcube.NDCollection`"""
         raise NotImplementedError("NDCollection does not support setdefault.")
 
-    def popitem(self):
+    def popitem(self) -> Any:
         """Not supported by `~ndcube.NDCollection`"""
         raise NotImplementedError("NDCollection does not support popitem.")
 
-    def pop(self, key):
+    def pop(self, key: Any) -> Any:  # type: ignore[override]
         """
         Remove a member from the `~ndcube.NDCollection` and return it.
 
@@ -295,7 +319,7 @@ class NDCollection(dict):
             self.aligned_axes.pop(key)
         return popped_cube
 
-    def update(self, *args):
+    def update(self, *args: Any) -> None:  # type: ignore[override]
         """
         Merges a new collection with current one replacing objects with common keys.
 
@@ -306,7 +330,7 @@ class NDCollection(dict):
         if len(args) == 2:
             key_data_pairs = args[0]
             new_keys, new_data = zip(*key_data_pairs)
-            new_aligned_axes = collection_utils._sanitize_aligned_axes(new_keys, new_data, args[1])
+            new_aligned_axes = collection_utils._sanitize_aligned_axes(new_keys, new_data, args[1])  # pyright: ignore[reportPrivateUsage]
         else:  # If one arg given, input must be NDCollection.
             collection = args[0]
             new_keys = list(collection.keys())
@@ -325,12 +349,15 @@ class NDCollection(dict):
         # Update collection
         super().update(key_data_pairs)
         if first_old_aligned_axes is not None:  # since the above assertion passed, if one aligned axes is not None, both are not None
+            if self.aligned_axes is None or new_aligned_axes is None:
+                raise RuntimeError("aligned_axes must not be None here; assert_aligned_axes_compatible should have raised.")
             self.aligned_axes.update(new_aligned_axes)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         super().__delitem__(key)
-        self.aligned_axes.__delitem__(key)
+        if self.aligned_axes is not None:
+            self.aligned_axes.__delitem__(key)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> None:
         raise NotImplementedError("NDCollection does not support __setitem__. "
                                   "Use NDCollection.update instead")

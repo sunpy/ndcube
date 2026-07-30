@@ -1,9 +1,12 @@
+from typing import Any
+
 import astropy.units as u
 
 __all__ = ['prep_plot_kwargs', 'set_wcsaxes_format_units']
 
 
-def _expand_ellipsis(ndim, plist):
+def _expand_ellipsis(ndim: int, plist: Any) -> list[Any]:
+    plist = list(plist)
     if Ellipsis in plist:
         if plist.count(Ellipsis) > 1:
             raise IndexError("Only single ellipsis ('...') is permitted.")
@@ -19,7 +22,8 @@ def _expand_ellipsis(ndim, plist):
     return plist
 
 
-def _expand_ellipsis_axis_coordinates(plist, wapt):
+def _expand_ellipsis_axis_coordinates(plist: Any, wapt: Any) -> list[Any]:
+    plist = list(plist)
     if Ellipsis in plist:
         if plist.count(Ellipsis) > 1:
             raise IndexError("Only single ellipsis ('...') is permitted.")
@@ -35,7 +39,8 @@ def _expand_ellipsis_axis_coordinates(plist, wapt):
     return plist
 
 
-def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
+def prep_plot_kwargs(naxis: int, wcs: Any, plot_axes: Any, axes_coordinates: Any,
+                     axes_units: Any) -> tuple[list[Any], list[Any] | None, list[Any] | None]:
     """
     Prepare the kwargs for the plotting functions.
 
@@ -85,7 +90,7 @@ def prep_plot_kwargs(naxis, wcs, plot_axes, axes_coordinates, axes_units):
     return plot_axes, axes_coordinates, axes_units
 
 
-def set_wcsaxes_format_units(coord_map, wcs, axes_units=None):
+def set_wcsaxes_format_units(coord_map: Any, wcs: Any, axes_units: list[Any] | None = None) -> None:
     """
     Given an `~astropy.visualization.wcsaxes.coordinates_map.CoordinatesMap`
     object set the format units.

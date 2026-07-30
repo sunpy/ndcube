@@ -1,4 +1,5 @@
 import warnings
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,8 +21,8 @@ class MatplotlibPlotter(BasePlotter):
     Provide visualization methods for NDCube which use `matplotlib`.
     """
 
-    def plot(self, axes=None, plot_axes=None, axes_coordinates=None,
-             axes_units=None, data_unit=None, wcs=None, **kwargs):
+    def plot(self, axes: Any = None, plot_axes: Any = None, axes_coordinates: Any = None,
+             axes_units: Any = None, data_unit: Any = None, wcs: Any = None, **kwargs: Any) -> Any:
         """
         Visualize the `~ndcube.NDCube`.
 
@@ -92,14 +93,14 @@ class MatplotlibPlotter(BasePlotter):
 
         return ax
 
-    def _not_visible_coords(self, axes, axes_coordinates):
+    def _not_visible_coords(self, axes: Any, axes_coordinates: Any) -> set[Any]:
         """
         Based on an axes object and axes_coords, work out which coords should not be visible.
         """
         visible_coords = {item[1] for item in axes.coords._aliases.items() if item[0] in axes_coordinates}
         return set(axes.coords._aliases.values()).difference(visible_coords)
 
-    def _apply_axes_coordinates(self, axes, axes_coordinates):
+    def _apply_axes_coordinates(self, axes: Any, axes_coordinates: Any) -> None:
         """
         Hide ticks and labels for non-visible axes based on axes_coordinates.
         """
@@ -107,8 +108,8 @@ class MatplotlibPlotter(BasePlotter):
             axes.coords[coord_index].set_ticks_visible(False)
             axes.coords[coord_index].set_ticklabel_visible(False)
 
-    def _plot_1D_cube(self, wcs, axes=None, axes_coordinates=None, axes_units=None,
-                      data_unit=None, **kwargs):
+    def _plot_1D_cube(self, wcs: Any, axes: Any = None, axes_coordinates: Any = None, axes_units: Any = None,
+                      data_unit: Any = None, **kwargs: Any) -> Any:
         if axes is None:
             axes = plt.subplot(projection=wcs)
 
@@ -157,8 +158,8 @@ class MatplotlibPlotter(BasePlotter):
 
         return axes
 
-    def _plot_2D_cube(self, wcs, axes=None, plot_axes=None, axes_coordinates=None,
-                      axes_units=None, data_unit=None, **kwargs):
+    def _plot_2D_cube(self, wcs: Any, axes: Any = None, plot_axes: Any = None, axes_coordinates: Any = None,
+                      axes_units: Any = None, data_unit: Any = None, **kwargs: Any) -> Any:
         if axes is None:
             axes = plt.subplot(projection=wcs, slices=plot_axes)
 
@@ -193,8 +194,8 @@ class MatplotlibPlotter(BasePlotter):
 
         return axes
 
-    def _animate_cube(self, wcs, plot_axes=None, axes_coordinates=None,
-                      axes_units=None, data_unit=None, **kwargs):
+    def _animate_cube(self, wcs: Any, plot_axes: Any = None, axes_coordinates: Any = None,
+                      axes_units: Any = None, data_unit: Any = None, **kwargs: Any) -> Any:
         try:
             from mpl_animators import ArrayAnimatorWCS  # noqa: PLC0415
         except ImportError as e:
@@ -222,7 +223,7 @@ class MatplotlibPlotter(BasePlotter):
 
         return ax
 
-    def _as_mpl_axes(self):
+    def _as_mpl_axes(self) -> tuple[Any, dict[str, Any]]:
         """
         Compatibility hook for Matplotlib and WCSAxes.
         This functionality requires the WCSAxes package to work. The reason
@@ -234,13 +235,14 @@ class MatplotlibPlotter(BasePlotter):
         and this will generate a plot with the correct WCS coordinates on the
         axes. See https://wcsaxes.readthedocs.io for more information.
         """
-        kwargs = {'wcs': self._ndcube.wcs}
+        kwargs: dict[str, Any] = {'wcs': self._ndcube.wcs}
         n_dim = len(self._ndcube.shape)
         if n_dim > 2:
             kwargs['slices'] = ['x', 'y'] + [None] * (n_dim - 2)
         return WCSAxes, kwargs
 
-    def _prep_animate_args(self, wcs, plot_axes, axes_units, data_unit):
+    def _prep_animate_args(self, wcs: Any, plot_axes: Any, axes_units: Any,
+                           data_unit: Any) -> tuple[Any, Any, list[Any], dict[str, Any]]:
         # If data_unit set, convert data to that unit
         if data_unit is None:
             data = self._ndcube.data
@@ -251,7 +253,7 @@ class MatplotlibPlotter(BasePlotter):
         if self._ndcube.mask is not None:
             data = np.ma.masked_array(data, self._ndcube.mask)
 
-        coord_params = {}
+        coord_params: dict[str, Any] = {}
         if axes_units is not None:
             for axis_unit, coord_name in zip(axes_units, wcs.world_axis_physical_types):
                 coord_params[coord_name] = {'format_unit': axis_unit}

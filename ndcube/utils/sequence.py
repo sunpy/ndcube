@@ -4,7 +4,8 @@ Utilities for ndcube sequence.
 """
 
 from copy import deepcopy
-from collections import namedtuple
+from typing import Any, NamedTuple
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -13,17 +14,18 @@ __all__ = ['SequenceItem',
            'cube_like_tuple_item_to_sequence_items']
 
 
-SequenceItem = namedtuple("SequenceItem", "sequence_index cube_item")
-"""
-Define SequenceItem named tuple of length 2. Its attributes are:
-sequence_index: an int giving the index of a cube within an NDCubeSequence.
-cube_item: item (int, slice, tuple) to be applied to cube identified
-by sequence_index attribute.
-"""
+class SequenceItem(NamedTuple):
+    """
+    sequence_index: an int giving the index of a cube within an NDCubeSequence.
+    cube_item: item (int, slice, tuple) to be applied to cube identified
+    by sequence_index attribute.
+    """
+    sequence_index: int
+    cube_item: Any
 
 
-def cube_like_index_to_sequence_and_common_axis_indices(cube_like_index, common_axis,
-                                                        common_axis_lengths):
+def cube_like_index_to_sequence_and_common_axis_indices(cube_like_index: int, common_axis: int,
+                                                        common_axis_lengths: Sequence[int]) -> tuple[int, int]:
     """
     Converts a cube-like index for an NDCubeSequence to a sequence index and a common axis index.
 
@@ -52,10 +54,12 @@ def cube_like_index_to_sequence_and_common_axis_indices(cube_like_index, common_
         common_axis_index = cube_like_index
     else:
         common_axis_index = cube_like_index - cumul_lengths[sequence_index - 1]
-    return sequence_index, common_axis_index
+    return int(sequence_index), int(common_axis_index)
 
 
-def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_lengths, n_cube_dims):
+def cube_like_tuple_item_to_sequence_items(item: list[Any], common_axis: int,
+                                           common_axis_lengths: Sequence[int],
+                                           n_cube_dims: int) -> list[SequenceItem]:
     """
     Convert a tuple for slicing an NDCubeSequence in the cube-like API to a list of SequenceItems.
 
@@ -64,8 +68,8 @@ def cube_like_tuple_item_to_sequence_items(item, common_axis, common_axis_length
 
     Parameters
     ----------
-    item: iterable of `int` or `slice`
-        The slicing item. The common axis entry must be a `slice`
+    item: iterable of `int` or ``slice``
+        The slicing item. The common axis entry must be a ``slice``
 
     common_axis: `int`
         The index of the item corresponding to the common axis.

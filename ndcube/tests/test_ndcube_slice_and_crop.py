@@ -423,6 +423,17 @@ def test_crop_by_values_1d_dependent(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_no_points_with_extra_coords_wcs(ndcube_3d_ln_lt_l_ec_time):
+    # Regression test: cropping with zero points is a no-op, but
+    # sanitize_crop_inputs used to return the *un-unwrapped* ExtraCoords
+    # object on that early-exit path, so `wcs.pixel_n_dim` crashed with
+    # AttributeError since ExtraCoords has no such attribute (only
+    # `ExtraCoords.wcs.pixel_n_dim` does).
+    cube = ndcube_3d_ln_lt_l_ec_time
+    output = cube.crop(wcs=cube.extra_coords)
+    helpers.assert_cubes_equal(output, cube)
+
+
 def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
     cube = ndcube_3d_ln_lt_l_ec_time
     lower_corner = (Time("2000-01-01T15:00:00", scale="utc", format="fits"), None)

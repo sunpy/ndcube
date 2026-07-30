@@ -29,7 +29,7 @@ class NDCubeDeprecationWarning(FutureWarning, NDCubeWarning):
     """
 
 
-def warn_user(msg, stacklevel=1):
+def warn_user(msg: str, stacklevel: int = 1) -> None:
     """
     Raise a `NDCubeWarning`.
 
@@ -45,7 +45,7 @@ def warn_user(msg, stacklevel=1):
     warnings.warn(msg, NDCubeUserWarning , stacklevel + 1)
 
 
-def warn_deprecated(msg, stacklevel=1):
+def warn_deprecated(msg: str, stacklevel: int = 1) -> None:
     """
     Raise a `NDCubeDeprecationWarning`.
 

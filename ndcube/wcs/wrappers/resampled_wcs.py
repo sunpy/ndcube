@@ -1,12 +1,17 @@
 
-import numpy as np
+from typing import Any
+from collections.abc import Iterable
 
+import numpy as np
+import numpy.typing as npt
+
+from astropy.wcs.wcsapi import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 __all__ = ['ResampledLowLevelWCS']
 
 
-class ResampledLowLevelWCS(BaseWCSWrapper):
+class ResampledLowLevelWCS(BaseWCSWrapper):  # type: ignore[misc]
     """
     A wrapper for a low-level WCS object that has down- or
     up-sampled pixel axes.
@@ -76,7 +81,8 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
                       -1   -0.75 -0.5  -0.25   0    0.25  0.5   0.75   1   resampled pixel indices: factor=2, offset=1
     """
 
-    def __init__(self, wcs, factor, offset=0):
+    def __init__(self, wcs: BaseLowLevelWCS, factor: float | Iterable[float],
+                 offset: float | Iterable[float] = 0) -> None:
         self._wcs = wcs
         if np.isscalar(factor):
             factor = [factor] * self.pixel_n_dim
@@ -89,36 +95,36 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
         if len(self._offset) != self.pixel_n_dim:
             raise ValueError(f"Length of offset must equal number of dimensions {self.pixel_n_dim}.")
 
-    def _top_to_underlying_pixels(self, top_pixels):
+    def _top_to_underlying_pixels(self, top_pixels: npt.NDArray[Any]) -> npt.NDArray[Any]:
         # Convert user-facing pixel indices to the pixel grid of underlying WCS.
         factor = self._pad_dims(self._factor, top_pixels.ndim)
         offset = self._pad_dims(self._offset, top_pixels.ndim)
-        return (top_pixels + 0.5) * factor - 0.5 + offset
+        return np.asarray((top_pixels + 0.5) * factor - 0.5 + offset)
 
-    def _underlying_to_top_pixels(self, underlying_pixels):
+    def _underlying_to_top_pixels(self, underlying_pixels: npt.NDArray[Any]) -> npt.NDArray[Any]:
         # Convert pixel indices of underlying pixel grid to user-facing grid.
         factor = self._pad_dims(self._factor, underlying_pixels.ndim)
         offset = self._pad_dims(self._offset, underlying_pixels.ndim)
-        return (underlying_pixels + 0.5 - offset) / factor - 0.5
+        return np.asarray((underlying_pixels + 0.5 - offset) / factor - 0.5)
 
-    def _pad_dims(self, arr, ndim):
+    def _pad_dims(self, arr: npt.NDArray[Any], ndim: int) -> npt.NDArray[Any]:
         # Pad array with trailing degenerate dimensions.
         # This make scaling with pixel arrays easier.
         shape = np.ones(ndim, dtype=int)
         shape[0] = len(arr)
         return arr.reshape(tuple(shape))
 
-    def pixel_to_world_values(self, *pixel_arrays):
+    def pixel_to_world_values(self, *pixel_arrays: Any) -> tuple[Any, ...]:
         underlying_pixel_arrays = self._top_to_underlying_pixels(np.asarray(pixel_arrays))
-        return self._wcs.pixel_to_world_values(*underlying_pixel_arrays)
+        return self._wcs.pixel_to_world_values(*underlying_pixel_arrays)  # type: ignore[no-any-return]
 
-    def world_to_pixel_values(self, *world_arrays):
+    def world_to_pixel_values(self, *world_arrays: Any) -> tuple[Any, ...]:
         underlying_pixel_arrays = self._wcs.world_to_pixel_values(*world_arrays)
         top_pixel_arrays = self._underlying_to_top_pixels(np.asarray(underlying_pixel_arrays))
         return tuple(array for array in top_pixel_arrays)
 
     @property
-    def pixel_shape(self):
+    def pixel_shape(self) -> tuple[int | float, ...] | None:
         # Return pixel shape of resampled grid.
         # Where shape is an integer, return an int type as its required for some uses.
         if self._wcs.pixel_shape is None:
@@ -131,7 +137,7 @@ class ResampledLowLevelWCS(BaseWCSWrapper):
                      for i, is_int in zip(pixel_shape, int_elements))
 
     @property
-    def pixel_bounds(self):
+    def pixel_bounds(self) -> list[tuple[Any, ...]] | None:
         if self._wcs.pixel_bounds is None:
             return self._wcs.pixel_bounds
         top_level_bounds = self._underlying_to_top_pixels(np.asarray(self._wcs.pixel_bounds))

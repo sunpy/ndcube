@@ -50,6 +50,12 @@ def test_construct_with_dict():
     assert cube_collection.items() == new_collection.items()
 
 
+def test_construct_with_single_int_aligned_axes():
+    # cube0 and cube2 both have shape (3, 4, 5), so axis 0 is a valid aligned axis.
+    collection = NDCollection([("cube0", cube0), ("cube2", cube2)], aligned_axes=0)
+    assert collection.aligned_axes == {"cube0": (0,), "cube2": (0,)}
+
+
 @pytest.mark.parametrize(('item', 'collection', 'expected'), [
     (0, cube_collection,
         NDCollection([("cube0", cube0[:, 0]), ("cube1", cube1[:, :, 0]), ("cube2", cube2[:, 0])],
@@ -112,11 +118,43 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
 
 @pytest.mark.parametrize(('collection', 'key', 'expected'), [
     (cube_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)],
-                                            aligned_axes=aligned_axes[1:]))])
+                                            aligned_axes=aligned_axes[1:])),
+    (unaligned_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)]))])
+    # Last regression test: __delitem__ used to call self.aligned_axes.__delitem__(key)
+    # unconditionally, crashing with AttributeError on a collection with no
+    # aligned axes since self.aligned_axes is None in that case.
 def test_del_collection(collection, key, expected):
     del_collection = collection.copy()
     del del_collection[key]
     helpers.assert_collections_equal(del_collection, expected)
+
+
+def test_slice_by_keys_unaligned_collection():
+    # Regression test: slicing by a sequence of string keys used to crash with
+    # TypeError ("'NoneType' object is not subscriptable") on a collection with
+    # aligned_axes=None, because `self.aligned_axes[item_]` was called
+    # unconditionally instead of being guarded by an is-None check.
+    result = unaligned_collection[("cube0", "cube1")]
+    assert list(result.keys()) == ["cube0", "cube1"]
+    assert result.aligned_axes is None
+
+
+def test_collection_getitem_unsupported_type():
+    # Regression test: the "unsupported slicing type" error message referenced
+    # `axis_item`, a loop variable only bound inside the tuple-handling branch,
+    # so hitting this branch raised NameError instead of the intended TypeError.
+    with pytest.raises(TypeError, match="Unsupported slicing type"):
+        cube_collection[1.5]
+
+
+def test_collection_slice_open_start_negative_stop_with_sliceable_meta():
+    # Regression test: sanitizing a slice item with sliceable meta compared
+    # `item.start < 0` even when `item.start` is None (i.e. an open-ended
+    # slice like `slice(None, -1)`), crashing with
+    # "'<' not supported between instances of 'NoneType' and 'int'".
+    result = cube_collection[slice(None, -1)]
+    expected = cube_collection[slice(0, cube_collection.aligned_dimensions[0] - 1)]
+    helpers.assert_collections_equal(result, expected)
 
 
 @pytest.mark.parametrize(('collection', 'key', 'data', 'aligned_axes', 'expected'), [

@@ -1,8 +1,8 @@
 import abc
 import copy
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from collections import OrderedDict, defaultdict
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterator
 
 import numpy as np
 
@@ -12,8 +12,18 @@ from astropy.wcs.wcsapi.utils import deserialize_class
 
 from ndcube.utils.wcs import validate_physical_types
 
+if TYPE_CHECKING:
+    from ndcube.ndcube import NDCubeABC
 
-class GlobalCoordsABC(Mapping):
+# Coordinate names/physical types are usually `str`, but can be grouped into
+# a `tuple` of `str` when several dropped world dimensions share one coordinate.
+CoordKeyType = str | tuple[str, ...]
+# A physical type is like CoordKeyType, but may also be None for coordinates
+# added via `GlobalCoords.add` without a known UCD1+ physical type.
+PhysicalTypeValue = CoordKeyType | None
+
+
+class GlobalCoordsABC(Mapping[CoordKeyType, Any]):
     """
     A structured representation of coordinate information applicable to a whole `~ndcube.ndcube.NDCubeABC`.
 
@@ -30,7 +40,7 @@ class GlobalCoordsABC(Mapping):
         coordinates explicitly added will be shown.
     """
     @abc.abstractmethod
-    def add(self, name: str, physical_type: str, coord: Any):
+    def add(self, name: str, physical_type: str | None, coord: Any) -> None:
         """
         Add a new coordinate to the collection.
 
@@ -49,32 +59,32 @@ class GlobalCoordsABC(Mapping):
         """
 
     @abc.abstractmethod
-    def remove(self, name: str):
+    def remove(self, name: str) -> None:
         """
         Remove a coordinate from the collection.
         """
 
     @property
     @abc.abstractmethod
-    def physical_types(self):
+    def physical_types(self) -> Mapping[CoordKeyType, PhysicalTypeValue]:
         """
         A mapping of names to physical types for each coordinate.
         """
 
     @abc.abstractmethod
-    def __getitem__(self, item: str):
+    def __getitem__(self, item: CoordKeyType) -> Any:
         """
         Indexing the object by name should return the coordinate object.
         """
 
     @abc.abstractmethod
-    def __iter__(self):
+    def __iter__(self) -> Iterator[CoordKeyType]:
         """
         Iterate over the collection.
         """
 
     @abc.abstractmethod
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Establish the length of the collection.
         """
@@ -83,13 +93,13 @@ class GlobalCoordsABC(Mapping):
 class GlobalCoords(GlobalCoordsABC):
     # Docstring in GlobalCoordsABC
 
-    def __init__(self, ndcube=None):
+    def __init__(self, ndcube: "NDCubeABC | None" = None) -> None:
         super().__init__()
         self._ndcube = ndcube
-        self._internal_coords = OrderedDict()
+        self._internal_coords: OrderedDict[CoordKeyType, tuple[PhysicalTypeValue, Any]] = OrderedDict()
 
     @staticmethod
-    def _convert_dropped_to_internal(dropped_dimensions):
+    def _convert_dropped_to_internal(dropped_dimensions: dict[str, Any]) -> dict[CoordKeyType, tuple[PhysicalTypeValue, Any]]:
         """
         Convert the `~astropy.wcs.wcsapi.SlicedLowLevelWCS` style
         ``dropped_world_dimensions`` dictionary to the GlobalCoords internal
@@ -98,7 +108,7 @@ class GlobalCoords(GlobalCoordsABC):
         # Most of this method is adapted from
         # astropy.wcs.wcsapi.high_level_wcs.HighLevelWCSMixin.pixel_to_world
 
-        new_internal_coords = {}
+        new_internal_coords: dict[CoordKeyType, tuple[PhysicalTypeValue, Any]] = {}
 
         world = dropped_dimensions.pop("value")
         components = dropped_dimensions.pop("world_axis_object_components")
@@ -111,8 +121,8 @@ class GlobalCoords(GlobalCoordsABC):
                 classes_new[key] = deserialize_class(value, construct=False)
             classes = classes_new
 
-        args = defaultdict(list)
-        kwargs = defaultdict(dict)
+        args: defaultdict[str, list[Any]] = defaultdict(list)
+        kwargs: defaultdict[str, dict[str, Any]] = defaultdict(dict)
 
         for i, (key, attr, _) in enumerate(components):
             if isinstance(attr, str):
@@ -153,7 +163,7 @@ class GlobalCoords(GlobalCoordsABC):
         return new_internal_coords
 
     @property
-    def _all_coords(self):
+    def _all_coords(self) -> dict[CoordKeyType, tuple[PhysicalTypeValue, Any]]:
         """
         A dynamic dictionary of all global coordinates, stored here or derived
         from the ndcube object.
@@ -161,7 +171,7 @@ class GlobalCoords(GlobalCoordsABC):
         if self._ndcube is None:
             return self._internal_coords
 
-        all_coords = {**self._internal_coords}
+        all_coords: dict[CoordKeyType, tuple[PhysicalTypeValue, Any]] = {**self._internal_coords}
 
         if hasattr(self._ndcube.wcs.low_level_wcs, "dropped_world_dimensions"):
             dropped_world = copy.deepcopy(self._ndcube.wcs.low_level_wcs.dropped_world_dimensions)
@@ -175,7 +185,7 @@ class GlobalCoords(GlobalCoordsABC):
 
         return all_coords
 
-    def add(self, name, physical_type, coord):
+    def add(self, name: str, physical_type: str | None, coord: Any) -> None:
         # Docstring in GlobalCoordsABC
         if name in self._internal_coords.keys():
             raise ValueError("coordinate with same name already exists: "
@@ -186,16 +196,16 @@ class GlobalCoords(GlobalCoordsABC):
 
         self._internal_coords[name] = (physical_type, coord)
 
-    def remove(self, name):
+    def remove(self, name: str) -> None:
         # Docstring in GlobalCoordsABC
         del self._internal_coords[name]
 
     @property
-    def physical_types(self):
+    def physical_types(self) -> dict[CoordKeyType, PhysicalTypeValue]:
         # Docstring in GlobalCoordsABC
         return {name: value[0] for name, value in self._all_coords.items()}
 
-    def filter_by_physical_type(self, physical_type):
+    def filter_by_physical_type(self, physical_type: str) -> "GlobalCoords":
         """
         Filter this object to coordinates with a given physical type.
 
@@ -210,10 +220,10 @@ class GlobalCoords(GlobalCoordsABC):
             A new object storing just the coordinates with the given physical type.
         """
         gc = GlobalCoords()
-        gc._internal_coords = dict(filter(lambda x: x[1][0] == physical_type, self._all_coords.items()))
+        gc._internal_coords = OrderedDict(filter(lambda x: x[1][0] == physical_type, self._all_coords.items()))
         return gc
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: CoordKeyType) -> Any:
         # Docstring in GlobalCoordsABC
         if item not in self._all_coords:
             for key, value in self._all_coords.items():
@@ -222,15 +232,15 @@ class GlobalCoords(GlobalCoordsABC):
 
         return self._all_coords[item][1]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[CoordKeyType]:
         # Docstring in GlobalCoordsABC
         return iter(self._all_coords)
 
-    def __len__(self):
+    def __len__(self) -> int:
         # Docstring in GlobalCoordsABC
         return len(self._all_coords)
 
-    def __str__(self):
+    def __str__(self) -> str:
         classname = self.__class__.__name__
         elements = [f"{name} {[ptype]}:\n{coord!r}" for (name, coord), ptype in
                     zip(self.items(), self.physical_types.values())]
@@ -242,5 +252,5 @@ class GlobalCoords(GlobalCoordsABC):
 
         return f"{classname}({joiner.join(elements)})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"

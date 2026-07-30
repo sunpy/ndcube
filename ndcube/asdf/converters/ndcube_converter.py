@@ -1,13 +1,14 @@
 import warnings
+from typing import Any
 
 from asdf.extension import Converter
 
 
-class NDCubeConverter(Converter):
+class NDCubeConverter(Converter):  # type: ignore[misc]
     tags = ["tag:sunpy.org:ndcube/ndcube-*"]
     types = ["ndcube.ndcube.NDCube"]
 
-    def from_yaml_tree(self, node, tag, ctx):
+    def from_yaml_tree(self, node: dict[str, Any], tag: str, ctx: Any) -> Any:
         from ndcube.ndcube import NDCube
 
         ndcube = NDCube(
@@ -19,13 +20,13 @@ class NDCubeConverter(Converter):
             uncertainty=node.get("uncertainty"),
         )
         if "extra_coords" in node:
-            ndcube._extra_coords = node["extra_coords"]
+            ndcube._extra_coords = node["extra_coords"]  # pyright: ignore[reportPrivateUsage]
         if "global_coords" in node:
-            ndcube._global_coords = node["global_coords"]
+            ndcube._global_coords = node["global_coords"]  # pyright: ignore[reportPrivateUsage]
 
         return ndcube
 
-    def to_yaml_tree(self, ndcube, tag, ctx):
+    def to_yaml_tree(self, ndcube: Any, tag: str, ctx: Any) -> dict[str, Any]:
         """
         Notes
         -----
@@ -41,7 +42,7 @@ class NDCubeConverter(Converter):
             This ensures that users are aware of potentially important information
             that is not included in the serialized output.
         """
-        node = {}
+        node: dict[str, Any] = {}
         node["data"] = ndcube.data
         # NDData always has .wcs as a high level wcs
         node["wcs"] = ndcube.wcs.low_level_wcs

@@ -98,6 +98,42 @@ exclude = ["ndcube._dev*"]
 [tool.setuptools_scm]
 version_file = "ndcube/_version.py"
 
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+disable_error_code = "import-untyped"
+allow_redefinition = true
+exclude = "(^|/)tests/"
+
+[[tool.mypy.overrides]]
+module = ["ndcube.conftest", "*.tests.*"]
+ignore_errors = true
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+
+# Don't infer types from unstubbed library source (astropy/scipy/sunpy have no py.typed);
+# treat them as untyped like mypy's ignore_missing_imports does, rather than statically
+# analysing their implementation.
+useLibraryCodeForTypes = false
+
+## Stop errors when third-party libraries lack types/stubs
+reportMissingImports = "none"
+reportMissingTypeStubs = "none"
+
+# Corrected rules to silence "partially unknown" issues from external packages
+reportUnknownVariableType = "none"
+reportUnknownMemberType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownParameterType = "none"
+
+ignore = [
+    "**/tests/**",
+    "**/conftest.py",
+]
+
 [tool.gilesbot]
   [tool.gilesbot.pull_requests]
   enabled = true

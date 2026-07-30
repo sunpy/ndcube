@@ -184,3 +184,33 @@ def test_shared_pixel_axis_compound_3d(spectral_cube_3d_fitswcs, time_1d_fitswcs
 
     with pytest.raises(ValueError):
         wcs.world_to_pixel_values((14, -10, -2.6e+10, -7.0))
+
+
+class _NamedPixelAxisWCS:
+    """
+    A minimal low-level WCS stub with a non-empty ``pixel_axis_names``.
+
+    FITS WCS objects always report empty-string pixel axis names, so they
+    can't be used to exercise the case where two WCSes sharing a pixel axis
+    (via ``mapping``) disagree on that axis's name.
+    """
+
+    def __init__(self, pixel_n_dim, pixel_axis_names):
+        self.pixel_n_dim = pixel_n_dim
+        self.array_shape = None
+        self.pixel_bounds = None
+        self.pixel_axis_names = pixel_axis_names
+
+
+def test_pixel_axis_names_shared_axis_different_names():
+    # Regression test: CompoundLowLevelWCS.pixel_axis_names used to build
+    # out_names via `list(self.mapping.inverse(*pixel_names))` and then try to
+    # mutate the *tuple* returned by `Mapping.__call__` in place, raising
+    # "'tuple' object does not support item assignment" whenever a shared
+    # pixel axis had different names in the contributing WCSes.
+    wcs_a = _NamedPixelAxisWCS(1, ('a',))
+    wcs_b = _NamedPixelAxisWCS(1, ('b',))
+
+    compound = CompoundLowLevelWCS(wcs_a, wcs_b, mapping=(0, 0))
+
+    assert compound.pixel_axis_names == ('a / b',)

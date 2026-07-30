@@ -1,17 +1,20 @@
+from typing import Any
+from collections.abc import Iterable
+
 import astropy.units as u
 
 __all__ = ['convert_quantities_to_units', 'unique_sorted']
 
 
-def unique_sorted(iterable):
+def unique_sorted(iterable: Iterable[Any]) -> list[Any]:
     """
     Return unique values in the order they are first encountered in the iterable.
     """
-    lookup = set()  # a temporary lookup set
-    return [ele for ele in iterable if ele not in lookup and lookup.add(ele) is None]
+    lookup: set[Any] = set()  # a temporary lookup set
+    return [ele for ele in iterable if ele not in lookup and lookup.add(ele) is None]  # type: ignore[func-returns-value]
 
 
-def convert_quantities_to_units(coords, units):
+def convert_quantities_to_units(coords: Iterable[Any], units: Iterable[Any]) -> list[Any]:
     """Converts a sequence of Quantities to units used in the WCS.
 
     Non-Quantity types in the sequence are allowed and ignored.

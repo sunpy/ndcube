@@ -1,11 +1,19 @@
 import numbers
+from typing import Any, Literal, TypeAlias
+from collections.abc import Sequence
 
 import numpy as np
+import numpy.typing as npt
 
 __all__ = ['assert_aligned_axes_compatible']
 
+AlignedAxesInput: TypeAlias = (
+    int | tuple[int, ...] | tuple[tuple[int, ...], ...] | Literal["all"] | None
+)
 
-def _sanitize_aligned_axes(keys, data, aligned_axes):
+
+def _sanitize_aligned_axes(keys: Sequence[Any], data: Sequence[Any],  # pyright: ignore[reportUnusedFunction]
+                           aligned_axes: AlignedAxesInput) -> dict[Any, tuple[int, ...]] | None:
     if aligned_axes is None:
         return None
     # If aligned_axes set to "all", assume all axes are aligned in order.
@@ -25,7 +33,7 @@ def _sanitize_aligned_axes(keys, data, aligned_axes):
     return dict(zip(keys, sanitized_axes))
 
 
-def _sanitize_user_aligned_axes(data, aligned_axes):
+def _sanitize_user_aligned_axes(data: Sequence[Any], aligned_axes: Any) -> tuple[Any, ...]:
     """
     Converts input aligned_axes to standard format.
     aligned_axes can be supplied by the user in a few ways:
@@ -39,15 +47,15 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     """
     aligned_axes_error_message = ("aligned_axes must contain ints or "
                                   "a tuple of ints for each element in data.")
-    if isinstance(data[0].shape, tuple):
-        cube0_dims = np.array(data[0].shape, dtype=object)[np.array(aligned_axes[0])]
-    else:
-        cube0_dims = data[0].shape[np.array(aligned_axes[0])]
     # If user entered a single int or string, convert to length 1 tuple of int.
     if isinstance(aligned_axes, numbers.Integral):
         aligned_axes = (aligned_axes,)
     if not isinstance(aligned_axes, tuple):
         raise ValueError(aligned_axes_error_message)
+    if isinstance(data[0].shape, tuple):
+        cube0_dims = np.array(data[0].shape, dtype=object)[np.array(aligned_axes[0])]
+    else:
+        cube0_dims = data[0].shape[np.array(aligned_axes[0])]
     # Check type of each element.
     axes_all_ints = all(isinstance(axis, numbers.Integral) for axis in aligned_axes)
     axes_all_tuples = all(isinstance(axis, tuple) for axis in aligned_axes)
@@ -55,7 +63,7 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     n_cubes = len(data)
     if axes_all_ints:
         n_aligned_axes = len(aligned_axes)
-        aligned_axes = tuple([aligned_axes for i in range(n_cubes)])
+        aligned_axes = tuple([aligned_axes for _ in range(n_cubes)])
 
     # If all elements are tuple, ensure there is a tuple for each cube and
     # all elements of each sub-tuple are ints.
@@ -110,30 +118,30 @@ def _sanitize_user_aligned_axes(data, aligned_axes):
     return aligned_axes
 
 
-def _update_aligned_axes(drop_aligned_axes_indices, aligned_axes, first_key):
+def _update_aligned_axes(drop_aligned_axes_indices: npt.NDArray[Any], aligned_axes: dict[Any, Any],  # pyright: ignore[reportUnusedFunction]
+                         first_key: Any) -> tuple[Any, ...] | None:
     # Remove dropped axes from aligned_axes. MUST BE A BETTER WAY TO DO THIS.
     if len(drop_aligned_axes_indices) <= 0:
-        new_aligned_axes = tuple(aligned_axes.values())
-    elif len(drop_aligned_axes_indices) == len(aligned_axes[first_key]):
-        new_aligned_axes = None
-    else:
-        new_aligned_axes = []
-        for key in aligned_axes.keys():
-            cube_aligned_axes = np.array(aligned_axes[key])
-            for drop_axis_index in drop_aligned_axes_indices:
-                drop_axis = cube_aligned_axes[drop_axis_index]
-                cube_aligned_axes = np.delete(cube_aligned_axes, drop_axis_index)
-                w = np.where(cube_aligned_axes > drop_axis)
-                cube_aligned_axes[w] -= 1
-                w = np.where(drop_aligned_axes_indices > drop_axis_index)
-                drop_aligned_axes_indices[w] -= 1
-            new_aligned_axes.append(tuple(cube_aligned_axes))
-        new_aligned_axes = tuple(new_aligned_axes)
+        return tuple(aligned_axes.values())
+    if len(drop_aligned_axes_indices) == len(aligned_axes[first_key]):
+        return None
 
-    return new_aligned_axes
+    new_aligned_axes: list[Any] = []
+    for axes in aligned_axes.values():
+        cube_aligned_axes = np.array(axes)
+        for drop_axis_index in drop_aligned_axes_indices:
+            drop_axis = cube_aligned_axes[drop_axis_index]
+            cube_aligned_axes = np.delete(cube_aligned_axes, drop_axis_index)
+            w = np.where(cube_aligned_axes > drop_axis)
+            cube_aligned_axes[w] -= 1
+            w = np.where(drop_aligned_axes_indices > drop_axis_index)
+            drop_aligned_axes_indices[w] -= 1
+        new_aligned_axes.append(tuple(cube_aligned_axes))
+    return tuple(new_aligned_axes)
 
 
-def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes1, data_axes2):
+def assert_aligned_axes_compatible(data_dimensions1: tuple[int, ...], data_dimensions2: tuple[int, ...],
+                                   data_axes1: tuple[int, ...] | None, data_axes2: tuple[int, ...] | None) -> None:
     """
     Checks whether two sets of aligned axes are compatible.
 
@@ -143,10 +151,12 @@ def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes
         The dimension lengths of data cube 1.
     data_dimensions2: `tuple` of `int`
         The dimension lengths of data cube 2.
-    data_axes1: `tuple` of `int`
-        The aligned axes of data cube 1.
-    data_axes2: `tuple` of `int`
-        The aligned axes of data cube 2.
+    data_axes1: `tuple` of `int` or `None`
+        The aligned axes of data cube 1. `None` if cube 1's collection has no
+        aligned axes.
+    data_axes2: `tuple` of `int` or `None`
+        The aligned axes of data cube 2. `None` if cube 2's collection has no
+        aligned axes.
     """
     # If one set of aligned axes is None and the other isn't, they are defined as not compatible.
     if (data_axes1 is None and data_axes2 is not None) or (data_axes1 is not None and data_axes2 is None):
@@ -155,6 +165,9 @@ def assert_aligned_axes_compatible(data_dimensions1, data_dimensions2, data_axes
 
     # Aligned_axes are being used for both collections
     if data_axes1 is not None:
+        # Guaranteed by the check above: if data_axes1 is not None, data_axes2 isn't either.
+        if data_axes2 is None:
+            raise RuntimeError("data_axes2 must not be None here.")
         # Confirm same number of aligned axes.
         if len(data_axes1) != len(data_axes2):
             raise ValueError(f"Number of aligned axes must be equal: {len(data_axes1)} != {len(data_axes2)}")

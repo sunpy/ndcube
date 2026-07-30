@@ -1,4 +1,5 @@
 import abc
+from typing import Any
 
 
 class BasePlotter(abc.ABC):
@@ -6,11 +7,11 @@ class BasePlotter(abc.ABC):
     Base class for NDCube plotter objects.
     """
 
-    def __init__(self, ndcube=None):
+    def __init__(self, ndcube: Any = None) -> None:
         self._ndcube = ndcube
 
     @abc.abstractmethod
-    def plot(self, *args, **kwargs):
+    def plot(self, *args: Any, **kwargs: Any) -> Any:
         """
         The default plot method.
 

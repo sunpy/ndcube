@@ -1,0 +1,1 @@
+Add type and type checking to package

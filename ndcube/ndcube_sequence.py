@@ -1,6 +1,8 @@
 import copy
 import numbers
 import textwrap
+from typing import Any
+from collections.abc import Iterator, Sequence
 
 import numpy as np
 
@@ -34,16 +36,18 @@ class NDCubeSequenceBase:
         were a single cube concatenated along the common axis.
     """
 
-    def __init__(self, data_list, meta=None, common_axis=None, **kwargs):
+    def __init__(self, data_list: Sequence[Any], meta: Any = None, common_axis: int | None = None,
+                 **kwargs: Any) -> None:
         self.data = data_list
         self.meta = meta
+        self._common_axis: int | None
         if common_axis is not None:
             self._common_axis = int(common_axis)
         else:
             self._common_axis = common_axis
 
     @property
-    def dimensions(self):
+    def dimensions(self) -> tuple[u.Quantity, ...]:
         """
         The length of each axis including the sequence axis.
         """
@@ -51,11 +55,11 @@ class NDCubeSequenceBase:
         return tuple([d * u.pix for d in self._shape])
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, ...]:
         return self._shape
 
     @property
-    def _shape(self):
+    def _shape(self) -> tuple[Any, ...]:
         dimensions = [len(self.data), *list(self.data[0].data.shape)]
         if len(dimensions) > 1:
             # If there is a common axis, length of cube's along it may not
@@ -70,14 +74,14 @@ class NDCubeSequenceBase:
         return tuple(dimensions)
 
     @property
-    def array_axis_physical_types(self):
+    def array_axis_physical_types(self) -> list[tuple[str, ...]]:
         """
         The physical types associated with each array axis, including the sequence axis.
         """
         return [("meta.obs.sequence",), *self.data[0].array_axis_physical_types]
 
     @property
-    def cube_like_dimensions(self):
+    def cube_like_dimensions(self) -> tuple[u.Quantity, ...]:
         """
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
@@ -85,7 +89,7 @@ class NDCubeSequenceBase:
         return tuple(u.Quantity(d, unit=u.pix) for d in self.cube_like_shape)
 
     @property
-    def cube_like_shape(self):
+    def cube_like_shape(self) -> list[Any]:
         """
         The length of each array axis as if all cubes were concatenated along the common axis.
         """
@@ -100,17 +104,17 @@ class NDCubeSequenceBase:
         return cube_like_shape
 
     @property
-    def cube_like_array_axis_physical_types(self):
+    def cube_like_array_axis_physical_types(self) -> list[tuple[str, ...]]:
         """
         The physical types associated with each array axis, omitting the sequence axis.
         """
         if self._common_axis is None:
             raise ValueError("Common axis must be set.")
-        return self.data[0].array_axis_physical_types
+        return self.data[0].array_axis_physical_types  # type: ignore[no-any-return]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Any:
         if isinstance(item, numbers.Integral):
-            return self.data[item]
+            return self.data[int(item)]
         # Determine whether meta attribute should be sliced.
         new_meta = self.meta.slice[item] if (hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__) else copy.deepcopy(self.meta)
         # Create an empty sequence in which to place the sliced cubes.
@@ -119,7 +123,7 @@ class NDCubeSequenceBase:
             result.data = self.data[item]
         else:
             if isinstance(item[0], numbers.Integral):
-                result = self.data[item[0]][item[1:]]
+                result = self.data[int(item[0])][item[1:]]
             else:
                 result.data = [cube[item[1:]] for cube in self.data[item[0]]]
             # Determine common axis after slicing.
@@ -134,7 +138,7 @@ class NDCubeSequenceBase:
         return result
 
     @property
-    def index_as_cube(self):
+    def index_as_cube(self) -> "_IndexAsCubeSlicer":
         """
         Slice the NDCubesequence instance as a single cube concatenated along the common axis.
 
@@ -153,7 +157,7 @@ class NDCubeSequenceBase:
         return _IndexAsCubeSlicer(self)
 
     @property
-    def common_axis_coords(self):
+    def common_axis_coords(self) -> list[list[Any]]:
         """
         The coordinate values at each location along the common axis across all cubes.
 
@@ -170,7 +174,7 @@ class NDCubeSequenceBase:
             cube_wcs = cube.combined_wcs
             common_coords.append(cube.axis_world_coords(common_axis, wcs=cube_wcs))
             mappings.append(utils.wcs.array_indices_for_world_objects(cube_wcs,
-                                                                      axes=(common_axis,)))
+                                                                      axes=(common_axis,)))  # type: ignore[arg-type]
         # For each coordinate, break up and then combine the coordinate objects across
         # the cubes into a list of coordinate objects that are length-1 and sequential
         # along the common axis.
@@ -180,7 +184,7 @@ class NDCubeSequenceBase:
             for cube_idx in range(len(common_coords)):
                 coord = common_coords[cube_idx][coord_idx]
                 axis = np.where(np.array(mappings[cube_idx][coord_idx]) == common_axis)[0][0]
-                item = [slice(None)] * len(coord.shape)
+                item: list[Any] = [slice(None)] * len(coord.shape)
                 for i in range(coord.shape[axis]):
                     item[axis] = i
                     exploded_coord.append(coord[tuple(item)])
@@ -188,7 +192,7 @@ class NDCubeSequenceBase:
         return sequence_coords
 
     @property
-    def sequence_axis_coords(self):
+    def sequence_axis_coords(self) -> dict[Any, list[Any]]:
         """
         Return the coordinate values along the sequence axis.
 
@@ -202,7 +206,7 @@ class NDCubeSequenceBase:
         return {name: [cube.global_coords[name] for cube in self.data]
                      for name in global_names}
 
-    def explode_along_axis(self, axis):
+    def explode_along_axis(self, axis: int) -> "NDCubeSequenceBase":
         """
         Separates slices of N-D cubes along a given cube axis into (N-1)D cubes.
 
@@ -222,7 +226,7 @@ class NDCubeSequenceBase:
         # To store the resultant cube
         result_cubes = []
         # All slices are initially initialised as slice(None, None, None)
-        result_cubes_slice = [slice(None, None, None)] * len(self[0].data.shape)
+        result_cubes_slice: list[Any] = [slice(None, None, None)] * len(self[0].data.shape)
         # the range of the axis that needs to be sliced
         range_of_axis = self[0].data.shape[axis]
         for ndcube in self.data:
@@ -236,12 +240,12 @@ class NDCubeSequenceBase:
             new_common_axis = None
         elif self._common_axis > axis:
             new_common_axis = self._common_axis - 1
-        elif self._common_axis < axis:
+        else:
             new_common_axis = self._common_axis
         # creating a new sequence with the result_cubes keeping the meta and common axis as axis
         return self._new_instance(result_cubes, common_axis=new_common_axis, meta=self.meta)
 
-    def crop(self, *points, wcses=None):
+    def crop(self, *points: Any, wcses: Any = None) -> Any:
         """
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 
@@ -277,7 +281,7 @@ class NDCubeSequenceBase:
         item = self._get_sequence_crop_item(*points, wcses=wcses)
         return self[item]
 
-    def crop_by_values(self, *points, units=None, wcses=None):
+    def crop_by_values(self, *points: Any, units: Any = None, wcses: Any = None) -> Any:
         """
         Crop cubes in sequence to smallest pixel-space bounding box containing the input points.
 
@@ -315,7 +319,8 @@ class NDCubeSequenceBase:
         item = self._get_sequence_crop_item(*points, wcses=wcses, crop_by_values=True, units=units)
         return self[item]
 
-    def _get_sequence_crop_item(self, *points, wcses=None, crop_by_values=False, units=None):
+    def _get_sequence_crop_item(self, *points: Any, wcses: Any = None, crop_by_values: bool = False,
+                                units: Any = None) -> tuple[slice, ...]:
         """
         Get the slice item with which to crop an NDCubeSequence given crop inputs.
 
@@ -347,7 +352,7 @@ class NDCubeSequenceBase:
             If False, inputs are assumined to be high-level coordinate objects and
             the crop util is used.
 
-        units: `astropy.units.Unit`, optional
+        units: iterable of `str` or `astropy.units.Unit`, optional
             Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
             Only used if crop_by_values is True.
         """
@@ -378,7 +383,7 @@ class NDCubeSequenceBase:
         return tuple(
             [slice(0, n_cubes)] + [slice(start, stop) for start, stop in zip(starts, stops)])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (textwrap.dedent(f"""\
                 NDCubeSequence
                 --------------
@@ -386,17 +391,18 @@ class NDCubeSequenceBase:
                 Physical Types of Axes: {self.array_axis_physical_types}
                 Common Cube Axis: {self._common_axis}"""))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self!s}"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         return iter(self.data)
 
     @classmethod
-    def _new_instance(cls, data_list, meta=None, common_axis=None):
+    def _new_instance(cls, data_list: Sequence[Any], meta: Any = None,
+                      common_axis: int | None = None) -> "NDCubeSequenceBase":
         """
         Instantiate a new instance of this class using given data.
         """
@@ -436,7 +442,7 @@ class NDCubeSequence(NDCubeSequenceBase):
     # last moment.
     plotter = PlotterDescriptor(default_type="mpl_sequence_plotter")
 
-    def plot(self, *args, **kwargs):
+    def plot(self, *args: Any, **kwargs: Any) -> Any:
         """
         A convenience function for the plotters default ``plot()`` method.
 
@@ -452,7 +458,7 @@ class NDCubeSequence(NDCubeSequenceBase):
 
         return self.plotter.plot(*args, **kwargs)
 
-    def plot_as_cube(self, *args, **kwargs):
+    def plot_as_cube(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError(
             "NDCubeSequence plot_as_cube is no longer supported.\n"
             "To learn why or to tell us why it should be re-instated, "
@@ -478,11 +484,15 @@ class _IndexAsCubeSlicer:
         Object of NDCubeSequence.
     """
 
-    def __init__(self, seq):
+    def __init__(self, seq: NDCubeSequenceBase) -> None:
         self.seq = seq
 
-    def __getitem__(self, item):
-        common_axis = self.seq._common_axis
+    def __getitem__(self, item: Any) -> Any:
+        # _IndexAsCubeSlicer is only constructed by NDCubeSequenceBase.index_as_cube,
+        # which already guarantees _common_axis is not None.
+        if self.seq._common_axis is None:  # pyright: ignore[reportPrivateUsage]
+            raise RuntimeError("common_axis must not be None here.")
+        common_axis = self.seq._common_axis  # pyright: ignore[reportPrivateUsage]
         common_axis_lengths = [int(cube.shape[common_axis]) for cube in self.seq.data]
         n_cube_dims = len(self.seq.cube_like_shape)
         n_uncommon_cube_dims = n_cube_dims - 1

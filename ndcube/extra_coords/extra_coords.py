@@ -1,8 +1,8 @@
 import abc
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 from numbers import Integral
 from functools import reduce, partial
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 
@@ -10,7 +10,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.wcs import WCS
-from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.wcs.wcsapi import BaseHighLevelWCS, BaseLowLevelWCS
 from astropy.wcs.wcsapi.high_level_wcs_wrapper import HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
 
@@ -19,12 +19,24 @@ from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 from .table_coord import (
     BaseTableCoordinate,
     MultipleTableCoordinate,
+    NamesType,
     QuantityTableCoordinate,
     SkyCoordTableCoordinate,
     TimeTableCoordinate,
 )
 
+if TYPE_CHECKING:
+    from ndcube.ndcube import NDCubeABC
+
 __all__ = ['ExtraCoords', 'ExtraCoordsABC']
+
+# The set of types ExtraCoords.add actually accepts, per its exhaustive
+# isinstance/raise chain: a pre-built BaseTableCoordinate, or anything it
+# knows how to build one from (Time, SkyCoord, a single Quantity, or a
+# sequence of 1-D Quantities for a multi-dimensional coordinate).
+LookupTableInput: TypeAlias = (
+    BaseTableCoordinate | Time | SkyCoord | u.Quantity | list[u.Quantity] | tuple[u.Quantity, ...]
+)
 
 
 class ExtraCoordsABC(abc.ABC):
@@ -47,11 +59,11 @@ class ExtraCoordsABC(abc.ABC):
     """
     @abc.abstractmethod
     def add(self,
-            name: str | Iterable[str],
+            name: NamesType,
             array_dimension: int | Iterable[int],
-            lookup_table: Any,
-            physical_types: str | Iterable[str] = None,
-            **kwargs):
+            lookup_table: LookupTableInput,
+            physical_types: NamesType = None,
+            **kwargs: Any) -> None:
         """
         Add a coordinate to this `~ndcube.ExtraCoords` based on a lookup table.
 
@@ -72,24 +84,25 @@ class ExtraCoordsABC(abc.ABC):
         """
 
     @abc.abstractmethod
-    def keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str] | None:
         """
         The world axis names for all the coordinates in the extra coords.
         """
 
     @property
     @abc.abstractmethod
-    def mapping(self) -> Iterable[tuple[int, int]]:
+    def mapping(self) -> Iterable[int]:
         """
         The mapping between the array dimensions and pixel dimensions.
 
-        This is an iterable of ``(array_dimension, pixel_dimension)`` pairs
-        of length equal to the number of pixel dimensions in the extra coords.
+        This is an iterable of pixel dimension indices, one per array dimension
+        in array-axis order, of length equal to the number of pixel dimensions
+        in the extra coords.
         """
 
     @property
     @abc.abstractmethod
-    def wcs(self) -> BaseHighLevelWCS:
+    def wcs(self) -> BaseHighLevelWCS | None:
         """
         A WCS object representing the world coordinates described by this ``ExtraCoords``.
 
@@ -105,8 +118,15 @@ class ExtraCoordsABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Return True if no extra coords present, else return False."""
+
+    @property
+    @abc.abstractmethod
+    def dropped_world_dimensions(self) -> dict[str, Any]:
+        """
+        Return an APE-14 like representation of any sliced out world dimensions.
+        """
 
     @abc.abstractmethod
     def __getitem__(self, item: str | int | slice | Iterable[str | int | slice]) -> "ExtraCoordsABC":
@@ -118,6 +138,15 @@ class ExtraCoordsABC(abc.ABC):
         numpy array like slice it should return a new ExtraCoords with the
         slice applied. Supporting step is not required and "fancy indexing" is
         not supported.
+        """
+
+    @abc.abstractmethod
+    def resample(self, factor: float | Iterable[float], offset: float | Iterable[float] = 0,
+                ndcube: "NDCubeABC | None" = None, **kwargs: Any) -> "ExtraCoordsABC":
+        """
+        Resample all extra coords by given factors in array-index-space.
+
+        One resample factor must be supplied for each array axis in array-axis order.
         """
 
 
@@ -140,23 +169,25 @@ class ExtraCoords(ExtraCoordsABC):
 
     """
 
-    def __init__(self, ndcube=None):
+    def __init__(self, ndcube: "NDCubeABC | None" = None) -> None:
         super().__init__()
 
         # Setup private attributes
-        self._wcs = None
-        self._mapping = None
+        self._wcs: BaseLowLevelWCS | BaseHighLevelWCS | None = None
+        self._mapping: Iterable[int] | None = None
 
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables = []
-        self._dropped_tables = []
+        self._lookup_tables: list[tuple[int | Iterable[int], BaseTableCoordinate]] = []
+        self._dropped_tables: list[BaseTableCoordinate] = []
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
 
     @classmethod
-    def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables, physical_types=None):
+    def from_lookup_tables(cls, names: Sequence[str], pixel_dimensions: Sequence[int | Iterable[int]],
+                           lookup_tables: Sequence[LookupTableInput],
+                           physical_types: Sequence[NamesType] | None = None) -> "ExtraCoords":
         """
         Construct a new ExtraCoords instance from lookup tables.
 
@@ -204,7 +235,8 @@ class ExtraCoords(ExtraCoordsABC):
 
         return extra_coords
 
-    def add(self, name, array_dimension, lookup_table, physical_types=None, **kwargs):
+    def add(self, name: NamesType, array_dimension: int | Iterable[int], lookup_table: LookupTableInput,
+            physical_types: NamesType = None, **kwargs: Any) -> None:
         # docstring in ABC
 
         if self._wcs is not None:
@@ -231,16 +263,16 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
         self._lookup_tables = sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])  # type: ignore[index]
 
     @property
-    def _name_lut_map(self):
+    def _name_lut_map(self) -> dict[Any, tuple[Any, BaseTableCoordinate]]:
         """
         Map of world names to the corresponding `.LookupTableCoord`
         """
         return {lut[1].wcs.world_axis_names: lut for lut in self._lookup_tables}
 
-    def keys(self):
+    def keys(self) -> tuple[str, ...] | None:
         # docstring in ABC
         if not self.wcs:
             return ()
@@ -248,10 +280,10 @@ class ExtraCoords(ExtraCoordsABC):
         return tuple(self.wcs.world_axis_names) if self.wcs.world_axis_names else None
 
     @property
-    def mapping(self):
+    def mapping(self) -> tuple[int, ...]:
         # docstring in ABC
         if self._mapping:
-            return self._mapping
+            return tuple(self._mapping)
 
         # If mapping is not set but lookup_tables is empty then the extra
         # coords is empty, so there is no mapping.
@@ -260,13 +292,13 @@ class ExtraCoords(ExtraCoordsABC):
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
-        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
-        converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.shape))
+        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]  # type: ignore[arg-type]
+        converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.shape))  # type: ignore[union-attr]
         pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
-        return tuple(reduce(list.__add__, pixel_indicies))
+        return tuple(reduce(list.__add__, pixel_indicies))  # type: ignore[arg-type]
 
     @mapping.setter
-    def mapping(self, mapping):
+    def mapping(self, mapping: Iterable[int]) -> None:
         if self._mapping is not None:
             raise AttributeError("Can't set mapping if a mapping has already been specified.")
 
@@ -284,7 +316,7 @@ class ExtraCoords(ExtraCoordsABC):
         self._mapping = mapping
 
     @property
-    def wcs(self):
+    def wcs(self) -> BaseHighLevelWCS | None:
         # docstring in ABC
         if self._wcs is not None:
             return self._wcs
@@ -292,14 +324,13 @@ class ExtraCoords(ExtraCoordsABC):
         if not self._lookup_tables:
             return None
 
-        tcoords = {lt[1] for lt in self._lookup_tables}
         # created a sorted list of unique items
-        _tmp = set()  # a temporary set
-        tcoords = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]
+        _tmp: set[Any] = set()  # a temporary set
+        tcoords = [x[1] for x in self._lookup_tables if x[1] not in _tmp and _tmp.add(x[1]) is None]  # type: ignore[func-returns-value]
         return MultipleTableCoordinate(*tcoords).wcs
 
     @wcs.setter
-    def wcs(self, wcs):
+    def wcs(self, wcs: BaseLowLevelWCS | BaseHighLevelWCS) -> None:
         if self._wcs is not None:
             raise AttributeError(
                 "Can't set wcs if a WCS has already been specified."
@@ -319,13 +350,13 @@ class ExtraCoords(ExtraCoordsABC):
         self._wcs = wcs
 
     @property
-    def is_empty(self):
+    def is_empty(self) -> bool:
         # docstring in ABC
         if not self._wcs and not self._lookup_tables:
             return True
         return False
 
-    def _getitem_string(self, item):
+    def _getitem_string(self, item: str) -> "ExtraCoords":
         """
         Slice the Extracoords based on axis names.
         """
@@ -338,16 +369,16 @@ class ExtraCoords(ExtraCoordsABC):
 
         raise KeyError(f"Can't find the world axis named {item} in this ExtraCoords object.")
 
-    def _getitem_lookup_tables(self, item):
+    def _getitem_lookup_tables(self, item: Any) -> "ExtraCoords":
         """
         Apply an array slice to the lookup tables.
 
         Returns a new ExtraCoords object with modified lookup tables.
         """
-        dropped_tables = set()
-        new_lookup_tables = set()
-        ndims = max([lut[0] if isinstance(lut[0], Integral) else max(lut[0])
-                     for lut in self._lookup_tables]) + 1
+        dropped_tables: set[BaseTableCoordinate] = set()
+        new_lookup_tables: set[tuple[Any, BaseTableCoordinate]] = set()
+        ndims = int(max(lut[0] if isinstance(lut[0], Integral) else max(lut[0])  # type: ignore[arg-type]
+                        for lut in self._lookup_tables)) + 1
         # Determine how many dimensions will be dropped by slicing below each dimension.
         if isinstance(item, Integral):
             n_dropped_dims = np.ones(ndims, dtype=int)
@@ -360,9 +391,9 @@ class ExtraCoords(ExtraCoordsABC):
             n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
+            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)  # pyright: ignore[reportCallIssue, reportArgumentType]
             lut_slice = tuple(item[i] for i in lut_axes)
-            if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
+            if len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
 
             sliced_lut = lut[lut_slice]
@@ -376,7 +407,10 @@ class ExtraCoords(ExtraCoordsABC):
         new_extra_coords._dropped_tables = list(dropped_tables)
         return new_extra_coords
 
-    def _getitem_wcs(self, item):
+    def _getitem_wcs(self, item: Any) -> "ExtraCoords":
+        # Only called from __getitem__ when self._wcs is truthy, so self.wcs is not None here.
+        if self.wcs is None:
+            raise RuntimeError("wcs must not be None here.")
         item = sanitize_slices(item, self.wcs.pixel_n_dim)
 
         # It's valid to slice down the EC such that there is nothing left,
@@ -393,7 +427,7 @@ class ExtraCoords(ExtraCoordsABC):
         new_ec.mapping = new_mapping
         return new_ec
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str | int | slice | Iterable[str | int | slice]) -> "ExtraCoords":
         # docstring in ABC
         if isinstance(item, str):
             return self._getitem_string(item)
@@ -409,24 +443,25 @@ class ExtraCoords(ExtraCoordsABC):
         return self
 
     @property
-    def dropped_world_dimensions(self):
+    def dropped_world_dimensions(self) -> dict[str, Any]:
         """
         Return an APE-14 like representation of any sliced out world dimensions.
         """
 
         if self._wcs:
             if isinstance(self._wcs, SlicedLowLevelWCS):
-                return self._wcs.dropped_world_dimensions
+                return self._wcs.dropped_world_dimensions  # type: ignore[no-any-return]
 
         if self._lookup_tables or self._dropped_tables:
             mtc = MultipleTableCoordinate(*[lt[1] for lt in self._lookup_tables])
-            mtc._dropped_coords = self._dropped_tables
+            mtc._dropped_coords = self._dropped_tables  # pyright: ignore[reportPrivateUsage]
 
             return mtc.dropped_world_dimensions
 
         return {}
 
-    def resample(self, factor, offset=0, ndcube=None, **kwargs):
+    def resample(self, factor: float | Iterable[float], offset: float | Iterable[float] = 0,
+                ndcube: "NDCubeABC | None" = None, **kwargs: Any) -> "ExtraCoords":
         """
         Resample all extra coords by given factors in array-index-space.
 
@@ -445,8 +480,9 @@ class ExtraCoords(ExtraCoordsABC):
             for each dimension. If a scalar, the grid will be
             shifted by the same amount in all dimensions.
 
-        ndcube: `~ndcube.NDCube`
+        ndcube: `~ndcube.NDCube`, optional
             The NDCube instance with which the output ExtraCoords object is associated.
+            Defaults to `None`.
 
         kwargs
             All remaining kwargs are passed to `numpy.interp`.
@@ -469,41 +505,41 @@ class ExtraCoords(ExtraCoordsABC):
                 "Resampling a lookup-table-based ExtraCoords not yet implemented. "
                 "Please raise an issue at https://github.com/sunpy/ndcube/issues "
                 "if you need this functionality")
-        if np.isscalar(factor):
-            factor = [factor] * ndim
-        if len(factor) != ndim:
+        factor_seq: Sequence[float] = [factor] * ndim if np.isscalar(factor) else list(factor)  # type: ignore[list-item, arg-type]
+        if len(factor_seq) != ndim:
             raise ValueError(
                 "factor must be scalar or an iterable with length equal to number of cube "
-                f"dimensions: len(factor) = {len(factor)}; No. cube dimensions = {ndim}.")
-        if np.isscalar(offset):
-            offset = [offset] * ndim
-        if len(offset) != ndim:
+                f"dimensions: len(factor) = {len(factor_seq)}; No. cube dimensions = {ndim}.")
+        offset_seq: Sequence[float] = [offset] * ndim if np.isscalar(offset) else list(offset)  # type: ignore[list-item, arg-type]
+        if len(offset_seq) != ndim:
             raise ValueError(
                 "offset must be scalar or an iterable with length equal to number of cube "
-                f"dimensions: len(offset) = {len(offset)}; No. cube dimensions = {ndim}.")
+                f"dimensions: len(offset) = {len(offset_seq)}; No. cube dimensions = {ndim}.")
         # If ExtraCoords object built on WCS, resample using WCS insfrastructure
         if self._wcs is not None:
             new_ec.wcs = HighLevelWCSWrapper(ResampledLowLevelWCS(self._wcs.low_level_wcs,
-                                                                  factor, offset))
+                                                                  factor_seq, offset_seq))
             return new_ec
         # Else interpolate the lookup table coordinates.
-        factor = np.asarray(factor)
+        # self._wcs is None here (handled above), so the if/elif above guarantees
+        # self._ndcube was not None and cube_shape was set.
+        factor_arr = np.asarray(factor_seq)
         new_grids = []
-        for c, d, f in zip(offset, cube_shape, factor):
+        for c, d, f in zip(offset_seq, cube_shape, factor_arr):  # pyright: ignore[reportPossiblyUnboundVariable]
             x = np.arange(c, d+f, f)
             x = x[x <= d-1]
             new_grids.append(x)
         new_grids = np.array(new_grids, dtype=object)
         for array_axes, coord in self._lookup_tables:
             if np.isscalar(array_axes):
-                new_coord = coord.interpolate(new_grids[array_axes], **kwargs)
+                new_coord = coord.interpolate(new_grids[array_axes], **kwargs)  # type: ignore[index]
             else:
                 new_coord = coord.interpolate(*new_grids[np.asarray(array_axes)], **kwargs)
-            new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)
+            new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
         return new_ec
 
     @property
-    def cube_wcs(self):
+    def cube_wcs(self) -> CompoundLowLevelWCS:
         """Produce a WCS that describes the associated NDCube with just the extra coords.
 
         For NDCube pixel axes without any extra coord, dummy axes are inserted.
@@ -521,16 +557,16 @@ class ExtraCoords(ExtraCoordsABC):
             dummy_wcs.wcs.cunit = ["pix"] * n_dummy_axes
             wcses.append(dummy_wcs)
             mapping += list(dummy_axes)
-        return CompoundLowLevelWCS(*wcses, mapping=mapping)
+        return CompoundLowLevelWCS(*wcses, mapping=tuple(mapping))
 
     @property
-    def _cube_array_axes_without_extra_coords(self):
+    def _cube_array_axes_without_extra_coords(self) -> set[int]:
         """Return the array axes not associated with any extra coord."""
-        return set(range(len(self._ndcube.shape))) - set(self.mapping)
+        return set(range(len(self._ndcube.shape))) - set(self.mapping)  # type: ignore[union-attr]
 
-    def __str__(self):
+    def __str__(self) -> str:
         classname = self.__class__.__name__
-        elements = [f"{', '.join(table.names)} ({axes}) {table.physical_types}: {table}"
+        elements = [f"{', '.join(table.names) if table.names else ()} ({axes}) {table.physical_types}: {table}"
                     for axes, table in self._lookup_tables]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
         if length > np.get_printoptions()['linewidth']:
@@ -540,5 +576,5 @@ class ExtraCoords(ExtraCoordsABC):
 
         return f"{classname}({joiner.join(elements)})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{object.__repr__(self)}\n{self}"

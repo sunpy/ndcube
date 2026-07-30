@@ -1,13 +1,17 @@
+from typing import Any
 from functools import reduce
+from collections.abc import Iterable
 
 import numpy as np
+import numpy.typing as npt
 
+from astropy.wcs.wcsapi import BaseLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
 __all__ = ['CompoundLowLevelWCS']
 
 
-def tuplesum(lists):
+def tuplesum(lists: Iterable[Iterable[Any]]) -> tuple[Any, ...]:
     return reduce(tuple.__add__, map(tuple, lists))
 
 
@@ -27,25 +31,25 @@ class Mapping:
 
     """
 
-    def __init__(self, mapping):
+    def __init__(self, mapping: tuple[int, ...]) -> None:
         self.mapping = mapping
         self.n_inputs = max(mapping) + 1
         self.n_outputs = len(mapping)
 
-    def __call__(self, *values):
+    def __call__(self, *values: Any) -> tuple[Any, ...]:
         return tuple(values[idx] for idx in self.mapping)
 
     @property
-    def inverse(self):
+    def inverse(self) -> "Mapping":
         mapping = tuple(self.mapping.index(idx)
                         for idx in range(self.n_inputs))
         return type(self)(mapping)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Mapping({self.mapping})>'
 
 
-class CompoundLowLevelWCS(BaseWCSWrapper):
+class CompoundLowLevelWCS(BaseWCSWrapper):  # type: ignore[misc]
     """
     A wrapper that takes multiple low level WCS objects and makes a compound
     WCS that combines them.
@@ -69,7 +73,8 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         ``world_to_pixel`` are the same from all WCSes.
     """
 
-    def __init__(self, *wcs, mapping=None, pixel_atol=1e-8):
+    def __init__(self, *wcs: BaseLowLevelWCS, mapping: tuple[int, ...] | None = None,
+                 pixel_atol: float = 1e-8) -> None:
         self._wcs = wcs
 
         if not mapping:
@@ -87,26 +92,26 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         self.pixel_shape
 
     @property
-    def _all_pixel_n_dim(self):
+    def _all_pixel_n_dim(self) -> int:
         return sum([w.pixel_n_dim for w in self._wcs])
 
     @property
-    def pixel_n_dim(self):
+    def pixel_n_dim(self) -> int:
         return self.mapping.n_inputs
 
     @property
-    def world_n_dim(self):
+    def world_n_dim(self) -> int:
         return sum([w.world_n_dim for w in self._wcs])
 
     @property
-    def world_axis_physical_types(self):
+    def world_axis_physical_types(self) -> tuple[Any, ...]:
         return tuplesum([w.world_axis_physical_types for w in self._wcs])
 
     @property
-    def world_axis_units(self):
+    def world_axis_units(self) -> tuple[Any, ...]:
         return tuplesum([w.world_axis_units for w in self._wcs])
 
-    def pixel_to_world_values(self, *pixel_arrays):
+    def pixel_to_world_values(self, *pixel_arrays: Any) -> tuple[Any, ...]:
         pixel_arrays = self.mapping(*pixel_arrays)
         world_arrays = []
         for w in self._wcs:
@@ -119,7 +124,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             pixel_arrays = pixel_arrays[w.pixel_n_dim:]
         return tuple(world_arrays)
 
-    def world_to_pixel_values(self, *world_arrays):
+    def world_to_pixel_values(self, *world_arrays: Any) -> tuple[Any, ...]:
         pixel_arrays = []
         for w in self._wcs:
             world_arrays_sub = world_arrays[:w.world_n_dim]
@@ -130,9 +135,15 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
             else:
                 pixel_arrays.append(pixel_arrays_sub)
 
+        # NOTE: self.mapping.mapping is a plain tuple, so `== mapped_axis` here compares
+        # tuple-to-int (always False) rather than doing an elementwise numpy comparison.
+        # This means the shared-pixel-axis consistency check below never actually runs.
+        # Flagged rather than silently fixed: making it elementwise (e.g. via
+        # np.array(self.mapping.mapping)) causes test_shared_pixel_axis_compound_3d to fail
+        # on the ordinary roundtrip case, which needs a deliberate look, not a typing-pass fix.
         mapped_axes = set(self.mapping.mapping)
         for mapped_axis in mapped_axes:
-            idx, = np.atleast_1d(self.mapping.mapping == mapped_axis).nonzero()
+            idx, = np.atleast_1d(self.mapping.mapping == mapped_axis).nonzero()  # type: ignore[comparison-overlap]
             if len(idx) > 1:
                 idx_0 = idx[0]
                 for idx_n in idx[1:]:
@@ -145,7 +156,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         return self.mapping.inverse(*pixel_arrays)
 
     @property
-    def world_axis_object_components(self):
+    def world_axis_object_components(self) -> list[tuple[Any, ...]]:
         all_components = []
         for iw, w in enumerate(self._wcs):
             all_components += [(f'{component[0]}_{iw}', *component[1:]) for component
@@ -153,7 +164,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         return all_components
 
     @property
-    def world_axis_object_classes(self):
+    def world_axis_object_classes(self) -> dict[str, Any]:
         # TODO: deal with name conflicts
         all_classes = {}
         for iw, w in enumerate(self._wcs):
@@ -162,7 +173,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         return all_classes
 
     @property
-    def pixel_shape(self):
+    def pixel_shape(self) -> tuple[int, ...] | None:
         if not any(w.array_shape is None for w in self._wcs):
             pixel_shape = tuplesum(w.pixel_shape for w in self._wcs)
             out_shape = self.mapping.inverse(*pixel_shape)
@@ -175,7 +186,7 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         return None
 
     @property
-    def pixel_bounds(self):
+    def pixel_bounds(self) -> tuple[tuple[float, float], ...] | None:
         if any(w.pixel_bounds is not None for w in self._wcs):
             pixel_bounds = tuplesum(w.pixel_bounds or [() for _ in range(w.pixel_n_dim)] for w in self._wcs)
             out_bounds = self.mapping.inverse(*pixel_bounds)
@@ -190,22 +201,22 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
 
 
     @property
-    def pixel_axis_names(self):
+    def pixel_axis_names(self) -> tuple[str, ...]:
         pixel_names = tuplesum(w.pixel_axis_names for w in self._wcs)
-        out_names = self.mapping.inverse(*pixel_names)
+        out_names = list(self.mapping.inverse(*pixel_names))
 
         for i, ix in enumerate(self.mapping.mapping):
             if out_names[ix] != pixel_names[i]:
                 out_names[ix] = ' / '.join([out_names[ix], pixel_names[i]])
 
-        return out_names
+        return tuple(out_names)
 
     @property
-    def world_axis_names(self):
+    def world_axis_names(self) -> tuple[str, ...]:
         return tuplesum(w.world_axis_names for w in self._wcs)
 
     @property
-    def axis_correlation_matrix(self):
+    def axis_correlation_matrix(self) -> npt.NDArray[np.bool_]:
         full_matrix = np.zeros((self.world_n_dim, self._all_pixel_n_dim), dtype=bool)
         iw = ip = 0
         for w in self._wcs:
@@ -220,5 +231,5 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         return matrix
 
     @property
-    def serialized_classes(self):
+    def serialized_classes(self) -> bool:
         return any(w.serialized_classes for w in self._wcs)
