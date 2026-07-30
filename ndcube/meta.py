@@ -118,7 +118,7 @@ class NDMetaABC(collections.abc.Mapping[str, Any]):
 
     @data_shape.setter
     @abc.abstractmethod
-    def data_shape(self, new_shape: collections.abc.Sequence[int]) -> None:
+    def data_shape(self, new_shape: ShapeLike) -> None:
         """
         Set the shape of the data with which the metadata is associated.
         """
@@ -167,7 +167,7 @@ class NDMetaABC(collections.abc.Mapping[str, Any]):
         """
 
     @abc.abstractmethod
-    def rebin(self, bin_shape: collections.abc.Sequence[int]) -> "NDMetaABC":
+    def rebin(self, bin_shape: ShapeLike) -> "NDMetaABC":
         """
         Adjusts grid-aware metadata to stay consistent with rebinned data.
         """
@@ -268,7 +268,7 @@ class NDMeta(dict[str, Any], NDMetaABC):
         return self._data_shape
 
     @data_shape.setter
-    def data_shape(self, new_shape: collections.abc.Sequence[int]) -> None:
+    def data_shape(self, new_shape: ShapeLike) -> None:
         """
         Set data shape to new shape.
 
@@ -361,7 +361,7 @@ class NDMeta(dict[str, Any], NDMetaABC):
         # Docstring in ABC.
         return _NDMetaSlicer(self)
 
-    def rebin(self, bin_shape: collections.abc.Sequence[int]) -> "NDMeta":
+    def rebin(self, bin_shape: ShapeLike) -> "NDMeta":
         """
         Adjusts axis-aware metadata to stay consistent with a rebinned `~ndcube.NDCube`.
 

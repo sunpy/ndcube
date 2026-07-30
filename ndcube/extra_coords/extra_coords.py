@@ -1,5 +1,5 @@
 import abc
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 from numbers import Integral
 from functools import reduce, partial
 from collections.abc import Iterable, Sequence
@@ -30,6 +30,14 @@ if TYPE_CHECKING:
 
 __all__ = ['ExtraCoords', 'ExtraCoordsABC']
 
+# The set of types ExtraCoords.add actually accepts, per its exhaustive
+# isinstance/raise chain: a pre-built BaseTableCoordinate, or anything it
+# knows how to build one from (Time, SkyCoord, a single Quantity, or a
+# sequence of 1-D Quantities for a multi-dimensional coordinate).
+LookupTableInput: TypeAlias = (
+    BaseTableCoordinate | Time | SkyCoord | u.Quantity | list[u.Quantity] | tuple[u.Quantity, ...]
+)
+
 
 class ExtraCoordsABC(abc.ABC):
     """
@@ -53,7 +61,7 @@ class ExtraCoordsABC(abc.ABC):
     def add(self,
             name: NamesType,
             array_dimension: int | Iterable[int],
-            lookup_table: Any,
+            lookup_table: LookupTableInput,
             physical_types: NamesType = None,
             **kwargs: Any) -> None:
         """
@@ -134,7 +142,7 @@ class ExtraCoordsABC(abc.ABC):
 
     @abc.abstractmethod
     def resample(self, factor: float | Iterable[float], offset: float | Iterable[float] = 0,
-                ndcube: Any = None, **kwargs: Any) -> "ExtraCoordsABC":
+                ndcube: "NDCubeABC | None" = None, **kwargs: Any) -> "ExtraCoordsABC":
         """
         Resample all extra coords by given factors in array-index-space.
 
@@ -170,16 +178,16 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Lookup tables is a list of (pixel_dim, LookupTableCoord) to allow for
         # one pixel dimension having more than one lookup coord.
-        self._lookup_tables: list[tuple[Any, BaseTableCoordinate]] = []
+        self._lookup_tables: list[tuple[int | Iterable[int], BaseTableCoordinate]] = []
         self._dropped_tables: list[BaseTableCoordinate] = []
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
 
     @classmethod
-    def from_lookup_tables(cls, names: Sequence[str], pixel_dimensions: Sequence[Any],
-                           lookup_tables: Sequence[Any],
-                           physical_types: Sequence[Any] | None = None) -> "ExtraCoords":
+    def from_lookup_tables(cls, names: Sequence[str], pixel_dimensions: Sequence[int | Iterable[int]],
+                           lookup_tables: Sequence[LookupTableInput],
+                           physical_types: Sequence[NamesType] | None = None) -> "ExtraCoords":
         """
         Construct a new ExtraCoords instance from lookup tables.
 
@@ -227,7 +235,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         return extra_coords
 
-    def add(self, name: NamesType, array_dimension: int | Iterable[int], lookup_table: Any,
+    def add(self, name: NamesType, array_dimension: int | Iterable[int], lookup_table: LookupTableInput,
             physical_types: NamesType = None, **kwargs: Any) -> None:
         # docstring in ABC
 
@@ -255,7 +263,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
         self._lookup_tables = sorted(self._lookup_tables,
-                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])
+                                          key=lambda x: x[0] if isinstance(x[0], Integral) else x[0][0])  # type: ignore[index]
 
     @property
     def _name_lut_map(self) -> dict[Any, tuple[Any, BaseTableCoordinate]]:
@@ -284,7 +292,7 @@ class ExtraCoords(ExtraCoordsABC):
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
-        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
+        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]  # type: ignore[arg-type]
         converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.shape))  # type: ignore[union-attr]
         pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
         return tuple(reduce(list.__add__, pixel_indicies))  # type: ignore[arg-type]
@@ -369,7 +377,7 @@ class ExtraCoords(ExtraCoordsABC):
         """
         dropped_tables: set[BaseTableCoordinate] = set()
         new_lookup_tables: set[tuple[Any, BaseTableCoordinate]] = set()
-        ndims = int(max(lut[0] if isinstance(lut[0], Integral) else max(lut[0])
+        ndims = int(max(lut[0] if isinstance(lut[0], Integral) else max(lut[0])  # type: ignore[arg-type]
                         for lut in self._lookup_tables)) + 1
         # Determine how many dimensions will be dropped by slicing below each dimension.
         if isinstance(item, Integral):
@@ -383,7 +391,7 @@ class ExtraCoords(ExtraCoordsABC):
             n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
+            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)  # pyright: ignore[reportCallIssue, reportArgumentType]
             lut_slice = tuple(item[i] for i in lut_axes)
             if len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
@@ -527,7 +535,7 @@ class ExtraCoords(ExtraCoordsABC):
                 new_coord = coord.interpolate(new_grids[array_axes], **kwargs)  # type: ignore[index]
             else:
                 new_coord = coord.interpolate(*new_grids[np.asarray(array_axes)], **kwargs)
-            new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)  # pyright: ignore[reportArgumentType]
+            new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
         return new_ec
 
     @property

@@ -352,7 +352,7 @@ class NDCubeSequenceBase:
             If False, inputs are assumined to be high-level coordinate objects and
             the crop util is used.
 
-        units: `astropy.units.Unit`, optional
+        units: iterable of `str` or `astropy.units.Unit`, optional
             Passed to :meth:`ndcube.NDCube.crop_by_values` as the ``units`` kwarg.
             Only used if crop_by_values is True.
         """

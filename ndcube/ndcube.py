@@ -569,15 +569,20 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):  # type:
         return world_coords
 
     @utils.cube.sanitize_wcs
-    def axis_world_coords(self, *axes: int | str, pixel_corners: bool = False, wcs: Any = None) -> Any:
+    def axis_world_coords(self, *axes: int | str, pixel_corners: bool = False,
+                          wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None) -> Any:
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
-            wcs = wcs.low_level_wcs
+            wcs = wcs.low_level_wcs  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
         orig_wcs = wcs
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
                 return ()
+        # The sanitize_wcs decorator guarantees wcs is resolved to a concrete
+        # low-level WCS by this point (never None, never a bare ExtraCoordsABC).
+        if wcs is None or isinstance(wcs, ExtraCoordsABC):
+            raise RuntimeError("wcs must be resolved to a low-level WCS here.")
         object_names = np.array([wao_comp[0] for wao_comp in wcs.world_axis_object_components])
         unique_obj_names = utils.misc.unique_sorted(object_names)
         world_axes_for_obj = [np.where(object_names == name)[0] for name in unique_obj_names]
@@ -597,15 +602,20 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):  # type:
         return tuple(axes_coords[i] for i in object_indices)
 
     @utils.cube.sanitize_wcs
-    def axis_world_coords_values(self, *axes: int | str, pixel_corners: bool = False, wcs: Any = None) -> Any:
+    def axis_world_coords_values(self, *axes: int | str, pixel_corners: bool = False,
+                                 wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None) -> Any:
         # Docstring in NDCubeABC.
         if isinstance(wcs, BaseHighLevelWCS):
-            wcs = wcs.low_level_wcs
+            wcs = wcs.low_level_wcs  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
         orig_wcs = wcs
         if isinstance(wcs, ExtraCoords):
             wcs = wcs.wcs
             if not wcs:
                 return ()
+        # The sanitize_wcs decorator guarantees wcs is resolved to a concrete
+        # low-level WCS by this point (never None, never a bare ExtraCoordsABC).
+        if wcs is None or isinstance(wcs, ExtraCoordsABC):
+            raise RuntimeError("wcs must be resolved to a low-level WCS here.")
         world_indices = utils.wcs.calculate_world_indices_from_axes(wcs, axes)
         axes_coords = self._generate_world_coords(pixel_corners, orig_wcs, needed_axes=world_indices, units=True)
         world_axis_physical_types = wcs.world_axis_physical_types
@@ -625,7 +635,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):  # type:
         CoordValues = namedtuple("CoordValues", identifiers)  # type: ignore[misc]
         return CoordValues(*axes_coords[::-1])
 
-    def crop(self, *points: Any, wcs: Any = None, keepdims: bool = False) -> "NDCubeBase":
+    def crop(self, *points: Iterable[Any], wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None,
+             keepdims: bool = False) -> "NDCubeBase":
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_item(*points, wcs=wcs, keepdims=keepdims)
@@ -657,7 +668,8 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):  # type:
         return utils.cube.get_crop_item_from_points(sanitized_points, wcs, False, keepdims=keepdims,
                                                     original_shape=self.data.shape)
 
-    def crop_by_values(self, *points: Any, units: Any = None, wcs: Any = None, keepdims: bool = False) -> "NDCubeBase":
+    def crop_by_values(self, *points: Iterable[u.Quantity | float], units: Iterable[str | u.Unit] | None = None,
+                       wcs: BaseHighLevelWCS | ExtraCoordsABC | None = None, keepdims: bool = False) -> "NDCubeBase":
         # The docstring is defined in NDCubeABC
         # Calculate the array slice item corresponding to bounding box and return sliced cube.
         item = self._get_crop_by_values_item(*points, units=units, wcs=wcs, keepdims=keepdims)

@@ -2,12 +2,18 @@ import copy
 import numbers
 import textwrap
 import collections.abc
-from typing import Any
+from typing import TYPE_CHECKING, Any
+from collections.abc import Mapping, Collection
 
 import numpy as np
 
 import ndcube.utils.collection as collection_utils
+from ndcube.utils.collection import AlignedAxesInput
 from ndcube.utils.exceptions import warn_deprecated
+
+if TYPE_CHECKING:
+    from ndcube.ndcube import NDCube
+    from ndcube.ndcube_sequence import NDCubeSequence
 
 __all__ = ["NDCollection"]
 
@@ -50,42 +56,49 @@ class NDCollection(dict[Any, Any]):
     axis 1 of cube0 is aligned with axis 1 of cube1.
     """
 
-    def __init__(self, key_data_pairs: Any, aligned_axes: Any = None, meta: Any = None, **kwargs: Any) -> None:
+    def __init__(self,
+                 key_data_pairs: "Mapping[str, NDCube | NDCubeSequence] | Collection[tuple[str, NDCube | NDCubeSequence]]",
+                 aligned_axes: AlignedAxesInput = None, meta: Any = None, **kwargs: Any) -> None:
         if isinstance(key_data_pairs, collections.abc.Mapping):
-            key_data_pairs = tuple(key_data_pairs.items())
-        for key, _ in key_data_pairs:
+            pairs = tuple(key_data_pairs.items())
+        else:
+            pairs = key_data_pairs
+        for key, _ in pairs:
             if isinstance(key, numbers.Number):
                 warn_deprecated(
                     "Passing numerical keys to NDCollection is deprecated as they"
                     " lead to ambiguity when slicing the collection."
                 )
         # Enter data and metadata into object.
-        super().__init__(key_data_pairs)
+        super().__init__(pairs)
         self.meta = meta
 
         # Convert aligned axes to required format.
         sanitize_inputs = kwargs.pop("sanitize_inputs", True)
         keys: tuple[Any, ...] = ()
+        sanitized_axes: dict[Any, tuple[int, ...]] | None = None
         if aligned_axes is not None:
-            keys, data = zip(*key_data_pairs)
+            keys, data = zip(*pairs)
             # Sanitize aligned axes unless hidden kwarg indicates not to.
             if sanitize_inputs:
-                aligned_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)  # pyright: ignore[reportPrivateUsage]
+                sanitized_axes = collection_utils._sanitize_aligned_axes(keys, data, aligned_axes)  # pyright: ignore[reportPrivateUsage]
             else:
-                aligned_axes = dict(zip(keys, aligned_axes))
+                # Only reachable internally (copy(), __getitem__, etc.), always with
+                # an already-sanitised tuple[tuple[int, ...], ...] of per-cube axes.
+                sanitized_axes = dict(zip(keys, aligned_axes))  # type: ignore[arg-type]
         if kwargs:
             raise TypeError(
                 f"__init__() got an unexpected keyword argument: '{list(kwargs.keys())[0]}'"
             )
         # Attach aligned axes to object.
-        self._aligned_axes = aligned_axes
+        self._aligned_axes = sanitized_axes
         if self._aligned_axes is None:
             self.n_aligned_axes = 0
         else:
             self.n_aligned_axes = len(self._aligned_axes[keys[0]])
 
     @property
-    def aligned_axes(self) -> dict[Any, tuple[Any, ...]] | None:
+    def aligned_axes(self) -> dict[Any, tuple[int, ...]] | None:
         """
         The axes of each array that are aligned in numpy order.
         """

@@ -1,5 +1,5 @@
 import numbers
-from typing import Any
+from typing import Any, Literal, TypeAlias
 from collections.abc import Sequence
 
 import numpy as np
@@ -7,9 +7,13 @@ import numpy.typing as npt
 
 __all__ = ['assert_aligned_axes_compatible']
 
+AlignedAxesInput: TypeAlias = (
+    int | tuple[int, ...] | tuple[tuple[int, ...], ...] | Literal["all"] | None
+)
+
 
 def _sanitize_aligned_axes(keys: Sequence[Any], data: Sequence[Any],  # pyright: ignore[reportUnusedFunction]
-                           aligned_axes: str | tuple[Any, ...] | int | None) -> dict[Any, tuple[Any, ...]] | None:
+                           aligned_axes: AlignedAxesInput) -> dict[Any, tuple[int, ...]] | None:
     if aligned_axes is None:
         return None
     # If aligned_axes set to "all", assume all axes are aligned in order.
@@ -43,15 +47,15 @@ def _sanitize_user_aligned_axes(data: Sequence[Any], aligned_axes: Any) -> tuple
     """
     aligned_axes_error_message = ("aligned_axes must contain ints or "
                                   "a tuple of ints for each element in data.")
-    if isinstance(data[0].shape, tuple):
-        cube0_dims = np.array(data[0].shape, dtype=object)[np.array(aligned_axes[0])]
-    else:
-        cube0_dims = data[0].shape[np.array(aligned_axes[0])]
     # If user entered a single int or string, convert to length 1 tuple of int.
     if isinstance(aligned_axes, numbers.Integral):
         aligned_axes = (aligned_axes,)
     if not isinstance(aligned_axes, tuple):
         raise ValueError(aligned_axes_error_message)
+    if isinstance(data[0].shape, tuple):
+        cube0_dims = np.array(data[0].shape, dtype=object)[np.array(aligned_axes[0])]
+    else:
+        cube0_dims = data[0].shape[np.array(aligned_axes[0])]
     # Check type of each element.
     axes_all_ints = all(isinstance(axis, numbers.Integral) for axis in aligned_axes)
     axes_all_tuples = all(isinstance(axis, tuple) for axis in aligned_axes)

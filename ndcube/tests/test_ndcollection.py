@@ -50,6 +50,12 @@ def test_construct_with_dict():
     assert cube_collection.items() == new_collection.items()
 
 
+def test_construct_with_single_int_aligned_axes():
+    # cube0 and cube2 both have shape (3, 4, 5), so axis 0 is a valid aligned axis.
+    collection = NDCollection([("cube0", cube0), ("cube2", cube2)], aligned_axes=0)
+    assert collection.aligned_axes == {"cube0": (0,), "cube2": (0,)}
+
+
 @pytest.mark.parametrize(('item', 'collection', 'expected'), [
     (0, cube_collection,
         NDCollection([("cube0", cube0[:, 0]), ("cube1", cube1[:, :, 0]), ("cube2", cube2[:, 0])],
