@@ -558,7 +558,7 @@ class ExtraCoords(ExtraCoordsABC):
 
     def __str__(self) -> str:
         classname = self.__class__.__name__
-        elements = [f"{', '.join(table.names or ())} ({axes}) {table.physical_types}: {table}"
+        elements = [f"{', '.join(table.names) if table.names else ()} ({axes}) {table.physical_types}: {table}"
                     for axes, table in self._lookup_tables]
         length = len(classname) + 2 * len(elements) + sum(len(e) for e in elements)
         if length > np.get_printoptions()['linewidth']:

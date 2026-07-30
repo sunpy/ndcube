@@ -113,10 +113,10 @@ def test_collection_pop(collection, popped_key, expected_popped, expected_collec
 @pytest.mark.parametrize(('collection', 'key', 'expected'), [
     (cube_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)],
                                             aligned_axes=aligned_axes[1:])),
-    # Regression test: __delitem__ used to call self.aligned_axes.__delitem__(key)
+    (unaligned_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)]))])
+    # Last regression test: __delitem__ used to call self.aligned_axes.__delitem__(key)
     # unconditionally, crashing with AttributeError on a collection with no
     # aligned axes since self.aligned_axes is None in that case.
-    (unaligned_collection, "cube0", NDCollection([("cube1", cube1), ("cube2", cube2)]))])
 def test_del_collection(collection, key, expected):
     del_collection = collection.copy()
     del del_collection[key]
