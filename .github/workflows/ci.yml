@@ -24,7 +24,7 @@ permissions: {}
 
 jobs:
   core:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2  # zizmor: ignore[unpinned-uses]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3  # zizmor: ignore[unpinned-uses]
     with:
       submodules: false
       coverage: codecov
@@ -37,7 +37,7 @@ jobs:
   sdist_verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6  # zizmor: ignore[unpinned-uses]
+      - uses: actions/checkout@v7  # zizmor: ignore[unpinned-uses]
         with:
           persist-credentials: false
       - uses: actions/setup-python@v6  # zizmor: ignore[unpinned-uses]
@@ -50,7 +50,7 @@ jobs:
 
   test:
     needs: [core, sdist_verify]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2  # zizmor: ignore[unpinned-uses]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3  # zizmor: ignore[unpinned-uses]
     with:
       submodules: false
       coverage: codecov
@@ -67,7 +67,7 @@ jobs:
 
   docs:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2  # zizmor: ignore[unpinned-uses]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v3  # zizmor: ignore[unpinned-uses]
     with:
       default_python: '3.13'
       submodules: false
@@ -112,7 +112,7 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'Run publish')
       )
     needs: [test, docs]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v2  # zizmor: ignore[unpinned-uses]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v3  # zizmor: ignore[unpinned-uses]
     with:
       python-version: '3.13'
       test_extras: 'all,tests'
