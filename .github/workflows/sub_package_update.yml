@@ -5,6 +5,12 @@ name: Automatic Update from package template
 on:
   # Allow manual runs through the web UI
   workflow_dispatch:
+    inputs:
+      extra_context:
+        description: 'JSON of cookiecutter variables to update (passed to cruft --variables-to-update), e.g. {"project": "new-name"}'
+        required: false
+        default: ''
+        type: string
   schedule:
     #        ┌───────── minute (0 - 59)
     #        │ ┌───────── hour (0 - 23)
@@ -19,8 +25,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       pull-requests: write
+    environment:
+      name: sub_package_update
+      deployment: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -51,11 +59,18 @@ jobs:
       - name: Run update if available
         id: cruft_update
         if: steps.check.outputs.has_changes == '1'
+        env:
+          EXTRA_CONTEXT: ${{ inputs.extra_context }}
         run: |
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git config --global user.name "${GITHUB_ACTOR}"
 
-          cruft_output=$(cruft update --skip-apply-ask --refresh-private-variables)
+          EXTRA_ARGS=()
+          if [ -n "$EXTRA_CONTEXT" ]; then
+            EXTRA_ARGS=(--variables-to-update "$EXTRA_CONTEXT")
+          fi
+
+          cruft_output=$(cruft update --skip-apply-ask --refresh-private-variables "${EXTRA_ARGS[@]}")
           echo $cruft_output
           git restore --staged .
 
@@ -82,6 +97,7 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          branch-token: ${{ secrets.WORKFLOWS_UPDATE_PAT }}
           add-paths: "."
           commit-message: "Automatic package template update"
           branch: "cruft/update"
