@@ -91,12 +91,12 @@ jobs:
         github.event_name == 'pull_request' &&
         contains(github.event.pull_request.labels.*.name, 'Run cron CI')
       )
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2  # zizmor: ignore[unpinned-uses]
+    needs: [core]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c8bb6c6c962542921f993d47d26df38dccd50b1  # v3.0.2
     with:
-      default_python: '3.13'
       submodules: false
-      coverage: codecov
       toxdeps: tox-pypi-filter
+      coverage: codecov
       envs: |
         - linux: py314-devdeps
     secrets:

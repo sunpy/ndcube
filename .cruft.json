@@ -25,7 +25,7 @@
       "use_pat_in_cruft_update_workflow": "y",
       "use_extended_ruff_linting": "y",
       "matrix_room_id": "!TWSJXVpyflnZOzmSQz:matrix.org",
-      "extra_ci_jobs": "",
+      "extra_ci_jobs": "cron",
       "_sphinx_theme": "sunpy",
       "_parent_project": "",
       "_install_requires": "",
