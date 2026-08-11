@@ -1,19 +1,19 @@
 repos:
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.26.1
+    rev: v1.28.0
     hooks:
       - id: zizmor
     # This should be before any formatting hooks like isort
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.15.20"
+    rev: "v0.16.1"
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: ["--fix"]
         types: [python]
         # Define here once and then reference using YAML anchor
         exclude: &exclude_dirs ^ndcube/(data|extern)/
   - repo: https://github.com/PyCQA/isort
-    rev: 9.0.0a3
+    rev: 8.0.1
     hooks:
       - id: isort
         types: [python]
@@ -45,7 +45,7 @@ repos:
       - id: mixed-line-ending
         types_or: [python, rst]
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
+    rev: v2.4.3
     hooks:
       - id: codespell
         args: [ "--write-changes" ]
