@@ -25,14 +25,20 @@ permissions: {}
 jobs:
   core:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c8bb6c6c962542921f993d47d26df38dccd50b1  # v3.0.2
+    permissions:
+      id-token: write
     with:
       submodules: false
-      coverage: codecov
+      coverage: codecov-oidc
       toxdeps: tox-pypi-filter
       envs: |
+<<<<<<<
         - linux: py313-minimal
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+=======
+        - linux: py313
+>>>>>>>
 
   sdist_verify:
     runs-on: ubuntu-latest
@@ -51,19 +57,26 @@ jobs:
   test:
     needs: [core, sdist_verify]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c8bb6c6c962542921f993d47d26df38dccd50b1  # v3.0.2
+    permissions:
+      id-token: write
     with:
       submodules: false
-      coverage: codecov
+      coverage: codecov-oidc
       toxdeps: tox-pypi-filter
       posargs: -n auto
       envs: |
         - linux: py314
         - windows: py312
         - macos: py312
+<<<<<<<
         - linux: py311-oldestdeps
         - linux: asdf_schemas
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+=======
+        - linux: py312-oldestdeps
+        - linux: py314-devdeps
+>>>>>>>
 
   docs:
     needs: [core]
@@ -93,10 +106,16 @@ jobs:
       )
     needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c8bb6c6c962542921f993d47d26df38dccd50b1  # v3.0.2
+    permissions:
+      id-token: write
     with:
       submodules: false
       toxdeps: tox-pypi-filter
+<<<<<<<
       coverage: codecov
+=======
+      coverage: codecov-oidc
+>>>>>>>
       envs: |
         - linux: py314-devdeps
     secrets:
