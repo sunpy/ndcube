@@ -617,6 +617,13 @@ def test_crop_all_points_beyond_cube_extent_error(points):
         cube.crop(*points, keepdims=True)
 
 
+def test_crop_length_error_names_world_components(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    interval0 = cube.wcs.array_index_to_world([1, 2], [0, 1], [0, 1], [0, 2])[0]
+    with pytest.raises(ValueError, match=r"one entry per world object"):
+        cube.crop([interval0[0], None], [interval0[-1], None])
+
+
 def test_crop_by_values_quantity_table_coordinate():
     # Regression: QuantityTableCoordinate-based WCS raised
     # "High Level objects are not supported with the native API" because
