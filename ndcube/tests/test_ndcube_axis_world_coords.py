@@ -64,14 +64,12 @@ def test_axis_world_coords_empty_ec(ndcube_3d_l_ln_lt_ectime):
     assert awc == ()
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
     ec_shape = cube.data.shape[1:3]
     data = np.arange(np.prod(ec_shape)).reshape(ec_shape) * u.m / u.s
 
-    # The lookup table has to be in world order so transpose it.
-    cube.extra_coords.add('velocity', (2, 1), data.T)
+    cube.extra_coords.add('velocity', (1, 2), data)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1
