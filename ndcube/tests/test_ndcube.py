@@ -293,3 +293,47 @@ def test_custom_tonddata_type(ndcube_2d_ln_lt):
     assert new_ndd.spam == "Eggs"
     assert new_ndd.data is ndc.data
     assert new_ndd.wcs is ndc.wcs
+
+
+class SidecarCube(NDCube):
+    """NDCube subclass declaring extra attributes to propagate to derived cubes."""
+
+    _extra_attrs_to_copy = ("observer", "calibration_level")
+
+    def __init__(self, *args, **kwargs):
+        self.observer = kwargs.pop("observer", None)
+        self.calibration_level = kwargs.pop("calibration_level", 0)
+        super().__init__(*args, **kwargs)
+
+
+@pytest.fixture
+def sidecar_cube(wcs_3d_lt_ln_l):
+    cube = SidecarCube(np.ones((2, 3, 4)), wcs=wcs_3d_lt_ln_l)
+    cube.observer = "earth"
+    cube.calibration_level = 2
+    return cube
+
+
+def test_extra_attrs_to_copy_propagate_through_arithmetic(sidecar_cube):
+    doubled = sidecar_cube * 2
+    assert type(doubled) is SidecarCube
+    assert doubled.observer == "earth"
+    assert doubled.calibration_level == 2
+
+    negated = -sidecar_cube
+    assert negated.observer == "earth"
+    assert negated.calibration_level == 2
+
+
+def test_extra_attrs_to_copy_propagate_through_to_nddata(sidecar_cube):
+    copied = sidecar_cube.to_nddata(nddata_type=SidecarCube)
+    assert copied.observer == "earth"
+    assert copied.calibration_level == 2
+
+    # Explicit kwargs override the automatic copy.
+    overridden = sidecar_cube.to_nddata(nddata_type=SidecarCube, observer="sdo")
+    assert overridden.observer == "sdo"
+
+    # Types which do not carry the attributes are unaffected.
+    plain = sidecar_cube.to_nddata(nddata_type=astropy.nddata.NDData)
+    assert not hasattr(plain, "observer")
