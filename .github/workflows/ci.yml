@@ -64,6 +64,7 @@ jobs:
         - macos: py312
         - linux: py311-oldestdeps
         - linux: asdf_schemas
+          coverage: false
 
   docs:
     needs: [core]
