@@ -42,8 +42,7 @@ class PlotterDescriptor:
                         raise ImportError(MISSING_MATPLOTLIB_ERROR_MSG) from e
             elif self._default_type == "mpl_sequence_plotter":
                 try:
-                    from ndcube.visualization.mpl_sequence_plotter import \
-                        MatplotlibSequencePlotter  # noqa: PLC0415
+                    from ndcube.visualization.mpl_sequence_plotter import MatplotlibSequencePlotter  # noqa: PLC0415
                     return MatplotlibSequencePlotter
                 except ImportError as e:
                     if raise_error:
