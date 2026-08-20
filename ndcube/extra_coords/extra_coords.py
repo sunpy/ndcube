@@ -1,8 +1,8 @@
 import abc
-from typing import Any
-from numbers import Integral
-from functools import reduce, partial
 from collections.abc import Iterable
+from functools import partial, reduce
+from numbers import Integral
+from typing import Any
 
 import numpy as np
 

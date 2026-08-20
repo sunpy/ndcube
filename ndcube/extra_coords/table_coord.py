@@ -1,15 +1,15 @@
 import abc
 import copy
 import uuid
-from numbers import Integral
-from functools import partial
 from collections import defaultdict
+from functools import partial
+from numbers import Integral
 
-import gwcs
-import gwcs.coordinate_frames as cf
 import numpy as np
 
 import astropy.units as u
+import gwcs
+import gwcs.coordinate_frames as cf
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.modeling.models import tabular_model

@@ -3,10 +3,10 @@ import copy
 import inspect
 import numbers
 import textwrap
+from collections import namedtuple
+from collections.abc import Iterable, Mapping
 from copy import deepcopy
 from typing import Any
-from collections import namedtuple
-from collections.abc import Mapping, Iterable
 
 import numpy as np
 
