@@ -1,7 +1,7 @@
+import collections.abc
 import copy
 import numbers
 import textwrap
-import collections.abc
 
 import numpy as np
 

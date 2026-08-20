@@ -1,7 +1,7 @@
 import pytest
 
-from astropy.wcs.wcsapi.conftest import Celestial2DLowLevelWCS as ApyCelestial2DLowLevelWCS
 from astropy.wcs.wcsapi.conftest import *  # NOQA
+from astropy.wcs.wcsapi.conftest import Celestial2DLowLevelWCS as ApyCelestial2DLowLevelWCS
 
 
 class Celestial2DLowLevelWCS(ApyCelestial2DLowLevelWCS):
