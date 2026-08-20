@@ -1,9 +1,9 @@
-import gwcs
-import gwcs.coordinate_frames as cf
 import numpy as np
 import pytest
 
 import astropy.units as u
+import gwcs
+import gwcs.coordinate_frames as cf
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
