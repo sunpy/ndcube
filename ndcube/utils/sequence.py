@@ -3,8 +3,8 @@
 Utilities for ndcube sequence.
 """
 
-from copy import deepcopy
 from collections import namedtuple
+from copy import deepcopy
 
 import numpy as np
 

@@ -1,7 +1,7 @@
 import abc
+import collections.abc
 import copy
 import numbers
-import collections.abc
 from types import MappingProxyType
 
 import numpy as np
