@@ -6,8 +6,6 @@ import logging
 
 import numpy as np
 import pytest
-from gwcs import coordinate_frames as cf
-from gwcs import wcs
 
 import astropy.nddata
 import astropy.units as u
@@ -17,6 +15,8 @@ from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
+from gwcs import coordinate_frames as cf
+from gwcs import wcs
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube, NDCubeSequence, NDMeta
 from ndcube.extra_coords.table_coord import (

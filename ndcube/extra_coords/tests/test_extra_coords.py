@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock
 
-import gwcs
 import numpy as np
 import pytest
 
 import astropy.units as u
+import gwcs
 from astropy.coordinates import SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.wcs import WCS
