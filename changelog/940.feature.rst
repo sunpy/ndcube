@@ -1,0 +1,1 @@
+Added the ``NDCube._extra_attrs_to_copy`` extension point. Subclasses can declare instance attributes that are automatically propagated to cubes derived through arithmetic operations (``_new_instance``) and through ``to_nddata`` when the target type is a subclass carrying the same attributes.
