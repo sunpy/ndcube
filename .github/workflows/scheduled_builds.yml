@@ -24,7 +24,7 @@ jobs:
       matrix:
         include:
           - branch: "main"
-          - branch: "2.3"
+          - branch: "2.4"
     steps:
       - name: Trigger workflow dispatch for CI workflow
         uses: benc-uk/workflow-dispatch@31e2b3319479a63f0ab15bf800eff9e913504e26 # v1.3.2
