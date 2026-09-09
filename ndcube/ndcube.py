@@ -1661,7 +1661,7 @@ def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
     m = None if (mask is None or mask is False or operation_ignores_mask) else mask
     if m is None:
         return data, m
-    for array_type, masked_type in ARRAY_MASK_MAP.items():
+    for array_type, masked_type in ARRAY_MASK_MAP.items():  # noqa B008
         if isinstance(data, array_type):
             break
     else:
