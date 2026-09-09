@@ -152,7 +152,7 @@ def test_cube_like_dimensions(ndc, expected_dimensions):
 @pytest.mark.parametrize("ndc", (["ndcubesequence_4c_ln_lt_l"]), indirect=("ndc",))
 def test_cube_like_shape_error(ndc):
     with pytest.raises(TypeError):
-        ndc.cube_like_shape
+        _ = ndc.cube_like_shape
 
 
 @pytest.mark.parametrize("ndc", (["ndcubesequence_3c_l_ln_lt_cax1"]), indirect=("ndc",))

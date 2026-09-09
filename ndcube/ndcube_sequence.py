@@ -166,7 +166,7 @@ class NDCubeSequenceBase:
         # Get coordinate objects associated with the common axis in all cubes.
         common_coords = []
         mappings = []
-        for i, cube in enumerate(self.data):
+        for cube in self.data:
             cube_wcs = cube.combined_wcs
             common_coords.append(cube.axis_world_coords(common_axis, wcs=cube_wcs))
             mappings.append(utils.wcs.array_indices_for_world_objects(cube_wcs,
