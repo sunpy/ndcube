@@ -83,8 +83,8 @@ class CompoundLowLevelWCS(BaseWCSWrapper):
         self.atol = pixel_atol
 
         # Validate the pixel bounds and shape are consistent
-        self.pixel_bounds
-        self.pixel_shape
+        _ = self.pixel_bounds
+        _ = self.pixel_shape
 
     @property
     def _all_pixel_n_dim(self):
