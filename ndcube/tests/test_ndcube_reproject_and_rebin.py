@@ -30,7 +30,7 @@ def test_reproject_interpolation(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
 def test_reproject_invalid_wcs(ndcube_4d_ln_l_t_lt, wcs_3d_lt_ln_l):
     shape_out = (5, 20, 12, 8)
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="Number of dimensions"):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_3d_lt_ln_l, shape_out=shape_out)
 
 
@@ -59,7 +59,7 @@ def test_reproject_shape_out(ndcube_4d_ln_l_t_lt, wcs_4d_lt_t_l_ln):
     # should raise an exception when neither shape_out is specified nor
     # target_wcs has the pixel_shape or array_shape attribute
     wcs_4d_lt_t_l_ln.pixel_shape = None
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="shape_out must be specified"):
         _ = ndcube_4d_ln_l_t_lt.reproject_to(wcs_4d_lt_t_l_ln)
     # should not raise an exception when shape_out is specified
     shape = (5, 10, 12, 8)

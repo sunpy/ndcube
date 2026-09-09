@@ -58,7 +58,7 @@ class NDCubeConverter(Converter):
         if ndcube.uncertainty is not None:
             node["uncertainty"] = ndcube.uncertainty
 
-        if getattr(ndcube, 'psf') is not None:
-            warnings.warn("Attribute 'psf' is present but not being saved in ASDF serialization.", UserWarning)
+        if ndcube.psf is not None:
+            warnings.warn("Attribute 'psf' is present but not being saved in ASDF serialization.", UserWarning, stacklevel=2)
 
         return node
