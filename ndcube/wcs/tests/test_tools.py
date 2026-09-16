@@ -40,3 +40,17 @@ def test_unwrap_wcs_to_fitswcs():
     assert_array_almost_equal(world_values[1], np.array([1.04e-09, 1.10e-09]))
     assert_array_almost_equal(world_values[2][0], np.array([1.26915033e-05]))
     assert_array_almost_equal(world_values[3][0], np.array([0.60002173]))
+
+
+def test_unwrap_wcs_to_fitswcs_does_not_modify_input():
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["HPLN-TAN", "HPLT-TAN"]
+    wcs.wcs.cdelt = [1.0, 1.0]
+    wcs.wcs.crpix = [1.0, 1.0]
+    wcs._naxis = [4, 4]
+
+    unwrap_wcs_to_fitswcs(ResampledLowLevelWCS(wcs, [2, 2]))
+
+    assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
+    assert_array_equal(wcs.wcs.crpix, [1.0, 1.0])
+    assert list(wcs._naxis) == [4, 4]
