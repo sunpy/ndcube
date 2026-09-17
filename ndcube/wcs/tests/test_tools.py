@@ -49,8 +49,14 @@ def test_unwrap_wcs_to_fitswcs_does_not_modify_input():
     wcs.wcs.crpix = [1.0, 1.0]
     wcs._naxis = [4, 4]
 
-    unwrap_wcs_to_fitswcs(ResampledLowLevelWCS(wcs, [2, 2]))
+    output_wcs, _ = unwrap_wcs_to_fitswcs(ResampledLowLevelWCS(wcs, [2, 2]))
 
+    # The resample was applied to the returned WCS
+    assert output_wcs is not wcs
+    assert_array_equal(output_wcs.wcs.cdelt, [2.0, 2.0])
+    assert_array_equal(output_wcs.wcs.crpix, [0.5, 0.5])
+    assert list(output_wcs._naxis) == [2, 2]
+    # and not to the WCS that was wrapped
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
     assert_array_equal(wcs.wcs.crpix, [1.0, 1.0])
     assert list(wcs._naxis) == [4, 4]
