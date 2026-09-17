@@ -92,22 +92,6 @@ def test_3d_distance(lut_3d_distance_mesh):
     assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 10*u.km, 20*u.km), (0, 0, 0))
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
-def test_2d_nout_1_no_mesh(lut_2d_distance_no_mesh):
-    ltc = lut_2d_distance_no_mesh
-    assert ltc.wcs.world_n_dim == 2
-    assert ltc.wcs.pixel_n_dim == 2
-
-    assert ltc.model.n_inputs == 2
-    assert ltc.model.n_outputs == 2
-
-    assert u.allclose(ltc.wcs.pixel_to_world(0*u.pix, 0*u.pix),
-                      (0, 9)*u.km)
-
-    # TODO: this model is not invertable
-    assert u.allclose(ltc.wcs.world_to_pixel(0*u.km, 9*u.km), (0, 0))
-
-
 def test_1d_skycoord_no_mesh(lut_1d_skycoord_no_mesh):
     ltc = lut_1d_skycoord_no_mesh
 
@@ -207,7 +191,6 @@ def test_join_3d(lut_2d_skycoord_mesh, lut_1d_wave):
     assert u.allclose(ltc.wcs.world_to_pixel(*world), (0, 0, 0))
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_2d_quantity():
     shape = (3, 3)
     data = np.arange(np.prod(shape)).reshape(shape) * u.m / u.s
@@ -336,14 +319,6 @@ def test_3d_distance_slice(lut_3d_distance_mesh):
     assert len(sub_ltc.table[2]) == 7
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
-def test_2d_nout_1_no_mesh_slice(lut_2d_distance_no_mesh):
-    ltc = lut_2d_distance_no_mesh
-    sub_ltc = ltc[0:2, 0:2]
-    assert sub_ltc.table[0].shape == (2, 2)
-    assert sub_ltc.table[1].shape == (2, 2)
-
-
 def test_1d_skycoord_no_mesh_slice(lut_1d_skycoord_no_mesh):
     sub_ltc = lut_1d_skycoord_no_mesh[0:4]
     assert sub_ltc.table.shape == (4, )
@@ -466,33 +441,6 @@ def test_mtc_dropped_table_skycoord_join(lut_1d_time, lut_2d_skycoord_mesh):
     assert dwd["value"] == [0, 0]
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
-def test_mtc_dropped_quantity_table(lut_1d_time, lut_2d_distance_no_mesh):
-    mtc = MultipleTableCoordinate(lut_1d_time, lut_2d_distance_no_mesh)
-    sub = mtc[:, 0, 0]
-
-    assert len(sub._table_coords) == 1
-    assert len(sub._dropped_coords) == 1
-
-    pytest.importorskip("gwcs", minversion="0.17")
-
-    dwd = sub.dropped_world_dimensions
-    assert isinstance(dwd, dict)
-    wao_classes = dwd.pop("world_axis_object_classes")
-    assert all(isinstance(value, list) for value in dwd.values())
-    assert dwd
-    assert all(len(value) == 2 for value in dwd.values())
-
-    assert dwd["world_axis_names"] == ["", ""]
-    assert all(isinstance(u, str) for u in dwd["world_axis_units"])
-    assert dwd["world_axis_units"] == ["km", "km"]
-    assert dwd["world_axis_physical_types"] == ["custom:SPATIAL", "custom:SPATIAL"]
-    assert dwd["world_axis_object_components"] == [("SPATIAL", 0, "value"), ("SPATIAL1", 0, "value")]
-    assert wao_classes["SPATIAL"][0] is u.Quantity
-    assert wao_classes["SPATIAL1"][0] is u.Quantity
-    assert dwd["value"] == [0*u.km, 9*u.km]
-
-
 def test_mtc_dropped_quantity_inside_table(lut_3d_distance_mesh):
     sub = lut_3d_distance_mesh[:, 0, :]
 
@@ -517,24 +465,6 @@ def test_mtc_dropped_quantity_inside_table(lut_3d_distance_mesh):
     assert all(isinstance(value, list) for value in dwd.values())
     assert dwd
     assert all(len(value) == 2 for value in dwd.values())
-
-
-@pytest.mark.xfail(reason=">1D Tables not supported")
-def test_mtc_dropped_quantity_inside_table_no_mesh(lut_2d_distance_no_mesh):
-    """
-    When not meshing, we don't drop a coord, as the coordinate for the sliced
-    out axis can still vary along the remaining coordinate.
-    """
-    sub = lut_2d_distance_no_mesh[:, 0]
-
-    assert len(sub.table) == 2
-
-    pytest.importorskip("gwcs", minversion="0.17")
-
-    dwd = sub.dropped_world_dimensions
-    assert isinstance(dwd, dict)
-    dwd.pop("world_axis_object_classes")
-    assert not dwd
 
 
 def test_mtc_dropped_quantity_join_drop_table(lut_1d_time, lut_3d_distance_mesh):
@@ -722,3 +652,96 @@ def assert_lutc_ancilliary_data_same(lutc1, lutc2):
     assert lutc1.names == lutc2.names
     assert lutc1.physical_types == lutc2.physical_types
     assert lutc1._dropped_world_dimensions == lutc2._dropped_world_dimensions
+
+
+@pytest.fixture
+def timetable_2d():
+    times = Time("2020-01-01T00:00:00") + np.arange(12).reshape(3, 4) * u.min
+    return TimeTableCoordinate(times, names="time", physical_types="time")
+
+
+@pytest.fixture
+def quantitytable_2d():
+    return QuantityTableCoordinate(np.arange(12).reshape(3, 4) * u.km,
+                                   names="distance", physical_types="pos.distance")
+
+
+def test_2d_time_table(timetable_2d):
+    assert timetable_2d.n_inputs == 2
+    assert not timetable_2d.is_scalar()
+
+    twcs = timetable_2d.wcs
+    assert twcs.pixel_n_dim == 2
+    assert twcs.world_n_dim == 1
+    # Model inputs are in pixel order, i.e. reversed array order.
+    assert twcs.pixel_to_world(1, 2) == timetable_2d.table[2, 1]
+
+
+def test_2d_time_table_slicing(timetable_2d):
+    sub = timetable_2d[1:3, 0:2]
+    assert isinstance(sub, TimeTableCoordinate)
+    assert sub.table.shape == (2, 2)
+    assert sub.n_inputs == 2
+    assert (sub.table == timetable_2d.table[1:3, 0:2]).all()
+    # Reference time must be preserved through slicing.
+    assert sub.reference_time == timetable_2d.reference_time
+
+    row = timetable_2d[1, :]
+    assert row.table.shape == (4,)
+    assert row.n_inputs == 1
+
+    scalar = timetable_2d[1, 2]
+    assert scalar.is_scalar()
+
+    with pytest.raises(ValueError, match="Can not slice with incorrect length"):
+        timetable_2d[1]
+
+
+def test_2d_time_table_interpolate(timetable_2d):
+    new_grid0 = np.array([0.5, 1.5])
+    new_grid1 = np.array([1.0, 2.0])
+    new_coord = timetable_2d.interpolate(new_grid0, new_grid1)
+    assert isinstance(new_coord, TimeTableCoordinate)
+    expected = timetable_2d.table.mjd[0:2, 1:3].diagonal() + 0.5 * (1 * u.min).to_value(u.day) * 4
+    np.testing.assert_allclose(new_coord.table.mjd, expected)
+
+
+def test_2d_quantity_table(quantitytable_2d):
+    assert quantitytable_2d.n_inputs == 2
+    assert quantitytable_2d.ndim == 2
+    assert quantitytable_2d.shape == (3, 4)
+    assert not quantitytable_2d.is_scalar()
+
+    qwcs = quantitytable_2d.wcs
+    assert qwcs.pixel_n_dim == 2
+    assert qwcs.world_n_dim == 1
+    # Model inputs are in pixel order, i.e. reversed array order.
+    assert qwcs.pixel_to_world(1, 2) == quantitytable_2d.table[0][2, 1]
+
+
+def test_2d_quantity_table_slicing(quantitytable_2d):
+    sub = quantitytable_2d[0:2, 1:3]
+    assert isinstance(sub, QuantityTableCoordinate)
+    assert sub.table[0].shape == (2, 2)
+    assert sub.n_inputs == 2
+    assert (sub.table[0] == quantitytable_2d.table[0][0:2, 1:3]).all()
+
+    row = quantitytable_2d[0, :]
+    assert row.table[0].shape == (4,)
+    assert row.n_inputs == 1
+
+    scalar = quantitytable_2d[0, 1]
+    assert scalar.is_scalar()
+
+
+def test_2d_quantity_table_interpolate(quantitytable_2d):
+    new_grid0 = np.array([0.0, 1.0])
+    new_grid1 = np.array([1.0, 2.0])
+    new_coord = quantitytable_2d.interpolate(new_grid0, new_grid1)
+    assert isinstance(new_coord, QuantityTableCoordinate)
+    np.testing.assert_allclose(new_coord.table[0].to_value(u.km), [1.0, 6.0])
+
+
+def test_multiple_nd_tables_rejected():
+    with pytest.raises(ValueError, match="Multiple tables can only be provided if they are all 1-D"):
+        QuantityTableCoordinate(np.ones((2, 2)) * u.km, np.ones((2, 2)) * u.km)
