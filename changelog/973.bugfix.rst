@@ -1,1 +1,0 @@
-`ndcube.wcs.tools.unwrap_wcs_to_fitswcs` no longer modifies the input WCS inplace when unwrapping a `~ndcube.wcs.wrappers.ResampledLowLevelWCS`.

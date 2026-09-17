@@ -1,3 +1,12 @@
+2.4.2 (2026-09-17)
+==================
+
+Bug Fixes
+---------
+
+- `ndcube.wcs.tools.unwrap_wcs_to_fitswcs` no longer modifies the input WCS inplace when unwrapping a `~ndcube.wcs.wrappers.ResampledLowLevelWCS`. (`#973 <https://github.com/sunpy/ndcube/pull/973>`__)
+
+
 2.4.1 (2026-06-10)
 ==================
 
