@@ -1,0 +1,5 @@
+Added ``NDCube._slice_custom_state``, an overridable no-op hook called at the
+end of ``NDCube.__getitem__`` with the newly sliced cube and the sanitized
+slice item. Subclasses carrying extra state that tracks the data axes (e.g.
+per-frame WCS objects) can override it instead of overriding ``__getitem__``
+and re-deriving the normalized item themselves.

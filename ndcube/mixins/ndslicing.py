@@ -53,4 +53,30 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         if meta_is_sliceable:
             sliced_cube.meta = meta.slice[item]
 
+        self._slice_custom_state(sliced_cube, item)
+
         return sliced_cube
+
+    def _slice_custom_state(self, sliced_cube, item):
+        """
+        Update custom subclass state on a newly sliced cube.
+
+        Called at the end of ``__getitem__``, after the data, WCS, coords and
+        metadata of ``sliced_cube`` have been set.
+
+        Subclasses carrying extra state that tracks the data axes (for example
+        a list of per-frame WCS objects) should override this method instead of
+        ``__getitem__``, mutating ``sliced_cube`` in place.  The default
+        implementation does nothing.
+
+        Parameters
+        ----------
+        sliced_cube : `~ndcube.NDCube`
+            The new cube produced by slicing this one.
+
+        item : `tuple`
+            The sanitized slice item: one entry per data axis of the original
+            cube, containing only `int` and `slice` objects.  Any ellipsis has
+            already been expanded and missing trailing axes filled with
+            ``slice(None)``.
+        """
