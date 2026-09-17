@@ -227,6 +227,19 @@ class ExtraCoords(ExtraCoordsABC):
         else:
             raise TypeError(f"The input type {type(lookup_table)} isn't supported")
 
+        axes = (array_dimension,) if isinstance(array_dimension, Integral) else tuple(array_dimension)
+        n_inputs = coord.n_inputs
+        if isinstance(coord, SkyCoordTableCoordinate) and not coord.mesh:
+            n_inputs = coord.table.ndim
+        if len(axes) != n_inputs:
+            raise ValueError(f"Expected {n_inputs} array axes for this lookup table, got {len(axes)}.")
+        if any(not isinstance(axis, Integral) or axis < 0 for axis in axes):
+            raise ValueError("Array axes must be non-negative integers.")
+        if len(set(axes)) != len(axes):
+            raise ValueError("Array axes must be distinct.")
+        if self._ndcube is not None and any(axis >= len(self._ndcube.shape) for axis in axes):
+            raise ValueError("Array axes must be within the cube dimensions.")
+        array_dimension = axes[0] if isinstance(array_dimension, Integral) else axes
         self._lookup_tables.append((array_dimension, coord))
 
         # Sort the LUTs so that the mapping and the wcs are ordered in pixel dim order
@@ -260,9 +273,17 @@ class ExtraCoords(ExtraCoordsABC):
 
         # The mapping is from the array index (position in the list) to the
         # pixel dimensions (numbers in the list)
-        lts = [list([lt[0]] if isinstance(lt[0], Integral) else lt[0]) for lt in self._lookup_tables]
         converter = partial(convert_between_array_and_pixel_axes, naxes=len(self._ndcube.shape))
-        pixel_indicies = [list(converter(np.array(ids))) for ids in lts]
+        pixel_indicies = []
+        for lut_axis, lut in self._lookup_tables:
+            ids = [lut_axis] if isinstance(lut_axis, Integral) else list(lut_axis)
+            pixel_ids = list(converter(np.array(ids)))
+            if lut._model_inputs_are_pixel_ordered:
+                # Single N-D tables expose their model inputs in pixel order,
+                # i.e. reversed with respect to the array-ordered axes given
+                # to `add`.
+                pixel_ids = pixel_ids[::-1]
+            pixel_indicies.append(pixel_ids)
         return tuple(reduce(list.__add__, pixel_indicies))
 
     @mapping.setter
@@ -360,7 +381,6 @@ class ExtraCoords(ExtraCoordsABC):
             n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
             lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
             lut_slice = tuple(item[i] for i in lut_axes)
             if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
@@ -370,6 +390,13 @@ class ExtraCoords(ExtraCoordsABC):
             if sliced_lut.is_scalar():
                 dropped_tables.add(sliced_lut)
             else:
+                kept_axes = lut_axes
+                if sliced_lut.n_inputs < len(lut_axes):
+                    # The sliced table lost pixel dimensions (e.g. an N-D
+                    # table sliced with an integer), so drop the
+                    # integer-sliced axes from the table's axes.
+                    kept_axes = tuple(ax for ax in lut_axes if not isinstance(item[ax], Integral))
+                new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in kept_axes)
                 new_lookup_tables.add((new_lut_axes, sliced_lut))
         new_extra_coords = type(self)()
         new_extra_coords._lookup_tables = list(new_lookup_tables)
@@ -483,8 +510,13 @@ class ExtraCoords(ExtraCoordsABC):
                 f"dimensions: len(offset) = {len(offset)}; No. cube dimensions = {ndim}.")
         # If ExtraCoords object built on WCS, resample using WCS insfrastructure
         if self._wcs is not None:
+            pixel_axes = self.mapping if self._mapping is not None else tuple(range(self._wcs.pixel_n_dim))
+            factor = np.asarray(factor)[::-1][list(pixel_axes)]
+            offset = np.asarray(offset)[::-1][list(pixel_axes)]
             new_ec.wcs = HighLevelWCSWrapper(ResampledLowLevelWCS(self._wcs.low_level_wcs,
                                                                   factor, offset))
+            if self._mapping is not None:
+                new_ec.mapping = self.mapping
             return new_ec
         # Else interpolate the lookup table coordinates.
         factor = np.asarray(factor)
@@ -498,7 +530,10 @@ class ExtraCoords(ExtraCoordsABC):
             if np.isscalar(array_axes):
                 new_coord = coord.interpolate(new_grids[array_axes], **kwargs)
             else:
-                new_coord = coord.interpolate(*new_grids[np.asarray(array_axes)], **kwargs)
+                grids = new_grids[np.asarray(array_axes)]
+                if coord._model_inputs_are_pixel_ordered:
+                    grids = np.meshgrid(*grids, indexing="ij")
+                new_coord = coord.interpolate(*grids, **kwargs)
             new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)
         return new_ec
 

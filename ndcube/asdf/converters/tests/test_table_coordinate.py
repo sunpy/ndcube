@@ -1,10 +1,12 @@
+import numpy as np
 import pytest
 
 import asdf
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.time import Time
 
-from ndcube.extra_coords import MultipleTableCoordinate
+from ndcube.extra_coords import MultipleTableCoordinate, QuantityTableCoordinate, TimeTableCoordinate
 
 
 @pytest.fixture
@@ -82,3 +84,30 @@ def test_serialize_sliced_multiple_coord(lut_1d_distance, lut_1d_time, tmp_path)
     with asdf.open(file_path) as af:
         new_mtc = af["lut"]
         assert_mtc_equal(new_mtc, mtc)
+
+
+@pytest.mark.parametrize("shape", [(2, 3), (2, 3, 4)])
+@pytest.mark.parametrize("kind", ["quantity", "time"])
+def test_serialize_nd_table(shape, kind, tmp_path):
+    values = np.arange(np.prod(shape)).reshape(shape)
+    if kind == "quantity":
+        coord = QuantityTableCoordinate(values * u.m, names="distance", physical_types="pos.distance")
+    else:
+        origin = Time("2020-01-01", scale="tai")
+        coord = TimeTableCoordinate(origin + values * u.s, names="time", physical_types="time",
+                                    reference_time=origin - 1 * u.day)
+    path = tmp_path / "nd-table.asdf"
+    with asdf.AsdfFile({"coord": coord}) as af:
+        af.write_to(path)
+    with asdf.open(path) as af:
+        restored = af["coord"]
+        assert restored.n_inputs == len(shape)
+        assert restored.names == coord.names
+        assert restored.physical_types == coord.physical_types
+        if kind == "time":
+            assert restored.reference_time == coord.reference_time
+            assert restored.table.scale == coord.table.scale
+        pixels = np.indices(shape)[::-1]
+        assert (restored.wcs.pixel_to_world(*pixels) == coord.wcs.pixel_to_world(*pixels)).all()
+        sliced = restored[(0,) + (slice(None),) * (len(shape) - 1)]
+        assert sliced.n_inputs == len(shape) - 1

@@ -1392,7 +1392,9 @@ class NDCube(NDCubeBase):
         new_cube._global_coords = self._global_coords
         # Reconstitute extra coords
         if not self.extra_coords.is_empty:
-            new_cube._extra_coords = self.extra_coords.resample(bin_shape, ndcube=new_cube)
+            # Lookup tables use center offsets; WCS wrappers use pixel-edge offsets.
+            offset = (bin_shape - 1) / 2 if self.extra_coords._lookup_tables else 0
+            new_cube._extra_coords = self.extra_coords.resample(bin_shape, offset=offset, ndcube=new_cube)
 
         return new_cube
 

@@ -230,6 +230,31 @@ The physical types of extra coordinates are also returned by `~ndcube.NDCube.arr
 The values of the extra coordinates at each array index can be retrieved using and combination of :meth:`ndcube.NDCube.axis_world_coords` and `ndcube.NDCube.combined_wcs`.
 See :ref:`combined_wcs` below.
 
+A single Quantity or Time lookup table can also vary over several array axes.
+Supply those axes in the same order as the dimensions of the table.
+For example, this distance coordinate varies over both axes of a small image:
+
+.. code-block:: python
+
+  >>> import numpy as np
+  >>> import astropy.units as u
+  >>> from astropy.wcs import WCS
+  >>> from ndcube import NDCube
+  >>> image = NDCube(np.ones((4, 6)), WCS(naxis=2))
+  >>> rows, columns = np.indices(image.shape)
+  >>> distance = (10 * rows + columns) * u.m
+  >>> image.extra_coords.add("distance", (0, 1), distance, physical_types="pos.distance")
+  >>> row = image[1, :]
+  >>> row_distance, = row.axis_world_coords(wcs=row.extra_coords)
+  >>> np.testing.assert_allclose(row_distance.to_value(u.m), distance[1].to_value(u.m))
+  >>> rebinned = image.rebin((2, 3))
+  >>> rebinned_distance, = rebinned.axis_world_coords(wcs=rebinned.extra_coords)
+  >>> np.testing.assert_allclose(rebinned_distance.to_value(u.m), [[6, 9], [26, 29]])
+
+Slicing removes the corresponding table dimensions automatically.
+Rebinning interpolates the coordinate at each new pixel center; it does not average the coordinate values within a bin.
+A Time table can be attached in the same way, using ``physical_types="time"``.
+
 .. _combined_wcs:
 
 Combined WCS

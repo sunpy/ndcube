@@ -283,11 +283,10 @@ def test_extra_coords_index(skycoord_2d_lut, time_lut):
     assert sub_ec.wcs.world_axis_names == ("exposure_time",)
 
 
-@pytest.mark.xfail(reason=">1D Tables not supported")
 def test_extra_coords_2d_quantity(quantity_2d_lut):
     ec = ExtraCoords()
     ec.add("velocity", (0, 1), quantity_2d_lut)
-    assert ec.wcs.pixel_to_world(0, 0)
+    assert u.allclose(ec.wcs.pixel_to_world(1, 2), quantity_2d_lut[2, 1])
 
 
 # Extra Coords with NDCube
@@ -560,3 +559,85 @@ def test_length1_extra_coord(wave_lut):
     sec = ec[item]
     assert (sec.wcs.pixel_to_world(0) == wave_lut[item]).all()
     assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()
+
+
+@pytest.mark.parametrize("shape", [(3, 4), (3, 3)])
+@pytest.mark.parametrize("kind", ["quantity", "time"])
+def test_nd_table_resample(shape, kind):
+    values = np.arange(np.prod(shape)).reshape(shape)
+    table = values * u.m if kind == "quantity" else Time("2020-01-01") + values * u.s
+    cube = NDCube(values, WCS(naxis=2))
+    cube.extra_coords.add(kind, (0, 1), table)
+
+    for factor in (1, 2):
+        resampled = cube.extra_coords.resample(factor)
+        rows, columns = np.indices(table[::factor, ::factor].shape)
+        actual = resampled.wcs.pixel_to_world(columns, rows)
+        assert actual.shape == table[::factor, ::factor].shape
+        difference = actual - table[::factor, ::factor]
+        unit = u.m if kind == "quantity" else u.s
+        np.testing.assert_allclose(difference.to_value(unit), 0, atol=1e-6)
+
+
+def test_2d_time_extra_coord_through_cube(wcs_3d_lt_ln_l):
+    cube = NDCube(np.zeros((3, 4, 5)), wcs=wcs_3d_lt_ln_l)
+    times = Time("2020-01-01T00:00:00") + np.arange(12).reshape(3, 4) * u.s
+    cube.extra_coords.add("time", (0, 1), times, physical_types="time")
+
+    (world_times,) = cube.axis_world_coords("time", wcs=cube.extra_coords)
+    assert world_times.shape == (3, 4)
+    assert (world_times == times).all()
+
+    # Slicing with ranges keeps the table 2-D.
+    sub = cube[1:3, 0:2]
+    (sub_times,) = sub.axis_world_coords("time", wcs=sub.extra_coords)
+    assert sub_times.shape == (2, 2)
+    assert (sub_times == times[1:3, 0:2]).all()
+
+    # Integer slicing drops the corresponding table dimension.
+    row = cube[1]
+    (row_times,) = row.axis_world_coords("time", wcs=row.extra_coords)
+    assert row_times.shape == (4,)
+    assert (row_times == times[1]).all()
+
+    column = cube[:, 2]
+    (column_times,) = column.axis_world_coords("time", wcs=column.extra_coords)
+    assert column_times.shape == (3,)
+    assert (column_times == times[:, 2]).all()
+
+    # Slicing away both table dimensions drops the coordinate.
+    point = cube[1, 2]
+    assert point.extra_coords.is_empty
+    assert len(point.extra_coords._dropped_tables) == 1
+
+
+@pytest.mark.parametrize("kind", ["quantity", "time", "wcs"])
+def test_rebin_extra_coords_pixel_centers(kind):
+    wcs = WCS(naxis=2)
+    wcs.wcs.crpix = [1, 1]
+    cube = NDCube(np.ones((4, 6)), wcs)
+    _, columns = np.indices(cube.shape)
+    if kind == "wcs":
+        cube.extra_coords.wcs = wcs
+        cube.extra_coords.mapping = (0, 1)
+    else:
+        values = columns * u.m if kind == "quantity" else Time("2020-01-01") + columns * u.s
+        cube.extra_coords.add(kind, (0, 1), values)
+    rebinned = cube.rebin((2, 3))
+    x, y = np.meshgrid(np.arange(2), np.arange(2))
+    expected_x, expected_y = rebinned.wcs.low_level_wcs.pixel_to_world_values(x, y)
+    actual = rebinned.extra_coords.wcs.pixel_to_world(x, y)
+    if kind == "wcs":
+        np.testing.assert_allclose(actual[0].value, expected_x)
+        np.testing.assert_allclose(actual[1].value, expected_y)
+    else:
+        actual = actual.to_value(u.m) if kind == "quantity" else (actual - Time("2020-01-01")).to_value(u.s)
+        np.testing.assert_allclose(actual, expected_x, atol=1e-6)
+
+
+@pytest.mark.parametrize("axes", [0, (0, 1, 2), (0, 0), (-1, 0), (0, 0.5), (0, 2)])
+def test_add_invalid_nd_axes(axes):
+    cube = NDCube(np.ones((2, 3)), WCS(naxis=2))
+    with pytest.raises(ValueError, match=r"[Aa]rray axes"):
+        cube.extra_coords.add("distance", axes, np.ones((2, 3)) * u.m)
+    assert cube.extra_coords.is_empty
