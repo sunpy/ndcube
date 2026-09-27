@@ -653,3 +653,12 @@ def test_slice_negative_integer_drops_correct_coordinate(ndcube_4d_ln_lt_l_t):
 
 def test_slice_nested_with_step_one(ndcube_4d_ln_lt_l_t):
     assert ndcube_4d_ln_lt_l_t[1:][:2:1].shape == (2, 8, 10, 12)
+
+
+@pytest.mark.parametrize("item", [np.s_[::2], np.s_[0, 0, 0, 0]])
+def test_failed_slice_keeps_meta(ndcube_4d_axis_aware_meta, item):
+    cube = ndcube_4d_axis_aware_meta
+    meta = cube.meta
+    with pytest.raises((IndexError, ValueError)):
+        cube[item]
+    assert cube.meta is meta
