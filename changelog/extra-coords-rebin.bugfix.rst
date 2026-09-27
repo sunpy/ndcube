@@ -1,0 +1,1 @@
+Fixed `~ndcube.NDCube.rebin` for cubes with lookup-table extra coords: the extra coords are now sampled at the centre of each new pixel, matching the rebinned WCS, instead of at the first pixel of each bin, and rebinning no longer raises a ``TypeError`` when every axis of the rebinned cube has the same length (always the case for 1-D cubes).

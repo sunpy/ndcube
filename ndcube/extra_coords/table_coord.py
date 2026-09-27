@@ -796,12 +796,13 @@ class TimeTableCoordinate(BaseTableCoordinate):
             raise ValueError("Cannot interpolate a scalar TimeTableCoordinate.")
         # Build pixel grids for current TimeTableCoord.
         old_array_grids = np.arange(len(self.table))
-        # Interpolate using MJD format and convert back to a Time object.
-        new_table = np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs)
-        new_table = Time(new_table, scale=self.table.scale, format="mjd")
-        new_table.format = self.table.format
+        # Interpolate offsets from the first time; absolute MJD floats lose sub-microsecond precision.
+        origin = self.table[0]
+        deltas = (self.table - origin).to_value(u.s)
+        new_table = origin + np.interp(new_array_grids, old_array_grids, deltas, **kwargs) * u.s
         # Rebuild new TimeTableCoord and return.
-        new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types)
+        new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types,
+                               reference_time=self.reference_time)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
         return new_coord
 

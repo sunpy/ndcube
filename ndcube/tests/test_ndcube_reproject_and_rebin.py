@@ -157,7 +157,7 @@ def test_rebin(ndcube_3d_l_ln_lt_ectime, bin_shape):
     assert u.allclose(output_spec, expected_spec)
     assert output_time.scale == expected_time.scale
     assert output_time.format == expected_time.format
-    assert np.allclose(output_time.mjd, expected_time.mjd)
+    assert np.allclose(output_time.mjd, expected_time.mjd, rtol=0, atol=1e-8)
 
 
 def test_rebin_dask(ndcube_2d_dask):
@@ -325,3 +325,10 @@ def test_rebin_specutils():
     spec = Spectrum(flux=y, spectral_axis=x, bin_specification='centers', mask=x > 2000*u.nm)
     output = spec.rebin((10,), operation=np.sum, operation_ignores_mask=False)
     assert output.shape == (400,)
+
+
+def test_rebin_1d_extra_coords(ndcube_1d_l):
+    ndcube_1d_l.extra_coords.add("wave", 0, ndcube_1d_l.axis_world_coords_values()[0])
+    output = ndcube_1d_l.rebin((2,))
+    assert u.allclose(output.axis_world_coords_values(wcs=output.extra_coords)[0],
+                      output.axis_world_coords_values()[0])
