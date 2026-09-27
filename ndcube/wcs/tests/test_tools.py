@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_array_equal
+from numpy.testing import assert_allclose, assert_array_almost_equal, assert_array_equal
 
 from astropy.time import Time
 from astropy.wcs import WCS
@@ -49,12 +49,17 @@ def test_unwrap_wcs_to_fitswcs_does_not_modify_input():
     wcs.wcs.crpix = [1.0, 1.0]
     wcs._naxis = [4, 4]
 
-    output_wcs, _ = unwrap_wcs_to_fitswcs(ResampledLowLevelWCS(wcs, [2, 2]))
+    resampled_wcs = ResampledLowLevelWCS(wcs, [2, 2])
+    output_wcs, _ = unwrap_wcs_to_fitswcs(resampled_wcs)
 
     # The resample was applied to the returned WCS
     assert output_wcs is not wcs
     assert_array_equal(output_wcs.wcs.cdelt, [2.0, 2.0])
-    assert_array_equal(output_wcs.wcs.crpix, [0.5, 0.5])
+    # assert_array_equal(output_wcs.wcs.crpix, [0.75, 0.75])
+    pixels = [-0.5, 0, 0.5, 1, 1.5]
+    assert_allclose(output_wcs.pixel_to_world_values(pixels, pixels),
+                    resampled_wcs.pixel_to_world_values(pixels, pixels))
+
     assert list(output_wcs._naxis) == [2, 2]
     # and not to the WCS that was wrapped
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
