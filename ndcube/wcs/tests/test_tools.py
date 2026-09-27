@@ -36,10 +36,13 @@ def test_unwrap_wcs_to_fitswcs():
     assert output_wcs._naxis == [1, 2, 1, 1]
     assert list(output_wcs.wcs.ctype) == ['TIME', 'WAVE', 'HPLT-TAN', 'HPLN-TAN']
     world_values = output_wcs.array_index_to_world_values([0], [0], [0, 1], [0])
-    assert_array_almost_equal(world_values[0][0], np.array([2700]))
-    assert_array_almost_equal(world_values[1], np.array([1.04e-09, 1.10e-09]))
-    assert_array_almost_equal(world_values[2][0], np.array([1.26915033e-05]))
-    assert_array_almost_equal(world_values[3][0], np.array([0.60002173]))
+    expected_time, expected_wave = wcs3.array_index_to_world_values([0, 1], [0])
+    assert_array_almost_equal(world_values[0], expected_time)
+    assert_array_almost_equal(world_values[1], expected_wave)
+    # Lat/lon were sliced away in wcs1 so compare to its dropped world values
+    expected_lat, expected_lon = wcs1.dropped_world_dimensions["value"]
+    assert_array_almost_equal(world_values[2], expected_lat)
+    assert_array_almost_equal(world_values[3], expected_lon)
 
 
 def test_unwrap_wcs_to_fitswcs_does_not_modify_input():
@@ -80,6 +83,6 @@ def test_unwrap_wcs_to_fitswcs_preserve_units():
 
     assert list(output_wcs.wcs.cunit) == ["arcsec", "arcsec"]
     assert_array_equal(output_wcs.wcs.cdelt, [2.0, 2.0])
-    assert_array_equal(output_wcs.wcs.crpix, [0.5, 0.5])
+    assert_array_equal(output_wcs.wcs.crpix, [0.75, 0.75])
     assert list(output_wcs._naxis) == [2, 2]
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
