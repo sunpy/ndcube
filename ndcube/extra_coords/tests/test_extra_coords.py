@@ -562,11 +562,12 @@ def test_length1_extra_coord(wave_lut):
     assert (sec.wcs.world_to_pixel(wave_lut[item])[0] == [0]).all()
 
 
-@pytest.mark.parametrize("axes", [(0, 1), [0, 1]])
-def test_slice_multi_axis_lookup_table(axes):
+@pytest.mark.parametrize("axes", [(0, 1), [0, 1], (1, 0)])
+@pytest.mark.parametrize("item", [np.s_[:], np.s_[1:], np.s_[1]])
+def test_slice_multi_axis_lookup_table(axes, item):
     cube = NDCube(np.zeros((3, 4, 5)), wcs=WCS(naxis=3))
     lon = np.arange(12).reshape(3, 4)
     sky = SkyCoord(lon * u.deg, np.ones((3, 4)) * u.deg)
-    cube.extra_coords.add(("lon", "lat"), axes, sky, mesh=False)
-    sliced = cube[1]
-    np.testing.assert_allclose(sliced.axis_world_coords(wcs=sliced.extra_coords)[0].ra.deg, lon[1])
+    cube.extra_coords.add(("lon", "lat"), axes, sky if axes[0] == 0 else sky.T, mesh=False)
+    sliced = cube[item]
+    np.testing.assert_allclose(sliced.axis_world_coords(wcs=sliced.extra_coords)[0].ra.deg, lon[item])
