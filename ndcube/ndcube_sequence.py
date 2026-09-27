@@ -513,6 +513,8 @@ class _IndexAsCubeSlicer:
             cube_item[common_axis] = common_axis_index
             return self.seq.data[sequence_index][tuple(cube_item)]
         # item can now only be a tuple whose common axis item is a non-None slice object.
+        if item[common_axis].step not in (None, 1):
+            raise IndexError("Slicing WCS with a step is not supported.")
         # Resolve negative and out-of-range bounds against the total common-axis length.
         item[common_axis] = slice(*item[common_axis].indices(sum(common_axis_lengths))[:2])
         # Convert item into iterable of SequenceItems and slice each cube appropriately.

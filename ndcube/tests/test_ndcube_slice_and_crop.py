@@ -655,6 +655,18 @@ def test_slice_nested_with_step_one(ndcube_4d_ln_lt_l_t):
     assert ndcube_4d_ln_lt_l_t[1:][:2:1].shape == (2, 8, 10, 12)
 
 
+@pytest.mark.parametrize("item", [np.s_[2:2], np.s_[3:1], np.s_[-1:1], np.s_[10:]])
+def test_slice_to_length_0_raises(ndcube_4d_ln_lt_l_t, item):
+    with pytest.raises(IndexError, match="length-0"):
+        ndcube_4d_ln_lt_l_t[item]
+
+
+def test_slice_empty_cube():
+    cube = NDCube(np.zeros((0, 3)), wcs=WCS(naxis=2))
+    assert cube[:].shape == (0, 3)
+    assert cube[:, 0].shape == (0,)
+
+
 @pytest.mark.parametrize("item", [np.s_[::2], np.s_[0, 0, 0, 0]])
 def test_failed_slice_keeps_meta(ndcube_4d_axis_aware_meta, item):
     cube = ndcube_4d_axis_aware_meta

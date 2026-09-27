@@ -228,6 +228,12 @@ def test_slice_negative_indices(ndcubesequence_4c_ln_lt_l_cax1):
     helpers.assert_cubesequences_equal(seq[-2:, :, -1], seq[2:, :, 2])
 
 
+@pytest.mark.parametrize("item", [np.s_[:, ::2], np.s_[:, ::-1], np.s_[:, 1:5:2]])
+def test_index_as_cube_step_error(ndcubesequence_4c_ln_lt_l_cax1, item):
+    with pytest.raises(IndexError, match="step"):
+        ndcubesequence_4c_ln_lt_l_cax1.index_as_cube[item]
+
+
 def test_index_as_cube_negative_int(ndcubesequence_3c_l_ln_lt_cax1):
     seq = ndcubesequence_3c_l_ln_lt_cax1
     helpers.assert_cubes_equal(seq.index_as_cube[:, -1], seq.index_as_cube[:, seq.cube_like_shape[1] - 1])
