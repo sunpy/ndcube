@@ -633,12 +633,7 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
         # Quit out early if we are no-op
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
-        comp = [c[0] for c in wcs.world_axis_object_components]
-        # Trim to unique component names - `np.unique(..., return_index=True)
-        # keeps sorting alphabetically, set() seems just nondeterministic.
-        for k, c in enumerate(comp):
-            if comp.count(c) > 1:
-                comp.pop(k)
+        comp = utils.misc.unique_sorted(c[0] for c in wcs.world_axis_object_components)
         classes = [wcs.world_axis_object_classes[c][0] for c in comp]
         expected = ", ".join(f"{name} ({cls.__name__})" for name, cls in zip(comp, classes))
         for i, point in enumerate(points):
@@ -647,6 +642,12 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
                                  f"WCS with {len(comp)} components. Each point must "
                                  "have one entry per world object (use None for a "
                                  f"component that should not be cropped), in order: {expected}.")
+            # Like astropy's world_to_pixel, match objects to components by class when unambiguous (#608).
+            vals = [v for v in point if v is not None]
+            slots = [[j for j, cls in enumerate(classes) if isinstance(v, cls)] for v in vals]
+            matched = {s[0]: v for v, s in zip(vals, slots) if len(s) == 1}
+            if len(matched) == len(vals):
+                points[i] = point = [matched.get(j) for j in range(len(comp))]
             for j, value in enumerate(point):
                 if not (value is None or isinstance(value, classes[j])):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
