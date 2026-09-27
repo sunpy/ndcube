@@ -36,6 +36,8 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         # Drop the step: sanitize_slices only allows 1, which nested WCS slicing rejects.
         item = tuple(slice(*i.indices(n)[:2]) if isinstance(i, slice) else range(n)[i]
                      for i, n in zip(item, self.shape))
+        if 0 not in self.shape and any(isinstance(i, slice) and i.start >= i.stop for i in item):
+            raise IndexError("Slicing would give a length-0 axis, which a WCS cannot describe.")
         # If cube has a sliceable metadata, remove it and handle it separately.
         # This is to prevent the shapes of the data and metadata getting out of
         # sync part way through the slicing process.

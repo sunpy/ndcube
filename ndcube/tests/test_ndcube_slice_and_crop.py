@@ -667,6 +667,18 @@ def test_slice_nested_with_step_one():
     assert _time_cube()[1:][:2:1].shape == (2, 3)
 
 
+@pytest.mark.parametrize("item", [np.s_[2:2], np.s_[3:1], np.s_[-1:1], np.s_[10:]])
+def test_slice_to_length_0_raises(item):
+    with pytest.raises(IndexError, match="length-0"):
+        _time_cube()[item]
+
+
+def test_slice_empty_cube():
+    cube = NDCube(np.zeros((0, 3)), wcs=WCS(naxis=2))
+    assert cube[:].shape == (0, 3)
+    assert cube[:, 0].shape == (0,)
+
+
 @pytest.mark.parametrize("item", [np.s_[::2], np.s_[0, 0]])
 def test_failed_slice_keeps_meta(item):
     cube = _time_cube(NDMeta({"exp": np.arange(4)}, axes={"exp": 0}))
