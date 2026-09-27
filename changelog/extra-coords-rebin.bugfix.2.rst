@@ -1,0 +1,1 @@
+`~ndcube.extra_coords.QuantityTableCoordinate.interpolate` now accepts grids of different lengths, so `~ndcube.NDCube.rebin` no longer raises "New array grids must all be same shape" for a `~astropy.units.Quantity` lookup table spanning several axes that are rebinned to different lengths.
