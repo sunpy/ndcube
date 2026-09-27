@@ -332,3 +332,11 @@ def test_rebin_1d_extra_coords(ndcube_1d_l):
     output = ndcube_1d_l.rebin((2,))
     assert u.allclose(output.axis_world_coords_values(wcs=output.extra_coords)[0],
                       output.axis_world_coords_values()[0])
+
+
+def test_rebin_mesh_extra_coords(ndcube_2d_ln_lt):
+    ndcube_2d_ln_lt.extra_coords.add(("a", "b"), (0, 1), (np.arange(10) * u.m, np.arange(12) * u.m))
+    output = ndcube_2d_ln_lt.rebin((5, 4))
+    a, b = output.axis_world_coords(wcs=output.extra_coords)
+    assert u.allclose(a, [2, 7] * u.m)
+    assert u.allclose(b, [1.5, 5.5, 9.5] * u.m)

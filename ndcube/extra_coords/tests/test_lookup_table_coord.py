@@ -705,10 +705,6 @@ def test_quantity_interpolate_errors():
         qtc.interpolate(np.ones(1))
     assert "A new array grid must be given for each array axis" in str(ei)
 
-    with pytest.raises(ValueError) as ei:
-        qtc.interpolate(np.ones(1), np.ones(2))
-    assert "New array grids must all be same shape." in str(ei)
-
 
 def test_skycoord_interpolate_error(lut_2d_skycoord_mesh):
     sctc = SkyCoordTableCoordinate(SkyCoord(1 * u.deg, 2 * u.deg))
