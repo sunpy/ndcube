@@ -60,3 +60,21 @@ def test_unwrap_wcs_to_fitswcs_does_not_modify_input():
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
     assert_array_equal(wcs.wcs.crpix, [1.0, 1.0])
     assert list(wcs._naxis) == [4, 4]
+
+
+def test_unwrap_wcs_to_fitswcs_preserve_units():
+    # With preserve_units=True and non-degree celestial units, astropy returns
+    # cdelt as a read-only copy, so the resample must not modify it in place.
+    header = {"CTYPE1": "HPLN-TAN", "CTYPE2": "HPLT-TAN",
+              "CUNIT1": "arcsec", "CUNIT2": "arcsec",
+              "CDELT1": 1.0, "CDELT2": 1.0, "CRPIX1": 1.0, "CRPIX2": 1.0,
+              "NAXIS1": 4, "NAXIS2": 4}
+    wcs = WCS(header, preserve_units=True)
+
+    output_wcs, _ = unwrap_wcs_to_fitswcs(ResampledLowLevelWCS(wcs, [2, 2]))
+
+    assert list(output_wcs.wcs.cunit) == ["arcsec", "arcsec"]
+    assert_array_equal(output_wcs.wcs.cdelt, [2.0, 2.0])
+    assert_array_equal(output_wcs.wcs.crpix, [0.5, 0.5])
+    assert list(output_wcs._naxis) == [2, 2]
+    assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
