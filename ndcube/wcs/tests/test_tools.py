@@ -71,7 +71,7 @@ def test_unwrap_wcs_to_fitswcs_does_not_modify_input():
     assert_array_equal(wcs.wcs.crpix, [1.0, 1.0])
     assert list(wcs._naxis) == [4, 4]
 
-@pytest.mark.skipif(astropy.__version__ >= "7.2.0", reason="preserve_units was added in astropy 7.2")
+@pytest.mark.skipif(astropy.__version__ < "7.2.0", reason="preserve_units was added in astropy 7.2")
 def test_unwrap_wcs_to_fitswcs_preserve_units():
     # With preserve_units=True and non-degree celestial units, astropy returns
     # cdelt as a read-only copy, so the resample must not modify it in place.
