@@ -187,6 +187,6 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
     # the WCS they passed in to be altered
     resampled_wcs = deepcopy(fitswcs)
     resampled_wcs.wcs.cdelt = resampled_wcs.wcs.cdelt * factor
-    resampled_wcs.wcs.crpix = (resampled_wcs.wcs.crpix + offset) / factor
+    resampled_wcs.wcs.crpix = (resampled_wcs.wcs.crpix - 0.5 - offset) / factor + 0.5
     resampled_wcs._naxis = list(np.round(np.array(resampled_wcs._naxis) / factor).astype(int))
     return resampled_wcs
