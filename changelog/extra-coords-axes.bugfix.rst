@@ -1,0 +1,1 @@
+Fixed slicing an `~ndcube.NDCube` whose ``extra_coords`` include a lookup table spanning more than one array axis: integer indexing no longer gives wrong or NaN extra-coordinate values, and tables whose axes were given as a list, including all such tables in a cube loaded from ASDF, no longer raise a `TypeError`.
