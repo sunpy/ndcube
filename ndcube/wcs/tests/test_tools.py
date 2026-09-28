@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose, assert_array_almost_equal, assert_arr
 
 import astropy
 from astropy.time import Time
-from astropy.wcs import WCS
+from astropy.wcs import WCS, Sip
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 
 from ndcube.wcs.tools import unwrap_wcs_to_fitswcs
@@ -89,11 +89,12 @@ def test_unwrap_wcs_to_fitswcs_preserve_units():
     assert list(output_wcs._naxis) == [2, 2]
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
 
-def test_unwrap_wcs_to_fitswcs_resampled_pc():
+@pytest.mark.parametrize("cdelt", [[1, 1], [2, 1]])
+def test_unwrap_wcs_to_fitswcs_resampled_pc(cdelt):
     wcs = WCS(naxis=2)
     wcs.wcs.pc = [[0, -1], [1, 0]]  # 90 degree rotation
     wcs.wcs.crpix = [1, 1]
-    wcs.wcs.cdelt = [1.0, 1.0]  # defulats but just to be sure
+    wcs.wcs.cdelt = cdelt
     wcs.pixel_shape = (4, 4)
 
 
@@ -120,3 +121,27 @@ def test_unwrap_wcs_to_fitswcs_resampled_cd(factor):
     pixels = ([0, 1, 0], [0, 0, 1])
     assert_allclose(unwrapped.pixel_to_world_values(*pixels),
                     resampled.pixel_to_world_values(*pixels))
+
+def test_unwrap_wcs_to_fitswcs_resampled_sip():
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["RA---TAN-SIP", "DEC--TAN-SIP"]
+    wcs.wcs.crval = [10, 20]
+    wcs.wcs.cdelt = [0.001, 0.001]
+    wcs.wcs.crpix = [6, 7]
+    wcs.pixel_shape = (12, 12)
+    a = np.zeros((3, 3))
+    a[2, 0] = 2e-3
+    a[1, 1] = -1e-3
+    b = np.zeros((3, 3))
+    b[0, 2] = 1e-3
+    b[1, 1] = 2e-3
+    wcs.sip = Sip(a, b, -a, -b, wcs.wcs.crpix)
+
+    resampled = ResampledLowLevelWCS(wcs, [2, 3], offset=[1, 2])
+    unwrapped, _ = unwrap_wcs_to_fitswcs(resampled)
+
+    pixels = ([0, 1, 2.5, -0.5], [0, 3, 1.5, -0.5])
+    world = resampled.pixel_to_world_values(*pixels)
+    assert_allclose(unwrapped.pixel_to_world_values(*pixels), world)
+    assert_allclose(unwrapped.world_to_pixel_values(*world),
+                    resampled.world_to_pixel_values(*world))
