@@ -208,6 +208,53 @@ def test_crop(ndcube_4d_ln_lt_l_t):
     helpers.assert_cubes_equal(output, expected)
 
 
+@pytest.mark.parametrize("cdelt", [0.2, 0.3, 0.6, 1.7, 0.599489, 2.402792, 19.183648])
+def test_crop_at_pixel_edges_with_inexact_cdelt(cdelt):
+    # the bounds of pixels are the edges below pixel 1 and above pixel 2.
+    # Dividing them back by cdelt is not exact for any cdelt that is not a power of
+    # two, so the pixel coordinate lands a little either side of the edge and
+    # must not be rounded.
+    wcs = astropy.wcs.WCS({"CTYPE1": "WAVE", "CUNIT1": "Angstrom",
+                           "CDELT1": cdelt, "CRPIX1": 1, "CRVAL1": 0})
+    cube = NDCube(np.arange(10), wcs=wcs)
+    output = cube.crop([0.5 * cdelt * u.Angstrom], [2.5 * cdelt * u.Angstrom], keepdims=True)
+    np.testing.assert_array_equal(output.data, [1, 2])
+
+
+@pytest.mark.parametrize("unit", [u.Angstrom, u.nm, u.m, u.cm, u.mm])
+def test_crop_is_independent_of_input_unit(unit):
+    # 0.3 Angstrom is the edge between pixel 0 and pixel 1, so pixel 0 holds no
+    # wavelength longer than the one asked for and is not part of the result.
+    # Writing that same wavelength in another unit must not change which pixels
+    # are returned, but converting it moves it off the edge by an ULP or so.
+    wcs = astropy.wcs.WCS({"CTYPE1": "WAVE", "CUNIT1": "Angstrom",
+                           "CDELT1": 0.2, "CRPIX1": 0, "CRVAL1": 0})
+    cube = NDCube(np.arange(10), wcs=wcs)
+    lower = (0.3 * u.Angstrom).to(unit)
+    output = cube.crop([lower], [0.45 * u.Angstrom], keepdims=True)
+    np.testing.assert_array_equal(output.data, [1])
+
+
+@pytest.mark.parametrize(("bottom_left", "top_right", "expected_shape"), [
+    ((0.5, 0.5), (2.5, 2.5), (2, 2)),
+    ((0.5, 0.5), (4.5, 2.5), (2, 4)),
+    ((-0.5, -0.5), (0.5, 0.5), (1, 1)),
+    ((1.5, 2.5), (5.5, 6.5), (4, 4)),
+    ((0.5, 0.5), (1.5, 6.5), (6, 1)),
+    ((2.5, 0.5), (8.5, 8.5), (8, 6)),
+])
+def test_crop_roundtrips_pixel_edges_through_world(ndcube_2d_ln_lt, bottom_left,
+                                                   top_right, expected_shape):
+    # This deliberately round trips: pixel edges are converted to world coordinates
+    # here and crop converts them straight back to pixel coordinates.
+    cube = ndcube_2d_ln_lt
+    x = np.array([bottom_left[0], top_right[0], top_right[0], bottom_left[0]])
+    y = np.array([bottom_left[1], bottom_left[1], top_right[1], top_right[1]])
+    world = cube.wcs.pixel_to_world(x, y)
+    corners = [[coord[i] for coord in world] for i in range(4)]
+    assert cube.crop(*corners, keepdims=True).shape == expected_shape
+
+
 def test_crop_tuple_non_tuple_input(ndcube_2d_ln_lt):
     cube = ndcube_2d_ln_lt
     frame = astropy.wcs.utils.wcs_to_celestial_frame(cube.wcs)
@@ -242,7 +289,7 @@ def test_crop_with_nones(ndcube_4d_ln_lt_l_t):
 
 def test_crop_1d_independent(ndcube_4d_ln_lt_l_t):
     cube_1d = ndcube_4d_ln_lt_l_t[0, 0, :, 0]
-    wl_range = SpectralCoord([3e-11, 4.5e-11], unit=u.m)
+    wl_range = SpectralCoord([2.5e-11, 4.5e-11], unit=u.m)
     expected = cube_1d[0:2]
     output = cube_1d.crop([wl_range[0]], [wl_range[-1]])
     helpers.assert_cubes_equal(output, expected)

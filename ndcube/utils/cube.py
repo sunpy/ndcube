@@ -221,6 +221,10 @@ def get_crop_item_from_points(points, wcs, crop_by_values, keepdims, original_sh
             # Therefore a shift of 0.5 is required in the conversion.
             # The max idx conversion below will discard right-ward array element if
             # max pixel coord corresponds to a pixel edge.
+            # These conversions are discontinuous at pixel edges, so round off the
+            # error in the world -> pixel transform first. Otherwise a point lying on
+            # an edge falls either side of it depending on that error.
+            pixel_coords = np.round(pixel_coords, 6)
             min_array_idx = int(np.floor(min(pixel_coords) + 0.5))
             max_array_idx = int(np.ceil(max(pixel_coords) - 0.5)) + 1
             # Raise error if indices all lie below or all lie above array axis's extent.
