@@ -81,22 +81,25 @@ def test_unwrap_wcs_to_fitswcs_preserve_units():
               "NAXIS1": 4, "NAXIS2": 4}
     wcs = WCS(header, preserve_units=True)
 
-    output_wcs, _ = unwrap_wcs_to_fitswcs(ResampledLowLevelWCS(wcs, [2, 2]))
+    resampled = ResampledLowLevelWCS(wcs, [2, 2])
+    output_wcs, _ = unwrap_wcs_to_fitswcs(resampled)
 
     assert list(output_wcs.wcs.cunit) == ["arcsec", "arcsec"]
     assert_array_equal(output_wcs.wcs.cdelt, [2.0, 2.0])
     assert_array_equal(output_wcs.wcs.crpix, [0.75, 0.75])
     assert list(output_wcs._naxis) == [2, 2]
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
+    pixels = ([-0.25, -0.25], [1.75, 1.75])
+    assert_allclose(resampled.pixel_to_world_values(*pixels),
+                    output_wcs.pixel_to_world_values(*pixels))
 
 @pytest.mark.parametrize("cdelt", [[1, 1], [2, 1]])
 def test_unwrap_wcs_to_fitswcs_resampled_pc(cdelt):
     wcs = WCS(naxis=2)
-    wcs.wcs.pc = [[0, -1], [1, 0]]  # 90 degree rotation
+    wcs.wcs.pc = [[0, -1], [1, 0]]  # 90-degree rotation
     wcs.wcs.crpix = [1, 1]
     wcs.wcs.cdelt = cdelt
     wcs.pixel_shape = (4, 4)
-
 
     resampled = ResampledLowLevelWCS(wcs, [2, 1])
     unwrapped, _ = unwrap_wcs_to_fitswcs(resampled)
