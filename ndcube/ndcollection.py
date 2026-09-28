@@ -134,8 +134,10 @@ class NDCollection(dict):
         collection_types = [np.array(cube.array_axis_physical_types,
                                      dtype=object)[np.array(self.aligned_axes[name])]
                             for name, cube in self.items()]
-        # Return physical types common to all members of collection for each axis.
-        return [tuple(set.intersection(*[set(cube_types[i]) for cube_types in collection_types]))
+        # Return physical types common to all members of collection for each axis,
+        # in the order of the first member so the result does not depend on set ordering.
+        return [tuple(physical_type for physical_type in collection_types[0][i]
+                      if all(physical_type in cube_types[i] for cube_types in collection_types[1:]))
                 for i in range(self.n_aligned_axes)]
 
     def __getitem__(self, item):
