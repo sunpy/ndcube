@@ -1,3 +1,4 @@
+from copy import deepcopy
 from numbers import Integral
 
 import numpy as np
@@ -182,7 +183,10 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
     if len(offset) != fitswcs.naxis:
         raise ValueError(f"Length of offset must equal number of dimensions {fitswcs.naxis}.")
     # Scale plate scale and shift by offset.
-    fitswcs.wcs.cdelt *= factor
-    fitswcs.wcs.crpix = (fitswcs.wcs.crpix + offset) / factor
-    fitswcs._naxis = list(np.round(np.array(fitswcs._naxis) / factor).astype(int))
-    return fitswcs
+    # This is done on a copy because callers of the public unwrap_wcs_to_fitswcs do not expect
+    # the WCS they passed in to be altered
+    resampled_wcs = deepcopy(fitswcs)
+    resampled_wcs.wcs.cdelt *= factor
+    resampled_wcs.wcs.crpix = (resampled_wcs.wcs.crpix + offset) / factor
+    resampled_wcs._naxis = list(np.round(np.array(resampled_wcs._naxis) / factor).astype(int))
+    return resampled_wcs
