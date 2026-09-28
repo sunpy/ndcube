@@ -250,9 +250,12 @@ def test_crop_roundtrips_pixel_edges_through_world(ndcube_2d_ln_lt, bottom_left,
     cube = ndcube_2d_ln_lt
     x = np.array([bottom_left[0], top_right[0], top_right[0], bottom_left[0]])
     y = np.array([bottom_left[1], bottom_left[1], top_right[1], top_right[1]])
-    world = cube.wcs.pixel_to_world(x, y)
-    corners = [[coord[i] for coord in world] for i in range(4)]
-    assert cube.crop(*corners, keepdims=True).shape == expected_shape
+    # Use the low level API so we always get an array
+    low_level = cube.wcs.low_level_wcs
+    world = low_level.pixel_to_world_values(x, y)
+    units = [u.Unit(unit) for unit in low_level.world_axis_units]
+    corners = [[values[i] * unit for values, unit in zip(world, units)] for i in range(4)]
+    assert cube.crop_by_values(*corners, keepdims=True).shape == expected_shape
 
 
 def test_crop_tuple_non_tuple_input(ndcube_2d_ln_lt):
@@ -305,7 +308,8 @@ def test_crop_1d_dependent(ndcube_4d_ln_lt_l_t):
 
 def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
-    point = (None, SpectralCoord([3e-11], unit=u.m), None)
+    # deliberately avoid a pixel edge.
+    point = (None, SpectralCoord([2.5e-11], unit=u.m), None)
     expected = cube[:, :, 0, :]
     output = cube.crop(point)
     helpers.assert_cubes_equal(output, expected)
@@ -313,7 +317,8 @@ def test_crop_reduces_dimensionality(ndcube_4d_ln_lt_l_t):
 
 def test_crop_keepdims(ndcube_4d_ln_lt_l_t):
     cube = ndcube_4d_ln_lt_l_t
-    point = (None, SpectralCoord([3e-11], unit=u.m), None)
+    # deliberately avoid a pixel edge.
+    point = (None, SpectralCoord([2.5e-11], unit=u.m), None)
     output = cube.crop(point, keepdims=True)
     expected = cube[:, :, 0:1, :]
     assert output.shape == (5, 8, 1, 12)
