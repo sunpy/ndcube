@@ -88,3 +88,35 @@ def test_unwrap_wcs_to_fitswcs_preserve_units():
     assert_array_equal(output_wcs.wcs.crpix, [0.75, 0.75])
     assert list(output_wcs._naxis) == [2, 2]
     assert_array_equal(wcs.wcs.cdelt, [1.0, 1.0])
+
+def test_unwrap_wcs_to_fitswcs_resampled_pc():
+    wcs = WCS(naxis=2)
+    wcs.wcs.pc = [[0, -1], [1, 0]]  # 90 degree rotation
+    wcs.wcs.crpix = [1, 1]
+    wcs.wcs.cdelt = [1.0, 1.0]  # defulats but just to be sure
+    wcs.pixel_shape = (4, 4)
+
+
+    resampled = ResampledLowLevelWCS(wcs, [2, 1])
+    unwrapped, _ = unwrap_wcs_to_fitswcs(resampled)
+
+    pixels = ([0, 1, 0], [0, 0, 1])
+    # in diff between two world values crpix and crval cancel so isolates PC
+    expected = np.diff(resampled.pixel_to_world_values(*pixels), axis=1)
+    actual = np.diff(unwrapped.pixel_to_world_values(*pixels), axis=1)
+    assert_allclose(actual, expected)
+
+@pytest.mark.parametrize("factor", [[2, 2], [2, 1]])
+def test_unwrap_wcs_to_fitswcs_resampled_cd(factor):
+    # Same as PC above but using combined CD
+    wcs = WCS(naxis=2)
+    wcs.wcs.cd = [[0, -1], [1, 0]]  # 90 degree rotation
+    wcs.wcs.crpix = [1, 1]
+    wcs.pixel_shape = (4, 4)
+
+    resampled = ResampledLowLevelWCS(wcs, factor)
+    unwrapped, _ = unwrap_wcs_to_fitswcs(resampled)
+
+    pixels = ([0, 1, 0], [0, 0, 1])
+    assert_allclose(unwrapped.pixel_to_world_values(*pixels),
+                    resampled.pixel_to_world_values(*pixels))

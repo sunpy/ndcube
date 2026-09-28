@@ -186,7 +186,13 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
     # This is done on a copy because callers of the public unwrap_wcs_to_fitswcs do not expect
     # the WCS they passed in to be altered
     resampled_wcs = deepcopy(fitswcs)
-    resampled_wcs.wcs.cdelt = resampled_wcs.wcs.cdelt * factor
+    factor = np.asarray(factor)
+    if resampled_wcs.wcs.has_cd():
+        # CD = diag(CDELT) @ PC so row by column means apply factor to columns
+        resampled_wcs.wcs.cd = resampled_wcs.wcs.cd * factor[np.newaxis, :]
+    else:
+        resampled_wcs.wcs.cdelt = resampled_wcs.wcs.cdelt * factor
+        resampled_wcs.wcs.pc = resampled_wcs.wcs.pc * factor[np.newaxis, :] / factor[:, np.newaxis]
     resampled_wcs.wcs.crpix = (resampled_wcs.wcs.crpix - 0.5 - offset) / factor + 0.5
     resampled_wcs._naxis = list(np.round(np.array(resampled_wcs._naxis) / factor).astype(int))
     return resampled_wcs
