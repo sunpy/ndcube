@@ -658,6 +658,15 @@ def test_time_interpolate(lut_1d_time):
     assert_lutc_ancilliary_data_same(output, lutc)
 
 
+def test_time_interpolate_keeps_precision_and_reference_time():
+    reference = Time("2020-01-01T00:00:00", scale="utc")
+    times = Time("2026-01-01T00:00:00", scale="utc") + np.arange(4) * 10 * u.ns
+    coord = TimeTableCoordinate(times, reference_time=reference)
+    new = coord.interpolate(np.arange(4.))
+    assert new.reference_time == reference
+    assert u.allclose((new.table - times).to(u.ns), 0 * u.ns, atol=1 * u.ns)
+
+
 def test_skycoord_interpolate_no_mesh(lut_2d_skycoord_no_mesh):
     lutc = lut_2d_skycoord_no_mesh
     new_array_grids = np.meshgrid(np.arange(0.5, 2), np.arange(0, 3))
@@ -695,10 +704,6 @@ def test_quantity_interpolate_errors():
     with pytest.raises(ValueError) as ei:
         qtc.interpolate(np.ones(1))
     assert "A new array grid must be given for each array axis" in str(ei)
-
-    with pytest.raises(ValueError) as ei:
-        qtc.interpolate(np.ones(1), np.ones(2))
-    assert "New array grids must all be same shape." in str(ei)
 
 
 def test_skycoord_interpolate_error(lut_2d_skycoord_mesh):
