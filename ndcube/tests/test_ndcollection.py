@@ -63,6 +63,10 @@ def test_construct_with_dict():
         [("cube0", cube0[:, -3:-1]), ("cube1", cube1[:, :, -3:-1]), ("cube2", cube2[:, -3:-1])],
         aligned_axes=aligned_axes, meta=cube_coll_meta.slice[1:3])),
 
+    (slice(-2, None), cube_collection, NDCollection(
+        [("cube0", cube0[:, -2:]), ("cube1", cube1[:, :, -2:]), ("cube2", cube2[:, -2:])],
+        aligned_axes=aligned_axes, meta=cube_coll_meta.slice[2:4])),
+
     ((slice(None), slice(1, 2)), cube_collection, NDCollection(
         [("cube0", cube0[:, :, 1:2]), ("cube1", cube1[1:2]), ("cube2", cube2[:, :, 1:2])],
         aligned_axes=aligned_axes, meta=cube_coll_meta.slice[:, 1:2])),

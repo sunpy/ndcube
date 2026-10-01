@@ -637,3 +637,51 @@ def test_crop_by_values_quantity_table_coordinate():
                                    wcs=cube.extra_coords)
     assert cropped.shape == (10, 5)
     np.testing.assert_array_equal(cropped.data, data[3:13, 1:6])
+
+
+def _time_cube(meta=None):
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["WAVE", "TIME"]
+    wcs.wcs.cunit = ["m", "s"]
+    wcs.wcs.cdelt = [1, 10]
+    wcs.wcs.mjdref = [60000, 0]
+    wcs.wcs.crpix = [1, 1]
+    return NDCube(np.zeros((4, 3)), wcs=wcs, meta=meta)
+
+
+@pytest.mark.parametrize(("item", "expected"), [(np.s_[-2:], [20, 30]), (np.s_[1:-1], [10, 20]), (np.s_[:10], [0, 10, 20, 30])])
+def test_slice_negative_and_out_of_range_bounds(item, expected):
+    cube = _time_cube(NDMeta({"exp": np.arange(4)}, axes={"exp": 0}))
+    sliced = cube[item]
+    assert u.allclose(sliced.axis_world_coords_values("time")[0], expected * u.s)
+    assert np.array_equal(sliced.meta["exp"], np.arange(4)[item])
+
+
+def test_slice_negative_integer_drops_correct_coordinate():
+    cube = _time_cube()
+    assert cube[-1].global_coords["time"] == cube[3].global_coords["time"]
+    assert cube[1:][-1].global_coords["time"] == cube[3].global_coords["time"]
+
+
+def test_slice_nested_with_step_one():
+    assert _time_cube()[1:][:2:1].shape == (2, 3)
+
+
+@pytest.mark.parametrize("item", [np.s_[2:2], np.s_[3:1], np.s_[-1:1], np.s_[10:]])
+def test_slice_to_length_0_raises(item):
+    with pytest.raises(IndexError, match="length-0"):
+        _time_cube()[item]
+
+
+def test_slice_empty_cube():
+    cube = NDCube(np.zeros((0, 3)), wcs=WCS(naxis=2))
+    assert cube[:].shape == (0, 3)
+    assert cube[:, 0].shape == (0,)
+
+
+@pytest.mark.parametrize("item", [np.s_[::2], np.s_[0, 0]])
+def test_failed_slice_keeps_meta(item):
+    cube = _time_cube(NDMeta({"exp": np.arange(4)}, axes={"exp": 0}))
+    with pytest.raises((IndexError, ValueError)):
+        cube[item]
+    assert np.array_equal(cube.meta["exp"], np.arange(4))
