@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
-import astropy
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
@@ -172,12 +171,8 @@ def test_shared_pixel_axis_compound_3d(spectral_cube_3d_fitswcs, time_1d_fitswcs
                                                              [False, True, False]])
 
     world = wcs.pixel_to_world_values(0, 0, 0)
-    if astropy.__version__ >= "7.0.0":
-        np.testing.assert_allclose(world, (14, np.nan, np.nan, -7.0))
-        np.testing.assert_allclose(wcs.world_to_pixel_values(*world), (0, np.nan, np.nan))
-    else:
-        np.testing.assert_allclose(world, (14, -12, -2.6e+10, -7.0))
-        np.testing.assert_allclose(wcs.world_to_pixel_values(*world), (0, 0, 0))
+    np.testing.assert_allclose(world, (14, np.nan, np.nan, -7.0))
+    np.testing.assert_allclose(wcs.world_to_pixel_values(*world), (0, np.nan, np.nan))
 
     with pytest.raises(ValueError):
         wcs.world_to_pixel_values((14, -12, -2.6e+10, -6.0))
