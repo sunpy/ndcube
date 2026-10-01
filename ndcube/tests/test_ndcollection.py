@@ -167,7 +167,5 @@ def test_aligned_dimensions(collection, expected_aligned_dimensions):
                       ('custom:pos.helioprojective.lat', 'custom:pos.helioprojective.lon'),
                       ('em.wl',)])])
 def test_aligned_axis_physical_types(collection, expected):
-    output = collection.aligned_axis_physical_types
-    assert len(output) == len(expected)
-    for output_axis_types, expect_axis_types in zip(output, expected):
-        assert set(output_axis_types) == set(expect_axis_types)
+    # The types keep the order of the first member, so they do not change from run to run.
+    assert collection.aligned_axis_physical_types == expected
