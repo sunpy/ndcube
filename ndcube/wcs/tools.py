@@ -3,7 +3,7 @@ from numbers import Integral
 
 import numpy as np
 
-from astropy.wcs import WCS
+from astropy.wcs import WCS, Sip
 from astropy.wcs.wcsapi import SlicedLowLevelWCS
 from astropy.wcs.wcsapi.wrappers.base import BaseWCSWrapper
 
@@ -186,7 +186,34 @@ def _resample_fitswcs(fitswcs, factor, offset=0):
     # This is done on a copy because callers of the public unwrap_wcs_to_fitswcs do not expect
     # the WCS they passed in to be altered
     resampled_wcs = deepcopy(fitswcs)
-    resampled_wcs.wcs.cdelt *= factor
-    resampled_wcs.wcs.crpix = (resampled_wcs.wcs.crpix + offset) / factor
+    factor = np.asarray(factor)
+    if resampled_wcs.wcs.has_cd():
+        # CD = diag(CDELT) @ PC so row by column means apply factor to columns
+        resampled_wcs.wcs.cd = resampled_wcs.wcs.cd * factor[np.newaxis, :]
+    else:
+        resampled_wcs.wcs.cdelt = resampled_wcs.wcs.cdelt * factor
+        resampled_wcs.wcs.pc = resampled_wcs.wcs.pc * factor[np.newaxis, :] / factor[:, np.newaxis]
+    resampled_wcs.wcs.crpix = (resampled_wcs.wcs.crpix - 0.5 - offset) / factor + 0.5
+    if resampled_wcs.sip is not None:
+        resampled_wcs.sip = _resample_sip(resampled_wcs.sip, factor, resampled_wcs.wcs.crpix)
     resampled_wcs._naxis = list(np.round(np.array(resampled_wcs._naxis) / factor).astype(int))
     return resampled_wcs
+
+
+def _resample_sip(sip, factor, crpix):
+    """
+    Rescale SIP distortion coefficients for a resampled pixel grid.
+
+    SIP polynomials are in pixel offsets from CRPIX, which scale by ``factor`` on
+    resampling. Substituting the old offsets (``factor * new``) into the polynomial and
+    dividing out the new linear scale of each axis gives
+    ``coef_pq * factor[0]**p * factor[1]**q / factor[axis]``.
+    """
+    def scale(coef, axis_factor):
+        if coef is None:
+            return None
+        p, q = np.indices(coef.shape)
+        return coef * factor[0] ** p * factor[1] ** q / axis_factor
+
+    return Sip(scale(sip.a, factor[0]), scale(sip.b, factor[1]),
+               scale(sip.ap, factor[0]), scale(sip.bp, factor[1]), crpix)
