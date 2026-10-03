@@ -921,7 +921,7 @@ class NDCube(NDCubeBase):
     # last moment.
     plotter = PlotterDescriptor(default_type="mpl_plotter")
     """
-    A ~ndcube.visualization.mpl_plotter.MatplotlibPlotter` instance providing visualization methods.
+    A `~ndcube.visualization.BasePlotter` instance providing visualization methods, by default a `~ndcube.visualization.mpl_plotter.MatplotlibPlotter`.
 
     The type of this attribute can be changed to provide custom visualization functionality.
     """
