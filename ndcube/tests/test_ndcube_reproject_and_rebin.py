@@ -7,10 +7,10 @@ import pytest
 import astropy.units as u
 import astropy.wcs
 from astropy.coordinates import SpectralCoord
-from astropy.nddata import UnknownUncertainty
+from astropy.nddata import StdDevUncertainty, UnknownUncertainty
 from astropy.time import Time
 
-from ndcube import ExtraCoords
+from ndcube import ExtraCoords, NDCube
 from ndcube.tests import helpers
 from ndcube.utils.exceptions import NDCubeUserWarning
 
@@ -253,6 +253,24 @@ def test_rebin_some_masked_uncerts_exclude_masked_values(ndcube_2d_ln_lt_mask_un
     assert np.allclose(output.uncertainty.array[np.logical_not(expected_mask)],
                        expected_uncert[np.logical_not(expected_mask)])
     assert (output.mask == expected_mask).all()
+
+
+def test_rebin_masked_uncertainties_preserves_input():
+    data = np.array([[[1., 2., 3., 4.]]])
+    mask = np.array([[[False, True, False, False]]])
+    cube = NDCube(data, wcs=astropy.wcs.WCS(naxis=3), mask=mask,
+                  uncertainty=StdDevUncertainty(data * 0.1))
+    original_data = cube.data.copy()
+    original_uncertainty = cube.uncertainty.array.copy()
+    original_mask = cube.mask.copy()
+
+    output = cube.rebin((1, 1, -1), propagate_uncertainties=True)
+
+    np.testing.assert_allclose(output.data, [[[8 / 3]]])
+    np.testing.assert_allclose(output.uncertainty.array, [[[np.sqrt(0.26) / 3]]])
+    np.testing.assert_array_equal(cube.data, original_data)
+    np.testing.assert_array_equal(cube.uncertainty.array, original_uncertainty)
+    np.testing.assert_array_equal(cube.mask, original_mask)
 
 
 def test_rebin_errors(ndcube_3d_l_ln_lt_ectime):

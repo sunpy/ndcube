@@ -1,4 +1,5 @@
 import inspect
+from copy import copy
 from functools import wraps
 from itertools import chain
 
@@ -314,6 +315,10 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
         The propagated uncertainty.
         Same shape as input uncertainty without its first dimension.
     """
+    # The propagation algorithm updates data and uncertainties while accumulating.
+    # Work on copies so rebinned views cannot modify the input cube.
+    data = copy(data)
+    uncertainty = type(uncertainty)(uncertainty, copy=True)
     flat_axis = 0
     operation_is_mean = True if operation in {np.mean, np.nanmean} else False
     operation_is_nantype = True if operation in {np.nansum, np.nanmean, np.nanprod} else False
@@ -330,22 +335,15 @@ def propagate_rebin_uncertainties(uncertainty, data, mask, operation, operation_
     new_uncertainty = uncertainty[0]  # Define uncertainty for initial iteration step.
     if operation_ignores_mask or mask is None:
         mask = False
+    if operation_is_nantype:
+        nan_mask = np.isnan(data)
+        if nan_mask.any():
+            mask = nan_mask if mask is False else np.logical_or(mask, nan_mask)
     if mask is False:
-        if operation_is_nantype:
-            nan_mask = np.isnan(data)
-            if nan_mask.any():
-                mask = nan_mask
-                idx = np.logical_not(mask)
-                mask1 = mask[1:]
-        else:
-            # If there is no mask and operation is not nan-type, build generator
-            # so non-mask can still be iterated.
-            n_pix_per_bin = data.shape[flat_axis]
-            mask1 = (False for i in range(1, n_pix_per_bin))
+        # Build a generator so unmasked inputs can still be iterated.
+        n_pix_per_bin = data.shape[flat_axis]
+        mask1 = (False for i in range(1, n_pix_per_bin))
     else:
-        # Mask uncertainties corresponding to nan data if operation is nantype.
-        if operation_is_nantype:
-            mask[np.isnan(data)] = True
         # Set masked uncertainties in first mask to 0
         # as they shouldn't count towards final uncertainty.
         mask1 = mask[1:]
