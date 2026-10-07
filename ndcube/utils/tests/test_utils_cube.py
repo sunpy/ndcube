@@ -54,6 +54,26 @@ def test_propagate_rebin_uncertainties_use_masked(stacked_pixel_data):
     assert np.allclose(output.array, expected.array)
 
 
+@pytest.mark.parametrize("operation", [np.mean, np.nanmean])
+@pytest.mark.parametrize("readonly", [False, True])
+def test_propagate_rebin_uncertainties_preserves_inputs(stacked_pixel_data, operation, readonly):
+    data = stacked_pixel_data
+    mask = np.zeros(data.shape, dtype=bool)
+    mask[3, 0, 0] = True
+    if operation is np.nanmean:
+        data[3, 0, 1] = np.nan
+    uncertainty = StdDevUncertainty(data * 0.1)
+    originals = [array.copy() for array in (data, uncertainty.array, mask)]
+    if readonly:
+        for array in (data, uncertainty.array, mask):
+            array.flags.writeable = False
+
+    propagate_rebin_uncertainties(uncertainty, data, mask, operation)
+
+    for array, original in zip((data, uncertainty.array, mask), originals):
+        np.testing.assert_array_equal(array, original)
+
+
 def test_propagate_rebin_uncertainties_prod(stacked_pixel_data):
     # Build inputs
     data = stacked_pixel_data
@@ -99,3 +119,12 @@ def test_propagate_rebin_uncertainties_nan(stacked_pixel_data):
                                            np.nanmean, operation_ignores_mask=False)
     assert type(output) is type(expected)
     assert np.allclose(output.array, expected.array)
+
+
+def test_propagate_rebin_uncertainties_nanmean_without_nans(stacked_pixel_data):
+    uncertainty = StdDevUncertainty(stacked_pixel_data * 0.1)
+    expected = np.sqrt((uncertainty.array**2).sum(axis=0)) / stacked_pixel_data.shape[0]
+
+    output = propagate_rebin_uncertainties(uncertainty, stacked_pixel_data, None, np.nanmean)
+
+    np.testing.assert_allclose(output.array, expected)
