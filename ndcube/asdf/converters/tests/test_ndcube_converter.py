@@ -6,8 +6,11 @@ import pytest
 from packaging.version import Version
 
 import asdf
+import astropy.units as u
 import astropy.wcs
+from astropy.coordinates import SkyCoord
 
+from ndcube import NDCube
 from ndcube.tests.helpers import assert_cubes_equal
 
 
@@ -47,3 +50,14 @@ def test_serialization_sliced_ndcube(expected_cube, tmp_path):
 
     with asdf.open(file_path) as af:
         assert_cubes_equal(af["ndcube_gwcs"], sndc, rtol=1e-12)
+
+
+def test_serialization_multi_axis_extra_coords_can_be_sliced(tmp_path):
+    cube = NDCube(np.zeros((3, 4)), wcs=astropy.wcs.WCS(naxis=2))
+    sky = SkyCoord(np.arange(12).reshape(3, 4) * u.deg, np.ones((3, 4)) * u.deg)
+    cube.extra_coords.add(("lon", "lat"), (0, 1), sky, mesh=False)
+    file_path = tmp_path / "test.asdf"
+    with asdf.AsdfFile({"ndcube": cube}) as af:
+        af.write_to(file_path)
+    with asdf.open(file_path) as af:
+        assert af["ndcube"][1:].extra_coords.keys() == cube[1:].extra_coords.keys()
