@@ -508,6 +508,7 @@ class _IndexAsCubeSlicer:
             cube_item[common_axis] = common_axis_index
             return self.seq.data[sequence_index][tuple(cube_item)]
         # item can now only be a tuple whose common axis item is a non-None slice object.
+        item[common_axis] = slice(*item[common_axis].indices(sum(common_axis_lengths))[:2])
         # Convert item into iterable of SequenceItems and slice each cube appropriately.
         # item for common_axis must always be a slice for every cube,
         # even if it is only a length-1 slice.

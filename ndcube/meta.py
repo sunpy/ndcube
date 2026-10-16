@@ -392,17 +392,7 @@ class _NDMetaSlicer:
             if isinstance(axis_item, numbers.Integral):
                 dropped_axes[i] = True
             elif isinstance(axis_item, slice):
-                start = axis_item.start
-                if start is None:
-                    start = 0
-                if start < 0:
-                    start = data_shape[i] - start
-                stop = axis_item.stop
-                if stop is None:
-                    stop = data_shape[i]
-                if stop < 0:
-                    stop = data_shape[i] - stop
-                new_shape[i] = stop - start
+                new_shape[i] = len(range(data_shape[i])[axis_item])
             else:
                 raise TypeError("Unrecognized slice type. "
                                 "Must be an int, slice and tuple of the same.")
