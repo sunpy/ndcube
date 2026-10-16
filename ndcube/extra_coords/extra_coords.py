@@ -1,4 +1,5 @@
 import abc
+import copy
 from collections.abc import Iterable
 from functools import partial, reduce
 from numbers import Integral
@@ -154,6 +155,18 @@ class ExtraCoords(ExtraCoordsABC):
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
+
+    def __deepcopy__(self, memo):
+
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == '_ndcube':
+                setattr(result, k, None)
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     @classmethod
     def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables, physical_types=None):

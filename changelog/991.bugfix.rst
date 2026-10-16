@@ -1,0 +1,1 @@
+Fixed a memory leak when deep-copying an ``NDCube`` object or its coordinates by properly implementing ``__deepcopy__`` for ``ExtraCoords`` and ``GlobalCoords``.
