@@ -448,9 +448,8 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         new_array_grids: array-like
             The array index values at which the the new values of the coords
             are desired. An array grid must be provided as a separate arg
-            for each array dimension and corresponding elements in all arrays
-            represent a single location in the pixel grid. Therefore, array grids
-            must all have the same shape.
+            for each array dimension. Each table is interpolated independently
+            along its own grid, so the grids can have different lengths.
 
         kwargs
             All remaining kwargs are passed to underlying interpolation function.
@@ -468,8 +467,6 @@ class QuantityTableCoordinate(BaseTableCoordinate):
         if len(new_array_grids) != ndim:
             raise ValueError(
                 f"A new array grid must be given for each array axis/table, i.e. {ndim}")
-        if any(new_grid.shape != new_array_grids[0].shape for new_grid in new_array_grids):
-            raise ValueError("New array grids must all be same shape.")
         # Build array grids for non-interpolated table.
         old_array_grids = tuple(np.arange(d) for d in self.shape)
         # Iterate through tables and interpolate each.
@@ -796,12 +793,13 @@ class TimeTableCoordinate(BaseTableCoordinate):
             raise ValueError("Cannot interpolate a scalar TimeTableCoordinate.")
         # Build pixel grids for current TimeTableCoord.
         old_array_grids = np.arange(len(self.table))
-        # Interpolate using MJD format and convert back to a Time object.
-        new_table = np.interp(new_array_grids, old_array_grids, self.table.mjd, **kwargs)
-        new_table = Time(new_table, scale=self.table.scale, format="mjd")
-        new_table.format = self.table.format
+        # Interpolate offsets from the first time; absolute MJD floats lose sub-microsecond precision.
+        origin = self.table[0]
+        deltas = (self.table - origin).to_value(u.s)
+        new_table = origin + np.interp(new_array_grids, old_array_grids, deltas, **kwargs) * u.s
         # Rebuild new TimeTableCoord and return.
-        new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types)
+        new_coord = type(self)(new_table, names=self.names, physical_types=self.physical_types,
+                               reference_time=self.reference_time)
         new_coord._dropped_world_dimensions = self._dropped_world_dimensions
         return new_coord
 
