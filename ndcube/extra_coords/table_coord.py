@@ -15,12 +15,13 @@ from astropy.modeling import models
 from astropy.modeling.models import tabular_model
 from astropy.modeling.tabular import Tabular1D, Tabular2D, _Tabular
 from astropy.time import Time
-from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices, sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import combine_slices
 
 try:
     import scipy.interpolate
 except ImportError:
     pass
+from ndcube.utils.misc import simplify_basic_index
 
 __all__ = [
     "BaseTableCoordinate",
@@ -530,7 +531,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
 
         super().__init__(sc, mesh=mesh, names=names, physical_types=physical_types)
         self.table = self.table[0]
-        self._slice = sanitize_slices(np.s_[...], self.n_inputs)
+        self._slice = simplify_basic_index(np.s_[...], shape=[None] * self.n_inputs)
 
     @property
     def n_inputs(self):
@@ -551,7 +552,7 @@ class SkyCoordTableCoordinate(BaseTableCoordinate):
     def __getitem__(self, item):
         # override the error for consistency
         try:
-            sane_item = sanitize_slices(item, self.n_inputs)
+            sane_item = simplify_basic_index(item, shape=[None] * self.n_inputs)
         except ValueError as ex:
             raise ValueError("Can not slice with incorrect length") from ex
 

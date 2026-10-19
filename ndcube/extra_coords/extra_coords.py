@@ -12,8 +12,9 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.high_level_wcs_wrapper import HighLevelWCSWrapper
-from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS, sanitize_slices
+from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS
 
+from ndcube.utils.misc import simplify_basic_index
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 from .table_coord import (
@@ -377,7 +378,7 @@ class ExtraCoords(ExtraCoordsABC):
         return new_extra_coords
 
     def _getitem_wcs(self, item):
-        item = sanitize_slices(item, self.wcs.pixel_n_dim)
+        item = simplify_basic_index(item, shape=[None] * self.wcs.pixel_n_dim)
 
         # It's valid to slice down the EC such that there is nothing left,
         # which is not a valid way to slice the WCS
