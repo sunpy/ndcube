@@ -1105,7 +1105,7 @@ class NDCube(NDCubeBase):
             else:
                 kwargs["unit"] = self.unit
             kwargs["data"] = self.data * value
-            kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
+            kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value, copy=False)
                             if self.uncertainty is not None else None)
         return self._new_instance(**kwargs)
 
@@ -1465,7 +1465,8 @@ class NDCube(NDCubeBase):
         # TODO: is the logic repetitive? this else is the same with the if not fill_in_place below? No because the order matters.
         else:
             new_data = copy.deepcopy(self.data)
-            new_uncertainty = copy.deepcopy(self.uncertainty)
+            # The memo keeps deepcopy from copying this cube through the uncertainty's parent.
+            new_uncertainty = copy.deepcopy(self.uncertainty, {id(self): None})
             new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
 
         masked = (

@@ -1,1 +1,1 @@
-Arithmetic on an `~ndcube.NDCube` and `ndcube.NDCube.to` no longer make a temporary copy of the whole cube, data included, when copying the uncertainty, extra coordinates and global coordinates for the result, and no longer copy the attributes the operation replaces.
+Arithmetic on an `~ndcube.NDCube`, `ndcube.NDCube.to` and `ndcube.NDCube.fill_masked` no longer make a temporary copy of the whole cube, data included, when copying the uncertainty, extra coordinates and global coordinates for the result, and no longer copy the attributes the operation replaces.
