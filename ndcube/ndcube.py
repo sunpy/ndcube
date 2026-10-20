@@ -954,8 +954,11 @@ class NDCube(NDCubeBase):
         return self.plotter.plot(*args, **kwargs)
 
     def _new_instance(self, **kwargs):
+        # The uncertainty, extra coords and global coords refer back to this cube.
+        # Map it in the memo so deepcopy does not copy the whole cube through them.
+        memo = {id(self): None}
         keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
-        new_kwargs = {k: deepcopy(getattr(self, k, None)) for k in keys}
+        new_kwargs = {k: deepcopy(getattr(self, k, None), memo) for k in keys if k not in kwargs}
         # To support old versions of astropy, we need to make sure
         # we only pass in the parameters that are valid for the NDData
         params = list(inspect.signature(astropy.nddata.NDData).parameters)
@@ -964,10 +967,11 @@ class NDCube(NDCubeBase):
         full_kwargs['data'] = self.data
         full_kwargs.update(kwargs)
         new_cube = type(self)(**full_kwargs)
+        memo[id(self)] = new_cube
         if self.extra_coords is not None:
-            new_cube._extra_coords = deepcopy(self.extra_coords)
+            new_cube._extra_coords = deepcopy(self.extra_coords, memo)
         if self.global_coords is not None:
-            new_cube._global_coords = deepcopy(self.global_coords)
+            new_cube._global_coords = deepcopy(self.global_coords, memo)
         return new_cube
 
     def __neg__(self):

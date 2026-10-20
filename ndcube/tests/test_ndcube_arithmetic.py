@@ -1,3 +1,6 @@
+import operator
+import tracemalloc
+
 import numpy as np
 import pytest
 
@@ -429,6 +432,36 @@ def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
         -ndcube_2d_ln_lt_units,
         u.Quantity(-ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit),
     )
+
+
+@pytest.mark.parametrize("operation", [operator.neg, lambda cube: cube * 2], ids=["neg", "mul"])
+def test_cube_arithmetic_does_not_copy_cube(operation):
+    shape = (2500, 2500)  # 50 MB of float64
+    cube = NDCube(np.ones(shape), wcs=astropy.wcs.WCS(naxis=2), unit=u.ct,
+                  uncertainty=StdDevUncertainty(np.ones(shape)), meta={"a": 1})
+    cube.extra_coords.add("time", 0, np.arange(shape[0]) * u.s)
+    cube.global_coords.add("name", "custom:physical_type", 1 * u.s)
+
+    tracemalloc.start()
+    try:
+        new_cube = operation(cube)
+        peak = tracemalloc.get_traced_memory()[1]
+    finally:
+        tracemalloc.stop()
+    # The new data and uncertainty take up to 150 MB. Copying the uncertainty or
+    # coordinates used to copy the cube through their back-reference, 100 MB each time.
+    assert peak < 4 * cube.data.nbytes
+    assert new_cube.extra_coords._ndcube is new_cube
+    assert new_cube.global_coords._ndcube is new_cube
+
+    new_cube.meta["a"] = 2
+    new_cube.uncertainty.array[0, 0] = 5
+    new_cube.extra_coords.add("exposure", 1, np.arange(shape[1]) * u.s)
+    new_cube.global_coords.add("other", "custom:physical_type", 2 * u.s)
+    assert cube.meta["a"] == 1
+    assert cube.uncertainty.array[0, 0] == 1
+    assert list(cube.extra_coords.keys()) == ["time"]
+    assert list(cube.global_coords) == ["name"]
 
 
 def test_add_unitless_cube_typeerror(ndcube_2d_ln_lt_units):
