@@ -434,8 +434,9 @@ def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
     )
 
 
-@pytest.mark.parametrize("operation", [operator.neg, lambda cube: cube * 2], ids=["neg", "mul"])
-def test_cube_arithmetic_does_not_copy_cube(operation):
+@pytest.mark.parametrize(("operation", "limit"), [(operator.neg, 2.5), (lambda cube: cube * 2, 3.5)],
+                         ids=["neg", "mul"])
+def test_cube_arithmetic_does_not_copy_cube(operation, limit):
     shape = (2500, 2500)  # 50 MB of float64
     cube = NDCube(np.ones(shape), wcs=astropy.wcs.WCS(naxis=2), unit=u.ct,
                   uncertainty=StdDevUncertainty(np.ones(shape)), meta={"a": 1})
@@ -448,9 +449,10 @@ def test_cube_arithmetic_does_not_copy_cube(operation):
         peak = tracemalloc.get_traced_memory()[1]
     finally:
         tracemalloc.stop()
-    # The new data and uncertainty take up to 150 MB. Copying the uncertainty or
-    # coordinates used to copy the cube through their back-reference, 100 MB each time.
-    assert peak < 4 * cube.data.nbytes
+    # The new data and uncertainty take 100 MB for neg and 150 MB for mul.
+    # Copying the uncertainty used to copy the cube's data through parent_nddata (50 MB).
+    # Copying extra_coords or global_coords used to copy the cube with its uncertainty (100 MB).
+    assert peak < limit * cube.data.nbytes
     assert new_cube.extra_coords._ndcube is new_cube
     assert new_cube.global_coords._ndcube is new_cube
 
