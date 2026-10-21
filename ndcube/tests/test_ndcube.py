@@ -1,4 +1,6 @@
+from copy import deepcopy
 from inspect import signature
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -9,7 +11,7 @@ import astropy.wcs
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
-from ndcube import NDCube
+from ndcube import ExtraCoords, GlobalCoords, NDCube
 from ndcube.tests import helpers
 
 
@@ -59,6 +61,54 @@ def test_initialize_with_extra_global_coords(ndcube_3d_ln_lt_l_ec_all_axes):
     assert new_cube_copy.global_coords is not gc
     helpers.assert_extra_coords_equal(new_cube_copy.extra_coords, ec)
     helpers.assert_global_coords_equal(new_cube_copy.global_coords, gc)
+
+
+@pytest.mark.parametrize("coords_name", ["extra_coords", "global_coords"])
+def test_deepcopy_coords_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, coords_name, monkeypatch):
+    cube = ndcube_3d_l_ln_lt_ectime
+    cube.global_coords.add("distance", "pos.distance", 1 * u.m)
+    coords = getattr(cube, coords_name)
+    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
+
+    copied = deepcopy(coords)
+
+    assert copied is not coords
+    assert copied._ndcube is cube
+    if coords_name == "extra_coords":
+        helpers.assert_extra_coords_equal(copied, coords)
+        copied._lookup_tables[0][1].table[0] += 1 * u.s
+        assert copied._lookup_tables[0][1].table[0] != coords._lookup_tables[0][1].table[0]
+    else:
+        helpers.assert_global_coords_equal(copied, coords)
+        copied["distance"][...] = 2 * u.m
+        assert coords["distance"] == 1 * u.m
+
+
+@pytest.mark.parametrize("coords_type", [ExtraCoords, GlobalCoords])
+def test_deepcopy_coords_cycles(coords_type):
+    coords = coords_type()
+    coords.cycle = [coords]
+    coords.alias = coords.cycle
+
+    copied = deepcopy(coords)
+
+    assert copied.cycle is not coords.cycle
+    assert copied.cycle[0] is copied
+    assert copied.alias is copied.cycle
+
+
+def test_deepcopy_cube_keeps_coords_linked(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime
+    cube.global_coords.add("distance", "pos.distance", 1 * u.m)
+
+    copied = deepcopy(cube)
+
+    helpers.assert_cubes_equal(copied, cube, check_uncertainty_values=True)
+    helpers.assert_global_coords_equal(copied.global_coords, cube.global_coords)
+    assert copied.extra_coords._ndcube is copied
+    assert copied.global_coords._ndcube is copied
+    assert cube.extra_coords._ndcube is cube
+    assert cube.global_coords._ndcube is cube
 
 
 def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
@@ -233,12 +283,15 @@ def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value,
     ],
     indirect=("ndc", "expected_cube")
 )
-def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value, unmask, expected_cube):
+def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value, unmask, expected_cube, monkeypatch):
+    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
     # compare the expected cube with the cube saved in the new place
 
     # perform the fill_masked method on the fixture, using parametrized as parameters.
     filled_cube = ndc.fill_masked(fill_value, uncertainty_fill_value, unmask, fill_in_place=False)
     helpers.assert_cubes_equal(filled_cube, expected_cube, check_uncertainty_values=True)
+    assert filled_cube.uncertainty.parent_nddata is filled_cube
+    assert ndc.uncertainty.parent_nddata is ndc
 
 @pytest.mark.parametrize(
     ("ndc", "fill_value", "uncertainty_fill_value", "unmask"),

@@ -1,5 +1,4 @@
 import operator
-import tracemalloc
 
 import numpy as np
 import pytest
@@ -434,28 +433,27 @@ def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
     )
 
 
-@pytest.mark.parametrize("operation", [operator.neg, lambda cube: cube * 2, lambda cube: cube.fill_masked(0)],
-                         ids=["neg", "mul", "fill_masked"])
+@pytest.mark.parametrize("operation", [operator.neg, lambda cube: cube * 2, lambda cube: cube.to(u.mct)],
+                         ids=["neg", "mul", "to"])
 def test_cube_arithmetic_does_not_copy_cube(operation):
-    shape = (2500, 2500)  # 50 MB of float64
-    cube = NDCube(np.ones(shape), wcs=astropy.wcs.WCS(naxis=2), unit=u.ct,
+    class NoDeepCopy(np.ndarray):
+        def __deepcopy__(self, memo):
+            raise AssertionError("Data array was deep copied")
+
+    shape = (3, 4)
+    cube = NDCube(np.ones(shape).view(NoDeepCopy), wcs=astropy.wcs.WCS(naxis=2), unit=u.ct,
                   uncertainty=StdDevUncertainty(np.ones(shape)), meta={"a": 1})
     cube.extra_coords.add("time", 0, np.arange(shape[0]) * u.s)
     cube.global_coords.add("name", "custom:physical_type", 1 * u.s)
 
-    tracemalloc.start()
-    try:
-        new_cube = operation(cube)
-        peak = tracemalloc.get_traced_memory()[1]
-    finally:
-        tracemalloc.stop()
-    # The new data and uncertainty take 100 MB.
-    # Copying the uncertainty used to copy the cube's data through parent_nddata (50 MB),
-    # copying extra_coords or global_coords the cube with its uncertainty (100 MB),
-    # and mul copied its new uncertainty array again (50 MB).
-    assert peak < 2.5 * cube.data.nbytes
+    new_cube = operation(cube)
+
     assert new_cube.extra_coords._ndcube is new_cube
     assert new_cube.global_coords._ndcube is new_cube
+    assert new_cube.uncertainty.parent_nddata is new_cube
+    assert cube.extra_coords._ndcube is cube
+    assert cube.global_coords._ndcube is cube
+    assert cube.uncertainty.parent_nddata is cube
 
     new_cube.meta["a"] = 2
     new_cube.uncertainty.array[0, 0] = 5

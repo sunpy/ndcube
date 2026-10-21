@@ -88,6 +88,16 @@ class GlobalCoords(GlobalCoordsABC):
         self._ndcube = ndcube
         self._internal_coords = OrderedDict()
 
+    def __deepcopy__(self, memo):
+        new = copy.copy(self)
+        memo[id(self)] = new
+        for key, value in vars(self).items():
+            if key != "_ndcube":
+                setattr(new, key, copy.deepcopy(value, memo))
+        # Reuse the parent, or its existing copy when copying an entire cube.
+        new._ndcube = memo.get(id(self._ndcube), self._ndcube)
+        return new
+
     @staticmethod
     def _convert_dropped_to_internal(dropped_dimensions):
         """

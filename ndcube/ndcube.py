@@ -954,8 +954,7 @@ class NDCube(NDCubeBase):
         return self.plotter.plot(*args, **kwargs)
 
     def _new_instance(self, **kwargs):
-        # The uncertainty, extra coords and global coords refer back to this cube.
-        # Map it in the memo so deepcopy does not copy the whole cube through them.
+        # Astropy's uncertainty copy state includes its parent cube.
         memo = {id(self): None}
         keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
         new_kwargs = {k: deepcopy(getattr(self, k, None), memo) for k in keys if k not in kwargs}
@@ -967,11 +966,10 @@ class NDCube(NDCubeBase):
         full_kwargs['data'] = self.data
         full_kwargs.update(kwargs)
         new_cube = type(self)(**full_kwargs)
-        memo[id(self)] = new_cube
         if self.extra_coords is not None:
-            new_cube._extra_coords = deepcopy(self.extra_coords, memo)
+            new_cube._extra_coords = deepcopy(self.extra_coords)
         if self.global_coords is not None:
-            new_cube._global_coords = deepcopy(self.global_coords, memo)
+            new_cube._global_coords = deepcopy(self.global_coords)
         return new_cube
 
     def __neg__(self):
