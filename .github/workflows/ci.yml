@@ -25,7 +25,7 @@ permissions: {}
 jobs:
   core:
     if: ${{ !github.event.repository.fork || github.event_name != 'schedule' }}
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@3a3dcf3ba6828dac29eba10334948ef38364ed14  # v3.1.0
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c9f6c4af6750aa4b26765e8c312164efc226dfd  # v3.2.0
     permissions:
       id-token: write
     with:
@@ -51,7 +51,7 @@ jobs:
 
   test:
     needs: [core, sdist_verify]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@3a3dcf3ba6828dac29eba10334948ef38364ed14  # v3.1.0
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c9f6c4af6750aa4b26765e8c312164efc226dfd  # v3.2.0
     permissions:
       id-token: write
     with:
@@ -69,7 +69,7 @@ jobs:
 
   docs:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@3a3dcf3ba6828dac29eba10334948ef38364ed14  # v3.1.0
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c9f6c4af6750aa4b26765e8c312164efc226dfd  # v3.2.0
     with:
       default_python: '3.13'
       submodules: false
@@ -94,7 +94,7 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'Run cron CI')
       )
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@3a3dcf3ba6828dac29eba10334948ef38364ed14  # v3.1.0
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8c9f6c4af6750aa4b26765e8c312164efc226dfd  # v3.2.0
     permissions:
       id-token: write
     with:
@@ -114,7 +114,7 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'Run publish')
       )
     needs: [test, docs]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@3a3dcf3ba6828dac29eba10334948ef38364ed14  # v3.1.0
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@8c9f6c4af6750aa4b26765e8c312164efc226dfd  # v3.2.0
     with:
       python-version: '3.13'
       test_extras: 'all,tests'
@@ -143,7 +143,7 @@ jobs:
       - run: ls -lha dist/
 
       - name: Run upload
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
 
   notify:
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
