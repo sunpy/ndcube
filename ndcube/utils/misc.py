@@ -6,7 +6,6 @@ from numpy.lib.array_utils import normalize_axis_index
 
 import astropy.units as u
 from astropy.utils import minversion
-from astropy.utils.shapes import simplify_basic_index
 
 __all__ = ["convert_quantities_to_units", "unique_sorted"]
 
@@ -43,9 +42,9 @@ def convert_quantities_to_units(coords, units):
 
 
 if minversion("astropy", "8.0.2"):
-    from astropy.utils.shapes import simplify_basic_index
+    from astropy.utils.shapes import simplify_basic_index as _simplify_basic_index
 else:
-    def simplify_basic_index(
+    def _simplify_basic_index(
         basic_index: int | slice | Sequence[int | slice | EllipsisType | None],
         *,
         shape: Sequence[int | None],

@@ -20,7 +20,7 @@ from astropy.wcs.wcsapi.low_level_api import BaseLowLevelWCS
 
 from ndcube import NDCube, NDCubeSequence
 from ndcube.meta import NDMeta
-from ndcube.utils.misc import simplify_basic_index
+from ndcube.utils.misc import _simplify_basic_index
 
 __all__ = [
     'assert_cubes_equal',
@@ -220,7 +220,7 @@ def create_sliced_wcs(wcs, item, dim):
     """
 
     # Sanitize the slices
-    item = simplify_basic_index(item, shape=[None] * dim)
+    item = _simplify_basic_index(item, shape=[None] * dim)
     return SlicedFITSWCS(wcs, item)
 
 
