@@ -1,0 +1,1 @@
+ ~ndcube.NDCollection.aligned_axis_physical_types now returns the physical types in the order of the collection's first member, instead of an order that changed from run to run.
