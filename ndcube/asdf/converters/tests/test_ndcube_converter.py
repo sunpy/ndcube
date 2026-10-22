@@ -60,4 +60,5 @@ def test_serialization_multi_axis_extra_coords_can_be_sliced(tmp_path):
     with asdf.AsdfFile({"ndcube": cube}) as af:
         af.write_to(file_path)
     with asdf.open(file_path) as af:
-        assert af["ndcube"][1:].extra_coords.keys() == cube[1:].extra_coords.keys()
+        sliced = af["ndcube"][1:]
+        np.testing.assert_allclose(sliced.axis_world_coords(wcs=sliced.extra_coords)[0].ra.deg, sky[1:].ra.deg)

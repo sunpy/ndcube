@@ -1,1 +1,1 @@
-Slicing an `~ndcube.NDCube` whose ``extra_coords`` include a lookup table spanning more than one array axis now works. Integer indexing no longer gives wrong or NaN values, and tables whose axes were given as a list, including every such table loaded from ASDF, no longer raise a `TypeError`.
+Integer-indexing an `~ndcube.NDCube` along an array axis spanned by a multi-axis lookup table in ``extra_coords`` no longer gives wrong coordinates or errors. Multi-axis tables whose axes are a list, as when loaded from ASDF, no longer raise a `TypeError` when sliced.
