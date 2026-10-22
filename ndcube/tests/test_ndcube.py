@@ -86,7 +86,7 @@ def test_deepcopy_coords_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, coords_n
         helpers.assert_extra_coords_equal(copied, coords)
         copied._lookup_tables[0][1].table[0] += 1 * u.s
         assert copied._lookup_tables[0][1].table[0] != coords._lookup_tables[0][1].table[0]
-    else:
+    if coords_name == "global_coords":
         helpers.assert_global_coords_equal(copied, coords)
         copied["distance"][...] = 2 * u.m
         assert coords["distance"] == 1 * u.m
