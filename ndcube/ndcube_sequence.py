@@ -527,6 +527,8 @@ class _IndexAsCubeSlicer:
         # is returned, not an NDCubeSequence.
         # common_axis of returned sequence must be altered if axes in front of it
         # are sliced away.
+        if item[common_axis].start >= item[common_axis].stop:
+            raise IndexError("Slicing would give a length-0 common axis, which a WCS cannot describe.")
         sequence_items = utils.sequence.cube_like_tuple_item_to_sequence_items(
             item, common_axis, common_axis_lengths, n_cube_dims)
         # Work out new common axis value if axes in front of it are sliced away.
