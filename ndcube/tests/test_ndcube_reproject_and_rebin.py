@@ -352,7 +352,7 @@ def test_rebin_1d_extra_coords(ndcube_1d_l):
                       output.axis_world_coords_values()[0])
 
 
-def test_rebin_mesh_extra_coords(ndcube_2d_ln_lt):
+def test_rebin_multi_axis_quantity_extra_coords(ndcube_2d_ln_lt):
     ndcube_2d_ln_lt.extra_coords.add(("a", "b"), (0, 1), (np.arange(10) * u.m, np.arange(12) * u.m))
     output = ndcube_2d_ln_lt.rebin((5, 4))
     a, b = output.axis_world_coords(wcs=output.extra_coords)

@@ -445,6 +445,8 @@ class ExtraCoords(ExtraCoordsABC):
             to the zeroth element after resampling. If iterable, must have an entry
             for each dimension. If a scalar, the grid will be
             shifted by the same amount in all dimensions.
+            For WCS-based extra coords, it is instead the shift of the lower edge
+            of the zeroth pixel, as in `~ndcube.wcs.wrappers.ResampledLowLevelWCS`.
 
         ndcube: `~ndcube.NDCube`
             The NDCube instance with which the output ExtraCoords object is associated.

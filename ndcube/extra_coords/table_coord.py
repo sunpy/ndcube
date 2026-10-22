@@ -777,9 +777,7 @@ class TimeTableCoordinate(BaseTableCoordinate):
         Parameters
         ----------
         new_array_grids: array-like
-            The array index values at which the the new values of the
-            coords are desired. A grid must be supplied for each pixel
-            axis (in array-axis order). All grids must be the same shape.
+            The array index values at which the new times are desired.
 
         Returns
         -------
