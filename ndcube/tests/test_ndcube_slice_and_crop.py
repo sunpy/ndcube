@@ -637,3 +637,40 @@ def test_crop_by_values_quantity_table_coordinate():
                                    wcs=cube.extra_coords)
     assert cropped.shape == (10, 5)
     np.testing.assert_array_equal(cropped.data, data[3:13, 1:6])
+
+
+@pytest.mark.parametrize(("item", "expected"), [(np.s_[-2:], np.s_[3:]), (np.s_[1:-1], np.s_[1:4]), (np.s_[:10], np.s_[:])])
+def test_slice_negative_and_out_of_range_bounds(ndcube_4d_axis_aware_meta, item, expected):
+    cube = ndcube_4d_axis_aware_meta
+    helpers.assert_cubes_equal(cube[item], cube[expected])
+
+
+def test_slice_negative_integer_drops_correct_coordinate(ndcube_4d_ln_lt_l_t):
+    cube = ndcube_4d_ln_lt_l_t
+    assert cube[..., -1].global_coords["time"] == cube[..., 11].global_coords["time"]
+    assert cube[..., 1:][..., -1].global_coords["time"] == cube[..., 11].global_coords["time"]
+
+
+def test_slice_nested_with_step_one(ndcube_4d_ln_lt_l_t):
+    assert ndcube_4d_ln_lt_l_t[1:][:2:1].shape == (2, 8, 10, 12)
+
+
+@pytest.mark.parametrize("item", [np.s_[2:2], np.s_[3:1], np.s_[-1:1], np.s_[10:]])
+def test_slice_to_length_0_raises(ndcube_4d_ln_lt_l_t, item):
+    with pytest.raises(IndexError, match="length-0"):
+        ndcube_4d_ln_lt_l_t[item]
+
+
+def test_slice_empty_cube():
+    cube = NDCube(np.zeros((0, 3)), wcs=WCS(naxis=2))
+    assert cube[:].shape == (0, 3)
+    assert cube[:, 0].shape == (0,)
+
+
+@pytest.mark.parametrize("item", [np.s_[::2], np.s_[0, 0, 0, 0]])
+def test_failed_slice_keeps_meta(ndcube_4d_axis_aware_meta, item):
+    cube = ndcube_4d_axis_aware_meta
+    meta = cube.meta
+    with pytest.raises((IndexError, ValueError)):
+        cube[item]
+    assert cube.meta is meta

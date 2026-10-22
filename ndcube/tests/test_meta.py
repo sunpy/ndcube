@@ -129,6 +129,13 @@ def test_slice_dependent_axes(basic_meta):
     assert_metas_equal(output, expected)
 
 
+@pytest.mark.parametrize(("item", "expected"), [(np.s_[:, -2:], [4, 6]), (np.s_[:, :-1], [2, 4]), (np.s_[:, 1:10], [4, 6])])
+def test_slice_negative_and_out_of_range_bounds(basic_meta, item, expected):
+    output = basic_meta.slice[item]
+    assert output["e"] == expected
+    assert output.data_shape[1] == len(expected)
+
+
 def test_slice_by_str(basic_meta):
     meta = basic_meta
     assert meta["a"] == "hello"
