@@ -80,6 +80,7 @@ def test_slice_common_axis(ndc, item, expected_common_axis):
                              ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 2:4], (2, 2, 1, 4)),
                              ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, 0:6], (2, 2, 3, 4)),
                              ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[0, 0:6], (2, 3, 4)),
+                             ("ndcubesequence_4c_ln_lt_l_cax1", np.s_[:, -11:-5], (3, 2, (2, 3, 1), 4)),
                          ],
                          indirect=("ndc",))
 def test_index_as_cube(ndc, item, expected_shape):
@@ -220,3 +221,26 @@ def test_slice_meta(ndcubesequence_4c_ln_lt_l_cax1):
                             "pixel response": u.Quantity([100] * 4, unit=u.percent)},
                            axes={"exposure time": 0, "pixel response": 0}, data_shape=(4, 2, 4))
     helpers.assert_metas_equal(sliced_seq.meta, expected_meta)
+
+
+def test_slice_negative_indices(ndcubesequence_4c_ln_lt_l_cax1):
+    seq = ndcubesequence_4c_ln_lt_l_cax1
+    helpers.assert_cubesequences_equal(seq[-2:, :, -1], seq[2:, :, 2])
+
+
+@pytest.mark.parametrize(("item", "match"), [
+    (np.s_[:, ::2], "step"),
+    (np.s_[:, ::-1], "step"),
+    (np.s_[:, 1:5:2], "step"),
+    (np.s_[:, -1:1], "length-0"),
+    (np.s_[:, 3:1], "length-0"),
+    (np.s_[:, 1:1], "length-0"),
+])
+def test_index_as_cube_invalid_slice(ndcubesequence_4c_ln_lt_l_cax1, item, match):
+    with pytest.raises(IndexError, match=match):
+        ndcubesequence_4c_ln_lt_l_cax1.index_as_cube[item]
+
+
+def test_index_as_cube_negative_int(ndcubesequence_3c_l_ln_lt_cax1):
+    seq = ndcubesequence_3c_l_ln_lt_cax1
+    helpers.assert_cubes_equal(seq.index_as_cube[:, -1], seq.index_as_cube[:, seq.cube_like_shape[1] - 1])

@@ -500,14 +500,23 @@ class _IndexAsCubeSlicer:
             return self.seq[(slice(None), *item)]
         if isinstance(item[common_axis], numbers.Integral):
             # If common_axis item is an int or return an NDCube with dimensionality of N-1
+            # Indexing a range resolves a negative index against the total common-axis length.
             sequence_index, common_axis_index = \
                 utils.sequence.cube_like_index_to_sequence_and_common_axis_indices(
-                    item[common_axis], common_axis, common_axis_lengths)
+                    # indexing a range of the axis length gives the positive index
+                    range(sum(common_axis_lengths))[item[common_axis]],
+                    common_axis,
+                    common_axis_lengths,
+                )
             # Insert index for common axis in item for slicing the NDCube.
             cube_item = copy.deepcopy(item)
             cube_item[common_axis] = common_axis_index
             return self.seq.data[sequence_index][tuple(cube_item)]
         # item can now only be a tuple whose common axis item is a non-None slice object.
+        if item[common_axis].step not in (None, 1):
+            raise IndexError("Slicing WCS with a step is not supported.")
+        # Resolve negative and out-of-range bounds against the total common-axis length.
+        item[common_axis] = slice(*item[common_axis].indices(sum(common_axis_lengths))[:2])
         # Convert item into iterable of SequenceItems and slice each cube appropriately.
         # item for common_axis must always be a slice for every cube,
         # even if it is only a length-1 slice.
@@ -518,6 +527,8 @@ class _IndexAsCubeSlicer:
         # is returned, not an NDCubeSequence.
         # common_axis of returned sequence must be altered if axes in front of it
         # are sliced away.
+        if item[common_axis].start >= item[common_axis].stop:
+            raise IndexError("Slicing would give a length-0 common axis, which a WCS cannot describe.")
         sequence_items = utils.sequence.cube_like_tuple_item_to_sequence_items(
             item, common_axis, common_axis_lengths, n_cube_dims)
         # Work out new common axis value if axes in front of it are sliced away.
