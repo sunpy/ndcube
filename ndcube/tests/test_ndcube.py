@@ -13,6 +13,14 @@ from astropy.wcs.wcsapi.wrappers import SlicedLowLevelWCS
 
 from ndcube import ExtraCoords, GlobalCoords, NDCube
 from ndcube.tests import helpers
+from ndcube.visualization import BasePlotter
+
+
+class _DummyPlotter(BasePlotter):
+    """A concrete plotter for testing ``BasePlotter`` without a matplotlib dependency."""
+
+    def plot(self, *args, **kwargs):
+        pass
 
 
 def test_array_axis_physical_types(ndcube_3d_ln_lt_l):
@@ -109,6 +117,45 @@ def test_deepcopy_cube_keeps_coords_linked(ndcube_3d_l_ln_lt_ectime):
     assert copied.global_coords._ndcube is copied
     assert cube.extra_coords._ndcube is cube
     assert cube.global_coords._ndcube is cube
+
+
+def test_deepcopy_plotter_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, monkeypatch):
+    cube = ndcube_3d_l_ln_lt_ectime
+    plotter = _DummyPlotter(cube)
+    plotter.canvas = [1, 2, 3]
+    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
+
+    copied = deepcopy(plotter)
+
+    assert copied is not plotter
+    assert copied._ndcube is cube
+    assert copied.canvas == [1, 2, 3]
+    copied.canvas.append(4)
+    assert plotter.canvas == [1, 2, 3]
+
+
+def test_deepcopy_plotter_cycles():
+    plotter = _DummyPlotter()
+    plotter.cycle = [plotter]
+    plotter.alias = plotter.cycle
+
+    copied = deepcopy(plotter)
+
+    assert copied.cycle is not plotter.cycle
+    assert copied.cycle[0] is copied
+    assert copied.alias is copied.cycle
+
+
+def test_deepcopy_cube_keeps_plotter_linked(ndcube_3d_l_ln_lt_ectime):
+    cube = ndcube_3d_l_ln_lt_ectime
+    cube._plotter = _DummyPlotter(cube)
+
+    copied = deepcopy(cube)
+
+    helpers.assert_cubes_equal(copied, cube, check_uncertainty_values=True)
+    assert copied.plotter is not cube.plotter
+    assert copied.plotter._ndcube is copied
+    assert cube.plotter._ndcube is cube
 
 
 def test_wcs_type_after_init(ndcube_3d_ln_lt_l, wcs_3d_l_lt_ln):
