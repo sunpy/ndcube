@@ -434,6 +434,16 @@ def test_crop_by_extra_coords(ndcube_3d_ln_lt_l_ec_time):
     helpers.assert_cubes_equal(output, expected)
 
 
+def test_crop_by_extra_coords_not_matched_by_class():
+    # The Quantity must not be moved into the hidden slot for the axis without an extra coord.
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["PIXEL", "PIXEL"]
+    cube = NDCube(np.zeros((2, 3)), wcs=wcs)
+    cube.extra_coords.add("time", (0,), Time(["2000-01-01", "2000-01-02"]))
+    with pytest.raises(TypeError):
+        cube.crop([1 * u.pix], [1 * u.pix], wcs=cube.extra_coords)
+
+
 def test_crop_by_extra_coords_values(ndcube_3d_ln_lt_l_ec_time):
     cube = ndcube_3d_ln_lt_l_ec_time
     lower_corner = (3 * 60 * 60 * u.s, 0 * u.pix)
@@ -472,7 +482,7 @@ def test_crop_by_extra_coords_all_axes_with_coord(ndcube_3d_ln_lt_l_ec_all_axes)
     output = cube.crop(lower_corner, upper_corner, wcs=cube.extra_coords)
     expected = cube[0, 0:2, 1:4]
     helpers.assert_cubes_equal(output, expected)
-    # 1 m matches both Quantity coords, so the point is matched by position.
+    # Points for extra coords are matched by position.
     output = cube.crop((None, None, interval2[0]), (None, None, interval2[1]), wcs=cube.extra_coords)
     helpers.assert_cubes_equal(output, cube[:, :, 1:4])
 
@@ -636,6 +646,23 @@ def test_crop_non_contiguous_world_objects(ndcube_4d_ln_l_t_lt):
     # 1 matches no class, so the point is matched by position and rejected.
     with pytest.raises(TypeError):
         cube.crop([wave, sky, 1])
+    # Two values for the one Quantity object: matched by position and rejected.
+    with pytest.raises(TypeError):
+        cube.crop([wave, wave, None])
+
+
+def test_crop_shared_world_object_classes_needs_pixel_to_world_order():
+    # WAVE and LINEAR are both Quantity, so the objects must be in pixel_to_world order.
+    wcs = WCS(naxis=4)
+    wcs.wcs.ctype = ["HPLN-TAN", "WAVE", "HPLT-TAN", "LINEAR"]
+    wcs.wcs.cunit = ["deg", "m", "deg", "m"]
+    cube = NDCube(np.zeros((3, 4, 5, 6)), wcs=wcs)
+    sky, wave, _ = cube.wcs.pixel_to_world(1, 2, 3, 0)
+    helpers.assert_cubes_equal(cube.crop([sky, wave, None], keepdims=True), cube[:, 3:4, 2:3, 1:2])
+    with pytest.raises(TypeError):
+        cube.crop([wave, sky, None])
+    with pytest.raises(TypeError):
+        cube.crop([None, sky, None])
 
 
 def test_crop_by_values_many_axes_keeps_axis_order():
