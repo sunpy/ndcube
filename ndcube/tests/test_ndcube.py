@@ -1,6 +1,5 @@
 from copy import deepcopy
 from inspect import signature
-from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -72,11 +71,10 @@ def test_initialize_with_extra_global_coords(ndcube_3d_ln_lt_l_ec_all_axes):
 
 
 @pytest.mark.parametrize("coords_name", ["extra_coords", "global_coords"])
-def test_deepcopy_coords_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, coords_name, monkeypatch):
+def test_deepcopy_coords_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, coords_name, forbid_cube_deepcopy):
     cube = ndcube_3d_l_ln_lt_ectime
     cube.global_coords.add("distance", "pos.distance", 1 * u.m)
     coords = getattr(cube, coords_name)
-    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
 
     copied = deepcopy(coords)
 
@@ -84,8 +82,8 @@ def test_deepcopy_coords_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, coords_n
     assert copied._ndcube is cube
     if coords_name == "extra_coords":
         helpers.assert_extra_coords_equal(copied, coords)
-        copied._lookup_tables[0][1].table[0] += 1 * u.s
-        assert copied._lookup_tables[0][1].table[0] != coords._lookup_tables[0][1].table[0]
+        copied.add("exposure", 1, np.arange(5) * u.s)
+        assert list(coords.keys()) == ["time"]
     if coords_name == "global_coords":
         helpers.assert_global_coords_equal(copied, coords)
         copied["distance"][...] = 2 * u.m
@@ -119,11 +117,10 @@ def test_deepcopy_cube_keeps_coords_linked(ndcube_3d_l_ln_lt_ectime):
     assert cube.global_coords._ndcube is cube
 
 
-def test_deepcopy_plotter_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, monkeypatch):
+def test_deepcopy_plotter_does_not_copy_parent(ndcube_3d_l_ln_lt_ectime, forbid_cube_deepcopy):
     cube = ndcube_3d_l_ln_lt_ectime
     plotter = _DummyPlotter(cube)
     plotter.canvas = [1, 2, 3]
-    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
 
     copied = deepcopy(plotter)
 
@@ -144,6 +141,16 @@ def test_deepcopy_plotter_cycles():
     assert copied.cycle is not plotter.cycle
     assert copied.cycle[0] is copied
     assert copied.alias is copied.cycle
+
+
+def test_deepcopy_plotter_without_base_init():
+    class NoInitPlotter(_DummyPlotter):
+        def __init__(self):
+            pass
+
+    copied = deepcopy(NoInitPlotter())
+
+    assert not hasattr(copied, "_ndcube")
 
 
 def test_deepcopy_cube_keeps_plotter_linked(ndcube_3d_l_ln_lt_ectime):
@@ -330,8 +337,7 @@ def test_fill_masked_fill_in_place_true(ndc, fill_value, uncertainty_fill_value,
     ],
     indirect=("ndc", "expected_cube")
 )
-def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value, unmask, expected_cube, monkeypatch):
-    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
+def test_fill_masked_fill_in_place_false(ndc, fill_value, uncertainty_fill_value, unmask, expected_cube, forbid_cube_deepcopy):
     # compare the expected cube with the cube saved in the new place
 
     # perform the fill_masked method on the fixture, using parametrized as parameters.

@@ -1,5 +1,6 @@
 import abc
-import copy
+
+from ndcube.utils.misc import _deepcopy_without_parent
 
 
 class BasePlotter(abc.ABC):
@@ -23,12 +24,4 @@ class BasePlotter(abc.ABC):
         The ``plot()`` method **should** accept ``**kwargs``.
         """
 
-    def __deepcopy__(self, memo):
-        new = copy.copy(self)
-        memo[id(self)] = new
-        for key, value in vars(self).items():
-            if key != "_ndcube":
-                setattr(new, key, copy.deepcopy(value, memo))
-        # Reuse the parent, or its existing copy when copying an entire cube.
-        new._ndcube = memo.get(id(self._ndcube), self._ndcube)
-        return new
+    __deepcopy__ = _deepcopy_without_parent

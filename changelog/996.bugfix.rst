@@ -1,2 +1,2 @@
-Deep copying `~ndcube.ExtraCoords`, `~ndcube.GlobalCoords`, and `~ndcube.visualization.BasePlotter` now copy without copying their parent cube.
-This reduces memory use when doing operations such as arithmetic or `~ndcube.NDCube.to` etc.
+Deep copies of `~ndcube.ExtraCoords`, `~ndcube.GlobalCoords` and `~ndcube.visualization.BasePlotter` no longer copy their parent cube.
+This reduces memory use in operations such as arithmetic and `~ndcube.NDCube.to`.
