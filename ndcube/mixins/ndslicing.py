@@ -19,15 +19,6 @@ class NDCubeSlicingMixin(NDSlicingMixin):
         if item is None or (isinstance(item, tuple) and None in item):
             raise IndexError("None indices not supported")
 
-        # If cube has a sliceable metadata, remove it and handle it separately.
-        # This is to prevent the shapes of the data and metadata getting out of
-        # sync part way through the slicing process.
-        meta_is_sliceable = False
-        if hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__:
-            meta_is_sliceable = True
-            meta = self.meta
-            self.meta = None
-
         if isinstance(item, tuple) and Ellipsis in item:
             if item.count(Ellipsis) > 1:
                 raise IndexError("An index can only have a single ellipsis ('...')")
@@ -41,9 +32,27 @@ class NDCubeSlicingMixin(NDSlicingMixin):
 
         # Slice cube.
         item = tuple(sanitize_slices(item, len(self.shape)))
-        sliced_cube = super().__getitem__(item)
-        if meta_is_sliceable:
-            self.meta = meta  # Add unsliced meta back onto unsliced cube.
+        # TODO: Remove when astropy>7.2.3
+        # Resolve negative and out-of-range bounds against the cube's shape, as numpy does for the data.
+        # Before astropy 7.2.3/8.0.2 the WCS slicer takes negative values as offsets from 0 (astropy/astropy#15557),
+        # and since then it raises for them if the WCS has no array_shape.
+        # Drop the step (at most 1 here): nested WCS slicing rejects an explicit step before those versions.
+        item = tuple(slice(*i.indices(n)[:2]) if isinstance(i, slice) else range(n)[i]
+                     for i, n in zip(item, self.shape))
+        if 0 not in self.shape and any(isinstance(i, slice) and i.start >= i.stop for i in item):
+            raise IndexError("Slicing would give a length-0 axis, which a WCS cannot describe.")
+        # If cube has a sliceable metadata, remove it and handle it separately.
+        # This is to prevent the shapes of the data and metadata getting out of
+        # sync part way through the slicing process.
+        if meta_is_sliceable := (hasattr(self.meta, "__ndcube_can_slice__") and self.meta.__ndcube_can_slice__):
+            meta = self.meta
+            self.meta = None
+
+        try:
+            sliced_cube = super().__getitem__(item)
+        finally:
+            if meta_is_sliceable:
+                self.meta = meta  # Add unsliced meta back onto unsliced cube.
 
         # Add sliced coords back onto sliced cube.
         sliced_cube._global_coords._internal_coords = self.global_coords._internal_coords
