@@ -14,7 +14,7 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.wcs.wcsapi.high_level_wcs_wrapper import HighLevelWCSWrapper
 from astropy.wcs.wcsapi.wrappers.sliced_wcs import SlicedLowLevelWCS
 
-from ndcube.utils.misc import _simplify_basic_index
+from ndcube.utils.misc import _deepcopy_without_parent, _simplify_basic_index
 from ndcube.utils.wcs import convert_between_array_and_pixel_axes
 from ndcube.wcs.wrappers import CompoundLowLevelWCS, ResampledLowLevelWCS
 from .table_coord import (
@@ -155,6 +155,8 @@ class ExtraCoords(ExtraCoordsABC):
 
         # We need a reference to the parent NDCube
         self._ndcube = ndcube
+
+    __deepcopy__ = _deepcopy_without_parent
 
     @classmethod
     def from_lookup_tables(cls, names, pixel_dimensions, lookup_tables, physical_types=None):

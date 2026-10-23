@@ -1,3 +1,5 @@
+import operator
+
 import numpy as np
 import pytest
 
@@ -429,6 +431,38 @@ def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
         -ndcube_2d_ln_lt_units,
         u.Quantity(-ndcube_2d_ln_lt_units.data, ndcube_2d_ln_lt_units.unit),
     )
+
+
+@pytest.mark.parametrize("operation", [operator.neg, lambda cube: cube * 2, lambda cube: cube.to(u.mct)],
+                         ids=["neg", "mul", "to"])
+def test_cube_arithmetic_does_not_copy_cube(operation):
+    class NoDeepCopy(np.ndarray):
+        def __deepcopy__(self, memo):
+            raise AssertionError("Data array was deep copied")
+
+    shape = (3, 4)
+    cube = NDCube(np.ones(shape).view(NoDeepCopy), wcs=astropy.wcs.WCS(naxis=2), unit=u.ct,
+                  uncertainty=StdDevUncertainty(np.ones(shape)), meta={"a": 1})
+    cube.extra_coords.add("time", 0, np.arange(shape[0]) * u.s)
+    cube.global_coords.add("name", "custom:physical_type", 1 * u.s)
+
+    new_cube = operation(cube)
+
+    assert new_cube.extra_coords._ndcube is new_cube
+    assert new_cube.global_coords._ndcube is new_cube
+    assert new_cube.uncertainty.parent_nddata is new_cube
+    assert cube.extra_coords._ndcube is cube
+    assert cube.global_coords._ndcube is cube
+    assert cube.uncertainty.parent_nddata is cube
+
+    new_cube.meta["a"] = 2
+    new_cube.uncertainty.array[0, 0] = 5
+    new_cube.extra_coords.add("exposure", 1, np.arange(shape[1]) * u.s)
+    new_cube.global_coords.add("other", "custom:physical_type", 2 * u.s)
+    assert cube.meta["a"] == 1
+    assert cube.uncertainty.array[0, 0] == 1
+    assert list(cube.extra_coords.keys()) == ["time"]
+    assert list(cube.global_coords) == ["name"]
 
 
 def test_add_unitless_cube_typeerror(ndcube_2d_ln_lt_units):
