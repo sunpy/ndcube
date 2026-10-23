@@ -2,7 +2,10 @@ import numbers
 from collections.abc import Sequence
 from types import EllipsisType
 
-from numpy.lib.array_utils import normalize_axis_index
+try:
+    from numpy.lib.array_utils import normalize_axis_index
+except ImportError:  # numpy < 2
+    from numpy.core.multiarray import normalize_axis_index
 
 import astropy.units as u
 from astropy.utils import minversion
