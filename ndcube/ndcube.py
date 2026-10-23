@@ -1104,6 +1104,7 @@ class NDCube(NDCubeBase):
             else:
                 kwargs["unit"] = self.unit
             kwargs["data"] = self.data * value
+            # The array is already new, don't copy it again
             kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value, copy=False)
                             if self.uncertainty is not None else None)
         return self._new_instance(**kwargs)
