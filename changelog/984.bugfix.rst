@@ -1,0 +1,1 @@
+Fixed :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` returning the wrong pixels when a crop point lies on a pixel edge.
