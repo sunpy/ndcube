@@ -1,0 +1,1 @@
+Integer-indexing an `~ndcube.NDCube` along an array axis spanned by a multi-axis lookup table in ``extra_coords`` no longer gives wrong coordinates or errors. Multi-axis tables whose axes are a list, as when loaded from ASDF, no longer raise a `TypeError` when sliced.
