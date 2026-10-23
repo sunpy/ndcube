@@ -1,0 +1,1 @@
+Replace use of the deprecated ``sanitize_slices`` function in astropy with the updated version of `~astropy.utils.shapes.simplify_basic_index`.
