@@ -954,8 +954,11 @@ class NDCube(NDCubeBase):
         return self.plotter.plot(*args, **kwargs)
 
     def _new_instance(self, **kwargs):
+        # Astropy's NDUncertainty deep copies its parent_nddata, i.e. this whole cube.
+        # Seeding the memo makes that parent copy as None; the new cube then becomes its parent.
+        memo = {id(self): None}
         keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
-        new_kwargs = {k: deepcopy(getattr(self, k, None)) for k in keys}
+        new_kwargs = {k: deepcopy(getattr(self, k, None), memo) for k in keys if k not in kwargs}
         # To support old versions of astropy, we need to make sure
         # we only pass in the parameters that are valid for the NDData
         params = list(inspect.signature(astropy.nddata.NDData).parameters)
@@ -1101,7 +1104,8 @@ class NDCube(NDCubeBase):
             else:
                 kwargs["unit"] = self.unit
             kwargs["data"] = self.data * value
-            kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value)
+            # The array is already new, don't copy it again
+            kwargs["uncertainty"] = (type(self.uncertainty)(self.uncertainty.array * value, copy=False)
                             if self.uncertainty is not None else None)
         return self._new_instance(**kwargs)
 
@@ -1461,7 +1465,8 @@ class NDCube(NDCubeBase):
         # TODO: is the logic repetitive? this else is the same with the if not fill_in_place below? No because the order matters.
         else:
             new_data = copy.deepcopy(self.data)
-            new_uncertainty = copy.deepcopy(self.uncertainty)
+            # The memo stops deepcopy copying this cube via the uncertainty's parent; see _new_instance.
+            new_uncertainty = copy.deepcopy(self.uncertainty, {id(self): None})
             new_mask = False if unmask else copy.deepcopy(self.mask) # self.mask still exists.
 
         masked = (

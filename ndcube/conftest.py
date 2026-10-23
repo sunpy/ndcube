@@ -3,6 +3,7 @@ This file contains a set of common fixtures to get a set of different but
 predictable NDCube objects.
 """
 import logging
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -1326,6 +1327,12 @@ def lut_1d_time():
 def lut_1d_wave():
     # TODO: Make this into a SpectralCoord object
     return QuantityTableCoordinate(range(10) * u.nm)
+
+
+@pytest.fixture
+def forbid_cube_deepcopy(monkeypatch):
+    """Make any deep copy of an `~ndcube.NDCube` fail the test."""
+    monkeypatch.setattr(NDCube, "__deepcopy__", Mock(side_effect=AssertionError("Parent cube was copied")), raising=False)
 
 
 def pytest_runtest_teardown(item):
