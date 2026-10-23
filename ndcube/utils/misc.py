@@ -1,3 +1,4 @@
+import copy
 import numbers
 from collections.abc import Sequence
 from types import EllipsisType
@@ -42,6 +43,24 @@ def convert_quantities_to_units(coords, units):
     """
     return [coord.to(unit) if isinstance(coord, u.Quantity) else coord
             for coord, unit in zip(coords, units)]
+
+
+def _deepcopy_without_parent(obj, memo):
+    """
+    Deep copy an object without copying the parent cube it links to through ``_ndcube``.
+
+    Assign this as ``__deepcopy__`` on the class.
+    """
+    new = copy.copy(obj)
+    memo[id(obj)] = new
+    for key, value in vars(obj).items():
+        if key != "_ndcube":
+            setattr(new, key, copy.deepcopy(value, memo))
+    # A plotter subclass that skips BasePlotter.__init__ has no _ndcube.
+    if hasattr(obj, "_ndcube"):
+        # Use the cube's copy if deepcopy reached the cube first, otherwise keep the original cube.
+        new._ndcube = memo.get(id(obj._ndcube), obj._ndcube)
+    return new
 
 
 if minversion("astropy", "8.0.2"):
