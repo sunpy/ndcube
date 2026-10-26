@@ -10,6 +10,7 @@ from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.wcs.wcsapi.high_level_api import default_order
 from astropy.wcs.wcsapi.utils import deserialize_class
 
+from ndcube.utils.misc import _deepcopy_without_parent
 from ndcube.utils.wcs import validate_physical_types
 
 
@@ -87,6 +88,8 @@ class GlobalCoords(GlobalCoordsABC):
         super().__init__()
         self._ndcube = ndcube
         self._internal_coords = OrderedDict()
+
+    __deepcopy__ = _deepcopy_without_parent
 
     @staticmethod
     def _convert_dropped_to_internal(dropped_dimensions):

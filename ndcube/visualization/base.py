@@ -1,5 +1,7 @@
 import abc
 
+from ndcube.utils.misc import _deepcopy_without_parent
+
 
 class BasePlotter(abc.ABC):
     """
@@ -21,3 +23,5 @@ class BasePlotter(abc.ABC):
 
         The ``plot()`` method **should** accept ``**kwargs``.
         """
+
+    __deepcopy__ = _deepcopy_without_parent
