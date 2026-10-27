@@ -1,1 +1,0 @@
-A failed slice of an `~ndcube.NDCube` no longer empties its ``meta``.

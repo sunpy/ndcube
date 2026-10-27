@@ -1,3 +1,26 @@
+2.4.3 (2026-10-27)
+==================
+
+Breaking Changes
+----------------
+
+- Slicing an `~ndcube.NDCube` or a `~ndcube.NDCubeSequence` to a length-0 axis (e.g. ``cube[2:2]`` or ``cube[10:1]``) now raises an `IndexError` instead of returning a cube whose WCS cannot describe it, and so does slicing `~ndcube.NDCubeSequence.index_as_cube` with a step along the common axis, which used to be ignored. (`#979 <https://github.com/sunpy/ndcube/pull/979>`__)
+
+
+Bug Fixes
+---------
+
+- Fix bug in `ndcube.wcs.tools.unwrap_wcs_to_fitswcs` when used on a resampled `astropy.wcs.WCS` with  ``preserve_units=True``. (`#976 <https://github.com/sunpy/ndcube/pull/976>`__)
+- Fix slicing `~ndcube.NDCube`, `~ndcube.NDCubeSequence` (including `~ndcube.NDCubeSequence.index_as_cube`), `~ndcube.NDCollection` and `~ndcube.NDMeta` with negative or out-of-range indices, which gave wrong world coordinates or raised errors with axis-aware metadata. (`#979 <https://github.com/sunpy/ndcube/pull/979>`__)
+- A failed slice of an `~ndcube.NDCube` no longer empties its ``meta``. (`#979 <https://github.com/sunpy/ndcube/pull/979>`__)
+- `~ndcube.NDCollection.aligned_axis_physical_types` now returns the physical types in the order of the collection's first member, instead of an order that changed from run to run. (`#983 <https://github.com/sunpy/ndcube/pull/983>`__)
+- Fixed :meth:`~ndcube.NDCube.crop` and :meth:`~ndcube.NDCube.crop_by_values` returning the wrong pixels when a crop point lies on a pixel edge. (`#984 <https://github.com/sunpy/ndcube/pull/984>`__)
+- Fixed `~ndcube.NDCube.rebin` modifying input data and masks when propagating uncertainties over masked samples, and made the default uncertainty propagation helper preserve its input arrays. (`#990 <https://github.com/sunpy/ndcube/pull/990>`__)
+- Replace use of the deprecated ``sanitize_slices`` function in astropy with the updated version of `~astropy.utils.shapes.simplify_basic_index`. (`#995 <https://github.com/sunpy/ndcube/pull/995>`__)
+- Deep copies of `~ndcube.ExtraCoords`, `~ndcube.GlobalCoords` and `~ndcube.visualization.BasePlotter` no longer copy their parent cube.
+  This reduces memory use in operations such as arithmetic and `~ndcube.NDCube.to`. (`#996 <https://github.com/sunpy/ndcube/pull/996>`__)
+
+
 2.4.2 (2026-09-17)
 ==================
 

@@ -1,1 +1,0 @@
-Slicing an `~ndcube.NDCube` or a `~ndcube.NDCubeSequence` to a length-0 axis (e.g. ``cube[2:2]`` or ``cube[10:1]``) now raises an `IndexError` instead of returning a cube whose WCS cannot describe it, and so does slicing `~ndcube.NDCubeSequence.index_as_cube` with a step along the common axis, which used to be ignored.

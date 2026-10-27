@@ -1,1 +1,0 @@
-Fix slicing `~ndcube.NDCube`, `~ndcube.NDCubeSequence` (including `~ndcube.NDCubeSequence.index_as_cube`), `~ndcube.NDCollection` and `~ndcube.NDMeta` with negative or out-of-range indices, which gave wrong world coordinates or raised errors with axis-aware metadata.
