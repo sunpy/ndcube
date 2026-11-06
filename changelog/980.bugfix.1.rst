@@ -1,0 +1,1 @@
+`~ndcube.NDCube.axis_world_coords` and `~ndcube.NDCube.axis_world_coords_values` with ``wcs=cube.extra_coords`` now return extra coordinates spanning several array axes in array-axis order. Previously these came back transposed for a lookup table on ascending array axes such as ``(0, 1)``, or for a WCS-backed extra coordinate whose ``mapping`` is not ascending.
