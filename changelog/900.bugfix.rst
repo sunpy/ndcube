@@ -1,1 +1,1 @@
-Arithmetic operations on `~ndcube.NDCube` subclasses whose constructors do not accept ``psf`` no longer raise ``ValueError``.
+Arithmetic no longer passes ``psf`` into `~ndcube.NDCube` subclasses that do not declare it, while still copying attributes such as ``mask`` and ``meta``.
