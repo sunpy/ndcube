@@ -1,0 +1,1 @@
+Arithmetic operations on `~ndcube.NDCube` subclasses whose constructors do not accept ``psf`` no longer raise ``ValueError``.

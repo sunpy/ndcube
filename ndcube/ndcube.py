@@ -959,9 +959,16 @@ class NDCube(NDCubeBase):
         memo = {id(self): None}
         keys = ('unit', 'wcs', 'mask', 'meta', 'uncertainty', 'psf')
         new_kwargs = {k: deepcopy(getattr(self, k, None), memo) for k in keys if k not in kwargs}
-        # To support old versions of astropy, we need to make sure
-        # we only pass in the parameters that are valid for the NDData
-        params = list(inspect.signature(astropy.nddata.NDData).parameters)
+        # Only pass constructor arguments this class accepts. Filtering against
+        # NDData alone is not enough: NDData may accept arguments (e.g. psf)
+        # that a subclass __init__ still rejects.
+        # Intersect with NDData so older astropy still ignores unsupported params.
+        nddata_params = inspect.signature(astropy.nddata.NDData).parameters
+        cls_params = {
+            name for name, param in inspect.signature(type(self)).parameters.items()
+            if param.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+        }
+        params = nddata_params.keys() & cls_params
         full_kwargs = {x: new_kwargs.pop(x) for x in params & new_kwargs.keys()}
         # We Explicitly DO NOT deepcopy any data
         full_kwargs['data'] = self.data
