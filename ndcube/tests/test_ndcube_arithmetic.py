@@ -426,6 +426,43 @@ def test_cube_arithmetic_rdivide_nddata_dask(wcs_2d_lt_ln, nddata_2d_dask):
     assert type(output_cube.mask) is type(value.mask)
 
 
+class NDCubeNoPsf(NDCube):
+    """Dummy subclass whose constructor does not accept ``psf``.
+
+    Mirrors specutils Spectrum: ``mask`` and ``meta`` are accepted only via
+    ``**kwargs``, and unknown names raise ValueError.
+    """
+
+    def __init__(self, data, wcs=None, uncertainty=None, unit=None, copy=False, **kwargs):
+        unknown_kwargs = set(kwargs).difference(
+            {"data", "unit", "uncertainty", "meta", "mask", "copy", "extra_coords"})
+        if unknown_kwargs:
+            raise ValueError(f"unknown argument {', '.join(map(str, unknown_kwargs))}")
+        super().__init__(data, wcs=wcs, uncertainty=uncertainty,
+                         mask=kwargs.get("mask"), meta=kwargs.get("meta"),
+                         unit=unit, copy=copy)
+
+
+def test_rdivide_subclass_without_psf(ndcube_2d_ln_lt_units):
+    cube = ndcube_2d_ln_lt_units
+    mask = np.zeros(cube.data.shape, dtype=bool)
+    mask[0, 0] = True
+    meta = {"source": "test"}
+    sub = NDCubeNoPsf(cube.data, wcs=cube.wcs, unit=cube.unit, mask=mask, meta=meta)
+    cube_quantity = u.Quantity(cube.data, cube.unit)
+    with np.errstate(divide="ignore"):
+        new_cube = 1 / sub
+        check_arithmetic_value_and_units(new_cube, 1 / cube_quantity)
+    assert type(new_cube) is NDCubeNoPsf
+    np.testing.assert_array_equal(new_cube.mask, mask)
+    assert new_cube.meta == meta
+
+
+def test_arithmetic_preserves_psf(ndcube_2d_ln_lt_psf):
+    new_cube = ndcube_2d_ln_lt_psf * 2
+    np.testing.assert_array_equal(new_cube.psf, ndcube_2d_ln_lt_psf.psf)
+
+
 def test_cube_arithmetic_neg(ndcube_2d_ln_lt_units):
     check_arithmetic_value_and_units(
         -ndcube_2d_ln_lt_units,

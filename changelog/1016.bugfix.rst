@@ -1,0 +1,1 @@
+Arithmetic no longer passes ``psf`` into `~ndcube.NDCube` subclasses that do not declare it, while still copying attributes such as ``mask`` and ``meta``.

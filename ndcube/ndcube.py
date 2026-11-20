@@ -963,6 +963,12 @@ class NDCube(NDCubeBase):
         # we only pass in the parameters that are valid for the NDData
         params = list(inspect.signature(astropy.nddata.NDData).parameters)
         full_kwargs = {x: new_kwargs.pop(x) for x in params & new_kwargs.keys()}
+        # psf is valid for NDData, but subclasses may reject unknown names.
+        # Only forward it when this class declares it as a named __init__ parameter.
+        psf_param = inspect.signature(type(self)).parameters.get("psf")
+        if psf_param is None or psf_param.kind in (
+                inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+            full_kwargs.pop("psf", None)
         # We Explicitly DO NOT deepcopy any data
         full_kwargs['data'] = self.data
         full_kwargs.update(kwargs)
