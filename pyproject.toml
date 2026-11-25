@@ -8,9 +8,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ndcube"
 description = "A package for multi-dimensional contiguous and non-contiguous coordinate aware arrays."
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license-files = ["licenses/LICENSE.rst"]
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
 authors = [
   { name = "The SunPy Community", email = "sunpy@googlegroups.com" },
 ]
