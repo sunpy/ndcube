@@ -62,15 +62,8 @@ jobs:
       envs: |
         - linux: py314
         - windows: py312
-<<<<<<<
-        - macos: py312
-=======
         - macos: py313
         - linux: py312-oldestdeps
-        - linux: py314-devdeps
-
->>>>>>>
-        - linux: py311-oldestdeps
         - linux: asdf_schemas
           coverage: false
 
@@ -109,11 +102,7 @@ jobs:
       toxdeps: tox-pypi-filter
       coverage: codecov-oidc
       envs: |
-<<<<<<<
         - linux: py314-devdeps
-=======
-
->>>>>>>
 
   build_dists:
     # Build wheels on PRs only when labelled. Releases will only be published if tagged ^v.*
