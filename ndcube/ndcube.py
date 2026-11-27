@@ -1,6 +1,7 @@
 import abc
 import copy
 import inspect
+import itertools
 import numbers
 import textwrap
 from collections import namedtuple
@@ -208,10 +209,11 @@ class NDCubeABC(astropy.nddata.NDDataBase):
             Each iterable of coordinate objects represents a single location
             in the data array in real world coordinates.
 
-            The coordinates of the points as they are passed to
-            `~astropy.wcs.wcsapi.BaseHighLevelWCS.world_to_pixel`.
-            Therefore their number and order must be compatible with the API
-            of that method, i.e. they must be passed in world order.
+            Each point has one entry per world object, in the order
+            `~astropy.wcs.wcsapi.BaseHighLevelWCS.pixel_to_world` returns them,
+            with `None` for objects that should not be cropped.
+            If no world object's class is the same as, or a subclass of, another's,
+            the entries can be given in any order (not with ``wcs=cube.extra_coords``).
 
         wcs: `~astropy.wcs.wcsapi.BaseHighLevelWCS` or `~ndcube.ExtraCoordsABC`
             The WCS to use to calculate the pixel coordinates based on the input.
@@ -628,27 +630,33 @@ class NDCubeBase(NDCubeABC, astropy.nddata.NDData, NDCubeSlicingMixin):
 
     @utils.cube.sanitize_wcs
     def _get_crop_item(self, *points, wcs=None, keepdims=False):
+        # ExtraCoords points get hidden Quantity slots for axes without extra coords.
+        is_extra_coords = isinstance(wcs, ExtraCoords)
         # Sanitize inputs.
         no_op, points, wcs = utils.cube.sanitize_crop_inputs(points, wcs)
         # Quit out early if we are no-op
         if no_op:
             return tuple([slice(None)] * wcs.pixel_n_dim)
-        comp = [c[0] for c in wcs.world_axis_object_components]
-        # Trim to unique component names - `np.unique(..., return_index=True)
-        # keeps sorting alphabetically, set() seems just nondeterministic.
-        for k, c in enumerate(comp):
-            if comp.count(c) > 1:
-                comp.pop(k)
+        comp = utils.misc.unique_sorted(c[0] for c in wcs.world_axis_object_components)
         classes = [wcs.world_axis_object_classes[c][0] for c in comp]
+        expected = ", ".join(f"{name} ({cls.__name__})" for name, cls in zip(comp, classes))
+        # If no class is the same as, or a subclass of, another, a value's class
+        # tells us which world object it is, so it can be given in any position (#608).
+        any_order = not is_extra_coords and not any(
+            issubclass(a, b) for a, b in itertools.permutations(classes, 2))
         for i, point in enumerate(points):
             if len(point) != len(comp):
                 raise ValueError(f"{len(point)} components in point {i} do not match "
-                                 f"WCS with {len(comp)} components.")
+                                 f"WCS with {len(comp)} components. Each point must "
+                                 "have one entry per world object (use None for a "
+                                 f"component that should not be cropped), in order: {expected}.")
+            if any_order:
+                points[i] = point = _order_point_by_class(point, classes)
             for j, value in enumerate(point):
                 if not (value is None or isinstance(value, classes[j])):
                     raise TypeError(f"{type(value)} of component {j} in point {i} is "
                                     f"incompatible with WCS component {comp[j]} "
-                                    f"{classes[j]}.")
+                                    f"{classes[j]}. Expected order: {expected}.")
         return utils.cube.get_crop_item_from_points(points, wcs, False, keepdims=keepdims,
                                                     original_shape=self.data.shape)
 
@@ -1660,6 +1668,25 @@ class NDCube(NDCubeBase):
                        for key, value in user_kwargs.items()}
         # Construct and return new instance.
         return nddata_type(**user_kwargs)
+
+
+def _order_point_by_class(point, classes):
+    """
+    Put each non-None value of a crop point in the slot of the class it is an instance of.
+
+    ``classes`` must not overlap, so each value matches at most one of them.
+    If a value matches no class, or two values match the same class, return the point
+    unchanged so that the positional type check reports it.
+    """
+    ordered = [None] * len(classes)
+    for value in point:
+        if value is None:
+            continue
+        slot = next((j for j, cls in enumerate(classes) if isinstance(value, cls)), None)
+        if slot is None or ordered[slot] is not None:
+            return point
+        ordered[slot] = value
+    return ordered
 
 
 def _create_masked_array_for_rebinning(data, mask, operation_ignores_mask):
