@@ -447,6 +447,8 @@ class ExtraCoords(ExtraCoordsABC):
             to the zeroth element after resampling. If iterable, must have an entry
             for each dimension. If a scalar, the grid will be
             shifted by the same amount in all dimensions.
+            For WCS-based extra coords, it is instead the shift of the lower edge
+            of the zeroth pixel, as in `~ndcube.wcs.wrappers.ResampledLowLevelWCS`.
 
         ndcube: `~ndcube.NDCube`
             The NDCube instance with which the output ExtraCoords object is associated.
@@ -496,12 +498,11 @@ class ExtraCoords(ExtraCoordsABC):
             x = np.arange(c, d+f, f)
             x = x[x <= d-1]
             new_grids.append(x)
-        new_grids = np.array(new_grids, dtype=object)
         for array_axes, coord in self._lookup_tables:
             if np.isscalar(array_axes):
                 new_coord = coord.interpolate(new_grids[array_axes], **kwargs)
             else:
-                new_coord = coord.interpolate(*new_grids[np.asarray(array_axes)], **kwargs)
+                new_coord = coord.interpolate(*[new_grids[axis] for axis in array_axes], **kwargs)
             new_ec.add(coord.names, array_axes, new_coord, physical_types=coord.physical_types)
         return new_ec
 
