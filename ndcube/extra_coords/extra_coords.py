@@ -362,10 +362,11 @@ class ExtraCoords(ExtraCoordsABC):
             item = list(item) + [slice(None)] * (ndims - len(item))
             n_dropped_dims = np.cumsum([isinstance(i, Integral) for i in item])
         for lut_axis, lut in self._lookup_tables:
-            lut_axes = (lut_axis,) if not isinstance(lut_axis, tuple) else lut_axis
-            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes)
+            lut_axes = (lut_axis,) if isinstance(lut_axis, Integral) else tuple(lut_axis)
+            # Integer-indexed axes drop out of the table; the rest shift down past the dropped ones.
+            new_lut_axes = tuple(ax - n_dropped_dims[ax] for ax in lut_axes if not isinstance(item[ax], Integral))
             lut_slice = tuple(item[i] for i in lut_axes)
-            if isinstance(lut_slice, tuple) and len(lut_slice) == 1:
+            if len(lut_slice) == 1:
                 lut_slice = lut_slice[0]
 
             sliced_lut = lut[lut_slice]

@@ -5,6 +5,9 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord, SpectralCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
+from astropy.wcs import WCS
+
+from ndcube import NDCube
 
 
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
@@ -81,6 +84,20 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     coords = cube.axis_world_coords(wcs=cube.combined_wcs)
     assert len(coords) == 4
     assert u.allclose(coords[3], data)
+
+
+@pytest.mark.parametrize("axes", [(0, 1), [0, 1], (1, 0)])
+@pytest.mark.parametrize("item", [np.s_[:], np.s_[1:], np.s_[1], np.s_[:, 1]])
+def test_axis_world_coords_multi_axis_ec(axes, item):
+    cube = NDCube(np.zeros((3, 4, 5)), wcs=WCS(naxis=3))
+    lon = np.arange(12).reshape(3, 4)
+    sky = SkyCoord(lon * u.deg, np.ones((3, 4)) * u.deg)
+    # Table dimension i runs along array axis axes[i]
+    cube.extra_coords.add(("lon", "lat"), axes, sky.transpose(axes), mesh=False)
+    sliced = cube[item]
+    np.testing.assert_allclose(sliced.axis_world_coords(wcs=sliced.extra_coords)[0].ra.deg, lon[item])
+    # The extra coords are the last world object of combined_wcs.
+    np.testing.assert_allclose(sliced.axis_world_coords(wcs=sliced.combined_wcs)[-1].ra.deg, lon[item])
 
 
 @pytest.mark.parametrize("axes", [[-1], [2], ["em"]])
